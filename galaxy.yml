@@ -1,0 +1,16 @@
+authors: 
+- Jie Shen
+#dependencies: {}
+description: 'The Azure collection.'
+#documentation: ''
+homepage: 'https://azure.microsoft.com'
+issues: 'https://github.com/ansible/ansible_collections_azure/issues'
+license: ['GNU General Public License v3.0']
+name: azcollection
+namespace: azure
+readme: README.md
+repository: 'https://github.com/ansible/ansible_collections_azure'
+tags:
+  - azure
+  - collection
+version: 0.0.1
