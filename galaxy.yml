@@ -5,7 +5,7 @@ description: 'The Azure collection.'
 #documentation: ''
 homepage: 'https://azure.microsoft.com'
 issues: 'https://github.com/ansible/ansible_collections_azure/issues'
-license: ['GNU General Public License v3.0']
+license: ['GPL-3.0-or-later']
 name: azcollection
 namespace: azure
 readme: README.md
