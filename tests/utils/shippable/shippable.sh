@@ -75,6 +75,11 @@ set -ux
 
 pip install ansible==2.9.0rc2
 
+TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
+mkdir -p "${TEST_DIR}"
+cp -aT "${SHIPPABLE_BUILD_DIR}" "${TEST_DIR}"
+cd "${TEST_DIR}"
+
 function cleanup
 {
     if [ -d test/results/coverage/ ]; then
