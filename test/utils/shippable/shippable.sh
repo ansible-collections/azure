@@ -73,6 +73,8 @@ set +ux
 . ~/ansible-venv/bin/activate
 set -ux
 
+pip install ansible==2.9.0rc2
+
 function cleanup
 {
     if [ -d test/results/coverage/ ]; then
