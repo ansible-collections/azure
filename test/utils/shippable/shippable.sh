@@ -68,9 +68,6 @@ else
     export UNSTABLE=""
 fi
 
-# remove empty core/extras module directories from PRs created prior to the repo-merge
-find lib/ansible/modules -type d -empty -print -delete
-
 function cleanup
 {
     if [ -d test/results/coverage/ ]; then
