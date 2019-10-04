@@ -82,8 +82,8 @@ cd "${TEST_DIR}"
 
 function cleanup
 {
-    if [ -d test/results/coverage/ ]; then
-        if find test/results/coverage/ -mindepth 1 -name '.*' -prune -o -print -quit | grep -q .; then
+    if [ -d tests/output/coverage/ ]; then
+        if find tests/output/coverage/ -mindepth 1 -name '.*' -prune -o -print -quit | grep -q .; then
             # for complete on-demand coverage generate a report for all files with no coverage on the "other" job so we only have one copy
             if [ "${COVERAGE}" == "--coverage" ] && [ "${CHANGED}" == "" ] && [ "${test}" == "sanity/1" ]; then
                 stub="--stub"
@@ -93,20 +93,20 @@ function cleanup
 
             # shellcheck disable=SC2086
             ansible-test coverage xml --color -v --requirements --group-by command --group-by version ${stub:+"$stub"}
-            cp -a test/results/reports/coverage=*.xml shippable/codecoverage/
+            cp -a tests/output/reports/coverage=*.xml shippable/codecoverage/
         fi
     fi
 
-    if [ -d  test/results/junit/ ]; then
-      cp -aT test/results/junit/ shippable/testresults/
+    if [ -d  tests/output/junit/ ]; then
+      cp -aT tests/output/junit/ shippable/testresults/
     fi
 
-    if [ -d test/results/data/ ]; then
-      cp -a test/results/data/ shippable/testresults/
+    if [ -d tests/output/data/ ]; then
+      cp -a tests/output/data/ shippable/testresults/
     fi
 
-    if [ -d  test/results/bot/ ]; then
-      cp -aT test/results/bot/ shippable/testresults/
+    if [ -d  tests/output/bot/ ]; then
+      cp -aT tests/output/bot/ shippable/testresults/
     fi
 }
 
@@ -120,5 +120,5 @@ fi
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
 
-"test/utils/shippable/check_matrix.py"
-"test/utils/shippable/${script}.sh" "${test}"
+"tests/utils/shippable/check_matrix.py"
+"tests/utils/shippable/${script}.sh" "${test}"
