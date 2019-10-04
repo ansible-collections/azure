@@ -45,3 +45,4 @@ plugins/modules/azure_rm_virtualnetwork.py validate-modules:parameter-type-not-i
 plugins/modules/azure_rm_virtualnetwork_facts.py validate-modules:missing-module-utils-import
 plugins/modules/azure_rm_virtualnetwork_facts.py validate-modules:parameter-type-not-in-doc
 tests/utils/shippable/check_matrix.py replace-urlopen
+tests/utils/shippable/timing.py shebang
