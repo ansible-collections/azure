@@ -73,7 +73,7 @@ set +ux
 . ~/ansible-venv/bin/activate
 set -ux
 
-pip install ansible==2.9.0rc2
+pip install git+https://github.com/ansible/ansible.git@022335669cc1732939cc609f8dcdc5ad75a42439 --disable-pip-version-check
 
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
 mkdir -p "${TEST_DIR}"
