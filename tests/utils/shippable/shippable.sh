@@ -73,7 +73,7 @@ set +ux
 . ~/ansible-venv/bin/activate
 set -ux
 
-pip install git+https://github.com/ansible/ansible.git@022335669cc1732939cc609f8dcdc5ad75a42439 --disable-pip-version-check
+pip install git+https://github.com/ansible/ansible.git@d0a4f0fdbe3f54dd029430f0c943df4ec9fb5877 --disable-pip-version-check
 
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
 mkdir -p "${TEST_DIR}"
