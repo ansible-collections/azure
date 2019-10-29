@@ -4,7 +4,7 @@ This collection provides a series of Ansible modules and plugins for interacting
 
 ## Requirements
 
-- ansible version >=2.9
+- ansible version >= 2.9
 
 ## Installation
 
