@@ -4,10 +4,6 @@ plugins/module_utils/azure_rm_common_ext.py future-import-boilerplate
 plugins/module_utils/azure_rm_common_ext.py metaclass-boilerplate
 plugins/module_utils/azure_rm_common_rest.py future-import-boilerplate
 plugins/module_utils/azure_rm_common_rest.py metaclass-boilerplate
-plugins/modules/_azure.py ansible-doc!skip
-plugins/modules/_azure.py validate-modules:deprecation-mismatch
-plugins/modules/_azure.py validate-modules:missing-documentation
-plugins/modules/_azure.py validate-modules:missing-examples
 plugins/modules/azure_rm_deployment.py validate-modules:missing-module-utils-import
 plugins/modules/azure_rm_deployment.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_dnsrecordset.py validate-modules:doc-missing-type
