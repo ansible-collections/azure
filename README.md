@@ -62,6 +62,8 @@ For existing Ansible roles, please also reference the full namespace, collection
 
 ## Resource Supported
 
+### Modules
+
 - azure_rm_deployment - Create or destroy Azure Resource Manager template deployments
 - azure_rm_dnsrecordset - Create, delete and update DNS record sets and records
 - azure_rm_dnsrecordset_facts - Get DNS Record Set facts
@@ -80,6 +82,10 @@ For existing Ansible roles, please also reference the full namespace, collection
 - azure_rm_virtualmachine_facts - Get virtual machine facts
 - azure_rm_virtualnetwork - Manage Azure virtual networks
 - azure_rm_virtualnetwork_facts - Get virtual network facts
+
+### Plugins
+
+- azure_rm - Azure Resource Manager inventory plugin. Documentation [here](https://docs.ansible.com/ansible/latest/plugins/inventory/azure_rm.html) 
 
 ## Contributing
 
