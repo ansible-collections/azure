@@ -22,6 +22,7 @@ jobs:
     - task: ea576cd4-c61f-48f8-97e7-a3cb07b90a6f@2
       inputs:
         toolMajorVersion: 'V2'
+        suppressionsFile: 'CredScanSuppressions.json'
 
     - task: PostAnalysis@1
       inputs:
