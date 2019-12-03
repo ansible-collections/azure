@@ -105,7 +105,7 @@ EXAMPLES = '''
 # sample 'myazuresub.azure_rm.yaml'
 
 # required for all azure_rm inventory plugin configs
-plugin: azure_rm
+plugin: azure.azcollection.azure_rm
 
 # forces this plugin to use a CLI auth session instead of the automatic auth source selection (eg, prevents the
 # presence of 'ANSIBLE_AZURE_RM_X' environment variables from overriding CLI auth)
@@ -213,7 +213,7 @@ UrlAction = namedtuple('UrlAction', ['url', 'api_version', 'handler', 'handler_a
 # FUTURE: add Cacheable support once we have a sane serialization format
 class InventoryModule(BaseInventoryPlugin, Constructable):
 
-    NAME = 'azure_rm'
+    NAME = 'azure.azcollection.azure_rm'
 
     def __init__(self):
         super(InventoryModule, self).__init__()
