@@ -237,6 +237,7 @@ def nic_to_dict(nic):
     virtual_network = dict(
         resource_group=subnet_dict.get('resourceGroups'),
         name=subnet_dict.get('virtualNetworks')) if subnet_dict else None
+    # test
     return dict(
         id=nic.id,
         resource_group=azure_id_to_dict(nic.id).get('resourceGroups'),
