@@ -60,6 +60,17 @@ Or you can add full namepsace and collecton name in the `collections` element:
 
 For existing Ansible roles, please also reference the full namespace, collection name, and modules name which used in tasks instead of just modules name.
 
+### Plugins
+
+To use a pluign from Azure collection, please reference the full namespace, collection name, and plugins name that you want to use:
+
+```yaml
+plugin: azure.azcollection.azure_rm
+    include_vm_resource_groups:
+    - ansible-inventory-test-rg
+    auth_source: auto
+````
+
 ## Resource Supported
 
 ### Modules
