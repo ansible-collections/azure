@@ -9,7 +9,7 @@ namespace: azure
 name: azcollection
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 0.0.2
+version: 0.1.0
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -45,7 +45,7 @@ license_file:
 #dependencies: {}
 
 # The URL of the originating SCM repository
-repository: https://github.com/ansible/ansible_collections_azure
+repository: https://github.com/ansible-collections/ansible_collections_azure
 
 # The URL to any online docs
 #documentation: http://docs.example.com
@@ -54,4 +54,4 @@ repository: https://github.com/ansible/ansible_collections_azure
 homepage: https://azure.microsoft.com
 
 # The URL to the collection issue tracker
-issues: https://github.com/ansible/ansible_collections_azure/issues
+issues: https://github.com/ansible-collections/ansible_collections_azure/issues
