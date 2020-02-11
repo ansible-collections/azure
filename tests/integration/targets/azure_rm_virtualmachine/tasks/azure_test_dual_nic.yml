@@ -53,7 +53,7 @@
       - azure_vm.properties.storageProfile.osDisk.name == 'testosdiskxx'
 
 - name: Retrieve VM facts (filtering by name)
-  azure_rm_virtualmachine_facts:
+  azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
   register: vm_facts_results
@@ -69,7 +69,7 @@
       - vm_facts_results.vms[0].power_state != None
 
 - name: Retrieve facts by tags
-  azure_rm_virtualmachine_facts:
+  azure_rm_virtualmachine_info:
     tags:
       - abc:def
   register: facts_by_tags_results
@@ -112,7 +112,7 @@
     generalized: yes
 
 - name: Gather facts and check if machine is generalized
-  azure_rm_virtualmachine_facts:
+  azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
   register: generalized_output
