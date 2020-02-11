@@ -66,19 +66,19 @@
     state: absent
 
 - name: Query auto created NIC
-  azure_rm_networkinterface_facts:
+  azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}01"
   register: nic_result
 
 - name: Query auto created security group
-  azure_rm_securitygroup_facts:
+  azure_rm_securitygroup_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}01"
   register: nsg_result
 
 - name: Query auto created public IP
-  azure_rm_publicipaddress_facts:
+  azure_rm_publicipaddress_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}01"
   register: pip_result
