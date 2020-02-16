@@ -10,12 +10,21 @@ strategy:
   matrix:
     Python27:
       T: 'azure/2.7/1'
-  
 
 steps:
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '2.7'
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'SUBSCRIPTION_FULL_NAME'
+    scriptType: 'batch'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+        az group create -l eastus -n $(RESOURCE_GROUP)
+        az group create -l eastus -n $(RESOURCE_GROUP_SECONDARY)
+
 
 - script: tests/utils/ado/ado.sh $T
   env:
