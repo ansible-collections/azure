@@ -50,4 +50,4 @@ RESOURCE_GROUP:${RESOURCE_GROUP}
 RESOURCE_GROUP_SECONDARY:${RESOURCE_GROUP_SECONDARY}
 EOF
 
-ansible-test integration --color -v --retry-on-error 
+ansible-test integration --color -v --retry-on-error --allow-destructive
