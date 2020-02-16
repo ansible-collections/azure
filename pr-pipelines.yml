@@ -18,7 +18,7 @@ steps:
 
 - task: AzureCLI@2
   inputs:
-    azureSubscription: 'SUBSCRIPTION_FULL_NAME'
+    azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
     scriptType: 'batch'
     scriptLocation: 'inlineScript'
     inlineScript: |
@@ -38,3 +38,12 @@ steps:
     RESOURCE_GROUP: $(RESOURCE_GROUP)
     RESOURCE_GROUP_SECONDARY: $(RESOURCE_GROUP_SECONDARY)
   displayName: 'Test'
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
+    scriptType: 'batch'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+        az group delete -n $(RESOURCE_GROUP)
+        az group delete -n $(RESOURCE_GROUP_SECONDARY)
