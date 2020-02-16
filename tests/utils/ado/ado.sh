@@ -32,9 +32,6 @@ timeout=60
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
 
-#"tests/utils/shippable/check_matrix.py"
-#"tests/utils/shippable/${script}.sh" "${test}"
-
 ansible-test sanity --color -v --junit --docker
 
 cat <<EOF >> "${TEST_DIR}"/tests/integration/cloud-config-azure.ini
