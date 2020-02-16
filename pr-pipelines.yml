@@ -1,0 +1,31 @@
+trigger: none
+
+pr:
+- dev
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+strategy:
+  matrix:
+    Python27:
+      T: 'azure/2.7/1'
+  
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '2.7'
+
+- script: tests/utils/ado/ado.sh $T
+  env:
+    SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
+    REPO_FULL_NAME: $(Build.Repository.Name)
+    SHIPPABLE_BUILD_ID: $(Build.BuildId)
+    AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+    AZURE_SECRET: $(AZURE_SECRET)
+    AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+    AZURE_TENANT: $(AZURE_TENANT)
+    RESOURCE_GROUP: $(RESOURCE_GROUP)
+    RESOURCE_GROUP_SECONDARY: $(RESOURCE_GROUP_SECONDARY)
+  displayName: 'Test'
