@@ -40,7 +40,6 @@ steps:
   displayName: 'Test'
 
 - task: AzureCLI@2
-  condition: always()
   inputs:
     azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
     scriptType: 'bash'
