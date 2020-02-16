@@ -19,7 +19,7 @@ steps:
 - task: AzureCLI@2
   inputs:
     azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
-    scriptType: 'batch'
+    scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
         az group create -l eastus -n $(RESOURCE_GROUP)
@@ -42,7 +42,7 @@ steps:
 - task: AzureCLI@2
   inputs:
     azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
-    scriptType: 'batch'
+    scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
         az group delete -n $(RESOURCE_GROUP)
