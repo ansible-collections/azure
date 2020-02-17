@@ -7,7 +7,7 @@
   azure_rm_publicipaddress:
       resource_group: "{{ resource_group }}"
       name: "pip{{ rpfx }}"
-      state:  absent
+      state: absent
 
 - name: Create public ip
   azure_rm_publicipaddress:
@@ -104,7 +104,7 @@
   azure_rm_publicipaddress:
       resource_group: "{{ resource_group }}"
       name: "pip{{ rpfx }}"
-      state:  absent
+      state: absent
 
 - name: Gather facts for a public ip
   azure_rm_publicipaddress_info:
