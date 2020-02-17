@@ -61,9 +61,10 @@
       tags:
           - testing
           - foo:bar
+      register: infos
 
 - assert:
-      that: azure_publicipaddresses | length == 1
+      that: infos.publicipaddresses | length == 1
 
 - name: Purge all tags
   azure_rm_publicipaddress:
@@ -94,9 +95,10 @@
 - name: Gather facts for all public ips
   azure_rm_publicipaddress_info:
       resource_group: "{{ resource_group }}"
+  register: infos
 
 - assert:
-      that: azure_publicipaddresses | length > 0
+      that: infos.publicipaddresses | length > 0
 
 - name: Remove public ip
   azure_rm_publicipaddress:
@@ -108,6 +110,7 @@
   azure_rm_publicipaddress_info:
       resource_group: "{{ resource_group }}"
       name: "pip{{ rpfx }}"
+  register: infos
 
 - assert:
-      that: azure_publicipaddresses | length == 0
+      that: infos.publicipaddresses | length == 0
