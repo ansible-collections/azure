@@ -61,7 +61,7 @@
       tags:
           - testing
           - foo:bar
-      register: infos
+  register: infos
 
 - assert:
       that: infos.publicipaddresses | length == 1
