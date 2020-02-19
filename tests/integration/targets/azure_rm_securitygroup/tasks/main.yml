@@ -285,6 +285,11 @@
       name: "{{ sg_name1 }}"
       state: absent
 
+- name: List all existing security groups
+  azure_rm_securitygroup_info:
+      resource_group: "{{ resource_group }}"
+  register: output
+
 - name: Delete all security groups
   azure_rm_securitygroup:
       resource_group: "{{ resource_group }}"
