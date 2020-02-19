@@ -8,10 +8,12 @@ pool:
 
 strategy:
   matrix:
-    Python27:
+    Python27_1:
       python.version: '2.7'
-    Python36:
+      test.group: '1'
+    Python36_1:
       python.version: '3.6'
+      test.group: '1'
 
 steps:
 - task: UsePythonVersion@0
@@ -29,7 +31,7 @@ steps:
         az group create -l eastus -n $(RESOURCE_GROUP_SECONDARY)
 
 
-- script: tests/utils/ado/ado.sh $T
+- script: tests/utils/ado/ado.sh $(test.group)
   env:
     SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
     REPO_FULL_NAME: $(Build.Repository.Name)
