@@ -7,7 +7,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 jobs:
-  - job: create_resource_groups
+  - job: CreateResourceGroups
     steps:
       - task: AzureCLI@2
         inputs:
@@ -18,7 +18,8 @@ jobs:
               az group create -l eastus -n $(RESOURCE_GROUP)
               az group create -l eastus -n $(RESOURCE_GROUP_SECONDARY)
 
-  - job: run_tests
+  - job: RunTests
+    dependsOn: CreateResourceGroups 
     strategy:
       matrix:
         Python27_1:
@@ -49,7 +50,8 @@ jobs:
         RESOURCE_GROUP_SECONDARY: $(RESOURCE_GROUP_SECONDARY)
       displayName: 'Test'
 
-  - job: cleanup_resource_groups
+  - job: CleanupResourceGroups
+    dependsOn: RunTests
     condition: always()
     steps:
       - task: AzureCLI@2

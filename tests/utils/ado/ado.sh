@@ -37,13 +37,8 @@ timeout=60
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
 
-ansible-test sanity --color -v --junit --docker
-
 cat <<EOF >> "${TEST_DIR}"/tests/integration/cloud-config-azure.ini
 [default]
-# Provide either Service Principal or Active Directory credentials below.
-
-# Service Principal
 AZURE_CLIENT_ID:${AZURE_CLIENT_ID}
 AZURE_SECRET:${AZURE_SECRET}
 AZURE_SUBSCRIPTION_ID:${AZURE_SUBSCRIPTION_ID}
@@ -52,4 +47,9 @@ RESOURCE_GROUP:${RESOURCE_GROUP}
 RESOURCE_GROUP_SECONDARY:${RESOURCE_GROUP_SECONDARY}
 EOF
 
-ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
+if [ "sanity" = "${group}"]
+then
+    ansible-test sanity --color -v --junit --docker
+else
+    ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
+fi
