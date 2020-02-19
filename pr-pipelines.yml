@@ -6,50 +6,57 @@ pr:
 pool:
   vmImage: 'ubuntu-latest'
 
-strategy:
-  matrix:
-    Python27_1:
-      python.version: '2.7'
-      test.group: '1'
-    Python36_1:
-      python.version: '3.6'
-      test.group: '1'
+jobs:
+  - job: create_resource_groups
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+              az group create -l eastus -n $(RESOURCE_GROUP)
+              az group create -l eastus -n $(RESOURCE_GROUP_SECONDARY)
 
-steps:
-- task: UsePythonVersion@0
-  displayName: 'Use Python $(python.version)'
-  inputs:
-    versionSpec: '$(python.version)'
+  - job: run_tests
+    strategy:
+      matrix:
+        Python27_1:
+          python.version: '2.7'
+          test.group: '1'
+        Python36_1:
+          python.version: '3.6'
+          test.group: '1'
 
-- task: AzureCLI@2
-  inputs:
-    azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-        az group create -l eastus -n $(RESOURCE_GROUP)
-        az group create -l eastus -n $(RESOURCE_GROUP_SECONDARY)
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(python.version)'
+      inputs:
+        versionSpec: '$(python.version)'
 
 
-- script: tests/utils/ado/ado.sh $(test.group)
-  env:
-    SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
-    REPO_FULL_NAME: $(Build.Repository.Name)
-    SHIPPABLE_BUILD_ID: $(Build.BuildId)
-    AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-    AZURE_SECRET: $(AZURE_SECRET)
-    AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
-    AZURE_TENANT: $(AZURE_TENANT)
-    RESOURCE_GROUP: $(RESOURCE_GROUP)
-    RESOURCE_GROUP_SECONDARY: $(RESOURCE_GROUP_SECONDARY)
-  displayName: 'Test'
 
-- task: AzureCLI@2
-  condition: always()
-  inputs:
-    azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-        az group delete -n $(RESOURCE_GROUP) --yes --no-wait
-        az group delete -n $(RESOURCE_GROUP_SECONDARY) --yes --no-wait
+    - script: tests/utils/ado/ado.sh $(test.group)
+      env:
+        SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
+        REPO_FULL_NAME: $(Build.Repository.Name)
+        SHIPPABLE_BUILD_ID: $(Build.BuildId)
+        AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+        AZURE_SECRET: $(AZURE_SECRET)
+        AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+        AZURE_TENANT: $(AZURE_TENANT)
+        RESOURCE_GROUP: $(RESOURCE_GROUP)
+        RESOURCE_GROUP_SECONDARY: $(RESOURCE_GROUP_SECONDARY)
+      displayName: 'Test'
+
+  - job: cleanup_resource_groups
+    steps:
+      - task: AzureCLI@2
+        condition: always()
+        inputs:
+          azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+              az group delete -n $(RESOURCE_GROUP) --yes --no-wait
+              az group delete -n $(RESOURCE_GROUP_SECONDARY) --yes --no-wait
