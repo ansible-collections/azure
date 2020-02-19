@@ -25,9 +25,9 @@ jobs:
         Python27_1:
           python.version: '2.7'
           test.group: '1'
-        Python36_1:
+        Python36_2:
           python.version: '3.6'
-          test.group: '1'
+          test.group: '2'
 
     steps:
     - task: UsePythonVersion@0
