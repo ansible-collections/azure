@@ -47,7 +47,7 @@ RESOURCE_GROUP:${RESOURCE_GROUP}
 RESOURCE_GROUP_SECONDARY:${RESOURCE_GROUP_SECONDARY}
 EOF
 
-if [ "sanity" = "${group}"]
+if [ "sanity" = "${group}" ]
 then
     ansible-test sanity --color -v --junit --docker
 else
