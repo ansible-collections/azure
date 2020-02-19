@@ -58,7 +58,6 @@
 
 - assert:
     that:
-      - "azure_virtualnetworks | length == 1"
       - "facts.virtualnetworks | length == 1"
       - "facts.virtualnetworks[0].dns_servers | length == 2"
       - "facts.virtualnetworks[0].address_prefixes | length == 2"
@@ -69,17 +68,19 @@
     resource_group: "{{ resource_group }}"
     tags:
       - testing
+  register: facts
 
 - assert:
-    that: "azure_virtualnetworks | length >= 1"
+    that: "facts.virtualnetworks | length >= 1"
 
 - name: Gather facts by tags
   azure_rm_virtualnetwork_info:
     tags:
       - testing
+  register: facts
 
 - assert:
-    that: "azure_virtualnetworks | length >= 1"
+    that: "facts.virtualnetworks | length >= 1"
 
 - name: Should be idempotent
   azure_rm_virtualnetwork:
@@ -170,7 +171,6 @@
 
 - assert:
     that:
-      - azure_virtualnetworks | length == 1
       - facts.virtualnetworks | length == 1
       - "facts.virtualnetworks[0].subnets | length == 1"
 

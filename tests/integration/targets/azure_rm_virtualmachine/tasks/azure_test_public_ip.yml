@@ -252,19 +252,21 @@
   azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}"
     name: "{{ interface_name }}"
+  register: output
 
 - name: Ensure NIC was removed
   assert:
-    that: azure_networkinterfaces | length == 0
+    that: output.networkinterfaces | length == 0
 
 - name: Public IP should be gone
   azure_rm_publicipaddress_info:
     resource_group: "{{ resource_group }}"
     name: "{{ public_ip_name }}"
+  register: output
 
 - name: Ensure public IP was removed
   assert:
-    that: azure_publicipaddresses | length == 0
+    that: output.publicipaddresses | length == 0
 
 - name: Destroy NIC
   azure_rm_networkinterface:
