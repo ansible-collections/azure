@@ -2,6 +2,9 @@
 
 set -o pipefail -eux
 
+declare -a args
+group="${args[0]}"
+
 command -v python
 python -V
 
@@ -47,4 +50,4 @@ RESOURCE_GROUP:${RESOURCE_GROUP}
 RESOURCE_GROUP_SECONDARY:${RESOURCE_GROUP_SECONDARY}
 EOF
 
-ansible-test integration --color -v --retry-on-error --allow-destructive
+ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
