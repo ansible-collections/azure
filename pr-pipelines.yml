@@ -46,5 +46,5 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-        az group delete -n $(RESOURCE_GROUP) --yes
-        az group delete -n $(RESOURCE_GROUP_SECONDARY) --yes
+        az group delete -n $(RESOURCE_GROUP) --yes --no-wait
+        az group delete -n $(RESOURCE_GROUP_SECONDARY) --yes --no-wait
