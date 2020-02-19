@@ -3,6 +3,8 @@
 set -o pipefail -eux
 
 declare -a args
+IFS='/:' read -ra args <<< "$1"
+
 group="${args[0]}"
 
 command -v python

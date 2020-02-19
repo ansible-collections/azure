@@ -50,9 +50,9 @@ jobs:
       displayName: 'Test'
 
   - job: cleanup_resource_groups
+    condition: always()
     steps:
       - task: AzureCLI@2
-        condition: always()
         inputs:
           azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
           scriptType: 'bash'
