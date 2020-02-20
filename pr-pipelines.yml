@@ -31,12 +31,21 @@ jobs:
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
     strategy:
       matrix:
+        Python27_sanity:
+          python.version: '2.7'
+          test.key: 'sanity'
         Python27_1:
           python.version: '2.7'
-          test.group: '1'
-        Python36_2:
-          python.version: '3.6'
-          test.group: '2'
+          test.key: '1'
+        Python27_2:
+          python.version: '2.7'
+          test.key: '2'
+        Python27_5:
+          python.version: '2.7'
+          test.key: '5'
+        Python27_7:
+          python.version: '2.7'
+          test.key: '7'
 
     steps:
     - task: UsePythonVersion@0
@@ -49,7 +58,7 @@ jobs:
     - bash: |
         echo "Generate test resource group $TEST_RESOURCE_GROUP, $TEST_RESOURCE_GROUP_SECONDARY"
 
-    - script: tests/utils/ado/ado.sh $(test.group)
+    - script: tests/utils/ado/ado.sh $(test.key)
       env:
         SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
         REPO_FULL_NAME: $(Build.Repository.Name)
