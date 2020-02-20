@@ -241,7 +241,7 @@
           - name: AsgToAsg
             protocol: Tcp
             source_application_security_groups:
-                - "{{ asg1.id }}"
+                - "{{ asg_name1 }}"
             destination_application_security_groups:
                 - resource_group: "{{ resource_group_secondary }}"
                   name: "{{ asg_name2 }}"
