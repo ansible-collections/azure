@@ -221,7 +221,7 @@ EXAMPLES = '''
           ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAA...
         service_principal:
           client_id: "cf72ca99-f6b9-4004-b0e0-bee10c521948"
-          client_secret: "mySPNp@ssw0rd!"
+          client_secret: "Password123!"
         agent_pool_profiles:
           - name: default
             count: 5
