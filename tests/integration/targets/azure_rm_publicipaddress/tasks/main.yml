@@ -7,7 +7,7 @@
   azure_rm_publicipaddress:
       resource_group: "{{ resource_group }}"
       name: "pip{{ rpfx }}"
-      state:  absent
+      state: absent
 
 - name: Create public ip
   azure_rm_publicipaddress:
@@ -56,14 +56,15 @@
           - output.state.tags.delete == 'never'
 
 - name: Gather facts, filtering by tag
-  azure_rm_publicipaddress_facts:
+  azure_rm_publicipaddress_info:
       resource_group: "{{ resource_group }}"
       tags:
           - testing
           - foo:bar
+  register: infos
 
 - assert:
-      that: azure_publicipaddresses | length == 1
+      that: infos.publicipaddresses | length == 1
 
 - name: Purge all tags
   azure_rm_publicipaddress:
@@ -79,7 +80,7 @@
           - output.state.tags | length == 0
 
 - name: Gather facts for a public ip
-  azure_rm_publicipaddress_facts:
+  azure_rm_publicipaddress_info:
       resource_group: "{{ resource_group }}"
       name: "pip{{ rpfx }}"
   register: pip
@@ -92,22 +93,24 @@
       - pip.publicipaddresses[0].dns_settings.domain_name_label == domain_name
 
 - name: Gather facts for all public ips
-  azure_rm_publicipaddress_facts:
+  azure_rm_publicipaddress_info:
       resource_group: "{{ resource_group }}"
+  register: infos
 
 - assert:
-      that: azure_publicipaddresses | length > 0
+      that: infos.publicipaddresses | length > 0
 
 - name: Remove public ip
   azure_rm_publicipaddress:
       resource_group: "{{ resource_group }}"
       name: "pip{{ rpfx }}"
-      state:  absent
+      state: absent
 
 - name: Gather facts for a public ip
-  azure_rm_publicipaddress_facts:
+  azure_rm_publicipaddress_info:
       resource_group: "{{ resource_group }}"
       name: "pip{{ rpfx }}"
+  register: infos
 
 - assert:
-      that: azure_publicipaddresses | length == 0
+      that: infos.publicipaddresses | length == 0

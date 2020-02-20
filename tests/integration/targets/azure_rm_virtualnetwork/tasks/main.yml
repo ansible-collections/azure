@@ -49,7 +49,7 @@
     address_prefix_cidr: "10.1.0.0/24"
 
 - name: Gather facts by name, tags
-  azure_rm_virtualnetwork_facts:
+  azure_rm_virtualnetwork_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vnetname }}"
     tags:
@@ -58,28 +58,29 @@
 
 - assert:
     that:
-      - "azure_virtualnetworks | length == 1"
       - "facts.virtualnetworks | length == 1"
       - "facts.virtualnetworks[0].dns_servers | length == 2"
       - "facts.virtualnetworks[0].address_prefixes | length == 2"
       - "facts.virtualnetworks[0].subnets | length == 1"
 
 - name: Gather facts by resource group, tags
-  azure_rm_virtualnetwork_facts:
+  azure_rm_virtualnetwork_info:
     resource_group: "{{ resource_group }}"
     tags:
       - testing
+  register: facts
 
 - assert:
-    that: "azure_virtualnetworks | length >= 1"
+    that: "facts.virtualnetworks | length >= 1"
 
 - name: Gather facts by tags
-  azure_rm_virtualnetwork_facts:
+  azure_rm_virtualnetwork_info:
     tags:
       - testing
+  register: facts
 
 - assert:
-    that: "azure_virtualnetworks | length >= 1"
+    that: "facts.virtualnetworks | length >= 1"
 
 - name: Should be idempotent
   azure_rm_virtualnetwork:
@@ -163,14 +164,13 @@
     that: output.state['dns_servers'] is undefined
 
 - name: Gather facts
-  azure_rm_virtualnetwork_facts:
+  azure_rm_virtualnetwork_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vnetname }}"
   register: facts
 
 - assert:
     that:
-      - azure_virtualnetworks | length == 1
       - facts.virtualnetworks | length == 1
       - "facts.virtualnetworks[0].subnets | length == 1"
 

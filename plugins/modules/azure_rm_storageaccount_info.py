@@ -16,9 +16,9 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_storageaccount_facts
+module: azure_rm_storageaccount_info
 
-version_added: "2.1"
+version_added: "2.9"
 
 short_description: Get storage account facts
 
@@ -62,16 +62,16 @@ author:
 
 EXAMPLES = '''
     - name: Get facts for one account
-      azure_rm_storageaccount_facts:
+      azure_rm_storageaccount_info:
         resource_group: myResourceGroup
         name: clh0002
 
     - name: Get facts for all accounts in a resource group
-      azure_rm_storageaccount_facts:
+      azure_rm_storageaccount_info:
         resource_group: myResourceGroup
 
     - name: Get facts for all accounts by tags
-      azure_rm_storageaccount_facts:
+      azure_rm_storageaccount_info:
         tags:
           - testing
           - foo:bar
@@ -358,7 +358,7 @@ from ansible.module_utils._text import to_native
 AZURE_OBJECT_CLASS = 'StorageAccount'
 
 
-class AzureRMStorageAccountFacts(AzureRMModuleBase):
+class AzureRMStorageAccountInfo(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
@@ -371,7 +371,6 @@ class AzureRMStorageAccountFacts(AzureRMModuleBase):
 
         self.results = dict(
             changed=False,
-            ansible_facts=dict(azure_storageaccounts=[]),
             storageaccounts=[]
         )
 
@@ -381,11 +380,14 @@ class AzureRMStorageAccountFacts(AzureRMModuleBase):
         self.show_connection_string = None
         self.show_blob_cors = None
 
-        super(AzureRMStorageAccountFacts, self).__init__(self.module_arg_spec,
-                                                         supports_tags=False,
-                                                         facts_module=True)
+        super(AzureRMStorageAccountInfo, self).__init__(self.module_arg_spec,
+                                                        supports_tags=False,
+                                                        facts_module=True)
 
     def exec_module(self, **kwargs):
+        is_old_facts = self.module._name == 'azure_rm_storageaccount_facts'
+        if is_old_facts:
+            self.module.deprecate("The 'azure_rm_storageaccount_facts' module has been renamed to 'azure_rm_storageaccount_info'", version='2.13')
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
@@ -403,8 +405,12 @@ class AzureRMStorageAccountFacts(AzureRMModuleBase):
 
         filtered = self.filter_tag(results)
 
-        self.results['ansible_facts']['azure_storageaccounts'] = self.serialize(filtered)
-        self.results['ansible_facts']['storageaccounts'] = self.format_to_dict(filtered)
+        if is_old_facts:
+            self.results['ansible_facts'] = {
+                'azure_storageaccounts': self.serialize(filtered),
+                'storageaccounts': self.format_to_dict(filtered),
+            }
+        self.results['storageaccounts'] = self.format_to_dict(filtered)
         return self.results
 
     def get_account(self):
@@ -429,7 +435,7 @@ class AzureRMStorageAccountFacts(AzureRMModuleBase):
     def list_all(self):
         self.log('List all items')
         try:
-            response = self.storage_client.storage_accounts.list_by_resource_group(self.resource_group)
+            response = self.storage_client.storage_accounts.list()
         except Exception as exc:
             self.fail("Error listing all items - {0}".format(str(exc)))
 
@@ -544,7 +550,7 @@ class AzureRMStorageAccountFacts(AzureRMModuleBase):
 
 
 def main():
-    AzureRMStorageAccountFacts()
+    AzureRMStorageAccountInfo()
 
 
 if __name__ == '__main__':
