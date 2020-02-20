@@ -9,12 +9,15 @@ pool:
 strategy:
   matrix:
     Python27:
-      T: 'azure/2.7/1'
+      python.version: '2.7'
+    Python36:
+      python.version: '3.6'
 
 steps:
 - task: UsePythonVersion@0
+  displayName: 'Use Python $(python.version)'
   inputs:
-    versionSpec: '2.7'
+    versionSpec: '$(python.version)'
 
 - task: AzureCLI@2
   inputs:
@@ -46,5 +49,5 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-        az group delete -n $(RESOURCE_GROUP) --yes
-        az group delete -n $(RESOURCE_GROUP_SECONDARY) --yes
+        az group delete -n $(RESOURCE_GROUP) --yes --no-wait
+        az group delete -n $(RESOURCE_GROUP_SECONDARY) --yes --no-wait
