@@ -204,11 +204,9 @@ class AzureRMWebhooks(AzureRMModuleBase):
         old_response = None
         response = None
 
-        self.mgmt_client = self.get_mgmt_svc_client(
-                ContainerRegistryManagementClient,
-                base_url=self._cloud_environment.endpoints.resource_manager,
-                api_version='2017-10-01'
-            )
+        self.mgmt_client = self.get_mgmt_svc_client(ContainerRegistryManagementClient,
+                                                    base_url=self._cloud_environment.endpoints.resource_manager,
+                                                    api_version='2017-10-01')
 
         resource_group = self.get_resource_group(self.resource_group)
 
@@ -338,6 +336,7 @@ class AzureRMWebhooks(AzureRMModuleBase):
 def main():
     """Main execution"""
     AzureRMWebhooks()
+
 
 if __name__ == '__main__':
     main()
