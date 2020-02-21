@@ -40,9 +40,15 @@ jobs:
         Python27_2:
           python.version: '2.7'
           test.key: '2'
+        Python27_4:
+          python.version: '2.7'
+          test.key: '4'
         Python27_5:
           python.version: '2.7'
           test.key: '5'
+        Python27_6:
+          python.version: '2.7'
+          test.key: '6'
         Python27_7:
           python.version: '2.7'
           test.key: '7'
