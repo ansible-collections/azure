@@ -27,12 +27,12 @@ options:
         type: str
     name:
         description:
-            - secret name. 
+            - secret name.
         required: True
         type: str
     version:
         description:
-            - secret version.       
+            - secret version.
         default: current (latest)
         type: str
 
