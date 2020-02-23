@@ -5,7 +5,7 @@
 - name: Create virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
-    name: testVnet
+    name: testVnet1
     address_prefixes: "10.0.0.0/16"
 
 - name: Add subnet
@@ -13,7 +13,7 @@
     resource_group: "{{ resource_group }}"
     name: testSubnet
     address_prefix: "10.0.1.0/24"
-    virtual_network: testVnet
+    virtual_network: testVnet1
 
 - name: Create public IP address
   azure_rm_publicipaddress:
@@ -37,7 +37,7 @@
   azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: testNIC
-    virtual_network: testVnet
+    virtual_network: testVnet1
     subnet: testSubnet
     public_ip_name: testPublicIP
     security_group_name: testNetworkSecurityGroup
@@ -176,6 +176,6 @@
 - name: Delete virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
-    name: testVnet
+    name: testVnet1
     state: absent
     address_prefixes: "10.0.0.0/16"
