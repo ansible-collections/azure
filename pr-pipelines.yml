@@ -40,6 +40,9 @@ jobs:
         Python27_2:
           python.version: '2.7'
           test.key: '2'
+        Python27_3:
+          python.version: '2.7'
+          test.key: '3'
         Python27_4:
           python.version: '2.7'
           test.key: '4'
@@ -52,6 +55,9 @@ jobs:
         Python27_7:
           python.version: '2.7'
           test.key: '7'
+        Python27_9:
+          python.version: '2.7'
+          test.key: '9'
 
     steps:
     - task: UsePythonVersion@0
