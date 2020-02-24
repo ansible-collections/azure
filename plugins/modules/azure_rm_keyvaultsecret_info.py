@@ -164,7 +164,7 @@ keyvaults:
                     sample: Recoverable+Purgeable
 '''
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from azure.keyvault import KeyVaultClient, KeyVaultId, KeyVaultAuthentication
