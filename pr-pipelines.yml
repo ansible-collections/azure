@@ -4,7 +4,7 @@ pr:
 - dev
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'ubuntu-18.04'
 
 jobs:
   - job: CreateResourceGroups
@@ -65,23 +65,16 @@ jobs:
       inputs:
         versionSpec: '$(python.version)'
 
-
-
-    - bash: |
-        echo "Generate test resource group $TEST_RESOURCE_GROUP, $TEST_RESOURCE_GROUP_SECONDARY"
-
     - script: tests/utils/ado/ado.sh $(test.key)
       env:
         SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
-        REPO_FULL_NAME: $(Build.Repository.Name)
-        SHIPPABLE_BUILD_ID: $(Build.BuildId)
         AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
         AZURE_SECRET: $(AZURE_SECRET)
         AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
         AZURE_TENANT: $(AZURE_TENANT)
         RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
         RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
-      displayName: 'Test'
+      displayName: 'Running Tests'
 
   - job: CleanupResourceGroups
     dependsOn: 
