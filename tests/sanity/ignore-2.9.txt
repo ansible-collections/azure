@@ -246,5 +246,6 @@ plugins/modules/azure_rm_devtestlabschedule.py validate-modules:parameter-type-n
 plugins/modules/azure_rm_hdinsightcluster_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_loadbalancer_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_loganalyticsworkspace_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_cdnprofile_info.py validate-modules:parameter-type-not-in-doc
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang
