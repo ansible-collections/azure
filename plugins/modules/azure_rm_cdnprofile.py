@@ -83,6 +83,7 @@ id:
             id: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourcegroups/myResourceGroup/providers/Microsoft.Cdn/profiles/myCDN
 '''
 from ansible.module_utils.azure_rm_common import AzureRMModuleBase
+import uuid
 
 try:
     from azure.mgmt.cdn.models import Profile, Sku, ErrorResponseException
@@ -222,7 +223,6 @@ class AzureRMCdnprofile(AzureRMModuleBase):
             tags=self.tags
         )
 
-        import uuid
         xid = str(uuid.uuid1())
 
         try:

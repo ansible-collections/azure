@@ -156,6 +156,7 @@ plugins/modules/azure_rm_webappslot.py validate-modules:parameter-type-not-in-do
 plugins/modules/azure_rm_webappslot.py validate-modules:missing-module-utils-import
 plugins/modules/azure_rm_autoscale.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_autoscale.py validate-modules:undocumented-parameter
+plugins/modules/azure_rm_autoscale_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_cdnendpoint.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_cosmosdbaccount.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_cosmosdbaccount.py validate-modules:undocumented-parameter
@@ -233,5 +234,17 @@ plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:parameter-typ
 plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:doc-choices-do-not-match-spec
 plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:doc-default-does-not-match-spec
 plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:doc-missing-type
+plugins/modules/azure_rm_azurefirewall.py validate-modules:missing-suboption-docs
+plugins/modules/azure_rm_azurefirewall.py validate-modules:undocumented-parameter
+plugins/modules/azure_rm_azurefirewall.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_batchaccount.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_cdnendpoint_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_cdnprofile.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_cosmosdbaccount.py validate-modules:nonexistent-parameter-documented
+plugins/modules/azure_rm_cosmosdbaccount_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_devtestlabschedule.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_hdinsightcluster_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_loadbalancer_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_loganalyticsworkspace_info.py validate-modules:parameter-type-not-in-doc
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang
