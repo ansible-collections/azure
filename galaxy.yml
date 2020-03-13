@@ -45,7 +45,7 @@ license_file:
 #dependencies: {}
 
 # The URL of the originating SCM repository
-repository: https://github.com/ansible-collections/ansible_collections_azure
+repository: https://github.com/ansible-collections/azure
 
 # The URL to any online docs
 #documentation: http://docs.example.com
@@ -54,4 +54,4 @@ repository: https://github.com/ansible-collections/ansible_collections_azure
 homepage: https://azure.microsoft.com
 
 # The URL to the collection issue tracker
-issues: https://github.com/ansible-collections/ansible_collections_azure/issues
+issues: https://github.com/ansible-collections/azure/issues
