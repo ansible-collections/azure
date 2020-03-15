@@ -305,19 +305,19 @@ accounts:
                 - Primary master key.
             returned: when requested
             type: str
-            sample: UIWoYD4YaD4LxW6k3Jy69qcHDMLX4aSttECQkEcwWF1RflLd6crWSGJs0R9kJwujehtfLGeQx4ISVSJfTpJkYw==
+            sample: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         primary_readonly_master_key:
             description:
                 - Primary master key.
             returned: when requested
             type: str
-            sample: UIWoYD4YaD4LxW6k3Jy69qcHDMLX4aSttECQkEcwWF1RflLd6crWSGJs0R9kJwujehtfLGeQx4ISVSJfTpJkYw==
+            sample: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         secondary_readonly_master_key:
             description:
                 - Primary master key.
             returned: when requested
             type: str
-            sample: UIWoYD4YaD4LxW6k3Jy69qcHDMLX4aSttECQkEcwWF1RflLd6crWSGJs0R9kJwujehtfLGeQx4ISVSJfTpJkYw==
+            sample: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         connection_strings:
             description:
                 - List of connection strings.
@@ -335,8 +335,7 @@ accounts:
                         - Connection string.
                     type: str
                     returned: always
-                    sample: "AccountEndpoint=https://testaccount.documents.azure.com:443/;AccountKey=fSEjathnk6ZeBTrXkud9j5kfhtSEQ
-                             q3dpJxJga76h9BZkK2BJJrDzSO6DDn6yKads017OZBZ1YZWyq1cW4iuvA=="
+                    sample: "AccountEndpoint=https://testaccount.documents.azure.com:443/;AccountKey=xxxxx"
         tags:
             description:
                 - Tags assigned to the resource. Dictionary of "string":"string" pairs.

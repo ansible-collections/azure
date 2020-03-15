@@ -126,8 +126,8 @@ shared_keys:
     type: dict
     returned: success
     example: {
-                'primarySharedKey': 'BozLY1JnZbxu0jWUQSY8iRPEM8ObmpP8rW+8bUl3+HpDJI+n689SxXgTgU7k1qdxo/WugRLxechxbolAfHM5uA==',
-                'secondarySharedKey': '7tDt5W0JBrCQKtQA3igfFltLSzJeyr9LmuT+B/ibzd8cdC1neZ1ePOQLBx5NUzc0q2VUIK0cLhWNyFvo/hT8Ww=='
+                'primarySharedKey': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+                'secondarySharedKey': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
               }
 usages:
     description:
