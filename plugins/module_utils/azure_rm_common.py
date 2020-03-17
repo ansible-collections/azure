@@ -88,14 +88,67 @@ AZURE_API_PROFILES = {
         'WebSiteManagementClient': '2018-02-01',
         'PostgreSQLManagementClient': '2017-12-01',
         'MySQLManagementClient': '2017-12-01',
-        'MariaDBManagementClient': '2019-03-01'
+        'MariaDBManagementClient': '2019-03-01',
+        'ManagementLockClient': '2016-09-01'
     },
-
+    '2019-03-01-hybrid': {
+        'StorageManagementClient': '2017-10-01',
+        'NetworkManagementClient': '2017-10-01',
+        'ComputeManagementClient': SDKProfile('2017-12-01', {
+            'resource_skus': '2017-09-01',
+            'disks': '2017-03-30',
+            'snapshots': '2017-03-30'
+        }),
+        'ManagementLinkClient': '2016-09-01',
+        'ManagementLockClient': '2016-09-01',
+        'PolicyClient': '2016-12-01',
+        'ResourceManagementClient': '2018-05-01',
+        'SubscriptionClient': '2016-06-01',
+        'DnsManagementClient': '2016-04-01',
+        'KeyVaultManagementClient': '2016-10-01',
+        'AuthorizationManagementClient': SDKProfile('2015-07-01', {
+            'classic_administrators': '2015-06-01',
+            'policy_assignments': '2016-12-01',
+            'policy_definitions': '2016-12-01'
+        }),
+        'KeyVaultClient': '2016-10-01',
+        'azure.multiapi.storage': '2017-11-09',
+        'azure.multiapi.cosmosdb': '2017-04-17'
+    },
+    '2018-03-01-hybrid': {
+        'StorageManagementClient': '2016-01-01',
+        'NetworkManagementClient': '2017-10-01',
+        'ComputeManagementClient': SDKProfile('2017-03-30'),
+        'ManagementLinkClient': '2016-09-01',
+        'ManagementLockClient': '2016-09-01',
+        'PolicyClient': '2016-12-01',
+        'ResourceManagementClient': '2018-02-01',
+        'SubscriptionClient': '2016-06-01',
+        'DnsManagementClient': '2016-04-01',
+        'KeyVaultManagementClient': '2016-10-01',
+        'AuthorizationManagementClient': SDKProfile('2015-07-01', {
+            'classic_administrators': '2015-06-01'
+        }),
+        'KeyVaultClient': '2016-10-01',
+        'azure.multiapi.storage': '2017-04-17',
+        'azure.multiapi.cosmosdb': '2017-04-17'
+    },
     '2017-03-09-profile': {
-        'ComputeManagementClient': '2016-03-30',
+        'StorageManagementClient': '2016-01-01',
         'NetworkManagementClient': '2015-06-15',
+        'ComputeManagementClient': SDKProfile('2016-03-30'),
+        'ManagementLinkClient': '2016-09-01',
+        'ManagementLockClient': '2015-01-01',
+        'PolicyClient': '2015-10-01-preview',
         'ResourceManagementClient': '2016-02-01',
-        'StorageManagementClient': '2016-01-01'
+        'SubscriptionClient': '2016-06-01',
+        'DnsManagementClient': '2016-04-01',
+        'KeyVaultManagementClient': '2016-10-01',
+        'AuthorizationManagementClient': SDKProfile('2015-07-01', {
+            'classic_administrators': '2015-06-01'
+        }),
+        'KeyVaultClient': '2016-10-01',
+        'azure.multiapi.storage': '2015-04-05'
     }
 }
 
@@ -882,7 +935,7 @@ class AzureRMModuleBase(object):
         if not self._network_client:
             self._network_client = self.get_mgmt_svc_client(NetworkManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2018-08-01')
+                                                            api_version='2019-06-01')
         return self._network_client
 
     @property
@@ -910,13 +963,13 @@ class AzureRMModuleBase(object):
         if not self._compute_client:
             self._compute_client = self.get_mgmt_svc_client(ComputeManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2018-06-01')
+                                                            api_version='2019-07-01')
         return self._compute_client
 
     @property
     def compute_models(self):
         self.log("Getting compute models")
-        return ComputeManagementClient.models("2018-06-01")
+        return ComputeManagementClient.models("2019-07-01")
 
     @property
     def dns_client(self):
