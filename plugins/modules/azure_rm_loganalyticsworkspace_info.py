@@ -112,7 +112,7 @@ shared_keys:
     type: dict
     returned: success
     example: {
-                'primarySharedKey': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+                'primarySharedKey': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
                 'secondarySharedKey': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
               }
 usages:
