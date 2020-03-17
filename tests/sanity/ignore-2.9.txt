@@ -247,6 +247,9 @@ plugins/modules/azure_rm_cdnprofile_info.py validate-modules:parameter-type-not-
 plugins/modules/azure_rm_automationaccount.py validate-modules:missing-module-utils-import
 plugins/modules/azure_rm_automationaccount_info.py validate-modules:missing-module-utils-import
 plugins/modules/azure_rm_azurefirewall.py validate-modules:missing-module-utils-import
+plugins/modules/azure_rm_azurefirewall.py validate-modules:missing-suboption-docs
+plugins/modules/azure_rm_azurefirewall.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_azurefirewall.py validate-modules:undocumented-parameter
 plugins/modules/azure_rm_azurefirewall_info.py validate-modules:missing-module-utils-import
 plugins/modules/azure_rm_cdnendpoint_info.py validate-modules:missing-module-utils-import
 plugins/modules/azure_rm_cdnprofile.py validate-modules:missing-module-utils-import
