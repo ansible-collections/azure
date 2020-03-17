@@ -299,7 +299,7 @@ accounts:
                 - Primary master key.
             returned: when requested
             type: str
-            sample: UIWoYD4YaD4LxW6k3Jy69qcHDMLX4aSttECQkEcwWF1RflLd6crWSGJs0R9kJwujehtfLGeQx4ISVSJfTpJkYw==
+            sample: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         secondary_master_key:
             description:
                 - Primary master key.
