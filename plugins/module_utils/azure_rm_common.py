@@ -64,6 +64,7 @@ class SDKProfile(object):  # pylint: disable=too-few-public-methods
         """
         self.profile = profile if profile is not None else {}
         self.profile[None] = default_api_version
+        self.profileTag = 'test'
 
     @property
     def default_api_version(self):
