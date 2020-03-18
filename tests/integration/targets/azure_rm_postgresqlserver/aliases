@@ -1,5 +1,6 @@
 cloud/azure
 destructive
+unsupported
 shippable/azure/group11
 azure_rm_postgresqlserver_facts
 azure_rm_postgresqldatabase
