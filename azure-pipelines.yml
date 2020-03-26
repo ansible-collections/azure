@@ -33,7 +33,8 @@ jobs:
         APIScan: false
         BinSkim: false
         CodesignValidation: false
-        CredScan: true
+        CredScan: false 
+        #CredScan: true
         FortifySCA: false
         FxCop: false
         ModernCop: false
