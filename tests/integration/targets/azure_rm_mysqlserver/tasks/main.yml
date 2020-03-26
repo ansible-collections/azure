@@ -35,7 +35,7 @@
     version: 5.6
     enforce_ssl: True
     admin_username: testuser
-    admin_password: Password1234!
+    admin_password: Password123!
   register: output
 - name: Assert the resource instance is well created
   assert:
@@ -55,7 +55,7 @@
     version: 5.6
     enforce_ssl: True
     admin_username: zimxyz
-    admin_password: Password12345!!
+    admin_password: Password123!
   register: output
 - name: Assert the state has not changed
   assert:
@@ -107,7 +107,7 @@
     version: 5.6
     enforce_ssl: True
     admin_username: zimxyz
-    admin_password: Testpasswordxyz12!
+    admin_password: Password123!
     tags:
       aaa: bbb
 
@@ -123,7 +123,7 @@
     version: 5.6
     enforce_ssl: True
     admin_username: zimxyz
-    admin_password: Testpasswordxyz12!
+    admin_password: Password123!
     tags:
       ccc: ddd
 
