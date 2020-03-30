@@ -113,26 +113,26 @@ keys:
             returned: Successed
             type: str
             sample: "Endpoint=sb://nsb57dc95979.servicebus.windows.net/;SharedAccessKeyName=testpolicy;
-                    SharedAccessKey=r+HD3es/9aOOq0XjQtkx5KXROH1MIHDs0WxCgR23gMc=;EntityPath=topicb57dc95979"
+                    SharedAccessKey=xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         primary_key:
             description:
                 - Primary key.
             returned: Successed
             type: str
-            sample: "r+HD3es/9aOOq0XjQtkx5KXROH1MIHDs0WxCgR23gMc="
+            sample: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         secondary_key:
             description:
                 - Secondary key.
             returned: Successed
             type: str
-            sample: "/EcGztJBv72VD0Dy14bdsxi30rl+pSZMtKcs4KV3JWU="
+            sample: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         secondary_connection_string:
             description:
                 - Secondary connection string.
             returned: Successed
             type: str
             sample: "Endpoint=sb://nsb57dc95979.servicebus.windows.net/;SharedAccessKeyName=testpolicy;
-                    SharedAccessKey=/EcGztJBv72VD0Dy14bdsxi30rl+pSZMtKcs4KV3JWU=;EntityPath=topicb57dc95979"
+                    SharedAccessKey=xxxxxxxxxxxxxxxxxxxxxxxxx"
 name:
     description:
         - Name of the SAS policy.
