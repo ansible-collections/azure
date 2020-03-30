@@ -1,0 +1,4 @@
+cloud/azure
+shippable/azure/group14
+destructive
+azure_rm_autoscale
