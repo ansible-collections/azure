@@ -232,7 +232,7 @@ state:
         "traffic_routing_method": "Priority"
         "type": "Microsoft.Network/trafficManagerProfiles"
 '''
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from msrestazure.azure_exceptions import CloudError
