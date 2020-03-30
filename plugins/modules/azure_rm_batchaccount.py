@@ -114,8 +114,8 @@ account_endpoint:
 '''
 
 import time
-from ansible.module_utils.azure_rm_common import normalize_location_name
-from ansible.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import normalize_location_name
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
