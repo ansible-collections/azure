@@ -82,7 +82,7 @@ id:
     example:
             id: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourcegroups/myResourceGroup/providers/Microsoft.Cdn/profiles/myCDN
 '''
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 import uuid
 
 try:
