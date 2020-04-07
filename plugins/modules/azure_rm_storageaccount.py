@@ -67,11 +67,14 @@ options:
     kind:
         description:
             - The kind of storage.
+            - The C(FileStorage) and (BlockBlobStorage) only used when I(account_type=Premium_LRS).
         default: 'Storage'
         choices:
             - Storage
             - StorageV2
             - BlobStorage
+            - BlockBlobStorage
+            - FileStorage
         version_added: "2.2"
     access_tier:
         description:
@@ -150,6 +153,15 @@ EXAMPLES = '''
         tags:
           testing: testing
           delete: on-exit
+
+    - name: Create an account with kind of FileStorage
+      azure_rm_storageaccount:
+        resource_group: myResourceGroup
+        name: c1h0002
+        type: Premium_LRS
+        kind: FileStorage
+        tags:
+          testing: testing
 
     - name: create an account with blob CORS
       azure_rm_storageaccount:
@@ -347,7 +359,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             state=dict(default='present', choices=['present', 'absent']),
             force_delete_nonempty=dict(type='bool', default=False, aliases=['force']),
             tags=dict(type='dict'),
-            kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage']),
+            kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
             access_tier=dict(type='str', choices=['Hot', 'Cool']),
             https_only=dict(type='bool', default=False),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict')
@@ -395,6 +407,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 self.fail("Parameter error: expecting custom_domain to have a use_sub_domain "
                           "attribute of type boolean.")
 
+        if self.kind in ['FileStorage', 'BlockBlobStorage', ] and self.account_type != 'Premium_LRS':
+            self.fail("Parameter error: Storage account with {0} kind require account type is Premium_LRS".format(self.kind))
         self.account_dict = self.get_account()
 
         if self.state == 'present' and self.account_dict and \
