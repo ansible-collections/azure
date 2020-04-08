@@ -55,7 +55,7 @@ EXAMPLES = '''
     - name: Get Role Definition by name
       azure_rm_roledefinition_info:
         scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
-        name: myRoleDefinition
+        role_name: myRoleDefinition
 '''
 
 RETURN = '''
