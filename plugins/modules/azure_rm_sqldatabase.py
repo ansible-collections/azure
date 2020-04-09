@@ -196,7 +196,7 @@ status:
 '''
 
 import time
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -389,6 +389,7 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 update_tags, newtags = self.update_tags(old_response.get('tags', dict()))
                 if update_tags:
                     self.tags = newtags
+                    self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.log("Need to Create / Update the SQL Database instance")
