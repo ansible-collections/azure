@@ -527,7 +527,7 @@ class AzureRMModuleBase(object):
                 tag_value = json_tag[tag_key]
             except:
                 if ':' in tag:
-                    tag_key, tag_value = tag.split(':')
+                    tag_key, tag_value = tag.split(':',1)
             if tag_value and obj_tags.get(tag_key) == tag_value:
                 matches += 1
             elif not tag_value and obj_tags.get(tag_key):
