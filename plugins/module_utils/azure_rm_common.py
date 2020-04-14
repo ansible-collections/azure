@@ -523,7 +523,7 @@ class AzureRMModuleBase(object):
             tag_value = None
             try:
                 json_tag = json.loads(tag)
-                tag_key = json_tag.keys()[0]
+                tag_key = list(json_tag.keys())[0]
                 tag_value = json_tag[tag_key]
             except:
                 if ':' in tag:
