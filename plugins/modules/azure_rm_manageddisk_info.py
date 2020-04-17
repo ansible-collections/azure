@@ -176,6 +176,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
         super(AzureRMManagedDiskInfo, self).__init__(
             derived_arg_spec=self.module_arg_spec,
             supports_check_mode=True,
+            facts_module=True,
             supports_tags=True)
 
     def exec_module(self, **kwargs):
@@ -228,7 +229,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
 
         results = []
         for item in response:
-            if self.has_tags(item.tags, self.tags):
+            if self.has_tags(item.tags, eval(self.tags)):
                 results.append(managed_disk_to_dict(item))
         return results
 

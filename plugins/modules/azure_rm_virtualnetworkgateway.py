@@ -101,6 +101,9 @@ options:
             - VpnGw1
             - VpnGw2
             - VpnGw3
+            - Standard
+            - Basic
+            - HighPerformance
     bgp_settings:
         description:
             - Virtual network gateway's BGP speaker settings.
@@ -171,7 +174,7 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 
@@ -234,7 +237,7 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
             gateway_type=dict(type='str', default='vpn', choices=['vpn', 'express_route']),
             vpn_type=dict(type='str', default='route_based', choices=['route_based', 'policy_based']),
             enable_bgp=dict(type='bool', default=False),
-            sku=dict(default='VpnGw1', choices=['VpnGw1', 'VpnGw2', 'VpnGw3']),
+            sku=dict(default='VpnGw1', choices=['VpnGw1', 'VpnGw2', 'VpnGw3', 'Standard', 'Basic', 'HighPerformance']),
             bgp_settings=dict(type='dict', options=bgp_spec),
             virtual_network=dict(type='raw', aliases=['virtual_network_name'])
         )

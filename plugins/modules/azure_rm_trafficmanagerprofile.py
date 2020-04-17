@@ -155,7 +155,7 @@ endpoints:
              nalEndpoints/e1"
             ]
 '''
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase, normalize_location_name
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, normalize_location_name
 
 try:
     from msrestazure.azure_exceptions import CloudError
