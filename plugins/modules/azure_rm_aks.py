@@ -77,6 +77,26 @@ options:
             os_disk_size_gb:
                 description:
                     - Size of the OS disk.
+            enable_auto_scaling:
+                description:
+                    - To enable auto-scaler.
+                type: bool
+            max_count:
+                description:
+                    - Maximum number of nodes for auto-scaling.
+                type: int
+            min_count:
+                description:
+                    - Minmum number of nodes for auto-scaling.
+                type: int
+            type:
+                description:
+                    - AgentPoolType represents types of an agent pool.
+                    - Possible values include C(VirtualMachineScaleSets) and C(AvailabilitySet).
+                choice:
+                    - 'VirtualMachineScaleSets'
+                    - 'AvailabilitySet'
+                type: str
     service_principal:
         description:
             - The service principal suboptions.
@@ -209,6 +229,29 @@ author:
 '''
 
 EXAMPLES = '''
+    - name: Create an AKS instance
+      azure_rm_aks:
+         name: myAKS
+         resource_group: myResourceGroup
+         location: eastus
+         dns_prefix: akstest
+         kubernetes_version: 1.14.6
+         linux_profile:
+           admin_username: azureuser
+           ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAA...
+         service_principal:
+           client_id: "cf72ca99-f6b9-4004-b0e0-bee10c521948"
+           client_secret: "Password123!
+         agent_pool_profiles:
+           - name: default
+             count: 1
+             vm_size: Standard_DS1_v2
+             enable_auto_scaling: True
+             type: VirtualMachineScaleSets
+             max_count: 3
+             min_count: 1
+             enable_rbac: yes
+
     - name: Create a managed Azure Container Services (AKS) instance
       azure_rm_aks:
         name: myAKS
@@ -366,9 +409,12 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         vm_size=profile.vm_size,
         name=profile.name,
         os_disk_size_gb=profile.os_disk_size_gb,
-        storage_profile=profile.storage_profile,
         vnet_subnet_id=profile.vnet_subnet_id,
-        os_type=profile.os_type
+        os_type=profile.os_type,
+        type=profile.type,
+        enable_auto_scaling=profile.enable_auto_scaling,
+        max_count=profile.max_count,
+        min_count=proflie.min_count
     ) for profile in agentpoolprofiles] if agentpoolprofiles else None
 
 
@@ -418,7 +464,11 @@ agent_pool_profile_spec = dict(
     storage_profiles=dict(type='str', choices=[
                           'StorageAccount', 'ManagedDisks']),
     vnet_subnet_id=dict(type='str'),
-    os_type=dict(type='str', choices=['Linux', 'Windows'])
+    os_type=dict(type='str', choices=['Linux', 'Windows']),
+    type=dict(type='str', choice=['VirtualMachineScaleSets', 'AvailabilitySet']),
+    enable_auto_scaling=dict(type='bool'),
+    max_count=dict(type='int'),
+    min_count=dict(type='int')
 )
 
 
