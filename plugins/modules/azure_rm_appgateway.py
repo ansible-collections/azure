@@ -739,7 +739,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             item['http_listener'] = {'id': id}
                         if 'protocol' in item:
                             item['protocol'] = _snake_to_camel(item['protocol'], True)
-                        if 'rule_type' in ev:
+                        if 'rule_type' in item:
                             item['rule_type'] = _snake_to_camel(item['rule_type'], True)
                         if 'redirect_configuration' in item:
                             id = redirect_configuration_id(self.subscription_id,
