@@ -217,6 +217,10 @@ options:
                         description:
                             - Subnet associated to the cluster.
         version_added: "2.8"
+    node_resource_group:
+        description:
+            - Name of the resource group containing agent pool nodes.
+        type: str
 
 extends_documentation_fragment:
     - azure
@@ -545,7 +549,10 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             addon=dict(
                 type='dict',
                 options=create_addon_profiles_spec()
-            )
+            ),
+            node_resource_group=dict(
+                type='str'
+                )
         )
 
         self.resource_group = None
@@ -562,6 +569,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         self.network_profile = None
         self.aad_profile = None
         self.addon = None
+        self.node_resource_group = None
 
         required_if = [
             ('state', 'present', [
