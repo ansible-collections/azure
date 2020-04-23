@@ -79,7 +79,7 @@ options:
                     - Size of the OS disk.
             enable_auto_scaling:
                 description:
-                    - To enable auto-scaler.
+                    - To enable auto-scaling.
                 type: bool
             max_count:
                 description:
@@ -592,6 +592,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         resource_group = None
         to_be_updated = False
         update_tags = False
+        skip_scaling_update = False
 
         resource_group = self.get_resource_group(self.resource_group)
         if not self.location:
@@ -688,10 +689,15 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                             if profile_result['name'] == profile_self['name']:
                                 matched = True
                                 os_disk_size_gb = profile_self.get('os_disk_size_gb') or profile_result['os_disk_size_gb']
-                                if profile_result['count'] != profile_self['count'] \
+                                if profile_result['enable_auto_scaling']:
+                                    skip_scaling_update = True
+                                elif profile_result['count'] != profile_self['count'] \
                                         or profile_result['vm_size'] != profile_self['vm_size'] \
                                         or profile_result['os_disk_size_gb'] != os_disk_size_gb \
-                                        or profile_result['vnet_subnet_id'] != profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id']):
+                                        or profile_result['vnet_subnet_id'] != profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id']) \
+                                        or profile_result['type'] != profile_self['type'] \
+                                        or profile_result['max_count'] != profile_self['max_count'] \
+                                        or profile_result['min_count'] != profile_self['min_count'] :
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
                         if not matched:
@@ -702,8 +708,12 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                 self.log("Need to Create / Update the AKS instance")
 
                 if not self.check_mode:
-                    self.results = self.create_update_aks()
-                    self.log("Creation / Update done")
+                    if skip_scaling_update:
+                        self.results = self.update_scaling_aks()
+                        self.log("Creation / Update enable_auto_scaling done")
+                    else:
+                        self.results = self.create_update_aks()
+                        self.log("Creation / Update done")
 
                 self.results['changed'] = True
             elif update_tags:
@@ -726,6 +736,40 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             self.log("AKS instance deleted")
 
         return self.results
+
+    def update_scaling_aks(self):
+        '''
+        Update agent pool profiles parameter
+        '''
+        self.log("Creating / Updating the AKS's agent_agent_profiles instance {0}".format(self.name))
+
+        agentpools = []
+
+        service_principal_profile = self.create_service_principal_profile_instance(self.service_principal)
+
+        parameters = self.managedcluster_models.ManagedCluster(
+            location=self.location,
+            dns_prefix=self.dns_prefix,
+            kubernetes_version=self.kubernetes_version,
+            tags=self.tags,
+            service_principal_profile=service_principal_profile,
+            agent_pool_profiles=agentpools,
+            linux_profile=self.create_linux_profile_instance(self.linux_profile),
+            enable_rbac=self.enable_rbac,
+            network_profile=self.create_network_profile_instance(self.network_profile),
+            aad_profile=self.create_aad_profile_instance(self.aad_profile),
+            addon_profiles=self.create_addon_profile_instance(self.addon),
+            node_resource_group=self.node_resource_group
+        )
+
+        try:
+            poller = self.managedcluster_client.managed_clusters.create_or_update(self.resource_group, self.name, parameters)
+            response = self.get_poller_result(poller)
+            response.kube_config = self.get_aks_kubeconfig()
+            return create_aks_dict(response)
+        except CloudError as exc:
+            self.log('Error attempting to create the AKS instance.')
+            self.fail("Error creating the AKS instance: {0}".format(exc.message))
 
     def create_update_aks(self):
         '''
