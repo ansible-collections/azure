@@ -753,7 +753,8 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             enable_rbac=self.enable_rbac,
             network_profile=self.create_network_profile_instance(self.network_profile),
             aad_profile=self.create_aad_profile_instance(self.aad_profile),
-            addon_profiles=self.create_addon_profile_instance(self.addon)
+            addon_profiles=self.create_addon_profile_instance(self.addon),
+            node_resource_group=self.node_resource_group
         )
 
         # self.log("service_principal_profile : {0}".format(parameters.service_principal_profile))
