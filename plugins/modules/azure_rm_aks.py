@@ -84,10 +84,12 @@ options:
             max_count:
                 description:
                     - Maximum number of nodes for auto-scaling.
+                    - Required if I(enable_auto_scaling=True).
                 type: int
             min_count:
                 description:
                     - Minmum number of nodes for auto-scaling.
+                    - Required if I(enable_auto_scaling=True).
                 type: int
             type:
                 description:
