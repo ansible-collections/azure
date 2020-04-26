@@ -420,7 +420,7 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         type=profile.type,
         enable_auto_scaling=profile.enable_auto_scaling,
         max_count=profile.max_count,
-        min_count=proflie.min_count
+        min_count=profile.min_count
     ) for profile in agentpoolprofiles] if agentpoolprofiles else None
 
 
