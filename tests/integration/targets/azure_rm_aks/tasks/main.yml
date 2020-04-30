@@ -136,6 +136,7 @@
          - name: default
            count: 1
            vm_size: Standard_DS1_v2
+           type: VirtualMachineScaleSets
      node_resource_group: nodetest
      addon:
         http_application_routing: {}
@@ -169,6 +170,7 @@
          - name: default
            count: 1
            vm_size: Standard_DS1_v2
+           type: VirtualMachineScaleSets
      node_resource_group: nodetest
      addon:
         http_application_routing: {}
