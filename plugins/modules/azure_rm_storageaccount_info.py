@@ -207,7 +207,7 @@ storageaccounts:
             sample: eastus
         primary_endpoints:
             description:
-                - URLs to retrieve a public I(blob), I(queue), or I(table) object.
+                - URLs to retrieve a public I(blob), I(file), I(queue), or I(table) object.
                 - Note that C(Standard_ZRS) and C(Premium_LRS) accounts only return the blob endpoint.
             returned: always
             type: complex
@@ -230,6 +230,24 @@ storageaccounts:
                             returned: always
                             type: str
                             sample: "DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=X;AccountKey=X;BlobEndpoint=X"
+                file:
+                    description:
+                        - The primary file endpoint and connection string.
+                    returned: always
+                    type: complex
+                    contains:
+                        endpoint:
+                            description:
+                                - The primary file endpoint.
+                            returned: always
+                            type: str
+                            sample: "https://testaccount001.file.core.windows.net/"
+                        connectionstring:
+                            description:
+                                - Connectionstring of the file endpoint.
+                            returned: always
+                            type: str
+                            sample: "DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=X;AccountKey=X;FileEndpoint=X"
                 queue:
                     description:
                         - The primary queue endpoint and connection string.
@@ -274,7 +292,7 @@ storageaccounts:
                     sample: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         secondary_endpoints:
             description:
-                - The URLs to retrieve a public I(blob), I(queue), or I(table) object from the secondary location.
+                - The URLs to retrieve a public I(blob), I(file), I(queue), or I(table) object from the secondary location.
                 - Only available if the SKU I(name=Standard_RAGRS).
             returned: always
             type: complex
@@ -297,6 +315,24 @@ storageaccounts:
                             returned: always
                             type: str
                             sample: "DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=X;AccountKey=X;BlobEndpoint=X"
+                file:
+                    description:
+                        - The secondary file endpoint and connection string.
+                    returned: always
+                    type: complex
+                    contains:
+                        endpoint:
+                            description:
+                                - The secondary file endpoint.
+                            returned: always
+                            type: str
+                            sample: "https://testaccount001.file.core.windows.net/"
+                        connectionstring:
+                            description:
+                                - Connectionstring of the file endpoint.
+                            returned: always
+                            type: str
+                            sample: "DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=X;AccountKey=X;FileEndpoint=X"
                 queue:
                     description:
                         - The secondary queue endpoint and connection string.
@@ -483,6 +519,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         if account_obj.primary_endpoints:
             account_dict['primary_endpoints'] = dict(
                 blob=self.format_endpoint_dict(account_dict['name'], account_key[0], account_obj.primary_endpoints.blob, 'blob'),
+                file=self.format_endpoint_dict(account_dict['name'], account_key[0], account_obj.primary_endpoints.file, 'file'),
                 queue=self.format_endpoint_dict(account_dict['name'], account_key[0], account_obj.primary_endpoints.queue, 'queue'),
                 table=self.format_endpoint_dict(account_dict['name'], account_key[0], account_obj.primary_endpoints.table, 'table')
             )
@@ -492,6 +529,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         if account_obj.secondary_endpoints:
             account_dict['secondary_endpoints'] = dict(
                 blob=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.primary_endpoints.blob, 'blob'),
+                file=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.primary_endpoints.file, 'file'),
                 queue=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.primary_endpoints.queue, 'queue'),
                 table=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.primary_endpoints.table, 'table'),
             )
