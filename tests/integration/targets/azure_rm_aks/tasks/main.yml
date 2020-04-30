@@ -23,6 +23,11 @@
          - name: default
            count: 1
            vm_size: Standard_DS1_v2
+           type: VirtualMachineScaleSets
+           enable_auto_scaling: True
+           max_count: 3
+           min_count: 1
+     node_resource_group: nodetest
      enable_rbac: yes
    check_mode: yes
 
@@ -131,10 +136,6 @@
          - name: default
            count: 1
            vm_size: Standard_DS1_v2
-           type: VirtualMachineScaleSets
-           enable_auto_scaling: True
-           max_count: 3
-           min_count: 1
      node_resource_group: nodetest
      addon:
         http_application_routing: {}
@@ -168,10 +169,6 @@
          - name: default
            count: 1
            vm_size: Standard_DS1_v2
-           type: VirtualMachineScaleSets
-           enable_auto_scaling: True
-           max_count: 3
-           min_count: 1
      node_resource_group: nodetest
      addon:
         http_application_routing: {}
