@@ -73,6 +73,9 @@ hostvar_expressions:
   # overrides the default ansible_host value with a custom Jinja2 expression, in this case, the first DNS hostname, or
   # if none are found, the first public IP address.
   ansible_host: (public_dns_hostnames + public_ipv4_addresses) | first
+  # overrides the default inventory_hostname value with a custom Jinja2 expression, in this case, a tag called vm_name.
+  # if the tag is not found, use the default_inventory_hostname (see plain_host_names).
+  inventory_hostname: tags.vm_name | default(default_inventory_hostname)
 
 # places hosts in dynamically-created groups based on a variable value.
 keyed_groups:
