@@ -261,11 +261,13 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         constructable_config_strict = boolean(self.get_option('fail_on_template_errors'))
         constructable_config_compose = self.get_option('hostvar_expressions')
+        constructable_config_inventory_hostname = constructable_config_compose.pop('inventory_hostname')
         constructable_config_groups = self.get_option('conditional_groups')
         constructable_config_keyed_groups = self.get_option('keyed_groups')
 
         for h in self._hosts:
-            inventory_hostname = self._get_hostname(h)
+            # FUTURE: track hostnames to warn if a hostname is repeated (can happen for legacy and for composed inventory_hostname)
+            inventory_hostname = self._get_hostname(h, compose=constructable_config_inventory_hostname, strict=constructable_config_strict)
             if self._filter_host(inventory_hostname, h.hostvars):
                 continue
             self.inventory.add_host(inventory_hostname)
@@ -298,9 +300,15 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         return False
 
-    def _get_hostname(self, host):
-        # FUTURE: configurable hostname sources
-        return host.default_inventory_hostname
+    def _get_hostname(self, host, compose=None, strict=False):
+        if not compose:
+            return host.default_inventory_hostname
+        try:
+            return self._compose(compose, host.hostvars)
+        except Exception as e:
+            if strict:
+                raise AnsibleParserError("Error generating inventory_hostname with '{0}' (hostvar_expressions.inventory_hostname) for host {1}: {2}".format(compose, host.default_inventory_hostname, to_native(e))
+            return host.default_inventory_hostname
 
     def _process_queue_serial(self):
         try:
