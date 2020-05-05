@@ -507,7 +507,8 @@ class AzureHost(object):
             ) if self._vmss else {},
             virtual_machine_size=self._vm_model['properties']['hardwareProfile']['vmSize'] if self._vm_model['properties'].get('hardwareProfile') else None,
             plan=self._vm_model['properties']['plan']['name'] if self._vm_model['properties'].get('plan') else None,
-            resource_group=parse_resource_id(self._vm_model['id']).get('resource_group').lower()
+            resource_group=parse_resource_id(self._vm_model['id']).get('resource_group').lower(),
+            default_inventory_hostname=self.default_inventory_hostname,
         )
 
         # set nic-related values from the primary NIC first
