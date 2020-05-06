@@ -555,7 +555,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             ),
             node_resource_group=dict(
                 type='str'
-                )
+            )
         )
 
         self.resource_group = None
@@ -691,25 +691,26 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                             if profile_result['name'] == profile_self['name']:
                                 matched = True
                                 os_disk_size_gb = profile_self.get('os_disk_size_gb') or profile_result['os_disk_size_gb']
-                                if profile_result['count'] != profile_self['count'] and profile_self['count'] :
+                                vnet_subnet_id = profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id'])
+                                if profile_result['count'] != profile_self['count'] and profile_self['count']:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
-                                elif profile_result['vm_size'] != profile_self['vm_size'] and profile_self['vm_size'] :
+                                elif profile_result['vm_size'] != profile_self['vm_size'] and profile_self['vm_size']:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
-                                elif profile_result['os_disk_size_gb'] != os_disk_size_gb and os_disk_size_gb :
+                                elif profile_result['os_disk_size_gb'] != os_disk_size_gb and os_disk_size_gb:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
-                                elif profile_result['vnet_subnet_id'] != profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id']) and profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id']) :
+                                elif profile_result['vnet_subnet_id'] != profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id']) and vnet_subnet_id:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
-                                elif profile_result['enable_auto_scaling'] != profile_self['enable_auto_scaling'] and profile_self['enable_auto_scaling'] :
+                                elif profile_result['enable_auto_scaling'] != profile_self['enable_auto_scaling'] and profile_self['enable_auto_scaling']:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
-                                elif profile_result['max_count'] != profile_self['max_count'] and profile_self['max_count'] :
+                                elif profile_result['max_count'] != profile_self['max_count'] and profile_self['max_count']:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
-                                elif profile_result['min_count'] != profile_self['min_count'] and profile_self['min_count'] :
+                                elif profile_result['min_count'] != profile_self['min_count'] and profile_self['min_count']:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
                         if not matched:
