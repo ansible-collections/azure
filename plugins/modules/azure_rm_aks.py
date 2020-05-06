@@ -95,7 +95,7 @@ options:
                 description:
                     - AgentPoolType represents types of an agent pool.
                     - Possible values include C(VirtualMachineScaleSets) and C(AvailabilitySet).
-                choice:
+                choices:
                     - 'VirtualMachineScaleSets'
                     - 'AvailabilitySet'
                 type: str
@@ -238,26 +238,26 @@ author:
 EXAMPLES = '''
     - name: Create an AKS instance
       azure_rm_aks:
-         name: myAKS
-         resource_group: myResourceGroup
-         location: eastus
-         dns_prefix: akstest
-         kubernetes_version: 1.14.6
-         linux_profile:
-           admin_username: azureuser
-           ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAA...
-         service_principal:
-           client_id: "cf72ca99-f6b9-4004-b0e0-bee10c521948"
-           client_secret: "Password123!
-         agent_pool_profiles:
-           - name: default
-             count: 1
-             vm_size: Standard_DS1_v2
-             enable_auto_scaling: True
-             type: VirtualMachineScaleSets
-             max_count: 3
-             min_count: 1
-             enable_rbac: yes
+        name: myAKS
+        resource_group: myResourceGroup
+        location: eastus
+        dns_prefix: akstest
+        kubernetes_version: 1.14.6
+        linux_profile:
+          admin_username: azureuser
+          ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAA...
+        service_principal:
+          client_id: "cf72ca99-f6b9-4004-b0e0-bee10c521948"
+          client_secret: "Password123!
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_DS1_v2
+            enable_auto_scaling: True
+            type: VirtualMachineScaleSets
+            max_count: 3
+            min_count: 1
+            enable_rbac: yes
 
     - name: Create a managed Azure Container Services (AKS) instance
       azure_rm_aks:
