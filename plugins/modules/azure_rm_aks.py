@@ -703,9 +703,6 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 elif profile_result['vnet_subnet_id'] != profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id']) and profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id']) :
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
-                                elif profile_result['type'] != profile_self['type'] and profile_self['type'] :
-                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
-                                    to_be_updated = True
                                 elif profile_result['enable_auto_scaling'] != profile_self['enable_auto_scaling'] and profile_self['enable_auto_scaling'] :
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
