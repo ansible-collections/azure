@@ -23,6 +23,11 @@
          - name: default
            count: 1
            vm_size: Standard_DS1_v2
+           type: VirtualMachineScaleSets
+           enable_auto_scaling: True
+           max_count: 3
+           min_count: 1
+     node_resource_group: nodetest
      enable_rbac: yes
    check_mode: yes
 
@@ -54,6 +59,11 @@
          - name: default
            count: 1
            vm_size: Standard_DS1_v2
+           type: VirtualMachineScaleSets
+           enable_auto_scaling: True
+           max_count: 3
+           min_count: 1
+     node_resource_group: nodetest
      enable_rbac: yes
    register: output
 
@@ -91,6 +101,11 @@
          - name: default
            count: 1
            vm_size: Standard_DS1_v2
+           type: VirtualMachineScaleSets
+           enable_auto_scaling: True
+           max_count: 3
+           min_count: 1
+     node_resource_group: nodetest
      enable_rbac: yes
    register: output
 
@@ -121,6 +136,8 @@
          - name: default
            count: 1
            vm_size: Standard_DS1_v2
+           type: VirtualMachineScaleSets
+     node_resource_group: nodetest
      addon:
         http_application_routing: {}
      network_profile:
@@ -153,6 +170,8 @@
          - name: default
            count: 1
            vm_size: Standard_DS1_v2
+           type: VirtualMachineScaleSets
+     node_resource_group: nodetest
      addon:
         http_application_routing: {}
      network_profile:
@@ -163,6 +182,67 @@
  - assert:
       that:
         - not output.changed
+
+ - name: Upgrade the AKS instance with agent pool profiles
+   azure_rm_aks:
+     name: "aks{{ rpfx }}"
+     resource_group: "{{ resource_group }}"
+     location: eastus
+     dns_prefix: "aks{{ rpfx }}"
+     kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+     service_principal:
+         client_id: "{{ azure_client_id }}"
+         client_secret: "{{ azure_secret }}"
+     linux_profile:
+         admin_username: azureuser
+         ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDSPmiqkvDH1/+MDAVDZT8381aYqp73Odz8cnD5hegNhqtXajqtiH0umVg7HybX3wt1HjcrwKJovZURcIbbcDvzdH2bnYbF93T4OLXA0bIfuIp6M86x1iutFtXdpN3TTicINrmSXEE2Ydm51iMu77B08ZERjVaToya2F7vC+egfoPvibf7OLxE336a5tPCywavvNihQjL8sjgpDT5AAScjb3YqK/6VLeQ18Ggt8/ufINsYkb+9/Ji/3OcGFeflnDXq80vPUyF3u4iIylob6RSZenC38cXmQB05tRNxS1B6BXCjMRdy0v4pa7oKM2GA4ADKpNrr0RI9ed+peRFwmsclH test@ansible
+     agent_pool_profiles:
+         - name: default
+           count: 1
+           vm_size: Standard_DS1_v2
+           type: VirtualMachineScaleSets
+           enable_auto_scaling: True
+           max_count: 6
+           min_count: 3
+     node_resource_group: nodetest
+     enable_rbac: yes
+   register: output
+
+ - name: Assert the AKS instance is well created
+   assert:
+     that:
+       - output.changed
+       - output.provisioning_state == 'Succeeded'
+
+ - name: Upgrade the AKS instance with agent pool profiles (idempontent)
+   azure_rm_aks:
+     name: "aks{{ rpfx }}"
+     resource_group: "{{ resource_group }}"
+     location: eastus
+     dns_prefix: "aks{{ rpfx }}"
+     kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+     service_principal:
+         client_id: "{{ azure_client_id }}"
+         client_secret: "{{ azure_secret }}"
+     linux_profile:
+         admin_username: azureuser
+         ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDSPmiqkvDH1/+MDAVDZT8381aYqp73Odz8cnD5hegNhqtXajqtiH0umVg7HybX3wt1HjcrwKJovZURcIbbcDvzdH2bnYbF93T4OLXA0bIfuIp6M86x1iutFtXdpN3TTicINrmSXEE2Ydm51iMu77B08ZERjVaToya2F7vC+egfoPvibf7OLxE336a5tPCywavvNihQjL8sjgpDT5AAScjb3YqK/6VLeQ18Ggt8/ufINsYkb+9/Ji/3OcGFeflnDXq80vPUyF3u4iIylob6RSZenC38cXmQB05tRNxS1B6BXCjMRdy0v4pa7oKM2GA4ADKpNrr0RI9ed+peRFwmsclH test@ansible
+     agent_pool_profiles:
+         - name: default
+           count: 1
+           vm_size: Standard_DS1_v2
+           type: VirtualMachineScaleSets
+           enable_auto_scaling: True
+           max_count: 6
+           min_count: 3
+     node_resource_group: nodetest
+     enable_rbac: yes
+   register: output
+
+ - name: Assert the AKS instance is well created
+   assert:
+     that:
+       - not output.changed
 
  - name: Get AKS fact
    azure_rm_aks_info:

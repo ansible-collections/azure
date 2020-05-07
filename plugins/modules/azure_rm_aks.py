@@ -77,6 +77,28 @@ options:
             os_disk_size_gb:
                 description:
                     - Size of the OS disk.
+            enable_auto_scaling:
+                description:
+                    - To enable auto-scaling.
+                type: bool
+            max_count:
+                description:
+                    - Maximum number of nodes for auto-scaling.
+                    - Required if I(enable_auto_scaling=True).
+                type: int
+            min_count:
+                description:
+                    - Minmum number of nodes for auto-scaling.
+                    - Required if I(enable_auto_scaling=True).
+                type: int
+            type:
+                description:
+                    - AgentPoolType represents types of an agent pool.
+                    - Possible values include C(VirtualMachineScaleSets) and C(AvailabilitySet).
+                choices:
+                    - 'VirtualMachineScaleSets'
+                    - 'AvailabilitySet'
+                type: str
     service_principal:
         description:
             - The service principal suboptions.
@@ -197,6 +219,11 @@ options:
                         description:
                             - Subnet associated to the cluster.
         version_added: "2.8"
+    node_resource_group:
+        description:
+            - Name of the resource group containing agent pool nodes.
+            - Unable to update.
+        type: str
 
 extends_documentation_fragment:
     - azure
@@ -209,6 +236,29 @@ author:
 '''
 
 EXAMPLES = '''
+    - name: Create an AKS instance
+      azure_rm_aks:
+        name: myAKS
+        resource_group: myResourceGroup
+        location: eastus
+        dns_prefix: akstest
+        kubernetes_version: 1.14.6
+        linux_profile:
+          admin_username: azureuser
+          ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAA...
+        service_principal:
+          client_id: "cf72ca99-f6b9-4004-b0e0-bee10c521948"
+          client_secret: "Password1234!"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_DS1_v2
+            enable_auto_scaling: True
+            type: VirtualMachineScaleSets
+            max_count: 3
+            min_count: 1
+            enable_rbac: yes
+
     - name: Create a managed Azure Container Services (AKS) instance
       azure_rm_aks:
         name: myAKS
@@ -366,9 +416,12 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         vm_size=profile.vm_size,
         name=profile.name,
         os_disk_size_gb=profile.os_disk_size_gb,
-        storage_profile=profile.storage_profile,
         vnet_subnet_id=profile.vnet_subnet_id,
-        os_type=profile.os_type
+        os_type=profile.os_type,
+        type=profile.type,
+        enable_auto_scaling=profile.enable_auto_scaling,
+        max_count=profile.max_count,
+        min_count=profile.min_count
     ) for profile in agentpoolprofiles] if agentpoolprofiles else None
 
 
@@ -418,7 +471,11 @@ agent_pool_profile_spec = dict(
     storage_profiles=dict(type='str', choices=[
                           'StorageAccount', 'ManagedDisks']),
     vnet_subnet_id=dict(type='str'),
-    os_type=dict(type='str', choices=['Linux', 'Windows'])
+    os_type=dict(type='str', choices=['Linux', 'Windows']),
+    type=dict(type='str', choice=['VirtualMachineScaleSets', 'AvailabilitySet']),
+    enable_auto_scaling=dict(type='bool'),
+    max_count=dict(type='int'),
+    min_count=dict(type='int')
 )
 
 
@@ -495,6 +552,9 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             addon=dict(
                 type='dict',
                 options=create_addon_profiles_spec()
+            ),
+            node_resource_group=dict(
+                type='str'
             )
         )
 
@@ -512,6 +572,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         self.network_profile = None
         self.aad_profile = None
         self.addon = None
+        self.node_resource_group = None
 
         required_if = [
             ('state', 'present', [
@@ -630,10 +691,31 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                             if profile_result['name'] == profile_self['name']:
                                 matched = True
                                 os_disk_size_gb = profile_self.get('os_disk_size_gb') or profile_result['os_disk_size_gb']
-                                if profile_result['count'] != profile_self['count'] \
-                                        or profile_result['vm_size'] != profile_self['vm_size'] \
-                                        or profile_result['os_disk_size_gb'] != os_disk_size_gb \
-                                        or profile_result['vnet_subnet_id'] != profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id']):
+                                vnet_subnet_id = profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id'])
+                                count = profile_self['count']
+                                vm_size = profile_self['vm_size']
+                                enable_auto_scaling = profile_self['enable_auto_scaling']
+                                max_count = profile_self['max_count']
+                                min_count = profile_self['min_count']
+                                if count is not None and profile_result['count'] != count:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    to_be_updated = True
+                                elif vm_size is not None and profile_result['vm_size'] != vm_size:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    to_be_updated = True
+                                elif os_disk_size_gb is not None and profile_result['os_disk_size_gb'] != os_disk_size_gb:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    to_be_updated = True
+                                elif profile_result['vnet_subnet_id'] != vnet_subnet_id:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    to_be_updated = True
+                                elif enable_auto_scaling is not None and profile_result['enable_auto_scaling'] != enable_auto_scaling:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    to_be_updated = True
+                                elif max_count is not None and profile_result['max_count'] != max_count:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    to_be_updated = True
+                                elif min_count is not None and profile_result['min_count'] != min_count:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
                         if not matched:
@@ -695,7 +777,8 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             enable_rbac=self.enable_rbac,
             network_profile=self.create_network_profile_instance(self.network_profile),
             aad_profile=self.create_aad_profile_instance(self.aad_profile),
-            addon_profiles=self.create_addon_profile_instance(self.addon)
+            addon_profiles=self.create_addon_profile_instance(self.addon),
+            node_resource_group=self.node_resource_group
         )
 
         # self.log("service_principal_profile : {0}".format(parameters.service_principal_profile))
