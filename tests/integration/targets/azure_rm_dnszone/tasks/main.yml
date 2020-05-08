@@ -298,4 +298,3 @@
 
 - assert:
     that: not results.changed
-
