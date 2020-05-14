@@ -207,7 +207,7 @@ options:
         version_added: '2.7'
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure_tags
+    - azure.azcollection.azure_tags
 
 author:
     - Chris Houseknecht (@chouseknecht)

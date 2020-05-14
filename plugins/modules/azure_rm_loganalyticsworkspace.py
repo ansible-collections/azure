@@ -65,7 +65,7 @@ options:
         type: dict
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure_tags
+    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)

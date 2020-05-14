@@ -351,7 +351,7 @@ options:
             - This option has been deprecated, and will be removed in 2.9. Use I(inbound_nat_pools) instead.
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure_tags
+    - azure.azcollection.azure_tags
 
 author:
     - Thomas Stringer (@trstringer)
