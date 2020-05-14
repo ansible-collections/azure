@@ -47,7 +47,7 @@ options:
             - Derived from I(resource_group) if not specified.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
     - azure_tags
 
 author:

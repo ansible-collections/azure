@@ -66,7 +66,7 @@ options:
             - Note this will have network overhead for each IoT Hub.
         type: bool
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yuwei Zhou (@yuwzho)

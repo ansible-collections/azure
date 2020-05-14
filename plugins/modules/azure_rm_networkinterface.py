@@ -206,7 +206,7 @@ options:
         type: list
         version_added: '2.7'
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
     - azure_tags
 
 author:

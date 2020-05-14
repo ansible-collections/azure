@@ -188,7 +188,7 @@ options:
                        see U(https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-routing-query-syntax)"
                 type: str
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
     - azure_tags
 
 author:

@@ -146,7 +146,7 @@ options:
                     - The list of countries/regions mapped to this endpoint when using the 'Geographic' traffic routing method.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
     - azure_tags
 
 author:

@@ -98,7 +98,7 @@ options:
             - Not supported in IoT Hub with Basic tier.
         type: dict
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
     - azure_tags
 
 author:

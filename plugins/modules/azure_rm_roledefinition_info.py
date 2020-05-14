@@ -40,7 +40,7 @@ options:
             - custom
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yunge Zhu(@yungezz)

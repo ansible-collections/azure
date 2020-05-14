@@ -112,7 +112,7 @@ options:
             - send_disabled
             - receive_disabled
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
     - azure_tags
 
 author:

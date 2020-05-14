@@ -33,7 +33,7 @@ options:
             - Get the upgrade versions available for a managed Kubernetes cluster version.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yuwei Zhou (@yuwzho)

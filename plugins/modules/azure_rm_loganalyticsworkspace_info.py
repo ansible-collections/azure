@@ -48,7 +48,7 @@ options:
             - Show the list of usages for a workspace.
             - Note this will cost one more network overhead for each workspace, expected slow response.
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yuwei Zhou (@yuwzho)

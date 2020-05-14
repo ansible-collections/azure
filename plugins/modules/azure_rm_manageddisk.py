@@ -123,7 +123,7 @@ options:
         version_added: '2.10'
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
     - azure_tags
 author:
     - Bruno Medina (@brusMX)

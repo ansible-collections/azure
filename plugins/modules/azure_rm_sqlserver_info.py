@@ -31,7 +31,7 @@ options:
             - The name of the server.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
     - azure_tags
 
 author:
