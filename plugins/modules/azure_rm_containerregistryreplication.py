@@ -42,7 +42,7 @@ options:
             - Resource location. If not set, location from the resource group will be used as default.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - "Zim Kalinowski (@zikalino)"

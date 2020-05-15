@@ -59,7 +59,7 @@ options:
             - Note if enable this option, the facts module will raise two more HTTP call for each resources, need more network overhead.
         type: bool
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yuwei Zhou (@yuwzho)

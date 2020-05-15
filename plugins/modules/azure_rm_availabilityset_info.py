@@ -34,7 +34,7 @@ options:
             - List of tags to be matched.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Julien Stroheker (@julienstroheker)

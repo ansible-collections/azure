@@ -68,7 +68,7 @@ options:
         type: bool
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Sertac Ozercan (@sozercan)

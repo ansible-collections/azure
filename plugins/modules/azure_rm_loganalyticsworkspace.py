@@ -64,8 +64,8 @@ options:
             - Other intelligence packs not list in this property will not be changed.
         type: dict
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)

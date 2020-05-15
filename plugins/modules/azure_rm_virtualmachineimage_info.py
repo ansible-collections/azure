@@ -45,7 +45,7 @@ options:
             - Specific version number of an image.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Chris Houseknecht (@chouseknecht)

@@ -35,7 +35,7 @@ options:
             - The name of the virtual machine extension.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Zim Kalinowski (@zikalino)

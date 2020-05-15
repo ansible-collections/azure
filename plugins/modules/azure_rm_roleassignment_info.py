@@ -41,7 +41,7 @@ options:
             - Resource id of role definition.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yunge Zhu(@yungezz)
