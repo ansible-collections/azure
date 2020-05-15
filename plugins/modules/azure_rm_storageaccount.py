@@ -133,7 +133,7 @@ options:
                         suboptions:
                             value:
                                 description:
-                                    - The ip address or range.
+                                    - The IP address or range.
                             action:
                                 description:
                                     - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
