@@ -33,7 +33,7 @@ options:
             - List of tags to be matched.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Madhura Naniwadekar (@Madhura-CSI)

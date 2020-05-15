@@ -98,8 +98,8 @@ options:
             - Not supported in IoT Hub with Basic tier.
         type: dict
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)
