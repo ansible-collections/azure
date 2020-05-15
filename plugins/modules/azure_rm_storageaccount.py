@@ -103,7 +103,7 @@ options:
             default_action:
                 description:
                     - Default firewall traffic rule.
-                    - If set to 'Allow' no other settings have effect.
+                    - If I(default_action=Allow) no other settings have effect.
                 choices:
                     - Allow
                     - Deny
