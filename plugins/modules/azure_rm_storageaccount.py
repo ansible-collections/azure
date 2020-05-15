@@ -129,7 +129,7 @@ options:
                                 default: 'Allow'
                     ip_rules:
                         description:
-                            - A list of ip addresses or ranges in CIDR format
+                            - A list of IP addresses or ranges in CIDR format.
                         suboptions:
                             value:
                                 description:
