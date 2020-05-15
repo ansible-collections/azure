@@ -113,7 +113,7 @@ options:
                     - When I(default_action=Deny) this controls which Azure components can still reach the Storage Account.
                     - The list is comma separated.
                     - It can be any combination of the following: AzureServices, Logging, Metrics.
-                    - If no Azure components are allowed, explicitly set C(bypass="").
+                    - If no Azure components are allowed, explicitly set I(bypass="").
                 default: AzureServices
                 suboptions:
                     virtual_network_rules:
