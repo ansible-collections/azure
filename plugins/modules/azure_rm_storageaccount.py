@@ -125,7 +125,7 @@ options:
                                     - The complete path to the subnet.
                             action:
                                 description:
-                                    - The only logical action is 'Allow' because this setting is only accessible when C(default_action) is set to 'Deny'.
+                                    - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
                                 default: 'Allow'
                     ip_rules:
                         description:
