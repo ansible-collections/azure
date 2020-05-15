@@ -110,7 +110,7 @@ options:
                 default: Allow
             bypass:
                 description:
-                    - When C(default_action) is set to 'Deny' this controls which Azure components can still reach the Storage Account.
+                    - When I(default_action=Deny) this controls which Azure components can still reach the Storage Account.
                     - The list is comma separated.
                     - It can be any combination of the following: AzureServices, Logging, Metrics.
                     - If no Azure components are allowed, explicitly set C(bypass="").
