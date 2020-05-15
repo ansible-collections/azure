@@ -118,7 +118,7 @@ options:
                 suboptions:
                     virtual_network_rules:
                         description:
-                            - A list of subnets and their actions
+                            - A list of subnets and their actions.
                         suboptions:
                             id:
                                 description:
