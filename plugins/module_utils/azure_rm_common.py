@@ -223,6 +223,8 @@ try:
     from azure.mgmt.storage import StorageManagementClient
     from azure.mgmt.compute import ComputeManagementClient
     from azure.mgmt.dns import DnsManagementClient
+    from azure.mgmt.privatedns import PrivateDnsManagementClient
+    import azure.mgmt.privatedns.models as PrivateDnsModels
     from azure.mgmt.monitor import MonitorManagementClient
     from azure.mgmt.web import WebSiteManagementClient
     from azure.mgmt.containerservice import ContainerServiceClient
@@ -323,6 +325,10 @@ AZURE_PKG_VERSIONS = {
         'package_name': 'dns',
         'expected_version': '2.1.0'
     },
+    'PrivateDnsManagementClient': {
+        'package_name': 'privatedns',
+        'expected_version': '0.1.0'
+    },
     'WebSiteManagementClient': {
         'package_name': 'web',
         'expected_version': '0.41.0'
@@ -383,6 +389,7 @@ class AzureRMModuleBase(object):
         self._resource_client = None
         self._compute_client = None
         self._dns_client = None
+        self._private_dns_client = None
         self._web_client = None
         self._marketplace_client = None
         self._sql_client = None
@@ -985,6 +992,20 @@ class AzureRMModuleBase(object):
     def dns_models(self):
         self.log("Getting dns models...")
         return DnsManagementClient.models('2018-05-01')
+
+    @property
+    def private_dns_client(self):
+        self.log('Getting private dns client')
+        if not self._private_dns_client:
+            self._private_dns_client = self.get_mgmt_svc_client(
+                PrivateDnsManagementClient,
+                base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._private_dns_client
+
+    @property
+    def private_dns_models(self):
+        self.log('Getting private dns models')
+        return PrivateDnsModels
 
     @property
     def web_client(self):
