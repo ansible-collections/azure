@@ -33,10 +33,10 @@ module: azure_rm_privatednszone
 
 version_added: "2.10"
 
-short_description: Manage private Azure DNS zones
+short_description: Manage Azure private DNS zones
 
 description:
-    - Creates and deletes private Azure DNS zones.
+    - Creates and deletes Azure private DNS zones.
 
 options:
     resource_group:
@@ -81,7 +81,7 @@ EXAMPLES = '''
 RETURN = '''
 state:
     description:
-        - Current state of the private zone.
+        - Current state of the zone.
     returned: always
     type: dict
     sample: {
