@@ -30,7 +30,7 @@ description:
 options:
     resource_group:
         description:
-            - name of resource group.
+            - Name of resource group.
         required: true
     name:
         description:
