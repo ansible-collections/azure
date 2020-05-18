@@ -41,6 +41,14 @@
        tags:
            test: test
            galaxy: galaxy
+       http_only: yes
+       network_acls:
+         bypass: AzureServices
+         default_action: Deny
+         ip_rules:
+           - value: '9.9.9.9'
+             action: Allow
+
    register: output
 
  - name: Assert status succeeded and results include an Id value 
@@ -49,6 +57,10 @@
        - output.changed
        - output.state.id is defined
        - output.state.blob_cors | length == 1
+       - output.state.https_only
+       - output.state.network_acls.bypass == "AzureServices"
+       - output.state.network_acls.default_action == "Deny"
+       - output.state.network_acls.ip_rules | length == 1
 
  - name: Create new storage account (idempotence)
    azure_rm_storageaccount:
@@ -72,6 +84,13 @@
        tags:
            test: test
            galaxy: galaxy
+       http_only: yes
+       network_acls:
+         bypass: AzureServices
+         default_action: Deny
+         ip_rules:
+           - value: '9.9.9.9'
+             action: Allow
    register: output
   
  - assert:
@@ -138,12 +157,15 @@
 
  - assert:
        that:
-           - "output.storageaccounts| length == 1"
            - "output.storageaccounts | length == 1"
            - not output.storageaccounts[0].custom_domain
            - output.storageaccounts[0].account_type == "Standard_GRS"
            - output.storageaccounts[0].primary_endpoints.blob.connectionstring
            - output.storageaccounts[0].blob_cors
+           - output.storageaccounts[0].https_only
+           - output.storageaccounts[0].network_acls.bypass == "AzureServices"
+           - output.storageaccounts[0].network_acls.default_action == "Deny"
+           - output.storageaccounts[0].network_acls.ip_rules | length == 1
 
  - name: Gather facts
    azure_rm_storageaccount_info:
