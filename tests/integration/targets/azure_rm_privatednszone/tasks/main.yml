@@ -44,6 +44,18 @@
     that:
       - not results.changed
 
+- name: Retrieve DNS Zone Facts
+  azure_rm_privatednszone_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ domain_name }}.com"
+  register: zones
+
+- name: Assert that facts module returned result
+  assert:
+    that:
+      - zones.privatednszones[0].tags.test == 'modified'
+      - zones.privatednszones[0].number_of_record_sets == 1
+
 #
 # azure_rm_privatednszone cleanup
 #
