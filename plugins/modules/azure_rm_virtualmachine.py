@@ -1299,7 +1299,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 create_option=self.compute_models.DiskCreateOptionTypes.from_image,
                                 caching=self.os_disk_caching,
                                 disk_size_gb=self.os_disk_size_gb,
-                                diff_disk_settings=self.compute_models.DiffDiskSettings() if self.ephemeral_os_disk else None
+                                diff_disk_settings=self.compute_models.DiffDiskSettings(option='Local') if self.ephemeral_os_disk else None
                             ),
                             image_reference=image_reference,
                         ),
