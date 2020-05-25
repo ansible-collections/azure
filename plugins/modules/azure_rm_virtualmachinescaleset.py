@@ -720,7 +720,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                 differences = []
                 results = vmss_dict
                 current_osdisk = vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']
-                current_ephemeral = current_osdisk.get('diffDiskSettings',None)
+                current_ephemeral = current_osdisk.get('diffDiskSettings', None)
 
                 if self.ephemeral_os_disk is not None and self.ephemeral_os_disk != current_ephemeral:
                     self.fail('Ephemeral OS disk not updatable: virtual machine scale set ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
