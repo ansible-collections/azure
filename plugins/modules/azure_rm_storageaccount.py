@@ -112,7 +112,7 @@ options:
                 description:
                     - When I(default_action=Deny) this controls which Azure components can still reach the Storage Account.
                     - The list is comma separated.
-                    - It can be any combination of the following: AzureServices, Logging, Metrics.
+                    - It can be any combination of the example C(AzureServices), C(Logging), C(Metrics).
                     - If no Azure components are allowed, explicitly set I(bypass="").
                 default: AzureServices
                 suboptions:
@@ -207,7 +207,7 @@ EXAMPLES = '''
         tags:
           testing: testing
 
-   - name: configure firewall and virtual networks
+    - name: configure firewall and virtual networks
       azure_rm_storageaccount:
         resource_group: myResourceGroup
         name: clh0002
@@ -305,7 +305,8 @@ state:
                     "virtual_network_rules": [
                         {
                             "action": "Allow",
-                            "id": "/subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet"
+                            "id": "/subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/ \
+                                   providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet"
                             }
                         ],
                     "ip_rules": [
@@ -631,7 +632,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 self.fail("Failed to update account type: {0}".format(str(exc)))
 
     def sort_list_of_dicts(self, rule_set, dict_key):
-        return sorted(rule_set, key = lambda i: i[dict_key])
+        return sorted(rule_set, key=lambda i: i[dict_key])
 
     def update_account(self):
         self.log('Update storage account {0}'.format(self.name))
@@ -642,26 +643,29 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 self.update_network_rule_set()
 
             if self.network_acls.get('default_action', 'Allow') == 'Deny':
-                if sorted(self.network_acls['bypass'].replace(' ','').split(',')) != sorted(self.account_dict['network_acls']['bypass'].replace(' ','').split(',')):
+                if sorted(self.network_acls['bypass'].replace(" ',' ").split(',')) != \
+                        sorted(self.account_dict['network_acls']['bypass'].replace(" ',' ").split(',')):
                     self.results['changed'] = True
                     self.account_dict['network_acls']['bypass'] = self.network_acls['bypass']
                     self.update_network_rule_set()
 
-                if self.network_acls.get('virtual_network_rules', None) != None and self.account_dict['network_acls']['virtual_network_rules'] != []:
-                    if self.sort_list_of_dicts(self.network_acls['virtual_network_rules'], 'id') != self.sort_list_of_dicts(self.account_dict['network_acls']['virtual_network_rules'], 'id'):
+                if self.network_acls.get('virtual_network_rules', None) is not None and self.account_dict['network_acls']['virtual_network_rules'] != []:
+                    if self.sort_list_of_dicts(self.network_acls['virtual_network_rules'], 'id') != \
+                            self.sort_list_of_dicts(self.account_dict['network_acls']['virtual_network_rules'], 'id'):
                         self.results['changed'] = True
                         self.account_dict['network_acls']['virtual_network_rules'] = self.network_acls['virtual_network_rules']
                         self.update_network_rule_set()
-                if self.network_acls.get('virtual_network_rules', None) != None and self.account_dict['network_acls']['virtual_network_rules'] == []:
+                if self.network_acls.get('virtual_network_rules', None) is not None and self.account_dict['network_acls']['virtual_network_rules'] == []:
                     self.results['changed'] = True
                     self.update_network_rule_set()
 
-                if self.network_acls.get('ip_rules', None) != None and self.account_dict['network_acls']['ip_rules'] != []:
-                    if self.sort_list_of_dicts(self.network_acls['ip_rules'], 'value') != self.sort_list_of_dicts(self.account_dict['network_acls']['ip_rules'], 'value'):
+                if self.network_acls.get('ip_rules', None) is not None and self.account_dict['network_acls']['ip_rules'] != []:
+                    if self.sort_list_of_dicts(self.network_acls['ip_rules'], 'value') != \
+                            self.sort_list_of_dicts(self.account_dict['network_acls']['ip_rules'], 'value'):
                         self.results['changed'] = True
                         self.account_dict['network_acls']['ip_rules'] = self.network_acls['ip_rules']
                         self.update_network_rule_set()
-                if self.network_acls.get('ip_rules', None) != None and self.account_dict['network_acls']['ip_rules'] == []:
+                if self.network_acls.get('ip_rules', None) is not None and self.account_dict['network_acls']['ip_rules'] == []:
                     self.results['changed'] = True
                     self.update_network_rule_set()
 
@@ -851,6 +855,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                         parameters)
         except Exception as exc:
             self.fail("Failed to update account type: {0}".format(str(exc)))
+
 
 def main():
     AzureRMStorageAccount()

@@ -184,7 +184,8 @@ storageaccounts:
                     "virtual_network_rules": [
                         {
                             "action": "Allow",
-                            "id": "/subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet"
+                            "id": "/subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/ \
+                                    providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet"
                             }
                         ],
                     "ip_rules": [
