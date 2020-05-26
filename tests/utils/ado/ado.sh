@@ -7,8 +7,8 @@ IFS='/:' read -ra args <<< "$1"
 
 group="${args[0]}"
 
-command -v python
-python -V
+command -v python3
+python3 -V
 
 command -v pip3
 pip3 --version
