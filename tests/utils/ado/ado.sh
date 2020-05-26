@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -o pip3efail -eux
+set -o pipefail -eux
 
 declare -a args
 IFS='/:' read -ra args <<< "$1"
