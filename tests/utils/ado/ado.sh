@@ -7,8 +7,8 @@ IFS='/:' read -ra args <<< "$1"
 
 group="${args[0]}"
 
-command -v python3
-python3 -V
+command -v python
+python -V
 
 command -v pip3
 pip3 --version
@@ -20,7 +20,6 @@ export LC_ALL="en_US.utf-8"
 
 pip3 install virtualenv
 virtualenv --python /usr/bin/python3.7 ~/ansible-venv
-#virtualenv --python /usr/bin/python2.7 ~/ansible-venv
 set +ux
 . ~/ansible-venv/bin/activate
 set -ux
