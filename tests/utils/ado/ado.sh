@@ -35,6 +35,7 @@ mkdir -p shippable/testresults
 pip3 install  -I -r "${TEST_DIR}/requirements-azure.txt"
 
 timeout=60
+ansible --version
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
 
