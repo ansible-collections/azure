@@ -33,8 +33,6 @@ cd "${TEST_DIR}"
 mkdir -p shippable/testresults
 pip3 install  -I -r "${TEST_DIR}/requirements-azure.txt"
 
-pip3 list|grep 'azure-mgmt-web'
-
 timeout=60
 ansible --version
 
