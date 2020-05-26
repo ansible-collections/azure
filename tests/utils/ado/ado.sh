@@ -19,7 +19,7 @@ export PYTHONIOENCODING="UTF-8"
 export LC_ALL="en_US.utf-8"
 
 pip3 install virtualenv
-virtualenv --python /usr/bin/python3.7 ~/ansible-venv
+virtualenv --python /usr/bin/python3.6 ~/ansible-venv
 set +ux
 . ~/ansible-venv/bin/activate
 set -ux
