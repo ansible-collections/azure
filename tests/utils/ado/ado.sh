@@ -10,7 +10,8 @@ group="${args[0]}"
 command -v python
 python -V
 
-if $(python_ver)=='2.7':
+if ["$(python_ver)"=='2.7']
+then
     command -v pip
     pip --version
     pip list --disable-pip-version-check
@@ -33,7 +34,7 @@ if $(python_ver)=='2.7':
     cd "${TEST_DIR}"
     mkdir -p shippable/testresults
     pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
-else:
+else
     command -v pip3
     pip3 --version
     pip3 list --disable-pip-version-check
@@ -55,7 +56,7 @@ else:
     cp -aT "${SHIPPABLE_BUILD_DIR}" "${TEST_DIR}"
     cd "${TEST_DIR}"
     mkdir -p shippable/testresults
-
+fi
 timeout=60
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
