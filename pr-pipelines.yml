@@ -1,30 +1,110 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+trigger: none
 
-trigger:
-- master
+pr:
+- dev
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'ubuntu-18.04'
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-  env:
-    PY_VER: $(PY_VER)
+jobs:
+  - job: CreateResourceGroups
+    steps:
+      - bash: |
+          echo "##vso[task.setvariable variable=resource_group;isOutput=true]ansibletest-$(uuidgen)"
+          echo "##vso[task.setvariable variable=resource_group_secondary;isOutput=true]ansibletest2-$(uuidgen)"
+        name: setvar
+      - bash: |
+          echo "Generate test resource group $(setvar.resource_group), $(setvar.resource_group_secondary)"
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+              az group create -l eastus -n $(setvar.resource_group)
+              az group create -l eastus -n $(setvar.resource_group_secondary)
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  - job: RunTests
+    dependsOn: CreateResourceGroups 
+    variables:
+      TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
+      TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
+    strategy:
+      matrix:
+        Python_sanity:
+          python.version: '$(PYTHON_VER)'
+          test.key: 'sanity'
+        Python_1:
+          python.version: '$(PYTHON_VER)'
+          test.key: '1'
+        Python_2:
+          python.version: '$(PYTHON_VER)'
+          test.key: '2'
+        Python_3:
+          python.version: '$(PYTHON_VER)'
+          test.key: '3'
+        Python_4:
+          python.version: '$(PYTHON_VER)'
+          test.key: '4'
+        Python_5:
+          python.version: '$(PYTHON_VER)'
+          test.key: '5'
+        Python_6:
+          python.version: '$(PYTHON_VER)'
+          test.key: '6'
+        Python_7:
+          python.version: '$(PYTHON_VER)'
+          test.key: '7'
+        Python_9:
+          python.version: '$(PYTHON_VER)'
+          test.key: '9'
+        Python_10:
+          python.version: '$(PYTHON_VER)'
+          test.key: '10'
+        Python_11:
+          python.version: '$(PYTHON_VER)'
+          test.key: '11'
+        Python_12:
+          python.version: '$(PYTHON_VER)'
+          test.key: '12'
+        Python_13:
+          python.version: '$(PYTHON_VER)'
+          test.key: '13'
+        Python_14:
+          python.version: '$(PYTHON_VER)'
+          test.key: '14'
 
-- task: PythonScript@0
-  inputs:
-    scriptSource: 'inline'
-    script: |
-      print('Hello world 1')
-      print('$(PY_VER)')
-      print('$(test)')
-      print('Hello world 2')
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(python.version)'
+      inputs:
+        versionSpec: '$(python.version)'
+
+    - script: tests/utils/ado/ado.sh $(test.key)
+      env:
+        SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
+        AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+        AZURE_SECRET: $(AZURE_SECRET)
+        AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+        AZURE_TENANT: $(AZURE_TENANT)
+        RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
+        RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
+      displayName: 'Running Tests'
+
+  - job: CleanupResourceGroups
+    dependsOn: 
+      - CreateResourceGroups
+      - RunTests
+    condition: always()
+    variables:
+      TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
+      TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+              az group delete -n $(TEST_RESOURCE_GROUP) --yes --no-wait
+              az group delete -n $(TEST_RESOURCE_GROUP_SECONDARY) --yes --no-wait
