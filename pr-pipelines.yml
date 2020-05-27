@@ -93,7 +93,7 @@ jobs:
       displayName: "$(pythonver)" 
       #displayName: 'Running Tests'
 
-    - job: CleanupResourceGroups
+  - job: CleanupResourceGroups
     dependsOn: 
       - CreateResourceGroups
       - RunTests
