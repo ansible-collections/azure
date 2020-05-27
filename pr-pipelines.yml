@@ -90,10 +90,10 @@ jobs:
         RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
         RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
         pythonver: $(pythonver)
-      displayName: 'Running Tests'
+      displayName: "$(pythonver)" 
+      #displayName: 'Running Tests'
 
-      #- job: CleanupResourceGroups
-  - job: "$(pythonver)" 
+    - job: CleanupResourceGroups
     dependsOn: 
       - CreateResourceGroups
       - RunTests
