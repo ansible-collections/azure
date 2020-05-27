@@ -6,11 +6,9 @@ declare -a args
 IFS='/:' read -ra args <<< "$1"
 
 group="${args[0]}"
-echo $2
-echo $3
 command -v python
 python -V
-if [ "$(PYTHON_VER)"==2.7]
+if [ $2=="2.7"]
 then
     command -v pip
     pip --version
@@ -44,12 +42,12 @@ else
     export LC_ALL="en_US.utf-8"
     
     pip3 install virtualenv
-    virtualenv --python "/usr/bin/python$(PYTHON_VER)" ~/ansible-venv
+    virtualenv --python /usr/bin/python$2 ~/ansible-venv
     set +ux
     . ~/ansible-venv/bin/activate
     set -ux
     
-    pip3 install ansible==$(ANSIBLE_VER) --disable-pip-version-check
+    pip3 install ansible==$3 --disable-pip-version-check
     
     TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
     mkdir -p "${TEST_DIR}"
