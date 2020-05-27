@@ -10,7 +10,7 @@ group="${args[0]}"
 command -v python
 python -V
 
-if ["$(python_ver)"=='2.7']
+if ["$(python_ver)"=="2.7"]
 then
     command -v pip
     pip --version
@@ -21,12 +21,12 @@ then
     export LC_ALL="en_US.utf-8"
     
     pip install virtualenv
-    virtualenv --python /usr/bin/python$(python_ver) ~/ansible-venv
+    virtualenv --python "/usr/bin/python$(python_ver)" ~/ansible-venv
     set +ux
     . ~/ansible-venv/bin/activate
     set -ux
     
-    pip install ansible==$(ansible_ver) --disable-pip-version-check
+    pip install ansible=="$(ansible_ver)" --disable-pip-version-check
     
     TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
     mkdir -p "${TEST_DIR}"
@@ -44,12 +44,12 @@ else
     export LC_ALL="en_US.utf-8"
     
     pip3 install virtualenv
-    virtualenv --python /usr/bin/python$(python_ver) ~/ansible-venv
+    virtualenv --python "/usr/bin/python$(python_ver)" ~/ansible-venv
     set +ux
     . ~/ansible-venv/bin/activate
     set -ux
     
-    pip3 install ansible==$(ansible_ver) --disable-pip-version-check
+    pip3 install ansible=="$(ansible_ver)" --disable-pip-version-check
     
     TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
     mkdir -p "${TEST_DIR}"
