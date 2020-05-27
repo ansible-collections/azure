@@ -23,5 +23,5 @@ steps:
     scriptSource: 'inline'
     script: |
       print('Hello world 1')
-      print('$(PY_VER))
+      print('$(PY_VER)')
       print('Hello world 2')
