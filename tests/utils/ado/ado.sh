@@ -6,7 +6,9 @@ declare -a args
 IFS='/:' read -ra args <<< "$1"
 
 group="${args[0]}"
-
+$1
+$2
+$3
 command -v python
 python -V
 if [ "$(PYTHON_VER)"==2.7]

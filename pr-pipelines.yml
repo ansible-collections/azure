@@ -80,7 +80,7 @@ jobs:
       inputs:
         versionSpec: '$(python.version)'
 
-    - script: tests/utils/ado/ado.sh $(test.key)
+    - script: tests/utils/ado/ado.sh $(test.key) $(PYTHON_VER) $(ANIBLE_VER)
       env:
         SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
         AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
