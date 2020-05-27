@@ -26,4 +26,5 @@ steps:
     script: |
       print('Hello world 1')
       print('$(PY_VER)')
+      print('$(test)')
       print('Hello world 2')
