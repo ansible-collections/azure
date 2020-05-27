@@ -42,12 +42,12 @@ else
     export LC_ALL="en_US.utf-8"
     
     pip3 install virtualenv
-    virtualenv --python /usr/bin/python$2 ~/ansible-venv
+    virtualenv --python /usr/bin/python"$2" ~/ansible-venv
     set +ux
     . ~/ansible-venv/bin/activate
     set -ux
     
-    pip3 install ansible==$3 --disable-pip-version-check
+    pip3 install ansible=="$3" --disable-pip-version-check
     
     TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
     mkdir -p "${TEST_DIR}"
