@@ -89,11 +89,11 @@ jobs:
         AZURE_TENANT: $(AZURE_TENANT)
         RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
         RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
-        python_ver: $(python_ver)
+        pythonver: $(pythonver)
       displayName: 'Running Tests'
 
       #- job: CleanupResourceGroups
-  - job: "$(python_ver)" 
+  - job: "$(pythonver)" 
     dependsOn: 
       - CreateResourceGroups
       - RunTests
