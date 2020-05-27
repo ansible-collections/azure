@@ -8,7 +8,7 @@ IFS='/:' read -ra args <<< "$1"
 group="${args[0]}"
 command -v python
 python -V
-if [ $2=="2.7"]
+if [ $2 = "2.7" ]
 then
     command -v pip
     pip --version
