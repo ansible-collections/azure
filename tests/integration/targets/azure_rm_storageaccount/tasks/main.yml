@@ -41,7 +41,7 @@
        tags:
            test: test
            galaxy: galaxy
-       http_only: yes
+       https_only: yes
        network_acls:
          bypass: AzureServices
          default_action: Deny
@@ -84,7 +84,7 @@
        tags:
            test: test
            galaxy: galaxy
-       http_only: yes
+       https_only: yes
        network_acls:
          bypass: AzureServices
          default_action: Deny
