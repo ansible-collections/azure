@@ -40,9 +40,9 @@ set -ux
 
 if [ "$2" = "2.7" ]
 then
-    pip install ansible==2.9.0 --disable-pip-version-check
+    pip install ansible=="$2" --disable-pip-version-check
 else
-    pip3 install ansible==2.9.0 --disable-pip-version-check
+    pip3 install ansible=="$2" --disable-pip-version-check
 fi
 
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
