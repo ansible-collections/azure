@@ -41,6 +41,8 @@ set -ux
 if [ "$2" = "2.7" ]
 then
     pip install ansible=="$3" --disable-pip-version-check
+elif
+    pip install git+https://github.com/ansible/ansible.git@devel  --disable-pip-version-check
 else
     pip3 install ansible=="$3" --disable-pip-version-check
 fi

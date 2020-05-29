@@ -13,6 +13,7 @@ parameters:
   values:
     - "2.9.0"
     - "2.9.9"
+    - "devel"
 
 trigger: none
 
