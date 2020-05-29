@@ -2,9 +2,6 @@
 
 set -o pipefail -eux
 
-echo $2
-echo $3
-
 declare -a args
 IFS='/:' read -ra args <<< "$1"
 
@@ -13,7 +10,7 @@ group="${args[0]}"
 command -v python
 python -V
 
-if [ "$2"="2.7" ]
+if [ "$2" = "2.7" ]
 then
     command -v pip
     pip --version
@@ -28,7 +25,7 @@ export PATH="${PWD}/bin:${PATH}"
 export PYTHONIOENCODING="UTF-8"
 export LC_ALL="en_US.utf-8"
 
-if [ "$2"="2.7" ]
+if [ "$2" = "2.7" ]
 then
     pip install virtualenv
     virtualenv --python /usr/bin/python2.7 ~/ansible-venv
@@ -41,7 +38,7 @@ set +ux
 . ~/ansible-venv/bin/activate
 set -ux
 
-if [ "$2"="2.7" ]
+if [ "$2" = "2.7" ]
 then
     pip install ansible==2.9.0 --disable-pip-version-check
 else
@@ -54,7 +51,7 @@ cp -aT "${SHIPPABLE_BUILD_DIR}" "${TEST_DIR}"
 cd "${TEST_DIR}"
 mkdir -p shippable/testresults
 
-if [ "$2"="2.7" ]
+if [ "$2" = "2.7" ]
 then
     pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
 else
