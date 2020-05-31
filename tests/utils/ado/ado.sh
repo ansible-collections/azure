@@ -40,19 +40,9 @@ set -ux
 
 if [ "$2" = "2.7" ]
 then
-    if [ "$3" = "devel" ]
-    then
-        pip install git+https://github.com/ansible/ansible.git@devel  --disable-pip-version-check
-    else
-        pip install ansible=="$3" --disable-pip-version-check
-    fi
+    pip install ansible=="$3" --disable-pip-version-check
 else
-    if [ "$3" = "devel" ]
-    then
-        pip3 install git+https://github.com/ansible/ansible.git@devel  --disable-pip-version-check
-    else
-        pip3 install ansible=="$3" --disable-pip-version-check
-    fi
+    pip3 install ansible=="$3" --disable-pip-version-check
 fi
 
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
