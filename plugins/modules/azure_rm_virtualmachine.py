@@ -1061,9 +1061,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 current_osdisk = vm_dict['properties']['storageProfile']['osDisk']
                 current_ephemeral = current_osdisk.get('diffDiskSettings', None)
 
-                if self.ephemeral_os_disk is not None and self.ephemeral_os_disk != current_ephemeral:
+                if self.ephemeral_os_disk and current_ephemeral is None:
                     self.fail('Ephemeral OS disk not updatable: virtual machine ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
-                elif self.ephemeral_os_disk is None and self.ephemeral_os_disk != current_ephemeral:
+                elif not self.ephemeral_os_disk and current_ephemeral is not None:
                     self.fail('Ephemeral OS disk not updatable: virtual machine ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
 
                 # Try to determine if the VM needs to be updated
