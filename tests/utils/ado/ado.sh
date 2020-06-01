@@ -37,6 +37,7 @@ timeout=60
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
 
+cat  "${TEST_DIR}"/tests/integration/cloud-config-azure.ini
 cat <<EOF >> "${TEST_DIR}"/tests/integration/cloud-config-azure.ini
 [default]
 AZURE_CLIENT_ID:${AZURE_CLIENT_ID}
