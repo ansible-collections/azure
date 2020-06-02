@@ -47,6 +47,7 @@
 - assert:
     that:
       - output.changed
+      - output.ansible_facts.azure_vm.properties.storageProfile.osDisk.diffDiskSettings.option == 'Local'
 
 - name: Check virtual machine ephmeral OS disk idempotent
   azure_rm_virtualmachine:
@@ -80,8 +81,6 @@
 - assert:
     that:
       - not output.changed
-- debug:
-    var: output
 
 - name: Delete VM
   azure_rm_virtualmachine:
