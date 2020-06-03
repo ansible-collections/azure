@@ -77,6 +77,7 @@ do
 	echo "PASS"
     else
         echo "diabled" >> "${TEST_DIR}"/tests/integration/targets/"${item}"/aliases
+	cat "${TEST_DIR}"/tests/integration/targets/"${item}"/aliases
     fi
 done
 
