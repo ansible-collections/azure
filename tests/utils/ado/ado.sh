@@ -72,13 +72,11 @@ test_list=("azure_rm_acs" "azure_rm_aks" "azure_rm_appgateway" "azure_rm_appserv
 
 for item in ${test_list[*]}
 do
-    if [ "${item}" = "azure_rm_aks" ]
+    if [ "${item}" = "azure_rm_image" ]
     then
 	echo "PASS"
     else
         echo "disabled" >> "${TEST_DIR}"/tests/integration/targets/"${item}"/aliases
-	#rm  -rf "${TEST_DIR}"/tests/integration/targets/"${item}"
-	#cat "${TEST_DIR}"/tests/integration/targets/"${item}"/aliases
     fi
 done
 
