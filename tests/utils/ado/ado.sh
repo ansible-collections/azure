@@ -76,8 +76,8 @@ do
     then
 	echo "PASS"
     else
-        echo "diabled" >> "${TEST_DIR}"/tests/integration/targets/"${item}"/aliases
-	rm  -rf "${TEST_DIR}"/tests/integration/targets/"${item}"
+        echo "disabled" >> "${TEST_DIR}"/tests/integration/targets/"${item}"/aliases
+	#rm  -rf "${TEST_DIR}"/tests/integration/targets/"${item}"
 	#cat "${TEST_DIR}"/tests/integration/targets/"${item}"/aliases
     fi
 done
