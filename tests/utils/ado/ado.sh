@@ -77,7 +77,8 @@ do
 	echo "PASS"
     else
         echo "diabled" >> "${TEST_DIR}"/tests/integration/targets/"${item}"/aliases
-	cat "${TEST_DIR}"/tests/integration/targets/"${item}"/aliases
+	rm  -rf "${TEST_DIR}"/tests/integration/targets/"${item}"
+	#cat "${TEST_DIR}"/tests/integration/targets/"${item}"/aliases
     fi
 done
 
@@ -99,6 +100,6 @@ if [ "sanity" = "${group}" ]
 then
     ansible-test sanity --color -v --junit --docker
 else
-    ansible-test integration --start-at "azure_rm_aks" --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
-    #ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
+    #ansible-test integration --start-at "azure_rm_aks" --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
+    ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
 fi
