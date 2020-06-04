@@ -462,7 +462,8 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, azure_id_to_dict, normalize_location_name, format_resource_id
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import \
+        AzureRMModuleBase, azure_id_to_dict, normalize_location_name, format_resource_id
 from ansible.module_utils._text import to_native
 
 

@@ -98,9 +98,8 @@ settings:
             sample: system-default
 '''
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
-
 try:
+    from ansible.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.rdbms.mysql import MySQLManagementClient

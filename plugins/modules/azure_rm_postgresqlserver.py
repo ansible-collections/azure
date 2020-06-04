@@ -139,9 +139,9 @@ fully_qualified_domain_name:
 '''
 
 import time
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
+    from ansible.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller

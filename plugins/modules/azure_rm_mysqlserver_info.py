@@ -153,9 +153,8 @@ servers:
             sample: { tag1: abc }
 '''
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
-
 try:
+    from ansible.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.rdbms.mysql import MySQLManagementClient
     from msrest.serialization import Model
