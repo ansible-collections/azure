@@ -156,7 +156,7 @@ class AzureRMLockInfo(AzureRMModuleBase):
 
         is_old_facts = self.module._name == 'azure_rm_lock_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_lock_facts' module has been renamed to 'azure_rm_lock_info'", version='ansible.builtin:2.9')
+            self.module.deprecate("The 'azure_rm_lock_facts' module has been renamed to 'azure_rm_lock_info'", version='2.9')
 
         for key in self.module_arg_spec.keys():
             setattr(self, key, kwargs[key])
