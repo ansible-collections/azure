@@ -94,8 +94,8 @@ id:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+    from msrestazure.azure_exceptions import CloudError
 except ImportError:
     # This is handled in azure_rm_common
     pass
