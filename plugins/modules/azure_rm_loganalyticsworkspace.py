@@ -154,7 +154,7 @@ usages:
 from ansible.module_utils.common.dict_transformations import _snake_to_camel, _camel_to_snake
 
 try:
-    from ansible.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
     from msrestazure.tools import parse_resource_id
     from msrestazure.azure_exceptions import CloudError
 except ImportError:

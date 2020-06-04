@@ -123,7 +123,7 @@ roledefinitions:
 from ansible.module_utils._text import to_native
 
 try:
-    from ansible.module_utils.azure_rm_common import AzureRMModuleBase
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
     from msrest.serialization import Model
     from azure.mgmt.authorization import AuthorizationManagementClient

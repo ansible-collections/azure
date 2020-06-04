@@ -120,7 +120,7 @@ id:
 import time
 
 try:
-    from ansible.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
     from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_operation import AzureOperationPoller
     from msrestazure.tools import is_valid_resource_id

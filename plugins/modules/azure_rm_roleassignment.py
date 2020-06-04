@@ -85,7 +85,7 @@ id:
 import uuid
 
 try:
-    from ansible.module_utils.azure_rm_common import AzureRMModuleBase
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_operation import AzureOperationPoller
     from msrest.serialization import Model
