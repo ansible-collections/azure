@@ -1,1 +1,4 @@
-ignore-2.9.txt
+plugins/modules/azure_rm_image.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_image.py validate-modules:missing-module-utils-import
+plugins/modules/azure_rm_image_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_image_info.py validate-modules:missing-module-utils-import
