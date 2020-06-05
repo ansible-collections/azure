@@ -184,7 +184,7 @@ class AzureRMDtlArtifactSourceInfo(AzureRMModuleBase):
         is_old_facts = self.module._name == 'azure_rm_devtestlabartifactsource_facts'
         if is_old_facts:
             self.module.deprecate("The 'azure_rm_devtestlabartifactsource_facts' module has been renamed to 'azure_rm_devtestlabartifactsource_info'",
-                                  version='2.9')
+                                  version='2.10')
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

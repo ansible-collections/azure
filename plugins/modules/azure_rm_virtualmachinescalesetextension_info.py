@@ -159,7 +159,7 @@ class AzureRMVirtualMachineScaleSetExtensionInfo(AzureRMModuleBase):
         if is_old_facts:
             self.module.deprecate("The 'azure_rm_virtualmachinescalesetextension_facts' module has been renamed to" +
                                   " 'azure_rm_virtualmachinescalesetextension_info'",
-                                  version='2.9')
+                                  version='2.10')
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

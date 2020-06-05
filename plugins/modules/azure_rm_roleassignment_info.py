@@ -166,7 +166,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         """Main module execution method"""
         is_old_facts = self.module._name == 'azure_rm_roleassignment_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_roleassignment_facts' module has been renamed to 'azure_rm_roleassignment_info'", version='2.9')
+            self.module.deprecate("The 'azure_rm_roleassignment_facts' module has been renamed to 'azure_rm_roleassignment_info'", version='2.10')
 
         for key in list(self.module_arg_spec.keys()):
             if hasattr(self, key):
