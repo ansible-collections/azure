@@ -77,7 +77,7 @@ parameters:
 trigger: none
 
 pr:
-- master
+- dev
 
 pool:
   vmImage: 'ubuntu-18.04'
