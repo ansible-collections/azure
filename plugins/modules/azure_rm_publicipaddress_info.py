@@ -59,7 +59,7 @@ RETURN = '''
 azure_publicipaddresses:
     description:
         - List of public IP address dicts.
-        - Please note that this option will be deprecated in 2.10 when curated format will become the only supported format.
+        - Please note that this option will be deprecated in 2.13 when curated format will become the only supported format.
     returned: always
     type: list
     example: [{
@@ -220,7 +220,7 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_publicipaddress_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_publicipaddress_facts' module has been renamed to 'azure_rm_publicipaddress_info'", version='2.10')
+            self.module.deprecate("The 'azure_rm_publicipaddress_facts' module has been renamed to 'azure_rm_publicipaddress_info'", version='2.13')
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

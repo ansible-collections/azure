@@ -39,7 +39,7 @@ options:
             - If C(raw) is selected information will be returned in raw format from Azure Python SDK.
             - If C(curated) is selected the structure will be identical to input parameters of M(azure_rm_virtualmachinescaleset) module.
             - In Ansible 2.5 and lower facts are always returned in raw format.
-            - Please note that this option will be deprecated in 2.10 when curated format will become the only supported format.
+            - Please note that this option will be deprecated in 2.13 when curated format will become the only supported format.
         default: 'raw'
         choices:
             - 'curated'
@@ -297,7 +297,7 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
         is_old_facts = self.module._name == 'azure_rm_virtualmachinescaleset_facts'
         if is_old_facts:
             self.module.deprecate("The 'azure_rm_virtualmachinescaleset_facts' module has been renamed to 'azure_rm_virtualmachinescaleset_info'",
-                                  version='2.10')
+                                  version='2.13')
 
         for key in self.module_args:
             setattr(self, key, kwargs[key])
