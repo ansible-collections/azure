@@ -77,7 +77,6 @@ parameters:
 trigger: none
 
 pr:
-- dev
 - master
 
 pool:
