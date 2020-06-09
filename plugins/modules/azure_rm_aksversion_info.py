@@ -93,7 +93,7 @@ class AzureRMAKSVersion(AzureRMModuleBase):
 
         is_old_facts = self.module._name == 'azure_rm_aksversion_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_aksversion_facts' module has been renamed to 'azure_rm_aksversion_info'", version=self.module._name)
+            self.module.deprecate("The 'azure_rm_aksversion_facts' module has been renamed to 'azure_rm_aksversion_info'", version='ansible.builtin:2.9')
 
         for key in self.module_args:
             setattr(self, key, kwargs[key])
