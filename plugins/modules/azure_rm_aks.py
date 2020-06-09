@@ -60,7 +60,7 @@ options:
     agent_pool_profiles:
         description:
             - The agent pool profile suboptions.
-        type: dict
+        type: list
         suboptions:
             name:
                 description:
@@ -103,7 +103,7 @@ options:
             ports:
                 description:
                     - Agent pool's ports.
-                type: list
+                type: int
     service_principal:
         description:
             - The service principal suboptions.
