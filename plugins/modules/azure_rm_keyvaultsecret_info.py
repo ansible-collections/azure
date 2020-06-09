@@ -103,7 +103,7 @@ keyvaults:
                 - Secret version.
             type: str
             returned: always
-            sample: fd2682392504455b79c90dd04a1bf46
+            sample: fd2682392a504455b79c90dd04a1bf46
         secret:
             description: secret value.
             type: str

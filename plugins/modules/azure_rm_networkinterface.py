@@ -642,7 +642,7 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
         if self.state == 'present' and not self.ip_configurations:
             # construct the ip_configurations array for compatible
             self.deprecate('Setting ip_configuration flatten is deprecated and will be removed.'
-                           ' Using ip_configurations list to define the ip configuration', version='2.9')
+                           ' Using ip_configurations list to define the ip configuration', version=(2, 9))
             self.ip_configurations = [
                 dict(
                     private_ip_address=self.private_ip_address,
