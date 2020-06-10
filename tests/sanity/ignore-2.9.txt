@@ -4,7 +4,6 @@ plugins/modules/azure_rm_aks.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_aks.py validate-modules:undocumented-parameter
 plugins/modules/azure_rm_aks.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_aks.py validate-modules:doc-elements-mismatch
-plugins/modules/azure_rm_aks.py validate-modules:doc-type-does-not-match-spec
 plugins/modules/azure_rm_aks.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_aks.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_aks.py validate-modules:required_if-unknown-key
@@ -115,6 +114,7 @@ plugins/modules/azure_rm_deployment.py validate-modules:deprecation-either-date-
 plugins/modules/azure_rm_deployment.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_deployment.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_deployment.py validate-modules:return-syntax-error
+plugins/modules/azure_rm_deployment.py validate-modules:unparsable-with-libyaml
 plugins/modules/azure_rm_deployment_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_deployment_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_deployment_info.py validate-modules:required_if-requirements-unknown
@@ -226,6 +226,7 @@ plugins/modules/azure_rm_keyvault.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_keyvault.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_keyvault.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_keyvault_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_keyvault_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_keyvault_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_keyvault_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_keyvault_info.py validate-modules:required_if-unknown-key
@@ -344,6 +345,9 @@ plugins/modules/azure_rm_subnet.py validate-modules:required_if-requirements-unk
 plugins/modules/azure_rm_subnet.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_subnet.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_subnet_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_subnet_info.py validate-modules:deprecation-either-date-or-version
+plugins/modules/azure_rm_subnet_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_subnet_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_virtualmachine.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachine.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_virtualmachine.py validate-modules:doc-elements-mismatch
@@ -430,6 +434,7 @@ plugins/modules/azure_rm_autoscale_info.py validate-modules:required_if-unknown-
 plugins/modules/azure_rm_cdnendpoint.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_cdnendpoint.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_cdnendpoint.py validate-modules:doc-elements-mismatch
+plugins/modules/azure_rm_cdnendpoint.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_cdnendpoint.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_cdnendpoint.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_cosmosdbaccount.py validate-modules:parameter-type-not-in-doc
@@ -664,6 +669,7 @@ plugins/modules/azure_rm_roledefinition.py validate-modules:invalid-ansiblemodul
 plugins/modules/azure_rm_roledefinition.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_roledefinition.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_roledefinition.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_roledefinition.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_roledefinition_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_roledefinition_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_roledefinition_info.py validate-modules:invalid-ansiblemodule-schema
@@ -778,7 +784,6 @@ plugins/modules/azure_rm_virtualnetwork.py validate-modules:parameter-list-no-el
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:return-syntax-error
-plugins/modules/azure_rm_virtualnetwork.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:parameter-list-no-elements
@@ -801,6 +806,7 @@ plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:deprecation-e
 plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_batchaccount.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_batchaccount.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_batchaccount.py validate-modules:invalid-ansiblemodule-schema
@@ -814,7 +820,6 @@ plugins/modules/azure_rm_cdnendpoint_info.py validate-modules:required_if-unknow
 plugins/modules/azure_rm_cdnendpoint_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_cdnprofile.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_cdnprofile.py validate-modules:deprecation-either-date-or-version
-plugins/modules/azure_rm_cdnprofile.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_cdnprofile.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_cdnprofile.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_cosmosdbaccount_info.py validate-modules:parameter-type-not-in-doc
