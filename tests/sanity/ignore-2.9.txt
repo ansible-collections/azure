@@ -208,7 +208,7 @@ plugins/modules/azure_rm_iotdevicemodule.py validate-modules:required_if-unknown
 plugins/modules/azure_rm_iothub.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_iothub.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_iothub.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_iothub.py validate-modules:required_if-unknown-key: re
+plugins/modules/azure_rm_iothub.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_iothub_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_iothub_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_iothub_info.py validate-modules:required_if-requirements-unknown
@@ -233,11 +233,11 @@ plugins/modules/azure_rm_keyvaultkey.py validate-modules:deprecation-either-date
 plugins/modules/azure_rm_keyvaultkey.py validate-modules:invalid-documentation
 plugins/modules/azure_rm_keyvaultkey.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_keyvaultkey.py validate-modules:required_if-unknown-key
-plugins/modules/azure_rm_keyvaultkey_inof.py validate-modules:deprecation-either-date-or-version
-plugins/modules/azure_rm_keyvaultkey_inof.py validate-modules:parameter-list-no-elements
-plugins/modules/azure_rm_keyvaultkey_inof.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_keyvaultkey_inof.py validate-modules:required_if-unknown-key
-plugins/modules/azure_rm_keyvaultkey_inof.py validate-modules:return-syntax-error
+plugins/modules/azure_rm_keyvaultkey_info.py validate-modules:deprecation-either-date-or-version
+plugins/modules/azure_rm_keyvaultkey_info.py validate-modules:parameter-list-no-elements
+plugins/modules/azure_rm_keyvaultkey_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_keyvaultkey_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_keyvaultkey_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_keyvaultsecret.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_keyvaultsecret.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_keyvaultsecret.py validate-modules:invalid-documentation
@@ -360,7 +360,7 @@ plugins/modules/azure_rm_virtualmachineextension.py validate-modules:required_if
 plugins/modules/azure_rm_virtualmachineextension.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_virtualmachineextension_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachineextension_info.py validate-modules:deprecation-either-date-or-version
-plugins/modules/azure_rm_virtualmachineextension_info.py validate-modules: parameter-list-no-elements
+plugins/modules/azure_rm_virtualmachineextension_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_virtualmachineextension_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_virtualmachineextension_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_virtualmachineimage_info.py validate-modules:parameter-type-not-in-doc
@@ -420,7 +420,6 @@ plugins/modules/azure_rm_autoscale.py validate-modules:deprecation-either-date-o
 plugins/modules/azure_rm_autoscale.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_autoscale.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_autoscale.py validate-modules:required_if-unknown-key
-plugins/modules/azure_rm_autoscale.py validate-modules:undocumented-parameter
 plugins/modules/azure_rm_autoscale_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_autoscale_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_autoscale_info.py validate-modules:parameter-list-no-elements
@@ -589,9 +588,9 @@ plugins/modules/azure_rm_mysqlfirewallrule.py validate-modules:deprecation-eithe
 plugins/modules/azure_rm_mysqlfirewallrule.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_mysqlfirewallrule.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_mysqlfirewallrule.py validate-modules:required_if-unknown-key
-plugins/modules/azure_rm_mysqlfirewallrule_inof.py validate-modules:deprecation-either-date-or-version
-plugins/modules/azure_rm_mysqlfirewallrule_inof.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_mysqlfirewallrule_inof.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_mysqlfirewallrule_info.py validate-modules:deprecation-either-date-or-version
+plugins/modules/azure_rm_mysqlfirewallrule_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_mysqlfirewallrule_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_mysqlserver.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mysqlserver.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_mysqlserver.py validate-modules:required_if-requirements-unknown
@@ -774,13 +773,13 @@ plugins/modules/azure_rm_virtualnetwork.py validate-modules:parameter-type-not-i
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_virtualnetwork.py validate-modules:required_if-unknown-key:
+plugins/modules/azure_rm_virtualnetwork.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_virtualnetwork_info.py validate-modules: required_if-unknown-key
+plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_virtualnetworkpeering.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualnetworkpeering.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_virtualnetworkpeering.py validate-modules:doc-required-mismatch
