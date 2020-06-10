@@ -16,9 +16,9 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_deployment
 
-short_description: Create or destroy Azure Resource Manager template deployments
-
 version_added: "2.1"
+
+short_description: Create or destroy Azure Resource Manager template deployments
 
 description:
     - Create or destroy Azure Resource Manager template deployments via the Azure SDK for Python.
