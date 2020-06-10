@@ -7,6 +7,7 @@ plugins/modules/azure_rm_aks.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_aks.py validate-modules:doc-type-does-not-match-spec
 plugins/modules/azure_rm_aks.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_aks.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_aks.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_aks_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_aks_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_aks_info.py validate-modules:deprecation-either-date-or-version
@@ -207,8 +208,8 @@ plugins/modules/azure_rm_iotdevicemodule.py validate-modules:required_if-require
 plugins/modules/azure_rm_iotdevicemodule.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_iothub.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_iothub.py validate-modules:doc-elements-mismatch
-plugins/modules/azure_rm_iothub.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_iothub.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_iothub.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_iothub_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_iothub_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_iothub_info.py validate-modules:required_if-requirements-unknown
@@ -263,6 +264,7 @@ plugins/modules/azure_rm_networkinterface.py validate-modules:doc-missing-type
 plugins/modules/azure_rm_networkinterface.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_networkinterface.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_networkinterface.py validate-modules:doc-elements-mismatch
+plugins/modules/azure_rm_networkinterface.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_networkinterface.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_networkinterface.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_networkinterface.py validate-modules:required_if-unknown-key
@@ -606,6 +608,7 @@ plugins/modules/azure_rm_postgresqlconfiguration.py validate-modules:required_if
 plugins/modules/azure_rm_postgresqlconfiguration_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_postgresqlconfiguration_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_postgresqlconfiguration_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_postgresqlconfiguration_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_postgresqldatabase.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqldatabase.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_postgresqldatabase.py validate-modules:required_if-requirements-unknown
@@ -775,6 +778,7 @@ plugins/modules/azure_rm_virtualnetwork.py validate-modules:parameter-list-no-el
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:return-syntax-error
+plugins/modules/azure_rm_virtualnetwork.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:parameter-list-no-elements
@@ -810,6 +814,7 @@ plugins/modules/azure_rm_cdnendpoint_info.py validate-modules:required_if-unknow
 plugins/modules/azure_rm_cdnendpoint_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_cdnprofile.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_cdnprofile.py validate-modules:deprecation-either-date-or-version
+plugins/modules/azure_rm_cdnprofile.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_cdnprofile.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_cdnprofile.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_cosmosdbaccount_info.py validate-modules:parameter-type-not-in-doc
