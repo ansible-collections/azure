@@ -303,9 +303,9 @@ class AzureRMVaults(AzureRMModuleBase):
                         if 'certificates' in policy:
                             policy.setdefault("permissions", {})["certificates"] = policy["certificates"]
                             policy.pop("certificates", None)
-                        if 'storage' in policy:
-                            policy.setdefault("permissions", {})["storage"] = policy["storage"]
-                            policy.pop("storage", None)
+                        #if 'storage' in policy:
+                        #    policy.setdefault("permissions", {})["storage"] = policy["storage"]
+                        #    policy.pop("storage", None)
                         if policy.get('tenantId') is None:
                             # default to key vault's tenant, since that's all that's currently supported anyway
                             policy['tenantId'] = kwargs['vault_tenant']
