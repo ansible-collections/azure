@@ -130,12 +130,12 @@ keyvaults:
             returned: always
             type: list
             contains:
-                object_id:
+                objectId:
                     description: The object if of a user, service principal or security group in AAD for the vault.
                     type: str
                     returned: always
                     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-                tenant_id:
+                tenantId:
                     description: The AAD tenant iD that should be used for authenticating requests to the key vault.
                     type: str
                     returned: always
@@ -193,8 +193,8 @@ def keyvault_to_dict(vault):
         enabled_for_disk_encryption=vault.properties.enabled_for_disk_encryption,
         enabled_for_template_deployment=vault.properties.enabled_for_template_deployment,
         accessPolicies=[dict(
-            tenant_id=policy.tenant_id,
-            object_id=policy.object_id,
+            tenantId=policy.tenantId,
+            objectId=policy.objectId,
             permissions=dict(
                 keys=[kp.lower() for kp in policy.permissions.keys] if policy.permissions.keys else None,
                 secrets=[sp.lower() for sp in policy.permissions.secrets] if policy.permissions.secrets else None,
