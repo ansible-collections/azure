@@ -61,6 +61,16 @@
     accessPolicies:
       - tenantId: "{{ tenantId }}"
         objectId: "{{ objectId }}"
+        keys:
+          - get
+          - list
+          - update
+          - create
+          - import
+          - delete
+          - recover
+          - backup
+          - restore
         secrets:
           - get
           - list
