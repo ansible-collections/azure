@@ -124,18 +124,18 @@ keyvaults:
                     type: str
                     returned: always
                     sample: standard
-        accessPolicies:
+        access_policies:
             description:
                 - Location of the vault.
             returned: always
             type: list
             contains:
-                objectId:
+                object_id:
                     description: The object if of a user, service principal or security group in AAD for the vault.
                     type: str
                     returned: always
                     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-                tenantId:
+                tenant_id:
                     description: The AAD tenant iD that should be used for authenticating requests to the key vault.
                     type: str
                     returned: always
@@ -192,16 +192,16 @@ def keyvault_to_dict(vault):
         enabled_for_deployment=vault.properties.enabled_for_deployment,
         enabled_for_disk_encryption=vault.properties.enabled_for_disk_encryption,
         enabled_for_template_deployment=vault.properties.enabled_for_template_deployment,
-        accessPolicies=[dict(
-            tenantId=policy.tenantId,
-            objectId=policy.objectId,
+        access_policies=[dict(
+            tenant_id=policy.tenant_id,
+            object_id=policy.object_id,
             permissions=dict(
                 keys=[kp.lower() for kp in policy.permissions.keys] if policy.permissions.keys else None,
                 secrets=[sp.lower() for sp in policy.permissions.secrets] if policy.permissions.secrets else None,
                 certificates=[cp.lower() for cp in policy.permissions.certificates] if policy.permissions.certificates else None,
                 storage=[stp.lower() for stp in policy.permissions.storage] if policy.permissions.storage else None
             ) if policy.permissions else None,
-        ) for policy in vault.properties.accessPolicies] if vault.properties.accessPolicies else None,
+        ) for policy in vault.properties.access_policies] if vault.properties.access_policies else None,
         sku=dict(
             family=vault.properties.sku.family,
             name=vault.properties.sku.name.name

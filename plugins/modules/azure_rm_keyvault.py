@@ -50,16 +50,16 @@ options:
                 choices:
                     - 'standard'
                     - 'premium'
-    accessPolicies:
+    access_policies:
         description:
             - An array of 0 to 16 identities that have access to the key vault.
             - All identities in the array must use the same tenant ID as the key vault's tenant ID.
         suboptions:
-            tenantId:
+            tenant_id:
                 description:
                     - The Azure Active Directory tenant ID that should be used for authenticating requests to the key vault.
-                    - Current keyvault C(tenantId) value will be used if not specified.
-            objectId:
+                    - Current keyvault C(tenant_id) value will be used if not specified.
+            object_id:
                 description:
                     - The object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault.
                     - The object ID must be unique for the list of access policies.
@@ -167,9 +167,9 @@ EXAMPLES = '''
       vault_tenant: 72f98888-8666-4144-9199-2d7cd0111111
       sku:
         name: standard
-      accessPolicies:
-        - tenantId: 72f98888-8666-4144-9199-2d7cd0111111
-          objectId: 99998888-8666-4144-9199-2d7cd0111111
+      access_policies:
+        - tenant_id: 72f98888-8666-4144-9199-2d7cd0111111
+          object_id: 99998888-8666-4144-9199-2d7cd0111111
           keys:
             - get
             - list
@@ -224,12 +224,12 @@ class AzureRMVaults(AzureRMModuleBase):
             sku=dict(
                 type='dict'
             ),
-            accessPolicies=dict(
+            access_policies=dict(
                 type='list',
                 elements='dict',
                 options=dict(
-                    tenantId=dict(type='str'),
-                    objectId=dict(type='str', required=True),
+                    tenant_id=dict(type='str'),
+                    object_id=dict(type='str', required=True),
                     application_id=dict(type='str'),
                     # FUTURE: add `choices` support once choices supports lists of values
                     keys=dict(type='list'),
@@ -288,12 +288,12 @@ class AzureRMVaults(AzureRMModuleBase):
                 if key == "location":
                     self.parameters["location"] = kwargs[key]
                 elif key == "vault_tenant":
-                    self.parameters.setdefault("properties", {})["tenantId"] = kwargs[key]
+                    self.parameters.setdefault("properties", {})["tenant_id"] = kwargs[key]
                 elif key == "sku":
                     self.parameters.setdefault("properties", {})["sku"] = kwargs[key]
-                elif key == "accessPolicies":
-                    accessPolicies = kwargs[key]
-                    for policy in accessPolicies:
+                elif key == "access_policies":
+                    access_policies = kwargs[key]
+                    for policy in access_policies:
                         if 'keys' in policy:
                             policy.setdefault("permissions", {})["keys"] = policy["keys"]
                             policy.pop("keys", None)
@@ -303,13 +303,13 @@ class AzureRMVaults(AzureRMModuleBase):
                         if 'certificates' in policy:
                             policy.setdefault("permissions", {})["certificates"] = policy["certificates"]
                             policy.pop("certificates", None)
-                        #if 'storage' in policy:
-                        #    policy.setdefault("permissions", {})["storage"] = policy["storage"]
-                        #    policy.pop("storage", None)
-                        if policy.get('tenantId') is None:
+                        if 'storage' in policy:
+                            policy.setdefault("permissions", {})["storage"] = policy["storage"]
+                            policy.pop("storage", None)
+                        if policy.get('tenant_id') is None:
                             # default to key vault's tenant, since that's all that's currently supported anyway
-                            policy['tenantId'] = kwargs['vault_tenant']
-                    self.parameters.setdefault("properties", {})["accessPolicies"] = accessPolicies
+                            policy['tenant_id'] = kwargs['vault_tenant']
+                    self.parameters.setdefault("properties", {})["access_policies"] = access_policies
                 elif key == "enabled_for_deployment":
                     self.parameters.setdefault("properties", {})["enabled_for_deployment"] = kwargs[key]
                 elif key == "enabled_for_disk_encryption":
@@ -349,7 +349,7 @@ class AzureRMVaults(AzureRMModuleBase):
                 self.log("Need to check if Key Vault instance has to be deleted or may be updated")
                 if ('location' in self.parameters) and (self.parameters['location'] != old_response['location']):
                     self.to_do = Actions.Update
-                elif ('tenantId' in self.parameters) and (self.parameters['tenantId'] != old_response['tenantId']):
+                elif ('tenant_id' in self.parameters) and (self.parameters['tenant_id'] != old_response['tenant_id']):
                     self.to_do = Actions.Update
                 elif ('enabled_for_deployment' in self.parameters) and (self.parameters['enabled_for_deployment'] != old_response['enabled_for_deployment']):
                     self.to_do = Actions.Update
@@ -363,18 +363,18 @@ class AzureRMVaults(AzureRMModuleBase):
                     self.to_do = Actions.Update
                 elif ('create_mode' in self.parameters) and (self.parameters['create_mode'] != old_response['create_mode']):
                     self.to_do = Actions.Update
-                elif 'accessPolicies' in self.parameters['properties']:
-                    if len(self.parameters['properties']['accessPolicies']) != len(old_response['properties']['accessPolicies']):
+                elif 'access_policies' in self.parameters['properties']:
+                    if len(self.parameters['properties']['access_policies']) != len(old_response['properties']['access_policies']):
                         self.to_do = Actions.Update
                     else:
                         # FUTURE: this list isn't really order-dependent- we should be set-ifying the rules list for order-independent comparison
-                        for i in range(len(old_response['properties']['accessPolicies'])):
-                            n = self.parameters['properties']['accessPolicies'][i]
-                            o = old_response['properties']['accessPolicies'][i]
-                            if n.get('tenantId', False) != o.get('tenantId', False):
+                        for i in range(len(old_response['properties']['access_policies'])):
+                            n = self.parameters['properties']['access_policies'][i]
+                            o = old_response['properties']['access_policies'][i]
+                            if n.get('tenant_id', False) != o.get('tenant_id', False):
                                 self.to_do = Actions.Update
                                 break
-                            if n.get('objectId', None) != o.get('objectId', None):
+                            if n.get('object_id', None) != o.get('object_id', None):
                                 self.to_do = Actions.Update
                                 break
                             if n.get('application_id', None) != o.get('application_id', None):

@@ -1,29 +1,29 @@
 - name: Prepare random number
   set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    tenantId: "{{ azure_tenant }}"
+    tenant_id: "{{ azure_tenant }}"
   run_once: yes
 
 - name: lookup service principal object id
   set_fact:
-    objectId: "{{ lookup('azure_service_principal_attribute',
+    object_id: "{{ lookup('azure_service_principal_attribute',
                    azure_client_id=azure_client_id,
                    azure_secret=azure_secret,
-                   azure_tenant=tenantId) }}"
-  register: objectId
+                   azure_tenant=tenant_id) }}"
+  register: object_id_facts
 
 - name: Create instance of Key Vault -- check mode
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     vault_name: "vault{{ rpfx }}"
     enabled_for_deployment: yes
-    vault_tenant: "{{ tenantId }}"
+    vault_tenant: "{{ tenant_id }}"
     sku:
       name: standard
       family: A
-    accessPolicies:
-      - tenantId: "{{ tenantId }}"
-        objectId: "{{ objectId }}"
+    access_policies:
+      - tenant_id: "{{ tenant_id }}"
+        object_id: "{{ object_id }}"
         keys:
           - get
           - list
@@ -54,23 +54,13 @@
     resource_group: "{{ resource_group }}"
     vault_name: "vault{{ rpfx }}"
     enabled_for_deployment: yes
-    vault_tenant: "{{ tenantId }}"
+    vault_tenant: "{{ tenant_id }}"
     sku:
       name: standard
       family: A
-    accessPolicies:
-      - tenantId: "{{ tenantId }}"
-        objectId: "{{ objectId }}"
-        keys:
-          - get
-          - list
-          - update
-          - create
-          - import
-          - delete
-          - recover
-          - backup
-          - restore
+    access_policies:
+      - tenant_id: "{{ tenant_id }}"
+        object_id: "{{ object_id }}"
         secrets:
           - get
           - list
@@ -90,13 +80,13 @@
     resource_group: "{{ resource_group }}"
     vault_name: "vault{{ rpfx }}"
     enabled_for_deployment: yes
-    vault_tenant: "{{ tenantId }}"
+    vault_tenant: "{{ tenant_id }}"
     sku:
       name: standard
       family: A
-    accessPolicies:
-      - tenantId: "{{ tenantId }}"
-        objectId: "{{ objectId }}"
+    access_policies:
+      - tenant_id: "{{ tenant_id }}"
+        object_id: "{{ object_id }}"
         secrets:
           - get
           - list
@@ -116,13 +106,13 @@
     resource_group: "{{ resource_group }}"
     vault_name: "vault{{ rpfx }}"
     enabled_for_deployment: yes
-    vault_tenant: "{{ tenantId }}"
+    vault_tenant: "{{ tenant_id }}"
     sku:
       name: standard
       family: A
-    accessPolicies:
-      - tenantId: "{{ tenantId }}"
-        objectId: "{{ objectId }}"
+    access_policies:
+      - tenant_id: "{{ tenant_id }}"
+        object_id: "{{ object_id }}"
         keys:
           - get
           - list
@@ -161,7 +151,7 @@
       - facts['keyvaults'] | length == 1
       - facts['keyvaults'][0]['vault_uri'] != None
       - facts['keyvaults'][0]['name'] != None
-      - facts['keyvaults'][0]['accessPolicies'] != None
+      - facts['keyvaults'][0]['access_policies'] != None
       - facts['keyvaults'][0]['sku'] != None
       - facts['keyvaults'][0]['id'] != None
 #
