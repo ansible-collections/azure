@@ -50,7 +50,7 @@ options:
                 choices:
                     - 'standard'
                     - 'premium'
-    access_policies:
+    accessPolicies:
         description:
             - An array of 0 to 16 identities that have access to the key vault.
             - All identities in the array must use the same tenant ID as the key vault's tenant ID.
@@ -167,7 +167,7 @@ EXAMPLES = '''
       vault_tenant: 72f98888-8666-4144-9199-2d7cd0111111
       sku:
         name: standard
-      access_policies:
+      accessPolicies:
         - tenant_id: 72f98888-8666-4144-9199-2d7cd0111111
           object_id: 99998888-8666-4144-9199-2d7cd0111111
           keys:
@@ -224,7 +224,7 @@ class AzureRMVaults(AzureRMModuleBase):
             sku=dict(
                 type='dict'
             ),
-            access_policies=dict(
+            accessPolicies=dict(
                 type='list',
                 elements='dict',
                 options=dict(
@@ -291,9 +291,9 @@ class AzureRMVaults(AzureRMModuleBase):
                     self.parameters.setdefault("properties", {})["tenant_id"] = kwargs[key]
                 elif key == "sku":
                     self.parameters.setdefault("properties", {})["sku"] = kwargs[key]
-                elif key == "access_policies":
-                    access_policies = kwargs[key]
-                    for policy in access_policies:
+                elif key == "accessPolicies":
+                    accessPolicies = kwargs[key]
+                    for policy in accessPolicies:
                         if 'keys' in policy:
                             policy.setdefault("permissions", {})["keys"] = policy["keys"]
                             policy.pop("keys", None)
@@ -309,7 +309,7 @@ class AzureRMVaults(AzureRMModuleBase):
                         if policy.get('tenant_id') is None:
                             # default to key vault's tenant, since that's all that's currently supported anyway
                             policy['tenant_id'] = kwargs['vault_tenant']
-                    self.parameters.setdefault("properties", {})["access_policies"] = access_policies
+                    self.parameters.setdefault("properties", {})["accessPolicies"] = accessPolicies
                 elif key == "enabled_for_deployment":
                     self.parameters.setdefault("properties", {})["enabled_for_deployment"] = kwargs[key]
                 elif key == "enabled_for_disk_encryption":
@@ -363,14 +363,14 @@ class AzureRMVaults(AzureRMModuleBase):
                     self.to_do = Actions.Update
                 elif ('create_mode' in self.parameters) and (self.parameters['create_mode'] != old_response['create_mode']):
                     self.to_do = Actions.Update
-                elif 'access_policies' in self.parameters['properties']:
-                    if len(self.parameters['properties']['access_policies']) != len(old_response['properties']['access_policies']):
+                elif 'accessPolicies' in self.parameters['properties']:
+                    if len(self.parameters['properties']['accessPolicies']) != len(old_response['properties']['accessPolicies']):
                         self.to_do = Actions.Update
                     else:
                         # FUTURE: this list isn't really order-dependent- we should be set-ifying the rules list for order-independent comparison
-                        for i in range(len(old_response['properties']['access_policies'])):
-                            n = self.parameters['properties']['access_policies'][i]
-                            o = old_response['properties']['access_policies'][i]
+                        for i in range(len(old_response['properties']['accessPolicies'])):
+                            n = self.parameters['properties']['accessPolicies'][i]
+                            o = old_response['properties']['accessPolicies'][i]
                             if n.get('tenant_id', False) != o.get('tenant_id', False):
                                 self.to_do = Actions.Update
                                 break

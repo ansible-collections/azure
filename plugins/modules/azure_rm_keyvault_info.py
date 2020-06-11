@@ -124,7 +124,7 @@ keyvaults:
                     type: str
                     returned: always
                     sample: standard
-        access_policies:
+        accessPolicies:
             description:
                 - Location of the vault.
             returned: always
@@ -192,7 +192,7 @@ def keyvault_to_dict(vault):
         enabled_for_deployment=vault.properties.enabled_for_deployment,
         enabled_for_disk_encryption=vault.properties.enabled_for_disk_encryption,
         enabled_for_template_deployment=vault.properties.enabled_for_template_deployment,
-        access_policies=[dict(
+        accessPolicies=[dict(
             tenant_id=policy.tenant_id,
             object_id=policy.object_id,
             permissions=dict(
@@ -201,7 +201,7 @@ def keyvault_to_dict(vault):
                 certificates=[cp.lower() for cp in policy.permissions.certificates] if policy.permissions.certificates else None,
                 storage=[stp.lower() for stp in policy.permissions.storage] if policy.permissions.storage else None
             ) if policy.permissions else None,
-        ) for policy in vault.properties.access_policies] if vault.properties.access_policies else None,
+        ) for policy in vault.properties.accessPolicies] if vault.properties.accessPolicies else None,
         sku=dict(
             family=vault.properties.sku.family,
             name=vault.properties.sku.name.name
