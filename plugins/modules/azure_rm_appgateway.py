@@ -441,11 +441,10 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from copy import deepcopy
 from ansible.module_utils.common.dict_transformations import (
     camel_dict_to_snake_dict, snake_dict_to_camel_dict,
-    _camel_to_snake, _snake_to_camel,
+    _camel_to_snake, _snake_to_camel, dict_merge,
 )
 
 try:
-    from ansible.module_utils.network.common.utils import dict_merge
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
     from azure.mgmt.network import NetworkManagementClient
