@@ -92,7 +92,7 @@ except ImportError:
 
 def create_replication_dict(replication):
     if replication is None:
-        return dict()
+        return None 
     results = dict(
         id=replication.id,
         name=replication.name,
@@ -144,7 +144,6 @@ class AzureRMReplications(AzureRMModuleBase):
         self.location = None
 
         self.results = dict(changed=False)
-        self.mgmt_client = None
         self.state = None
         self.to_do = Actions.NoAction
 
