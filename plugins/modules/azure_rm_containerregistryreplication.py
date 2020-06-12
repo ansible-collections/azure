@@ -92,7 +92,7 @@ except ImportError:
 
 def create_replication_dict(replication):
     if replication is None:
-        return None 
+        return None
     results = dict(
         id=replication.id,
         name=replication.name,
