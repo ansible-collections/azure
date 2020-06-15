@@ -72,7 +72,7 @@ status:
         - The status of the replication at the time the operation was called.
     returned: always
     type: str
-    sample: status
+    sample: Ready
 '''
 
 import time
