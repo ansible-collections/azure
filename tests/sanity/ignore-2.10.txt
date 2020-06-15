@@ -781,7 +781,6 @@ plugins/modules/azure_rm_virtualnetwork.py validate-modules:deprecation-either-d
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:required_if-unknown-key
-plugins/modules/azure_rm_virtualnetwork.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:parameter-list-no-elements
