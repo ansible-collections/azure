@@ -71,9 +71,8 @@ status:
     description:
         - The status of the replication at the time the operation was called.
     returned: always
-    type: complex
+    type: str
     sample: status
-    contains:
 '''
 
 import time
