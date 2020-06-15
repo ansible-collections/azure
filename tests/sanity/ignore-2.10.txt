@@ -82,7 +82,6 @@ plugins/modules/azure_rm_containerregistry_info.py validate-modules:required_if-
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:doc-choices-do-not-match-spec
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:doc-default-does-not-match-spec
-plugins/modules/azure_rm_containerregistryreplication.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:undocumented-parameter
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:required_if-requirements-unknown
