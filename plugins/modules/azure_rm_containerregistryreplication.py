@@ -197,8 +197,8 @@ class AzureRMReplications(AzureRMModuleBase):
 
             if not old_response:
                 self.results['changed'] = True
-#            else:
-#                self.results['changed'] = old_response.__ne__(response)
+            else:
+                self.results['changed'] = old_response.__ne__(response)
             self.log("Creation / Update done")
         elif self.to_do == Actions.Delete:
             self.log("Replication instance deleted")
