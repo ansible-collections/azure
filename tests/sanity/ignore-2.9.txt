@@ -31,7 +31,6 @@ plugins/modules/azure_rm_containerregistry_info.py validate-modules:missing-modu
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:doc-choices-do-not-match-spec
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:doc-default-does-not-match-spec
-plugins/modules/azure_rm_containerregistryreplication.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:undocumented-parameter
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:missing-module-utils-import
 plugins/modules/azure_rm_containerregistryreplication_facts.py validate-modules:parameter-type-not-in-doc
