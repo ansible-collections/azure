@@ -339,7 +339,7 @@ class AzureRMAppServicePlans(AzureRMModuleBase):
             sku_def = SkuDescription(tier=get_sku_name(
                 sku), name=sku, capacity=self.number_of_workers)
             plan_def = AppServicePlan(
-                location=self.location, sku=sku_def, reserved=self.is_linux, tags=self.tags if self.tags else None)
+                location=self.location, app_service_plan=self.name, sku=sku_def, reserved=self.is_linux, tags=self.tags if self.tags else None)
 
             response = self.web_client.app_service_plans.create_or_update(self.resource_group, self.name, plan_def)
 
