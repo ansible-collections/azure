@@ -643,7 +643,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 self.update_network_rule_set()
 
             if self.network_acls.get('default_action', 'Allow') == 'Deny':
-                self.network_acls['bypass'] != self.account_dict['network_acls']['bypass']:
+                if self.network_acls['bypass'] != self.account_dict['network_acls']['bypass']:
                     self.results['changed'] = True
                     self.account_dict['network_acls']['bypass'] = self.network_acls['bypass']
                     self.update_network_rule_set()
