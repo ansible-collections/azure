@@ -82,7 +82,7 @@ AZURE_API_PROFILES = {
             snapshots='2018-10-01',
             virtual_machine_run_commands='2018-10-01'
         ),
-        'NetworkManagementClient': '2018-08-01',
+        'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
         'StorageManagementClient': '2017-10-01',
         'WebSiteManagementClient': '2018-02-01',
@@ -936,7 +936,7 @@ class AzureRMModuleBase(object):
         if not self._network_client:
             self._network_client = self.get_mgmt_svc_client(NetworkManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2018-08-01')
+                                                            api_version='2019-06-01')
         return self._network_client
 
     @property
