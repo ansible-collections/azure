@@ -59,7 +59,7 @@ RETURN = '''
 azure_publicipaddresses:
     description:
         - List of public IP address dicts.
-        - Please note that this option will be deprecated in 2.13 when curated format will become the only supported format.
+        - Please note that this option will be deprecated in 2.10 when curated format will become the only supported format.
     returned: always
     type: list
     example: [{
