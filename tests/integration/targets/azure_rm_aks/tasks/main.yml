@@ -1,5 +1,6 @@
  - set_fact:
      rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+     noderpfx: "{{ resource_group | hash('md5') | truncate(4, True, '') }}"
 
  - name: Find available k8s version
    azure_rm_aksversion_info:
@@ -27,7 +28,7 @@
            enable_auto_scaling: True
            max_count: 3
            min_count: 1
-     node_resource_group: nodetest
+     node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
    check_mode: yes
 
@@ -63,7 +64,7 @@
            enable_auto_scaling: True
            max_count: 3
            min_count: 1
-     node_resource_group: nodetest
+     node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
    register: output
 
@@ -105,7 +106,7 @@
            enable_auto_scaling: True
            max_count: 3
            min_count: 1
-     node_resource_group: nodetest
+     node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
    register: output
 
@@ -137,7 +138,7 @@
            count: 1
            vm_size: Standard_DS1_v2
            type: VirtualMachineScaleSets
-     node_resource_group: nodetest
+     node_resource_group: "node{{ noderpfx }}"
      addon:
         http_application_routing: {}
      network_profile:
@@ -171,7 +172,7 @@
            count: 1
            vm_size: Standard_DS1_v2
            type: VirtualMachineScaleSets
-     node_resource_group: nodetest
+     node_resource_group: "node{{ noderpfx }}"
      addon:
         http_application_routing: {}
      network_profile:
@@ -204,7 +205,7 @@
            enable_auto_scaling: True
            max_count: 6
            min_count: 3
-     node_resource_group: nodetest
+     node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
    register: output
 
@@ -235,7 +236,7 @@
            enable_auto_scaling: True
            max_count: 6
            min_count: 3
-     node_resource_group: nodetest
+     node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
    register: output
 
