@@ -86,7 +86,7 @@ id:
 '''
 
 import time
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
+from ..module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from msrestazure.azure_exceptions import CloudError

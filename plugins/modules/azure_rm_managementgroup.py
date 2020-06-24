@@ -211,8 +211,8 @@ properties:
 
 import time
 import json
-from ansible.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from ansible.module_utils.azure_rm_common_rest import GenericRestClient
+from ..module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+from ..module_utils.azure_rm_common_rest import GenericRestClient
 try:
     from msrestazure.azure_exceptions import CloudError
 except ImportError:

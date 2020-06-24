@@ -189,7 +189,7 @@ rediscaches:
                     sample: X2xXXxx7xxxxxx5xxxx0xxxxx75xxxxxxxxXXXxxxxx=
 '''
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
+from ..module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from azure.common import AzureHttpError

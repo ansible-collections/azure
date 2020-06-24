@@ -140,7 +140,7 @@ fully_qualified_domain_name:
 '''
 
 import time
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
+from ..module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
