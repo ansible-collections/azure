@@ -17,6 +17,18 @@ DOCUMENTATION = r'''
         - By default, sets C(ansible_host) to the first public IP address found (preferring the primary NIC). If no
           public IPs are found, the first private IP (also preferring the primary NIC). The default may be overridden
           via C(hostvar_expressions); see examples.
+        hostnames:
+          description:
+            - A list of Jinja2 expressions in order of precedence to compose inventory_hostname.
+            - Ignores expression if result is an empty string or None value.
+            - By default, inventory_hostname is generated to be globally unique based on the VM host name.
+              See C(plain_host_names) for more details on the default.
+            - An expression of 'default' will force using the default hostname generator if no previous
+              hostname expression resulted in a valid hostname.
+            - Use ``default_inventory_hostname`` to access the default hostname generator's value in
+              any of the Jinja2 expressions.
+          type: list
+          default: [default]
 '''
 
 EXAMPLES = '''
@@ -73,9 +85,11 @@ hostvar_expressions:
   # overrides the default ansible_host value with a custom Jinja2 expression, in this case, the first DNS hostname, or
   # if none are found, the first public IP address.
   ansible_host: (public_dns_hostnames + public_ipv4_addresses) | first
-  # overrides the default inventory_hostname value with a custom Jinja2 expression, in this case, a tag called vm_name.
-  # if the tag is not found, use the default_inventory_hostname (see plain_host_names).
-  inventory_hostname: tags.vm_name | default(default_inventory_hostname)
+
+# change how inventory_hostname is generated. Each item is a jinja2 expression similar to hostvar_expressions.
+hostnames:
+  - tags.vm_name
+  - default  # special var that uses the default hashed name
 
 # places hosts in dynamically-created groups based on a variable value.
 keyed_groups:
@@ -119,7 +133,7 @@ from ansible.module_utils.six import iteritems
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMAuth
 from ansible.errors import AnsibleParserError, AnsibleError
 from ansible.module_utils.parsing.convert_bool import boolean
-from ansible.module_utils._text import to_native, to_bytes
+from ansible.module_utils._text import to_native, to_bytes, to_text
 from itertools import chain
 from msrest import ServiceClient, Serializer, Deserializer
 from msrestazure import AzureConfiguration
@@ -264,13 +278,14 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         constructable_config_strict = boolean(self.get_option('fail_on_template_errors'))
         constructable_config_compose = self.get_option('hostvar_expressions')
-        constructable_config_inventory_hostname = constructable_config_compose.pop('inventory_hostname')
         constructable_config_groups = self.get_option('conditional_groups')
         constructable_config_keyed_groups = self.get_option('keyed_groups')
 
+        constructable_hostnames = self.get_option('hostnames')
+
         for h in self._hosts:
             # FUTURE: track hostnames to warn if a hostname is repeated (can happen for legacy and for composed inventory_hostname)
-            inventory_hostname = self._get_hostname(h, compose=constructable_config_inventory_hostname, strict=constructable_config_strict)
+            inventory_hostname = self._get_hostname(h, hostnames=constructable_hostnames, strict=constructable_config_strict)
             if self._filter_host(inventory_hostname, h.hostvars):
                 continue
             self.inventory.add_host(inventory_hostname)
@@ -303,15 +318,30 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         return False
 
-    def _get_hostname(self, host, compose=None, strict=False):
-        if not compose:
-            return host.default_inventory_hostname
-        try:
-            return self._compose(compose, host.hostvars)
-        except Exception as e:
-            if strict:
-                raise AnsibleParserError("Error generating inventory_hostname with '{0}' (hostvar_expressions.inventory_hostname) for host {1}: {2}".format(compose, host.default_inventory_hostname, to_native(e))
-            return host.default_inventory_hostname
+    def _get_hostname(self, host, hostnames=None, strict=False):
+        hostname = None
+        errors = []
+
+        for preference in hostnames:
+            if preference == 'default':
+                return host.default_inventory_hostname
+            try:
+                hostname = self._compose(preference, host.hostvars)
+            except Exception as e:  # pylint: disable=broad-except
+                if strict:
+                    raise AnsibleError("Could not compose %s as hostnames - %s" % (preference, to_native(e)))
+                else:
+                    errors.append(
+                        (preference, str(e))
+                    )
+            if hostname:
+                return to_text(hostname)
+
+        raise AnsibleError(
+            'Could not template any hostname for host, errors for each preference: %s' % (
+                ', '.join(['%s: %s' % (pref, err) for pref, err in errors])
+            )
+        )
 
     def _process_queue_serial(self):
         try:
