@@ -52,7 +52,7 @@ options:
         version_added: "2.8"
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Chris Houseknecht (@chouseknecht)
@@ -173,6 +173,32 @@ storageaccounts:
             returned: always
             type: bool
             sample: false
+        network_acls:
+            description:
+                - A set of firewall and virtual network rules
+            returned: always
+            type: dict
+            sample: {
+                    "bypass": "AzureServices",
+                    "default_action": "Deny",
+                    "virtual_network_rules": [
+                        {
+                            "action": "Allow",
+                            "id": "/subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/ \
+                                    providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet"
+                            }
+                        ],
+                    "ip_rules": [
+                        {
+                            "action": "Allow",
+                            "value": "1.2.3.4"
+                        },
+                        {
+                            "action": "Allow",
+                            "value": "123.234.123.0/24"
+                        }
+                    ]
+                    }
         provisioning_state:
             description:
                 - The status of the storage account at the time the operation was called.
@@ -423,7 +449,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_storageaccount_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_storageaccount_facts' module has been renamed to 'azure_rm_storageaccount_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_storageaccount_facts' module has been renamed to 'azure_rm_storageaccount_info'", version=(2, 9))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
@@ -514,6 +540,23 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 name=account_obj.custom_domain.name,
                 use_sub_domain=account_obj.custom_domain.use_sub_domain
             )
+
+        account_dict['network_acls'] = None
+        if account_obj.network_rule_set:
+            account_dict['network_acls'] = dict(
+                bypass=account_obj.network_rule_set.bypass,
+                default_action=account_obj.network_rule_set.default_action,
+                ip_rules=account_obj.network_rule_set.ip_rules
+            )
+            if account_obj.network_rule_set.virtual_network_rules:
+                account_dict['network_acls']['virtual_network_rules'] = []
+                for rule in account_obj.network_rule_set.virtual_network_rules:
+                    account_dict['network_acls']['virtual_network_rules'].append(dict(id=rule.virtual_network_resource_id, action=rule.action))
+
+            if account_obj.network_rule_set.ip_rules:
+                account_dict['network_acls']['ip_rules'] = []
+                for rule in account_obj.network_rule_set.ip_rules:
+                    account_dict['network_acls']['ip_rules'].append(dict(value=rule.ip_address_or_range, action=rule.action))
 
         account_dict['primary_endpoints'] = None
         if account_obj.primary_endpoints:

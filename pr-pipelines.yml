@@ -1,3 +1,79 @@
+parameters:
+- name: PYTHON_VER
+  displayName: 'Python Version'
+  type: string
+  default: "2.7"
+  values:
+    - "2.7"
+    - "3.6"
+- name: ANSIBLE_VER
+  displayName: 'Ansible Version'
+  type: string
+  default: "2.9.0"
+  values:
+    - "2.9.0"
+    - "devel"
+- name: MODULE_NAME
+  displayName: 'Test Module'
+  type: string
+  default: 'all'
+  values:
+    - 'all'
+    - "azure_rm_acs"
+    - "azure_rm_aks"
+    - "azure_rm_appgateway"
+    - "azure_rm_appserviceplan"
+    - "azure_rm_automationaccount"
+    - "azure_rm_autoscale"
+    - "azure_rm_availabilityset"
+    - "azure_rm_azurefirewall"
+    - "azure_rm_batchaccount"
+    - "azure_rm_cdnprofile"
+    - "azure_rm_containerinstance"
+    - "azure_rm_containerregistry"
+    - "azure_rm_cosmosdbaccount"
+    - "azure_rm_deployment"
+    - "azure_rm_dnsrecordset"
+    - "azure_rm_dnszone"
+    - "azure_rm_functionapp"
+    - "azure_rm_gallery"
+    - "azure_rm_hdinsightcluster"
+    - "azure_rm_image"
+    - "azure_rm_iothub"
+    - "azure_rm_keyvault"
+    - "azure_rm_keyvaultkey"
+    - "azure_rm_keyvaultsecret"
+    - "azure_rm_loadbalancer"
+    - "azure_rm_manageddisk"
+    - "azure_rm_mariadbserver"
+    - "azure_rm_monitorlogprofile"
+    - "azure_rm_mysqlserver"
+    - "azure_rm_networkinterface"
+    - "azure_rm_postgresqlserver"
+    - "azure_rm_publicipaddress"
+    - "azure_rm_rediscache"
+    - "azure_rm_resource"
+    - "azure_rm_resourcegroup"
+    - "azure_rm_routetable"
+    - "azure_rm_securitygroup"
+    - "azure_rm_servicebus"
+    - "azure_rm_sqlserver"
+    - "azure_rm_storageaccount"
+    - "azure_rm_storageblob"
+    - "azure_rm_subnet"
+    - "azure_rm_trafficmanagerprofile"
+    - "azure_rm_virtualmachine"
+    - "azure_rm_virtualmachineextension"
+    - "azure_rm_virtualmachineimage_info"
+    - "azure_rm_virtualmachinescaleset"
+    - "azure_rm_virtualnetwork"
+    - "azure_rm_virtualnetworkgateway"
+    - "azure_rm_virtualnetworkeepring"
+    - "azure_rm_webapp"
+    - "azure_rm_workspace"
+    - "inventory_azure"
+    - "setup_azure"
+
 trigger: none
 
 pr:
@@ -31,47 +107,47 @@ jobs:
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
     strategy:
       matrix:
-        Python27_sanity:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_sanity":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: 'sanity'
-        Python27_1:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_1":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '1'
-        Python27_2:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_2":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '2'
-        Python27_3:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_3":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '3'
-        Python27_4:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_4":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '4'
-        Python27_5:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_5":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '5'
-        Python27_6:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_6":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '6'
-        Python27_7:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_7":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '7'
-        Python27_9:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_9":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '9'
-        Python27_10:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_10":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '10'
-        Python27_11:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_11":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '11'
-        Python27_12:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_12":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '12'
-        Python27_13:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_13":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '13'
-        Python27_14:
-          python.version: '2.7'
+        "Python${{ parameters.PYTHON_VER }}_14":
+          python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '14'
 
     steps:
@@ -80,7 +156,7 @@ jobs:
       inputs:
         versionSpec: '$(python.version)'
 
-    - script: tests/utils/ado/ado.sh $(test.key)
+    - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.PYTHON_VER }} ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
       env:
         SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
         AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)

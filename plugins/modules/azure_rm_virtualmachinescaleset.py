@@ -262,8 +262,8 @@ options:
         version_added: "2.10"
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Sertac Ozercan (@sozercan)
@@ -597,7 +597,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         if self.module._name == 'azure_rm_virtualmachine_scaleset':
-            self.module.deprecate("The 'azure_rm_virtualmachine_scaleset' module has been renamed to 'azure_rm_virtualmachinescaleset'", version='2.12')
+            self.module.deprecate("The 'azure_rm_virtualmachine_scaleset' module has been renamed to 'azure_rm_virtualmachinescaleset'", version=(2, 9))
 
         # make sure options are lower case
         self.remove_on_absent = set([resource.lower() for resource in self.remove_on_absent])

@@ -3,6 +3,10 @@
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
+
 import os
 import re
 import types
@@ -358,7 +362,6 @@ class AzureRMModuleBase(object):
         self.module = AnsibleModule(argument_spec=merged_arg_spec,
                                     bypass_checks=bypass_checks,
                                     no_log=no_log,
-                                    check_invalid_arguments=check_invalid_arguments,
                                     mutually_exclusive=mutually_exclusive,
                                     required_together=required_together,
                                     required_one_of=required_one_of,
@@ -1007,7 +1010,7 @@ class AzureRMModuleBase(object):
     @property
     def managedcluster_models(self):
         self.log("Getting container service models")
-        return ContainerServiceClient.models('2018-03-31')
+        return ContainerServiceClient.models('2019-04-01')
 
     @property
     def managedcluster_client(self):
@@ -1015,7 +1018,7 @@ class AzureRMModuleBase(object):
         if not self._managedcluster_client:
             self._managedcluster_client = self.get_mgmt_svc_client(ContainerServiceClient,
                                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                   api_version='2018-03-31')
+                                                                   api_version='2019-04-01')
         return self._managedcluster_client
 
     @property

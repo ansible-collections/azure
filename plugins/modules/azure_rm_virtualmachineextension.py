@@ -68,7 +68,7 @@ options:
         type: bool
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Sertac Ozercan (@sozercan)
@@ -214,7 +214,7 @@ class AzureRMVMExtension(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         if self.module._name == 'azure_rm_virtualmachine_extension':
-            self.module.deprecate("The 'azure_rm_virtualmachine_extension' module has been renamed to 'azure_rm_virtualmachineextension'", version='2.12')
+            self.module.deprecate("The 'azure_rm_virtualmachine_extension' module has been renamed to 'azure_rm_virtualmachineextension'", version=(2, 9))
 
         resource_group = None
         response = None

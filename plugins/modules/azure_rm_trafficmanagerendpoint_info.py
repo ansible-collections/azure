@@ -44,7 +44,7 @@ options:
             - nested_endpoints
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Hai Cao (@caohai)
@@ -227,7 +227,7 @@ class AzureRMTrafficManagerEndpointInfo(AzureRMModuleBase):
         is_old_facts = self.module._name == 'azure_rm_trafficmanagerendpoint_facts'
         if is_old_facts:
             self.module.deprecate("The 'azure_rm_trafficmanagerendpoint_facts' module has been renamed to 'azure_rm_trafficmanagerendpoint_info'",
-                                  version='2.13')
+                                  version=(2, 9))
 
         for key in self.module_args:
             setattr(self, key, kwargs[key])

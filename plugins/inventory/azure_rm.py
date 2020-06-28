@@ -9,7 +9,7 @@ DOCUMENTATION = r'''
     plugin_type: inventory
     short_description: Azure Resource Manager inventory plugin
     extends_documentation_fragment:
-      - azure
+      - azure.azcollection.azure
     description:
         - Query VM details from Azure Resource Manager
         - Requires a YAML configuration file whose name ends with 'azure_rm.(yml|yaml)'
