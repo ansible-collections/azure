@@ -16,9 +16,9 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_deployment
 
-short_description: Create or destroy Azure Resource Manager template deployments
-
 version_added: "2.1"
+
+short_description: Create or destroy Azure Resource Manager template deployments
 
 description:
     - Create or destroy Azure Resource Manager template deployments via the Azure SDK for Python.
@@ -118,7 +118,7 @@ EXAMPLES = '''
 # Create or update a template deployment based on a uri to the template and parameters specified inline.
 # This deploys a VM with SSH support for a given public key, then stores the result in 'azure_vms'. The result is then
 # used to create a new host group. This host group is then used to wait for each instance to respond to the public IP SSH.
----
+
 - name: Create Azure Deploy
   azure_rm_deployment:
     resource_group: myResourceGroup
