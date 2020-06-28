@@ -133,7 +133,7 @@ def timedelta_to_minutes(time):
 
 
 def get_enum_value(item):
-    if 'value' in dir(item):
+    if hasattr(item, 'value'):
         return to_native(item.value)
     return to_native(item)
 
@@ -233,7 +233,7 @@ class AzureRMAutoScaleInfo(AzureRMModuleBase):
 
         is_old_facts = self.module._name == 'azure_rm_autoscale_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_autoscale_facts' module has been renamed to 'azure_rm_autoscale_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_autoscale_facts' module has been renamed to 'azure_rm_autoscale_info'", version=(2, 9))
 
         for key in list(self.module_arg_spec):
             setattr(self, key, kwargs[key])

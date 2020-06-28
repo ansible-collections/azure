@@ -1,0 +1,101 @@
+- include_tasks: setup.yml
+
+- name: Create minimal VM with defaults
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    admin_username: "testuser"
+    admin_password: "Pass123$$$abx!"
+    vm_size: Standard_DS2_v2
+    image:
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 16.04-LTS
+      version: latest
+  register: vm_output
+
+- name: Generalize VM
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    generalized: yes
+
+- name: Create an image from VM
+  azure_rm_image:
+    resource_group: "{{ resource_group }}"
+    source: "{{ vm_name }}"
+    name: testimage
+    os_type: Linux
+  register: output
+
+- assert:
+    that:
+      - output.changed
+
+- name: Create virtual machine ephmeral OS disk
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}-02"
+    admin_username: "testuser"
+    admin_password: "Pass123$$$abx!"
+    vm_size: Standard_DS2_v2
+    os_disk_caching: ReadOnly
+    ephemeral_os_disk: True
+    image: testimage
+  register: output
+
+- assert:
+    that:
+      - output.changed
+      - output.ansible_facts.azure_vm.properties.storageProfile.osDisk.diffDiskSettings.option == 'Local'
+
+- name: Check virtual machine ephmeral OS disk idempotent
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}-02"
+    admin_username: "testuser"
+    admin_password: "Pass123$$$abx!"
+    vm_size: Standard_DS2_v2
+    os_disk_caching: ReadOnly
+    ephemeral_os_disk: True
+    image: testimage
+  register: output
+
+- assert:
+    that:
+      - not output.changed
+
+- name: Check virtual machine ephmeral OS disk can't update
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}-02"
+    admin_username: "testuser"
+    admin_password: "Pass123$$$abx!"
+    vm_size: Standard_DS2_v2
+    os_disk_caching: ReadOnly
+    ephemeral_os_disk: False
+    image: testimage
+  ignore_errors: yes
+  register: ouput
+
+- assert:
+    that:
+      - not output.changed
+
+- name: Delete VM
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    state: absent
+
+- name: Delete VM
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}-02"
+    state: absent
+
+- name: Create an image from VM
+  azure_rm_image:
+    resource_group: "{{ resource_group }}"
+    name: testimage
+    state: absent
