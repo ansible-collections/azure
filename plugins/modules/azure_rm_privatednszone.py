@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2020 Jose Angel Munoz, <josea.munoz@gmail.com>
@@ -31,15 +31,18 @@ options:
     resource_group:
         description:
             - Name of resource group.
+        type: str
         required: true
     name:
         description:
             - Name of the private DNS zone.
+        type: str
         required: true
     state:
         description:
             - Assert the state of the zone. Use C(present) to create or update and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present

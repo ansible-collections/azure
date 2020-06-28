@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2020 Jose Angel Munoz, <josea.munoz@gmail.com>
@@ -31,12 +31,15 @@ options:
     resource_group:
         description:
             - Limit results by resource group. Required when filtering by name.
+        type: str
     name:
         description:
             - Only show results for a specific zone.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -57,10 +60,11 @@ EXAMPLES = '''
   azure_rm_privatednszone_info:
     resource_group: myResourceGroup
 
-- name: Get facts by tags
+- name: Get facts for privatednszone with tags
   azure_rm_privatednszone_info:
     tags:
       - testing
+      - foo:bar
 '''
 
 RETURN = '''
