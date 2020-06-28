@@ -37,7 +37,7 @@
         - not output.changed
 
 - name: Get automation account
-  azure_rm_automationaccount_facts:
+  azure_rm_automationaccount_info:
       name: "{{ name }}"
       resource_group: "{{ resource_group }}"
       list_statistics: yes
