@@ -46,67 +46,15 @@
       - zones.dnszones[0].tags.test == 'modified'
       - zones.dnszones[0].type == 'public'
 
-- name: Create virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: "{{ item }}"
-    address_prefixes_cidr:
-      - 10.1.0.0/16
-      - 172.100.0.0/16
-  with_items:
-    - "{{ domain_name }}registration1"
-    - "{{ domain_name }}resolution1"
-    - "{{ domain_name }}registration2"
-    - "{{ domain_name }}resolution2"
-
-- name: Create private dns zone
-  azure_rm_dnszone:
-    name: "{{ domain_name }}.private"
-    resource_group: "{{ resource_group }}"
-    type: private
-    registration_virtual_networks:
-      - name: "{{ domain_name }}registration1"
-    resolution_virtual_networks:
-      - name: "{{ domain_name }}resolution1"
-      - name: "{{ domain_name }}resolution2"
-  register: results
-
-- assert:
-    that:
-        - "results.state.registration_virtual_networks | length == 1"
-        - "results.state.resolution_virtual_networks | length == 2"
-        - results.state.type == 'private'
-
-- name: Update private dns zone
-  azure_rm_dnszone:
-    name: "{{ domain_name }}.private"
-    resource_group: "{{ resource_group }}"
-    type: private
-    registration_virtual_networks:
-      - name: "{{ domain_name }}registration1"
-    resolution_virtual_networks:
-      - name: "{{ domain_name }}resolution1"
-  register: results
-
-- assert:
-    that:
-        - "results.state.registration_virtual_networks | length == 1"
-        - "results.state.resolution_virtual_networks | length == 1"
-        - results.state.type == 'private'
-
 - name: Test idempotent
   azure_rm_dnszone:
-    name: "{{ item }}"
+    name: "{{ domain_name }}.com"
     resource_group: "{{ resource_group }}"
-  with_items:
-    - "{{ domain_name }}.com"
-    - "{{ domain_name }}.private"
   register: results
 
 - assert:
     that:
-        - "not {{ item.changed }}"
-  with_items: "{{ results.results }}"
+      - not results.changed
 
 #
 # azure_rm_dnsrecordset test
@@ -338,11 +286,8 @@
 - name: Delete DNS zone
   azure_rm_dnszone:
     resource_group: "{{ resource_group }}"
-    name: "{{ item }}"
+    name:  "{{ domain_name }}.com"
     state: absent
-  with_items:
-    - "{{ domain_name }}.com"
-    - "{{ domain_name }}.private"
 
 - name: Delete DNS zone (idempotent)
   azure_rm_dnszone:

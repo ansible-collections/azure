@@ -206,8 +206,8 @@ options:
         type: list
         version_added: '2.7'
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Chris Houseknecht (@chouseknecht)
@@ -462,7 +462,11 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, azure_id_to_dict, normalize_location_name, format_resource_id
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import (AzureRMModuleBase,
+                                                                                         azure_id_to_dict,
+                                                                                         normalize_location_name,
+                                                                                         format_resource_id
+                                                                                         )
 from ansible.module_utils._text import to_native
 
 
@@ -638,7 +642,7 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
         if self.state == 'present' and not self.ip_configurations:
             # construct the ip_configurations array for compatible
             self.deprecate('Setting ip_configuration flatten is deprecated and will be removed.'
-                           ' Using ip_configurations list to define the ip configuration', version='2.9')
+                           ' Using ip_configurations list to define the ip configuration', version=(2, 9))
             self.ip_configurations = [
                 dict(
                     private_ip_address=self.private_ip_address,

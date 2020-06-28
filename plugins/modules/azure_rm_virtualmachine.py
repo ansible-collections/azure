@@ -382,8 +382,8 @@ options:
                 required: false
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Chris Houseknecht (@chouseknecht)
@@ -779,7 +779,11 @@ except ImportError:
     pass
 
 from ansible.module_utils.basic import to_native, to_bytes
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, azure_id_to_dict, normalize_location_name, format_resource_id
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import (AzureRMModuleBase,
+                                                                                         azure_id_to_dict,
+                                                                                         normalize_location_name,
+                                                                                         format_resource_id
+                                                                                         )
 
 
 AZURE_OBJECT_CLASS = 'VirtualMachine'

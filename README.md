@@ -11,6 +11,12 @@ This collection provides a series of Ansible modules and plugins for interacting
 
 ## Installation
 
+To install Azure dependencies:
+
+```bash
+pip install -r requirements-azure.txt
+```
+
 To install Azure collection hosted in Galaxy:
 
 ```bash

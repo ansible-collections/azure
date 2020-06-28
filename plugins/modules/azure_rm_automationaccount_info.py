@@ -52,7 +52,7 @@ options:
         type: bool
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -285,7 +285,7 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
 
         is_old_facts = self.module._name == 'azure_rm_automationaccount_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_automationaccount_facts' module has been renamed to 'azure_rm_automationaccount_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_automationaccount_facts' module has been renamed to 'azure_rm_automationaccount_info'", version=(2, 9))
 
         for key in list(self.module_arg_spec):
             setattr(self, key, kwargs[key])

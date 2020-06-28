@@ -146,8 +146,8 @@ options:
                     - The list of countries/regions mapped to this endpoint when using the 'Geographic' traffic routing method.
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - "Hai Cao <t-haicao@microsoft.com>"

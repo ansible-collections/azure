@@ -50,7 +50,7 @@ options:
         type: dict
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Jose Angel Munoz (@imjoseangel)
