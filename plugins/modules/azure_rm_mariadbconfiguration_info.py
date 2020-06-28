@@ -100,8 +100,7 @@ settings:
             sample: system-default
 '''
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
-
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 try:
     from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_operation import AzureOperationPoller
@@ -139,7 +138,7 @@ class AzureRMMariaDbConfigurationInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_mariadbconfiguration_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_mariadbconfiguration_facts' module has been renamed to 'azure_rm_mariadbconfiguration_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_mariadbconfiguration_facts' module has been renamed to 'azure_rm_mariadbconfiguration_info'", version=(2, 9))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
