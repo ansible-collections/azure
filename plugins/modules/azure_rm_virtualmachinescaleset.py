@@ -116,6 +116,12 @@ options:
             - Windows
             - Linux
         default: Linux
+    ephemeral_os_disk:
+        description:
+            - Parameters of ephemeral disk settings that can be specified for operating system disk.
+            - Ephemeral OS disk is only supported for VMS Instances using Managed Disk.
+        type: bool
+        default: False
     managed_disk_type:
         description:
             - Managed disk type.
@@ -540,7 +546,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                       product=dict(type='str', required=True), name=dict(type='str', required=True),
                       promotion_code=dict(type='str'))),
             scale_in_policy=dict(type='str', choices=['Default', 'OldestVM', 'NewestVM']),
-            terminate_event_timeout_minutes=dict(type='int')
+            terminate_event_timeout_minutes=dict(type='int'),
+            ephemeral_os_disk=dict(type='bool')
         )
 
         self.resource_group = None
@@ -578,6 +585,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         self.plan = None
         self.scale_in_policy = None
         self.terminate_event_timeout_minutes = None
+        self.ephemeral_os_disk = None
 
         mutually_exclusive = [('load_balancer', 'application_gateway')]
         self.results = dict(
@@ -711,6 +719,13 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             if self.state == 'present':
                 differences = []
                 results = vmss_dict
+                current_osdisk = vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']
+                current_ephemeral = current_osdisk.get('diffDiskSettings', None)
+
+                if self.ephemeral_os_disk and current_ephemeral is None:
+                    self.fail('Ephemeral OS disk not updatable: virtual machine scale set ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
+                elif not self.ephemeral_os_disk and current_ephemeral is not None:
+                    self.fail('Ephemeral OS disk not updatable: virtual machine scale set ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
 
                 if self.os_disk_caching and \
                    self.os_disk_caching != vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']['caching']:
@@ -899,6 +914,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                                     managed_disk=managed_disk,
                                     create_option=self.compute_models.DiskCreateOptionTypes.from_image,
                                     caching=self.os_disk_caching,
+                                    diff_disk_settings=self.compute_models.DiffDiskSettings(option='Local') if self.ephemeral_os_disk else None,
                                 ),
                                 image_reference=image_reference,
                             ),
