@@ -378,12 +378,12 @@ servicebuses:
 '''
 
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, azure_id_to_dict
     from msrestazure.azure_exceptions import CloudError
 except Exception:
     # This is handled in azure_rm_common
     pass
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase, azure_id_to_dict
 from ansible.module_utils.common.dict_transformations import _camel_to_snake
 from ansible.module_utils._text import to_native
 from datetime import datetime, timedelta
@@ -443,7 +443,7 @@ class AzureRMServiceBusInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_servicebus_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_servicebus_facts' module has been renamed to 'azure_rm_servicebus_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_servicebus_facts' module has been renamed to 'azure_rm_servicebus_info'", version=(2, 9))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

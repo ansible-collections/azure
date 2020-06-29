@@ -175,6 +175,12 @@ options:
             - Windows
             - Linux
         default: Linux
+    ephemeral_os_disk:
+        description:
+            - Parameters of ephemeral disk settings that can be specified for operating system disk.
+            - Ephemeral OS disk is only supported for VMS Instances using Managed Disk.
+        type: bool
+        default: False
     data_disks:
         description:
             - Describes list of data disks.
@@ -779,7 +785,11 @@ except ImportError:
     pass
 
 from ansible.module_utils.basic import to_native, to_bytes
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, azure_id_to_dict, normalize_location_name, format_resource_id
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import (AzureRMModuleBase,
+                                                                                         azure_id_to_dict,
+                                                                                         normalize_location_name,
+                                                                                         format_resource_id
+                                                                                         )
 
 
 AZURE_OBJECT_CLASS = 'VirtualMachine'
@@ -843,6 +853,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             vm_identity=dict(type='str', choices=['SystemAssigned']),
             winrm=dict(type='list'),
             boot_diagnostics=dict(type='dict'),
+            ephemeral_os_disk=dict(type='bool'),
         )
 
         self.resource_group = None
@@ -887,6 +898,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.license_type = None
         self.vm_identity = None
         self.boot_diagnostics = None
+        self.ephemeral_os_disk = None
 
         self.results = dict(
             changed=False,
@@ -1050,6 +1062,13 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 differences = []
                 current_nics = []
                 results = vm_dict
+                current_osdisk = vm_dict['properties']['storageProfile']['osDisk']
+                current_ephemeral = current_osdisk.get('diffDiskSettings', None)
+
+                if self.ephemeral_os_disk and current_ephemeral is None:
+                    self.fail('Ephemeral OS disk not updatable: virtual machine ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
+                elif not self.ephemeral_os_disk and current_ephemeral is not None:
+                    self.fail('Ephemeral OS disk not updatable: virtual machine ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
 
                 # Try to determine if the VM needs to be updated
                 if self.network_interface_names:
@@ -1290,7 +1309,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 managed_disk=managed_disk,
                                 create_option=self.compute_models.DiskCreateOptionTypes.from_image,
                                 caching=self.os_disk_caching,
-                                disk_size_gb=self.os_disk_size_gb
+                                disk_size_gb=self.os_disk_size_gb,
+                                diff_disk_settings=self.compute_models.DiffDiskSettings(option='Local') if self.ephemeral_os_disk else None
                             ),
                             image_reference=image_reference,
                         ),

@@ -125,7 +125,7 @@
     that: results.changed
 
 - name: Get VMSS to assert no VMSS is created in check mode
-  azure_rm_virtualmachinescaleset_facts:
+  azure_rm_virtualmachinescaleset_info:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     format: curated
@@ -204,7 +204,7 @@
     that: results.changed
 
 - name: Retrieve scaleset facts
-  azure_rm_virtualmachinescaleset_facts:
+  azure_rm_virtualmachinescaleset_info:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     format: curated
@@ -215,7 +215,7 @@
         - output_scaleset.vmss[0].load_balancer == "testLB1"
 
 - name: Retrieve scaleset VMs facts
-  azure_rm_virtualmachinescalesetinstance_facts:
+  azure_rm_virtualmachinescalesetinstance_info:
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
   register: instances
@@ -294,11 +294,12 @@
     that: not results.changed
 
 - name: Query extension
-  azure_rm_virtualmachinescalesetextension_facts:
+  azure_rm_virtualmachinescalesetextension_info:
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
     name: testExtension
   register: results
+
 - name: Assert that facts are returned
   assert:
     that:
@@ -314,10 +315,11 @@
       - results.extensions[0]['provisioning_state'] != None
 
 - name: List extensions
-  azure_rm_virtualmachinescalesetextension_facts:
+  azure_rm_virtualmachinescalesetextension_info:
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
   register: results
+
 - name: Assert that facts are returned
   assert:
     that:
@@ -331,7 +333,6 @@
       - results.extensions[0]['settings'] != None
       - results.extensions[0]['auto_upgrade_minor_version'] != None
       - results.extensions[0]['provisioning_state'] != None
-
 
 - name: Delete VMSS Extension
   azure_rm_virtualmachinescalesetextension:
@@ -380,7 +381,6 @@
 - name: Assert that something has changed
   assert:
     that: results.changed
-
 
 - name: Delete VMSS
   azure_rm_virtualmachinescaleset:
@@ -517,6 +517,59 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
+    state: absent
+
+- name: Create VMSS with ephmeral OS disk.
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}3
+    vm_size: Standard_DS2_v2
+    capacity: 0
+    virtual_network_name: testVnet
+    subnet_name: testSubnet
+    admin_username: testuser
+    ssh_password_enabled: true
+    admin_password: "Password1234!"
+    ephemeral_os_disk: True
+    image:
+      name: testimageb
+      resource_group: "{{ resource_group }}"
+    upgrade_policy: Manual
+    security_group:
+      name: testNetworkSecurityGroup2
+      resource_group: "{{ resource_group_secondary }}"
+  register: results
+
+- assert:
+    that:
+      - results.changed
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.storageProfile.osDisk.diffDiskSettings.option == 'Local'
+
+- name: Check VMSS ephmeral OS disk can't udpate
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}3
+    vm_size: Standard_DS2_v2
+    capacity: 0
+    virtual_network_name: testVnet
+    subnet_name: testSubnet
+    admin_username: testuser
+    ssh_password_enabled: true
+    admin_password: "Password1234!"
+    ephemeral_os_disk: False
+    image:
+      name: testimageb
+      resource_group: "{{ resource_group }}"
+    upgrade_policy: Manual
+    security_group:
+      name: testNetworkSecurityGroup2
+      resource_group: "{{ resource_group_secondary }}"
+  ignore_errors: yes
+
+- name: Delete VMSS
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}3
     state: absent
 
 - name: Fail when instance type is not supported to enable accelerated networking
