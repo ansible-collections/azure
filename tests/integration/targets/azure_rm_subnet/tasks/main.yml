@@ -94,6 +94,18 @@
 - assert:
     that: not output.changed
 
+- name: Able to completely remove service endpoints
+  azure_rm_subnet:
+    name: foobar
+    virtual_network_name: My_Virtual_Network
+    resource_group: "{{ resource_group }}"
+    address_prefix_cidr: "10.1.0.0/16"
+    service_endpoints: []
+  register: output
+
+- assert:
+    that: output.state.service_endpoints is not defined
+
 - name: Create network security group in another resource group
   azure_rm_securitygroup:
     name: secgroupfoo
