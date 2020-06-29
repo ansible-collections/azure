@@ -86,7 +86,7 @@ AZURE_API_PROFILES = {
             snapshots='2018-10-01',
             virtual_machine_run_commands='2018-10-01'
         ),
-        'NetworkManagementClient': '2018-08-01',
+        'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
         'StorageManagementClient': '2017-10-01',
         'WebSiteManagementClient': '2018-02-01',
