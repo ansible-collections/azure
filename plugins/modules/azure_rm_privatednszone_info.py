@@ -93,10 +93,12 @@ privatednszones:
             description:
                 - id of the private DNS Zone.
             sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privatednszones/azure.com"
+            type: str
         name:
             description:
                 - name of the private DNS zone.
             sample: azure.com
+            type: str
         number_of_record_sets:
             description:
                 - The current number of record sets in this private DNS zone.
@@ -151,7 +153,7 @@ class AzurePrivateRMDNSZoneInfo(AzureRMModuleBase):
         if is_old_facts:
             self.module.deprecate(
                 "The 'azure_rm_privatednszone_facts' module has been renamed to 'azure_rm_privatednszone_info'",
-                version='2.13')
+                version=((2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
