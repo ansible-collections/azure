@@ -39,7 +39,7 @@ options:
         type: str
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -106,9 +106,8 @@ databases:
             sample: English_United States.1252
 '''
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
-
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
     from msrest.serialization import Model
@@ -145,7 +144,7 @@ class AzureRMMariaDbDatabaseInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_mariadbdatabase_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_mariadbdatabase_facts' module has been renamed to 'azure_rm_mariadbdatabase_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_mariadbdatabase_facts' module has been renamed to 'azure_rm_mariadbdatabase_info'", version=(2, 9))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

@@ -37,7 +37,7 @@ options:
         type: list
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -154,9 +154,9 @@ servers:
             sample: { tag1: abc }
 '''
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
     from msrest.serialization import Model
@@ -192,7 +192,7 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_postgresqlserver_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_postgresqlserver_facts' module has been renamed to 'azure_rm_postgresqlserver_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_postgresqlserver_facts' module has been renamed to 'azure_rm_postgresqlserver_info'", version=(2, 9))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

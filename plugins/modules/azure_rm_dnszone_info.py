@@ -35,8 +35,8 @@ options:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Obezimnaka Boms (@ozboms)
@@ -164,7 +164,7 @@ class AzureRMDNSZoneInfo(AzureRMModuleBase):
 
         is_old_facts = self.module._name == 'azure_rm_dnszone_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_dnszone_facts' module has been renamed to 'azure_rm_dnszone_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_dnszone_facts' module has been renamed to 'azure_rm_dnszone_info'", version=(2, 9))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

@@ -9,18 +9,12 @@ import os
 import re
 import sys
 import time
+from ansible.module_utils.urls import open_url as urlopen
 
 try:
     from typing import NoReturn
 except ImportError:
     NoReturn = None
-
-try:
-    # noinspection PyCompatibility
-    from urllib2 import urlopen  # pylint: disable=ansible-bad-import-from
-except ImportError:
-    # noinspection PyCompatibility
-    from urllib.request import urlopen
 
 
 def main():  # type: () -> None

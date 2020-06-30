@@ -38,7 +38,7 @@ options:
         type: str
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -98,9 +98,8 @@ rules:
             sample: 10.0.0.18
 '''
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
-
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.rdbms.mysql import MySQLManagementClient
@@ -139,7 +138,7 @@ class AzureRMMySqlFirewallRuleInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_mysqlfirewallrule_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_mysqlfirewallrule_facts' module has been renamed to 'azure_rm_mysqlfirewallrule_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_mysqlfirewallrule_facts' module has been renamed to 'azure_rm_mysqlfirewallrule_info'", version=(2, 9))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

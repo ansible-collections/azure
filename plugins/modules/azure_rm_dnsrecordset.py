@@ -90,8 +90,8 @@ options:
                     - Primary data value for all record types.
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Obezimnaka Boms (@ozboms)

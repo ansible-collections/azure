@@ -350,8 +350,8 @@ options:
             - (deprecated) The protocol for the NAT pool.
             - This option has been deprecated, and will be removed in 2.9. Use I(inbound_nat_pools) instead.
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Thomas Stringer (@trstringer)
@@ -741,7 +741,7 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
             is_compatible_param = is_compatible_param or self.public_ip_address_name or self.probe_protocol or self.natpool_protocol or self.protocol
             if is_compatible_param:
                 self.deprecate('Discrete load balancer config settings are deprecated and will be removed.'
-                               ' Use frontend_ip_configurations, backend_address_pools, probes, inbound_nat_pools lists instead.', version='2.9')
+                               ' Use frontend_ip_configurations, backend_address_pools, probes, inbound_nat_pools lists instead.', version=(2, 9))
                 frontend_ip_name = 'frontendip0'
                 backend_address_pool_name = 'backendaddrp0'
                 prob_name = 'prob0'

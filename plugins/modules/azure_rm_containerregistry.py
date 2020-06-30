@@ -53,8 +53,8 @@ options:
             - Premium
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yawei Wang (@yaweiw)
