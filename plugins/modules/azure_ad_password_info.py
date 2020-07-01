@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'supported_by': 'community'}
 
 DOCUMENTATION = '''
-module: azure_rm_password_info
+module: azure_ad_password_info
 
 version_added: "2.10"
 
@@ -69,7 +69,7 @@ author:
 
 EXAMPLES = '''
   - name: get ad password info
-    azure_rm_password_info:
+    azure_ad_password_info:
       app_id: "{{ app_id }}"
       tenant: "{{ tenant_id }}"
       key_id: "{{ key_id }}"
@@ -111,7 +111,7 @@ passwords:
 
 '''
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from msrestazure.azure_exceptions import CloudError

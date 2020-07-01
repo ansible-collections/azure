@@ -17,7 +17,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_password
+module: azure_ad_password
 
 version_added: "2.10"
 
@@ -77,7 +77,7 @@ author:
 
 EXAMPLES = '''
     - name: create ad password
-      azure_rm_password:
+      azure_ad_password:
         app_id: "{{ app_id }}"
         state: present
         value: "$abc12345678"
@@ -108,7 +108,7 @@ start_date:
 
 '''
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from msrestazure.azure_exceptions import CloudError

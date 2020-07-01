@@ -52,8 +52,6 @@ parameters:
     - "azure_rm_postgresqlserver"
     - "azure_rm_privatednszone"
     - "azure_rm_publicipaddress"
-    - "azure_rm_password"
-    - "azure_rm_serviceprincipal"
     - "azure_rm_rediscache"
     - "azure_rm_resource"
     - "azure_rm_resourcegroup"
@@ -74,6 +72,8 @@ parameters:
     - "azure_rm_virtualnetworkeepring"
     - "azure_rm_webapp"
     - "azure_rm_workspace"
+    - "azure_ad_password"
+    - "azure_ad_serviceprincipal"
     - "inventory_azure"
     - "setup_azure"
 

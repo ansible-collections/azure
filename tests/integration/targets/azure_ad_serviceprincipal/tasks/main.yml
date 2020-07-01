@@ -1,11 +1,15 @@
+- set_fact:
+  app_id: "5d1e77d2-fc51-428d-ab67-4322e9544814"
+  tenant_id: "72f988bf-86f1-41af-91ab-2d7cd011db47"
+
 - name: delete ad service principal
-  azure_rm_serviceprincipal:
+  azure_ad_serviceprincipal:
     app_id: "{{ app_id }}"
     tenant: "{{ tenant_id }}"
     state: absent
 
 - name: create ad service principal
-  azure_rm_serviceprincipal:
+  azure_ad_serviceprincipal:
     app_id: "{{ app_id }}"
     tenant: "{{ tenant_id }}"
     state: present
@@ -16,7 +20,7 @@
         - ad_fact.changed
 
 - name: create ad service principal (idempontent)
-  azure_rm_serviceprincipal:
+  azure_ad_serviceprincipal:
     app_id: "{{ app_id }}"
     tenant: "{{ tenant_id }}"
     state: present
@@ -27,7 +31,7 @@
         - not output.changed
 
 - name: Get ad service principal info
-  azure_rm_serviceprincipal_info:
+  azure_ad_serviceprincipal_info:
     app_id: "{{ app_id }}"
     tenant: "{{ tenant_id }}"
   register: ad_info
@@ -38,7 +42,7 @@
         - ad_info.service_principals[0].app_role_assignment_required == ad_fact.app_role_assignment_required
 
 - name: delete ad service principal
-  azure_rm_serviceprincipal:
+  azure_ad_serviceprincipal:
     app_id: "{{ app_id }}"
     tenant: "{{ tenant_id }}"
     state: absent

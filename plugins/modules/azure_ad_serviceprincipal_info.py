@@ -13,7 +13,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'supported_by': 'community'}
 
 DOCUMENTATION = '''
-module: azure_rm_serviceprincipal_info
+module: azure_ad_serviceprincipal_info
 
 version_added: "2.10"
 
@@ -48,7 +48,7 @@ author:
 
 EXAMPLES = '''
   - name: get ad sp info
-    azure_rm_serviceprincipal_info:
+    azure_ad_serviceprincipal_info:
       app_id: "{{ app_id }}"
       tenant: "{{ tenant_id }}"
 
@@ -82,7 +82,7 @@ object_id:
 
 '''
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
+from ansible.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
     from msrestazure.azure_exceptions import CloudError
