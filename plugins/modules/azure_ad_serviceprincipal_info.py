@@ -110,7 +110,7 @@ class AzureRMServicePrincipalInfo(AzureRMModuleBase):
                                                           supports_check_mode=False,
                                                           supports_tags=False,
                                                           is_ad_resource=True)
-                                            
+
     def exec_module(self, **kwargs):
 
         for key in list(self.module_arg_spec.keys()):
@@ -129,19 +129,20 @@ class AzureRMServicePrincipalInfo(AzureRMModuleBase):
         except GraphErrorException as ge:
             self.fail("failed to get service principal info {0}".format(str(ge)))
 
-        return  self.results
+        return self.results
 
     def to_dict(self, object):
         return dict(
-            app_id = object.app_id,
-            object_id = object.object_id,
-            app_display_name = object.display_name,
-            app_role_assignment_required= object.app_role_assignment_required
+            app_id=object.app_id,
+            object_id=object.object_id,
+            app_display_name=object.display_name,
+            app_role_assignment_required=object.app_role_assignment_required
         )
 
 
 def main():
     AzureRMServicePrincipalInfo()
+
 
 if __name__ == '__main__':
     main()

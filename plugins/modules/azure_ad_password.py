@@ -6,7 +6,7 @@
 
 from __future__ import absolute_import, division, print_function
 import datetime
-from dateutil.relativedelta import  relativedelta
+from dateutil.relativedelta import relativedelta
 
 __metaclass__ = type
 
@@ -149,7 +149,7 @@ class AzureADPassword(AzureRMModuleBase):
                                               supports_check_mode=False,
                                               supports_tags=False,
                                               is_ad_resource=True)
-                                            
+
     def exec_module(self, **kwargs):
 
         for key in list(self.module_arg_spec.keys()):
@@ -205,7 +205,7 @@ class AzureADPassword(AzureRMModuleBase):
         try:
             return list(self.client.applications.list_password_credentials(self.app_object_id))
         except GraphErrorException as ge:
-            self.fail("failed to fetch passwords for app {0}: {1}".format(self.app_object_id,str(ge)))
+            self.fail("failed to fetch passwords for app {0}: {1}".format(self.app_object_id, str(ge)))
 
     def delete_all_passwords(self, old_passwords):
 
@@ -278,8 +278,10 @@ class AzureADPassword(AzureRMModuleBase):
             key_id=pd.key_id
         )
 
+
 def main():
     AzureADPassword()
+
 
 if __name__ == '__main__':
     main()

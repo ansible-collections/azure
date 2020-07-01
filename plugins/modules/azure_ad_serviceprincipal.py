@@ -102,6 +102,7 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
+
 class Actions:
     NoAction, Create, Update, Delete = range(4)
 
@@ -127,7 +128,7 @@ class AzureRMServicePrincipal(AzureRMModuleBaseExt):
                                                       supports_check_mode=False,
                                                       supports_tags=False,
                                                       is_ad_resource=True)
-                                            
+
     def exec_module(self, **kwargs):
 
         for key in list(self.module_arg_spec.keys()):
@@ -140,7 +141,7 @@ class AzureRMServicePrincipal(AzureRMModuleBaseExt):
                 if self.check_update(response):
                     self.update_resource(response)
             elif self.state == 'absent':
-                    self.delete_resource(response)
+                self.delete_resource(response)
         else:
             if self.state == 'present':
                 self.create_resource()
@@ -197,22 +198,24 @@ class AzureRMServicePrincipal(AzureRMModuleBaseExt):
             return False
 
     def check_update(self, response):
-        app_assignment_changed = self.app_role_assignment_required is not None and self.app_role_assignment_required != response.get('app_role_assignment_required', None)
+        app_assignment_changed = self.app_role_assignment_required is not None and
+                                 self.app_role_assignment_required != response.get('app_role_assignment_required', None)
         to_be_update = False or app_assignment_changed
 
         return to_be_update
 
     def to_dict(self, object):
         return dict(
-            app_id = object.app_id,
-            object_id = object.object_id,
-            app_display_name = object.display_name,
-            app_role_assignment_required= object.app_role_assignment_required
+            app_id=object.app_id,
+            object_id=object.object_id,
+            app_display_name=object.display_name,
+            app_role_assignment_required=object.app_role_assignment_required
         )
 
 
 def main():
     AzureRMServicePrincipal()
+
 
 if __name__ == '__main__':
     main()

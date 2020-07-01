@@ -6,7 +6,7 @@
 
 from __future__ import absolute_import, division, print_function
 import datetime
-from dateutil.relativedelta import  relativedelta
+from dateutil.relativedelta import relativedelta
 
 __metaclass__ = type
 
@@ -42,7 +42,7 @@ options:
         description:
             - The tenant ID.
         type: str
-            required: True
+        required: True
     end_date:
         description:
             - Date or datemtime after which credentials expire.
@@ -151,7 +151,7 @@ class AzureADPasswordInfo(AzureRMModuleBase):
                                                   supports_check_mode=False,
                                                   supports_tags=False,
                                                   is_ad_resource=True)
-                                            
+ 
     def exec_module(self, **kwargs):
 
         for key in list(self.module_arg_spec.keys()):
@@ -162,10 +162,10 @@ class AzureADPasswordInfo(AzureRMModuleBase):
         passwords = self.get_all_passwords()
 
         if self.key_id:
-            filtered = [ pd for pd in passwords if pd.key_id == self.key_id]
-            self.results['passwords'] = [ self.to_dict(pd) for pd in filtered]
+            filtered = [pd for pd in passwords if pd.key_id == self.key_id]
+            self.results['passwords'] = [self.to_dict(pd) for pd in filtered]
         else:
-            self.results['passwords'] = [ self.to_dict(pd) for pd in passwords]
+            self.results['passwords'] = [self.to_dict(pd) for pd in passwords]
 
         return self.results
 
@@ -196,7 +196,7 @@ class AzureADPasswordInfo(AzureRMModuleBase):
         try:
             return list(self.client.applications.list_password_credentials(self.app_object_id))
         except GraphErrorException as ge:
-            self.fail("failed to fetch passwords for app {0}: {1".format(self.app_object_id,str(ge)))
+            self.fail("failed to fetch passwords for app {0}: {1".format(self.app_object_id, str(ge)))
 
     @staticmethod
     def to_dict(pd):
@@ -207,8 +207,10 @@ class AzureADPasswordInfo(AzureRMModuleBase):
             custom_key_identifier=str(pd.custom_key_identifier)
         )
 
+
 def main():
     AzureADPasswordInfo()
+
 
 if __name__ == '__main__':
     main()
