@@ -6,7 +6,10 @@
 
 from __future__ import absolute_import, division, print_function
 import datetime
-from dateutil.relativedelta import relativedelta
+try:
+    from dateutil.relativedelta import relativedelta
+except ImportError:
+    pass
 
 __metaclass__ = type
 
