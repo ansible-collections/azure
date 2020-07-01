@@ -89,7 +89,7 @@ end_date:
     description:
         - Date or datemtime after which credentials expire.
         - Default value is one year after current time.
-    type: datetime
+    type: str
     returned: always
     sample: 2021-06-28T06:00:32.637070+00:00
 key_id:
@@ -102,7 +102,7 @@ start_date:
     description:
         - Date or datetime at which credentials become valid.
         - Default value is current time.
-    type: datetime
+    type: str
     returned: always
     sample: 2020-06-28T06:00:32.637070+00:00
 
@@ -151,7 +151,6 @@ class AzureADPassword(AzureRMModuleBase):
                                               is_ad_resource=True)
 
     def exec_module(self, **kwargs):
-
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
@@ -189,7 +188,7 @@ class AzureADPassword(AzureRMModuleBase):
                 if not self.app_id:
                     self.fail("can't resolve app via service principal object id {0}".format(self.service_principal_object_id))
 
-                result = list(self.client.applications.list(filter="appId eq '{}'".format(self.app_id)))
+                result = list(self.client.applications.list(filter="appId eq {0}".format(self.app_id)))
                 if result:
                     self.app_object_id = result[0].object_id
                 else:

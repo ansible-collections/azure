@@ -198,8 +198,8 @@ class AzureRMServicePrincipal(AzureRMModuleBaseExt):
             return False
 
     def check_update(self, response):
-        app_assignment_changed = self.app_role_assignment_required is not None and
-                                 self.app_role_assignment_required != response.get('app_role_assignment_required', None)
+        app_assignment_changed = self.app_role_assignment_required is not None and\
+                                    self.app_role_assignment_required != response.get('app_role_assignment_required', None)
         to_be_update = False or app_assignment_changed
 
         return to_be_update
