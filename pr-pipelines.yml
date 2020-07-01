@@ -52,6 +52,8 @@ parameters:
     - "azure_rm_postgresqlserver"
     - "azure_rm_privatednszone"
     - "azure_rm_publicipaddress"
+    - "azure_rm_password"
+    - "azure_rm_serviceprincipal"
     - "azure_rm_rediscache"
     - "azure_rm_resource"
     - "azure_rm_resourcegroup"
