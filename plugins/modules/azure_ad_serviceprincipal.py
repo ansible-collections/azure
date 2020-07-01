@@ -93,7 +93,7 @@ object_id:
 
 '''
 
-from ansible.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
     from msrestazure.azure_exceptions import CloudError

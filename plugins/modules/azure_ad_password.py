@@ -108,7 +108,7 @@ start_date:
 
 '''
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -197,7 +197,7 @@ class AzureADPassword(AzureRMModuleBase):
                 self.fail("one of the [app_id, app_object_id, service_principal_id] must be set")
 
         except GraphErrorException as ge:
-            self.fail("error in resolve app_object_id {0}".format(str(ge)))
+            self.fail("error in resolve app_object_id '{}'".format(str(ge)))
 
     def get_all_passwords(self):
 
