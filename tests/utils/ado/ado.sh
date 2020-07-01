@@ -75,7 +75,7 @@ then
     echo "All module need test"
 else
     path_dir="${TEST_DIR}/tests/integration/targets/"
-    for item in 'ls $path_dir'
+    for item in "ls $path_dir"
     do
         if [ "${item}" = "$4" ]
         then
