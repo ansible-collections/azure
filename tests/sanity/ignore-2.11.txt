@@ -867,5 +867,12 @@ plugins/modules/azure_rm_azurefirewall.py validate-modules:required_if-unknown-k
 plugins/modules/azure_rm_azurefirewall_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_azurefirewall_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_azurefirewall_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_privatednszone.py validate-modules:deprecation-either-date-or-version
+plugins/modules/azure_rm_privatednszone.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_privatednszone.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_privatednszone_info.py validate-modules:deprecation-either-date-or-version
+plugins/modules/azure_rm_privatednszone_info.py validate-modules:parameter-list-no-elements
+plugins/modules/azure_rm_privatednszone_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_privatednszone_info.py validate-modules:required_if-unknown-key
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang
