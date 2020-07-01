@@ -299,5 +299,17 @@ plugins/modules/azure_rm_trafficmanager.py validate-modules:missing-module-utils
 plugins/modules/azure_rm_trafficmanagerprofile.py validate-modules:missing-module-utils-import
 plugins/modules/azure_rm_virtualnetworkpeering.py validate-modules:missing-module-utils-import
 plugins/modules/azure_rm_virtualnetworkpeering_info.py validate-modules:missing-module-utils-import
+plugins/modules/azure_ad_password.py validate-modules:missing-module-utils-import
+plugins/modules/azure_ad_password.py validate-modules:nonexistent-parameter-documented
+plugins/modules/azure_ad_password.py validate-modules:return-syntax-error
+plugins/modules/azure_ad_password.py validate-modules:import-before-documentation
+plugins/modules/azure_ad_password_info.py validate-modules:missing-module-utils-import
+plugins/modules/azure_ad_password_info.py validate-modules:nonexistent-parameter-documented
+plugins/modules/azure_ad_password_info.py validate-modules:import-before-documentation
+plugins/modules/azure_ad_serviceprincipal.py validate-modules:missing-module-utils-import
+plugins/modules/azure_ad_serviceprincipal.py validate-modules:nonexistent-parameter-documented
+plugins/modules/azure_ad_serviceprincipal_info.py validate-modules:missing-module-utils-import
+plugins/modules/azure_ad_serviceprincipal_info.py validate-modules:nonexistent-parameter-documented
+plugins/modules/azure_ad_serviceprincipal_info.py validate-modules:
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang

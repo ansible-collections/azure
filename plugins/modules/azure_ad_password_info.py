@@ -180,7 +180,7 @@ class AzureADPasswordInfo(AzureRMModuleBase):
                 if not self.app_id:
                     self.fail("can't resolve app via service principal object id {0}".format(self.service_principal_object_id))
 
-                result = list(self.client.applications.list(filter="appId eq '{}'".format(self.app_id)))
+                result = list(self.client.applications.list(filter="appId eq {}".format(self.app_id)))
                 if result:
                     self.app_object_id = result[0].object_id
                 else:
@@ -196,7 +196,7 @@ class AzureADPasswordInfo(AzureRMModuleBase):
         try:
             return list(self.client.applications.list_password_credentials(self.app_object_id))
         except GraphErrorException as ge:
-            self.fail("failed to fetch passwords for app {0}: {1".format(self.app_object_id, str(ge)))
+            self.fail("failed to fetch passwords for app {0}: {1}".format(self.app_object_id, str(ge)))
 
     @staticmethod
     def to_dict(pd):

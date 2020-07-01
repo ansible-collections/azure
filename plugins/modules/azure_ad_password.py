@@ -197,7 +197,7 @@ class AzureADPassword(AzureRMModuleBase):
                 self.fail("one of the [app_id, app_object_id, service_principal_id] must be set")
 
         except GraphErrorException as ge:
-            self.fail("error in resolve app_object_id '{}'".format(str(ge)))
+            self.fail("error in resolve app_object_id {}".format(str(ge)))
 
     def get_all_passwords(self):
 

@@ -159,7 +159,7 @@ class AzureRMServicePrincipal(AzureRMModuleBaseExt):
             self.results.update(self.to_dict(response))
             return response
         except GraphErrorException as ge:
-            self.fail("Error creating service principle, app id {0} - {1}".format(self.app_id), str(ge))
+            self.fail("Error creating service principle, app id {0} - {1}".format(self.app_id, str(ge)))
 
     def update_resource(self, old_response):
         try:
@@ -188,7 +188,7 @@ class AzureRMServicePrincipal(AzureRMModuleBaseExt):
     def get_resource(self):
         try:
             client = self.get_graphrbac_client(self.tenant)
-            result = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq '{}')".format(self.app_id)))
+            result = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq {})".format(self.app_id)))
             if not result:
                 return False
             result = result[0]
@@ -198,8 +198,8 @@ class AzureRMServicePrincipal(AzureRMModuleBaseExt):
             return False
 
     def check_update(self, response):
-        app_assignment_changed = self.app_role_assignment_required is not None and\
-                                    self.app_role_assignment_required != response.get('app_role_assignment_required', None)
+        app_assignment_changed = self.app_role_assignment_required is not None and \
+            self.app_role_assignment_required != response.get('app_role_assignment_required', None)
         to_be_update = False or app_assignment_changed
 
         return to_be_update

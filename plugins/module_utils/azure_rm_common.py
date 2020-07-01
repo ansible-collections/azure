@@ -1245,7 +1245,7 @@ class AzureRMAuth(object):
         self.is_ad_resource = is_ad_resource
 
         # authenticate
-        self.credentials = self._get_credentials(params=
+        self.credentials = self._get_credentials(
             dict(auth_source=auth_source, profile=profile, subscription_id=subscription_id, client_id=client_id, secret=secret,
                  tenant=tenant, ad_user=ad_user, password=password, cloud_environment=cloud_environment,
                  cert_validation_mode=cert_validation_mode, api_profile=api_profile, adfs_authority_url=adfs_authority_url))
