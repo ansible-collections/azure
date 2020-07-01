@@ -1,0 +1,49 @@
+- name: delete ad service principal
+  azure_rm_serviceprincipal:
+    app_id: "{{ app_id }}"
+    tenant: "{{ tenant_id }}"
+    state: absent
+
+- name: create ad service principal
+  azure_rm_serviceprincipal:
+    app_id: "{{ app_id }}"
+    tenant: "{{ tenant_id }}"
+    state: present
+  register: ad_fact
+
+- assert:
+    that:
+        - ad_fact.changed
+
+- name: create ad service principal (idempontent)
+  azure_rm_serviceprincipal:
+    app_id: "{{ app_id }}"
+    tenant: "{{ tenant_id }}"
+    state: present
+  register: output
+
+- assert:
+    that:
+        - not output.changed
+
+- name: Get ad service principal info
+  azure_rm_serviceprincipal_info:
+    app_id: "{{ app_id }}"
+    tenant: "{{ tenant_id }}"
+  register: ad_info
+
+- assert:
+    that:
+        - ad_info.service_principals[0].app_display_name == ad_fact.app_display_name
+        - ad_info.service_principals[0].app_role_assignment_required == ad_fact.app_role_assignment_required
+
+- name: delete ad service principal
+  azure_rm_serviceprincipal:
+    app_id: "{{ app_id }}"
+    tenant: "{{ tenant_id }}"
+    state: absent
+  register: output
+
+- assert:
+    that:
+        - output.changed
