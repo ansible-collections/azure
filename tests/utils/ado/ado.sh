@@ -64,10 +64,8 @@ mkdir -p shippable/testresults
 if [ "$2" = "2.7" ]
 then
     pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
-    pip list
 else
     pip3 install  -I -r "${TEST_DIR}/requirements-azure.txt"
-    pip3 list
 fi
 
 timeout=60

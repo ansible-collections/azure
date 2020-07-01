@@ -121,7 +121,7 @@ class AzureRMServicePrincipalInfo(AzureRMModuleBase):
         try:
             client = self.get_graphrbac_client(self.tenant)
             if self.object_id is None:
-                service_principals = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq {})".format(self.app_id)))
+                service_principals = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq {0})".format(self.app_id)))
             else:
                 service_principals = [client.service_principals.get(self.object_id)]
 

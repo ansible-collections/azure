@@ -24,10 +24,10 @@ module: azure_ad_password
 
 version_added: "2.10"
 
-short_description: Manage application with AAD Graph
+short_description: Manage application password
 
 description:
-    - Manage application with AAD Graph.
+    - Manage application password.
 
 options:
     app_id:
@@ -200,7 +200,7 @@ class AzureADPassword(AzureRMModuleBase):
                 self.fail("one of the [app_id, app_object_id, service_principal_id] must be set")
 
         except GraphErrorException as ge:
-            self.fail("error in resolve app_object_id {}".format(str(ge)))
+            self.fail("error in resolve app_object_id {0}".format(str(ge)))
 
     def get_all_passwords(self):
 
