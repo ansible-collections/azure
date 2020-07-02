@@ -1,12 +1,14 @@
 - set_fact:
     app_id: "5d1e77d2-fc51-428d-ab67-4322e9544814"
     tenant_id: "72f988bf-86f1-41af-91ab-2d7cd011db47"
+    app_object_id: "b52e8275-a1ee-4c4a-86ff-15992e0920ed"
 
 - name: create ad password 
   azure_ad_password:
     app_id: "{{ app_id }}"
     value: "Password@032900001"
     tenant: "{{ tenant_id }}"
+    app_object_id: "{{ app_object_id }}"
     state: present
   register: ad_fact
 
@@ -20,6 +22,7 @@
     value: "Password@032900002"
     tenant: "{{ tenant_id }}"
     key_id: "{{ ad_fact.key_id }}"
+    app_object_id: "{{ app_object_id }}"
     state: present
   register: output
   ignore_errors: True
@@ -29,6 +32,7 @@
     app_id: "{{ app_id }}"
     tenant: "{{ tenant_id }}"
     key_id: "{{ ad_fact.key_id }}"
+    app_object_id: "{{ app_object_id }}"
   register: ad_info
 
 - assert:
@@ -40,6 +44,7 @@
   azure_ad_password:
     app_id: "{{ app_id }}"
     tenant: "{{ tenant_id }}"
+    app_object_id: "{{ app_object_id }}"
     state: absent
   register: output
 

@@ -53,6 +53,10 @@ options:
             - Application password value.
             - Length greater than 18 characters.
         type: str
+    app_object_id:
+        description:
+            - The application object ID.
+        type: str
     state:
         description:
             - Assert the state of Active Dirctory Password.
@@ -126,6 +130,7 @@ class AzureADPassword(AzureRMModuleBase):
         self.module_arg_spec = dict(
             app_id=dict(type='str'),
             service_principal_id=dict(type='str'),
+            app_object_id=dict(type='str'),
             key_id=dict(type='str'),
             tenant=dict(type='str', required=True),
             value=dict(type='str'),
