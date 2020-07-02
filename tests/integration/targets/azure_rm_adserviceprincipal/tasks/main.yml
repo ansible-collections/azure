@@ -1,7 +1,6 @@
 - set_fact:
     app_id: "e0a62513-1d81-480e-a6dc-5c99cdd58d9a"
     tenant_id: "72f988bf-86f1-41af-91ab-2d7cd011db47"
-    object_id: "b52e8275-a1ee-4c4a-86ff-15992e0920ed"
 
 - name: delete ad service principal
   azure_rm_adserviceprincipal:
@@ -50,11 +49,10 @@
     state: present
   register: output
 
-- name: Get ad service principal info
+- name: Get ad service principal info by object_id
   azure_rm_adserviceprincipal_info:
-    #app_id: "{{ app_id }}"
     tenant: "{{ tenant_id }}"
-    object_id: "{{ object_id }}"
+    object_id: "{{ ad_info.service_principals[0].object_id }}"
   register: ad_info
 
 - assert:
