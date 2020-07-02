@@ -99,7 +99,7 @@ passwords:
                 - The password key ID.
             type: str
             returned: always
-            sample: d33d730d-63e6-45f9-b165-eb723dfa10cd
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         start_date:
             description:
                 - Date or datetime at which credentials become valid.

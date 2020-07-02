@@ -77,7 +77,7 @@ app_id:
         - The application ID.
     returned: always
     type: str
-    sample: b6d3cf80-a95d-4c0c-bfc5-a63f08a1c301
+    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 app_role_assignment_required:
     description:
         - Whether the Role of the Service Principal is set.
@@ -89,7 +89,7 @@ object_id:
         - Object ID of the associated application.
     returned: always
     type: str
-    sample: c45fae27-41ef-43c1-a2de-99f507247c13
+    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 '''
 

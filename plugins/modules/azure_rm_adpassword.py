@@ -100,7 +100,7 @@ key_id:
         - The password key ID
     type: str
     returned: always
-    sample: 512f259c-c397-4ec6-8598-4f940d411970
+    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 start_date:
     description:
         - Date or datetime at which credentials become valid.
@@ -274,7 +274,6 @@ class AzureRMADPassword(AzureRMModuleBase):
 
     def update_password(self, old_passwords):
         self.fail("update existing password is not supported")
-
 
     def to_dict(self, pd):
         return dict(
