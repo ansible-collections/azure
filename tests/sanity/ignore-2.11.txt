@@ -876,9 +876,14 @@ plugins/modules/azure_rm_privatednszone_info.py validate-modules:required_if-req
 plugins/modules/azure_rm_privatednszone_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_ad_password.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_ad_password.py validate-modules:return-syntax-error
-plugins/modules/azure_ad_password.py validate-modules:mport-before-documentation
+plugins/modules/azure_ad_password.py validate-modules:import-before-documentation
+plugins/modules/azure_ad_password.py validate-modules:nonexistent-parameter-documented
+plugins/modules/azure_ad_password.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_ad_password.py validate-modules:required_if-unknown-key
+plugins/modules/azure_ad_password_info.py validate-modules:nonexistent-parameter-documented
+plugins/modules/azure_ad_password_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_ad_password_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_ad_password_info.py validate-modules:deprecation-either-date-or-version
-plugins/modules/azure_ad_password_info.py validate-modules:import-error
 plugins/modules/azure_ad_password_info.py validate-modules:return-syntax-error
 plugins/modules/azure_ad_password_info.py validate-modules:import-before-documentation
 plugins/modules/azure_ad_serviceprincipal.py validate-modules:deprecation-either-date-or-version
