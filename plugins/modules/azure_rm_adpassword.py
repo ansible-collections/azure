@@ -151,9 +151,9 @@ class AzureRMADPassword(AzureRMModuleBase):
         self.client = None
 
         super(AzureRMADPassword, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                              supports_check_mode=False,
-                                              supports_tags=False,
-                                              is_ad_resource=True)
+                                                supports_check_mode=False,
+                                                supports_tags=False,
+                                                is_ad_resource=True)
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
