@@ -308,8 +308,6 @@ plugins/modules/azure_rm_adpassword_info.py validate-modules:nonexistent-paramet
 plugins/modules/azure_rm_adpassword_info.py validate-modules:import-before-documentation
 plugins/modules/azure_rm_adserviceprincipal.py validate-modules:missing-module-utils-import
 plugins/modules/azure_rm_adserviceprincipal.py validate-modules:nonexistent-parameter-documented
-plugins/modules/azure_rm_adserviceprincipal.py validate-modules:ansible-format-automatic-specification
-plugins/modules/azure_rm_adserviceprincipal_info.py validate-modules:ansible-format-automatic-specification
 plugins/modules/azure_rm_adserviceprincipal_info.py validate-modules:missing-module-utils-import
 plugins/modules/azure_rm_adserviceprincipal_info.py validate-modules:nonexistent-parameter-documented
 tests/utils/shippable/check_matrix.py replace-urlopen
