@@ -86,7 +86,7 @@ app_role_assignment_required:
     sample: false
 object_id:
     description:
-        - Object ID of the associated application.
+        - Object ID of the associated service principal.
     returned: always
     type: str
     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
