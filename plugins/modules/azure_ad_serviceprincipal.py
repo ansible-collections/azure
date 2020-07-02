@@ -174,7 +174,7 @@ class AzureRMServicePrincipal(AzureRMModuleBaseExt):
             self.results.update(self.get_resource())
 
         except GraphErrorException as ge:
-            self.fail("Error deleting service principal app_id {0} - {1}".format(self.app_id, str(ge)))
+            self.fail("Error updating the service principal app_id {0} - {1}".format(self.app_id, str(ge)))
 
     def delete_resource(self, response):
         try:

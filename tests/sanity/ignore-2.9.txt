@@ -310,6 +310,5 @@ plugins/modules/azure_ad_serviceprincipal.py validate-modules:missing-module-uti
 plugins/modules/azure_ad_serviceprincipal.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_ad_serviceprincipal_info.py validate-modules:missing-module-utils-import
 plugins/modules/azure_ad_serviceprincipal_info.py validate-modules:nonexistent-parameter-documented
-plugins/modules/azure_ad_serviceprincipal_info.py validate-modules:
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang

@@ -6,10 +6,6 @@
 
 from __future__ import absolute_import, division, print_function
 import datetime
-try:
-    from dateutil.relativedelta import relativedelta
-except ImportError:
-    pass
 
 __metaclass__ = type
 
@@ -23,10 +19,10 @@ module: azure_ad_password_info
 
 version_added: "2.10"
 
-short_description: Get application info
+short_description: Get application password info
 
 description:
-        - Get application info.
+        - Get application password info.
 
 options:
     app_id:
@@ -83,7 +79,7 @@ passwords:
     description:
         - Password info.
     returned: success
-    type: complex
+    type: dict
     contains:
         custom_key_identifier:
             description:

@@ -6,10 +6,6 @@
 
 from __future__ import absolute_import, division, print_function
 import datetime
-try:
-    from dateutil.relativedelta import relativedelta
-except ImportError:
-    pass
 
 __metaclass__ = type
 
@@ -118,6 +114,7 @@ try:
     from azure.graphrbac.models import GraphErrorException
     from azure.graphrbac.models import PasswordCredential
     from azure.graphrbac.models import ApplicationUpdateParameters
+    from dateutil.relativedelta import relativedelta
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -236,8 +233,6 @@ class AzureADPassword(AzureRMModuleBase):
             num_of_passwords_after_delete = len(self.get_all_passwords())
             if num_of_passwords_after_delete != num_of_passwords_before_delete:
                 self.results['changed'] = True
-                self.results['num_of_passwords_before_delete'] = num_of_passwords_before_delete
-                self.results['num_of_passwords_after_delete'] = num_of_passwords_after_delete
 
         except GraphErrorException as ge:
             self.fail("failed to delete password with key id {0} - {1}".format(self.app_id, str(ge)))
