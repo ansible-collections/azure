@@ -276,7 +276,6 @@ class AzureADPassword(AzureRMModuleBase):
         self.fail("update existing password is not supported")
 
 
-
     def to_dict(self, pd):
         return dict(
             end_date=pd.end_date,

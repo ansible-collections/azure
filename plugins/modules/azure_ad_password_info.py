@@ -197,8 +197,7 @@ class AzureADPasswordInfo(AzureRMModuleBase):
         except GraphErrorException as ge:
             self.fail("failed to fetch passwords for app {0}: {1}".format(self.app_object_id, str(ge)))
 
-    @staticmethod
-    def to_dict(pd):
+    def to_dict(self, pd):
         return dict(
             end_date=pd.end_date,
             start_date=pd.start_date,
