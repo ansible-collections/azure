@@ -184,7 +184,7 @@ class AzureRMServicePrincipal(AzureRMModuleBaseExt):
     def get_resource(self):
         try:
             client = self.get_graphrbac_client(self.tenant)
-            result = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq {0})".format(self.app_id)))
+            result = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq '{}')".format(self.app_id)))
             if not result:
                 return False
             result = result[0]
