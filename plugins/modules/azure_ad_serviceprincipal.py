@@ -103,10 +103,6 @@ except ImportError:
     pass
 
 
-class Actions:
-    NoAction, Create, Update, Delete = range(4)
-
-
 class AzureRMServicePrincipal(AzureRMModuleBaseExt):
     def __init__(self):
 

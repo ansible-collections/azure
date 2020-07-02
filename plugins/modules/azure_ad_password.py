@@ -165,7 +165,7 @@ class AzureADPassword(AzureRMModuleBase):
 
         if self.state == 'present':
             if self.key_id and self.key_exists(passwords):
-                self.fail("It can't update existing password")
+                self.update(passwords)
             else:
                 self.create_password(passwords)
         else:
@@ -272,8 +272,12 @@ class AzureADPassword(AzureRMModuleBase):
         except GraphErrorException as ge:
             self.fail("failed to create new password: {0}".format(str(ge)))
 
-    @staticmethod
-    def to_dict(pd):
+    def update_password(self, old_passwords):
+        self.fail("update existing password is not supported")
+
+
+
+    def to_dict(self, pd):
         return dict(
             end_date=pd.end_date,
             start_date=pd.start_date,
