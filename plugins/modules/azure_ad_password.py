@@ -36,7 +36,7 @@ options:
         type: str
     key_id:
         description:
-            - Password key ID.
+            - The password key ID.
         type: str
     tenant:
         description:
@@ -50,7 +50,7 @@ options:
         type: str
     value:
         description:
-            - Application password value.
+            - The application password value.
             - Length greater than 18 characters.
         type: str
     app_object_id:
@@ -97,7 +97,7 @@ end_date:
     sample: 2021-06-28T06:00:32.637070+00:00
 key_id:
     description:
-        - Password key ID
+        - The password key ID
     type: str
     returned: always
     sample: 512f259c-c397-4ec6-8598-4f940d411970

@@ -35,7 +35,7 @@ options:
         type: str
     key_id:
         description:
-            - Password key ID.
+            - The password key ID.
         type: str
     tenant:
         description:
@@ -49,7 +49,7 @@ options:
         type: str
     value:
         description:
-            - Application password value.
+            - The application password value.
             - Length greater than 18 characters.
         type: str
     app_object_id:
@@ -77,7 +77,7 @@ EXAMPLES = '''
 RETURN = '''
 passwords:
     description:
-        - Password info.
+        - The password info.
     returned: success
     type: dict
     contains:
@@ -96,7 +96,7 @@ passwords:
             sample: 2021-06-18T06:51:25.508304+00:00
         key_id:
             description:
-                - Password key ID.
+                - The password key ID.
             type: str
             returned: always
             sample: d33d730d-63e6-45f9-b165-eb723dfa10cd
