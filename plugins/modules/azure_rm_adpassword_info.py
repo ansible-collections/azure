@@ -15,7 +15,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'supported_by': 'community'}
 
 DOCUMENTATION = '''
-module: azure_ad_password_info
+module: azure_rm_adpassword_info
 
 version_added: "2.10"
 
@@ -68,7 +68,7 @@ author:
 
 EXAMPLES = '''
   - name: get ad password info
-    azure_ad_password_info:
+    azure_rm_adpassword_info:
       app_id: "{{ app_id }}"
       tenant: "{{ tenant_id }}"
       key_id: "{{ key_id }}"
@@ -122,7 +122,7 @@ except ImportError:
     pass
 
 
-class AzureADPasswordInfo(AzureRMModuleBase):
+class AzureRMADPasswordInfo(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
@@ -207,7 +207,7 @@ class AzureADPasswordInfo(AzureRMModuleBase):
 
 
 def main():
-    AzureADPasswordInfo()
+    AzureRMADPasswordInfo()
 
 
 if __name__ == '__main__':

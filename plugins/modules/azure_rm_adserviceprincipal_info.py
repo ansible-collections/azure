@@ -13,7 +13,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'supported_by': 'community'}
 
 DOCUMENTATION = '''
-module: azure_ad_serviceprincipal_info
+module: azure_rm_adserviceprincipal_info
 
 version_added: "2.10"
 
@@ -48,7 +48,7 @@ author:
 
 EXAMPLES = '''
   - name: get ad sp info
-    azure_ad_serviceprincipal_info:
+    azure_rm_adserviceprincipal_info:
       app_id: "{{ app_id }}"
       tenant: "{{ tenant_id }}"
 
@@ -60,13 +60,13 @@ app_display_name:
         - Object's display name or its prefix.
     type: str
     returned: always
-    sample: fredAKSCluster
+    sample: sp
 app_id:
     description:
         - The application ID.
     returned: always
     type: str
-    sample: b6d3cf80-a95d-4c0c-bfc5-a63f08a1c301
+    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 app_role_assignment_required:
     description:
         - Whether the Role of the Service Principal is set.
@@ -78,7 +78,8 @@ object_id:
         - It's service principal's object ID.
     returned: always
     type: str
-    sample: c45fae27-41ef-43c1-a2de-99f507247c13
+    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
 
 '''
 
@@ -92,7 +93,7 @@ except ImportError:
     pass
 
 
-class AzureRMServicePrincipalInfo(AzureRMModuleBase):
+class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
@@ -141,7 +142,7 @@ class AzureRMServicePrincipalInfo(AzureRMModuleBase):
 
 
 def main():
-    AzureRMServicePrincipalInfo()
+    AzureRMADServicePrincipalInfo()
 
 
 if __name__ == '__main__':

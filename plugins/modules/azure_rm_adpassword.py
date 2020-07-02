@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = '''
 ---
-module: azure_ad_password
+module: azure_rm_adpassword
 
 version_added: "2.10"
 
@@ -80,7 +80,7 @@ author:
 
 EXAMPLES = '''
     - name: create ad password
-      azure_ad_password:
+      azure_rm_adpassword:
         app_id: "{{ app_id }}"
         state: present
         value: "$abc12345678"
@@ -124,7 +124,7 @@ except ImportError:
     pass
 
 
-class AzureADPassword(AzureRMModuleBase):
+class AzureRMADPassword(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
@@ -285,7 +285,7 @@ class AzureADPassword(AzureRMModuleBase):
 
 
 def main():
-    AzureADPassword()
+    AzureRMADPassword()
 
 
 if __name__ == '__main__':

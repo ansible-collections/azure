@@ -14,7 +14,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = '''
 ---
-module: azure_ad_serviceprincipal
+module: azure_rm_adserviceprincipal
 
 version_added: "2.10"
 
@@ -103,7 +103,7 @@ except ImportError:
     pass
 
 
-class AzureRMServicePrincipal(AzureRMModuleBaseExt):
+class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
     def __init__(self):
 
         self.module_arg_spec = dict(
@@ -209,7 +209,7 @@ class AzureRMServicePrincipal(AzureRMModuleBaseExt):
 
 
 def main():
-    AzureRMServicePrincipal()
+    AzureRMADServicePrincipal()
 
 
 if __name__ == '__main__':
