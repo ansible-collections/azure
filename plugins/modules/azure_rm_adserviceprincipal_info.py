@@ -107,7 +107,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         self.object_id = None
         self.results = dict(changed=False)
 
-        super(AzureRMServicePrincipalInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
+        super(AzureRMADServicePrincipalInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                           supports_check_mode=False,
                                                           supports_tags=False,
                                                           is_ad_resource=True)

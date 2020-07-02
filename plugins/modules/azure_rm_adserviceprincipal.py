@@ -120,7 +120,7 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
         self.object_id = None
         self.results = dict(changed=False)
 
-        super(AzureRMServicePrincipal, self).__init__(derived_arg_spec=self.module_arg_spec,
+        super(AzureRMADServicePrincipal, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                       supports_check_mode=False,
                                                       supports_tags=False,
                                                       is_ad_resource=True)
