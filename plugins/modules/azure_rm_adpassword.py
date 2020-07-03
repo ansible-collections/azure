@@ -30,9 +30,9 @@ options:
         description:
             - The application ID.
         type: str
-    service_principal_id:
+    service_principal_object_id:
         description:
-            - The service principal ID.
+            - The service principal object ID.
         type: str
     key_id:
         description:
@@ -129,7 +129,7 @@ class AzureRMADPassword(AzureRMModuleBase):
 
         self.module_arg_spec = dict(
             app_id=dict(type='str'),
-            service_principal_id=dict(type='str'),
+            service_principal_object_id=dict(type='str'),
             app_object_id=dict(type='str'),
             key_id=dict(type='str'),
             tenant=dict(type='str', required=True),
@@ -141,7 +141,7 @@ class AzureRMADPassword(AzureRMModuleBase):
         self.state = None
         self.tenant = None
         self.app_id = None
-        self.service_principal_id = None
+        self.service_principal_object_id = None
         self.app_object_id = None
         self.key_id = None
         self.value = None
@@ -188,12 +188,12 @@ class AzureRMADPassword(AzureRMModuleBase):
                 return
             elif self.app_id or self.service_principal_object_id:
                 if not self.app_id:
-                    sp = self.client.service_principals.get(self.service_principal_id)
+                    sp = self.client.service_principals.get(self.service_principal_object_id)
                     self.app_id = sp.app_id
                 if not self.app_id:
                     self.fail("can't resolve app via service principal object id {0}".format(self.service_principal_object_id))
 
-                result = list(self.client.applications.list(filter="appId eq {0}".format(self.app_id)))
+                result = list(self.client.applications.list(filter="appId eq '{}'".format(self.app_id)))
                 if result:
                     self.app_object_id = result[0].object_id
                 else:

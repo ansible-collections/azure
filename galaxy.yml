@@ -9,7 +9,7 @@ namespace: azure
 name: azcollection
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 0.1.3
+version: 0.2.0
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -18,7 +18,6 @@ readme: README.md
 # @nicks:irc/im.site#channel'
 authors:
 - Microsoft <haiyzhan@microsoft.com>
-- Microsoft <jieshe@microsoft.com>
 
 
 ### OPTIONAL but strongly recommended
