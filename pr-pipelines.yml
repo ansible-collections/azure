@@ -72,6 +72,8 @@ parameters:
     - "azure_rm_virtualnetworkeepring"
     - "azure_rm_webapp"
     - "azure_rm_workspace"
+    - "azure_rm_adpassword"
+    - "azure_rm_adserviceprincipal"
     - "inventory_azure"
     - "setup_azure"
 

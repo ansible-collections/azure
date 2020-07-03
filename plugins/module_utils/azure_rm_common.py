@@ -351,7 +351,7 @@ class AzureRMModuleBase(object):
     def __init__(self, derived_arg_spec, bypass_checks=False, no_log=False,
                  check_invalid_arguments=None, mutually_exclusive=None, required_together=None,
                  required_one_of=None, add_file_common_args=False, supports_check_mode=False,
-                 required_if=None, supports_tags=True, facts_module=False, skip_exec=False):
+                 required_if=None, supports_tags=True, facts_module=False, skip_exec=False, is_ad_resource=False):
 
         merged_arg_spec = dict()
         merged_arg_spec.update(AZURE_COMMON_ARGS)
@@ -418,7 +418,7 @@ class AzureRMModuleBase(object):
         # self.debug = self.module.params.get('debug')
 
         # delegate auth to AzureRMAuth class (shared with all plugin types)
-        self.azure_auth = AzureRMAuth(fail_impl=self.fail, **self.module.params)
+        self.azure_auth = AzureRMAuth(fail_impl=self.fail, is_ad_resource=is_ad_resource, **self.module.params)
 
         # common parameter validation
         if self.module.params.get('tags'):
@@ -827,6 +827,14 @@ class AzureRMModuleBase(object):
         # wrap basic strings in a dict that just defines the default
         return dict(default_api_version=profile_raw)
 
+    def get_graphrbac_client(self, tenant_id):
+        from azure.graphrbac import GraphRbacManagementClient
+        cred = self.azure_auth.azure_credentials
+        base_url = self.azure_auth._cloud_environment.endpoints.active_directory_graph_resource_id
+        client = GraphRbacManagementClient(cred, tenant_id, base_url)
+
+        return client
+
     def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None):
         self.log('Getting management service client {0}'.format(client_type.__name__))
         self.check_client_version(client_type)
@@ -1225,7 +1233,7 @@ class AzureRMAuthException(Exception):
 class AzureRMAuth(object):
     def __init__(self, auth_source='auto', profile=None, subscription_id=None, client_id=None, secret=None,
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
-                 api_profile='latest', adfs_authority_url=None, fail_impl=None, **kwargs):
+                 api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False, **kwargs):
 
         if fail_impl:
             self._fail_impl = fail_impl
@@ -1234,6 +1242,7 @@ class AzureRMAuth(object):
 
         self._cloud_environment = None
         self._adfs_authority_url = None
+        self.is_ad_resource = is_ad_resource
 
         # authenticate
         self.credentials = self._get_credentials(
@@ -1379,8 +1388,10 @@ class AzureRMAuth(object):
             'subscription_id': subscription_id
         }
 
-    def _get_azure_cli_credentials(self):
-        credentials, subscription_id = get_azure_cli_credentials()
+    def _get_azure_cli_credentials(self, resource=None):
+        if self.is_ad_resource:
+            resource = 'https://graph.windows.net/'
+        credentials, subscription_id = get_azure_cli_credentials(resource)
         cloud_environment = get_cli_active_cloud()
 
         cli_credentials = {
