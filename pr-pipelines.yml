@@ -12,7 +12,7 @@ parameters:
   default: "2.9.0"
   values:
     - "2.9.0"
-    - "2.9.9"
+    - "devel"
 - name: MODULE_NAME
   displayName: 'Test Module'
   type: string
@@ -50,6 +50,7 @@ parameters:
     - "azure_rm_mysqlserver"
     - "azure_rm_networkinterface"
     - "azure_rm_postgresqlserver"
+    - "azure_rm_privatednszone"
     - "azure_rm_publicipaddress"
     - "azure_rm_rediscache"
     - "azure_rm_resource"
@@ -71,6 +72,8 @@ parameters:
     - "azure_rm_virtualnetworkeepring"
     - "azure_rm_webapp"
     - "azure_rm_workspace"
+    - "azure_rm_adpassword"
+    - "azure_rm_adserviceprincipal"
     - "inventory_azure"
     - "setup_azure"
 
@@ -156,7 +159,7 @@ jobs:
       inputs:
         versionSpec: '$(python.version)'
 
-    - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.PYTHON_VER }} ${{ parameters.ANSIBLE_VER }}
+    - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.PYTHON_VER }} ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
       env:
         SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
         AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)

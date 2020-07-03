@@ -155,9 +155,8 @@ servers:
             sample: { tag1: abc }
 '''
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
-
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
     from msrest.serialization import Model
@@ -193,7 +192,7 @@ class AzureRMMariaDbServerInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_mariadbserver_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_mariadbserver_facts' module has been renamed to 'azure_rm_mariadbserver_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_mariadbserver_facts' module has been renamed to 'azure_rm_mariadbserver_info'", version=(2, 9))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

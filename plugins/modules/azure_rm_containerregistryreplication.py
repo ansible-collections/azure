@@ -71,9 +71,8 @@ status:
     description:
         - The status of the replication at the time the operation was called.
     returned: always
-    type: complex
-    sample: status
-    contains:
+    type: str
+    sample: Ready
 '''
 
 import time
@@ -144,7 +143,6 @@ class AzureRMReplications(AzureRMModuleBase):
         self.location = None
 
         self.results = dict(changed=False)
-        self.mgmt_client = None
         self.state = None
         self.to_do = Actions.NoAction
 

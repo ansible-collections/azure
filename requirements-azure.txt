@@ -15,8 +15,9 @@ azure-mgmt-dns==2.1.0
 azure-mgmt-keyvault==1.1.0
 azure-mgmt-marketplaceordering==0.1.0
 azure-mgmt-monitor==0.5.2
-azure-mgmt-network==4.0.0
+azure-mgmt-network==10.2.0
 azure-mgmt-nspkg==2.0.0
+azure-mgmt-privatedns==0.1.0
 azure-mgmt-redis==5.0.0
 azure-mgmt-resource==2.1.0
 azure-mgmt-rdbms==1.4.1
@@ -30,7 +31,7 @@ azure-storage==0.35.1
 msrest==0.6.10
 msrestazure==0.6.2
 azure-keyvault==1.0.0a1
-azure-graphrbac==0.40.0
+azure-graphrbac==0.61.1
 azure-mgmt-cosmosdb==0.5.2
 azure-mgmt-hdinsight==0.1.0
 azure-mgmt-devtestlabs==3.0.0

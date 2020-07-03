@@ -110,7 +110,6 @@ options:
             client_secret:
                 description:
                     - The secret password associated with the service principal.
-                required: true
     enable_rbac:
         description:
             - Enable RBAC.
@@ -205,6 +204,7 @@ options:
                     log_analytics_workspace_resource_id:
                         description:
                             - Where to store the container metrics.
+                        required: true
             virtual_node:
                 description:
                     - With virtual nodes, you have quick provisioning of pods, and only pay per second for their execution time.
@@ -218,6 +218,7 @@ options:
                     subnet_resource_id:
                         description:
                             - Subnet associated to the cluster.
+                        required: true
         version_added: "2.8"
     node_resource_group:
         description:

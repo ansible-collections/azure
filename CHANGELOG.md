@@ -1,5 +1,26 @@
 # Change Log
 
+## v0.2.0 (2020-07-03)
+
+### NEW MODULES
+  - azure_rm_privatezone module ([#122](https://github.com/ansible-collections/azure/pull/122))
+  - azure_rm_adserviceprincipal module ([#179](https://github.com/ansible-collections/azure/pull/179))
+  - azure_rm_adserviceprincipal_info module ([#179](https://github.com/ansible-collections/azure/pull/179))
+  - azure_rm_adpassword module ([#179](https://github.com/ansible-collections/azure/pull/179))
+  - azure_rm_adpassword_info module ([#179](https://github.com/ansible-collections/azure/pull/179))
+
+### FEATURE ENHANCEMENT
+  - add ability to remove all subnet service endpoints ([#148](https://github.com/ansible-collections/azure/pull/148))
+  - update network client api version ([#157](https://github.com/ansible-collections/azure/pull/157))
+  - add ephemeral os disk support for azure_rm_virualmachinescaleset ([#128](https://github.com/ansible-collections/azure/pull/128))
+  - add ephemeral os disk support for azure_rm_virtualmachine ([#124](https://github.com/ansible-collections/azure/pull/124))
+  - add FileEndpoint to azure_rm_storageaccount_info ([#102](https://github.com/ansible-collections/azure/pull/102))
+  - add support for managing the 'Firewall and virtual networks' settings in azure_rm_storageaccount ([#108](https://github.com/ansible-collections/azure/pull/108))
+
+### BUG FIXING
+  - bug fixing in azure_rm_aks ([#170](https://github.com/ansible-collections/azure/pull/170))
+  - migrate missing doc_fragments that went missing ([#115](https://github.com/ansible-collections/azure/pull/115))
+
 ## v0.1.3 (2020-05-13)
 
 - add new parameter in azure_rm_aks

@@ -741,7 +741,7 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
             is_compatible_param = is_compatible_param or self.public_ip_address_name or self.probe_protocol or self.natpool_protocol or self.protocol
             if is_compatible_param:
                 self.deprecate('Discrete load balancer config settings are deprecated and will be removed.'
-                               ' Use frontend_ip_configurations, backend_address_pools, probes, inbound_nat_pools lists instead.', version='2.9')
+                               ' Use frontend_ip_configurations, backend_address_pools, probes, inbound_nat_pools lists instead.', version=(2, 9))
                 frontend_ip_name = 'frontendip0'
                 backend_address_pool_name = 'backendaddrp0'
                 prob_name = 'prob0'
