@@ -880,6 +880,8 @@ plugins/modules/azure_rm_adpassword.py validate-modules:import-before-documentat
 plugins/modules/azure_rm_adpassword.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_adpassword.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_adpassword.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_adpassword.py validate-modules:ansible-format-automatic-specification
+plugins/modules/azure_rm_adpassword_info.py validate-modules:ansible-format-automatic-specification
 plugins/modules/azure_rm_adpassword_info.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_adpassword_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_adpassword_info.py validate-modules:required_if-unknown-key
@@ -890,6 +892,8 @@ plugins/modules/azure_rm_adserviceprincipal.py validate-modules:deprecation-eith
 plugins/modules/azure_rm_adserviceprincipal.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_adserviceprincipal.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_adserviceprincipal.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_adserviceprincipal.py validate-modules:ansible-format-automatic-specification
+plugins/modules/azure_rm_adserviceprincipal_info.py validate-modules:ansible-format-automatic-specification
 plugins/modules/azure_rm_adserviceprincipal_info.py validate-modules:deprecation-either-date-or-version
 plugins/modules/azure_rm_adserviceprincipal_info.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_adserviceprincipal_info.py validate-modules:required_if-requirements-unknown
