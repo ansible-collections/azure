@@ -23,8 +23,8 @@ schedules:
 - cron: "0 1 0 0 3"
   displayName: 'Execute dev-pipeline every Wednesday' 
   branches:
-    - dev
-    - "*.*"
+    includes:
+      - dev
   always: true
 
 trigger: none
