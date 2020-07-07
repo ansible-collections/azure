@@ -24,6 +24,7 @@ schedules:
   displayName: 'Execute dev-pipeline every Wednesday' 
   branches:
     - dev
+    - "*.*"
   always: true
 
 trigger: none
