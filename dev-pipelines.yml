@@ -121,7 +121,7 @@ jobs:
       - RunTests
     condition: failed()
     steps:
-      - script: tests/utils/sendmail/sendmail.py
+      - script: tests/utils/sendmail/sendmail.py $(PASSWORD) $(MAILBOX)
 
   - job: CleanupResourceGroups
     dependsOn: 

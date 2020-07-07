@@ -1,13 +1,16 @@
 # smtplib 用于邮件的发信动作
 import smtplib
+import sys
 from email.mime.text import MIMEText
 # email 用于构建邮件内容
 from email.header import Header
 # 用于构建邮件头
-  
+print(sys.argv[0])
+print(sys.argv[1])
+print(sys.argv[2])
 # 发信方的信息：发信邮箱，QQ 邮箱授权码
-from_addr = 'xiuxi.sun@qq.com'
-password = 'djwgzuhzrqwubbcb'
+from_addr = sys.argv[2]
+password = sys.argv[1]
   
 # 收信方邮箱
 to_addr = ['v-xisu@microsoft.com', 'xiuxi.sun@qq.com']
