@@ -7,7 +7,7 @@ from email.header import Header
   
 # 发信方的信息：发信邮箱，QQ 邮箱授权码
 from_addr = 'xiuxi.sun@qq.com'
-password = 'jdvtetkivptobeja'
+password = 'djwgzuhzrqwubbcb'
   
 # 收信方邮箱
 to_addr = ['v-xisu@microsoft.com', 'xiuxi.sun@qq.com']
