@@ -179,7 +179,7 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
                 if not self.app_id:
                     self.fail("can't resolve app via service principal object id {0}".format(self.service_principal_object_id))
 
-                result = list(self.client.applications.list(filter="appId eq '{}'".format(self.app_id)))
+                result = list(self.client.applications.list(filter="appId eq '{0}'".format(self.app_id)))
                 if result:
                     self.app_object_id = result[0].object_id
                 else:
