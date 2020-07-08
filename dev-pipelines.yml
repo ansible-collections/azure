@@ -1,10 +1,30 @@
+parameters:
+- name: PYTHON_VER
+  displayName: 'Python Version'
+  type: string
+  default: "3.6"
+  values:
+    - "3.6"
+- name: ANSIBLE_VER
+  displayName: 'Ansible Version'
+  type: string
+  default: "devel"
+  values:
+    - "2.9.0"
+    - "devel"
+- name: MODULE_NAME
+  displayName: 'Test Module'
+  type: string
+  default: 'all'
+  values:
+    - 'all'
+
 schedules:
 - cron: "0 1 * * 3"
-  displayName: 'Execute dev-pipeline every Wednesday' 
+  displayName: 'Execute dev-pipeline every Wednesday'
   branches:
     include:
-      - master
-      - release/*
+      - dev
   always: true
 
 trigger: none
@@ -13,10 +33,112 @@ pool:
   vmImage: 'ubuntu-18.04'
 
 jobs:
-  - job: A
+  - job: CreateResourceGroups
     steps:
-      - bash: echo 'A'
-  - job: B
-    steps:
-      - bash: echo 'B'
+      - bash: |
+          echo "##vso[task.setvariable variable=resource_group;isOutput=true]ansibletest-$(uuidgen)"
+          echo "##vso[task.setvariable variable=resource_group_secondary;isOutput=true]ansibletest2-$(uuidgen)"
+        name: setvar
+      - bash: |
+          echo "Generate test resource group $(setvar.resource_group), $(setvar.resource_group_secondary)"
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+              az group create -l eastus -n $(setvar.resource_group)
+              az group create -l eastus -n $(setvar.resource_group_secondary)
 
+  - job: RunTests
+    dependsOn: CreateResourceGroups
+    variables:
+      TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
+      TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
+    strategy:
+      matrix:
+        "Python${{ parameters.PYTHON_VER }}_sanity":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: 'sanity'
+        "Python${{ parameters.PYTHON_VER }}_1":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '1'
+        "Python${{ parameters.PYTHON_VER }}_2":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '2'
+        "Python${{ parameters.PYTHON_VER }}_3":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '3'
+        "Python${{ parameters.PYTHON_VER }}_4":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '4'
+        "Python${{ parameters.PYTHON_VER }}_5":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '5'
+        "Python${{ parameters.PYTHON_VER }}_6":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '6'
+        "Python${{ parameters.PYTHON_VER }}_7":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '7'
+        "Python${{ parameters.PYTHON_VER }}_9":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '9'
+        "Python${{ parameters.PYTHON_VER }}_10":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '10'
+        "Python${{ parameters.PYTHON_VER }}_11":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '11'
+        "Python${{ parameters.PYTHON_VER }}_12":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '12'
+        "Python${{ parameters.PYTHON_VER }}_13":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '13'
+        "Python${{ parameters.PYTHON_VER }}_14":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '14'
+
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(python.version)'
+      inputs:
+        versionSpec: '$(python.version)'
+
+    - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.PYTHON_VER }} ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
+      env:
+        SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
+        AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+        AZURE_SECRET: $(AZURE_SECRET)
+        AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+        AZURE_TENANT: $(AZURE_TENANT)
+        RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
+        RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
+      displayName: 'Running Tests'
+
+  - job: SendMail
+    dependsOn:
+      - RunTests
+    condition: failed()
+    steps:
+      - script: tests/utils/sendmail/sendmail.py $(PASSWORD) $(MAILBOX)
+
+  - job: CleanupResourceGroups
+    dependsOn:
+      - CreateResourceGroups
+      - RunTests
+      - SendMail
+    condition: always()
+    variables:
+      TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
+      TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+              az group delete -n $(TEST_RESOURCE_GROUP) --yes --no-wait
+              az group delete -n $(TEST_RESOURCE_GROUP_SECONDARY) --yes --no-wait
