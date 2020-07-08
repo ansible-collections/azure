@@ -25,6 +25,7 @@ schedules:
   branches:
     include:
       - dev
+      - '*.*'
   always: true
 
 trigger: none
