@@ -77,7 +77,7 @@ else
     path_dir="${TEST_DIR}/tests/integration/targets/"
     for item in "$path_dir"/*
     do
-        if [ "${item}" = "$4" ]
+        if [ "${item}" = "$path_dir""$4" ]
         then
             echo "PASS"
         else
