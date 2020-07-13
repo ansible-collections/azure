@@ -81,7 +81,7 @@ else
         then
             echo "PASS"
         else
-            echo "disabled" >> "${TEST_DIR}"/tests/integration/targets/"${item}"/aliases
+            echo "disabled" >> "${item}"/aliases
         fi
     done
 fi
