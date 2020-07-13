@@ -236,7 +236,8 @@ class AzureRMDeploymentInfo(AzureRMModuleBase):
             'parameters': d.get('properties', {}).get('parameters'),
             'outputs': d.get('properties', {}).get('outputs'),
             'output_resources': output_resources_list,
-            'template_link': d.get('properties', {}).get('template_link').get('uri')
+            'template_link': d.get('properties', {}).get('template_link', {}).get('uri'),
+            'correlation_id': d.get('properties', {}).get('correlation_id')
         }
         return d
 
