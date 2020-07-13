@@ -1593,7 +1593,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 vhd=data_disk_vhd,
                                 caching=data_disk.get('caching'),
                                 create_option=data_disk.get('createOption'),
-                                disk_size_gb=int(data_disk['diskSizeGB']),
+                                disk_size_gb=int(data_disk.get('diskSizeGB', 0)) or None,
                                 managed_disk=data_disk_managed_disk,
                             ))
                         vm_resource.storage_profile.data_disks = data_disks
