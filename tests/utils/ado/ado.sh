@@ -81,7 +81,8 @@ else
         then
             echo "PASS"
         else
-            echo "\ndisabled" >> "${item}"/aliases
+            echo "\n" >> "${item}"/aliases
+            echo "disabled" >> "${item}"/aliases
         fi
     done
 fi
