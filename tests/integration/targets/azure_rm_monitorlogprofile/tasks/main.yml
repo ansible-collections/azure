@@ -10,7 +10,7 @@
     resource_group: "{{ resource_group }}"
     account_type: Standard_LRS
 
-- name: create log profile (idempotence)
+- name: create log profile (check mode)
   azure_rm_monitorlogprofile:
     name: "{{ profile_name }}"
     location: "{{ location }}"
@@ -58,7 +58,7 @@
       - output.changed
       - output.id
 
-- name: update log profile (idempotence)
+- name: create log profile (idempotence)
   azure_rm_monitorlogprofile:
     name: "{{ profile_name }}"
     location: "{{ location }}"
