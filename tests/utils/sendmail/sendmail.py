@@ -5,11 +5,11 @@ from email.header import Header
 
 from_addr = sys.argv[1]
 password = sys.argv[2]
-to_addr = ['xiuxi.sun@qq.com',]
+to_addr = ['xiuxi.sun@qq.com', ]
 
 smtp_server = 'smtp.qq.com'
- 
-msg = MIMEText('DEV ver pipeline test fail，detail info as Link：*******' ,'plain', 'utf-8')
+
+msg = MIMEText('DEV ver pipeline test fail，detail info as Link：*******', 'plain', 'utf-8')
 
 msg['From'] = Header(from_addr)
 msg['Subject'] = Header('ansible-collection DEV TEST')
