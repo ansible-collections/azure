@@ -191,4 +191,4 @@ jobs:
     #  - RunTests
     # condition: failed()
     steps:
-      - script: python tests/utils/sendmail/sendmail.py $(USERNAME) $(PASSWORD)
+      - script: python3 tests/utils/sendmail/sendmail.py $(USERNAME) $(PASSWORD)
