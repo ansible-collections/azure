@@ -187,10 +187,3 @@ jobs:
           inlineScript: |
               az group delete -n $(TEST_RESOURCE_GROUP) --yes --no-wait
               az group delete -n $(TEST_RESOURCE_GROUP_SECONDARY) --yes --no-wait
-
-  - job: SendMail
-    dependsOn:
-      - RunTests
-    condition: failed()
-    steps:
-      - script: python3 $(MAILBOX)ests/utils/sendmail/sendmail.py $(USERNAME) $(PASSWORD)
