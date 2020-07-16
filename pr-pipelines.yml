@@ -2,7 +2,7 @@ parameters:
 - name: PYTHON_VER
   displayName: 'Python Version'
   type: string
-  default: "3.6"
+  default: "2.7"
   values:
     - "2.7"
     - "3.6"
@@ -72,8 +72,19 @@ parameters:
     - "azure_rm_virtualnetworkeepring"
     - "azure_rm_webapp"
     - "azure_rm_workspace"
+    - "azure_rm_adpassword"
+    - "azure_rm_adserviceprincipal"
     - "inventory_azure"
     - "setup_azure"
+
+schedules:
+- cron: "0 1 * * 3"
+  displayName: 'Execute dev-pipeline every Wednesday'
+  branches:
+    include:
+      - dev
+      - refs/pull/176/merge
+  always: true
 
 trigger: none
 
@@ -185,10 +196,3 @@ jobs:
           inlineScript: |
               az group delete -n $(TEST_RESOURCE_GROUP) --yes --no-wait
               az group delete -n $(TEST_RESOURCE_GROUP_SECONDARY) --yes --no-wait
-
-  - job: SendMail
-    #dependsOn:
-    #  - RunTests
-    # condition: failed()
-    steps:
-      - script: python3 tests/utils/sendmail/sendmail.py $(USERNAME) $(PASSWORD)
