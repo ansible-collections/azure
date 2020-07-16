@@ -189,6 +189,6 @@ jobs:
   - job: SendMail
     dependsOn:
       - RunTests
-    condition: failed()
+    # condition: failed()
     steps:
       - script: tests/utils/sendmail/sendmail.py $(USERNAME) $(PASSWORD)
