@@ -193,4 +193,4 @@ jobs:
       - RunTests
     condition: failed()
     steps:
-      - script: python3 $(MAILBOX)ests/utils/sendmail/sendmail.py $(USERNAME) $(PASSWORD)
+      - script: tests/utils/sendmail/sendmail.py $(USERNAME) $(PASSWORD)
