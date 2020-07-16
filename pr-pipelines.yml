@@ -187,8 +187,8 @@ jobs:
               az group delete -n $(TEST_RESOURCE_GROUP_SECONDARY) --yes --no-wait
 
   - job: SendMail
-    dependsOn:
-      - RunTests
+    #dependsOn:
+    #  - RunTests
     # condition: failed()
     steps:
       - script: python tests/utils/sendmail/sendmail.py $(USERNAME) $(PASSWORD)
