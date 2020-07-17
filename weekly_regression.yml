@@ -2,7 +2,7 @@ parameters:
 - name: PYTHON_VER
   displayName: 'Python Version'
   type: string
-  default: "2.7"
+  default: "3.6"
   values:
     - "2.7"
     - "3.6"
