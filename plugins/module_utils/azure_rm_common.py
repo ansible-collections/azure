@@ -1248,9 +1248,18 @@ class AzureRMAuth(object):
 
         # authenticate
         self.credentials = self._get_credentials(
-            dict(auth_source=auth_source, profile=profile, subscription_id=subscription_id, client_id=client_id, secret=secret,
-                 tenant=tenant, ad_user=ad_user, password=password, cloud_environment=cloud_environment,
-                 cert_validation_mode=cert_validation_mode, api_profile=api_profile, adfs_authority_url=adfs_authority_url))
+            auth_source=auth_source,
+            profile=profile,
+            subscription_id=subscription_id,
+            client_id=client_id,
+            secret=secret,
+            tenant=tenant,
+            ad_user=ad_user,
+            password=password,
+            cloud_environment=cloud_environment,
+            cert_validation_mode=cert_validation_mode,
+            api_profile=api_profile,
+            adfs_authority_url=adfs_authority_url)
 
         if not self.credentials:
             if HAS_AZURE_CLI_CORE:
@@ -1419,8 +1428,7 @@ class AzureRMAuth(object):
 
         return None
 
-    # TODO: use explicit kwargs instead of intermediate dict
-    def _get_credentials(self, params):
+    def _get_credentials(self, auth_source=None, **params):
         # Get authentication credentials.
         self.log('Getting credentials')
 
