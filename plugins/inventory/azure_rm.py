@@ -532,6 +532,12 @@ class AzureHost(object):
                 system = 'linux'
             if 'windowsConfiguration' in self._vm_model['properties']['osProfile']:
                 system = 'windows'
+        else:
+            osType = self._vm_model['properties']['storageProfile']['osDisk']['osType']
+            if osType == 'Linux':
+                system = 'linux'
+            if osType == 'Windows':
+                system = 'windows'
 
         new_hostvars = dict(
             public_ipv4_addresses=[],
