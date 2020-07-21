@@ -156,7 +156,7 @@ options:
                 description:
                     - Whether the IP configuration is the primary one in the list.
                 type: bool
-                default: 'no'
+                required: true
             application_security_groups:
                 description:
                     - List of application security groups in which the IP configuration is included.
@@ -533,7 +533,7 @@ ip_configuration_spec = dict(
     public_ip_address_name=dict(type='str', aliases=['public_ip_address', 'public_ip_name']),
     public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
     load_balancer_backend_address_pools=dict(type='list'),
-    primary=dict(type='bool', default=False),
+    primary=dict(type='bool', required=True),
     application_security_groups=dict(type='list', elements='raw')
 )
 
