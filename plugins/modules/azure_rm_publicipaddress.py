@@ -318,7 +318,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                     changed = True
                     results['dns_settings']['domain_name_label'] = self.domain_name
 
-                if self.allocation_method.lower() != results['public_ip_allocation_method'].lower():
+                if self.allocation_method != results['public_ip_allocation_method']:
                     self.log("CHANGED: allocation_method")
                     changed = True
                     results['public_ip_allocation_method'] = self.allocation_method
@@ -369,7 +369,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                     pip = self.network_models.PublicIPAddress(
                         location=self.location,
                         public_ip_address_version=self.version,
-                        public_ip_allocation_method=self.allocation_method if self.version == 'IPv4' else None,
+                        public_ip_allocation_method=self.allocation_method if self.sku == 'Basic' else 'Static',
                         sku=self.network_models.PublicIPAddressSku(name=self.sku) if self.sku else None,
                         idle_timeout_in_minutes=self.idle_timeout if self.idle_timeout and self.idle_timeout > 0 else None
                     )
