@@ -21,7 +21,9 @@ except Exception:
     pass
 from os.path import expanduser
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import \
+    AnsibleModule, missing_required_lib, env_fallback
+
 try:
     from ansible.module_utils.ansible_release import __version__ as ANSIBLE_VERSION
 except Exception:
@@ -32,7 +34,9 @@ import ansible.module_utils.six.moves.urllib.parse as urlparse
 AZURE_COMMON_ARGS = dict(
     auth_source=dict(
         type='str',
-        choices=['auto', 'cli', 'env', 'credential_file', 'msi']
+        choices=['auto', 'cli', 'env', 'credential_file', 'msi'],
+        fallback=(env_fallback, ['ANSIBLE_AZURE_AUTH_SOURCE']),
+        default="auto"
     ),
     profile=dict(type='str'),
     subscription_id=dict(type='str'),
@@ -1236,7 +1240,8 @@ class AzureRMAuthException(Exception):
 class AzureRMAuth(object):
     _cloud_environment = None
     _adfs_authority_url = None
-    def __init__(self, auth_source='auto', profile=None, subscription_id=None, client_id=None, secret=None,
+
+    def __init__(self, auth_source=None, profile=None, subscription_id=None, client_id=None, secret=None,
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
                  api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False, **kwargs):
 
@@ -1435,10 +1440,6 @@ class AzureRMAuth(object):
         arg_credentials = dict()
         for attribute, env_variable in AZURE_CREDENTIAL_ENV_MAPPING.items():
             arg_credentials[attribute] = params.get(attribute, None)
-
-        auth_source = params.get('auth_source', None)
-        if not auth_source:
-            auth_source = os.environ.get('ANSIBLE_AZURE_AUTH_SOURCE', 'auto')
 
         if auth_source == 'msi':
             self.log('Retrieving credenitals from MSI')
