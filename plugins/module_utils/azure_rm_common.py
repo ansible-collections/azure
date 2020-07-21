@@ -1234,6 +1234,8 @@ class AzureRMAuthException(Exception):
 
 
 class AzureRMAuth(object):
+    _cloud_environment = None
+    _adfs_authority_url = None
     def __init__(self, auth_source='auto', profile=None, subscription_id=None, client_id=None, secret=None,
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
                  api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False, **kwargs):
@@ -1242,9 +1244,6 @@ class AzureRMAuth(object):
             self._fail_impl = fail_impl
         else:
             self._fail_impl = self._default_fail_impl
-
-        self._cloud_environment = None
-        self._adfs_authority_url = None
         self.is_ad_resource = is_ad_resource
 
         # authenticate
