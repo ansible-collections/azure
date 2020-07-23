@@ -1,0 +1,13 @@
+- hosts: localhost
+  connection: local
+  collections:
+    - azure.azcollection
+  tasks:
+  - name: upload file blob
+    azure_rm_storageblob:
+      resource_group: zhytest
+      storage_account_name: zhytest
+      container: foo
+      batch_upload_src: ~/code/azure
+      batch_upload_dst: azure7/
+      public_access: container

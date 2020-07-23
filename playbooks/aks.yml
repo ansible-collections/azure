@@ -1,0 +1,29 @@
+- hosts: localhost
+  connection: local
+  tasks:
+  - name: create rg
+    azure_rm_resourcegroup:
+      name: "aks-test"
+      location: eastus
+  - name: Find available k8s version
+    azure_rm_aksversion_info:
+      location: eastus
+    register: versions
+  - name: Create an AKS instance
+    azure_rm_aks:
+     name: "aks-zhy6"
+     resource_group: "aks-test"
+     location: eastus
+     dns_prefix: "aks-zhy"
+     kubernetes_version: "1.16.9"
+     service_principal:
+         client_id: "c47b1a61-382e-4ab1-be9d-2a7018f24732"
+         client_secret: "NEd0e4x-AH431O-I16s0x_-Np-c7G_LLzC"
+     linux_profile:
+         admin_username: azureuser
+         ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDSPmiqkvDH1/+MDAVDZT8381aYqp73Odz8cnD5hegNhqtXajqtiH0umVg7HybX3wt1HjcrwKJovZURcIbbcDvzdH2bnYbF93T4OLXA0bIfuIp6M86x1iutFtXdpN3TTicINrmSXEE2Ydm51iMu77B08ZERjVaToya2F7vC+egfoPvibf7OLxE336a5tPCywavvNihQjL8sjgpDT5AAScjb3YqK/6VLeQ18Ggt8/ufINsYkb+9/Ji/3OcGFeflnDXq80vPUyF3u4iIylob6RSZenC38cXmQB05tRNxS1B6BXCjMRdy0v4pa7oKM2GA4ADKpNrr0RI9ed+peRFwmsclH test@ansible
+     agent_pool_profiles:
+         - name: default
+           count: 1
+           vm_size: Standard_DS1_v2
+     enable_rbac: yes

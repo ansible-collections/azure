@@ -1,0 +1,12 @@
+- hosts: myvm
+  tasks:
+  - name: upload file blob
+    azure_rm_storageblob:
+      resource_group: myrg
+      storage_account_name: zhytest2
+      container: foo
+      src: /tmp/bar.txt
+      blob: bar.txt
+      public_access: container
+      content_type: 'text/html'
+  

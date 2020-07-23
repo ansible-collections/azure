@@ -1,0 +1,13 @@
+- hosts: localhost
+  connection: local
+  tasks:
+  - name: upload file blob
+    azure_rm_storageblob:
+      resource_group: zhytest
+      storage_account_name: zhytest
+      container: foo
+      src: /tmp/foo.txt
+      blob: dir/foo.txt
+      public_access: container
+      content_type: 'text/html'
+  
