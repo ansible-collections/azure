@@ -271,7 +271,6 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         self.blob_client = self.get_blob_client(self.resource_group, self.storage_account_name, self.blob_type)
         self.container_obj = self.get_container()
 
-
         if self.state == 'present':
             if not self.container_obj:
                 # create the container
@@ -285,7 +284,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             if self.batch_upload_src:
                 self.batch_upload()
                 return self.results
-            
+
             if self.blob:
                 # create, update or download blob
                 self.blob_obj = self.get_blob()
@@ -326,16 +325,14 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
     def batch_upload(self):
         import os
-        
         def _glob_files_locally(folder_path):
 
             len_folder_path = len(folder_path) + 1
 
-            for root, _, files in os.walk(folder_path):
+            for root, v, files in os.walk(folder_path):
                 for f in files:
                     full_path = os.path.join(root, f)
-                    yield (full_path, full_path[len_folder_path:])
-
+                    yield full_path, full_path[len_folder_path:]
 
         def _normalize_blob_file_path(path, name):
             path_sep = '/'
@@ -364,10 +361,10 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
         self.batch_upload_src = os.path.expanduser(self.batch_upload_src)
         if not os.path.exists(self.batch_upload_src):
-            self.fail("batch upload source source directory {} does not exist".format(self.batch_upload_src))
+            self.fail("batch upload source source directory {0} does not exist".format(self.batch_upload_src))
         
         if not os.path.isdir(self.batch_upload_src):
-            self.fail("incorrect usage: {} is not a direcotry".format(self.batch_upload_src))
+            self.fail("incorrect usage: {0} is not a directory".format(self.batch_upload_src))
         
         source_dir = os.path.realpath(self.batch_upload_src)
         source_files = [c for c in _glob_files_locally(source_dir)]
@@ -386,7 +383,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             if not self.check_mode:
                 try:
                     self.blob_client.create_blob_from_path(self.container, blob_path, src,
-                                                       metadata=self.tags, content_settings=_guess_content_type(src, content_settings))
+                                                           metadata=self.tags, content_settings=_guess_content_type(src, content_settings))
                 except AzureHttpError as exc:
                     self.fail("Error creating blob {0} - {1}".format(src, str(exc)))
             self.results['actions'].append('created blob from {0}'.format(src))
