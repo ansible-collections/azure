@@ -21,7 +21,11 @@ short_description: Manage blob containers and blob objects
 version_added: "2.1"
 description:
     - Create, update and delete blob containers and blob objects.
-    - Use to upload a file and store it as a blob object, or download a blob object to a file.
+    - Use to upload a file and store it as a blob object, or download a blob object to a file(upload and download mode)
+    - Use to upload a batch of files under a given directory(batch upload mode)
+    - In the batch upload mode, the existing blob object will be overwritten if a blob object with the same name is to be created.
+    - the module can work exclusively in three modes, when C(batch_upload_src) is set, it is working in batch upload mode;
+      when C(src) is set, it is working in upload mode and when C(dst) is set, it is working in dowload mode.
 options:
     storage_account_name:
         description:
@@ -88,6 +92,12 @@ options:
             - Source file path. Use with state C(present) to upload a blob.
         aliases:
             - source
+    batch_upload_src:
+        description:
+            - Batch upload source directory. Use with state C(present) to upload batch of files under the directory.
+    batch_upload_dst:
+        description:
+            - Base directory in container when upload batch of files.
     state:
         description:
             - State of a container or blob.
