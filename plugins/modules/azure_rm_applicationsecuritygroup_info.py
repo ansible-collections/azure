@@ -33,7 +33,7 @@ options:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yunge Zhu (@yungezz)
@@ -139,7 +139,7 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
         is_old_facts = self.module._name == 'azure_rm_applicationsecuritygroup_facts'
         if is_old_facts:
             self.module.deprecate("The 'azure_rm_applicationsecuritygroup_facts' module has been renamed to 'azure_rm_applicationsecuritygroup_info'",
-                                  version='2.13')
+                                  version=(2.9, ))
 
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             if hasattr(self, key):

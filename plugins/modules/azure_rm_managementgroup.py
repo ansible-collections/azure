@@ -69,8 +69,8 @@ options:
             - present
         type: str
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 author:
     - Zim Kalinowski (@zikalino)
 
@@ -211,8 +211,8 @@ properties:
 
 import time
 import json
-from ansible.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from ansible.module_utils.azure_rm_common_rest import GenericRestClient
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
     from msrestazure.azure_exceptions import CloudError
 except ImportError:

@@ -40,7 +40,7 @@ options:
             - custom
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yunge Zhu(@yungezz)
@@ -55,7 +55,7 @@ EXAMPLES = '''
     - name: Get Role Definition by name
       azure_rm_roledefinition_info:
         scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
-        name: myRoleDefinition
+        role_name: myRoleDefinition
 '''
 
 RETURN = '''
@@ -120,10 +120,10 @@ roledefinitions:
                     sample: [ 'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write' ]
 '''
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils._text import to_native
 
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
     from msrest.serialization import Model
     from azure.mgmt.authorization import AuthorizationManagementClient
@@ -184,7 +184,7 @@ class AzureRMRoleDefinitionInfo(AzureRMModuleBase):
         """Main module execution method"""
         is_old_facts = self.module._name == 'azure_rm_roledefinition_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_roledefinition_facts' module has been renamed to 'azure_rm_roledefinition_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_roledefinition_facts' module has been renamed to 'azure_rm_roledefinition_info'", version=(2.9, ))
 
         for key in list(self.module_arg_spec.keys()):
             if hasattr(self, key):

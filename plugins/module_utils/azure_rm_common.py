@@ -3,6 +3,10 @@
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
+
 import os
 import re
 import types
@@ -82,7 +86,7 @@ AZURE_API_PROFILES = {
             snapshots='2018-10-01',
             virtual_machine_run_commands='2018-10-01'
         ),
-        'NetworkManagementClient': '2018-08-01',
+        'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
         'StorageManagementClient': '2017-10-01',
         'WebSiteManagementClient': '2018-02-01',
@@ -223,6 +227,8 @@ try:
     from azure.mgmt.storage import StorageManagementClient
     from azure.mgmt.compute import ComputeManagementClient
     from azure.mgmt.dns import DnsManagementClient
+    from azure.mgmt.privatedns import PrivateDnsManagementClient
+    import azure.mgmt.privatedns.models as PrivateDnsModels
     from azure.mgmt.monitor import MonitorManagementClient
     from azure.mgmt.web import WebSiteManagementClient
     from azure.mgmt.containerservice import ContainerServiceClient
@@ -323,6 +329,10 @@ AZURE_PKG_VERSIONS = {
         'package_name': 'dns',
         'expected_version': '2.1.0'
     },
+    'PrivateDnsManagementClient': {
+        'package_name': 'privatedns',
+        'expected_version': '0.1.0'
+    },
     'WebSiteManagementClient': {
         'package_name': 'web',
         'expected_version': '0.41.0'
@@ -341,7 +351,7 @@ class AzureRMModuleBase(object):
     def __init__(self, derived_arg_spec, bypass_checks=False, no_log=False,
                  check_invalid_arguments=None, mutually_exclusive=None, required_together=None,
                  required_one_of=None, add_file_common_args=False, supports_check_mode=False,
-                 required_if=None, supports_tags=True, facts_module=False, skip_exec=False):
+                 required_if=None, supports_tags=True, facts_module=False, skip_exec=False, is_ad_resource=False):
 
         merged_arg_spec = dict()
         merged_arg_spec.update(AZURE_COMMON_ARGS)
@@ -358,7 +368,6 @@ class AzureRMModuleBase(object):
         self.module = AnsibleModule(argument_spec=merged_arg_spec,
                                     bypass_checks=bypass_checks,
                                     no_log=no_log,
-                                    check_invalid_arguments=check_invalid_arguments,
                                     mutually_exclusive=mutually_exclusive,
                                     required_together=required_together,
                                     required_one_of=required_one_of,
@@ -383,6 +392,7 @@ class AzureRMModuleBase(object):
         self._resource_client = None
         self._compute_client = None
         self._dns_client = None
+        self._private_dns_client = None
         self._web_client = None
         self._marketplace_client = None
         self._sql_client = None
@@ -408,7 +418,7 @@ class AzureRMModuleBase(object):
         # self.debug = self.module.params.get('debug')
 
         # delegate auth to AzureRMAuth class (shared with all plugin types)
-        self.azure_auth = AzureRMAuth(fail_impl=self.fail, **self.module.params)
+        self.azure_auth = AzureRMAuth(fail_impl=self.fail, is_ad_resource=is_ad_resource, **self.module.params)
 
         # common parameter validation
         if self.module.params.get('tags'):
@@ -822,6 +832,14 @@ class AzureRMModuleBase(object):
         # wrap basic strings in a dict that just defines the default
         return dict(default_api_version=profile_raw)
 
+    def get_graphrbac_client(self, tenant_id):
+        from azure.graphrbac import GraphRbacManagementClient
+        cred = self.azure_auth.azure_credentials
+        base_url = self.azure_auth._cloud_environment.endpoints.active_directory_graph_resource_id
+        client = GraphRbacManagementClient(cred, tenant_id, base_url)
+
+        return client
+
     def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None):
         self.log('Getting management service client {0}'.format(client_type.__name__))
         self.check_client_version(client_type)
@@ -992,6 +1010,20 @@ class AzureRMModuleBase(object):
         return DnsManagementClient.models('2018-05-01')
 
     @property
+    def private_dns_client(self):
+        self.log('Getting private dns client')
+        if not self._private_dns_client:
+            self._private_dns_client = self.get_mgmt_svc_client(
+                PrivateDnsManagementClient,
+                base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._private_dns_client
+
+    @property
+    def private_dns_models(self):
+        self.log('Getting private dns models')
+        return PrivateDnsModels
+
+    @property
     def web_client(self):
         self.log('Getting web client')
         if not self._web_client:
@@ -1012,7 +1044,7 @@ class AzureRMModuleBase(object):
     @property
     def managedcluster_models(self):
         self.log("Getting container service models")
-        return ContainerServiceClient.models('2018-03-31')
+        return ContainerServiceClient.models('2019-04-01')
 
     @property
     def managedcluster_client(self):
@@ -1020,7 +1052,7 @@ class AzureRMModuleBase(object):
         if not self._managedcluster_client:
             self._managedcluster_client = self.get_mgmt_svc_client(ContainerServiceClient,
                                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                   api_version='2018-03-31')
+                                                                   api_version='2019-04-01')
         return self._managedcluster_client
 
     @property
@@ -1206,7 +1238,7 @@ class AzureRMAuthException(Exception):
 class AzureRMAuth(object):
     def __init__(self, auth_source='auto', profile=None, subscription_id=None, client_id=None, secret=None,
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
-                 api_profile='latest', adfs_authority_url=None, fail_impl=None, **kwargs):
+                 api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False, **kwargs):
 
         if fail_impl:
             self._fail_impl = fail_impl
@@ -1215,6 +1247,7 @@ class AzureRMAuth(object):
 
         self._cloud_environment = None
         self._adfs_authority_url = None
+        self.is_ad_resource = is_ad_resource
 
         # authenticate
         self.credentials = self._get_credentials(
@@ -1360,8 +1393,10 @@ class AzureRMAuth(object):
             'subscription_id': subscription_id
         }
 
-    def _get_azure_cli_credentials(self):
-        credentials, subscription_id = get_azure_cli_credentials()
+    def _get_azure_cli_credentials(self, resource=None):
+        if self.is_ad_resource:
+            resource = 'https://graph.windows.net/'
+        credentials, subscription_id = get_azure_cli_credentials(resource)
         cloud_environment = get_cli_active_cloud()
 
         cli_credentials = {

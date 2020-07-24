@@ -47,7 +47,7 @@ options:
         type: str
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -116,10 +116,10 @@ locks:
 import json
 import re
 from ansible.module_utils.common.dict_transformations import _camel_to_snake
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.azure_rm_common_rest import GenericRestClient
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
 except ImportError:
     # This is handled in azure_rm_common
@@ -156,7 +156,7 @@ class AzureRMLockInfo(AzureRMModuleBase):
 
         is_old_facts = self.module._name == 'azure_rm_lock_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_lock_facts' module has been renamed to 'azure_rm_lock_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_lock_facts' module has been renamed to 'azure_rm_lock_info'", version=(2.9, ))
 
         for key in self.module_arg_spec.keys():
             setattr(self, key, kwargs[key])

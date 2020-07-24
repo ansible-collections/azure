@@ -91,7 +91,7 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Hai Cao (@caohai)

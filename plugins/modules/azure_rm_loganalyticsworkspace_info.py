@@ -48,7 +48,7 @@ options:
             - Show the list of usages for a workspace.
             - Note this will cost one more network overhead for each workspace, expected slow response.
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -137,10 +137,10 @@ usages:
               }
 '''  # NOQA
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
 from ansible.module_utils.common.dict_transformations import _snake_to_camel, _camel_to_snake
 
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
     from msrestazure.tools import parse_resource_id
     from msrestazure.azure_exceptions import CloudError
 except ImportError:
@@ -182,7 +182,7 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
         is_old_facts = self.module._name == 'azure_rm_loganalyticsworkspace_facts'
         if is_old_facts:
             self.module.deprecate("The 'azure_rm_loganalyticsworkspace_facts' module has been renamed to 'azure_rm_loganalyticsworkspace_info'",
-                                  version='2.13')
+                                  version=(2.9, ))
 
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])

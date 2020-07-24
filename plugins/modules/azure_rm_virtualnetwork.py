@@ -67,8 +67,8 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Chris Houseknecht (@chouseknecht)
@@ -100,7 +100,7 @@ EXAMPLES = '''
 RETURN = '''
 state:
     description:
-       - Current state of the virtual network.
+        - Current state of the virtual network.
     returned: always
     type: complex
     contains:
@@ -155,12 +155,12 @@ state:
             sample: Succeeded
         tags:
             description:
-                - Resource tags, such as { 'tags1':'value1' }
+                - Resource tags, such as { 'tags1':'value1' }.
             returned: always
             type: dict
             sample: { 'key1':'value1' }
         type:
-            descriptioin:
+            description:
                 - Resource type.
             returned: always
             type: str

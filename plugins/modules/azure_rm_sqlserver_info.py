@@ -31,8 +31,8 @@ options:
             - The name of the server.
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -146,7 +146,7 @@ class AzureRMSqlServerInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_sqlserver_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_sqlserver_facts' module has been renamed to 'azure_rm_sqlserver_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_sqlserver_facts' module has been renamed to 'azure_rm_sqlserver_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

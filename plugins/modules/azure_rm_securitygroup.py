@@ -68,6 +68,7 @@ options:
                 choices:
                     - Udp
                     - Tcp
+                    - Icmp
                     - "*"
                 default: "*"
             source_port_range:
@@ -139,8 +140,8 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Chris Houseknecht (@chouseknecht)
@@ -203,6 +204,21 @@ EXAMPLES = '''
       tags:
           testing: testing
           delete: on-exit
+
+# Create a securiy group with I(protocol=Icmp)
+- azure_rm_securitygroup:
+    name: mysecgroup
+    resource_group: myResourceGroup
+    rules:
+      - name: SSH
+        protocol: Tcp
+        destination_port_range: 22
+        access: Allow
+        priority: 105
+        direction: Inbound
+      - name: ICMP
+        protocol: Icmp
+        priority: 106
 
 # Delete security group
 - azure_rm_securitygroup:
@@ -598,7 +614,7 @@ def create_network_security_group_dict(nsg):
 rule_spec = dict(
     name=dict(type='str', required=True),
     description=dict(type='str'),
-    protocol=dict(type='str', choices=['Udp', 'Tcp', '*'], default='*'),
+    protocol=dict(type='str', choices=['Udp', 'Tcp', 'Icmp', '*'], default='*'),
     source_port_range=dict(type='raw', default='*'),
     destination_port_range=dict(type='raw', default='*'),
     source_address_prefix=dict(type='raw', default='*'),
