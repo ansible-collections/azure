@@ -362,13 +362,13 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         self.batch_upload_src = os.path.expanduser(self.batch_upload_src)
         if not os.path.exists(self.batch_upload_src):
             self.fail("batch upload source source directory {0} does not exist".format(self.batch_upload_src))
-        
+
         if not os.path.isdir(self.batch_upload_src):
             self.fail("incorrect usage: {0} is not a directory".format(self.batch_upload_src))
-        
+
         source_dir = os.path.realpath(self.batch_upload_src)
         source_files = [c for c in _glob_files_locally(source_dir)]
-        
+
         content_settings = ContentSettings(
                 content_type=self.content_type,
                 content_encoding=self.content_encoding,
@@ -376,7 +376,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                 content_disposition=self.content_disposition,
                 cache_control=self.cache_control,
                 content_md5=None)
-        
+
         for src, blob_path in source_files:
             if self.batch_upload_dst:
                 blob_path = _normalize_blob_file_path(self.batch_upload_dst, blob_path)
