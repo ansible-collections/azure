@@ -216,8 +216,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             force=dict(type='bool', default=False),
             resource_group=dict(required=True, type='str', aliases=['resource_group_name']),
             src=dict(type='str', aliases=['source']),
-            batch_upload_src=dict(type='str'),
-            batch_upload_dst=dict(type='str'),
+            batch_upload_src=dict(type='path'),
+            batch_upload_dst=dict(type='path'),
             state=dict(type='str', default='present', choices=['absent', 'present']),
             public_access=dict(type='str', choices=['container', 'blob']),
             content_type=dict(type='str'),
@@ -350,16 +350,13 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             mimetypes.add_type('application/javascript', '.js')
             mimetypes.add_type('application/wasm', '.wasm')
 
-            content_type, _ = mimetypes.guess_type(file_path)
-            return ContentSettings(
-                content_type=content_type,
-                content_encoding=original.content_encoding,
-                content_disposition=original.content_disposition,
-                content_language=original.content_language,
-                content_md5=original.content_md5,
-                cache_control=original.cache_control)
+            content_type, v = mimetypes.guess_type(file_path)
+            return ContentSettings(content_type=content_type,
+                                   content_disposition=original.content_disposition,
+                                   content_language=original.content_language,
+                                   content_md5=original.content_md5,
+                                   cache_control=original.cache_control)
 
-        self.batch_upload_src = os.path.expanduser(self.batch_upload_src)
         if not os.path.exists(self.batch_upload_src):
             self.fail("batch upload source source directory {0} does not exist".format(self.batch_upload_src))
 
