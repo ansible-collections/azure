@@ -369,13 +369,12 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         source_dir = os.path.realpath(self.batch_upload_src)
         source_files = [c for c in _glob_files_locally(source_dir)]
 
-        content_settings = ContentSettings(
-                content_type=self.content_type,
-                content_encoding=self.content_encoding,
-                content_language=self.content_language,
-                content_disposition=self.content_disposition,
-                cache_control=self.cache_control,
-                content_md5=None)
+        content_settings = ContentSettings(content_type=self.content_type,
+                                           content_encoding=self.content_encoding,
+                                           content_language=self.content_language,
+                                           content_disposition=self.content_disposition,
+                                           cache_control=self.cache_control,
+                                           content_md5=None)
 
         for src, blob_path in source_files:
             if self.batch_upload_dst:
