@@ -1277,7 +1277,7 @@ class AzureRMAuth(object):
         # cert validation mode precedence: module-arg, credential profile, env, "validate"
         self._cert_validation_mode = cert_validation_mode or \
             self.credentials.get('cert_validation_mode') or \
-            os.environ.get('AZURE_CERT_VALIDATION_MODE') or \
+            self._get_env('cert_validation_mode') or \
             'validate'
 
         if self._cert_validation_mode not in ['validate', 'ignore']:
@@ -1368,6 +1368,10 @@ class AzureRMAuth(object):
     def _default_fail_impl(self, msg, exception=None, **kwargs):
         raise AzureRMAuthException(msg)
 
+    def _get_env(self, module_key, default=None):
+        "Read envvar matching module parameter"
+        return os.environ.get(AZURE_CREDENTIAL_ENV_MAPPING[module_key], default)
+
     def _get_profile(self, profile="default"):
         path = expanduser("~/.azure/credentials")
         try:
@@ -1390,7 +1394,7 @@ class AzureRMAuth(object):
 
     def _get_msi_credentials(self, subscription_id=None, client_id=None, **kwargs):
         credentials = MSIAuthentication(client_id=client_id)
-        subscription_id = subscription_id or os.environ.get(AZURE_CREDENTIAL_ENV_MAPPING['subscription_id'])
+        subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
             try:
                 # use the first subscription of the MSI
@@ -1408,7 +1412,7 @@ class AzureRMAuth(object):
     def _get_azure_cli_credentials(self, subscription_id=None, resource=None):
         if self.is_ad_resource:
             resource = 'https://graph.windows.net/'
-        subscription_id = subscription_id or os.environ.get(AZURE_CREDENTIAL_ENV_MAPPING['subscription_id'])
+        subscription_id = subscription_id or self._get_env('subscription_id')
         profile = get_cli_profile()
         credentials, subscription_id, tenant = profile.get_login_credentials(
             subscription_id=subscription_id, resource=resource)
