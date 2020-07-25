@@ -1448,7 +1448,7 @@ class AzureRMAuth(object):
             arg_credentials[attribute] = params.get(attribute, None)
 
         if auth_source == 'msi':
-            self.log('Retrieving credenitals from MSI')
+            self.log('Retrieving credentials from MSI')
             return self._get_msi_credentials(subscription_id=params.get('subscription_id'), client_id=params.get('client_id'))
 
         if auth_source == 'cli':
