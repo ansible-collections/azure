@@ -1275,8 +1275,10 @@ class AzureRMAuth(object):
                           "define a profile in ~/.azure/credentials, or install Azure CLI and log in (`az login`).")
 
         # cert validation mode precedence: module-arg, credential profile, env, "validate"
-        self._cert_validation_mode = cert_validation_mode or self.credentials.get('cert_validation_mode') or \
-            os.environ.get('AZURE_CERT_VALIDATION_MODE') or 'validate'
+        self._cert_validation_mode = cert_validation_mode or \
+            self.credentials.get('cert_validation_mode') or \
+            os.environ.get('AZURE_CERT_VALIDATION_MODE') or \
+            'validate'
 
         if self._cert_validation_mode not in ['validate', 'ignore']:
             self.fail('invalid cert_validation_mode: {0}'.format(self._cert_validation_mode))
