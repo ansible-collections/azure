@@ -197,7 +197,7 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
         app_assignment_changed = self.app_role_assignment_required is not None and \
             self.app_role_assignment_required != response.get('app_role_assignment_required', None)
 
-        return False or self.app_role_assignment_required
+        return app_assignment_changed
 
     def to_dict(self, object):
         return dict(
