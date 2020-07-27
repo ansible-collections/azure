@@ -94,6 +94,17 @@ options:
             -  Allows https traffic only to storage service when set to C(true).
         type: bool
         version_added: "2.8"
+    minimum_tls_version:
+        description:
+            - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
+        default: 'tls1_0'
+        choices:
+            - tls1_0
+            - tls1_1
+            - tls1_2
+        version_added: "2.10"
+        version_added_collection: "azure.azcollection v0.4.0"
+
     network_acls:
         description:
             - Manages the Firewall and virtual networks settings of the storage account.
@@ -449,6 +460,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
             access_tier=dict(type='str', choices=['Hot', 'Cool']),
             https_only=dict(type='bool', default=False),
+            minimum_tls_version=dict(type='str', default='tls1_0', choices=['tls1_0', 'tls1_1', 'tls1_2']),
             network_acls=dict(type='dict'),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict')
         )
@@ -470,6 +482,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.kind = None
         self.access_tier = None
         self.https_only = None
+        self.minimum_tls_version = None
         self.network_acls = None
         self.blob_cors = None
 
@@ -568,6 +581,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                  if account_obj.status_of_secondary is not None else None),
             primary_location=account_obj.primary_location,
             https_only=account_obj.enable_https_traffic_only,
+            minimum_tls_version=account_obj.minimum_tls_version,
             network_acls=account_obj.network_rule_set
         )
         account_dict['custom_domain'] = None
@@ -680,6 +694,18 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 except Exception as exc:
                     self.fail("Failed to update account type: {0}".format(str(exc)))
 
+        if bool(self.minimum_tls_version) != bool(self.account_dict.get('minimum_tls_version')):
+            self.results['changed'] = True
+            self.account_dict['minimum_tls_version'] = self.minimum_tls_version
+            if not self.check_mode:
+                try:
+                    parameters = self.storage_models.StorageAccountUpdateParameters(minimum_tls_version=self.minimum_tls_version)
+                    self.storage_client.storage_accounts.update(self.resource_group,
+                                                                self.name,
+                                                                parameters)
+                except Exception as exc:
+                    self.fail("Failed to update account type: {0}".format(str(exc)))
+
         if self.account_type:
             if self.account_type != self.account_dict['sku_name']:
                 # change the account type
@@ -771,6 +797,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 name=self.name,
                 resource_group=self.resource_group,
                 enable_https_traffic_only=self.https_only,
+                minimum_tls_version=self.minimum_tls_version,
                 networks_acls=dict(),
                 tags=dict()
             )
@@ -789,6 +816,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         location=self.location,
                                                                         tags=self.tags,
                                                                         enable_https_traffic_only=self.https_only,
+                                                                        minimum_tls_version=self.minimum_tls_version,
                                                                         access_tier=self.access_tier)
         self.log(str(parameters))
         try:
