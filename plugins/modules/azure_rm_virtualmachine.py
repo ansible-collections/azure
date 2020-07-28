@@ -947,7 +947,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         elif self.storage_account_name:
             bsa = self.get_storage_account(self.resource_group, self.storage_account_name)
         else:
-            bsa = self.create_default_storage_account(self.resource_group, vm_dict=vm_dict)
+            bsa = self.create_default_storage_account(vm_dict=vm_dict)
         self.log("boot diagnostics storage account:")
         self.log(self.serialize_obj(bsa, 'StorageAccount'), pretty_print=True)
         return bsa
