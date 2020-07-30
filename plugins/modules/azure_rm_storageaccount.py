@@ -103,7 +103,6 @@ options:
             - TLS1_1
             - TLS1_2
         version_added: "2.10"
-        version_added_collection: "azure.azcollection v0.4.0"
 
     network_acls:
         description:
