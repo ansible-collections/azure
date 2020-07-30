@@ -694,7 +694,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 except Exception as exc:
                     self.fail("Failed to update account type: {0}".format(str(exc)))
 
-        if bool(self.minimum_tls_version) != self.account_dict.get('minimum_tls_version'):
+        if self.minimum_tls_version is not None and self.minimum_tls_version != self.account_dict.get('minimum_tls_version'):
             self.results['changed'] = True
             self.account_dict['minimum_tls_version'] = self.minimum_tls_version
             if not self.check_mode:
