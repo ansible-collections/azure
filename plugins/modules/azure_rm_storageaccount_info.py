@@ -519,7 +519,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             location=account_obj.location,
             access_tier=(account_obj.access_tier
                          if account_obj.access_tier is not None else None),
-            account_type=account_obj.sku.name, #.value,
+            account_type=account_obj.sku.name,
             kind=account_obj.kind if account_obj.kind else None,
             provisioning_state=account_obj.provisioning_state,
             secondary_location=account_obj.secondary_location,
