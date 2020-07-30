@@ -517,18 +517,19 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             id=account_obj.id,
             name=account_obj.name,
             location=account_obj.location,
-            access_tier=(account_obj.access_tier.value
+            access_tier=(account_obj.access_tier
                          if account_obj.access_tier is not None else None),
-            account_type=account_obj.sku.name.value,
-            kind=account_obj.kind.value if account_obj.kind else None,
-            provisioning_state=account_obj.provisioning_state.value,
+            account_type=account_obj.sku.name, #.value,
+            kind=account_obj.kind if account_obj.kind else None,
+            provisioning_state=account_obj.provisioning_state,
             secondary_location=account_obj.secondary_location,
-            status_of_primary=(account_obj.status_of_primary.value
+            status_of_primary=(account_obj.status_of_primary
                                if account_obj.status_of_primary is not None else None),
-            status_of_secondary=(account_obj.status_of_secondary.value
+            status_of_secondary=(account_obj.status_of_secondary
                                  if account_obj.status_of_secondary is not None else None),
             primary_location=account_obj.primary_location,
-            https_only=account_obj.enable_https_traffic_only
+            https_only=account_obj.enable_https_traffic_only,
+            minimum_tls_version=account_obj.minimum_tls_version
         )
 
         id_dict = self.parse_resource_to_dict(account_obj.id)

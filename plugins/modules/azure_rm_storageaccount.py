@@ -97,11 +97,11 @@ options:
     minimum_tls_version:
         description:
             - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
-        default: 'tls1_0'
+        default: 'TLS1_0'
         choices:
-            - tls1_0
-            - tls1_1
-            - tls1_2
+            - TLS1_0
+            - TLS1_1
+            - TLS1_2
         version_added: "2.10"
         version_added_collection: "azure.azcollection v0.4.0"
 
@@ -460,7 +460,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
             access_tier=dict(type='str', choices=['Hot', 'Cool']),
             https_only=dict(type='bool', default=False),
-            minimum_tls_version=dict(type='str', default='tls1_0', choices=['tls1_0', 'tls1_1', 'tls1_2']),
+            minimum_tls_version=dict(type='str', default='TLS1_0', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
             network_acls=dict(type='dict'),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict')
         )
@@ -694,7 +694,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 except Exception as exc:
                     self.fail("Failed to update account type: {0}".format(str(exc)))
 
-        if bool(self.minimum_tls_version) != bool(self.account_dict.get('minimum_tls_version')):
+        if bool(self.minimum_tls_version) != self.account_dict.get('minimum_tls_version'):
             self.results['changed'] = True
             self.account_dict['minimum_tls_version'] = self.minimum_tls_version
             if not self.check_mode:
