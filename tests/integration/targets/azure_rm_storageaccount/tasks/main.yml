@@ -48,7 +48,6 @@
          ip_rules:
            - value: '9.9.9.9'
              action: Allow
-
    register: output
 
  - name: Assert status succeeded and results include an Id value 
@@ -58,6 +57,7 @@
        - output.state.id is defined
        - output.state.blob_cors | length == 1
        - output.state.https_only
+       - output.state.minimum_tls_version == "TLS1_0" # default value
        - output.state.network_acls.bypass == "AzureServices"
        - output.state.network_acls.default_action == "Deny"
        - output.state.network_acls.ip_rules | length == 1
@@ -85,6 +85,7 @@
            test: test
            galaxy: galaxy
        https_only: yes
+       minimum_tls_version: "TLS1_0" 
        network_acls:
          bypass: AzureServices
          default_action: Deny
@@ -147,6 +148,19 @@
            - "output.state.tags.testing == 'testing'"
            - "output.state.tags.delete == 'never'"
 
+ - name: Update account minimum tls version
+   azure_rm_storageaccount:
+       resource_group: "{{ resource_group }}"
+       name: "{{ storage_account }}"
+       minimum_tls_version: "TLS1_2" 
+   register: output
+
+ - name: Assert status succeeded and results include an Id value 
+   assert:
+     that:
+       - output.changed
+       - output.state.minimum_tls_version == "TLS1_2"
+
  - name: Gather facts
    azure_rm_storageaccount_info:
        resource_group: "{{ resource_group }}"
@@ -162,6 +176,7 @@
            - output.storageaccounts[0].account_type == "Standard_GRS"
            - output.storageaccounts[0].primary_endpoints.blob.connectionstring
            - output.storageaccounts[0].blob_cors
+           - output.storageaccounts[0].minimum_tls_version == "TLS1_2" 
            #- output.storageaccounts[0].https_only
            #- output.storageaccounts[0].network_acls.bypass == "AzureServices"
            #- output.storageaccounts[0].network_acls.default_action == "Deny"
