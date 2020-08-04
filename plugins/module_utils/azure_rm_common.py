@@ -88,7 +88,7 @@ AZURE_API_PROFILES = {
         ),
         'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
-        'StorageManagementClient': '2017-10-01',
+        'StorageManagementClient': '2019-06-01',
         'WebSiteManagementClient': '2018-02-01',
         'PostgreSQLManagementClient': '2017-12-01',
         'MySQLManagementClient': '2017-12-01',
@@ -307,7 +307,7 @@ def normalize_location_name(name):
 AZURE_PKG_VERSIONS = {
     'StorageManagementClient': {
         'package_name': 'storage',
-        'expected_version': '3.1.0'
+        'expected_version': '11.1.0'
     },
     'ComputeManagementClient': {
         'package_name': 'compute',
@@ -941,12 +941,12 @@ class AzureRMModuleBase(object):
         if not self._storage_client:
             self._storage_client = self.get_mgmt_svc_client(StorageManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2018-07-01')
+                                                            api_version='2019-06-01')
         return self._storage_client
 
     @property
     def storage_models(self):
-        return StorageManagementClient.models("2018-07-01")
+        return StorageManagementClient.models("2019-06-01")
 
     @property
     def network_client(self):
