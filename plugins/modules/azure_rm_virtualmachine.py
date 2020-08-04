@@ -386,6 +386,10 @@ options:
                     - If not specified, uses I(storage_account_name) defined one level up.
                     - If storage account is not specified anywhere, and C(enabled) is C(true), a default storage account is created for boot diagnostics data.
                 required: false
+            resource_group:
+                description:
+                    - Resource group where the storage account is located.
+                type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
