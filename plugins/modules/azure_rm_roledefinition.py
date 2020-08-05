@@ -284,7 +284,7 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
 
     # check update
     def check_update(self, old_definition):
-        if self.description and self.description != old_definition['properties']['description']:
+        if self.description and self.description != old_definition['description']:
             return True
         if self.permissions:
             if len(self.permissions) != len(old_definition['permissions']):
