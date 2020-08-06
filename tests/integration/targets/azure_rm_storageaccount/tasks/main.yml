@@ -163,7 +163,7 @@
        - output.changed
        - output.state.minimum_tls_version == "TLS1_2"
 
- - name: Update account minimum tls version
+ - name: Update account blob public access
    azure_rm_storageaccount:
        resource_group: "{{ resource_group }}"
        name: "{{ storage_account }}"
