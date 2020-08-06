@@ -101,7 +101,7 @@ EOF
 
 if [ "sanity" = "${group}" ]
 then
-    ansible-test sanity --color -v --junit --docker
+    ansible-test sanity --color -v --junit 
 else
     ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
 fi
