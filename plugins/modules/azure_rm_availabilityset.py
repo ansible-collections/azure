@@ -16,7 +16,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_availabilityset
 
-version_added: "2.4"
+version_added: "0.1.2"
 
 short_description: Manage Azure Availability Set
 

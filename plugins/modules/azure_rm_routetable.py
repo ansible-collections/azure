@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_routetable
-version_added: "2.7"
+version_added: "0.1.2"
 short_description: Manage Azure route table resource
 description:
     - Create, update or delete a route table.

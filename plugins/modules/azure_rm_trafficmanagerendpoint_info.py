@@ -16,7 +16,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_trafficmanagerendpoint_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get Azure Traffic Manager endpoint facts
 

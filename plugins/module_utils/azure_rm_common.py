@@ -15,6 +15,10 @@ import inspect
 import traceback
 import json
 
+try:
+    from azure.graphrbac import GraphRbacManagementClient
+except Exception:
+    pass
 from os.path import expanduser
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
@@ -828,7 +832,6 @@ class AzureRMModuleBase(object):
         return dict(default_api_version=profile_raw)
 
     def get_graphrbac_client(self, tenant_id):
-        from azure.graphrbac import GraphRbacManagementClient
         cred = self.azure_auth.azure_credentials
         base_url = self.azure_auth._cloud_environment.endpoints.active_directory_graph_resource_id
         client = GraphRbacManagementClient(cred, tenant_id, base_url)

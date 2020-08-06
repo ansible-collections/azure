@@ -20,7 +20,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_privatednszone
 
-version_added: "2.10"
+version_added: "0.0.1"
 
 short_description: Manage Azure private DNS zones
 
