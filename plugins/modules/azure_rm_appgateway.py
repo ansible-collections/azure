@@ -44,14 +44,18 @@ options:
                     - 'standard_small'
                     - 'standard_medium'
                     - 'standard_large'
+                    - 'standard_v2'
                     - 'waf_medium'
                     - 'waf_large'
+                    - 'waf_v2'
             tier:
                 description:
                     - Tier of an application gateway.
                 choices:
                     - 'standard'
+                    - 'standard_v2'
                     - 'waf'
+                    - 'waf_v2'
             capacity:
                 description:
                     - Capacity (instance count) of an application gateway.
@@ -587,15 +591,23 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             ev['name'] = 'Standard_Medium'
                         elif ev['name'] == 'standard_large':
                             ev['name'] = 'Standard_Large'
+                        elif ev['name'] == 'standard_v2':
+                            ev['name'] = 'Standard_v2'
                         elif ev['name'] == 'waf_medium':
                             ev['name'] = 'WAF_Medium'
                         elif ev['name'] == 'waf_large':
                             ev['name'] = 'WAF_Large'
+                        elif ev['name'] == 'waf_v2':
+                            ev['name'] = 'WAF_v2'
                     if 'tier' in ev:
                         if ev['tier'] == 'standard':
                             ev['tier'] = 'Standard'
+                        if ev['tier'] == 'standard_v2':
+                            ev['tier'] = 'Standard_v2'
                         elif ev['tier'] == 'waf':
                             ev['tier'] = 'WAF'
+                        elif ev['tier'] == 'waf_v2':
+                            ev['tier'] = 'WAF_v2'
                     self.parameters["sku"] = ev
                 elif key == "ssl_policy":
                     ev = kwargs[key]

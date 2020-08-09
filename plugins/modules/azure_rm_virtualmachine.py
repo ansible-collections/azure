@@ -1174,7 +1174,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     boot_diagnostics_storage_account = self.get_boot_diagnostics_storage_account(
                         limited=not self.boot_diagnostics['enabled'], vm_dict=vm_dict)
                     boot_diagnostics_blob = boot_diagnostics_storage_account.primary_endpoints.blob if boot_diagnostics_storage_account else None
-                    if current_boot_diagnostics['storageUri'] != boot_diagnostics_blob:
+                    if current_boot_diagnostics.get('storageUri') != boot_diagnostics_blob:
                         current_boot_diagnostics['storageUri'] = boot_diagnostics_blob
                         boot_diagnostics_changed = True
 
@@ -1363,10 +1363,14 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             vm_resource.os_profile.windows_configuration.win_rm = winrm
 
                     if self.boot_diagnostics_present:
+                        if self.boot_diagnostics['enabled']:
+                            storage_uri = boot_diag_storage_account.primary_endpoints.blob
+                        else:
+                            storage_uri = None
                         vm_resource.diagnostics_profile = self.compute_models.DiagnosticsProfile(
                             boot_diagnostics=self.compute_models.BootDiagnostics(
                                 enabled=self.boot_diagnostics['enabled'],
-                                storage_uri=boot_diag_storage_account.primary_endpoints.blob))
+                                storage_uri=storage_uri))
 
                     if self.admin_password:
                         vm_resource.os_profile.admin_password = self.admin_password
