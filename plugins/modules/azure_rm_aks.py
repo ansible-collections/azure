@@ -15,7 +15,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_aks
-version_added: "2.6"
+version_added: "0.1.2"
 short_description: Manage a managed Azure Container Service (AKS) instance
 description:
     - Create, update and delete a managed Azure Container Service (AKS) instance.
@@ -116,7 +116,6 @@ options:
             - Existing non-RBAC enabled AKS clusters cannot currently be updated for RBAC use.
         type: bool
         default: no
-        version_added: "2.8"
     network_profile:
         description:
             - Profile of network configuration.
@@ -159,7 +158,6 @@ options:
                     - A CIDR notation IP range assigned to the Docker bridge network.
                     - It must not overlap with any Subnet IP ranges or the Kubernetes service address range.
                 default: "172.17.0.1/16"
-        version_added: "2.8"
     aad_profile:
         description:
             - Profile of Azure Active Directory configuration.
@@ -174,7 +172,6 @@ options:
                 description:
                     - The AAD tenant ID to use for authentication.
                     - If not specified, will use the tenant of the deployment subscription.
-        version_added: "2.8"
     addon:
         description:
             - Profile of managed cluster add-on.
@@ -219,7 +216,6 @@ options:
                         description:
                             - Subnet associated to the cluster.
                         required: true
-        version_added: "2.8"
     node_resource_group:
         description:
             - Name of the resource group containing agent pool nodes.

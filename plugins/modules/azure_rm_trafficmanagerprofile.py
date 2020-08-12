@@ -14,7 +14,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_trafficmanagerprofile
-version_added: "2.7"
+version_added: "0.1.2"
 short_description: Manage Azure Traffic Manager profile
 description:
     - Create, update and delete a Traffic Manager profile.

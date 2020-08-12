@@ -11,7 +11,8 @@ parameters:
   type: string
   default: "2.9.0"
   values:
-    - "2.9.0"
+    - "2.9"
+    - "2.10"
     - "devel"
 - name: MODULE_NAME
   displayName: 'Test Module'

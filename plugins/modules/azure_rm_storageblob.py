@@ -18,7 +18,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_storageblob
 short_description: Manage blob containers and blob objects
-version_added: "2.1"
+version_added: "0.0.1"
 description:
     - Create, update and delete blob containers and blob objects.
     - Use to upload a file and store it as a blob object, or download a blob object to a file(upload and download mode)
@@ -46,7 +46,7 @@ options:
         choices:
             - block
             - page
-        version_added: "2.5"
+        version_added: "0.0.1"
     container:
         description:
             - Name of a blob container within the storage account.
@@ -192,6 +192,7 @@ container:
 '''
 
 import os
+import mimetypes
 
 try:
     from azure.storage.blob.models import ContentSettings
@@ -324,7 +325,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         return self.results
 
     def batch_upload(self):
-        import os
+
         def _glob_files_locally(folder_path):
 
             len_folder_path = len(folder_path) + 1
@@ -345,7 +346,6 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             if original.content_encoding or original.content_type:
                 return original
 
-            import mimetypes
             mimetypes.add_type('application/json', '.json')
             mimetypes.add_type('application/javascript', '.js')
             mimetypes.add_type('application/wasm', '.wasm')
@@ -364,7 +364,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             self.fail("incorrect usage: {0} is not a directory".format(self.batch_upload_src))
 
         source_dir = os.path.realpath(self.batch_upload_src)
-        source_files = [c for c in _glob_files_locally(source_dir)]
+        source_files = list(_glob_files_locally(source_dir))
 
         content_settings = ContentSettings(content_type=self.content_type,
                                            content_encoding=self.content_encoding,

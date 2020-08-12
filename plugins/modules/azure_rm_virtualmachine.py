@@ -19,7 +19,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachine
 
-version_added: "2.1"
+version_added: "0.1.2"
 
 short_description: Manage Azure virtual machines
 
@@ -45,7 +45,6 @@ options:
             - Only used on Linux images with C(cloud-init) enabled.
             - Consult U(https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init#cloud-init-overview) for cloud-init ready images.
             - To enable cloud-init on a Linux image, follow U(https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloudinit-prepare-custom-image).
-        version_added: "2.5"
     state:
         description:
             - State of the VM.
@@ -74,7 +73,6 @@ options:
             - Set to C(true) with I(state=present) to generalize the VM.
             - Generalizing a VM is irreversible.
         type: bool
-        version_added: "2.8"
     restarted:
         description:
             - Set to C(true) with I(state=present) to restart a running VM.
@@ -121,7 +119,6 @@ options:
     availability_set:
         description:
             - Name or ID of an existing availability set to add the VM to. The I(availability_set) should be in the same resource group as VM.
-        version_added: "2.5"
     storage_account_name:
         description:
             - Name of a storage account that supports creation of VHD blobs.
@@ -151,11 +148,9 @@ options:
             - Standard_LRS
             - StandardSSD_LRS
             - Premium_LRS
-        version_added: "2.4"
     os_disk_name:
         description:
             - OS disk name.
-        version_added: "2.8"
     os_disk_caching:
         description:
             - Type of OS disk caching.
@@ -167,7 +162,6 @@ options:
     os_disk_size_gb:
         description:
             - Type of OS disk size in GB.
-        version_added: "2.7"
     os_type:
         description:
             - Base type of operating system.
@@ -185,21 +179,18 @@ options:
         description:
             - Describes list of data disks.
             - Use M(azure_rm_mangeddisk) to manage the specific disk.
-        version_added: "2.4"
         suboptions:
             lun:
                 description:
                     - The logical unit number for data disk.
                     - This value is used to identify data disks within the VM and therefore must be unique for each data disk attached to a VM.
                 required: true
-                version_added: "2.4"
             disk_size_gb:
                 description:
                     - The initial disk size in GB for blank data disks.
                     - This value cannot be larger than C(1023) GB.
                     - Size can be changed only when the virtual machine is deallocated.
                     - Not sure when I(managed_disk_id) defined.
-                version_added: "2.4"
             managed_disk_type:
                 description:
                     - Managed data disk type.
@@ -208,7 +199,6 @@ options:
                     - Standard_LRS
                     - StandardSSD_LRS
                     - Premium_LRS
-                version_added: "2.4"
             storage_account_name:
                 description:
                     - Name of an existing storage account that supports creation of VHD blobs.
@@ -216,7 +206,6 @@ options:
                     - Only used when OS disk created with virtual hard disk (VHD).
                     - Used when I(managed_disk_type) not defined.
                     - Cannot be updated unless I(lun) updated.
-                version_added: "2.4"
             storage_container_name:
                 description:
                     - Name of the container to use within the storage account to store VHD blobs.
@@ -225,7 +214,6 @@ options:
                     - Used when I(managed_disk_type) not defined.
                     - Cannot be updated unless I(lun) updated.
                 default: vhds
-                version_added: "2.4"
             storage_blob_name:
                 description:
                     - Name of the storage blob used to hold the OS disk image of the VM.
@@ -234,7 +222,6 @@ options:
                     - Only used when OS disk created with virtual hard disk (VHD).
                     - Used when I(managed_disk_type) not defined.
                     - Cannot be updated unless I(lun) updated.
-                version_added: "2.4"
             caching:
                 description:
                     - Type of data disk caching.
@@ -242,7 +229,6 @@ options:
                     - ReadOnly
                     - ReadWrite
                 default: ReadOnly
-                version_added: "2.4"
     public_ip_allocation_method:
         description:
             - Allocation method for the public IP of the VM.
@@ -274,7 +260,6 @@ options:
     virtual_network_resource_group:
         description:
             - The resource group to use when creating a VM with another resource group's virtual network.
-        version_added: "2.4"
     virtual_network_name:
         description:
             - The virtual network to use when creating a VM.
@@ -301,7 +286,6 @@ options:
     plan:
         description:
             - Third-party billing plan for the VM.
-        version_added: "2.5"
         type: dict
         suboptions:
             name:
@@ -326,31 +310,26 @@ options:
             - Only valid when a I(plan) is specified.
         type: bool
         default: false
-        version_added: "2.7"
     zones:
         description:
             - A list of Availability Zones for your VM.
         type: list
-        version_added: "2.8"
     license_type:
         description:
             - On-premise license for the image or disk.
             - Only used for images that contain the Windows Server operating system.
             - To remove all license type settings, set to the string C(None).
-        version_added: "2.8"
         choices:
             - Windows_Server
             - Windows_Client
     vm_identity:
         description:
             - Identity for the VM.
-        version_added: "2.8"
         choices:
             - SystemAssigned
     winrm:
         description:
             - List of Windows Remote Management configurations of the VM.
-        version_added: "2.8"
         suboptions:
             protocol:
                 description:
@@ -373,7 +352,6 @@ options:
         description:
             - Manage boot diagnostics settings for a VM.
             - Boot diagnostics includes a serial console and remote console screenshots.
-        version_added: '2.9'
         suboptions:
             enabled:
                 description:
@@ -2060,6 +2038,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         sku = self.storage_models.Sku(name=self.storage_models.SkuName.standard_lrs)
         sku.tier = self.storage_models.SkuTier.standard
         kind = self.storage_models.Kind.storage
+        # pylint: disable=missing-kwoa
         parameters = self.storage_models.StorageAccountCreateParameters(sku=sku, kind=kind, location=self.location)
         self.log("Creating storage account {0} in location {1}".format(storage_account_name, self.location))
         self.results['actions'].append("Created storage account {0}".format(storage_account_name))
