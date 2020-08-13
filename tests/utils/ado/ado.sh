@@ -48,6 +48,7 @@ then
 	cd "ansible"
 	git checkout "stable-$3"
 	source hacking/env-setup
+	pip3 install paramiko PyYAML Jinja2  httplib2 six
 	pip install paramiko PyYAML Jinja2  httplib2 six
     fi
 else
@@ -59,6 +60,7 @@ else
 	cd "ansible"
 	git checkout "stable-$3"
 	source hacking/env-setup
+	pip2 install paramiko PyYAML Jinja2  httplib2 six
 	pip3 install paramiko PyYAML Jinja2  httplib2 six
     fi
 fi
@@ -72,13 +74,15 @@ mkdir -p shippable/testresults
 if [ "$2" = "2.7" ]
 then
     pip install --upgrade pip
+    pip2 install  -I -r "${TEST_DIR}/requirements-azure.txt"
     pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
-    pip install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
     pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
+    pip2 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
     pip3 list
 else
     pip3 install  -I -r "${TEST_DIR}/requirements-azure.txt"
     pip install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
+    pip2 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
     pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
     pip3 list
 fi
