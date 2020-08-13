@@ -34,7 +34,7 @@ else
     virtualenv --python /usr/bin/python"$2" ~/ansible-venv
 fi
 
-cp -rf /usr/bin/python"$2"/dist-packages/* ansible-venv/lib/python"$2"/dist-packages
+cp -rf /usr/bin/python"$2"/dist-packages ansible-venv/lib/python"$2"/dist-packages
 set +ux
 . ~/ansible-venv/bin/activate
 set -ux
