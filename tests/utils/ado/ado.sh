@@ -33,6 +33,8 @@ else
     pip3 install virtualenv
     virtualenv --python /usr/bin/python"$2" ~/ansible-venv
 fi
+ls /usr/lib/
+ls /usr/lib/python"$2"
 
 cp -rf /usr/lib/python"$2"/dist-packages ansible-venv/lib/python"$2"/dist-packages
 set +ux
