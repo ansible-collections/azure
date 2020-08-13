@@ -86,6 +86,16 @@ else
     pip2 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
     pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
     pip3 list
+    git clone git://github.com/yyuu/pyenv.git ~/.pyenv
+    echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+    echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+    echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+    exec $SHELL -l
+    pyenv install --list
+    sudo apt-get install libc6-dev gcc
+    sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm
+    pyenv install 3.8.0
+    pyenv install 3.9.0
 fi
 
 timeout=60
