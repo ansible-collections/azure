@@ -34,12 +34,10 @@ else
     virtualenv --python /usr/bin/python"$2" ~/ansible-venv
 fi
 
+cp -rf /usr/bin/python"$2"/dist-packages/* ansible-venv/lib/python2.7/dist-packages
 set +ux
 . ~/ansible-venv/bin/activate
 set -ux
-
-pip3 uninstall setuptools -y
-pip3 install setuptools==44.1.0 -I
 
 if [ "$2" = "2.7" ]
 then
@@ -79,7 +77,6 @@ then
     pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
     pip3 list
 else
-    pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
     pip3 install  -I -r "${TEST_DIR}/requirements-azure.txt"
     pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
     pip3 list

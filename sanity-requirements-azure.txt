@@ -2,4 +2,3 @@ voluptuous==0.11.7
 pycodestyle==2.6.0
 yamllint==1.24.2
 pylint==2.5.3
-junit-xml==1.7
