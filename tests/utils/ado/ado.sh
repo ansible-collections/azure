@@ -36,7 +36,7 @@ fi
 ls /usr/lib/
 ls /usr/lib/python"$2"
 
-cp -rf /usr/lib/python"$2"/dist-packages ansible-venv/lib/python"$2"/dist-packages
+cp -rf /usr/lib/python"$2"/ ansible-venv/lib/python"$2"/
 set +ux
 . ~/ansible-venv/bin/activate
 set -ux
