@@ -1,4 +1,0 @@
-voluptuous==0.11.7
-pycodestyle==2.6.0
-yamllint==1.24.2
-pylint
