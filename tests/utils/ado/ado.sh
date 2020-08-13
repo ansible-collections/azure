@@ -73,11 +73,13 @@ if [ "$2" = "2.7" ]
 then
     pip install --upgrade pip
     pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
-    pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
+    pip install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
+    pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
     pip3 list
 else
     pip3 install  -I -r "${TEST_DIR}/requirements-azure.txt"
-    pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
+    pip install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
+    pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
     pip3 list
 fi
 
@@ -102,8 +104,6 @@ fi
 echo '--------------------------------------------'
 ansible --version
 echo '--------------------------------------------'
-ansible-test sanity --test compile
-#echo '--------------------------------------------'
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
 
