@@ -74,6 +74,7 @@ mkdir -p shippable/testresults
 if [ "$2" = "2.7" ]
 then
     pip install --upgrade pip
+    pip install setuptools==44.1.0
     pip2 install  -I -r "${TEST_DIR}/requirements-azure.txt"
     pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
     pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
@@ -107,6 +108,9 @@ else
 fi
 echo '--------------------------------------------'
 ansible --version
+echo '--------------------------------------------'
+ls /usr/lib/
+ls /usr/bin/
 echo '--------------------------------------------'
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
