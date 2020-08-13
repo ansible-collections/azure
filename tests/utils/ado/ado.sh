@@ -102,7 +102,7 @@ fi
 echo '--------------------------------------------'
 ansible --version
 echo '--------------------------------------------'
-#ansible-test sanity --docker --list-test
+ansible-test sanity --test compile
 #echo '--------------------------------------------'
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
