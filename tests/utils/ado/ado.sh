@@ -48,7 +48,6 @@ then
 	cd "ansible"
 	git checkout "stable-$3"
 	source hacking/env-setup
-	pip3 install paramiko PyYAML Jinja2  httplib2 six
 	pip install paramiko PyYAML Jinja2  httplib2 six
     fi
 else
@@ -60,7 +59,6 @@ else
 	cd "ansible"
 	git checkout "stable-$3"
 	source hacking/env-setup
-	pip2 install paramiko PyYAML Jinja2  httplib2 six
 	pip3 install paramiko PyYAML Jinja2  httplib2 six
     fi
 fi
@@ -75,27 +73,13 @@ if [ "$2" = "2.7" ]
 then
     pip install --upgrade pip
     pip install setuptools==44.1.0
-    pip2 install  -I -r "${TEST_DIR}/requirements-azure.txt"
     pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
-    pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
-    pip2 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
+    pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
     pip3 list
 else
     pip3 install  -I -r "${TEST_DIR}/requirements-azure.txt"
-    pip install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
-    pip2 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
-    pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure02.txt"
+    pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
     pip3 list
-    git clone git://github.com/yyuu/pyenv.git ~/.pyenv
-    echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-    echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-    echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-    exec $SHELL -l
-    pyenv install --list
-    sudo apt-get install libc6-dev gcc
-    sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm
-    pyenv install 3.8.0
-    pyenv install 3.9.0
 fi
 
 timeout=60
@@ -118,9 +102,6 @@ else
 fi
 echo '--------------------------------------------'
 ansible --version
-echo '--------------------------------------------'
-ls /usr/lib/
-ls /usr/bin/
 echo '--------------------------------------------'
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
