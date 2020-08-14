@@ -1,5 +1,5 @@
 # Change Log
-## v0.4.0 (2020-08-12)
+## v1.0.0 (2020-08-12)
 
 ### FEATURE ENHANCEMENT
   - azure_rm_appgateway: support version 2 SKUS ([#198](https://github.com/ansible-collections/azure/pull/198))
