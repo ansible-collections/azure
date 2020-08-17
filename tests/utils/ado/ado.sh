@@ -44,14 +44,22 @@ then
     then
         pip install git+https://github.com/ansible/ansible.git@devel  --disable-pip-version-check
     else
-        pip install ansible=="$3" --disable-pip-version-check
+	git clone https://github.com/ansible/ansible.git
+	cd "ansible"
+	git checkout "stable-$3"
+	source hacking/env-setup
+	pip install paramiko PyYAML Jinja2  httplib2 six
     fi
 else
     if [ "$3" = "devel" ]
     then
         pip3 install git+https://github.com/ansible/ansible.git@devel  --disable-pip-version-check
     else
-        pip3 install ansible=="$3" --disable-pip-version-check
+	git clone https://github.com/ansible/ansible.git
+	cd "ansible"
+	git checkout "stable-$3"
+	source hacking/env-setup
+	pip3 install paramiko PyYAML Jinja2  httplib2 six
     fi
 fi
 
@@ -63,9 +71,15 @@ mkdir -p shippable/testresults
 
 if [ "$2" = "2.7" ]
 then
+    pip install --upgrade pip
     pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
+    pip3 install setuptools
+    pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
+    pip3 list
 else
     pip3 install  -I -r "${TEST_DIR}/requirements-azure.txt"
+    pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
+    pip3 list
 fi
 
 timeout=60
@@ -86,6 +100,9 @@ else
         fi
     done
 fi
+echo '--------------------------------------------'
+ansible --version
+echo '--------------------------------------------'
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
 
@@ -101,7 +118,7 @@ EOF
 
 if [ "sanity" = "${group}" ]
 then
-    ansible-test sanity --color -v --junit --docker
+    ansible-test sanity --color -v --junit
 else
     ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
 fi

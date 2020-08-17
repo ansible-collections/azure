@@ -17,7 +17,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_manageddisk
 
-version_added: "2.4"
+version_added: "0.1.2"
 
 short_description: Manage Azure Manage Disks
 
@@ -91,7 +91,6 @@ options:
             - Name of an existing virtual machine with which the disk is or will be associated, this VM should be in the same resource group.
             - To detach a disk from a vm, explicitly set to ''.
             - If this option is unset, the value will not be changed.
-        version_added: '2.5'
     attach_caching:
         description:
             - Disk caching policy controlled by VM. Will be used when attached to the VM defined by C(managed_by).
@@ -100,7 +99,6 @@ options:
             - ''
             - read_only
             - read_write
-        version_added: '2.8'
     tags:
         description:
             - Tags to assign to the managed disk.
@@ -114,13 +112,11 @@ options:
             - 2
             - 3
             - ''
-        version_added: "2.8"
     lun:
         description:
             - The logical unit number for data disk.
             - This value is used to identify data disks within the VM and therefore must be unique for each data disk attached to a VM.
         type: int
-        version_added: '2.10'
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -363,6 +359,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         # prepare the data disk
         params = self.compute_models.ManagedDiskParameters(id=disk.get('id'), storage_account_type=disk.get('storage_account_type'))
         caching_options = self.compute_models.CachingTypes[self.attach_caching] if self.attach_caching and self.attach_caching != '' else None
+        # pylint: disable=missing-kwoa
         data_disk = self.compute_models.DataDisk(lun=lun,
                                                  create_option=self.compute_models.DiskCreateOptionTypes.attach,
                                                  managed_disk=params,

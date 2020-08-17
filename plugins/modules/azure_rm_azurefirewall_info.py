@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_azurefirewall_info
-version_added: '2.9'
+version_added: '0.1.2'
 short_description: Get AzureFirewall info
 description:
     - Get info of AzureFirewall.

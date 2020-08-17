@@ -17,7 +17,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_storageaccount
-version_added: "2.1"
+version_added: "0.1.0"
 short_description: Manage Azure storage accounts
 description:
     - Create, update or delete a storage account.
@@ -75,14 +75,12 @@ options:
             - BlobStorage
             - BlockBlobStorage
             - FileStorage
-        version_added: "2.2"
     access_tier:
         description:
             - The access tier for this storage account. Required when I(kind=BlobStorage).
         choices:
             - Hot
             - Cool
-        version_added: "2.4"
     force_delete_nonempty:
         description:
             - Attempt deletion if resource already exists and cannot be updated.
@@ -93,7 +91,6 @@ options:
         description:
             -  Allows https traffic only to storage service when set to C(true).
         type: bool
-        version_added: "2.8"
     minimum_tls_version:
         description:
             - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
@@ -114,7 +111,6 @@ options:
         description:
             - Manages the Firewall and virtual networks settings of the storage account.
         type: dict
-        version_added: "2.10"
         suboptions:
             default_action:
                 description:
@@ -161,7 +157,6 @@ options:
             - If no blob_cors elements are included in the argument list, nothing about CORS will be changed.
             - If you want to delete all CORS rules and disable CORS for the Blob service, explicitly set I(blob_cors=[]).
         type: list
-        version_added: "2.8"
         suboptions:
             allowed_origins:
                 description:
@@ -832,6 +827,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         sku = self.storage_models.Sku(name=self.storage_models.SkuName(self.account_type))
         sku.tier = self.storage_models.SkuTier.standard if 'Standard' in self.account_type else \
             self.storage_models.SkuTier.premium
+        # pylint: disable=missing-kwoa
         parameters = self.storage_models.StorageAccountCreateParameters(sku=sku,
                                                                         kind=self.kind,
                                                                         location=self.location,

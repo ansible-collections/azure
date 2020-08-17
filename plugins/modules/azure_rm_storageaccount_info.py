@@ -18,7 +18,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_storageaccount_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get storage account facts
 
@@ -43,13 +43,11 @@ options:
             - For convenient usage, C(show_connection_string) will also show the access keys for each of the storageaccount's endpoints.
             - Note that it will cost a lot of time when list all storageaccount rather than query a single one.
         type: bool
-        version_added: "2.8"
     show_blob_cors:
         description:
             - Show the blob CORS settings for each blob related to the storage account.
             - Querying all storage accounts will take a long time.
         type: bool
-        version_added: "2.8"
 
 extends_documentation_fragment:
     - azure.azcollection.azure

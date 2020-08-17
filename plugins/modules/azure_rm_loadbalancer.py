@@ -17,7 +17,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_loadbalancer
 
-version_added: "2.4"
+version_added: "0.1.2"
 
 short_description: Manage Azure load balancers
 
@@ -49,7 +49,6 @@ options:
         choices:
             - Basic
             - Standard
-        version_added: '2.6'
     frontend_ip_configurations:
         description:
             - List of frontend IPs to be used.
@@ -64,20 +63,16 @@ options:
             private_ip_address:
                 description:
                     - The reference of the Public IP resource.
-                version_added: '2.6'
             private_ip_allocation_method:
                 description:
                     - The Private IP allocation method.
                 choices:
                     - Static
                     - Dynamic
-                version_added: '2.6'
             subnet:
                 description:
                     - The reference of the subnet resource.
                     - Should be an existing subnet's resource id.
-                version_added: '2.6'
-        version_added: '2.5'
     backend_address_pools:
         description:
             - List of backend address pools.
@@ -86,7 +81,6 @@ options:
                 description:
                     - Name of the backend address pool.
                 required: True
-        version_added: '2.5'
     probes:
         description:
             - List of probe definitions used to check endpoint health.
@@ -125,7 +119,6 @@ options:
                 description:
                     - The URI used for requesting health status from the VM.
                     - Path is required if I(protocol=Http) or I(protocol=Https). Otherwise, it is not allowed.
-        version_added: '2.5'
     inbound_nat_pools:
         description:
             - Defines an external port range for inbound NAT to a single backend port on NICs associated with a load balancer.
@@ -164,7 +157,6 @@ options:
                 description:
                     - The port used for internal connections on the endpoint.
                     - Acceptable values are between 1 and 65535.
-        version_added: '2.5'
     load_balancing_rules:
         description:
             - Object collection representing the load balancing rules Gets the provisioning.
@@ -220,7 +212,6 @@ options:
             enable_floating_ip:
                 description:
                     - Configures SNAT for the VMs in the backend pool to use the publicIP address specified in the frontend of the load balancing rule.
-        version_added: '2.5'
     inbound_nat_rules:
         description:
             - Collection of inbound NAT Rules used by a load balancer.
@@ -270,7 +261,6 @@ options:
                 description:
                     - Receive bidirectional TCP Reset on TCP flow idle timeout or unexpected connection termination.
                     - This element is only used when I(protocol=Tcp).
-        version_added: '2.8'
     public_ip_address_name:
         description:
             - (deprecated) Name of an existing public IP address object to associate with the security group.

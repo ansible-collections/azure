@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: azure_rm_keyvaultsecret_info
-version_added: "2.10"
+version_added: "0.1.2"
 short_description: Get Azure Key Vault secret facts
 description:
     - Get facts of Azure Key Vault secret.
