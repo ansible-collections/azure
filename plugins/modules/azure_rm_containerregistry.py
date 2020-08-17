@@ -14,7 +14,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_containerregistry
-version_added: "2.5"
+version_added: "0.1.2"
 short_description: Manage an Azure Container Registry
 description:
     - Create, update and delete an Azure Container Registry.

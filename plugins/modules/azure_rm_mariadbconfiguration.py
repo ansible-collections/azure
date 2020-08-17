@@ -17,7 +17,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_mariadbconfiguration
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage Configuration instance
 description:
     - Create, update and delete instance of Configuration.
@@ -27,17 +27,21 @@ options:
         description:
             - The name of the resource group that contains the resource.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the server configuration.
         required: True
+        type: str
     value:
         description:
             - Value of the configuration.
+        type: str
     state:
         description:
             - Assert the state of the MariaDB configuration. Use C(present) to update setting, or C(absent) to reset to default value.
@@ -45,6 +49,7 @@ options:
         choices:
             - absent
             - present
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure

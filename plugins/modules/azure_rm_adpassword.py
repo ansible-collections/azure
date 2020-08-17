@@ -18,7 +18,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_adpassword
 
-version_added: "2.10"
+version_added: "0.2.0"
 
 short_description: Manage application password
 
@@ -112,6 +112,7 @@ start_date:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+import uuid
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -243,8 +244,8 @@ class AzureRMADPassword(AzureRMModuleBase):
             self.fail("failed to delete password with key id {0} - {1}".format(self.app_id, str(ge)))
 
     def create_password(self, old_passwords):
+
         def gen_guid():
-            import uuid
             return uuid.uuid4()
 
         if self.value is None:

@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_route
-version_added: "2.7"
+version_added: "0.1.2"
 short_description: Manage Azure route resource
 description:
     - Create, update or delete a route.
