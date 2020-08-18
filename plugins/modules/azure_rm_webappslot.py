@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_webappslot
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage Azure Web App slot
 description:
     - Create, update and delete Azure Web App slot.

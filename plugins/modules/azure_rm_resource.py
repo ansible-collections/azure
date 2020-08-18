@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_resource
-version_added: "2.6"
+version_added: "0.1.2"
 short_description: Create any Azure resource
 description:
     - Create, update or delete any Azure resource using Azure REST API.
@@ -89,13 +89,11 @@ options:
             - If enabled, idempotency check will be done by using I(method=GET) first and then comparing with I(body).
         default: 0
         type: int
-        version_added: "2.8"
     polling_interval:
         description:
             - If enabled, idempotency check will be done by using I(method=GET) first and then comparing with I(body).
         default: 60
         type: int
-        version_added: "2.8"
     state:
         description:
             - Assert the state of the resource. Use C(present) to create or update resource or C(absent) to delete resource.

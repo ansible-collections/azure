@@ -16,7 +16,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_deployment
 
-version_added: "2.1"
+version_added: "0.1.0"
 
 short_description: Create or destroy Azure Resource Manager template deployments
 
@@ -564,8 +564,8 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
         except CloudError as exc:
             failed_deployment_operations = self._get_failed_deployment_operations(self.name)
             self.log("Deployment failed %s: %s" % (exc.status_code, exc.message))
-            self.fail("Deployment failed with status code: %s and message: %s" % (exc.status_code, exc.message),
-                      failed_deployment_operations=failed_deployment_operations)
+            error_msg = self._error_msg_from_cloud_error(exc)
+            self.fail(error_msg, failed_deployment_operations=failed_deployment_operations)
 
         if self.wait_for_deployment_completion and deployment_result.properties.provisioning_state != 'Succeeded':
             self.log("provisioning state: %s" % deployment_result.properties.provisioning_state)
@@ -693,6 +693,15 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                 for public_ip_id in [ip_conf_instance.public_ip_address.id
                                      for ip_conf_instance in nic_obj.ip_configurations
                                      if ip_conf_instance.public_ip_address]]
+
+    def _error_msg_from_cloud_error(self, exc):
+        msg = ''
+        status_code = str(exc.status_code)
+        if status_code.startswith('2'):
+            msg = 'Deployment failed: {0}'.format(exc.message)
+        else:
+            msg = 'Deployment failed with status code: {0} and message: {1}'.format(status_code, exc.message)
+        return msg
 
 
 def main():

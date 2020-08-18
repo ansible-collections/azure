@@ -14,7 +14,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_image_info
 
-version_added: "2.9"
+version_added: "0.0.1"
 
 short_description: Get facts about azure custom images
 
