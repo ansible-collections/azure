@@ -100,14 +100,14 @@ options:
             - TLS1_0
             - TLS1_1
             - TLS1_2
-        version_added: "2.10"
+        version_added: "1.0.0"
     allow_blob_public_access:
         description:
             - Allows blob containers in account to be set for anonymous public access.
             - If set to false, no containers in this account will be able to allow anonymous public access.
         default: true
         type: bool
-        version_added: "2.10"
+        version_added: "1.0.1"
     network_acls:
         description:
             - Manages the Firewall and virtual networks settings of the storage account.
