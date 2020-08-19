@@ -95,7 +95,6 @@ options:
     minimum_tls_version:
         description:
             - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
-        default: 'TLS1_0'
         choices:
             - TLS1_0
             - TLS1_1
@@ -105,7 +104,6 @@ options:
         description:
             - Allows blob containers in account to be set for anonymous public access.
             - If set to false, no containers in this account will be able to allow anonymous public access.
-        default: true
         type: bool
         version_added: "1.0.1"
     network_acls:
