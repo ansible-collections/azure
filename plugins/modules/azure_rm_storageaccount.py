@@ -90,6 +90,7 @@ options:
     https_only:
         description:
             -  Allows https traffic only to storage service when set to C(true).
+            -  Allows update storage account property when set to C(False).
         type: bool
     minimum_tls_version:
         description:
@@ -459,9 +460,9 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             tags=dict(type='dict'),
             kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
             access_tier=dict(type='str', choices=['Hot', 'Cool']),
-            https_only=dict(type='bool', default=False),
-            minimum_tls_version=dict(type='str', default='TLS1_0', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
-            allow_blob_public_access=dict(type='bool', default=True),
+            https_only=dict(type='bool'),
+            minimum_tls_version=dict(type='str', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
+            allow_blob_public_access=dict(type='bool'),
             network_acls=dict(type='dict'),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict')
         )
