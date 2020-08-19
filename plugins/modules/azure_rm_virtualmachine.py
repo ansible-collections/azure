@@ -364,6 +364,10 @@ options:
                     - If not specified, uses I(storage_account_name) defined one level up.
                     - If storage account is not specified anywhere, and C(enabled) is C(true), a default storage account is created for boot diagnostics data.
                 required: false
+            resource_group:
+                description:
+                    - Resource group where the storage account is located.
+                type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -916,11 +920,14 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         """
         bsa = None
         if 'storage_account' in self.boot_diagnostics:
-            bsa = self.get_storage_account(self.boot_diagnostics['storage_account'])
+            if 'resource_group' in self.boot_diagnostics:
+                bsa = self.get_storage_account(self.boot_diagnostics['resource_group'], self.boot_diagnostics['storage_account'])
+            else:
+                bsa = self.get_storage_account(self.resource_group, self.boot_diagnostics['storage_account'])
         elif limited:
             return None
         elif self.storage_account_name:
-            bsa = self.get_storage_account(self.storage_account_name)
+            bsa = self.get_storage_account(self.resource_group, self.storage_account_name)
         else:
             bsa = self.create_default_storage_account(vm_dict=vm_dict)
         self.log("boot diagnostics storage account:")
@@ -1021,7 +1028,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 self.storage_blob_name = self.name
 
             if self.storage_account_name and not self.managed_disk_type:
-                properties = self.get_storage_account(self.storage_account_name)
+                properties = self.get_storage_account(self.resource_group, self.storage_account_name)
 
                 requested_storage_uri = properties.primary_endpoints.blob
                 requested_vhd_uri = '{0}{1}/{2}'.format(requested_storage_uri,
@@ -1379,7 +1386,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                     count += 1
 
                                 if data_disk.get('storage_account_name'):
-                                    data_disk_storage_account = self.get_storage_account(data_disk['storage_account_name'])
+                                    data_disk_storage_account = self.get_storage_account(self.resource_group, data_disk['storage_account_name'])
                                 else:
                                     data_disk_storage_account = self.create_default_storage_account()
                                     self.log("data disk storage account:")
@@ -1955,9 +1962,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         except Exception as exc:
             self.fail("Error fetching availability set {0} - {1}".format(name, str(exc)))
 
-    def get_storage_account(self, name):
+    def get_storage_account(self, resource_group, name):
         try:
-            account = self.storage_client.storage_accounts.get_properties(self.resource_group,
+            account = self.storage_client.storage_accounts.get_properties(resource_group,
                                                                           name)
             return account
         except Exception as exc:
@@ -2006,12 +2013,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
         if self.tags.get('_own_sa_', None):
             # We previously created one in the same invocation
-            return self.get_storage_account(self.tags['_own_sa_'])
+            return self.get_storage_account(self.resource_group, self.tags['_own_sa_'])
 
         if vm_dict and vm_dict.get('tags', {}).get('_own_sa_', None):
             # We previously created one in a previous invocation
             # We must be updating, like adding boot diagnostics
-            return self.get_storage_account(vm_dict['tags']['_own_sa_'])
+            return self.get_storage_account(self.resource_group, vm_dict['tags']['_own_sa_'])
 
         # Attempt to find a valid storage account name
         storage_account_name_base = re.sub('[^a-zA-Z0-9]', '', self.name[:20].lower())
@@ -2048,7 +2055,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         except Exception as exc:
             self.fail("Failed to create storage account: {0} - {1}".format(storage_account_name, str(exc)))
         self.tags['_own_sa_'] = storage_account_name
-        return self.get_storage_account(storage_account_name)
+        return self.get_storage_account(self.resource_group, storage_account_name)
 
     def check_storage_account_name(self, name):
         self.log("Checking storage account name availability for {0}".format(name))
