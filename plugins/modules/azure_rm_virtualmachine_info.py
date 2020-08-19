@@ -414,7 +414,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                        result['properties']['diagnosticsProfile']['bootDiagnostics']['enabled'] or False,
             'storage_uri': 'diagnosticsProfile' in result['properties'] and
                            'bootDiagnostics' in result['properties']['diagnosticsProfile'] and
-                           result['properties']['diagnosticsProfile']['bootDiagnostics']['storageUri'] or None
+                           result['properties']['diagnosticsProfile']['bootDiagnostics'].get('storageUri', None)
         }
         if new_result['boot_diagnostics']['enabled']:
             new_result['boot_diagnostics']['console_screenshot_uri'] = result['properties']['instanceView']['bootDiagnostics']['consoleScreenshotBlobUri']
