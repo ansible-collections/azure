@@ -17,7 +17,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachinescaleset
 
-version_added: "2.4"
+version_added: "0.1.2"
 
 short_description: Manage Azure virtual machine scale sets
 
@@ -131,24 +131,20 @@ options:
     data_disks:
         description:
             - Describes list of data disks.
-        version_added: "2.4"
         suboptions:
             lun:
                 description:
                     - The logical unit number for data disk.
                 default: 0
-                version_added: "2.4"
             disk_size_gb:
                 description:
                     - The initial disk size in GB for blank data disks.
-                version_added: "2.4"
             managed_disk_type:
                 description:
                     - Managed data disk type.
                 choices:
                     - Standard_LRS
                     - Premium_LRS
-                version_added: "2.4"
             caching:
                 description:
                     - Type of data disk caching.
@@ -156,13 +152,11 @@ options:
                     - ReadOnly
                     - ReadWrite
                 default: ReadOnly
-                version_added: "2.4"
     virtual_network_resource_group:
         description:
             - When creating a virtual machine, if a specific virtual network from another resource group should be
               used.
             - Use this parameter to specify the resource group to use.
-        version_added: "2.5"
     virtual_network_name:
         description:
             - Virtual Network name.
@@ -178,15 +172,12 @@ options:
             - Assign a public IP to each virtual machine of the scale set
         type: bool
         default: False
-        version_added: "2.10"
     load_balancer:
         description:
             - Load balancer name.
-        version_added: "2.5"
     application_gateway:
         description:
             - Application gateway name.
-        version_added: "2.8"
     remove_on_absent:
         description:
             - When removing a VM using I(state=absent), also remove associated resources.
@@ -196,7 +187,6 @@ options:
     enable_accelerated_networking:
         description:
             - Indicates whether user wants to allow accelerated networking for virtual machines in scaleset being created.
-        version_added: "2.7"
         type: bool
     security_group:
         description:
@@ -204,7 +194,6 @@ options:
             - It can be the security group name which is in the same resource group.
             - It can be the resource ID.
             - It can be a dict which contains I(name) and I(resource_group) of the security group.
-        version_added: "2.7"
         aliases:
             - security_group_name
     overprovision:
@@ -212,17 +201,14 @@ options:
             - Specifies whether the Virtual Machine Scale Set should be overprovisioned.
         type: bool
         default: True
-        version_added: "2.8"
     single_placement_group:
         description:
             - When true this limits the scale set to a single placement group, of max size 100 virtual machines.
         type: bool
         default: True
-        version_added: "2.9"
     plan:
         description:
             - Third-party billing plan for the VM.
-        version_added: "2.10"
         type: dict
         suboptions:
             name:
@@ -244,7 +230,6 @@ options:
         description:
             - A list of Availability Zones for your virtual machine scale set.
         type: list
-        version_added: "2.8"
     custom_data:
         description:
             - Data which is made available to the virtual machine and used by e.g., C(cloud-init).
@@ -252,7 +237,6 @@ options:
             - If the image you are attempting to use is not listed in
               U(https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init#cloud-init-overview),
               follow these steps U(https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloudinit-prepare-custom-image).
-        version_added: "2.8"
     scale_in_policy:
         description:
             - define the order in which vmss instances are scaled-in
@@ -260,12 +244,10 @@ options:
             - Default
             - NewestVM
             - OldestVM
-        version_added: "2.10"
     terminate_event_timeout_minutes:
         description:
             - timeout time for termination notification event
             - in range between 5 and 15
-        version_added: "2.10"
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -909,6 +891,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                         plan=plan,
                         virtual_machine_profile=self.compute_models.VirtualMachineScaleSetVMProfile(
                             os_profile=os_profile,
+                            # pylint: disable=missing-kwoa
                             storage_profile=self.compute_models.VirtualMachineScaleSetStorageProfile(
                                 os_disk=self.compute_models.VirtualMachineScaleSetOSDisk(
                                     managed_disk=managed_disk,

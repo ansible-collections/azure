@@ -1,0 +1,3 @@
+dependencies:
+  python: requirements-azure.txt
+version: 1

@@ -16,7 +16,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_aksversion_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get available kubernetes versions supported by Azure Kubernetes Service
 

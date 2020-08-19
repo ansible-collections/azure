@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_loganalyticsworkspace_info
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Get facts of Azure Log Analytics workspaces
 description:
     - Get, query Azure Log Analytics workspaces.

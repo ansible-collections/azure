@@ -17,7 +17,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_storageaccount
-version_added: "2.1"
+version_added: "0.1.0"
 short_description: Manage Azure storage accounts
 description:
     - Create, update or delete a storage account.
@@ -75,14 +75,12 @@ options:
             - BlobStorage
             - BlockBlobStorage
             - FileStorage
-        version_added: "2.2"
     access_tier:
         description:
             - The access tier for this storage account. Required when I(kind=BlobStorage).
         choices:
             - Hot
             - Cool
-        version_added: "2.4"
     force_delete_nonempty:
         description:
             - Attempt deletion if resource already exists and cannot be updated.
@@ -93,12 +91,19 @@ options:
         description:
             -  Allows https traffic only to storage service when set to C(true).
         type: bool
-        version_added: "2.8"
+    minimum_tls_version:
+        description:
+            - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
+        default: 'TLS1_0'
+        choices:
+            - TLS1_0
+            - TLS1_1
+            - TLS1_2
+
     network_acls:
         description:
             - Manages the Firewall and virtual networks settings of the storage account.
         type: dict
-        version_added: "2.10"
         suboptions:
             default_action:
                 description:
@@ -145,7 +150,6 @@ options:
             - If no blob_cors elements are included in the argument list, nothing about CORS will be changed.
             - If you want to delete all CORS rules and disable CORS for the Blob service, explicitly set I(blob_cors=[]).
         type: list
-        version_added: "2.8"
         suboptions:
             allowed_origins:
                 description:
@@ -449,6 +453,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
             access_tier=dict(type='str', choices=['Hot', 'Cool']),
             https_only=dict(type='bool', default=False),
+            minimum_tls_version=dict(type='str', default='TLS1_0', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
             network_acls=dict(type='dict'),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict')
         )
@@ -470,6 +475,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.kind = None
         self.access_tier = None
         self.https_only = None
+        self.minimum_tls_version = None
         self.network_acls = None
         self.blob_cors = None
 
@@ -558,8 +564,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             type=account_obj.type,
             access_tier=(account_obj.access_tier.value
                          if account_obj.access_tier is not None else None),
-            sku_tier=account_obj.sku.tier.value,
-            sku_name=account_obj.sku.name.value,
+            sku_tier=account_obj.sku.tier,
+            sku_name=account_obj.sku.name,
             provisioning_state=account_obj.provisioning_state.value,
             secondary_location=account_obj.secondary_location,
             status_of_primary=(account_obj.status_of_primary.value
@@ -568,6 +574,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                  if account_obj.status_of_secondary is not None else None),
             primary_location=account_obj.primary_location,
             https_only=account_obj.enable_https_traffic_only,
+            minimum_tls_version=account_obj.minimum_tls_version,
             network_acls=account_obj.network_rule_set
         )
         account_dict['custom_domain'] = None
@@ -680,6 +687,18 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 except Exception as exc:
                     self.fail("Failed to update account type: {0}".format(str(exc)))
 
+        if self.minimum_tls_version is not None and self.minimum_tls_version != self.account_dict.get('minimum_tls_version'):
+            self.results['changed'] = True
+            self.account_dict['minimum_tls_version'] = self.minimum_tls_version
+            if not self.check_mode:
+                try:
+                    parameters = self.storage_models.StorageAccountUpdateParameters(minimum_tls_version=self.minimum_tls_version)
+                    self.storage_client.storage_accounts.update(self.resource_group,
+                                                                self.name,
+                                                                parameters)
+                except Exception as exc:
+                    self.fail("Failed to update account type: {0}".format(str(exc)))
+
         if self.account_type:
             if self.account_type != self.account_dict['sku_name']:
                 # change the account type
@@ -771,6 +790,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 name=self.name,
                 resource_group=self.resource_group,
                 enable_https_traffic_only=self.https_only,
+                minimum_tls_version=self.minimum_tls_version,
                 networks_acls=dict(),
                 tags=dict()
             )
@@ -784,11 +804,13 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         sku = self.storage_models.Sku(name=self.storage_models.SkuName(self.account_type))
         sku.tier = self.storage_models.SkuTier.standard if 'Standard' in self.account_type else \
             self.storage_models.SkuTier.premium
+        # pylint: disable=missing-kwoa
         parameters = self.storage_models.StorageAccountCreateParameters(sku=sku,
                                                                         kind=self.kind,
                                                                         location=self.location,
                                                                         tags=self.tags,
                                                                         enable_https_traffic_only=self.https_only,
+                                                                        minimum_tls_version=self.minimum_tls_version,
                                                                         access_tier=self.access_tier)
         self.log(str(parameters))
         try:
