@@ -89,8 +89,8 @@ options:
             - force
     https_only:
         description:
-            -  Allows https traffic only to storage service when set to C(true).
-            -  Allows update storage account property when set to C(False).
+            - Allows https traffic only to storage service when set to C(true).
+            - Allows update storage account property when set to C(False).
             - Default value is C(False).
         type: bool
     minimum_tls_version:
@@ -826,6 +826,12 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             if self.blob_cors:
                 account_dict['blob_cors'] = self.blob_cors
             return account_dict
+        if bool(self.https_only):
+            self.https_only = False
+        if bool(self.minimum_tls_version):
+            self.minimum_tls_version = 'TLS1_0'
+        if bool(self.allow_blob_public_access):
+            self.allow_blob_public_access = True
         sku = self.storage_models.Sku(name=self.storage_models.SkuName(self.account_type))
         sku.tier = self.storage_models.SkuTier.standard if 'Standard' in self.account_type else \
             self.storage_models.SkuTier.premium
@@ -834,9 +840,9 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         kind=self.kind,
                                                                         location=self.location,
                                                                         tags=self.tags,
-                                                                        enable_https_traffic_only=self.https_only if bool(self.https_only) else False,
-                                                                        minimum_tls_version=self.minimum_tls_version if bool(self.minium_tls_version) else 'TLS1_0',
-                                                                        allow_blob_public_access=self.allow_blob_public_access if bool(allow_blob_public_access) else True,
+                                                                        enable_https_traffic_only=self.https_only,
+                                                                        minimum_tls_version=self.minimum_tls_version,
+                                                                        allow_blob_public_access=self.allow_blob_public_access,
                                                                         access_tier=self.access_tier)
         self.log(str(parameters))
         try:

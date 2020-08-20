@@ -172,18 +172,6 @@
        - output.changed
        - output.state.allow_blob_public_access == true
 
- - name: Update https only
-   azure_rm_storageaccount:
-       resource_group: "{{ resource_group }}"
-       name: "{{ storage_account }}"
-       https_only: yes
-   register: output
-
- - name: Assert status succeeded and results
-   assert:
-     that:
-       - output.changed
-
  - name: Gather facts
    azure_rm_storageaccount_info:
        resource_group: "{{ resource_group }}"
