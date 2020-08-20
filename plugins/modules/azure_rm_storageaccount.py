@@ -91,10 +91,12 @@ options:
         description:
             -  Allows https traffic only to storage service when set to C(true).
             -  Allows update storage account property when set to C(False).
+            - Default value is C(False).
         type: bool
     minimum_tls_version:
         description:
             - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
+            - Default value is C(TLS1_0).
         choices:
             - TLS1_0
             - TLS1_1
@@ -104,8 +106,9 @@ options:
         description:
             - Allows blob containers in account to be set for anonymous public access.
             - If set to false, no containers in this account will be able to allow anonymous public access.
+            - Default value is C(True).
         type: bool
-        version_added: "1.0.1"
+        version_added: "1.1.0"
     network_acls:
         description:
             - Manages the Firewall and virtual networks settings of the storage account.
@@ -831,9 +834,9 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         kind=self.kind,
                                                                         location=self.location,
                                                                         tags=self.tags,
-                                                                        enable_https_traffic_only=self.https_only,
-                                                                        minimum_tls_version=self.minimum_tls_version,
-                                                                        allow_blob_public_access=self.allow_blob_public_access,
+                                                                        enable_https_traffic_only=self.https_only if bool(self.https_only) else False,
+                                                                        minimum_tls_version=self.minimum_tls_version if bool(self.minium_tls_version) else 'TLS1_0',
+                                                                        allow_blob_public_access=self.allow_blob_public_access if bool(allow_blob_public_access) else True,
                                                                         access_tier=self.access_tier)
         self.log(str(parameters))
         try:
