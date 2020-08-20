@@ -687,7 +687,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                     self.results['changed'] = True
                     self.update_network_rule_set()
 
-        if bool(self.https_only) != bool(self.account_dict.get('https_only')):
+        if self.https_only is not None and bool(self.https_only) != bool(self.account_dict.get('https_only')):
             self.results['changed'] = True
             self.account_dict['https_only'] = self.https_only
             if not self.check_mode:
@@ -711,17 +711,18 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 except Exception as exc:
                     self.fail("Failed to update account type: {0}".format(str(exc)))
 
-        if bool(self.allow_blob_public_access) != bool(self.account_dict.get('allow_blob_public_access')):
-            self.results['changed'] = True
-            self.account_dict['allow_blob_public_access'] = self.allow_blob_public_access
-            if not self.check_mode:
-                try:
-                    parameters = self.storage_models.StorageAccountUpdateParameters(allow_blob_public_access=self.allow_blob_public_access)
-                    self.storage_client.storage_accounts.update(self.resource_group,
-                                                                self.name,
-                                                                parameters)
-                except Exception as exc:
-                    self.fail("Failed to update account type: {0}".format(str(exc)))
+        if self.allow_blob_public_access is not None:
+            if bool(self.allow_blob_public_access) != bool(self.account_dict.get('allow_blob_public_access')):
+                self.results['changed'] = True
+                self.account_dict['allow_blob_public_access'] = self.allow_blob_public_access
+                if not self.check_mode:
+                    try:
+                        parameters = self.storage_models.StorageAccountUpdateParameters(allow_blob_public_access=self.allow_blob_public_access)
+                        self.storage_client.storage_accounts.update(self.resource_group,
+                                                                    self.name,
+                                                                    parameters)
+                    except Exception as exc:
+                        self.fail("Failed to update account type: {0}".format(str(exc)))
 
         if self.account_type:
             if self.account_type != self.account_dict['sku_name']:
