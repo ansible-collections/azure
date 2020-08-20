@@ -191,7 +191,6 @@
            - output.storageaccounts[0].account_type == "Standard_GRS"
            - output.storageaccounts[0].primary_endpoints.blob.connectionstring
            - output.storageaccounts[0].blob_cors
-           - output.storageaccounts[0].minimum_tls_version == "TLS1_2" 
            - output.storageaccounts[0].allow_blob_public_access == true
            #- output.storageaccounts[0].https_only
            #- output.storageaccounts[0].network_acls.bypass == "AzureServices"
