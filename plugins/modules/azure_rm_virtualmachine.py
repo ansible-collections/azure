@@ -19,7 +19,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachine
 
-version_added: "2.1"
+version_added: "0.1.2"
 
 short_description: Manage Azure virtual machines
 
@@ -45,7 +45,6 @@ options:
             - Only used on Linux images with C(cloud-init) enabled.
             - Consult U(https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init#cloud-init-overview) for cloud-init ready images.
             - To enable cloud-init on a Linux image, follow U(https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloudinit-prepare-custom-image).
-        version_added: "2.5"
     state:
         description:
             - State of the VM.
@@ -74,7 +73,6 @@ options:
             - Set to C(true) with I(state=present) to generalize the VM.
             - Generalizing a VM is irreversible.
         type: bool
-        version_added: "2.8"
     restarted:
         description:
             - Set to C(true) with I(state=present) to restart a running VM.
@@ -121,7 +119,6 @@ options:
     availability_set:
         description:
             - Name or ID of an existing availability set to add the VM to. The I(availability_set) should be in the same resource group as VM.
-        version_added: "2.5"
     storage_account_name:
         description:
             - Name of a storage account that supports creation of VHD blobs.
@@ -151,11 +148,9 @@ options:
             - Standard_LRS
             - StandardSSD_LRS
             - Premium_LRS
-        version_added: "2.4"
     os_disk_name:
         description:
             - OS disk name.
-        version_added: "2.8"
     os_disk_caching:
         description:
             - Type of OS disk caching.
@@ -167,7 +162,6 @@ options:
     os_disk_size_gb:
         description:
             - Type of OS disk size in GB.
-        version_added: "2.7"
     os_type:
         description:
             - Base type of operating system.
@@ -185,21 +179,18 @@ options:
         description:
             - Describes list of data disks.
             - Use M(azure_rm_mangeddisk) to manage the specific disk.
-        version_added: "2.4"
         suboptions:
             lun:
                 description:
                     - The logical unit number for data disk.
                     - This value is used to identify data disks within the VM and therefore must be unique for each data disk attached to a VM.
                 required: true
-                version_added: "2.4"
             disk_size_gb:
                 description:
                     - The initial disk size in GB for blank data disks.
                     - This value cannot be larger than C(1023) GB.
                     - Size can be changed only when the virtual machine is deallocated.
                     - Not sure when I(managed_disk_id) defined.
-                version_added: "2.4"
             managed_disk_type:
                 description:
                     - Managed data disk type.
@@ -208,7 +199,6 @@ options:
                     - Standard_LRS
                     - StandardSSD_LRS
                     - Premium_LRS
-                version_added: "2.4"
             storage_account_name:
                 description:
                     - Name of an existing storage account that supports creation of VHD blobs.
@@ -216,7 +206,6 @@ options:
                     - Only used when OS disk created with virtual hard disk (VHD).
                     - Used when I(managed_disk_type) not defined.
                     - Cannot be updated unless I(lun) updated.
-                version_added: "2.4"
             storage_container_name:
                 description:
                     - Name of the container to use within the storage account to store VHD blobs.
@@ -225,7 +214,6 @@ options:
                     - Used when I(managed_disk_type) not defined.
                     - Cannot be updated unless I(lun) updated.
                 default: vhds
-                version_added: "2.4"
             storage_blob_name:
                 description:
                     - Name of the storage blob used to hold the OS disk image of the VM.
@@ -234,7 +222,6 @@ options:
                     - Only used when OS disk created with virtual hard disk (VHD).
                     - Used when I(managed_disk_type) not defined.
                     - Cannot be updated unless I(lun) updated.
-                version_added: "2.4"
             caching:
                 description:
                     - Type of data disk caching.
@@ -242,7 +229,6 @@ options:
                     - ReadOnly
                     - ReadWrite
                 default: ReadOnly
-                version_added: "2.4"
     public_ip_allocation_method:
         description:
             - Allocation method for the public IP of the VM.
@@ -274,7 +260,6 @@ options:
     virtual_network_resource_group:
         description:
             - The resource group to use when creating a VM with another resource group's virtual network.
-        version_added: "2.4"
     virtual_network_name:
         description:
             - The virtual network to use when creating a VM.
@@ -301,7 +286,6 @@ options:
     plan:
         description:
             - Third-party billing plan for the VM.
-        version_added: "2.5"
         type: dict
         suboptions:
             name:
@@ -326,31 +310,26 @@ options:
             - Only valid when a I(plan) is specified.
         type: bool
         default: false
-        version_added: "2.7"
     zones:
         description:
             - A list of Availability Zones for your VM.
         type: list
-        version_added: "2.8"
     license_type:
         description:
             - On-premise license for the image or disk.
             - Only used for images that contain the Windows Server operating system.
             - To remove all license type settings, set to the string C(None).
-        version_added: "2.8"
         choices:
             - Windows_Server
             - Windows_Client
     vm_identity:
         description:
             - Identity for the VM.
-        version_added: "2.8"
         choices:
             - SystemAssigned
     winrm:
         description:
             - List of Windows Remote Management configurations of the VM.
-        version_added: "2.8"
         suboptions:
             protocol:
                 description:
@@ -373,7 +352,6 @@ options:
         description:
             - Manage boot diagnostics settings for a VM.
             - Boot diagnostics includes a serial console and remote console screenshots.
-        version_added: '2.9'
         suboptions:
             enabled:
                 description:
@@ -386,6 +364,10 @@ options:
                     - If not specified, uses I(storage_account_name) defined one level up.
                     - If storage account is not specified anywhere, and C(enabled) is C(true), a default storage account is created for boot diagnostics data.
                 required: false
+            resource_group:
+                description:
+                    - Resource group where the storage account is located.
+                type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -938,11 +920,14 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         """
         bsa = None
         if 'storage_account' in self.boot_diagnostics:
-            bsa = self.get_storage_account(self.boot_diagnostics['storage_account'])
+            if 'resource_group' in self.boot_diagnostics:
+                bsa = self.get_storage_account(self.boot_diagnostics['resource_group'], self.boot_diagnostics['storage_account'])
+            else:
+                bsa = self.get_storage_account(self.resource_group, self.boot_diagnostics['storage_account'])
         elif limited:
             return None
         elif self.storage_account_name:
-            bsa = self.get_storage_account(self.storage_account_name)
+            bsa = self.get_storage_account(self.resource_group, self.storage_account_name)
         else:
             bsa = self.create_default_storage_account(vm_dict=vm_dict)
         self.log("boot diagnostics storage account:")
@@ -1043,7 +1028,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 self.storage_blob_name = self.name
 
             if self.storage_account_name and not self.managed_disk_type:
-                properties = self.get_storage_account(self.storage_account_name)
+                properties = self.get_storage_account(self.resource_group, self.storage_account_name)
 
                 requested_storage_uri = properties.primary_endpoints.blob
                 requested_vhd_uri = '{0}{1}/{2}'.format(requested_storage_uri,
@@ -1401,7 +1386,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                     count += 1
 
                                 if data_disk.get('storage_account_name'):
-                                    data_disk_storage_account = self.get_storage_account(data_disk['storage_account_name'])
+                                    data_disk_storage_account = self.get_storage_account(self.resource_group, data_disk['storage_account_name'])
                                 else:
                                     data_disk_storage_account = self.create_default_storage_account()
                                     self.log("data disk storage account:")
@@ -1977,9 +1962,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         except Exception as exc:
             self.fail("Error fetching availability set {0} - {1}".format(name, str(exc)))
 
-    def get_storage_account(self, name):
+    def get_storage_account(self, resource_group, name):
         try:
-            account = self.storage_client.storage_accounts.get_properties(self.resource_group,
+            account = self.storage_client.storage_accounts.get_properties(resource_group,
                                                                           name)
             return account
         except Exception as exc:
@@ -2028,12 +2013,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
         if self.tags.get('_own_sa_', None):
             # We previously created one in the same invocation
-            return self.get_storage_account(self.tags['_own_sa_'])
+            return self.get_storage_account(self.resource_group, self.tags['_own_sa_'])
 
         if vm_dict and vm_dict.get('tags', {}).get('_own_sa_', None):
             # We previously created one in a previous invocation
             # We must be updating, like adding boot diagnostics
-            return self.get_storage_account(vm_dict['tags']['_own_sa_'])
+            return self.get_storage_account(self.resource_group, vm_dict['tags']['_own_sa_'])
 
         # Attempt to find a valid storage account name
         storage_account_name_base = re.sub('[^a-zA-Z0-9]', '', self.name[:20].lower())
@@ -2060,6 +2045,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         sku = self.storage_models.Sku(name=self.storage_models.SkuName.standard_lrs)
         sku.tier = self.storage_models.SkuTier.standard
         kind = self.storage_models.Kind.storage
+        # pylint: disable=missing-kwoa
         parameters = self.storage_models.StorageAccountCreateParameters(sku=sku, kind=kind, location=self.location)
         self.log("Creating storage account {0} in location {1}".format(storage_account_name, self.location))
         self.results['actions'].append("Created storage account {0}".format(storage_account_name))
@@ -2069,7 +2055,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         except Exception as exc:
             self.fail("Failed to create storage account: {0} - {1}".format(storage_account_name, str(exc)))
         self.tags['_own_sa_'] = storage_account_name
-        return self.get_storage_account(storage_account_name)
+        return self.get_storage_account(self.resource_group, storage_account_name)
 
     def check_storage_account_name(self, name):
         self.log("Checking storage account name availability for {0}".format(name))

@@ -1,4 +1,14 @@
 # Change Log
+## v1.0.0 (2020-08-12)
+
+### FEATURE ENHANCEMENT
+  - azure_rm_appgateway: support version 2 SKUS ([#198](https://github.com/ansible-collections/azure/pull/198))
+  - azure_rm_storageaccount: support minimum tls version ([#207](https://github.com/ansible-collections/azure/pull/207))
+
+### BUG FIXING
+  - azure_rm_roledefinition: fails when `description` is set ([#214](https://github.com/ansible-collections/azure/pull/214))
+  - azure_rm_virtualmachine: boot diagnostics related error ([#200](https://github.com/ansible-collections/azure/pull/200))
+
 
 ## v0.3.0 (2020-07-24)
 

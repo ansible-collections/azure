@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_appgateway
-version_added: "2.7"
+version_added: "0.1.2"
 short_description: Manage Application Gateway instance
 description:
     - Create, update and delete instance of Application Gateway.
@@ -143,7 +143,6 @@ options:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
     redirect_configurations:
-        version_added: "2.8"
         description:
             - Redirect configurations of the application gateway resource.
         suboptions:
@@ -232,7 +231,6 @@ options:
                 description:
                     - Resource that is unique within a resource group. This name can be used to access the resource.
     probes:
-        version_added: "2.8"
         description:
             - Probes available to the application gateway resource.
         suboptions:

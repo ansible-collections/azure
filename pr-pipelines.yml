@@ -9,9 +9,10 @@ parameters:
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
-  default: "2.9.0"
+  default: "2.9"
   values:
-    - "2.9.0"
+    - "2.9"
+    - "2.10"
     - "devel"
 - name: MODULE_NAME
   displayName: 'Test Module'

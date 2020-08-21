@@ -15,11 +15,11 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_containerregistrywebhook_facts
-version_added: "2.5"
-short_description: Get Webhook facts.
+module: azure_rm_containerregistryreplication_info
+version_added: "0.0.1"
+short_description: Get Replication facts.
 description:
-    - Get facts of Webhook.
+    - Get facts of Replication.
 
 options:
     resource_group:
@@ -30,9 +30,9 @@ options:
         description:
             - The name of the container registry.
         required: True
-    webhook_name:
+    replication_name:
         description:
-            - The name of the webhook.
+            - The name of the replication.
         required: True
 
 extends_documentation_fragment:
@@ -44,20 +44,20 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Webhook
-    azure_rm_containerregistrywebhook_facts:
+  - name: Get instance of Replication
+    azure_rm_containerregistryreplication_info:
       resource_group: resource_group_name
       registry_name: registry_name
-      webhook_name: webhook_name
+      replication_name: replication_name
 '''
 
 RETURN = '''
-webhooks:
-    description: A list of dict results where the key is the name of the Webhook and the values are the facts for that Webhook.
+replications:
+    description: A list of dict results where the key is the name of the Replication and the values are the facts for that Replication.
     returned: always
     type: complex
     contains:
-        webhook_name:
+        replication_name:
             description: The key is the name of the server that the values relate to.
             type: complex
             contains:
@@ -67,44 +67,44 @@ webhooks:
                     returned: always
                     type: str
                     sample: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.ContainerRegistry/registr
-                            ies/myRegistry/webhooks/myWebhook"
+                            ies/myRegistry/replications/myReplication"
                 name:
                     description:
                         - The name of the resource.
                     returned: always
                     type: str
-                    sample: myWebhook
+                    sample: myReplication
                 type:
                     description:
                         - The type of the resource.
                     returned: always
                     type: str
-                    sample: Microsoft.ContainerRegistry/registries/webhooks
+                    sample: Microsoft.ContainerRegistry/registries/replications
                 location:
                     description:
                         - The location of the resource. This cannot be changed after the resource is created.
                     returned: always
                     type: str
-                    sample: westus
+                    sample: eastus
                 status:
                     description:
-                        - "The status of the webhook at the time the operation was called. Possible values include: 'enabled', 'disabled'"
+                        - The status of the replication at the time the operation was called.
                     returned: always
-                    type: str
-                    sample: enabled
-                scope:
-                    description:
-                        - "The scope of repositories where the event can be triggered. For example, 'foo:*' means events for all tags under repository 'foo'.
-                           'foo:bar' means events for 'foo:bar' only. 'foo' is equivalent to 'foo:latest'. Empty means all events."
-                    returned:
-                    type: str
-                    sample: myRepository
-                actions:
-                    description:
-                        - The list of actions that trigger the webhook to post notifications.
-                    returned: always
-                    type: str
-                    sample: "[\n\n  'push'\n\n]"
+                    type: complex
+                    sample: status
+                    contains:
+                        message:
+                            description:
+                                - The detailed message for the status, including alerts and error messages.
+                            returned:
+                            type: str
+                            sample: The replication is ready.
+                        timestamp:
+                            description:
+                                - The timestamp when the status was changed to the current value.
+                            returned: always
+                            type: datetime
+                            sample: "2017-03-01T23:15:37.0707808Z"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -120,7 +120,7 @@ except ImportError:
     pass
 
 
-class AzureRMWebhooksFacts(AzureRMModuleBase):
+class AzureRMReplicationsFacts(AzureRMModuleBase):
     def __init__(self):
         # define user inputs into argument
         self.module_arg_spec = dict(
@@ -132,7 +132,7 @@ class AzureRMWebhooksFacts(AzureRMModuleBase):
                 type='str',
                 required=True
             ),
-            webhook_name=dict(
+            replication_name=dict(
                 type='str',
                 required=True
             )
@@ -145,8 +145,8 @@ class AzureRMWebhooksFacts(AzureRMModuleBase):
         self.mgmt_client = None
         self.resource_group = None
         self.registry_name = None
-        self.webhook_name = None
-        super(AzureRMWebhooksFacts, self).__init__(self.module_arg_spec)
+        self.replication_name = None
+        super(AzureRMReplicationsFacts, self).__init__(self.module_arg_spec)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
@@ -157,25 +157,25 @@ class AzureRMWebhooksFacts(AzureRMModuleBase):
 
         if (self.resource_group is not None and
                 self.registry_name is not None and
-                self.webhook_name is not None):
-            self.results['webhooks'] = self.get()
+                self.replication_name is not None):
+            self.results['replications'] = self.get()
         return self.results
 
     def get(self):
         '''
-        Gets facts of the specified Webhook.
+        Gets facts of the specified Replication.
 
-        :return: deserialized Webhookinstance state dictionary
+        :return: deserialized Replicationinstance state dictionary
         '''
         response = None
         results = {}
         try:
-            response = self.mgmt_client.webhooks.get(resource_group_name=self.resource_group,
-                                                     registry_name=self.registry_name,
-                                                     webhook_name=self.webhook_name)
+            response = self.mgmt_client.replications.get(resource_group_name=self.resource_group,
+                                                         registry_name=self.registry_name,
+                                                         replication_name=self.replication_name)
             self.log("Response : {0}".format(response))
         except CloudError as e:
-            self.log('Could not get facts for Webhooks.')
+            self.log('Could not get facts for Replications.')
 
         if response is not None:
             results[response.name] = response.as_dict()
@@ -184,7 +184,7 @@ class AzureRMWebhooksFacts(AzureRMModuleBase):
 
 
 def main():
-    AzureRMWebhooksFacts()
+    AzureRMReplicationsFacts()
 
 
 if __name__ == '__main__':

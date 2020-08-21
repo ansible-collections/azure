@@ -51,12 +51,12 @@ options:
               the C(AZURE_CLOUD_ENVIRONMENT) environment variable.
         type: str
         default: AzureCloud
-        version_added: '2.4'
+        version_added: '0.0.1'
     adfs_authority_url:
         description:
             - Azure AD authority url. Use when authenticating with Username/password, and has your own ADFS authority.
         type: str
-        version_added: '2.6'
+        version_added: '0.0.1'
     cert_validation_mode:
         description:
             - Controls the certificate validation behavior for Azure endpoints. By default, all modules will validate the server certificate, but
@@ -64,7 +64,7 @@ options:
               set via credential file profile or the C(AZURE_CERT_VALIDATION) environment variable.
         type: str
         choices: [ ignore, validate ]
-        version_added: '2.5'
+        version_added: '0.0.1'
     auth_source:
         description:
             - Controls the source of the credentials to use for authentication.
@@ -86,14 +86,14 @@ options:
         - credential_file
         - env
         - msi
-        version_added: '2.5'
+        version_added: '0.0.1'
     api_profile:
         description:
         - Selects an API profile to use when communicating with Azure services. Default value of C(latest) is appropriate for public clouds;
           future values will allow use with Azure Stack.
         type: str
         default: latest
-        version_added: '2.5'
+        version_added: '0.0.1'
 requirements:
     - python >= 2.7
     - azure >= 2.0.0

@@ -15,7 +15,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachinescaleset_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get Virtual Machine Scale Set facts
 
@@ -44,7 +44,6 @@ options:
         choices:
             - 'curated'
             - 'raw'
-        version_added: "2.6"
 
 extends_documentation_fragment:
     - azure.azcollection.azure
