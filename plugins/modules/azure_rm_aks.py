@@ -158,6 +158,12 @@ options:
                     - A CIDR notation IP range assigned to the Docker bridge network.
                     - It must not overlap with any Subnet IP ranges or the Kubernetes service address range.
                 default: "172.17.0.1/16"
+            load_balancer_sku:
+                description:
+                    - The load balancer sku for the managed cluster.
+                choices:
+                    - standard
+                    - basic
     aad_profile:
         description:
             - Profile of Azure Active Directory configuration.
@@ -361,7 +367,8 @@ def create_network_profiles_dict(network):
         pod_cidr=network.pod_cidr,
         service_cidr=network.service_cidr,
         dns_service_ip=network.dns_service_ip,
-        docker_bridge_cidr=network.docker_bridge_cidr
+        docker_bridge_cidr=network.docker_bridge_cidr,
+        load_balancer_sku=network.load_balancer_sku
     ) if network else dict()
 
 
@@ -484,7 +491,8 @@ network_profile_spec = dict(
     pod_cidr=dict(type='str'),
     service_cidr=dict(type='str'),
     dns_service_ip=dict(type='str'),
-    docker_bridge_cidr=dict(type='str')
+    docker_bridge_cidr=dict(type='str'),
+    load_balancer_sku=dict(type='str')
 )
 
 
