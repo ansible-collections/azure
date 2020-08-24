@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_containerinstance
-version_added: "2.5"
+version_added: "0.1.2"
 short_description: Manage an Azure Container Instance
 description:
     - Create, update and delete an Azure Container Instance.
@@ -56,7 +56,6 @@ options:
         description:
             - The Dns name label for the IP.
         type: str
-        version_added: "2.8"
     ports:
         description:
             - List of ports exposed within the container group.
@@ -119,13 +118,11 @@ options:
                         description:
                             - Is variable secure.
                         type: bool
-                version_added: "2.8"
             commands:
                 description:
                     - List of commands to execute within the container instance in exec form.
                     - When updating existing container all existing commands will be replaced by new ones.
                 type: list
-                version_added: "2.8"
     restart_policy:
         description:
             - Restart policy for all containers within the container group.
@@ -134,7 +131,6 @@ options:
             - always
             - on_failure
             - never
-        version_added: "2.8"
     force_update:
         description:
             - Force update of existing container instance. Any update will result in deletion and recreation of existing containers.

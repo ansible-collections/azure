@@ -16,7 +16,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_deployment
 
-version_added: "2.1"
+version_added: "0.1.0"
 
 short_description: Create or destroy Azure Resource Manager template deployments
 

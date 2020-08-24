@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_devtestlabcustomimage_info
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Get Azure DevTest Lab Custom Image facts
 description:
     - Get facts of Azure Azure DevTest Lab Custom Image.
