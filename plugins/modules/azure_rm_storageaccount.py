@@ -89,17 +89,26 @@ options:
             - force
     https_only:
         description:
-            -  Allows https traffic only to storage service when set to C(true).
+            - Allows https traffic only to storage service when set to C(true).
+            - Allows update storage account property when set to C(False).
+            - Default value is C(False).
         type: bool
     minimum_tls_version:
         description:
             - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
-        default: 'TLS1_0'
+            - Default value is C(TLS1_0).
         choices:
             - TLS1_0
             - TLS1_1
             - TLS1_2
-
+        version_added: "1.0.0"
+    allow_blob_public_access:
+        description:
+            - Allows blob containers in account to be set for anonymous public access.
+            - If set to false, no containers in this account will be able to allow anonymous public access.
+            - Default value is C(True).
+        type: bool
+        version_added: "1.1.0"
     network_acls:
         description:
             - Manages the Firewall and virtual networks settings of the storage account.
@@ -452,8 +461,9 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             tags=dict(type='dict'),
             kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
             access_tier=dict(type='str', choices=['Hot', 'Cool']),
-            https_only=dict(type='bool', default=False),
-            minimum_tls_version=dict(type='str', default='TLS1_0', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
+            https_only=dict(type='bool'),
+            minimum_tls_version=dict(type='str', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
+            allow_blob_public_access=dict(type='bool'),
             network_acls=dict(type='dict'),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict')
         )
@@ -476,6 +486,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.access_tier = None
         self.https_only = None
         self.minimum_tls_version = None
+        self.allow_blob_public_access = None
         self.network_acls = None
         self.blob_cors = None
 
@@ -575,6 +586,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             primary_location=account_obj.primary_location,
             https_only=account_obj.enable_https_traffic_only,
             minimum_tls_version=account_obj.minimum_tls_version,
+            allow_blob_public_access=account_obj.allow_blob_public_access,
             network_acls=account_obj.network_rule_set
         )
         account_dict['custom_domain'] = None
@@ -675,7 +687,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                     self.results['changed'] = True
                     self.update_network_rule_set()
 
-        if bool(self.https_only) != bool(self.account_dict.get('https_only')):
+        if self.https_only is not None and bool(self.https_only) != bool(self.account_dict.get('https_only')):
             self.results['changed'] = True
             self.account_dict['https_only'] = self.https_only
             if not self.check_mode:
@@ -698,6 +710,19 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                 parameters)
                 except Exception as exc:
                     self.fail("Failed to update account type: {0}".format(str(exc)))
+
+        if self.allow_blob_public_access is not None:
+            if bool(self.allow_blob_public_access) != bool(self.account_dict.get('allow_blob_public_access')):
+                self.results['changed'] = True
+                self.account_dict['allow_blob_public_access'] = self.allow_blob_public_access
+                if not self.check_mode:
+                    try:
+                        parameters = self.storage_models.StorageAccountUpdateParameters(allow_blob_public_access=self.allow_blob_public_access)
+                        self.storage_client.storage_accounts.update(self.resource_group,
+                                                                    self.name,
+                                                                    parameters)
+                    except Exception as exc:
+                        self.fail("Failed to update account type: {0}".format(str(exc)))
 
         if self.account_type:
             if self.account_type != self.account_dict['sku_name']:
@@ -791,6 +816,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 resource_group=self.resource_group,
                 enable_https_traffic_only=self.https_only,
                 minimum_tls_version=self.minimum_tls_version,
+                allow_blob_public_access=self.allow_blob_public_access,
                 networks_acls=dict(),
                 tags=dict()
             )
@@ -801,6 +827,12 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             if self.blob_cors:
                 account_dict['blob_cors'] = self.blob_cors
             return account_dict
+        if bool(self.https_only):
+            self.https_only = False
+        if bool(self.minimum_tls_version):
+            self.minimum_tls_version = 'TLS1_0'
+        if bool(self.allow_blob_public_access):
+            self.allow_blob_public_access = True
         sku = self.storage_models.Sku(name=self.storage_models.SkuName(self.account_type))
         sku.tier = self.storage_models.SkuTier.standard if 'Standard' in self.account_type else \
             self.storage_models.SkuTier.premium
@@ -811,6 +843,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         tags=self.tags,
                                                                         enable_https_traffic_only=self.https_only,
                                                                         minimum_tls_version=self.minimum_tls_version,
+                                                                        allow_blob_public_access=self.allow_blob_public_access,
                                                                         access_tier=self.access_tier)
         self.log(str(parameters))
         try:

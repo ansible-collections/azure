@@ -41,7 +41,7 @@
        tags:
            test: test
            galaxy: galaxy
-       https_only: yes
+       https_only: no
        network_acls:
          bypass: AzureServices
          default_action: Deny
@@ -56,8 +56,7 @@
        - output.changed
        - output.state.id is defined
        - output.state.blob_cors | length == 1
-       - output.state.https_only
-       - output.state.minimum_tls_version == "TLS1_0" # default value
+       - not output.state.https_only
        - output.state.network_acls.bypass == "AzureServices"
        - output.state.network_acls.default_action == "Deny"
        - output.state.network_acls.ip_rules | length == 1
@@ -84,8 +83,7 @@
        tags:
            test: test
            galaxy: galaxy
-       https_only: yes
-       minimum_tls_version: "TLS1_0" 
+       https_only: no
        network_acls:
          bypass: AzureServices
          default_action: Deny
@@ -161,6 +159,19 @@
        - output.changed
        - output.state.minimum_tls_version == "TLS1_2"
 
+ - name: Update account blob public access
+   azure_rm_storageaccount:
+       resource_group: "{{ resource_group }}"
+       name: "{{ storage_account }}"
+       allow_blob_public_access: true
+   register: output
+
+ - name: Assert status succeeded and results include an Id value 
+   assert:
+     that:
+       - output.changed
+       - output.state.allow_blob_public_access == true
+
  - name: Gather facts
    azure_rm_storageaccount_info:
        resource_group: "{{ resource_group }}"
@@ -177,6 +188,7 @@
            - output.storageaccounts[0].primary_endpoints.blob.connectionstring
            - output.storageaccounts[0].blob_cors
            - output.storageaccounts[0].minimum_tls_version == "TLS1_2" 
+           - output.storageaccounts[0].allow_blob_public_access == true
            #- output.storageaccounts[0].https_only
            #- output.storageaccounts[0].network_acls.bypass == "AzureServices"
            #- output.storageaccounts[0].network_acls.default_action == "Deny"

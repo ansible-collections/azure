@@ -9,7 +9,7 @@ parameters:
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
-  default: "2.9.0"
+  default: "2.9"
   values:
     - "2.9"
     - "2.10"
