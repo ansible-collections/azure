@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_resource_info
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Generic facts of Azure resources
 description:
     - Obtain facts of any resource using Azure REST API.
@@ -58,7 +58,7 @@ options:
                     - Subresource name.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -336,7 +336,7 @@ class AzureRMResourceInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_resource_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_resource_facts' module has been renamed to 'azure_rm_resource_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_resource_facts' module has been renamed to 'azure_rm_resource_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

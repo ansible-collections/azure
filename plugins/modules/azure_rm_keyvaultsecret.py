@@ -14,7 +14,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_keyvaultsecret
-version_added: 2.5
+version_added: "0.1.2"
 short_description: Use Azure KeyVault Secrets
 description:
     - Create or delete a secret within a given keyvault.
@@ -41,8 +41,8 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Ian Philpot (@iphilpot)

@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_gallery_info
-version_added: '2.9'
+version_added: "0.1.2"
 short_description: Get Azure Shared Image Gallery info
 description:
     - Get info of Azure Shared Image Gallery.
@@ -30,7 +30,7 @@ options:
             - Resource name
         type: str
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 author:
     - Liu Qingyi (@smile37773)
 

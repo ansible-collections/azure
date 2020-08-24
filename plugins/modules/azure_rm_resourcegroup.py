@@ -17,7 +17,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_resourcegroup
-version_added: "2.1"
+version_added: "0.1.2"
 short_description: Manage Azure resource groups
 description:
     - Create, update and delete a resource group.
@@ -47,8 +47,8 @@ options:
             - absent
             - present
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Chris Houseknecht (@chouseknecht)

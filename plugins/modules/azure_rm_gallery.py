@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_gallery
-version_added: '2.9'
+version_added: "0.1.2"
 short_description: Manage Azure Shared Image Gallery instance
 description:
     - Create, update and delete instance of Azure Shared Image Gallery (SIG).
@@ -50,8 +50,8 @@ options:
             - absent
             - present
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 author:
     - Zim Kalinowski (@zikalino)
 

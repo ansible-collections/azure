@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_webapp
-version_added: "2.7"
+version_added: "0.1.2"
 short_description: Manage Web App instances
 description:
     - Create, update and delete instance of Web App.
@@ -186,8 +186,8 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yunge Zhu (@yungezz)

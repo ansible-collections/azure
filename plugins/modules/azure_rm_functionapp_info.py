@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_functionapp_info
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Get Azure Function App facts
 description:
     - Get facts for one Azure Function App or all Function Apps within a resource group.
@@ -34,7 +34,7 @@ options:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Thomas Stringer (@trstringer)
@@ -87,7 +87,7 @@ azure_functionapps:
             host_type: Repository
         server_farm_id: /subscriptions/.../resourceGroups/ansible-rg/providers/Microsoft.Web/serverfarms/EastUSPlan
         reserved: false
-        last_modified_time_utc: 2017-08-22T18:54:01.190Z
+        last_modified_time_utc: '2017-08-22T18:54:01.190Z'
         scm_site_also_stopped: false
         client_affinity_enabled: true
         client_cert_enabled: false
@@ -136,7 +136,7 @@ class AzureRMFunctionAppInfo(AzureRMModuleBase):
 
         is_old_facts = self.module._name == 'azure_rm_functionapp_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_functionapp_facts' module has been renamed to 'azure_rm_functionapp_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_functionapp_facts' module has been renamed to 'azure_rm_functionapp_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

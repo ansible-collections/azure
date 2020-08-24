@@ -17,7 +17,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_storageaccount
-version_added: "2.1"
+version_added: "0.1.0"
 short_description: Manage Azure storage accounts
 description:
     - Create, update or delete a storage account.
@@ -75,14 +75,12 @@ options:
             - BlobStorage
             - BlockBlobStorage
             - FileStorage
-        version_added: "2.2"
     access_tier:
         description:
             - The access tier for this storage account. Required when I(kind=BlobStorage).
         choices:
             - Hot
             - Cool
-        version_added: "2.4"
     force_delete_nonempty:
         description:
             - Attempt deletion if resource already exists and cannot be updated.
@@ -91,9 +89,69 @@ options:
             - force
     https_only:
         description:
-            -  Allows https traffic only to storage service when set to C(true).
+            - Allows https traffic only to storage service when set to C(true).
+            - Allows update storage account property when set to C(False).
+            - Default value is C(False).
         type: bool
-        version_added: "2.8"
+    minimum_tls_version:
+        description:
+            - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
+            - Default value is C(TLS1_0).
+        choices:
+            - TLS1_0
+            - TLS1_1
+            - TLS1_2
+        version_added: "1.0.0"
+    allow_blob_public_access:
+        description:
+            - Allows blob containers in account to be set for anonymous public access.
+            - If set to false, no containers in this account will be able to allow anonymous public access.
+            - Default value is C(True).
+        type: bool
+        version_added: "1.1.0"
+    network_acls:
+        description:
+            - Manages the Firewall and virtual networks settings of the storage account.
+        type: dict
+        suboptions:
+            default_action:
+                description:
+                    - Default firewall traffic rule.
+                    - If I(default_action=Allow) no other settings have effect.
+                choices:
+                    - Allow
+                    - Deny
+                default: Allow
+            bypass:
+                description:
+                    - When I(default_action=Deny) this controls which Azure components can still reach the Storage Account.
+                    - The list is comma separated.
+                    - It can be any combination of the example C(AzureServices), C(Logging), C(Metrics).
+                    - If no Azure components are allowed, explicitly set I(bypass="").
+                default: AzureServices
+                suboptions:
+                    virtual_network_rules:
+                        description:
+                            - A list of subnets and their actions.
+                        suboptions:
+                            id:
+                                description:
+                                    - The complete path to the subnet.
+                            action:
+                                description:
+                                    - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
+                                default: 'Allow'
+                    ip_rules:
+                        description:
+                            - A list of IP addresses or ranges in CIDR format.
+                        suboptions:
+                            value:
+                                description:
+                                    - The IP address or range.
+                            action:
+                                description:
+                                    - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
+                                default: 'Allow'
     blob_cors:
         description:
             - Specifies CORS rules for the Blob service.
@@ -101,7 +159,6 @@ options:
             - If no blob_cors elements are included in the argument list, nothing about CORS will be changed.
             - If you want to delete all CORS rules and disable CORS for the Blob service, explicitly set I(blob_cors=[]).
         type: list
-        version_added: "2.8"
         suboptions:
             allowed_origins:
                 description:
@@ -130,8 +187,8 @@ options:
                 required: true
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Chris Houseknecht (@chouseknecht)
@@ -162,6 +219,23 @@ EXAMPLES = '''
         kind: FileStorage
         tags:
           testing: testing
+
+    - name: configure firewall and virtual networks
+      azure_rm_storageaccount:
+        resource_group: myResourceGroup
+        name: clh0002
+        type: Standard_RAGRS
+        network_acls:
+          bypass: AzureServices,Metrics
+          default_action: Deny
+          virtual_network_rules:
+            - id: /subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet
+              action: Allow
+          ip_rules:
+            - value: 1.2.3.4
+              action: Allow
+            - value: 123.234.123.0/24
+              action: Allow
 
     - name: create an account with blob CORS
       azure_rm_storageaccount:
@@ -233,6 +307,32 @@ state:
             returned: always
             type: str
             sample: clh0003
+        network_acls:
+            description:
+                - A set of firewall and virtual network rules
+            returned: always
+            type: dict
+            sample: {
+                    "bypass": "AzureServices",
+                    "default_action": "Deny",
+                    "virtual_network_rules": [
+                        {
+                            "action": "Allow",
+                            "id": "/subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/ \
+                                   providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet"
+                            }
+                        ],
+                    "ip_rules": [
+                        {
+                            "action": "Allow",
+                            "value": "1.2.3.4"
+                        },
+                        {
+                            "action": "Allow",
+                            "value": "123.234.123.0/24"
+                        }
+                    ]
+                    }
         primary_endpoints:
             description:
                 - The URLs to retrieve the public I(blob), I(queue), or I(table) object from the primary location.
@@ -361,7 +461,10 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             tags=dict(type='dict'),
             kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
             access_tier=dict(type='str', choices=['Hot', 'Cool']),
-            https_only=dict(type='bool', default=False),
+            https_only=dict(type='bool'),
+            minimum_tls_version=dict(type='str', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
+            allow_blob_public_access=dict(type='bool'),
+            network_acls=dict(type='dict'),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict')
         )
 
@@ -382,6 +485,9 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.kind = None
         self.access_tier = None
         self.https_only = None
+        self.minimum_tls_version = None
+        self.allow_blob_public_access = None
+        self.network_acls = None
         self.blob_cors = None
 
         super(AzureRMStorageAccount, self).__init__(self.module_arg_spec,
@@ -469,8 +575,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             type=account_obj.type,
             access_tier=(account_obj.access_tier.value
                          if account_obj.access_tier is not None else None),
-            sku_tier=account_obj.sku.tier.value,
-            sku_name=account_obj.sku.name.value,
+            sku_tier=account_obj.sku.tier,
+            sku_name=account_obj.sku.name,
             provisioning_state=account_obj.provisioning_state.value,
             secondary_location=account_obj.secondary_location,
             status_of_primary=(account_obj.status_of_primary.value
@@ -478,7 +584,10 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             status_of_secondary=(account_obj.status_of_secondary.value
                                  if account_obj.status_of_secondary is not None else None),
             primary_location=account_obj.primary_location,
-            https_only=account_obj.enable_https_traffic_only
+            https_only=account_obj.enable_https_traffic_only,
+            minimum_tls_version=account_obj.minimum_tls_version,
+            allow_blob_public_access=account_obj.allow_blob_public_access,
+            network_acls=account_obj.network_rule_set
         )
         account_dict['custom_domain'] = None
         if account_obj.custom_domain:
@@ -512,11 +621,73 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 exposed_headers=[to_native(y) for y in x.exposed_headers],
                 allowed_headers=[to_native(y) for y in x.allowed_headers]
             ) for x in blob_service_props.cors.cors_rules]
+
+        account_dict['network_acls'] = None
+        if account_obj.network_rule_set:
+            account_dict['network_acls'] = dict(
+                bypass=account_obj.network_rule_set.bypass,
+                default_action=account_obj.network_rule_set.default_action
+            )
+            account_dict['network_acls']['virtual_network_rules'] = []
+            if account_obj.network_rule_set.virtual_network_rules:
+                for rule in account_obj.network_rule_set.virtual_network_rules:
+                    account_dict['network_acls']['virtual_network_rules'].append(dict(id=rule.virtual_network_resource_id, action=rule.action))
+
+            account_dict['network_acls']['ip_rules'] = []
+            if account_obj.network_rule_set.ip_rules:
+                for rule in account_obj.network_rule_set.ip_rules:
+                    account_dict['network_acls']['ip_rules'].append(dict(value=rule.ip_address_or_range, action=rule.action))
+
         return account_dict
+
+    def update_network_rule_set(self):
+        if not self.check_mode:
+            try:
+                parameters = self.storage_models.StorageAccountUpdateParameters(network_rule_set=self.network_acls)
+                self.storage_client.storage_accounts.update(self.resource_group,
+                                                            self.name,
+                                                            parameters)
+            except Exception as exc:
+                self.fail("Failed to update account type: {0}".format(str(exc)))
+
+    def sort_list_of_dicts(self, rule_set, dict_key):
+        return sorted(rule_set, key=lambda i: i[dict_key])
 
     def update_account(self):
         self.log('Update storage account {0}'.format(self.name))
-        if bool(self.https_only) != bool(self.account_dict.get('https_only')):
+        if self.network_acls:
+            if self.network_acls.get('default_action', 'Allow') != self.account_dict['network_acls']['default_action']:
+                self.results['changed'] = True
+                self.account_dict['network_acls']['default_action'] = self.network_acls['default_action']
+                self.update_network_rule_set()
+
+            if self.network_acls.get('default_action', 'Allow') == 'Deny':
+                if self.network_acls['bypass'] != self.account_dict['network_acls']['bypass']:
+                    self.results['changed'] = True
+                    self.account_dict['network_acls']['bypass'] = self.network_acls['bypass']
+                    self.update_network_rule_set()
+
+                if self.network_acls.get('virtual_network_rules', None) is not None and self.account_dict['network_acls']['virtual_network_rules'] != []:
+                    if self.sort_list_of_dicts(self.network_acls['virtual_network_rules'], 'id') != \
+                            self.sort_list_of_dicts(self.account_dict['network_acls']['virtual_network_rules'], 'id'):
+                        self.results['changed'] = True
+                        self.account_dict['network_acls']['virtual_network_rules'] = self.network_acls['virtual_network_rules']
+                        self.update_network_rule_set()
+                if self.network_acls.get('virtual_network_rules', None) is not None and self.account_dict['network_acls']['virtual_network_rules'] == []:
+                    self.results['changed'] = True
+                    self.update_network_rule_set()
+
+                if self.network_acls.get('ip_rules', None) is not None and self.account_dict['network_acls']['ip_rules'] != []:
+                    if self.sort_list_of_dicts(self.network_acls['ip_rules'], 'value') != \
+                            self.sort_list_of_dicts(self.account_dict['network_acls']['ip_rules'], 'value'):
+                        self.results['changed'] = True
+                        self.account_dict['network_acls']['ip_rules'] = self.network_acls['ip_rules']
+                        self.update_network_rule_set()
+                if self.network_acls.get('ip_rules', None) is not None and self.account_dict['network_acls']['ip_rules'] == []:
+                    self.results['changed'] = True
+                    self.update_network_rule_set()
+
+        if self.https_only is not None and bool(self.https_only) != bool(self.account_dict.get('https_only')):
             self.results['changed'] = True
             self.account_dict['https_only'] = self.https_only
             if not self.check_mode:
@@ -527,6 +698,31 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                 parameters)
                 except Exception as exc:
                     self.fail("Failed to update account type: {0}".format(str(exc)))
+
+        if self.minimum_tls_version is not None and self.minimum_tls_version != self.account_dict.get('minimum_tls_version'):
+            self.results['changed'] = True
+            self.account_dict['minimum_tls_version'] = self.minimum_tls_version
+            if not self.check_mode:
+                try:
+                    parameters = self.storage_models.StorageAccountUpdateParameters(minimum_tls_version=self.minimum_tls_version)
+                    self.storage_client.storage_accounts.update(self.resource_group,
+                                                                self.name,
+                                                                parameters)
+                except Exception as exc:
+                    self.fail("Failed to update account type: {0}".format(str(exc)))
+
+        if self.allow_blob_public_access is not None:
+            if bool(self.allow_blob_public_access) != bool(self.account_dict.get('allow_blob_public_access')):
+                self.results['changed'] = True
+                self.account_dict['allow_blob_public_access'] = self.allow_blob_public_access
+                if not self.check_mode:
+                    try:
+                        parameters = self.storage_models.StorageAccountUpdateParameters(allow_blob_public_access=self.allow_blob_public_access)
+                        self.storage_client.storage_accounts.update(self.resource_group,
+                                                                    self.name,
+                                                                    parameters)
+                    except Exception as exc:
+                        self.fail("Failed to update account type: {0}".format(str(exc)))
 
         if self.account_type:
             if self.account_type != self.account_dict['sku_name']:
@@ -619,20 +815,35 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 name=self.name,
                 resource_group=self.resource_group,
                 enable_https_traffic_only=self.https_only,
+                minimum_tls_version=self.minimum_tls_version,
+                allow_blob_public_access=self.allow_blob_public_access,
+                networks_acls=dict(),
                 tags=dict()
             )
             if self.tags:
                 account_dict['tags'] = self.tags
+            if self.network_acls:
+                account_dict['network_acls'] = self.network_acls
             if self.blob_cors:
                 account_dict['blob_cors'] = self.blob_cors
             return account_dict
+        if bool(self.https_only):
+            self.https_only = False
+        if bool(self.minimum_tls_version):
+            self.minimum_tls_version = 'TLS1_0'
+        if bool(self.allow_blob_public_access):
+            self.allow_blob_public_access = True
         sku = self.storage_models.Sku(name=self.storage_models.SkuName(self.account_type))
         sku.tier = self.storage_models.SkuTier.standard if 'Standard' in self.account_type else \
             self.storage_models.SkuTier.premium
+        # pylint: disable=missing-kwoa
         parameters = self.storage_models.StorageAccountCreateParameters(sku=sku,
                                                                         kind=self.kind,
                                                                         location=self.location,
                                                                         tags=self.tags,
+                                                                        enable_https_traffic_only=self.https_only,
+                                                                        minimum_tls_version=self.minimum_tls_version,
+                                                                        allow_blob_public_access=self.allow_blob_public_access,
                                                                         access_tier=self.access_tier)
         self.log(str(parameters))
         try:
@@ -641,6 +852,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         except CloudError as e:
             self.log('Error creating storage account.')
             self.fail("Failed to create account: {0}".format(str(e)))
+        if self.network_acls:
+            self.set_network_acls()
         if self.blob_cors:
             self.set_blob_cors()
         # the poller doesn't actually return anything
@@ -687,6 +900,15 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                      self.storage_models.BlobServiceProperties(cors=cors_rules))
         except Exception as exc:
             self.fail("Failed to set CORS rules: {0}".format(str(exc)))
+
+    def set_network_acls(self):
+        try:
+            parameters = self.storage_models.StorageAccountUpdateParameters(network_rule_set=self.network_acls)
+            self.storage_client.storage_accounts.update(self.resource_group,
+                                                        self.name,
+                                                        parameters)
+        except Exception as exc:
+            self.fail("Failed to update account type: {0}".format(str(exc)))
 
 
 def main():

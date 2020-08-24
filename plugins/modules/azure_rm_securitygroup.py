@@ -17,7 +17,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_securitygroup
-version_added: "2.1"
+version_added: "0.1.0"
 short_description: Manage Azure network security groups
 description:
     - Create, update or delete a network security group.
@@ -140,8 +140,8 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Chris Houseknecht (@chouseknecht)

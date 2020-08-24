@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_roledefinition
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage Azure Role Definition
 description:
     - Create, update and delete instance of Azure Role Definition.
@@ -66,7 +66,7 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yunge Zhu(@yungezz)
@@ -97,10 +97,10 @@ id:
 '''
 
 import uuid
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils._text import to_native
 
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_operation import AzureOperationPoller
     from msrest.polling import LROPoller
@@ -284,7 +284,7 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
 
     # check update
     def check_update(self, old_definition):
-        if self.description and self.description != old_definition['properties']['description']:
+        if self.description and self.description != old_definition['description']:
             return True
         if self.permissions:
             if len(self.permissions) != len(old_definition['permissions']):

@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_loganalyticsworkspace
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage Azure Log Analytics workspaces
 description:
     - Create, delete Azure Log Analytics workspaces.
@@ -64,8 +64,8 @@ options:
             - Other intelligence packs not list in this property will not be changed.
         type: dict
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -151,10 +151,10 @@ usages:
               }
 '''  # NOQA
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
 from ansible.module_utils.common.dict_transformations import _snake_to_camel, _camel_to_snake
 
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
     from msrestazure.tools import parse_resource_id
     from msrestazure.azure_exceptions import CloudError
 except ImportError:

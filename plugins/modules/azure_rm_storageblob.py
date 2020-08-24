@@ -18,10 +18,14 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_storageblob
 short_description: Manage blob containers and blob objects
-version_added: "2.1"
+version_added: "0.0.1"
 description:
     - Create, update and delete blob containers and blob objects.
-    - Use to upload a file and store it as a blob object, or download a blob object to a file.
+    - Use to upload a file and store it as a blob object, or download a blob object to a file(upload and download mode)
+    - Use to upload a batch of files under a given directory(batch upload mode)
+    - In the batch upload mode, the existing blob object will be overwritten if a blob object with the same name is to be created.
+    - the module can work exclusively in three modes, when C(batch_upload_src) is set, it is working in batch upload mode;
+      when C(src) is set, it is working in upload mode and when C(dst) is set, it is working in dowload mode.
 options:
     storage_account_name:
         description:
@@ -42,7 +46,7 @@ options:
         choices:
             - block
             - page
-        version_added: "2.5"
+        version_added: "0.0.1"
     container:
         description:
             - Name of a blob container within the storage account.
@@ -88,6 +92,12 @@ options:
             - Source file path. Use with state C(present) to upload a blob.
         aliases:
             - source
+    batch_upload_src:
+        description:
+            - Batch upload source directory. Use with state C(present) to upload batch of files under the directory.
+    batch_upload_dst:
+        description:
+            - Base directory in container when upload batch of files.
     state:
         description:
             - State of a container or blob.
@@ -112,8 +122,8 @@ options:
             - blob
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Chris Houseknecht (@chouseknecht)
@@ -182,6 +192,7 @@ container:
 '''
 
 import os
+import mimetypes
 
 try:
     from azure.storage.blob.models import ContentSettings
@@ -206,6 +217,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             force=dict(type='bool', default=False),
             resource_group=dict(required=True, type='str', aliases=['resource_group_name']),
             src=dict(type='str', aliases=['source']),
+            batch_upload_src=dict(type='path'),
+            batch_upload_dst=dict(type='path'),
             state=dict(type='str', default='present', choices=['absent', 'present']),
             public_access=dict(type='str', choices=['container', 'blob']),
             content_type=dict(type='str'),
@@ -216,7 +229,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             content_md5=dict(type='str'),
         )
 
-        mutually_exclusive = [('src', 'dest')]
+        mutually_exclusive = [('src', 'dest'), ('src', 'batch_upload_src'), ('dest', 'batch_upload_src')]
 
         self.blob_client = None
         self.blob_details = None
@@ -230,6 +243,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         self.force = None
         self.resource_group = None
         self.src = None
+        self.batch_upload_src = None
+        self.batch_upload_dst = None
         self.state = None
         self.tags = None
         self.public_access = None
@@ -257,9 +272,6 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         self.blob_client = self.get_blob_client(self.resource_group, self.storage_account_name, self.blob_type)
         self.container_obj = self.get_container()
 
-        if self.blob is not None:
-            self.blob_obj = self.get_blob()
-
         if self.state == 'present':
             if not self.container_obj:
                 # create the container
@@ -270,8 +282,13 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                 if update_tags:
                     self.update_container_tags(self.container_obj['tags'])
 
+            if self.batch_upload_src:
+                self.batch_upload()
+                return self.results
+
             if self.blob:
                 # create, update or download blob
+                self.blob_obj = self.get_blob()
                 if self.src and self.src_is_valid():
                     if self.blob_obj and not self.force:
                         self.log("Cannot upload to {0}. Blob with that name already exists. "
@@ -306,6 +323,69 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         # until we sort out how we want to do this globally
         del self.results['actions']
         return self.results
+
+    def batch_upload(self):
+
+        def _glob_files_locally(folder_path):
+
+            len_folder_path = len(folder_path) + 1
+
+            for root, v, files in os.walk(folder_path):
+                for f in files:
+                    full_path = os.path.join(root, f)
+                    yield full_path, full_path[len_folder_path:]
+
+        def _normalize_blob_file_path(path, name):
+            path_sep = '/'
+            if path:
+                name = path_sep.join((path, name))
+
+            return path_sep.join(os.path.normpath(name).split(os.path.sep)).strip(path_sep)
+
+        def _guess_content_type(file_path, original):
+            if original.content_encoding or original.content_type:
+                return original
+
+            mimetypes.add_type('application/json', '.json')
+            mimetypes.add_type('application/javascript', '.js')
+            mimetypes.add_type('application/wasm', '.wasm')
+
+            content_type, v = mimetypes.guess_type(file_path)
+            return ContentSettings(content_type=content_type,
+                                   content_disposition=original.content_disposition,
+                                   content_language=original.content_language,
+                                   content_md5=original.content_md5,
+                                   cache_control=original.cache_control)
+
+        if not os.path.exists(self.batch_upload_src):
+            self.fail("batch upload source source directory {0} does not exist".format(self.batch_upload_src))
+
+        if not os.path.isdir(self.batch_upload_src):
+            self.fail("incorrect usage: {0} is not a directory".format(self.batch_upload_src))
+
+        source_dir = os.path.realpath(self.batch_upload_src)
+        source_files = list(_glob_files_locally(source_dir))
+
+        content_settings = ContentSettings(content_type=self.content_type,
+                                           content_encoding=self.content_encoding,
+                                           content_language=self.content_language,
+                                           content_disposition=self.content_disposition,
+                                           cache_control=self.cache_control,
+                                           content_md5=None)
+
+        for src, blob_path in source_files:
+            if self.batch_upload_dst:
+                blob_path = _normalize_blob_file_path(self.batch_upload_dst, blob_path)
+            if not self.check_mode:
+                try:
+                    self.blob_client.create_blob_from_path(self.container, blob_path, src,
+                                                           metadata=self.tags, content_settings=_guess_content_type(src, content_settings))
+                except AzureHttpError as exc:
+                    self.fail("Error creating blob {0} - {1}".format(src, str(exc)))
+            self.results['actions'].append('created blob from {0}'.format(src))
+
+        self.results['changed'] = True
+        self.results['container'] = self.container_obj
 
     def get_container(self):
         result = {}

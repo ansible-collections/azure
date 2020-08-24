@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_sqlfirewallrule
-version_added: "2.7"
+version_added: "0.1.2"
 short_description: Manage Firewall Rule instance
 description:
     - Create, update and delete instance of Firewall Rule.
@@ -51,7 +51,7 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Zim Kalinowski (@zikalino)

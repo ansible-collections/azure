@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_image
-version_added: "2.5"
+version_added: "0.0.1"
 short_description: Manage Azure image
 description:
     - Create, delete an image from virtual machine, blob uri, managed disk or snapshot.
@@ -59,8 +59,8 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)

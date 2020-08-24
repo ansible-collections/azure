@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_appgateway
-version_added: "2.7"
+version_added: "0.1.2"
 short_description: Manage Application Gateway instance
 description:
     - Create, update and delete instance of Application Gateway.
@@ -44,14 +44,18 @@ options:
                     - 'standard_small'
                     - 'standard_medium'
                     - 'standard_large'
+                    - 'standard_v2'
                     - 'waf_medium'
                     - 'waf_large'
+                    - 'waf_v2'
             tier:
                 description:
                     - Tier of an application gateway.
                 choices:
                     - 'standard'
+                    - 'standard_v2'
                     - 'waf'
+                    - 'waf_v2'
             capacity:
                 description:
                     - Capacity (instance count) of an application gateway.
@@ -139,7 +143,6 @@ options:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
     redirect_configurations:
-        version_added: "2.8"
         description:
             - Redirect configurations of the application gateway resource.
         suboptions:
@@ -228,7 +231,6 @@ options:
                 description:
                     - Resource that is unique within a resource group. This name can be used to access the resource.
     probes:
-        version_added: "2.8"
         description:
             - Probes available to the application gateway resource.
         suboptions:
@@ -378,8 +380,8 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -439,10 +441,9 @@ id:
 import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from copy import deepcopy
-from ansible.module_utils.network.common.utils import dict_merge
 from ansible.module_utils.common.dict_transformations import (
     camel_dict_to_snake_dict, snake_dict_to_camel_dict,
-    _camel_to_snake, _snake_to_camel,
+    _camel_to_snake, _snake_to_camel, dict_merge,
 )
 
 try:
@@ -588,15 +589,23 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             ev['name'] = 'Standard_Medium'
                         elif ev['name'] == 'standard_large':
                             ev['name'] = 'Standard_Large'
+                        elif ev['name'] == 'standard_v2':
+                            ev['name'] = 'Standard_v2'
                         elif ev['name'] == 'waf_medium':
                             ev['name'] = 'WAF_Medium'
                         elif ev['name'] == 'waf_large':
                             ev['name'] = 'WAF_Large'
+                        elif ev['name'] == 'waf_v2':
+                            ev['name'] = 'WAF_v2'
                     if 'tier' in ev:
                         if ev['tier'] == 'standard':
                             ev['tier'] = 'Standard'
+                        if ev['tier'] == 'standard_v2':
+                            ev['tier'] = 'Standard_v2'
                         elif ev['tier'] == 'waf':
                             ev['tier'] = 'WAF'
+                        elif ev['tier'] == 'waf_v2':
+                            ev['tier'] = 'WAF_v2'
                     self.parameters["sku"] = ev
                 elif key == "ssl_policy":
                     ev = kwargs[key]

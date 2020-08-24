@@ -17,7 +17,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_subnet
-version_added: "2.1"
+version_added: "0.1.0"
 short_description: Manage Azure subnets
 description:
     - Create, update or delete a subnet within a given virtual network.
@@ -63,7 +63,6 @@ options:
             - The reference of the RouteTable resource.
             - Can be the name or resource ID of the route table.
             - Can be a dict containing the I(name) and I(resource_group) of the route table.
-        version_added: "2.7"
     service_endpoints:
         description:
             - An array of service endpoints.
@@ -77,10 +76,9 @@ options:
                 description:
                     - A list of locations.
                 type: list
-        version_added: "2.8"
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Chris Houseknecht (@chouseknecht)
@@ -285,7 +283,7 @@ class AzureRMSubnet(AzureRMModuleBase):
                     results['route_table']['id'] = self.route_table
                     self.log("CHANGED: subnet {0} route_table to {1}".format(self.name, route_table.get('name')))
 
-                if self.service_endpoints:
+                if self.service_endpoints or self.service_endpoints == []:
                     oldd = {}
                     for item in self.service_endpoints:
                         name = item['service']

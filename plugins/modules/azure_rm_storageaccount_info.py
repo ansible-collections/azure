@@ -18,7 +18,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_storageaccount_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get storage account facts
 
@@ -43,16 +43,14 @@ options:
             - For convenient usage, C(show_connection_string) will also show the access keys for each of the storageaccount's endpoints.
             - Note that it will cost a lot of time when list all storageaccount rather than query a single one.
         type: bool
-        version_added: "2.8"
     show_blob_cors:
         description:
             - Show the blob CORS settings for each blob related to the storage account.
             - Querying all storage accounts will take a long time.
         type: bool
-        version_added: "2.8"
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Chris Houseknecht (@chouseknecht)
@@ -173,6 +171,32 @@ storageaccounts:
             returned: always
             type: bool
             sample: false
+        network_acls:
+            description:
+                - A set of firewall and virtual network rules
+            returned: always
+            type: dict
+            sample: {
+                    "bypass": "AzureServices",
+                    "default_action": "Deny",
+                    "virtual_network_rules": [
+                        {
+                            "action": "Allow",
+                            "id": "/subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/ \
+                                    providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet"
+                            }
+                        ],
+                    "ip_rules": [
+                        {
+                            "action": "Allow",
+                            "value": "1.2.3.4"
+                        },
+                        {
+                            "action": "Allow",
+                            "value": "123.234.123.0/24"
+                        }
+                    ]
+                    }
         provisioning_state:
             description:
                 - The status of the storage account at the time the operation was called.
@@ -207,7 +231,7 @@ storageaccounts:
             sample: eastus
         primary_endpoints:
             description:
-                - URLs to retrieve a public I(blob), I(queue), or I(table) object.
+                - URLs to retrieve a public I(blob), I(file), I(queue), or I(table) object.
                 - Note that C(Standard_ZRS) and C(Premium_LRS) accounts only return the blob endpoint.
             returned: always
             type: complex
@@ -230,6 +254,24 @@ storageaccounts:
                             returned: always
                             type: str
                             sample: "DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=X;AccountKey=X;BlobEndpoint=X"
+                file:
+                    description:
+                        - The primary file endpoint and connection string.
+                    returned: always
+                    type: complex
+                    contains:
+                        endpoint:
+                            description:
+                                - The primary file endpoint.
+                            returned: always
+                            type: str
+                            sample: "https://testaccount001.file.core.windows.net/"
+                        connectionstring:
+                            description:
+                                - Connectionstring of the file endpoint.
+                            returned: always
+                            type: str
+                            sample: "DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=X;AccountKey=X;FileEndpoint=X"
                 queue:
                     description:
                         - The primary queue endpoint and connection string.
@@ -274,7 +316,7 @@ storageaccounts:
                     sample: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         secondary_endpoints:
             description:
-                - The URLs to retrieve a public I(blob), I(queue), or I(table) object from the secondary location.
+                - The URLs to retrieve a public I(blob), I(file), I(queue), or I(table) object from the secondary location.
                 - Only available if the SKU I(name=Standard_RAGRS).
             returned: always
             type: complex
@@ -297,6 +339,24 @@ storageaccounts:
                             returned: always
                             type: str
                             sample: "DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=X;AccountKey=X;BlobEndpoint=X"
+                file:
+                    description:
+                        - The secondary file endpoint and connection string.
+                    returned: always
+                    type: complex
+                    contains:
+                        endpoint:
+                            description:
+                                - The secondary file endpoint.
+                            returned: always
+                            type: str
+                            sample: "https://testaccount001.file.core.windows.net/"
+                        connectionstring:
+                            description:
+                                - Connectionstring of the file endpoint.
+                            returned: always
+                            type: str
+                            sample: "DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=X;AccountKey=X;FileEndpoint=X"
                 queue:
                     description:
                         - The secondary queue endpoint and connection string.
@@ -387,7 +447,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_storageaccount_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_storageaccount_facts' module has been renamed to 'azure_rm_storageaccount_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_storageaccount_facts' module has been renamed to 'azure_rm_storageaccount_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
@@ -455,18 +515,20 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             id=account_obj.id,
             name=account_obj.name,
             location=account_obj.location,
-            access_tier=(account_obj.access_tier.value
+            access_tier=(account_obj.access_tier
                          if account_obj.access_tier is not None else None),
-            account_type=account_obj.sku.name.value,
-            kind=account_obj.kind.value if account_obj.kind else None,
-            provisioning_state=account_obj.provisioning_state.value,
+            account_type=account_obj.sku.name,
+            kind=account_obj.kind if account_obj.kind else None,
+            provisioning_state=account_obj.provisioning_state,
             secondary_location=account_obj.secondary_location,
-            status_of_primary=(account_obj.status_of_primary.value
+            status_of_primary=(account_obj.status_of_primary
                                if account_obj.status_of_primary is not None else None),
-            status_of_secondary=(account_obj.status_of_secondary.value
+            status_of_secondary=(account_obj.status_of_secondary
                                  if account_obj.status_of_secondary is not None else None),
             primary_location=account_obj.primary_location,
-            https_only=account_obj.enable_https_traffic_only
+            https_only=account_obj.enable_https_traffic_only,
+            minimum_tls_version=account_obj.minimum_tls_version,
+            allow_blob_public_access=account_obj.allow_blob_public_access
         )
 
         id_dict = self.parse_resource_to_dict(account_obj.id)
@@ -479,10 +541,28 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 use_sub_domain=account_obj.custom_domain.use_sub_domain
             )
 
+        account_dict['network_acls'] = None
+        if account_obj.network_rule_set:
+            account_dict['network_acls'] = dict(
+                bypass=account_obj.network_rule_set.bypass,
+                default_action=account_obj.network_rule_set.default_action,
+                ip_rules=account_obj.network_rule_set.ip_rules
+            )
+            if account_obj.network_rule_set.virtual_network_rules:
+                account_dict['network_acls']['virtual_network_rules'] = []
+                for rule in account_obj.network_rule_set.virtual_network_rules:
+                    account_dict['network_acls']['virtual_network_rules'].append(dict(id=rule.virtual_network_resource_id, action=rule.action))
+
+            if account_obj.network_rule_set.ip_rules:
+                account_dict['network_acls']['ip_rules'] = []
+                for rule in account_obj.network_rule_set.ip_rules:
+                    account_dict['network_acls']['ip_rules'].append(dict(value=rule.ip_address_or_range, action=rule.action))
+
         account_dict['primary_endpoints'] = None
         if account_obj.primary_endpoints:
             account_dict['primary_endpoints'] = dict(
                 blob=self.format_endpoint_dict(account_dict['name'], account_key[0], account_obj.primary_endpoints.blob, 'blob'),
+                file=self.format_endpoint_dict(account_dict['name'], account_key[0], account_obj.primary_endpoints.file, 'file'),
                 queue=self.format_endpoint_dict(account_dict['name'], account_key[0], account_obj.primary_endpoints.queue, 'queue'),
                 table=self.format_endpoint_dict(account_dict['name'], account_key[0], account_obj.primary_endpoints.table, 'table')
             )
@@ -492,6 +572,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         if account_obj.secondary_endpoints:
             account_dict['secondary_endpoints'] = dict(
                 blob=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.primary_endpoints.blob, 'blob'),
+                file=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.primary_endpoints.file, 'file'),
                 queue=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.primary_endpoints.queue, 'queue'),
                 table=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.primary_endpoints.table, 'table'),
             )

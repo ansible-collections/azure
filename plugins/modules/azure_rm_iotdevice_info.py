@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_iotdevice_info
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Facts of Azure IoT hub device
 description:
     - Query, get Azure IoT hub device.
@@ -59,8 +59,8 @@ options:
             - List the top n devices in the query.
         type: int
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)

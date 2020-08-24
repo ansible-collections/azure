@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_autoscale
-version_added: "2.7"
+version_added: "0.1.2"
 short_description: Manage Azure autoscale setting
 description:
     - Create, delete an autoscale setting.
@@ -213,8 +213,8 @@ options:
 
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -373,7 +373,7 @@ def timedelta_to_minutes(time):
 
 
 def get_enum_value(item):
-    if 'value' in dir(item):
+    if hasattr(item, 'value'):
         return to_native(item.value)
     return to_native(item)
 
@@ -443,7 +443,7 @@ def notification_to_dict(notification):
     return dict(send_to_subscription_administrator=notification.email.send_to_subscription_administrator if notification.email else False,
                 send_to_subscription_co_administrators=notification.email.send_to_subscription_co_administrators if notification.email else False,
                 custom_emails=[to_native(e) for e in notification.email.custom_emails or []],
-                webhooks=[to_native(w.service_url) for w in notification.webhooks or []])
+                webhooks=[to_native(w.service_uri) for w in notification.webhooks or []])
 
 
 rule_spec = dict(

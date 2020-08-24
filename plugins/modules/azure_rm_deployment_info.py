@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_deployment_info
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Get Azure Deployment facts
 description:
     - Get facts of Azure Deployment.
@@ -31,7 +31,7 @@ options:
             - The name of the deployment.
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -157,7 +157,7 @@ class AzureRMDeploymentInfo(AzureRMModuleBase):
 
         is_old_facts = self.module._name == 'azure_rm_deployment_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_deployment_facts' module has been renamed to 'azure_rm_deployment_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_deployment_facts' module has been renamed to 'azure_rm_deployment_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
@@ -236,7 +236,8 @@ class AzureRMDeploymentInfo(AzureRMModuleBase):
             'parameters': d.get('properties', {}).get('parameters'),
             'outputs': d.get('properties', {}).get('outputs'),
             'output_resources': output_resources_list,
-            'template_link': d.get('properties', {}).get('template_link').get('uri')
+            'template_link': d.get('properties', {}).get('template_link', {}).get('uri'),
+            'correlation_id': d.get('properties', {}).get('correlation_id')
         }
         return d
 

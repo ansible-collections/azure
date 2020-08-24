@@ -17,7 +17,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_mariadbdatabase
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage MariaDB Database instance
 description:
     - Create, update and delete instance of MariaDB Database.
@@ -58,7 +58,7 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -90,9 +90,9 @@ name:
 '''
 
 import time
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller

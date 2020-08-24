@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_lock
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Manage Azure locks
 description:
     - Create, delete an Azure lock.
@@ -60,7 +60,7 @@ options:
             - can_not_delete
             - read_only
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -101,8 +101,7 @@ id:
     sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Authorization/locks/keep"
 '''  # NOQA
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
-
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 try:
     from msrestazure.azure_exceptions import CloudError
 except ImportError:

@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_roleassignment
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage Azure Role Assignment
 description:
     - Create and delete instance of Azure Role Assignment.
@@ -50,7 +50,7 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yunge Zhu(@yungezz)
@@ -83,9 +83,9 @@ id:
 '''
 
 import uuid
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_operation import AzureOperationPoller
     from msrest.serialization import Model
@@ -225,6 +225,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         self.log("Creating role assignment {0}".format(self.name))
 
         try:
+            # pylint: disable=missing-kwoa
             parameters = RoleAssignmentCreateParameters(role_definition_id=self.role_definition_id, principal_id=self.assignee_object_id)
             response = self._client.role_assignments.create(scope=self.scope,
                                                             role_assignment_name=self.name,

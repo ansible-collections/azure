@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_iothubconsumergroup
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Manage Azure IoT hub
 description:
     - Create, delete an Azure IoT hub.
@@ -49,8 +49,8 @@ options:
             - Name of the consumer group.
         type: str
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)

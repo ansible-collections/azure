@@ -16,7 +16,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_dnsrecordset
 
-version_added: "2.4"
+version_added: "0.1.0"
 
 short_description: Create, delete and update DNS record sets and records
 
@@ -90,8 +90,8 @@ options:
                     - Primary data value for all record types.
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Obezimnaka Boms (@ozboms)

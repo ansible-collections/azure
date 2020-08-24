@@ -16,7 +16,7 @@ DOCUMENTATION = r'''
 ---
 module: azure_rm_manageddisk_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get managed disk facts
 
@@ -42,8 +42,8 @@ options:
         type: list
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Bruno Medina (@brusMX)

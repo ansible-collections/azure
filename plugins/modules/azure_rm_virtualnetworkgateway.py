@@ -13,7 +13,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_virtualnetworkgateway
 
-version_added: "2.8"
+version_added: "0.0.1"
 
 short_description: Manage Azure virtual network gateways
 
@@ -114,8 +114,8 @@ options:
                 required: True
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Madhura Naniwadekar (@Madhura-CSI)

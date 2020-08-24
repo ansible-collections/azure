@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_iotdevicemodule
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Manage Azure IoT hub device module
 description:
     - Create, delete an Azure IoT hub device module.
@@ -92,8 +92,8 @@ options:
             - List is not supported.
         type: dict
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)

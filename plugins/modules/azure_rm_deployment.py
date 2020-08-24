@@ -16,9 +16,9 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_deployment
 
-short_description: Create or destroy Azure Resource Manager template deployments
+version_added: "0.1.0"
 
-version_added: "2.1"
+short_description: Create or destroy Azure Resource Manager template deployments
 
 description:
     - Create or destroy Azure Resource Manager template deployments via the Azure SDK for Python.
@@ -89,8 +89,8 @@ options:
         - absent
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - David Justice (@devigned)
@@ -118,7 +118,7 @@ EXAMPLES = '''
 # Create or update a template deployment based on a uri to the template and parameters specified inline.
 # This deploys a VM with SSH support for a given public key, then stores the result in 'azure_vms'. The result is then
 # used to create a new host group. This host group is then used to wait for each instance to respond to the public IP SSH.
----
+
 - name: Create Azure Deploy
   azure_rm_deployment:
     resource_group: myResourceGroup
@@ -564,8 +564,8 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
         except CloudError as exc:
             failed_deployment_operations = self._get_failed_deployment_operations(self.name)
             self.log("Deployment failed %s: %s" % (exc.status_code, exc.message))
-            self.fail("Deployment failed with status code: %s and message: %s" % (exc.status_code, exc.message),
-                      failed_deployment_operations=failed_deployment_operations)
+            error_msg = self._error_msg_from_cloud_error(exc)
+            self.fail(error_msg, failed_deployment_operations=failed_deployment_operations)
 
         if self.wait_for_deployment_completion and deployment_result.properties.provisioning_state != 'Succeeded':
             self.log("provisioning state: %s" % deployment_result.properties.provisioning_state)
@@ -693,6 +693,15 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                 for public_ip_id in [ip_conf_instance.public_ip_address.id
                                      for ip_conf_instance in nic_obj.ip_configurations
                                      if ip_conf_instance.public_ip_address]]
+
+    def _error_msg_from_cloud_error(self, exc):
+        msg = ''
+        status_code = str(exc.status_code)
+        if status_code.startswith('2'):
+            msg = 'Deployment failed: {0}'.format(exc.message)
+        else:
+            msg = 'Deployment failed with status code: {0} and message: {1}'.format(status_code, exc.message)
+        return msg
 
 
 def main():

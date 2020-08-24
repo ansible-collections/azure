@@ -15,7 +15,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachinescaleset_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get Virtual Machine Scale Set facts
 
@@ -44,10 +44,9 @@ options:
         choices:
             - 'curated'
             - 'raw'
-        version_added: "2.6"
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Sertac Ozercan (@sozercan)
@@ -297,7 +296,7 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
         is_old_facts = self.module._name == 'azure_rm_virtualmachinescaleset_facts'
         if is_old_facts:
             self.module.deprecate("The 'azure_rm_virtualmachinescaleset_facts' module has been renamed to 'azure_rm_virtualmachinescaleset_info'",
-                                  version='2.13')
+                                  version=(2.9, ))
 
         for key in self.module_args:
             setattr(self, key, kwargs[key])

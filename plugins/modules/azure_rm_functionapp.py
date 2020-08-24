@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_functionapp
-version_added: "2.4"
+version_added: "0.1.2"
 short_description: Manage Azure Function Apps
 description:
     - Create, update or delete an Azure Function App.
@@ -43,7 +43,6 @@ options:
             - It can be a dict which contains C(name), C(resource_group).
             - C(name). Name of app service plan.
             - C(resource_group). Resource group name of app service plan.
-        version_added: "2.8"
     container_settings:
         description: Web app container settings.
         suboptions:
@@ -59,7 +58,6 @@ options:
             registry_server_password:
                 description:
                     - The container registry server password.
-        version_added: "2.8"
     storage_account:
         description:
             - Name of the storage account to use.
@@ -79,8 +77,8 @@ options:
             - present
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Thomas Stringer (@trstringer)
@@ -152,7 +150,7 @@ state:
             host_type: Repository
         server_farm_id: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Web/serverfarms/EastUSPlan
         reserved: false
-        last_modified_time_utc: 2017-08-22T18:54:01.190Z
+        last_modified_time_utc: '2017-08-22T18:54:01.190Z'
         scm_site_also_stopped: false
         client_affinity_enabled: true
         client_cert_enabled: false

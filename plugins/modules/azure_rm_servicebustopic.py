@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_servicebustopic
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage Azure Service Bus
 description:
     - Create, update or delete an Azure Service Bus topics.
@@ -92,8 +92,8 @@ options:
             - receive_disabled
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -118,12 +118,12 @@ id:
 '''
 
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils.common.dict_transformations import _snake_to_camel, _camel_to_snake
 from ansible.module_utils._text import to_native
 from datetime import datetime, timedelta

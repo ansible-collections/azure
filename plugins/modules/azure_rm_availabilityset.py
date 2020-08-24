@@ -16,7 +16,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_availabilityset
 
-version_added: "2.4"
+version_added: "0.1.2"
 
 short_description: Manage Azure Availability Set
 
@@ -64,8 +64,8 @@ options:
             - Classic
             - Aligned
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Julien Stroheker (@julienstroheker)

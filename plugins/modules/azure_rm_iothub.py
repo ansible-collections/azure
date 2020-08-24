@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_iothub
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Manage Azure IoT hub
 description:
     - Create, delete an Azure IoT hub.
@@ -188,8 +188,8 @@ options:
                        see U(https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-routing-query-syntax)"
                 type: str
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)

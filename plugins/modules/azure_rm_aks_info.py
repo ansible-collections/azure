@@ -16,7 +16,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_aks_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get Azure Kubernetes Service facts
 
@@ -37,13 +37,12 @@ options:
         description:
             - Show kubeconfig of the AKS cluster.
             - Note the operation will cost more network overhead, not recommended when listing AKS.
-        version_added: "2.8"
         choices:
             - user
             - admin
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -116,7 +115,7 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
 
         is_old_facts = self.module._name == 'azure_rm_aks_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_aks_facts' module has been renamed to 'azure_rm_aks_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_aks_facts' module has been renamed to 'azure_rm_aks_info'", version=(2.9, ))
 
         for key in self.module_args:
             setattr(self, key, kwargs[key])

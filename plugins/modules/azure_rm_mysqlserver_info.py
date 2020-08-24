@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_mysqlserver_info
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Get Azure MySQL Server facts
 description:
     - Get facts of MySQL Server.
@@ -37,7 +37,7 @@ options:
         type: list
 
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -153,9 +153,8 @@ servers:
             sample: { tag1: abc }
 '''
 
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
-
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.rdbms.mysql import MySQLManagementClient
     from msrest.serialization import Model
@@ -191,7 +190,7 @@ class AzureRMMySqlServerInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_mysqlserver_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_mysqlserver_facts' module has been renamed to 'azure_rm_mysqlserver_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_mysqlserver_facts' module has been renamed to 'azure_rm_mysqlserver_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

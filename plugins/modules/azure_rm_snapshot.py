@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_snapshot
-version_added: '2.9'
+version_added: "0.1.2"
 short_description: Manage Azure Snapshot instance.
 description:
     - Create, update and delete instance of Azure Snapshot.
@@ -89,8 +89,8 @@ options:
           - absent
           - present
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 author:
     - Zim Kalinowski (@zikalino)
 

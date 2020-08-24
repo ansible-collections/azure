@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_azurefirewall
-version_added: '2.9'
+version_added: '0.1.2'
 short_description: Manage Azure Firewall instance
 description:
     - Create, update and delete instance of Azure Firewall.
@@ -226,8 +226,8 @@ options:
             - absent
             - present
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 author:
     - Zim Kalinowski (@zikalino)
     - Jurijs Fadejevs (@needgithubid)

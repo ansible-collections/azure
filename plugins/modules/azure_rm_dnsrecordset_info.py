@@ -15,7 +15,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_dnsrecordset_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get DNS Record Set facts
 
@@ -41,8 +41,8 @@ options:
         type: int
 
 extends_documentation_fragment:
-    - azure
-    - azure_tags
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Ozi Boms (@ozboms)
@@ -193,7 +193,7 @@ class AzureRMRecordSetInfo(AzureRMModuleBase):
 
         is_old_facts = self.module._name == 'azure_rm_dnsrecordset_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_dnsrecordset_facts' module has been renamed to 'azure_rm_dnsrecordset_info'", version='2.13')
+            self.module.deprecate("The 'azure_rm_dnsrecordset_facts' module has been renamed to 'azure_rm_dnsrecordset_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
