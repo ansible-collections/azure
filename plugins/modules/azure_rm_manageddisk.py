@@ -327,13 +327,15 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         if self.managed_by or self.managed_by == '':
             vm_name = parse_resource_id(disk_instance.get('managed_by', '')).get('name') if disk_instance else None
             vm_name = vm_name or ''
+            vm_old = None
             if self.managed_by != vm_name or self.is_attach_caching_option_different(vm_name, result):
                 changed = True
                 if not self.check_mode:
                     if vm_name:
+                        vm_old = self._get_vm(vm_name)
                         self.detach(vm_name, result)
                     if self.managed_by:
-                        self.attach(self.managed_by, result)
+                        self.attach(self.managed_by, result, vm_old)
                     result = self.get_managed_disk()
 
         if self.state == 'absent' and disk_instance:
@@ -346,7 +348,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         self.results['state'] = result
         return self.results
 
-    def attach(self, vm_name, disk):
+    def attach(self, vm_name, disk, vm_old):
         vm = self._get_vm(vm_name)
         # find the lun
         if self.lun:
@@ -354,7 +356,15 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         else:
             luns = ([d.lun for d in vm.storage_profile.data_disks]
                     if vm.storage_profile.data_disks else [])
-            lun = max(luns) + 1 if luns else 0
+            lun = 0
+            while True:
+                if lun not in luns:
+                    break
+                lun = lun + 1
+            if vm_old is not None:
+                for item in vm_old.storage_profile.data_disks:
+                    if item.name == self.name:
+                        lun = item.lun
 
         # prepare the data disk
         params = self.compute_models.ManagedDiskParameters(id=disk.get('id'), storage_account_type=disk.get('storage_account_type'))
