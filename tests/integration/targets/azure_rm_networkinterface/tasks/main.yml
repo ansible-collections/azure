@@ -85,6 +85,7 @@
     that:
       - output.changed
       - output.state.id
+      - output.state.ip_configuration.primary
 
 - name: Get fact of the new created NIC
   azure_rm_networkinterface_info:
@@ -97,6 +98,7 @@
       - "facts.networkinterfaces | length == 1"
       - facts.networkinterfaces[0].id == output.state.id
       - "facts.networkinterfaces[0].ip_configurations | length == 1"
+      - facts.networkinterfaces[0].ip_configurations[0].primary == True
       - not facts.networkinterfaces[0].security_group
       - not facts.networkinterfaces[0].ip_configurations[0].public_ip_address
       - not facts.networkinterfaces[0].enable_ip_forwarding
@@ -233,6 +235,7 @@
             primary: "{{ facts.networkinterfaces[0].ip_configurations[0].primary }}"
           - name: ipconfig1
             public_ip_name: "tn{{ rpfx }}"
+            primary: False
             load_balancer_backend_address_pools:
               - "{{ lb.state.backend_address_pools[0].id }}"
               - name: backendaddrpool1
@@ -266,6 +269,7 @@
             primary: "{{ facts.networkinterfaces[0].ip_configurations[0].primary }}"
           - name: ipconfig1
             public_ip_name: "tn{{ rpfx }}"
+            primary: False
             load_balancer_backend_address_pools:
               - "{{ lb.state.backend_address_pools[0].id }}"
               - name: backendaddrpool1
