@@ -235,7 +235,6 @@
             primary: "{{ facts.networkinterfaces[0].ip_configurations[0].primary }}"
           - name: ipconfig1
             public_ip_name: "tn{{ rpfx }}"
-            primary: False
             load_balancer_backend_address_pools:
               - "{{ lb.state.backend_address_pools[0].id }}"
               - name: backendaddrpool1
@@ -269,7 +268,6 @@
             primary: "{{ facts.networkinterfaces[0].ip_configurations[0].primary }}"
           - name: ipconfig1
             public_ip_name: "tn{{ rpfx }}"
-            primary: False
             load_balancer_backend_address_pools:
               - "{{ lb.state.backend_address_pools[0].id }}"
               - name: backendaddrpool1
@@ -294,6 +292,8 @@
       - 'facts.networkinterfaces[0].security_group.endswith("tn{{ rpfx }}sg")'
       - facts.networkinterfaces[0].enable_accelerated_networking
       - facts.networkinterfaces[0].enable_ip_forwarding
+      - facts.networkinterfaces[0].ip_configurations[0].primary == True
+      - facts.networkinterfaces[0].ip_configurations[1].primary == False
 
 - name: Remove one dns server and ip configuration
   azure_rm_networkinterface:
