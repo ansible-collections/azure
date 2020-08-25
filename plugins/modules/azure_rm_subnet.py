@@ -142,8 +142,6 @@ state:
             sample: ["10.2.0.0/124", "fdda:e69b:1587:495e::/64"]
         id:
             description:
-        id:
-            description:
                 - Subnet resource path.
             returned: always
             type: str
@@ -224,7 +222,7 @@ class AzureRMSubnet(AzureRMModuleBase):
             state=dict(type='str', default='present', choices=['present', 'absent']),
             virtual_network_name=dict(type='str', required=True, aliases=['virtual_network']),
             address_prefix_cidr=dict(type='str', aliases=['address_prefix']),
-            address_prefixes_cidr=dict(type='str', aliases=['address_prefixes']),
+            address_prefixes_cidr=dict(type='list', aliases=['address_prefixes']),
             security_group=dict(type='raw', aliases=['security_group_name']),
             route_table=dict(type='raw'),
             service_endpoints=dict(

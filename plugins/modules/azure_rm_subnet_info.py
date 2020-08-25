@@ -102,8 +102,6 @@ subnets:
             sample: ["10.2.0.0/24", "fdda:e69b:1587:495e::/64"]
         route_table:
             description:
-        route_table:
-            description:
                 - Associated route table ID.
             returned: always
             type: str
