@@ -260,11 +260,6 @@ class AzureRMSubnet(AzureRMModuleBase):
         if self.address_prefix_cidr and not CIDR_PATTERN.match(self.address_prefix_cidr):
             self.fail("Invalid address_prefix_cidr value {0}".format(self.address_prefix_cidr))
 
-        #if self.address_prefixes_cidr:
-        #    for prefix in self.address_prefixes_cidr:
-        #        if not CIDR_PATTERN.match(prefix):
-        #            self.fail("Invalid address_prefixes_cidr value {0}".format(self.address_prefixes_cidr))
-
         nsg = dict()
         if self.security_group:
             nsg = self.parse_nsg()
