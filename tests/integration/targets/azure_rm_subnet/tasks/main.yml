@@ -144,15 +144,14 @@
 - assert:
     that: not output.changed
 
-- name: Update the subnet to IPv4 and IPv6
+- name: Create subnet with IPv4 and IPv6
   azure_rm_subnet:
-    name: foobar
+    name: foobar01
     virtual_network_name: My_Virtual_Network
     resource_group: "{{ resource_group }}"
     address_prefixes_cidr:
-      - "10.1.0.0/16"
-      - "fdda:e69b:1587:495e::/48"
-    security_group: "{{ nsg.state.id }}"
+      - "172.100.0.0/16"
+      - "fdda:e69b:1587:495e::/64"
   register: output
 
 - assert:
@@ -163,13 +162,12 @@
 
 - name: Update the subnet to IPv4 and IPv6 (idempotent)
   azure_rm_subnet:
-    name: foobar
+    name: foobar01
     virtual_network_name: My_Virtual_Network
     resource_group: "{{ resource_group }}"
     address_prefixes_cidr:
-      - "10.1.0.0/16"
-      - "fdda:e69b:1587:495e::/48"
-    security_group: "{{ nsg.state.id }}"
+      - "172.100.0.0/16"
+      - "fdda:e69b:1587:495e::/64"
   register: output
 
 - assert:
@@ -177,11 +175,11 @@
 
 - name: Update the subnet's IPv4 and IPv6 address
   azure_rm_subnet:
-    name: foobar
+    name: foobar01
     virtual_network_name: My_Virtual_Network
     resource_group: "{{ resource_group }}"
     address_prefixes_cidr:
-      - "10.1.0.0/24"
+      - "172.100.0.0/24"
       - "fdda:e69b:1587:495e::/64"
     security_group: "{{ nsg.state.id }}"
   register: output
@@ -189,6 +187,28 @@
 - assert:
     that:
       - output.changed
+
+
+- name: Get subnet facts
+  azure_rm_subnet_info:
+    name: foobar01
+    virtual_network_name: My_Virtual_Network
+    resource_group: "{{ resource_group }}"
+  register: output
+- debug:
+    var: output
+- name: Assert that facts are returned
+  assert:
+    that:
+      - output.changed == False
+      - output.subnets[0]['id'] != None
+      - output.subnets[0]['resource_group'] != None
+      - output.subnets[0]['virtual_network_name'] != None
+      - output.subnets[0]['name'] != None
+      - not output.subnets[0]['address_prefix_cidr']
+      - output.subnets[0]['address_prefixes_cidr'] != None
+      - output.subnets[0]['security_group'] != None
+      - output.subnets[0]['provisioning_state'] != None
 
 - name: Get subnet facts
   azure_rm_subnet_info:
@@ -207,9 +227,8 @@
       - output.subnets[0]['resource_group'] != None
       - output.subnets[0]['virtual_network_name'] != None
       - output.subnets[0]['name'] != None
-      - not output.subnets[0]['address_prefix_cidr']
-      - output.subnets[0]['address_prefixes_cidr'] != None
       - output.subnets[0]['route_table'] != None
+      - output.subnets[0]['address_prefix_cidr'] != None
       - output.subnets[0]['security_group'] != None
       - output.subnets[0]['provisioning_state'] != None
 
@@ -230,6 +249,13 @@
 
 - assert:
     that: not output.changed
+
+- name: Remove subnet
+  azure_rm_subnet:
+    state: absent
+    name: foobar01
+    virtual_network_name: My_Virtual_Network
+    resource_group: "{{ resource_group }}"
 
 - name: Remove security group
   azure_rm_securitygroup:
