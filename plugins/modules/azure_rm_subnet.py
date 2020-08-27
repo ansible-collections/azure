@@ -139,7 +139,7 @@ state:
                 - IP address for IPv4 and IPv6 CIDR.
             returned: always
             type: list
-            sample: ["10.2.0.0/124", "fdda:e69b:1587:495e::/64"]
+            sample: ["10.2.0.0/24", "fdda:e69b:1587:495e::/64"]
         id:
             description:
                 - Subnet resource path.
