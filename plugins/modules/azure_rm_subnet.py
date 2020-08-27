@@ -230,6 +230,8 @@ class AzureRMSubnet(AzureRMModuleBase):
             )
         )
 
+        mutually_exclusive = [['address_prefix_cidr', 'address_prefixes_cidr']]
+
         self.results = dict(
             changed=False,
             state=dict()
