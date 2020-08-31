@@ -538,6 +538,9 @@ class AzureHost(object):
                 system = 'linux'
             if osType == 'Windows':
                 system = 'windows'
+        av_zone = None
+        if 'zones' in self._vm_model:
+            av_zone = self._vm_model['zones']
 
         new_hostvars = dict(
             public_ipv4_addresses=[],
@@ -546,6 +549,7 @@ class AzureHost(object):
             id=self._vm_model['id'],
             location=self._vm_model['location'],
             name=self._vm_model['name'],
+            availability_zone=av_zone,
             powerstate=self._powerstate,
             provisioning_state=self._vm_model['properties']['provisioningState'].lower(),
             tags=self._vm_model.get('tags', {}),
