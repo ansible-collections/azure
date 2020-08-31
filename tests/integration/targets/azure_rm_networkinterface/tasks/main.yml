@@ -85,6 +85,7 @@
     that:
       - output.changed
       - output.state.id
+      - output.state.ip_configuration.primary
 
 - name: Get fact of the new created NIC
   azure_rm_networkinterface_info:
@@ -97,6 +98,7 @@
       - "facts.networkinterfaces | length == 1"
       - facts.networkinterfaces[0].id == output.state.id
       - "facts.networkinterfaces[0].ip_configurations | length == 1"
+      - facts.networkinterfaces[0].ip_configurations[0].primary == True
       - not facts.networkinterfaces[0].security_group
       - not facts.networkinterfaces[0].ip_configurations[0].public_ip_address
       - not facts.networkinterfaces[0].enable_ip_forwarding
@@ -290,6 +292,8 @@
       - 'facts.networkinterfaces[0].security_group.endswith("tn{{ rpfx }}sg")'
       - facts.networkinterfaces[0].enable_accelerated_networking
       - facts.networkinterfaces[0].enable_ip_forwarding
+      - facts.networkinterfaces[0].ip_configurations[0].primary == True
+      - facts.networkinterfaces[0].ip_configurations[1].primary == False
 
 - name: Remove one dns server and ip configuration
   azure_rm_networkinterface:
