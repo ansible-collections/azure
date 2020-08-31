@@ -154,8 +154,9 @@ options:
             primary:
                 description:
                     - Whether the IP configuration is the primary one in the list.
+                    - The first IP configuration default set to I(primary=True).
                 type: bool
-                default: 'no'
+                default: False
             application_security_groups:
                 description:
                     - List of application security groups in which the IP configuration is included.
