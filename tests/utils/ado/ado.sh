@@ -72,8 +72,8 @@ mkdir -p shippable/testresults
 if [ "$2" = "2.7" ]
 then
     pip install --upgrade pip
-    pip install setuptools==44.1.0
     pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
+    pip install setuptools
     pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
     pip3 list
 else
