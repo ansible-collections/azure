@@ -181,7 +181,7 @@ class AzureRMMariaDbServers(AzureRMModuleBase):
             ),
             version=dict(
                 type='str',
-                choices=['10.2', '10,3']
+                choices=['10.2', '10.3']
             ),
             enforce_ssl=dict(
                 type='bool',
