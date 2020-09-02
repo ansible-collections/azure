@@ -208,3 +208,4 @@
        resource_group: "{{ resource_group }}" 
        name: "{{ storage_account }}"
        state: absent
+       force_delete_nonempty: True
