@@ -373,8 +373,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
                 item = self._request_queue.get_nowait()
                 resp = self.send_request(item.url, item.api_version)
                 item.handler(resp, **item.handler_args)
-        except:
-            #except Empty:
+        except Empty:
             pass
 
     def _on_vm_page_response(self, response, vmss=None):
@@ -417,8 +416,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
                     batch_requests.append(dict(httpMethod="GET", url=req.url, name=name))
                     batch_response_handlers[name] = item
                     batch_item_index += 1
-            except:
-                # except Empty:
+            except Empty:
                 pass
 
             if not batch_requests:
