@@ -74,10 +74,12 @@ then
     pip install --upgrade pip
     pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
     pip3 install setuptools
+    pip3 uninstall cryptography -y
     pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
     pip3 list
 else
     pip3 install  -I -r "${TEST_DIR}/requirements-azure.txt"
+    pip3 uninstall cryptography -y
     pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
     pip3 list
 fi
