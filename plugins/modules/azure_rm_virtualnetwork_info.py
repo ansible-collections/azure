@@ -18,7 +18,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_virtualnetwork_info
 
-version_added: "2.9"
+version_added: "0.0.1"
 
 short_description: Get virtual network facts
 
@@ -162,6 +162,12 @@ virtualnetworks:
                         returned: always
                         type: str
                         sample: '10.1.0.0/16'
+                    address_prefixes:
+                        description:
+                            - Both IPv4 and IPv6 address prefixes for the subnet, will return null if only an  IPv4 set.
+                        returned: always
+                        type: list
+                        sample: ["10.1.0.0/16", "fdda:e69b:2547:485e::/64"]
                     network_security_group:
                         description:
                             - Existing security group ID with which to associate the subnet.
@@ -322,6 +328,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
             name=subnet.name,
             provisioning_state=subnet.provisioning_state,
             address_prefix=subnet.address_prefix,
+            address_prefixes=subnet.address_prefixes if subnet.address_prefixes else None,
             network_security_group=subnet.network_security_group.id if subnet.network_security_group else None,
             route_table=subnet.route_table.id if subnet.route_table else None
         )

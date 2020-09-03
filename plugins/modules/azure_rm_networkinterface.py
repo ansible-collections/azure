@@ -19,7 +19,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_networkinterface
 
-version_added: '2.1'
+version_added: "0.1.0"
 
 short_description: Manage Azure network interfaces
 
@@ -151,30 +151,26 @@ options:
                     - List of existing load-balancer backend address pools to associate with the network interface.
                     - Can be written as a resource ID.
                     - Also can be a dict of I(name) and I(load_balancer).
-                version_added: '2.6'
             primary:
                 description:
                     - Whether the IP configuration is the primary one in the list.
+                    - The first IP configuration default set to I(primary=True).
                 type: bool
-                default: 'no'
+                default: False
             application_security_groups:
                 description:
                     - List of application security groups in which the IP configuration is included.
                     - Element of the list could be a resource id of application security group, or dict of I(resource_group) and I(name).
-                version_added: '2.8'
-        version_added: '2.5'
     enable_accelerated_networking:
         description:
             - Whether the network interface should be created with the accelerated networking feature or not.
         type: bool
-        version_added: '2.7'
         default: False
     create_with_security_group:
         description:
             - Whether a security group should be be created with the NIC.
             - If this flag set to C(True) and no I(security_group) set, a default security group will be created.
         type: bool
-        version_added: '2.6'
         default: True
     security_group:
         description:
@@ -198,13 +194,11 @@ options:
             - ip_forwarding
         type: bool
         default: False
-        version_added: '2.7'
     dns_servers:
         description:
             - Which DNS servers should the NIC lookup.
             - List of IP addresses.
         type: list
-        version_added: '2.7'
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags

@@ -15,7 +15,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_aks
-version_added: "2.6"
+version_added: "0.1.2"
 short_description: Manage a managed Azure Container Service (AKS) instance
 description:
     - Create, update and delete a managed Azure Container Service (AKS) instance.
@@ -116,7 +116,6 @@ options:
             - Existing non-RBAC enabled AKS clusters cannot currently be updated for RBAC use.
         type: bool
         default: no
-        version_added: "2.8"
     network_profile:
         description:
             - Profile of network configuration.
@@ -159,7 +158,12 @@ options:
                     - A CIDR notation IP range assigned to the Docker bridge network.
                     - It must not overlap with any Subnet IP ranges or the Kubernetes service address range.
                 default: "172.17.0.1/16"
-        version_added: "2.8"
+            load_balancer_sku:
+                description:
+                    - The load balancer sku for the managed cluster.
+                choices:
+                    - standard
+                    - basic
     aad_profile:
         description:
             - Profile of Azure Active Directory configuration.
@@ -174,7 +178,6 @@ options:
                 description:
                     - The AAD tenant ID to use for authentication.
                     - If not specified, will use the tenant of the deployment subscription.
-        version_added: "2.8"
     addon:
         description:
             - Profile of managed cluster add-on.
@@ -219,7 +222,6 @@ options:
                         description:
                             - Subnet associated to the cluster.
                         required: true
-        version_added: "2.8"
     node_resource_group:
         description:
             - Name of the resource group containing agent pool nodes.
@@ -365,7 +367,8 @@ def create_network_profiles_dict(network):
         pod_cidr=network.pod_cidr,
         service_cidr=network.service_cidr,
         dns_service_ip=network.dns_service_ip,
-        docker_bridge_cidr=network.docker_bridge_cidr
+        docker_bridge_cidr=network.docker_bridge_cidr,
+        load_balancer_sku=network.load_balancer_sku
     ) if network else dict()
 
 
@@ -488,7 +491,8 @@ network_profile_spec = dict(
     pod_cidr=dict(type='str'),
     service_cidr=dict(type='str'),
     dns_service_ip=dict(type='str'),
-    docker_bridge_cidr=dict(type='str')
+    docker_bridge_cidr=dict(type='str'),
+    load_balancer_sku=dict(type='str')
 )
 
 

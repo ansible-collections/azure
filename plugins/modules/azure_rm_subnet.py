@@ -17,7 +17,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_subnet
-version_added: "2.1"
+version_added: "0.1.0"
 short_description: Manage Azure subnets
 description:
     - Create, update or delete a subnet within a given virtual network.
@@ -37,6 +37,14 @@ options:
             - CIDR defining the IPv4 address space of the subnet. Must be valid within the context of the virtual network.
         aliases:
             - address_prefix
+    address_prefixes_cidr:
+        description:
+            - CIDR defining the IPv4 and IPv6 address space of the subnet. Must be valid within the context of the virtual network.
+            - If set I(address_prefix), It will not set.
+        aliases:
+            - address_prefixes
+        type: list
+        version_added: "1.0.1"
     security_group:
         description:
             - Existing security group with which to associate the subnet.
@@ -63,7 +71,6 @@ options:
             - The reference of the RouteTable resource.
             - Can be the name or resource ID of the route table.
             - Can be a dict containing the I(name) and I(resource_group) of the route table.
-        version_added: "2.7"
     service_endpoints:
         description:
             - An array of service endpoints.
@@ -77,7 +84,6 @@ options:
                 description:
                     - A list of locations.
                 type: list
-        version_added: "2.8"
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -128,6 +134,12 @@ state:
             returned: always
             type: str
             sample: "10.1.0.0/16"
+        address_prefixes:
+            description:
+                - IP address for IPv4 and IPv6 CIDR.
+            returned: always
+            type: list
+            sample: ["10.2.0.0/24", "fdda:e69b:1587:495e::/64"]
         id:
             description:
                 - Subnet resource path.
@@ -181,6 +193,7 @@ def subnet_to_dict(subnet):
         name=subnet.name,
         provisioning_state=subnet.provisioning_state,
         address_prefix=subnet.address_prefix,
+        address_prefixes=subnet.address_prefixes,
         network_security_group=dict(),
         route_table=dict()
     )
@@ -209,12 +222,15 @@ class AzureRMSubnet(AzureRMModuleBase):
             state=dict(type='str', default='present', choices=['present', 'absent']),
             virtual_network_name=dict(type='str', required=True, aliases=['virtual_network']),
             address_prefix_cidr=dict(type='str', aliases=['address_prefix']),
+            address_prefixes_cidr=dict(type='list', aliases=['address_prefixes']),
             security_group=dict(type='raw', aliases=['security_group_name']),
             route_table=dict(type='raw'),
             service_endpoints=dict(
                 type='list'
             )
         )
+
+        mutually_exclusive = [['address_prefix_cidr', 'address_prefixes_cidr']]
 
         self.results = dict(
             changed=False,
@@ -226,6 +242,7 @@ class AzureRMSubnet(AzureRMModuleBase):
         self.state = None
         self.virtual_network_name = None
         self.address_prefix_cidr = None
+        self.address_prefixes_cidr = None
         self.security_group = None
         self.route_table = None
         self.service_endpoints = None
@@ -274,6 +291,10 @@ class AzureRMSubnet(AzureRMModuleBase):
                     self.log("CHANGED: subnet {0} address_prefix_cidr".format(self.name))
                     changed = True
                     results['address_prefix'] = self.address_prefix_cidr
+                if self.address_prefixes_cidr and results['address_prefixes'] != self.address_prefixes_cidr:
+                    self.log("CHANGED: subnet {0} address_prefixes_cidr".format(self.name))
+                    changed = True
+                    results['address_prefixes'] = self.address_prefixes_cidr
 
                 if self.security_group is not None and results['network_security_group'].get('id') != nsg.get('id'):
                     self.log("CHANGED: subnet {0} network security group".format(self.name))
@@ -316,11 +337,12 @@ class AzureRMSubnet(AzureRMModuleBase):
             if self.state == 'present' and changed:
                 if not subnet:
                     # create new subnet
-                    if not self.address_prefix_cidr:
-                        self.fail('address_prefix_cidr is not set')
+                    if not self.address_prefix_cidr and not self.address_prefixes_cidr:
+                        self.fail('address_prefix_cidr or address_prefixes_cidr is not set')
                     self.log('Creating subnet {0}'.format(self.name))
                     subnet = self.network_models.Subnet(
-                        address_prefix=self.address_prefix_cidr
+                        address_prefix=self.address_prefix_cidr,
+                        address_prefixes=self.address_prefixes_cidr
                     )
                     if nsg:
                         subnet.network_security_group = self.network_models.NetworkSecurityGroup(id=nsg.get('id'))
@@ -332,7 +354,8 @@ class AzureRMSubnet(AzureRMModuleBase):
                     # update subnet
                     self.log('Updating subnet {0}'.format(self.name))
                     subnet = self.network_models.Subnet(
-                        address_prefix=results['address_prefix']
+                        address_prefix=results['address_prefix'],
+                        address_prefixes=results['address_prefixes']
                     )
                     if results['network_security_group'].get('id') is not None:
                         subnet.network_security_group = self.network_models.NetworkSecurityGroup(id=results['network_security_group'].get('id'))

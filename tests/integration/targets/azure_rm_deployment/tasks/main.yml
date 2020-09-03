@@ -2,6 +2,24 @@
   set_fact:
     dns_label: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
+- name: Error Create Azure Deploy
+  azure_rm_deployment:
+    resource_group: "{{ resource_group }}"
+    location: "eastus"
+    template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/azuredeploy.json'
+    deployment_name: "{{ dns_label }}"
+    parameters:
+      adminUsername:
+        value: chouseknecht
+      adminPassword:
+        value: password123!
+      dnsLabelPrefix:
+        value: "{{ dns_label }}"
+      ubuntuOSVersion:
+        value: "Never-LTS"
+  register: output
+  ignore_errors: yes
+
 - name: Create Azure Deploy
   azure_rm_deployment:
     resource_group: "{{ resource_group }}"

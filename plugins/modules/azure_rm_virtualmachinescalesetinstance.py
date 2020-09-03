@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachinescalesetinstance
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Get Azure Virtual Machine Scale Set Instance facts
 description:
     - Get facts of Azure Virtual Machine Scale Set VMs.
@@ -49,12 +49,10 @@ options:
         type: bool
         description:
             - turn on/off instance protection from scale in
-        version_added: "2.10"
     protect_from_scale_set_actions:
         type: bool
         description:
             - tun on/off instance protection from scale set actions
-        version_added: "2.10"
     state:
         description:
             - State of the VMSS instance. Use C(present) to update an instance and C(absent) to delete an instance.

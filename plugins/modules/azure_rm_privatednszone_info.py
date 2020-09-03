@@ -20,7 +20,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_privatednszone_info
 
-version_added: "2.10"
+version_added: "0.0.1"
 
 short_description: Get private DNS zone facts
 

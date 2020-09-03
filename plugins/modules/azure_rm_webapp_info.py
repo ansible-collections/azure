@@ -17,7 +17,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_webapp_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get Azure web app facts
 
@@ -231,6 +231,10 @@ except Exception:
     pass
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+try:
+    import xmltodict
+except Exception:
+    pass
 
 AZURE_OBJECT_CLASS = 'WebApp'
 
@@ -363,7 +367,6 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
         return response
 
     def get_webapp_ftp_publish_url(self, resource_group, name):
-        import xmltodict
 
         self.log('Get web app {0} app publish profile'.format(name))
 

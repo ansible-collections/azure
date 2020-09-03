@@ -15,7 +15,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 module: azure_rm_adserviceprincipal_info
 
-version_added: "2.10"
+version_added: "0.2.0"
 
 short_description: Get Azure Active Directory service principal info
 

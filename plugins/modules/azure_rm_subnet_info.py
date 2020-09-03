@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_subnet_info
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Get Azure Subnet facts
 description:
     - Get facts of Azure Subnet.
@@ -94,6 +94,12 @@ subnets:
             returned: always
             type: str
             sample: "10.1.0.0/16"
+        address_prefixes_cidr:
+            description:
+                - CIDR defining the IPv4 and IPv6 address space of the subnet.
+            returned: always
+            type: list
+            sample: ["10.2.0.0/24", "fdda:e69b:1587:495e::/64"]
         route_table:
             description:
                 - Associated route table ID.
@@ -230,6 +236,7 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'name': d.get('name'),
             'id': d.get('id'),
             'address_prefix_cidr': d.get('address_prefix'),
+            'address_prefixes_cidr': d.get('address_prefixes'),
             'route_table': d.get('route_table', {}).get('id'),
             'security_group': d.get('network_security_group', {}).get('id'),
             'provisioning_state': d.get('provisioning_state'),

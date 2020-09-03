@@ -17,7 +17,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_mariadbserver
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage MariaDB Server instance
 description:
     - Create, update and delete instance of MariaDB Server.
@@ -63,6 +63,7 @@ options:
             - Server version.
         choices:
             - 10.2
+            - 10.3
     enforce_ssl:
         description:
             - Enable SSL enforcement.
@@ -121,7 +122,7 @@ id:
     sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.DBforMariaDB/servers/mariadbsrv1b6dd89593
 version:
     description:
-        - Server version. Possible values include C(10.2).
+        - Server version. Possible values include C(10.2) and C(10.3).
     returned: always
     type: str
     sample: 10.2
@@ -180,7 +181,7 @@ class AzureRMMariaDbServers(AzureRMModuleBase):
             ),
             version=dict(
                 type='str',
-                choices=['10.2']
+                choices=['10.2', '10.3']
             ),
             enforce_ssl=dict(
                 type='bool',

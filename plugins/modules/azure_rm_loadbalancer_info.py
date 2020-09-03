@@ -17,7 +17,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_loadbalancer_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get load balancer facts
 

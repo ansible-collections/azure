@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_galleryimage
-version_added: '2.9'
+version_added: "0.1.2"
 short_description: Manage Azure SIG Image instance
 description:
     - Create, update and delete instance of Azure SIG Image.
