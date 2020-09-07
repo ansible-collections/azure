@@ -19,7 +19,7 @@ azure-mgmt-network==10.2.0
 azure-mgmt-nspkg==2.0.0
 azure-mgmt-privatedns==0.1.0
 azure-mgmt-redis==5.0.0
-azure-mgmt-resource==2.1.0
+azure-mgmt-resource==10.2.0
 azure-mgmt-rdbms==1.4.1
 azure-mgmt-servicebus==0.5.3
 azure-mgmt-sql==0.10.0
