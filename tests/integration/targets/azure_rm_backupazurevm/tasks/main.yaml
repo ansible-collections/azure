@@ -1,0 +1,85 @@
+- name: Fix resource prefix
+  set_fact:
+    resource_group: 'MyResourceGroup'
+    recovery_vault_name: 'MyRecoveryVault'
+    resource_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/MyVM"
+    backup_policy_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy"
+
+- name: Enabling/Updating protection for the Azure VM
+  azure_rm_backupazurevm:
+    resource_group: "{{ resource_group }}"
+    recovery_vault_name: "{{ recovery_vault_name }}"
+    resource_id: "{{ resource_id }}"
+    backup_policy_id: "backup_policy_id"
+    state: "create"
+  register: output
+
+- debug:
+    var: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.changed
+      
+- name: Stop protection but retain existing data
+  azure_rm_backupazurevm:
+    resource_group: "{{ resource_group }}"
+    recovery_vault_name: "{{ recovery_vault_name }}"
+    resource_id: "{{ resource_id }}"
+    backup_policy_id: "backup_policy_id"
+    state: "stop"
+  register: output
+
+- debug:
+    var: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.changed
+
+- name: Stop protection and delete data
+  azure_rm_backupazurevm:
+    resource_group: "{{ resource_group }}"
+    recovery_vault_name: "{{ recovery_vault_name }}"
+    resource_id: "{{ resource_id }}"
+    backup_policy_id: "backup_policy_id"
+    state: "create"
+  register: output
+  
+- debug:
+    var: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.changed
+  
+- name: Trigger an on-demand backup for a protected Azure VM
+  azure_rm_backupazurevm:
+    resource_group: "{{ resource_group }}"
+    recovery_vault_name: "{{ recovery_vault_name }}"
+    resource_id: "{{ resource_id }}"
+    backup_policy_id: "backup_policy_id"
+    state: "create"
+  register: output
+
+- debug:
+    var: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.changed
+  
+- name: Delete Azure Firewall
+  azure_rm_azurefirewall:
+    resource_group: '{{resource_group}}'
+    name: '{{azure_firewall_name}}'
+    state: absent
+  register: output
+
+- assert:
+    that: 
+      - output.changed
