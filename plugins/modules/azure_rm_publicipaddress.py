@@ -66,7 +66,6 @@ options:
         description:
             - The public IP address SKU.
             - When I(version=ipv6), if I(sku=standard) then set I(allocation_method=static).
-            - When I(version=ipv6), if II(sku=basic) then set I(allocation_method=dynamic).
             - When I(version=ipv4), if I(sku=standard) then set I(allocation_method=static).
         choices:
             - basic
