@@ -3,14 +3,14 @@
     resource_group: 'MyResourceGroup'
     recovery_vault_name: 'MyRecoveryVault'
     resource_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/MyVM"
-    backup_policy_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy"
+    backup_policy_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/DefaultPolicy"
 
 - name: Enabling/Updating protection for the Azure VM
   azure_rm_backupazurevm:
     resource_group: "{{ resource_group }}"
     recovery_vault_name: "{{ recovery_vault_name }}"
     resource_id: "{{ resource_id }}"
-    backup_policy_id: "backup_policy_id"
+    backup_policy_id: "{{ backup_policy_id }}"
     state: "create"
   register: output
 
@@ -27,7 +27,7 @@
     resource_group: "{{ resource_group }}"
     recovery_vault_name: "{{ recovery_vault_name }}"
     resource_id: "{{ resource_id }}"
-    backup_policy_id: "backup_policy_id"
+    backup_policy_id: "{{ backup_policy_id }}"
     state: "stop"
   register: output
 
@@ -44,7 +44,7 @@
     resource_group: "{{ resource_group }}"
     recovery_vault_name: "{{ recovery_vault_name }}"
     resource_id: "{{ resource_id }}"
-    backup_policy_id: "backup_policy_id"
+    backup_policy_id: "{{ backup_policy_id }}"
     state: "create"
   register: output
   
@@ -61,7 +61,7 @@
     resource_group: "{{ resource_group }}"
     recovery_vault_name: "{{ recovery_vault_name }}"
     resource_id: "{{ resource_id }}"
-    backup_policy_id: "backup_policy_id"
+    backup_policy_id: "{{ backup_policy_id }}"
     state: "create"
   register: output
 
@@ -72,14 +72,7 @@
   assert:
     that:
       - output.changed
-  
-- name: Delete Azure Firewall
-  azure_rm_azurefirewall:
-    resource_group: '{{resource_group}}'
-    name: '{{azure_firewall_name}}'
-    state: absent
-  register: output
-
+      
 - assert:
     that: 
       - output.changed
