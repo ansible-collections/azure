@@ -243,15 +243,21 @@ class BackupAzureVM(AzureRMModuleBaseExt):
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
+        changed = False
         if self.state == 'create' or self.state == 'update':
+            changed = True
             response = self.enable_update_protection_for_azure_vm()
         if self.state == 'delete':
+            changed = True
             response = self.stop_protection_and_delete_data()
         if self.state == 'stop':
+            changed = True
             response = self.stop_protection_but_retain_existing_data()
         if self.state == 'backup':
+            changed = True
             response = self.trigger_on_demand_backup()
         self.results['response'] = response
+        self.results['changed'] = changed
 
         return self.results
 
