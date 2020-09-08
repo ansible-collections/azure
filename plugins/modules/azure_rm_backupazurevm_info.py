@@ -14,7 +14,7 @@ DOCUMENTATION = \
     '''
 ---
 module: azure_rm_backupazurevm
-version_added: '2.7.6'
+version_added: '1.1.0'
 short_description: Back up an Azure Virtual Machine using Azure Backup Information
 description:
     - Get Recovery point details for protected items.
@@ -26,12 +26,12 @@ options:
         type: str
     recovery_vault_name:
         description:
-            - The name of the Azure Recovery Service Vault
+            - The name of the Azure Recovery Service Vault.
         required: true
         type: str
     resource_id:
         description:
-            - Azure Virtual Machine Resource ID
+            - Azure Virtual Machine Resource ID.
         required: true
         type: str
 extends_documentation_fragment:

@@ -14,7 +14,7 @@ DOCUMENTATION = \
     '''
 ---
 module: azure_rm_backupazurevm
-version_added: '2.7.6'
+version_added: '1.1.0'
 short_description: Back up an Azure Virtual Machine using Azure Backup
 description:
     - Back up an Azure VM using Azure Backup.
@@ -30,12 +30,12 @@ options:
         type: str
     recovery_vault_name:
         description:
-            - The name of the Azure Recovery Service Vault
+            - The name of the Azure Recovery Service Vault.
         required: true
         type: str
     resource_id:
         description:
-            - Azure Virtual Machine Resource ID
+            - Azure Virtual Machine Resource ID.
         required: true
         type: str
     backup_policy_id:
@@ -46,11 +46,11 @@ options:
     state:
         description:
             - Assert the state of the protection item.
-            - Use "create" for enabling protection for the Azure VM.
-            - Use "update" for changing the policy of protection.
-            - Use "stop" for stop protection but retain existing data.
-            - Use "delete" for stop protection and delete data.
-            - Use 'backup' for on-demand backup.
+            - Use C(create) for enabling protection for the Azure VM.
+            - Use C(update) for changing the policy of protection.
+            - Use C(stop) for stop protection but retain existing data.
+            - Use C(delete) for stop protection and delete data.
+            - Use C(backup) for on-demand backup.
         default: create
         type: str
         choices:
