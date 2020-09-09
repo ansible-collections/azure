@@ -1,0 +1,47 @@
+- name: Fix resource prefix
+  set_fact:
+    resource_group: 'MyResourceGroup'
+    recovery_service_vault_name: 'MyRecoveryVault'
+    location: "westeurope"
+    enhanced_security_state: "Enabled"
+    soft_delete_feature_state: "Disabled"
+
+- name: Create Azure Recovery Services vault
+  azure_rm_recoveryservicesvault:
+    resource_group: "{{ resource_group }}"
+    recovery_service_vault_name: "{{ recovery_service_vault_name }}"
+    location: "{{ location }}"
+    state: "create"
+  register: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.changed
+
+- name: Get Azure Recovery Services Vault Details
+  azure_rm_recoveryservicesvault_info:
+    resource_group: "{{ resource_group }}"
+    recovery_service_vault_name: "{{ recovery_vault_name }}"
+  register: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.response.id != None
+      - output.response.name != None
+
+- name: Update Azure Recovery Services vault
+  azure_rm_recoveryservicesvault:
+    resource_group: "{{ resource_group }}"
+    recovery_service_vault_name: "{{ recovery_service_vault_name }}"
+    location: "{{ location }}"
+    enhanced_security_state: "{{ enhanced_security_state }}"
+    soft_delete_feature_state: "{{ soft_delete_feature_state }}"
+    state: "update"
+  register: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.changed
