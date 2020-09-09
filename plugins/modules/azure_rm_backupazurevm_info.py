@@ -149,7 +149,7 @@ class BackupAzureVMInfo(AzureRMModuleBaseExt):
 
     def get_recovery_point_info(self):
 
-        # self.log('Enabling/Updating protection for the Azure Virtual Machine {0}'.format(self.))
+        # self.log('Fetching protection details for the Azure Virtual Machine {0}'.format(self.))
 
         try:
             response = self.mgmt_client.query(
