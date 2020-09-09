@@ -16,6 +16,15 @@ then
     pip --version
     pip list --disable-pip-version-check
 else
+    if [ "$2" = "3.8" ]
+    then
+        apt update
+        apt install software-properties-common
+        add-apt-repository ppa:deadsnakes/ppa
+        apt install python"$2" -y
+        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
+    fi
+
     command -v pip3
     pip3 --version
     pip3 list --disable-pip-version-check
@@ -30,14 +39,6 @@ then
     pip install virtualenv
     virtualenv --python /usr/bin/python2.7 ~/ansible-venv
 else
-    if [ "$2" = "3.8" ]
-    then
-        apt update
-        apt install software-properties-common
-        add-apt-repository ppa:deadsnakes/ppa
-        apt install python"$2" -y
-        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
-
     pip3 install virtualenv
     virtualenv --python /usr/bin/python"$2" ~/ansible-venv
 fi
