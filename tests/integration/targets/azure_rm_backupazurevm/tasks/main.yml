@@ -73,4 +73,3 @@
   assert:
     that:
       - output.changed
-
