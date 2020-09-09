@@ -65,6 +65,8 @@ options:
     sku:
         description:
             - The public IP address SKU.
+            - When I(version=ipv6), if I(sku=standard) then set I(allocation_method=static).
+            - When I(version=ipv4), if I(sku=standard) then set I(allocation_method=static).
         choices:
             - basic
             - standard
@@ -365,7 +367,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                     pip = self.network_models.PublicIPAddress(
                         location=self.location,
                         public_ip_address_version=self.version,
-                        public_ip_allocation_method=self.allocation_method if self.version == 'IPv4' else None,
+                        public_ip_allocation_method=self.allocation_method,
                         sku=self.network_models.PublicIPAddressSku(name=self.sku) if self.sku else None,
                         idle_timeout_in_minutes=self.idle_timeout if self.idle_timeout and self.idle_timeout > 0 else None
                     )
