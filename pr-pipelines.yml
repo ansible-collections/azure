@@ -6,6 +6,7 @@ parameters:
   values:
     - "2.7"
     - "3.6"
+    - "3.8"
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
