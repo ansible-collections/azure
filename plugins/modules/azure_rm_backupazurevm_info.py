@@ -13,7 +13,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'],
 DOCUMENTATION = \
     '''
 ---
-module: azure_rm_backupazurevm
+module: azure_rm_backupazurevm_info
 version_added: '1.1.0'
 short_description: Back up an Azure Virtual Machine using Azure Backup Information
 description:
