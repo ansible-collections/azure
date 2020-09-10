@@ -84,6 +84,24 @@ options:
                 description:
                     - A list of locations.
                 type: list
+    delegations:
+        description:
+            - An array of references to the delegations on the subnet.
+        type: str
+    private_endpoint_network_policies:
+        description:
+            - C(Enabled) or C(Disabled) apply network policies on private endpoints in the subnet.
+        type: string
+        choices:
+            - Enabled
+            - Dsabled
+    private_link_service_network_policies:
+        description:
+            - Enable or disable apply network policies on private link service in the subnet.
+        type: string
+        choices:
+            - Enabled
+            - Dsabled
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -179,6 +197,8 @@ state:
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
+import logging
+logging.basicConfig(filename='log.log', level=logging.INFO)
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -195,7 +215,10 @@ def subnet_to_dict(subnet):
         address_prefix=subnet.address_prefix,
         address_prefixes=subnet.address_prefixes,
         network_security_group=dict(),
-        route_table=dict()
+        route_table=dict(),
+        delegations=subnet.delegations,
+        private_endpoint_network_policies=subnet.private_endpoint_network_policies,
+        private_link_service_network_policies=subnet.private_link_service_network_policies
     )
     if subnet.network_security_group:
         id_keys = azure_id_to_dict(subnet.network_security_group.id)
@@ -227,6 +250,19 @@ class AzureRMSubnet(AzureRMModuleBase):
             route_table=dict(type='raw'),
             service_endpoints=dict(
                 type='list'
+            ),
+            delegations=dict(
+                type='str'
+            ),
+            private_endpoint_network_policies=dict(
+                type='str',
+                default='Enabled',
+                choices=[ 'Enabled', 'Disabled' ]
+            ),
+            private_link_service_network_policies=dict(
+                type='str',
+                default='Enabled',
+                choices=[ 'Enabled', 'Disabled' ]
             )
         )
 
@@ -246,6 +282,9 @@ class AzureRMSubnet(AzureRMModuleBase):
         self.security_group = None
         self.route_table = None
         self.service_endpoints = None
+        self.delegations = None
+        self.private_link_service_network_policies = None
+        self.private_endpoint_network_policies = None
 
         super(AzureRMSubnet, self).__init__(self.module_arg_spec,
                                             supports_check_mode=True,
@@ -286,7 +325,31 @@ class AzureRMSubnet(AzureRMModuleBase):
             self.check_provisioning_state(subnet, self.state)
             results = subnet_to_dict(subnet)
 
+            logging.info('123')
+            logging.info(subnet)
+            logging.info('--------------')
+            logging.info(results)
+            logging.info('345')
             if self.state == 'present':
+                if self.private_endpoint_network_policies is not None:
+                    if results['private_endpoint_network_policies'] != self.private_endpoint_network_policies:
+                        self.log("CHANGED: subnet {0} private_endpoint_network_policies".format(self.private_endpoint_network_policies))
+                        changed = True
+                        results['private_endpoint_network_policies'] = self.private_endpoint_network_policies
+                else:
+                    subnet['private_endpoint_network_policies'] = results['private_endpoint_network_policies']
+                if self.private_link_service_network_policies is not None:
+                    if results['private_link_service_network_policies'] is not None:
+                        self.log("CHANGED: subnet {0} private_link_service_network_policies".format(self.private_link_service_network_policies))
+                        changed = True
+                        results['private_link_service_network_policies'] = self.private_link_service_network_policies
+                else:
+                    subnet['private_link_service_network_policies'] = results['private_link_service_network_policies']
+                if self.delegations is not None and results['delegations'] != self.delegations:
+                    self.log("CHANGED: subnet {0} delegations".format(self.delegations))
+                    changed = True
+                    results['delegations'] = self.delegations
+
                 if self.address_prefix_cidr and results['address_prefix'] != self.address_prefix_cidr:
                     self.log("CHANGED: subnet {0} address_prefix_cidr".format(self.name))
                     changed = True
@@ -350,6 +413,12 @@ class AzureRMSubnet(AzureRMModuleBase):
                         subnet.route_table = self.network_models.RouteTable(id=self.route_table)
                     if self.service_endpoints:
                         subnet.service_endpoints = self.service_endpoints
+                    if self.delegations:
+                        subnet.delegations = self.delegations
+                    if self.private_endpoint_network_policies:
+                        subnet.private_endpoint_network_policies = self.private_endpoint_network_policies
+                    if self.private_link_service_network_policies:
+                        subnet.private_link_service_network_policies = self.private_link_service_network_policies
                 else:
                     # update subnet
                     self.log('Updating subnet {0}'.format(self.name))
@@ -364,6 +433,12 @@ class AzureRMSubnet(AzureRMModuleBase):
 
                     if results.get('service_endpoints') is not None:
                         subnet.service_endpoints = results['service_endpoints']
+                    if results.get('private_link_service_network_policies') is not None:
+                        subnet.private_link_service_network_policies = results['private_link_service_network_policies']
+                    if results.get('private_endpoint_network_policies') is not None:
+                        subnet.private_endpoint_network_policies = results['private_endpoint_network_policies']
+                    if results.get('delegations') is not None:
+                        subnet.delegations = results['delegations']
 
                 self.results['state'] = self.create_or_update_subnet(subnet)
             elif self.state == 'absent' and changed:
@@ -376,6 +451,13 @@ class AzureRMSubnet(AzureRMModuleBase):
         return self.results
 
     def create_or_update_subnet(self, subnet):
+        subnet.private_link_service_network_policies = 'Disable' 
+        subnet.private_endpoint_network_policies = 'Enable'
+        subnet.address_prefix_cidr = "10.1.0.0/25"
+        logging.info('12321')
+        logging.info(subnet)
+        logging.info(self.network_client.subnets)
+        logging.info('12321')
         try:
             poller = self.network_client.subnets.create_or_update(self.resource_group,
                                                                   self.virtual_network_name,
