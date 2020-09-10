@@ -16,6 +16,15 @@ then
     pip --version
     pip list --disable-pip-version-check
 else
+    if [ "$2" = "3.8" ]
+    then
+        sudo apt update
+        sudo apt install software-properties-common
+        sudo add-apt-repository ppa:deadsnakes/ppa
+        sudo apt install python"$2" -y
+        sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
+    fi
+
     command -v pip3
     pip3 --version
     pip3 list --disable-pip-version-check

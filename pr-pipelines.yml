@@ -6,6 +6,7 @@ parameters:
   values:
     - "2.7"
     - "3.6"
+    - "3.8"
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
@@ -71,6 +72,7 @@ parameters:
     - "azure_rm_virtualnetwork"
     - "azure_rm_virtualnetworkgateway"
     - "azure_rm_virtualnetworkeepring"
+    - "azure_rm_backupazurevm"
     - "azure_rm_webapp"
     - "azure_rm_workspace"
     - "inventory_azure"
