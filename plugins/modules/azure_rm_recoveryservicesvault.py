@@ -115,7 +115,7 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
-class azure_rm_recoveryservicesvault(AzureRMModuleBaseExt):
+class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
             resource_group=dict(
@@ -165,7 +165,7 @@ class azure_rm_recoveryservicesvault(AzureRMModuleBaseExt):
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
-        super(azure_rm_recoveryservicesvault, self).__init__(derived_arg_spec=self.module_arg_spec,
+        super(AzureRMRecoveryServicesVault, self).__init__(derived_arg_spec=self.module_arg_spec,
                                             supports_check_mode=True,
                                             supports_tags=True)
 
@@ -315,7 +315,7 @@ class azure_rm_recoveryservicesvault(AzureRMModuleBaseExt):
         return response
 
 def main():
-    azure_rm_recoveryservicesvault()
+    AzureRMRecoveryServicesVault()
 
 if __name__ == '__main__':
     main()
