@@ -24,7 +24,7 @@ options:
             - The name of the resource group.
         required: true
         type: str
-    recovery_service_vault_name:
+    name:
         description:
             - The name of the Azure Recovery Service Vault.
         required: true
@@ -40,7 +40,7 @@ EXAMPLES = '''
     - name: Get Azure Recovery Services Vault Details.
       azure_rm_recoveryservicesvault_info:
         resource_group: 'myResourceGroup'
-        recovery_service_vault_name: 'testVault'
+        name: 'testVault'
 '''
 
 RETURN = '''
@@ -70,14 +70,14 @@ class azure_rm_recoveryservicesvault_info(AzureRMModuleBaseExt):
                 type='str',
                 required=True
             ),
-            recovery_service_vault_name=dict(
+            name=dict(
                 type='str',
                 required=True
             )
         )
 
         self.resource_group = None
-        self.recovery_service_vault_name = None
+        self.name = None
 
         self.body = {}
         self.results = dict(changed=False)
@@ -104,7 +104,7 @@ class azure_rm_recoveryservicesvault_info(AzureRMModuleBaseExt):
                 + self.resource_group \
                 + '/providers/Microsoft.RecoveryServices' \
                 + '/vaults' + '/' \
-                + self.recovery_service_vault_name
+                + self.name
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):

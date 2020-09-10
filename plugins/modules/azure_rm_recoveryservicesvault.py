@@ -25,7 +25,7 @@ options:
             - The name of the resource group.
         required: true
         type: str
-    recovery_service_vault_name:
+    name:
         description:
             - The name of the Azure Recovery Service Vault.
         required: true
@@ -37,7 +37,7 @@ options:
         type: str
     enhanced_security_state:
         description:
-            - Backup Policy ID present under Recovery Service Vault mentioned in recovery_vault_name field.
+            - Enhanced Security for backup configuration.
         default: Enabled
         type: str
         choices:
@@ -45,7 +45,7 @@ options:
             - Disabled
     soft_delete_feature_state:
         description:
-            - Backup Policy ID present under Recovery Service Vault mentioned in recovery_vault_name field.
+            - Soft delete state for backup configuration.
         default: Enabled
         type: str
         choices:
@@ -54,13 +54,15 @@ options:
     state:
         description:
             - Assert the state of the protection item.
-            - Use C(create) for Creating Azure Recovery Services Vault.
-            - Use C(update) for Updating Azure Recovery Services Vault Soft Delete State.
+            - Use C(present) for Creating Azure Recovery Service Vault.
+            - Use C(update) for Updating Azure Recovery Service Vault backup configuration.
+            - Use C(absent) for Deleting Azure Recovery Service Vault.
         default: create
         type: str
         choices:
-            - create
+            - present
             - update
+            - absent
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -69,20 +71,28 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create Azure Recovery Services vault
+    - name: Create/Update Azure Recovery Service vault
       azure_rm_recoveryservicesvault:
         resource_group: 'myResourceGroup'
-        recovery_service_vault_name: 'testVault'
+        name: 'testVault'
         location: 'westeurope'
-        state: 'create'
-    - name: Update Azure Recovery Services vault
+        state: 'present'
+    - name: Update Azure Recovery Service vault backup configuration
       azure_rm_recoveryservicesvault:
         resource_group: 'myResourceGroup'
-        recovery_service_vault_name: 'testVault'
+        name: 'testVault'
         location: 'westeurope'
         enhanced_security_state: 'Enabled'
         soft_delete_feature_state: "Disabled"
         state: 'update'
+    - name: Delete Recovery Service Vault
+      azure_rm_recoveryservicesvault:
+        resource_group: 'myResourceGroup'
+        name: 'testVault'
+        location: 'westeurope'
+        enhanced_security_state: 'Enabled'
+        soft_delete_feature_state: "Disabled"
+        state: 'absent'
 '''
 
 RETURN = '''
@@ -112,7 +122,7 @@ class azure_rm_recoveryservicesvault(AzureRMModuleBaseExt):
                 type='str',
                 required=True
             ),
-            recovery_service_vault_name=dict(
+            name=dict(
                 type='str',
                 required=True
             ),
@@ -132,13 +142,13 @@ class azure_rm_recoveryservicesvault(AzureRMModuleBaseExt):
             ),
             state=dict(
                 type='str',
-                default='create',
-                choices=['create', 'update']
+                default='present',
+                choices=['present', 'absent', 'update']
             )
         )
 
         self.resource_group = None
-        self.recovery_service_vault_name = None
+        self.name = None
         self.location = None
         self.enhanced_security_state = None
         self.soft_delete_feature_state = None
@@ -160,17 +170,17 @@ class azure_rm_recoveryservicesvault(AzureRMModuleBaseExt):
                                             supports_tags=True)
 
     def get_api_version(self):
-        return '2016-06-01' if self.state == 'create' else '2019-05-13'
+        return '2016-06-01' if self.state == 'present' or self.state == 'absent' else '2019-05-13'
 
     def get_url(self):
-        if self.state == 'create':
+        if self.state == 'present' or self.state == 'absent':
             return '/subscriptions/' \
                    + self.subscription_id \
                    + '/resourceGroups/' \
                    + self.resource_group \
                    + '/providers/Microsoft.RecoveryServices' \
                    + '/vaults' + '/' \
-                   + self.recovery_service_vault_name
+                   + self.name
         if self.state == 'update':
             return '/subscriptions/' \
                    + self.subscription_id \
@@ -178,11 +188,11 @@ class azure_rm_recoveryservicesvault(AzureRMModuleBaseExt):
                    + self.resource_group \
                    + '/providers/Microsoft.RecoveryServices' \
                    + '/vaults' + '/' \
-                   + self.recovery_service_vault_name \
+                   + self.name \
                    + "/backupconfig/vaultconfig"
 
     def get_body(self):
-        if self.state == 'create':
+        if self.state == 'present':
             return {
                 "properties": {},
                 "sku": {
@@ -219,12 +229,15 @@ class azure_rm_recoveryservicesvault(AzureRMModuleBaseExt):
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         changed = False
-        if self.state == 'create':
+        if self.state == 'present':
             changed = True
             response = self.create_recovery_service_vault()
         if self.state == 'update':
             changed = True
             response = self.update_recovery_service_vault()
+        if self.state == 'absent':
+            changed = True
+            response = self.delete_recovery_service_vault()
 
         self.results['response'] = response
         self.results['changed'] = changed
@@ -270,7 +283,30 @@ class azure_rm_recoveryservicesvault(AzureRMModuleBaseExt):
             )
         except CloudError as e:
             self.log('Error attempting to update Azure Recovery Service Vault.')
-            self.fail('Error while updating Azure Recovery Service Vault Name: {0}'.format(str(e)))
+            self.fail('Error while updating Azure Recovery Service Vault: {0}'.format(str(e)))
+
+        try:
+            response = json.loads(response.text)
+        except Exception:
+            response = {'text': response.text}
+        return response
+
+    def delete_recovery_service_vault(self):
+        # self.log('Deleting Recovery Service Vault {0}'.format(self.))
+        try:
+            response = self.mgmt_client.query(
+                self.url,
+                'DELETE',
+                self.query_parameters,
+                self.header_parameters,
+                None,
+                self.status_code,
+                600,
+                30,
+            )
+        except CloudError as e:
+            self.log('Error attempting to delete Azure Recovery Service Vault.')
+            self.fail('Error while deleting Azure Recovery Service Vault: {0}'.format(str(e)))
 
         try:
             response = json.loads(response.text)
