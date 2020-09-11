@@ -112,7 +112,7 @@ subnets:
             returned: always
             type: str
             sample: Enabled
-        private_endpoint_network_policies:
+        private_link_service_network_policies:
             description:
                 - C(Enabled) or C(Disabled) apply network policies on private link service in the subnet.
             returned: always
