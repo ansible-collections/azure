@@ -335,7 +335,7 @@ class AzureRMSubnet(AzureRMModuleBase):
                 else:
                     subnet['private_endpoint_network_policies'] = results['private_endpoint_network_policies']
                 if self.private_link_service_network_policies is not None:
-                    if results['private_link_service_network_policies'] is not None:
+                    if results['private_link_service_network_policies'] != self.private_link_service_network_policies is not None:
                         self.log("CHANGED: subnet {0} private_link_service_network_policies".format(self.private_link_service_network_policies))
                         changed = True
                         results['private_link_service_network_policies'] = self.private_link_service_network_policies

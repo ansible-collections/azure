@@ -106,6 +106,18 @@ subnets:
             returned: always
             type: str
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/routeTables/myRouteTable
+        private_endpoint_network_policies:
+            description:
+                - C(Enabled) or C(Disabled) apply network policies on private endpoints in the subnet.
+            returned: always
+            type: str
+            sample: Enabled
+        private_endpoint_network_policies:
+            description:
+                - C(Enabled) or C(Disabled) apply network policies on private link service in the subnet.
+            returned: always
+            type: str
+            sample: Disabled
         security_group:
             description:
                 - Associated security group ID.
@@ -242,8 +254,7 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'provisioning_state': d.get('provisioning_state'),
             'service_endpoints': d.get('service_endpoints'),
             'private_endpoint_network_policies': d.get('private_endpoint_network_policies'),
-            'private_link_service_network_policies': d.get('private_link_service_network_policies'),
-            'delegations': d.get('delegations')
+            'private_link_service_network_policies': d.get('private_link_service_network_policies')
         }
         return d
 
