@@ -87,14 +87,16 @@ options:
     private_endpoint_network_policies:
         description:
             - C(Enabled) or C(Disabled) apply network policies on private endpoints in the subnet.
-        type: string
+        type: str
+        default: Enabled
         choices:
             - Enabled
             - Disabled
     private_link_service_network_policies:
         description:
             - C(Enabled) or C(Disabled) apply network policies on private link service in the subnet.
-        type: string
+        type: str
+        default: Enabled
         choices:
             - Enabled
             - Disabled
@@ -259,12 +261,12 @@ class AzureRMSubnet(AzureRMModuleBase):
             private_endpoint_network_policies=dict(
                 type='str',
                 default='Enabled',
-                choices=[ 'Enabled', 'Disabled' ]
+                choices=['Enabled', 'Disabled']
             ),
             private_link_service_network_policies=dict(
                 type='str',
                 default='Enabled',
-                choices=[ 'Enabled', 'Disabled' ]
+                choices=['Enabled','Disabled' ]
             )
         )
 
