@@ -15,10 +15,11 @@ DOCUMENTATION = \
 ---
 module: azure_rm_recoveryservicesvault
 version_added: '1.1.0'
-short_description: Create and Update Azure Recovery Services vault
+short_description: Create, Update and Delete Azure Recovery Services vault
 description:
     - Create Azure Recovery Services vault.
     - Update Azure Recovery Services vault.
+    - Delete Azure Recovery Services Vault.
 options:
     resource_group:
         description:
@@ -35,39 +36,21 @@ options:
             - Azure Resource location.
         required: true
         type: str
-    enhanced_security_state:
-        description:
-            - Enhanced Security for backup configuration.
-        default: Enabled
-        type: str
-        choices:
-            - Enabled
-            - Disabled
-    soft_delete_feature_state:
-        description:
-            - Soft delete state for backup configuration.
-        default: Enabled
-        type: str
-        choices:
-            - Enabled
-            - Disabled
     state:
         description:
             - Assert the state of the protection item.
-            - Use C(present) for Creating Azure Recovery Service Vault.
-            - Use C(update) for Updating Azure Recovery Service Vault backup configuration.
+            - Use C(present) for Creating/Updating Azure Recovery Service Vault.
             - Use C(absent) for Deleting Azure Recovery Service Vault.
-        default: create
+        default: present
         type: str
         choices:
             - present
-            - update
             - absent
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 author:
-    - Suyeb Ansari ( @suyeb786 )
+    - Suyeb Ansari (@suyeb786)
 '''
 
 EXAMPLES = '''
@@ -77,21 +60,11 @@ EXAMPLES = '''
         name: 'testVault'
         location: 'westeurope'
         state: 'present'
-    - name: Update Azure Recovery Service vault backup configuration
-      azure_rm_recoveryservicesvault:
-        resource_group: 'myResourceGroup'
-        name: 'testVault'
-        location: 'westeurope'
-        enhanced_security_state: 'Enabled'
-        soft_delete_feature_state: "Disabled"
-        state: 'update'
     - name: Delete Recovery Service Vault
       azure_rm_recoveryservicesvault:
         resource_group: 'myResourceGroup'
         name: 'testVault'
         location: 'westeurope'
-        enhanced_security_state: 'Enabled'
-        soft_delete_feature_state: "Disabled"
         state: 'absent'
 '''
 
@@ -130,28 +103,16 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
                 type='str',
                 required=True
             ),
-            enhanced_security_state=dict(
-                type='str',
-                default='Disabled',
-                choices=['Enabled', 'Disabled']
-            ),
-            soft_delete_feature_state=dict(
-                type='str',
-                default='Enabled',
-                choices=['Enabled', 'Disabled']
-            ),
             state=dict(
                 type='str',
                 default='present',
-                choices=['present', 'absent', 'update']
+                choices=['present', 'absent']
             )
         )
 
         self.resource_group = None
         self.name = None
         self.location = None
-        self.enhanced_security_state = None
-        self.soft_delete_feature_state = None
         self.state = None
 
         self.results = dict(changed=False)
@@ -181,15 +142,6 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
                    + '/providers/Microsoft.RecoveryServices' \
                    + '/vaults' + '/' \
                    + self.name
-        if self.state == 'update':
-            return '/subscriptions/' \
-                   + self.subscription_id \
-                   + '/resourceGroups/' \
-                   + self.resource_group \
-                   + '/providers/Microsoft.RecoveryServices' \
-                   + '/vaults' + '/' \
-                   + self.name \
-                   + "/backupconfig/vaultconfig"
 
     def get_body(self):
         if self.state == 'present':
@@ -200,13 +152,6 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
                     },
                 "location": self.location
             }
-        elif self.state == 'update':
-            return {
-                "properties": {
-                "enhancedSecurityState": self.enhanced_security_state,
-                "softDeleteFeatureState": self.soft_delete_feature_state
-                    }
-                }
         else:
             return {}
 
@@ -232,9 +177,6 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         if self.state == 'present':
             changed = True
             response = self.create_recovery_service_vault()
-        if self.state == 'update':
-            changed = True
-            response = self.update_recovery_service_vault()
         if self.state == 'absent':
             changed = True
             response = self.delete_recovery_service_vault()
@@ -266,29 +208,6 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         except Exception:
             response = {'text': response.text}
 
-        return response
-
-    def update_recovery_service_vault(self):
-        # self.log('Updating Recovery Service Vault Name {0}'.format(self.))
-        try:
-            response = self.mgmt_client.query(
-                self.url,
-                'PATCH',
-                self.query_parameters,
-                self.header_parameters,
-                self.body,
-                self.status_code,
-                600,
-                30,
-            )
-        except CloudError as e:
-            self.log('Error attempting to update Azure Recovery Service Vault.')
-            self.fail('Error while updating Azure Recovery Service Vault: {0}'.format(str(e)))
-
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
         return response
 
     def delete_recovery_service_vault(self):

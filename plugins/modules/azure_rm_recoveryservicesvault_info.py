@@ -33,7 +33,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 author:
-    - Suyeb Ansari ( @suyeb786 )
+    - Suyeb Ansari (@suyeb786)
 '''
 
 EXAMPLES = '''

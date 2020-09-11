@@ -6,27 +6,12 @@
     enhanced_security_state: "Enabled"
     soft_delete_feature_state: "Disabled"
 
-- name: Create Azure Recovery Service vault
+- name: Create/Update Azure Recovery Service vault
   azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
     name: "{{ name }}"
     location: "{{ location }}"
     state: "present"
-  register: output
-
-- name: Assert that output has changed
-  assert:
-    that:
-      - output.changed
-
-- name: Update Azure Recovery Service vault
-  azure_rm_recoveryservicesvault:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
-    location: "{{ location }}"
-    enhanced_security_state: "{{ enhanced_security_state }}"
-    soft_delete_feature_state: "{{ soft_delete_feature_state }}"
-    state: "update"
   register: output
 
 - name: Assert that output has changed
@@ -50,6 +35,7 @@
   azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
     name: "{{ name }}"
+    location: "{{ location }}"
     state: "absent"
   register: output
 
