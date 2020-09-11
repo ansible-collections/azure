@@ -266,7 +266,7 @@ class AzureRMSubnet(AzureRMModuleBase):
             private_link_service_network_policies=dict(
                 type='str',
                 default='Enabled',
-                choices=['Enabled','Disabled' ]
+                choices=['Enabled', 'Disabled']
             )
         )
 
