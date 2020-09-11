@@ -94,14 +94,14 @@ options:
         type: string
         choices:
             - Enabled
-            - Dsabled
+            - Disabled
     private_link_service_network_policies:
         description:
             - Enable or disable apply network policies on private link service in the subnet.
         type: string
         choices:
             - Enabled
-            - Dsabled
+            - Disabled
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -197,8 +197,6 @@ state:
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
-import logging
-logging.basicConfig(filename='log.log', level=logging.INFO)
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -325,11 +323,6 @@ class AzureRMSubnet(AzureRMModuleBase):
             self.check_provisioning_state(subnet, self.state)
             results = subnet_to_dict(subnet)
 
-            logging.info('123')
-            logging.info(subnet)
-            logging.info('--------------')
-            logging.info(results)
-            logging.info('345')
             if self.state == 'present':
                 if self.private_endpoint_network_policies is not None:
                     if results['private_endpoint_network_policies'] != self.private_endpoint_network_policies:
@@ -451,13 +444,6 @@ class AzureRMSubnet(AzureRMModuleBase):
         return self.results
 
     def create_or_update_subnet(self, subnet):
-        subnet.private_link_service_network_policies = 'Disable' 
-        subnet.private_endpoint_network_policies = 'Enable'
-        subnet.address_prefix_cidr = "10.1.0.0/25"
-        logging.info('12321')
-        logging.info(subnet)
-        logging.info(self.network_client.subnets)
-        logging.info('12321')
         try:
             poller = self.network_client.subnets.create_or_update(self.resource_group,
                                                                   self.virtual_network_name,
