@@ -1,10 +1,8 @@
 - name: Fix resource prefix
   set_fact:
-    resource_group: 'MyResourceGroup'
-    name: 'MyRecoveryVault'
-    location: "westeurope"
-    enhanced_security_state: "Enabled"
-    soft_delete_feature_state: "Disabled"
+    resource_group: "MyResourceGroup"
+    name: "revault{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    location: "eastus"
 
 - name: Create/Update Azure Recovery Service vault
   azure_rm_recoveryservicesvault:
