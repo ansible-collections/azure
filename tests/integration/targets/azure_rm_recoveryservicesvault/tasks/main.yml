@@ -1,6 +1,5 @@
 - name: Fix resource prefix
   set_fact:
-    resource_group: "MyResourceGroup"
     name: "revault{{ resource_group | hash('md5') | truncate(22, True, '') }}"
     location: "eastus"
 
