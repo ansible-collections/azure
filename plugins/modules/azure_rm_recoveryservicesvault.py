@@ -173,10 +173,16 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
+        old_response = self.get_resource()
+
         changed = False
         if self.state == 'present':
-            changed = True
-            response = self.create_recovery_service_vault()
+            if old_response == False:
+                changed = True
+                response = self.create_recovery_service_vault()
+            else:
+                changed = False
+                response = old_response
         if self.state == 'absent':
             changed = True
             response = self.delete_recovery_service_vault()
@@ -232,6 +238,29 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         except Exception:
             response = {'text': response.text}
         return response
+
+    def get_resource(self):
+        # self.log('Get Recovery Service Vault Name {0}'.format(self.))
+        found = False
+        try:
+            response = self.mgmt_client.query(
+                self.url,
+                'GET',
+                self.query_parameters,
+                self.header_parameters,
+                None,
+                self.status_code,
+                600,
+                30,
+            )
+            found = True
+        except CloudError as e:
+            self.log('Recovery Service Vault Does not exist.')
+        if found is True:
+            response = json.loads(response.text)
+            return response
+        else:
+            return False
 
 def main():
     AzureRMRecoveryServicesVault()

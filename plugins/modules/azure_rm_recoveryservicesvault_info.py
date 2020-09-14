@@ -132,7 +132,7 @@ class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
         return self.results
 
     def get_recovery_service_vault_info(self):
-        # self.log('Creating Recovery Service Vault Name {0}'.format(self.))
+        # self.log('Get Recovery Service Vault Details {0}'.format(self.))
         try:
             response = self.mgmt_client.query(
                 self.url,
