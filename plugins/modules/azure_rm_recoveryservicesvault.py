@@ -172,7 +172,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         self.query_parameters['api-version'] = None
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
-        
+
         super(AzureRMRecoveryServicesVault, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                            supports_check_mode=True,
                                                            supports_tags=True
