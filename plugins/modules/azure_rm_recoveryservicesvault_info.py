@@ -149,12 +149,12 @@ class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
 
     def get_url(self):
         return '/subscriptions/' \
-                   + self.subscription_id \
-                   + '/resourceGroups/' \
-                   + self.resource_group \
-                   + '/providers/Microsoft.RecoveryServices' \
-                   + '/vaults' + '/' \
-                   + self.name
+               + self.subscription_id \
+               + '/resourceGroups/' \
+               + self.resource_group \
+               + '/providers/Microsoft.RecoveryServices' \
+               + '/vaults' + '/' \
+               + self.name
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
