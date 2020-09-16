@@ -78,7 +78,7 @@ response:
                 - A unique read-only string that changes whenever the resource create.
             returned: always
             type: str
-            sample: "W/\"datetime'2020-09-16T02%3A44%3A27.834293Z'\""
+            sample: 'W/\"datetime'2020-09-16T02%3A44%3A27.834293Z'\"'
         id:
             description:
                 - Resource ID.
@@ -127,11 +127,13 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 import re
 import json
 import time
+
 try:
     from msrestazure.azure_exceptions import CloudError
 except ImportError:
     # This is handled in azure_rm_common
     pass
+
 
 class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
     def __init__(self):
@@ -170,10 +172,11 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         self.query_parameters['api-version'] = None
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
-
+        
         super(AzureRMRecoveryServicesVault, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                            supports_check_mode=True,
-                                            supports_tags=True)
+                                                           supports_check_mode=True,
+                                                           supports_tags=True
+                                                          )
 
     def get_api_version(self):
         return '2016-06-01' if self.state == 'present' or self.state == 'absent' else '2019-05-13'
@@ -193,8 +196,8 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
             return {
                 "properties": {},
                 "sku": {
-                    "name": "Standard"  #The SKU is always "Standard".
-                    },
+                    "name": "Standard"
+                },
                 "location": self.location
             }
         else:
@@ -222,7 +225,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
 
         changed = False
         if self.state == 'present':
-            if old_response == False:
+            if old_response is False:
                 changed = True
                 response = self.create_recovery_service_vault()
             else:
@@ -307,8 +310,10 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         else:
             return False
 
+
 def main():
     AzureRMRecoveryServicesVault()
+
 
 if __name__ == '__main__':
     main()
