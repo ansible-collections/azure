@@ -78,7 +78,7 @@ response:
                 - A unique read-only string that changes whenever the resource create.
             returned: always
             type: str
-            sample: 'W/\"datetime'2020-09-16T02%3A44%3A27.834293Z'\"'
+            sample: "datetime'2020-09-16T02%3A44%3A27.834293Z'"
         id:
             description:
                 - Resource ID.
@@ -176,7 +176,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         super(AzureRMRecoveryServicesVault, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                            supports_check_mode=True,
                                                            supports_tags=True
-                                                          )
+                                                           )
 
     def get_api_version(self):
         return '2016-06-01'

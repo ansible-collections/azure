@@ -55,7 +55,7 @@ response:
                 - A unique read-only string that changes whenever the resource create.
             returned: always
             type: str
-            sample: 'W/\"datetime'2020-09-16T02%3A44%3A27.834293Z'\"'
+            sample: "datetime'2020-09-16T02%3A44%3A27.834293Z'"
         id:
             description:
                 - Resource ID.
@@ -138,7 +138,7 @@ class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
         self.query_parameters['api-version'] = None
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
-        
+
         super(AzureRMRecoveryServicesVaultInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                                supports_check_mode=True,
                                                                supports_tags=True
@@ -146,15 +146,15 @@ class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
 
     def get_api_version(self):
         return '2016-06-01'
-    
+
     def get_url(self):
         return '/subscriptions/' \
-                 + self.subscription_id \
-                 + '/resourceGroups/' \
-                 + self.resource_group \
-                 + '/providers/Microsoft.RecoveryServices' \
-                 + '/vaults' + '/' \
-                 + self.name
+                   + self.subscription_id \
+                   + '/resourceGroups/' \
+                   + self.resource_group \
+                   + '/providers/Microsoft.RecoveryServices' \
+                   + '/vaults' + '/' \
+                   + self.name
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
