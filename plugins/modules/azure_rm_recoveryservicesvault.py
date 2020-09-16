@@ -179,7 +179,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
                                                           )
 
     def get_api_version(self):
-        return '2016-06-01' if self.state == 'present' or self.state == 'absent' else '2019-05-13'
+        return '2016-06-01'
 
     def get_url(self):
         if self.state == 'present' or self.state == 'absent':
