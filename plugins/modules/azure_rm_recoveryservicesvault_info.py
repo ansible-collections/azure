@@ -44,12 +44,59 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-id:
+response:
     description:
-        - Azure Recovery Service Vault Details.
+        - The response about the current state of the recovery services vault.
     returned: always
-    type: str
-    sample: '{"response":{"location":"resource_location","name":"recovery_vault_name","properties":{},"id":"vault_id"}}'
+    type: complex
+    contains:
+        etag:
+            description:
+                - A unique read-only string that changes whenever the resource create.
+            returned: always
+            type: str
+            sample: "W/\"datetime'2020-09-16T02%3A44%3A27.834293Z'\""
+        id:
+            description:
+                - Resource ID.
+            returned: always
+            type: str
+            sample:  "/subscriptions/xxxxxxx/resourceGroups/resourcegroup_name/ \
+            providers/Microsoft.RecoveryServices/vaults/rev_name"
+        location:
+            description:
+                - The location of the resource.
+            returned: always
+            type: str
+            sample: "eastus"
+        name:
+            description:
+                - Name of the recovery services vault name.
+            returned: always
+            type: str
+            sample: revault_name
+        properties:
+            description:
+                - The recovery service vault properties.
+            returned: always
+            type: dict
+            sample: {
+                    "privateEndpointStateForBackup": "None",
+                    "privateEndpointStateForSiteRecovery": "None",
+                    "provisioningState": "Succeeded"
+                    }
+        sku:
+            description:
+                - The sku type of the recovery service vault.
+            returned: always
+            type: str
+            sample: Standard
+        type:
+            description:
+                - The type of the recovery service vault.
+            returned: always
+            type: str
+            sample: "Microsoft.RecoveryServices/vaults"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
