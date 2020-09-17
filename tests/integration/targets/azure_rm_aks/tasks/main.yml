@@ -158,7 +158,7 @@
       that:
        - output.changed
        - output.kubernetes_version == version1.azure_aks_versions[0]
-       - output.addon.httpapplicationrouting.enabled ==  true
+       - output.addon.httpApplicationRouting.enabled ==  True
        - output.agent_pool_profiles[0].count == 1
        - output.network_profile.network_plugin == 'kubenet'
 
