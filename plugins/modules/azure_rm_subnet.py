@@ -221,6 +221,36 @@ state:
             returned: always
             type: str
             sample: "Disabled"
+        delegations:
+            description:
+                - Associated delegation of subnets
+            returned: always
+            type: list
+            contains:
+                name:
+                    description:
+                        - name of delegation
+                    returned: when delegation is present
+                    type: str
+                    sample: "delegationname"
+                serviceName:
+                    description:
+                        - service associated to delegation
+                    returned: when delegation is present
+                    type: str
+                    sample: "Microsoft.ContainerInstance/containerGroups"
+                actions:
+                    description:
+                        - list of actions associated with service of delegation
+                    returned : when delegation is present
+                    type: list
+                    sample: ["Microsoft.Network/virtualNetworks/subnets/action"]
+                provisioning_state:
+                    description:
+                        - Provisioning state of delegation.
+                    returned: when delegation is present
+                    type: str
+                    sample: Succeeded
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
