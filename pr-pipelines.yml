@@ -73,6 +73,7 @@ parameters:
     - "azure_rm_virtualnetworkgateway"
     - "azure_rm_virtualnetworkeepring"
     - "azure_rm_backupazurevm"
+    - "azure_rm_recoveryservicesvault"  
     - "azure_rm_webapp"
     - "azure_rm_workspace"
     - "inventory_azure"
