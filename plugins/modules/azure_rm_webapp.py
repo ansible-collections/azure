@@ -100,7 +100,8 @@ options:
         suboptions:
             name:
                 description:
-                    - Name of the container, for example C(imagename:tag). To create a multi-container app, the name should be C(COMPOSE|) or C(KUBE|) followed by base64 encoded configuration.
+                    - Name of the container, for example C(imagename:tag).
+                    - To create a multi-container app, the name should be 'COMPOSE|' or 'KUBE|' followed by base64 encoded configuration.
             registry_server_url:
                 description:
                     - Container registry server URL, for example C(mydockerregistry.io).
