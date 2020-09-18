@@ -245,12 +245,6 @@ state:
                     returned : when delegation is present
                     type: list
                     sample: ["Microsoft.Network/virtualNetworks/subnets/action"]
-                provisioning_state:
-                    description:
-                        - Provisioning state of delegation.
-                    returned: when delegation is present
-                    type: str
-                    sample: Succeeded
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
