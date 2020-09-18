@@ -107,15 +107,15 @@ options:
         suboptions:
             name:
                 description:
-                    - The name of delegation
+                    - The name of delegation.
                 required: True
             serviceName:
                 description:
                     - The type of the endpoint service.
                 required: True
-            locations:
+            actions:
                 description:
-                    - A list of locations.
+                    - A list of actions.
                 type: list
 
 extends_documentation_fragment:
