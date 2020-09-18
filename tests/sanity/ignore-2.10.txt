@@ -711,5 +711,9 @@ plugins/modules/azure_rm_backupazurevm.py validate-modules:required_if-requireme
 plugins/modules/azure_rm_backupazurevm.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_backupazurevm_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_backupazurevm_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_recoveryservicesvault.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_recoveryservicesvault.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_recoveryservicesvault_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_recoveryservicesvault_info.py validate-modules:required_if-unknown-key
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang
