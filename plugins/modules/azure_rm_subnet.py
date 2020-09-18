@@ -100,6 +100,23 @@ options:
         choices:
             - Enabled
             - Disabled
+    delegations:
+        description:
+            - An array of delegations.
+        type: list
+        suboptions:
+            name:
+                description:
+                    - The name of delegation
+                required: True
+            serviceName:
+                description:
+                    - The type of the endpoint service.
+                required: True
+            locations:
+                description:
+                    - A list of locations.
+                type: list
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -214,6 +231,10 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
+delegations_spec = dict(
+    name=dict(type='str'),
+    serviceName=dict(type='str', choices=['Microsoft.Web/serverFarms','Microsoft.ContainerInstance/containerGroups','Microsoft.Netapp/volumes','Microsoft.HardwareSecurityModules/dedicatedHSMs','Microsoft.ServiceFabricMesh/networks','Microsoft.Logic/integrationServiceEnvironments','Microsoft.Batch/batchAccounts','Microsoft.Sql/managedInstances','Microsoft.Web/hostingEnvironments','Microsoft.BareMetal/CrayServers','Microsoft.BareMetal/MonitoringServers','Microsoft.Databricks/workspaces','Microsoft.BareMetal/AzureHostedService','Microsoft.BareMetal/AzureVMware','Microsoft.BareMetal/AzureHPC','Microsoft.BareMetal/AzurePaymentHSM','Microsoft.StreamAnalytics/streamingJobs','Microsoft.DBforPostgreSQL/serversv2','Microsoft.AzureCosmosDB/clusters','Microsoft.MachineLearningServices/workspaces','Microsoft.DBforPostgreSQL/singleServers','Microsoft.DBforPostgreSQL/flexibleServers','Microsoft.DBforMySQL/serversv2','Microsoft.DBforMySQL/flexibleServers','Microsoft.ApiManagement/service','Microsoft.Synapse/workspaces','Microsoft.PowerPlatform/vnetaccesslinks','Microsoft.Network/managedResolvers','Microsoft.Kusto/clusters'])
+)
 
 def subnet_to_dict(subnet):
     result = dict(
@@ -239,6 +260,8 @@ def subnet_to_dict(subnet):
         result['route_table']['resource_group'] = id_keys['resourceGroups']
     if subnet.service_endpoints:
         result['service_endpoints'] = [{'service': item.service, 'locations': item.locations or []} for item in subnet.service_endpoints]
+    if subnet.delegations:
+        result['delegations'] = [{'name': item.name, 'serviceName': item.service_name, 'actions': item.actions or []} for item in subnet.delegations]
     return result
 
 
@@ -267,6 +290,11 @@ class AzureRMSubnet(AzureRMModuleBase):
                 type='str',
                 default='Enabled',
                 choices=['Enabled', 'Disabled']
+            ),
+            delegations=dict(
+                type='list',
+                elements='dict',
+                options=delegations_spec
             )
         )
 
@@ -288,6 +316,7 @@ class AzureRMSubnet(AzureRMModuleBase):
         self.service_endpoints = None
         self.private_link_service_network_policies = None
         self.private_endpoint_network_policies = None
+        self.delegations = None
 
         super(AzureRMSubnet, self).__init__(self.module_arg_spec,
                                             supports_check_mode=True,
@@ -300,6 +329,9 @@ class AzureRMSubnet(AzureRMModuleBase):
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
+
+        if self.delegations and len(self.delegations) > 1:
+            self.fail("Only one delegation is supported for a subnet")
 
         if self.address_prefix_cidr and not CIDR_PATTERN.match(self.address_prefix_cidr):
             self.fail("Invalid address_prefix_cidr value {0}".format(self.address_prefix_cidr))
@@ -379,6 +411,24 @@ class AzureRMSubnet(AzureRMModuleBase):
                         changed = True
                         results['service_endpoints'] = self.service_endpoints
 
+                if self.delegations:
+                    oldde = {}
+                    for item in self.delegations:
+                        name = item['name']
+                        serviceName = item['serviceName']
+                        actions = item.get('actions') or []
+                        oldde[name] = {'name': name, 'serviceName': serviceName, 'actions': actions.sort()}
+                    newde = {}
+                    if 'delegations' in results:
+                        for item in results['delegations']:
+                            name = item['name']
+                            serviceName = item['serviceName']
+                            actions = item.get('actions') or []
+                            newde[name] = {'name': name, 'serviceName': serviceName, 'actions': actions.sort()}
+                    if newde != oldde:
+                        changed = True
+                        results['delegations'] = self.delegations
+
             elif self.state == 'absent':
                 changed = True
         except CloudError:
@@ -411,6 +461,8 @@ class AzureRMSubnet(AzureRMModuleBase):
                         subnet.private_endpoint_network_policies = self.private_endpoint_network_policies
                     if self.private_link_service_network_policies:
                         subnet.private_link_service_network_policies = self.private_link_service_network_policies
+                    if self.delegations:
+                        subnet.delegations = self.delegations
                 else:
                     # update subnet
                     self.log('Updating subnet {0}'.format(self.name))
@@ -429,6 +481,8 @@ class AzureRMSubnet(AzureRMModuleBase):
                         subnet.private_link_service_network_policies = results['private_link_service_network_policies']
                     if results.get('private_endpoint_network_policies') is not None:
                         subnet.private_endpoint_network_policies = results['private_endpoint_network_policies']
+                    if results.get('delegations') is not None:
+                        subnet.delegations = results['delegations']
 
                 self.results['state'] = self.create_or_update_subnet(subnet)
             elif self.state == 'absent' and changed:
