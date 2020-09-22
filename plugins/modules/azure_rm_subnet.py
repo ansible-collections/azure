@@ -257,8 +257,23 @@ except ImportError:
 
 
 delegations_spec = dict(
-    name=dict(type='str'),
-    serviceName=dict(type='str', choices=['Microsoft.Web/serverFarms', 'Microsoft.ContainerInstance/containerGroups', 'Microsoft.Netapp/volumes', 'Microsoft.HardwareSecurityModules/dedicatedHSMs', 'Microsoft.ServiceFabricMesh/networks', 'Microsoft.Logic/integrationServiceEnvironments', 'Microsoft.Batch/batchAccounts', 'Microsoft.Sql/managedInstances', 'Microsoft.Web/hostingEnvironments', 'Microsoft.BareMetal/CrayServers', 'Microsoft.BareMetal/MonitoringServers', 'Microsoft.Databricks/workspaces', 'Microsoft.BareMetal/AzureHostedService', 'Microsoft.BareMetal/AzureVMware', 'Microsoft.BareMetal/AzureHPC', 'Microsoft.BareMetal/AzurePaymentHSM', 'Microsoft.StreamAnalytics/streamingJobs', 'Microsoft.DBforPostgreSQL/serversv2', 'Microsoft.AzureCosmosDB/clusters', 'Microsoft.MachineLearningServices/workspaces', 'Microsoft.DBforPostgreSQL/singleServers', 'Microsoft.DBforPostgreSQL/flexibleServers', 'Microsoft.DBforMySQL/serversv2', 'Microsoft.DBforMySQL/flexibleServers', 'Microsoft.ApiManagement/service', 'Microsoft.Synapse/workspaces', 'Microsoft.PowerPlatform/vnetaccesslinks', 'Microsoft.Network/managedResolvers', 'Microsoft.Kusto/clusters'])
+    name=dict(
+        type='str',
+        required=True
+    ),
+    serviceName=dict(
+        type='str',
+        required=True,
+        choices=['Microsoft.Web/serverFarms', 'Microsoft.ContainerInstance/containerGroups', 'Microsoft.Netapp/volumes', 'Microsoft.HardwareSecurityModules/dedicatedHSMs', 'Microsoft.ServiceFabricMesh/networks', 'Microsoft.Logic/integrationServiceEnvironments', 
+'Microsoft.Batch/batchAccounts', 'Microsoft.Sql/managedInstances', 'Microsoft.Web/hostingEnvironments', 'Microsoft.BareMetal/CrayServers', 'Microsoft.BareMetal/MonitoringServers', 'Microsoft.Databricks/workspaces', 'Microsoft.BareMetal/AzureHostedService', 
+'Microsoft.BareMetal/AzureVMware', 'Microsoft.BareMetal/AzureHPC', 'Microsoft.BareMetal/AzurePaymentHSM', 'Microsoft.StreamAnalytics/streamingJobs', 'Microsoft.DBforPostgreSQL/serversv2', 'Microsoft.AzureCosmosDB/clusters', 'Microsoft.MachineLearningServices/workspaces', 
+'Microsoft.DBforPostgreSQL/singleServers', 'Microsoft.DBforPostgreSQL/flexibleServers', 'Microsoft.DBforMySQL/serversv2', 'Microsoft.DBforMySQL/flexibleServers', 'Microsoft.ApiManagement/service', 'Microsoft.Synapse/workspaces', 'Microsoft.PowerPlatform/vnetaccesslinks', 
+'Microsoft.Network/managedResolvers', 'Microsoft.Kusto/clusters']
+    ),
+    actions=dict(
+        type='list',
+        default=[]
+    )
 )
 
 
