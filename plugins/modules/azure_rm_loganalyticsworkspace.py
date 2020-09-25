@@ -63,6 +63,10 @@ options:
             - Disable one pack by setting it to C(false). For example "Backup:false".
             - Other intelligence packs not list in this property will not be changed.
         type: dict
+    force:
+        description:
+            - Deletes the workspace without the recovery option. A workspace that was deleted with this flag cannot be recovered.
+        type: bool
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -173,7 +177,8 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
             location=dict(type='str'),
             sku=dict(type='str', default='per_gb2018', choices=['free', 'standard', 'premium', 'unlimited', 'per_node', 'per_gb2018', 'standalone']),
             retention_in_days=dict(type='int'),
-            intelligence_packs=dict(type='dict')
+            intelligence_packs=dict(type='dict'),
+            force=dict(type='bool')
         )
 
         self.results = dict(
@@ -188,6 +193,7 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
         self.sku = None
         self.retention_in_days = None
         self.intelligence_packs = None
+        self.force = None
 
         super(AzureRMLogAnalyticsWorkspace, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
@@ -210,7 +216,7 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
         workspace = self.get_workspace()
         if not workspace and self.state == 'present':
             changed = True
-            workspace = self.log_analytics_models.Workspace(sku=self.log_analytics_models.Sku(name=self.sku),
+            workspace = self.log_analytics_models.Workspace(sku=self.log_analytics_models.WorkspaceSku(name=self.sku),
                                                             retention_in_days=self.retention_in_days,
                                                             location=self.location)
             if not self.check_mode:
@@ -257,7 +263,7 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
 
     def delete_workspace(self):
         try:
-            self.log_analytics_client.workspaces.delete(self.resource_group, self.name)
+            self.log_analytics_client.workspaces.delete(self.resource_group, self.name, force=self.force)
         except CloudError as exc:
             self.fail('Error when deleting workspace {0} - {1}'.format(self.name, exc.message or str(exc)))
 
@@ -268,7 +274,7 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
 
     def list_intelligence_packs(self):
         try:
-            response = self.log_analytics_client.workspaces.list_intelligence_packs(self.resource_group, self.name)
+            response = self.log_analytics_client.intelligence_packs.list(self.resource_group, self.name)
             return [x.as_dict() for x in response]
         except CloudError as exc:
             self.fail('Error when listing intelligence packs {0}'.format(exc.message or str(exc)))
@@ -276,16 +282,16 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
     def change_intelligence(self, key, value):
         try:
             if value:
-                self.log_analytics_client.workspaces.enable_intelligence_pack(self.resource_group, self.name, key)
+                self.log_analytics_client.intelligence_packs.enable(self.resource_group, self.name, key)
             else:
-                self.log_analytics_client.workspaces.disable_intelligence_pack(self.resource_group, self.name, key)
+                self.log_analytics_client.intelligence_packs.disable(self.resource_group, self.name, key)
         except CloudError as exc:
             self.fail('Error when changing intelligence pack {0} - {1}'.format(key, exc.message or str(exc)))
 
     def list_management_groups(self):
         result = []
         try:
-            response = self.log_analytics_client.workspaces.list_management_groups(self.resource_group, self.name)
+            response = self.log_analytics_client.management_groups.list(self.resource_group, self.name)
             while True:
                 result.append(response.next().as_dict())
         except StopIteration:
@@ -297,7 +303,7 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
     def list_usages(self):
         result = []
         try:
-            response = self.log_analytics_client.workspaces.list_usages(self.resource_group, self.name)
+            response = self.log_analytics_client.usages.list(self.resource_group, self.name)
             while True:
                 result.append(response.next().as_dict())
         except StopIteration:
@@ -308,7 +314,7 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
 
     def get_shared_keys(self):
         try:
-            return self.log_analytics_client.workspaces.get_shared_keys(self.resource_group, self.name).as_dict()
+            return self.log_analytics_client.shared_keys.get_shared_keys(self.resource_group, self.name).as_dict()
         except CloudError as exc:
             self.fail('Error when getting shared key {0}'.format(exc.message or str(exc)))
 
