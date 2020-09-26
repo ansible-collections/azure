@@ -66,6 +66,7 @@ options:
     force:
         description:
             - Deletes the workspace without the recovery option. A workspace that was deleted with this flag cannot be recovered.
+        default: false
         type: bool
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -178,7 +179,7 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
             sku=dict(type='str', default='per_gb2018', choices=['free', 'standard', 'premium', 'unlimited', 'per_node', 'per_gb2018', 'standalone']),
             retention_in_days=dict(type='int'),
             intelligence_packs=dict(type='dict'),
-            force=dict(type='bool')
+            force=dict(type='bool', default=False)
         )
 
         self.results = dict(
