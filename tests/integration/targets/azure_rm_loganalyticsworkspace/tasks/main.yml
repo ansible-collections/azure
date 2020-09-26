@@ -1,7 +1,6 @@
 - name: Prepare random number
   set_fact:
-    name: loganalyticsddh
-  #  name: "loganalytics{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    name: "loganalytics{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     retention_days: 30
 
 - name: Create Log Analytics Workspace (Check Mode On)
