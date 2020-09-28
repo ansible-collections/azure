@@ -129,5 +129,5 @@ if [ "sanity" = "${group}" ]
 then
     ansible-test sanity --color -v --junit
 else
-    ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive -vvv
+    ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
 fi
