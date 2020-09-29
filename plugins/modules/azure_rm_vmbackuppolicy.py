@@ -198,7 +198,7 @@ response:
                     },
                     "timeZone": "Pacific Standard Time",
                     "protectedItemsCount": 0
-                  }                   
+                   }                   
         type:
             description:
                 - Resource type.
@@ -302,7 +302,7 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
         return time.strftime("%Y-%m-%d", time.gmtime()) + "T" + self.time + ":00Z"
 
     def get_body(self):
-        self.log('backup attributes {}'.format(self.body))
+        self.log('backup attributes {0}'.format(self.body))
         self.time = self.set_schedule_run_time()
         schedule_policy = dict()
         schedule_policy['schedulePolicyType'] = 'SimpleSchedulePolicy'

@@ -42,7 +42,7 @@ author:
 '''
 
 EXAMPLES = '''
-  azure_rm_backvmuppolicy_info:
+   azure_rm_backvmuppolicy_info:
      name: 'myBackupPolicy'
      vault_name: 'myVault'
      resource_group: 'myResourceGroup'        
@@ -150,7 +150,7 @@ response:
                     },
                     "timeZone": "Pacific Standard Time",
                     "protectedItemsCount": 0
-                  }                   
+                   }                   
         type:
             description:
                 - Resource type.
@@ -202,9 +202,9 @@ class BackupPolicyVMInfo(AzureRMModuleBaseExt):
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
         super(BackupPolicyVMInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                             supports_check_mode=True,
-                                             supports_tags=True
-                                             )
+                                                 supports_check_mode=True,
+                                                 supports_tags=True
+                                                 )
 
     def get_url(self):
         return '/subscriptions/' \
@@ -257,6 +257,7 @@ class BackupPolicyVMInfo(AzureRMModuleBaseExt):
             response = {'text': response.text}
 
         return response
+
 
 def main():
     BackupPolicyVMInfo()
