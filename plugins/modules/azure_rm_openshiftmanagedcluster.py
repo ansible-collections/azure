@@ -402,6 +402,7 @@ properties:
 
 import time
 import json
+import random
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 try:
@@ -500,7 +501,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                         disposition='serviceCidr'
                     )
                 ),
-                default= dict(
+                default=dict(
                     pod_cidr="10.128.0.0/14",
                     service_cidr="172.30.0.0/16"
                 )
@@ -815,7 +816,6 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
 
 # Added per Mangirdas Judeikis (RED HAT INC) to fix first letter of cluster domain beginning with digit ; currently not supported
     def random_id(self):
-        import random
         random_id = (''.join(random.choice('abcdefghijklmnopqrstuvwxyz')) +
                      ''.join(random.choice('abcdefghijklmnopqrstuvwxyz1234567890')
                              for _ in range(7)))

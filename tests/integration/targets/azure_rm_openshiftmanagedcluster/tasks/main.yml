@@ -54,8 +54,8 @@
        subnet_id: "{{ master_sub_output.state.id }}"
    register: output
 
-- assert:
-    that: output.changed
+ - assert:
+     that: output.changed
 
  - name: Delete openshift cluster
    azure_rm_openshiftmanagedcluster:
@@ -65,5 +65,5 @@
      state: absent
    register: output
 
-- assert:
-    that: output.changed
+ - assert:
+     that: output.changed
