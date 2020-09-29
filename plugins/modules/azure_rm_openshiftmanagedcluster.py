@@ -40,7 +40,7 @@ options:
         description:
             - Configuration for OpenShift cluster.
         type: dict
-        default: dict()
+        default: {}
         suboptions:
             pull_secret:
                 description:
@@ -80,7 +80,7 @@ options:
         description:
             - Configuration for OpenShift networking (immutable).
         type: dict
-        default: {'podCidr' : '10.128.0.0/14', 'serviceCidr' : '172.30.0.0/16'}
+        default: {'pod_cidr' : '10.128.0.0/14', 'service_cidr' : '172.30.0.0/16'}
         suboptions:
             pod_cidr:
                 description:
@@ -106,6 +106,7 @@ options:
             subnet_id:
                 description:
                     - The Azure resource ID of the master subnet (immutable).
+                required: true
                 type: str
     worker_profiles:
         description:
@@ -115,6 +116,7 @@ options:
             name:
                 description: name of the worker profile (immutable).
                 type: str
+                required: true
                 choices:
                     - worker
             vm_size:
@@ -133,6 +135,7 @@ options:
                 description:
                     - The Azure resource ID of the worker subnet (immutable).
                 type: str
+                required: true
             count:
                 description:
                     - The number of worker VMs. Must be between 3 and 20 (immutable).
@@ -390,7 +393,7 @@ properties:
             description:
                 - API server configuration.
             returned: always
-            type: coplex
+            type: complex
             contains:
                 visibility:
                     description:
@@ -440,7 +443,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             cluster_profile=dict(
                 type='dict',
                 disposition='/properties/clusterProfile',
-                default=dict(),
+                default={},
                 options=dict(
                     pull_secret=dict(
                         type='str',

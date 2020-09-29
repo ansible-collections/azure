@@ -715,5 +715,8 @@ plugins/modules/azure_rm_recoveryservicesvault.py validate-modules:required_if-r
 plugins/modules/azure_rm_recoveryservicesvault.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_recoveryservicesvault_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_recoveryservicesvault_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:invalid-ansiblemodule-schema
+plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:required_if-requirements-unknown
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang
