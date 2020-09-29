@@ -50,12 +50,10 @@ options:
             domain:
                 description:
                     - The domain for the cluster (immutable).
-                required: true
                 type: str
             cluster_resource_group_id:
                 description:
                     - The ID of the cluster resource group (immutable).
-                required: true
                 type: str
             version:
                 description:
