@@ -33,9 +33,9 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: CentOS
+      publisher: OpenLogic
+      sku: "8_2"
       version: latest
     data_disks:
       - lun: 0
