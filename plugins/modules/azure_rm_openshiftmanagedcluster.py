@@ -40,6 +40,7 @@ options:
         description:
             - Configuration for OpenShift cluster.
         type: dict
+        default: dict()
         suboptions:
             pull_secret:
                 description:
@@ -68,10 +69,12 @@ options:
             client_id:
                 description:
                     - Client ID of the service principal (immutable).
+                required: true
                 type: str
             client_secret:
                 description:
                     - Client secret of the service principal (immutable).
+                required: true
                 type: str
     network_profile:
         description:
@@ -377,23 +380,24 @@ properties:
                     type: str
                     sample: /subscriptions/xx-xx-xx-xx/resourceGroups/mycluster-eastus/providers/Microsoft.Network/
                             virtualNetworks/mycluster-vnet/subnets/mycluster-worker
-      ingressProfiles:
-          description:
-              - Ingress configruation.
-          returned: always
-          type: list
-          sample: [{"name": "default", "visibility": "Public"},]
-      apiserverProfile:
-          description:
-              - API server configuration.
-          returned: always
-          type: coplex
-          contains:
-              visibility:
-                  description: api server visibility.
-                  returned: always
-                  type: str
-                  sample: Public
+        ingressProfiles:
+            description:
+                - Ingress configruation.
+            returned: always
+            type: list
+            sample: [{"name": "default", "visibility": "Public"}, ]
+        apiserverProfile:
+            description:
+                - API server configuration.
+            returned: always
+            type: coplex
+            contains:
+                visibility:
+                    description:
+                        - api server visibility.
+                    returned: always
+                    type: str
+                    sample: Public
 '''
 
 import time
@@ -435,33 +439,33 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             cluster_profile=dict(
                 type='dict',
                 disposition='/properties/clusterProfile',
+                default=dict(),
                 options=dict(
                     pull_secret=dict(
-                    type='str',
-                    updatable=False,
-                    disposition='pullSecret',
-                    purgeIfNone= True
+                        type='str',
+                        updatable=False,
+                        disposition='pullSecret',
+                        purgeIfNone=True
                     ),
-                cluster_resource_group_id=dict(
-                    type='str',
-                    updatable=False,
-                    disposition='resourceGroupId',
-                    purgeIfNone=True
+                    cluster_resource_group_id=dict(
+                        type='str',
+                        updatable=False,
+                        disposition='resourceGroupId',
+                        purgeIfNone=True
+                    ),
+                    domain=dict(
+                        type='str',
+                        updatable=False,
+                        disposition='domain',
+                        purgeIfNone=True
+                    ),
+                    version=dict(
+                        type='str',
+                        updatable=False,
+                        disposition='version',
+                        purgeIfNone=True
+                    )
                 ),
-                domain=dict(
-                    type='str',
-                    updatable=False,
-                    disposition='domain',
-                    purgeIfNone=True
-                ),
-                version=dict(
-                    type='str',
-                    updatable=False,
-                    disposition='version',
-                    purgeIfNone=True
-                )
-              ),
-              default=dict()
             ),
             service_principal_profile=dict(
                 type='dict',
@@ -593,7 +597,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                         disposition='name',
                         updatable=False,
                         choices=['default'],
-                        default = 'default'
+                        default='default'
                     ),
                     visibility=dict(
                         type='str',
@@ -817,6 +821,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                              for _ in range(7)))
         return random_id
 ###
+
     def set_default(self):
         if 'apiServerProfile' not in self.body['properties']:
             api_profile = dict(visibility="Public")

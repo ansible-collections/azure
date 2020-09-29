@@ -53,5 +53,17 @@
        vm_size : "Standard_D8s_v3"
        subnet_id: "{{ master_sub_output.state.id }}"
    register: output
- - debug:
-     var: output
+
+- assert:
+    that: output.changed
+
+ - name: Delete openshift cluster
+   azure_rm_openshiftmanagedcluster:
+     resource_group: "{{ resource_group }}"
+     name: "{{ cluster_name }}"
+     location: "eastus"
+     state: absent
+   register: output
+
+- assert:
+    that: output.changed
