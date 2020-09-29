@@ -441,7 +441,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             cluster_profile=dict(
                 type='dict',
                 disposition='/properties/clusterProfile',
-                default={},
+                default=dict(),
                 options=dict(
                     pull_secret=dict(
                         type='str',
