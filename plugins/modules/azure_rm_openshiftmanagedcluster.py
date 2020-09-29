@@ -150,7 +150,7 @@ options:
                 choices:
                     - Public
                     - Private
-           ip:
+            ip:
                 description:
                     - IP address of api server (immutable), only appears in response.
                 type: str
