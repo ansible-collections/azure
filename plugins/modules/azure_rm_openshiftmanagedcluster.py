@@ -338,7 +338,8 @@ properties:
                         - The Azure resource ID of the master subnet (immutable).
                     type: str
                     returned: always
-                    sample: /subscriptions/xx-xx-xx-xx/resourceGroups/mycluster-eastus/providers/Microsoft.Network/virtualNetworks/mycluster-vnet/subnets/mycluster-worker
+                    sample: /subscriptions/xx-xx-xx-xx/resourceGroups/mycluster-eastus/providers/Microsoft.Network/
+                            virtualNetworks/mycluster-vnet/subnets/mycluster-worker
         workerProfiles:
             description:
                 - Configuration of OpenShift cluster VMs.
@@ -374,7 +375,8 @@ properties:
                         - Subnet ID for worker pool.
                     returned: always
                     type: str
-                    sample: /subscriptions/xx-xx-xx-xx/resourceGroups/mycluster-eastus/providers/Microsoft.Network/virtualNetworks/mycluster-vnet/subnets/mycluster-worker
+                    sample: /subscriptions/xx-xx-xx-xx/resourceGroups/mycluster-eastus/providers/Microsoft.Network/
+                            virtualNetworks/mycluster-vnet/subnets/mycluster-worker
       ingressProfiles:
           description:
               - Ingress configruation.
@@ -431,33 +433,33 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                 disposition='/'
             ),
             cluster_profile=dict(
-              type='dict',
-              disposition='/properties/clusterProfile',
-              options=dict(
-                  pull_secret=dict(
-                      type='str',
-                      updatable=False,
-                      disposition='pullSecret',
-                      purgeIfNone= True
-                  ),
-                  cluster_resource_group_id=dict(
-                      type='str',
-                      updatable=False,
-                      disposition='resourceGroupId',
-                      purgeIfNone=True
-                  ),
-                  domain=dict(
-                      type='str',
-                      updatable=False,
-                      disposition='domain',
-                      purgeIfNone=True
-                  ),
-                  version=dict(
-                      type='str',
-                      updatable=False,
-                      disposition='version',
-                      purgeIfNone=True
-                  )
+                type='dict',
+                disposition='/properties/clusterProfile',
+                options=dict(
+                    pull_secret=dict(
+                    type='str',
+                    updatable=False,
+                    disposition='pullSecret',
+                    purgeIfNone= True
+                    ),
+                cluster_resource_group_id=dict(
+                    type='str',
+                    updatable=False,
+                    disposition='resourceGroupId',
+                    purgeIfNone=True
+                ),
+                domain=dict(
+                    type='str',
+                    updatable=False,
+                    disposition='domain',
+                    purgeIfNone=True
+                ),
+                version=dict(
+                    type='str',
+                    updatable=False,
+                    disposition='version',
+                    purgeIfNone=True
+                )
               ),
               default=dict()
             ),
@@ -592,7 +594,6 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                         updatable=False,
                         choices=['default'],
                         default = 'default'
-
                     ),
                     visibility=dict(
                         type='str',
@@ -630,8 +631,8 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
         self.to_do = Actions.NoAction
 
         self.body = {}
-        self.query_parameters={}
-        self.header_parameters={}
+        self.query_parameters = {}
+        self.header_parameters = {}
 
         self.query_parameters['api-version'] = '2020-04-30'
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
@@ -834,9 +835,11 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
         if 'pullSecret' not in self.body['properties']['clusterProfile']:
             self.body['properties']['clusterProfile']['pullSecret'] = ''
         if 'resourceGroupId' not in self.body['properties']['clusterProfile']:
-            self.body['properties']['clusterProfile']['resourceGroupId'] = "/subscriptions/" + self.subscription_id + "/resourceGroups/" + self.name + "-cluster"
+            resourcegroup_id = "/subscriptions/" + self.subscription_id + "/resourceGroups/" + self.name + "-cluster"
+            self.body['properties']['clusterProfile']['resourceGroupId'] = resourcegroup_id
         if 'domain' not in self.body['properties']['clusterProfile']:
             self.body['properties']['clusterProfile']['domain'] = self.random_id()
+
 
 def main():
     AzureRMOpenShiftManagedClusters()
