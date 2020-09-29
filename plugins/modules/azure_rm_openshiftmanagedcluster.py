@@ -171,17 +171,17 @@ options:
                 choices:
                     - Public
                     - Private
-           name:
-               description:
-                   - Name of the ingress  (immutable).
-               type: str
-               default: default
-               choices:
-                   - default
-          ip:
-              description:
-                  - IP of the ingress (immutable), only appears in response.
-              type: str
+            name:
+                description:
+                    - Name of the ingress  (immutable).
+                type: str
+                default: default
+                choices:
+                    - default
+            ip:
+                description:
+                    - IP of the ingress (immutable), only appears in response.
+                type: str
     provisioning_state:
         description:
             - The current deployment or provisioning state, which only appears in the response.
