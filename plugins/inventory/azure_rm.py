@@ -17,18 +17,6 @@ DOCUMENTATION = r'''
         - By default, sets C(ansible_host) to the first public IP address found (preferring the primary NIC). If no
           public IPs are found, the first private IP (also preferring the primary NIC). The default may be overridden
           via C(hostvar_expressions); see examples.
-        hostnames:
-          description:
-            - A list of Jinja2 expressions in order of precedence to compose inventory_hostname.
-            - Ignores expression if result is an empty string or None value.
-            - By default, inventory_hostname is generated to be globally unique based on the VM host name.
-              See C(plain_host_names) for more details on the default.
-            - An expression of 'default' will force using the default hostname generator if no previous
-              hostname expression resulted in a valid hostname.
-            - Use ``default_inventory_hostname`` to access the default hostname generator's value in
-              any of the Jinja2 expressions.
-          type: list
-          default: [default]
 '''
 
 EXAMPLES = '''
