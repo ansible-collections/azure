@@ -819,7 +819,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
     def random_id(self):
         random_id = (''.join(random.choice('abcdefghijklmnopqrstuvwxyz')) +
                      ''.join(random.choice('abcdefghijklmnopqrstuvwxyz1234567890')
-                     for key in range(7)))
+                             for key in range(7)))
         return random_id
 ###
 

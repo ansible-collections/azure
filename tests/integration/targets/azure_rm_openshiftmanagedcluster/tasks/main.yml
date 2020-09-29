@@ -45,12 +45,12 @@
        pod_cidr: "10.128.0.0/14"
        service_cidr: "172.30.0.0/16"
      worker_profiles:
-       - vm_size : "Standard_D4s_v3"
-         subnet_id : "{{ worker_sub_output.state.id }}"
-         disk_size : 128
-         count : 3 
+       - vm_size: "Standard_D4s_v3"
+         subnet_id: "{{ worker_sub_output.state.id }}"
+         disk_size: 128
+         count: 3
      master_profile:
-       vm_size : "Standard_D8s_v3"
+       vm_size: "Standard_D8s_v3"
        subnet_id: "{{ master_sub_output.state.id }}"
    register: output
 
