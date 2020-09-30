@@ -146,6 +146,16 @@ EXAMPLES = '''
           resource_group: mySecondResourceGroup
         route_table: route
 
+    - name: Create a subnet with delegations
+      azure_rm_subnet:
+        resource_group: myResourceGroup
+        virtual_network_name: myVirtualNetwork
+        name: mySubnet
+        address_prefix_cidr: "10.1.0.0/16"
+        delegation:
+          name: 'mydeleg'
+          serviceName: 'Microsoft.ContainerInstance/containerGroups'
+
     - name: Delete a subnet
       azure_rm_subnet:
         resource_group: myResourceGroup
