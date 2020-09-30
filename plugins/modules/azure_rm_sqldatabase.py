@@ -202,6 +202,7 @@ try:
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
     from azure.mgmt.sql import SqlManagementClient
+    from azure.mgmt.sql.models import Sku
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -335,7 +336,7 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 elif key == "recovery_services_recovery_point_resource_id":
                     self.parameters["recovery_services_recovery_point_resource_id"] = kwargs[key]
                 elif key == "edition":
-                    self.parameters["edition"] = _snake_to_camel(kwargs[key], True)
+                    self.parameters["sku"]= Sku(name=kwargs[key])
                 elif key == "max_size_bytes":
                     self.parameters["max_size_bytes"] = kwargs[key]
                 elif key == "elastic_pool_name":
