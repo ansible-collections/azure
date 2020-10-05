@@ -97,6 +97,7 @@ AZURE_API_PROFILES = {
         'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
         'StorageManagementClient': '2019-06-01',
+        'SubscriptionClient': '2019-11-01',
         'WebSiteManagementClient': '2018-02-01',
         'PostgreSQLManagementClient': '2017-12-01',
         'MySQLManagementClient': '2017-12-01',
@@ -397,6 +398,7 @@ class AzureRMModuleBase(object):
 
         self._network_client = None
         self._storage_client = None
+        self._subscription_client = None
         self._resource_client = None
         self._compute_client = None
         self._dns_client = None
@@ -842,7 +844,7 @@ class AzureRMModuleBase(object):
 
         return client
 
-    def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None):
+    def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False):
         self.log('Getting management service client {0}'.format(client_type.__name__))
         self.check_client_version(client_type)
 
@@ -852,7 +854,11 @@ class AzureRMModuleBase(object):
             # most things are resource_manager, don't make everyone specify
             base_url = self.azure_auth._cloud_environment.endpoints.resource_manager
 
-        client_kwargs = dict(credentials=self.azure_auth.azure_credentials, subscription_id=self.azure_auth.subscription_id, base_url=base_url)
+        # Some management clients do not take a subscription ID as parameters.
+        if suppress_subscription_id:
+            client_kwargs = dict(credentials=self.azure_auth.azure_credentials, base_url=base_url)
+        else:
+            client_kwargs = dict(credentials=self.azure_auth.azure_credentials, subscription_id=self.azure_auth.subscription_id, base_url=base_url)
 
         api_profile_dict = {}
 
@@ -954,6 +960,20 @@ class AzureRMModuleBase(object):
     @property
     def storage_models(self):
         return StorageManagementClient.models("2019-06-01")
+
+    @property
+    def subscription_client(self):
+        self.log('Getting subscription client...')
+        if not self._subscription_client:
+            self._subscription_client = self.get_mgmt_svc_client(SubscriptionClient,
+                                                            base_url=self._cloud_environment.endpoints.resource_manager,
+                                                            suppress_subscription_id=True,
+                                                            api_version='2019-11-01')
+        return self._subscription_client
+
+    @property
+    def subscription_models(self):
+        return SubscriptionClient.models("2019-11-01")
 
     @property
     def network_client(self):
