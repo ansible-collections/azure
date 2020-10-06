@@ -131,18 +131,10 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
     def __init__(self):
         self.module_arg_spec = dict(
-            name=dict(
-                type='str'
-            ),
-            scope=dict(
-                type='str'
-            ),
-            assignee=dict(
-                type='str'
-            ),
-            role_definition_id=dict(
-                type='str'
-            )
+            name=dict(type='str'),
+            scope=dict(type='str'),
+            assignee=dict(type='str'),
+            role_definition_id=dict(type='str')
         )
 
         self.name = None
@@ -151,7 +143,8 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         self.role_definition_id = None
 
         self.results = dict(
-            changed=False
+            changed=False,
+            roleassignments=[]
         )
 
         self._client = None
