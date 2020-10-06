@@ -1,5 +1,6 @@
 #!/usr/bin/python
 #
+# Copyright (c) 2020 Paul Aiton, (@paultaiton)
 # Copyright (c) 2019 Yunge Zhu, (@yungezz)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
@@ -45,6 +46,7 @@ extends_documentation_fragment:
 
 author:
     - Yunge Zhu(@yungezz)
+    - Paul Aiton(@paultaiton)
 
 '''
 
@@ -89,6 +91,12 @@ roleassignments:
             type: str
             returned: always
             sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        principal_type:
+            description:
+                - Principal type of the role assigned to.
+            type: str
+            returned: always
+            sample: ServicePrincipal
         role_definition_id:
             description:
                 - Role definition id that was assigned to principal_id.
@@ -103,18 +111,16 @@ roleassignments:
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
-import time
+#import time # I don't think this is used.
 
 try:
-    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
-    from msrest.serialization import Model
-    from azure.mgmt.authorization import AuthorizationManagementClient
-
+    #from msrest.serialization import Model # I don't think this is used.
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 def roleassignment_to_dict(assignment):
     return dict(
@@ -147,12 +153,11 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             roleassignments=[]
         )
 
-        self._client = None
-
         mutually_exclusive = [['name', 'assignee']]
 
-        super(AzureRMRoleAssignmentInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
+        super(AzureRMRoleAssignmentInfo, self).__init__(self.module_arg_spec,
                                                         supports_tags=False,
+                                                        facts_module=True,
                                                         mutually_exclusive=mutually_exclusive)
 
     def exec_module(self, **kwargs):
@@ -161,14 +166,8 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         if is_old_facts:
             self.module.deprecate("The 'azure_rm_roleassignment_facts' module has been renamed to 'azure_rm_roleassignment_info'", version=(2.9, ))
 
-        for key in list(self.module_arg_spec.keys()):
-            if hasattr(self, key):
-                setattr(self, key, kwargs[key])
-
-        # get management client
-        self._client = self.get_mgmt_svc_client(AuthorizationManagementClient,
-                                                base_url=self._cloud_environment.endpoints.resource_manager,
-                                                api_version="2018-01-01-preview")
+        for key in self.module_arg_spec:
+            setattr(self, key, kwargs[key])
 
         if self.name:
             self.results['roleassignments'] = self.get_by_name()
@@ -177,7 +176,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         elif self.scope:
             self.results['roleassignments'] = self.list_by_scope()
         else:
-            self.fail("Please specify name or assignee")
+            self.fail("Please specify name, assignee or scope.")
 
         return self.results
 
@@ -192,7 +191,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         results = []
 
         try:
-            response = self._client.role_assignments.get(scope=self.scope, role_assignment_name=self.name)
+            response = self.authorization_client.role_assignments.get(scope=self.scope, role_assignment_name=self.name)
 
             if response:
                 response = roleassignment_to_dict(response)
@@ -219,7 +218,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         results = []
         filter = "principalId eq '{0}'".format(self.assignee)
         try:
-            response = list(self._client.role_assignments.list(filter=filter))
+            response = list(self.authorization_client.role_assignments.list(filter=filter))
 
             if response and len(response) > 0:
                 response = [roleassignment_to_dict(a) for a in response]
@@ -246,7 +245,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
         results = []
         try:
-            response = list(self._client.role_assignments.list_for_scope(scope=self.scope, filter='atScope()'))
+            response = list(self.authorization_client.role_assignments.list_for_scope(scope=self.scope, filter='atScope()'))
 
             if response and len(response) > 0:
                 response = [roleassignment_to_dict(a) for a in response]
