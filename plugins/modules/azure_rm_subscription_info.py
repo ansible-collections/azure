@@ -44,6 +44,11 @@ options:
             - Option has no effect when searching by id or name, and will be silently ignored.
         default: False
         type: bool
+    tags:
+        description:
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+            - Option has no effect when searching by id or name, and will be silently ignored.
+        type: list
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -64,6 +69,12 @@ EXAMPLES = '''
 - name: Get facts for all subscriptions, including ones that are disabled.
   azure_rm_subscription_info:
     all: True
+
+- name: Get facts for subscriptions containing tags provided.
+    azure_rm_subscription_info:
+    tags:
+        - testing
+        - foo:bar
 '''
 
 RETURN = '''
@@ -124,6 +135,7 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             id=dict(type='str'),
+            tags=dict(type='list'),
             all=dict(type='bool')
         )
 
@@ -134,6 +146,7 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
 
         self.name = None
         self.id = None
+        self.tags = None
         self.all = False
 
         super(AzureRMSubscriptionInfo, self).__init__(self.module_arg_spec,
@@ -184,7 +197,7 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
             # If name is not defined and either state is Enabled or all is true, return result.
             if ( self.name and self.name.lower() == item.display_name.lower() ):
                 results.append(self.to_dict(item) )
-            elif ( not self.name and ( self.all or item.state == "Enabled" ) ):
+            elif ( not self.name and ( self.all or item.state == "Enabled" ) and self.has_tags(item.tags, self.tags) ):
                 results.append(self.to_dict(item) )
 
         return results
