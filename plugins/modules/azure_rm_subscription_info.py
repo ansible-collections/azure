@@ -149,9 +149,12 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
         self.tags = None
         self.all = False
 
+        mutually_exclusive = [['name', 'id']]
+
         super(AzureRMSubscriptionInfo, self).__init__(self.module_arg_spec,
-                                                       supports_tags=False,
-                                                       facts_module=True)
+                                                        supports_tags=False,
+                                                        mutually_exclusive=mutually_exclusive,
+                                                        facts_module=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
