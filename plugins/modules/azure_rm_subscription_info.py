@@ -28,19 +28,22 @@ options:
     id:
         description:
             - Limit results to a specific subscription by id.
-            - Cannot be used together with name.
+            - Mutually exclusive with I(name).
+        type: str
     name:
         description:
             - Limit results to a specific subscription by name.
-            - Cannot be used together with id.
+            - Mutually exclusive with I(id).
         aliases:
             - subscription_name
+        type: str
     all:
         description:
             - If true, will return all subscriptions.
             - If false will omit disabled subscriptions (default).
-            - Option has no effect when searching by id or name.
+            - Option has no effect when searching by id or name, and will be silently ignored.
         default: False
+        type: bool
 
 extends_documentation_fragment:
     - azure.azcollection.azure
