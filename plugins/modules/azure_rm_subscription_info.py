@@ -71,7 +71,7 @@ EXAMPLES = '''
     all: True
 
 - name: Get facts for subscriptions containing tags provided.
-    azure_rm_subscription_info:
+  azure_rm_subscription_info:
     tags:
         - testing
         - foo:bar
