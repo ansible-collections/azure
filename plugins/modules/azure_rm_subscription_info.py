@@ -200,7 +200,7 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
             # If name is not defined and either state is Enabled or all is true, and tags match, return result.
             if ( self.name and self.name.lower() == item.display_name.lower() ):
                 results.append( self.to_dict( item ) )
-            elif ( not self.name and ( self.all or item.state == "Enabled" ) and self.has_tags( item.tags, self.tags) ):
+            elif ( not self.name and ( self.all or item.state == "Enabled" ) and self.has_tags( item.tags, self.tags ) ):
                 results.append( self.to_dict( item ) )
 
         return results
