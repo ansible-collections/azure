@@ -152,9 +152,9 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
         mutually_exclusive = [['name', 'id']]
 
         super(AzureRMSubscriptionInfo, self).__init__(self.module_arg_spec,
-                                                        supports_tags=False,
-                                                        mutually_exclusive=mutually_exclusive,
-                                                        facts_module=True)
+                                                      supports_tags=False,
+                                                      mutually_exclusive=mutually_exclusive,
+                                                      facts_module=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
@@ -197,11 +197,11 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
         results = []
         for item in response:
             # If the name matches, return result regardless of anything else.
-            # If name is not defined and either state is Enabled or all is true, return result.
+            # If name is not defined and either state is Enabled or all is true, and tags match, return result.
             if ( self.name and self.name.lower() == item.display_name.lower() ):
-                results.append(self.to_dict(item) )
-            elif ( not self.name and ( self.all or item.state == "Enabled" ) and self.has_tags(item.tags, self.tags) ):
-                results.append(self.to_dict(item) )
+                results.append( self.to_dict( item ) )
+            elif ( not self.name and ( self.all or item.state == "Enabled" ) and self.has_tags( item.tags, self.tags) ):
+                results.append( self.to_dict( item ) )
 
         return results
 

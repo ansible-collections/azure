@@ -966,9 +966,9 @@ class AzureRMModuleBase(object):
         self.log('Getting subscription client...')
         if not self._subscription_client:
             self._subscription_client = self.get_mgmt_svc_client(SubscriptionClient,
-                                                            base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            suppress_subscription_id=True,
-                                                            api_version='2019-11-01')
+                                                                 base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                 suppress_subscription_id=True,
+                                                                 api_version='2019-11-01')
         return self._subscription_client
 
     @property
