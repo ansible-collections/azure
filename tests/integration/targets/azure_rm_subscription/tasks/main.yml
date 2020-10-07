@@ -1,18 +1,18 @@
 - name: Get list of all subscriptions
-  azure.azcollection.azure_rm_subscription_info:
+  azure_rm_subscription_info:
     all: True
   register: az_all_subscriptions
 
 - name: Get a subscription by id
-  azure.azcollection.azure_rm_subscription_info:
+  azure_rm_subscription_info:
     id: "{{ az_all_subscriptions.subscriptions[0].subscription_id }}"
 
 - name: Get a subscription by name
-  azure.azcollection.azure_rm_subscription_info:
+  azure_rm_subscription_info:
     name: "{{ az_all_subscriptions.subscriptions[0].display_name }}"
 
 - name: Test invalid name id combo
-  azure.azcollection.azure_rm_subscription_info:
+  azure_rm_subscription_info:
     name: "{{ az_all_subscriptions.subscriptions[0].display_name }}"
     id: "{{ az_all_subscriptions.subscriptions[0].subscription_id }}"
   register: invalid_name
