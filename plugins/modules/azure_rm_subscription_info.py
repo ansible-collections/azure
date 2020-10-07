@@ -54,7 +54,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
-    - Paul Aiton ( @paultaiton )
+    - Paul Aiton (@paultaiton)
 '''
 
 EXAMPLES = '''
@@ -215,8 +215,10 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
             tenant_id=subscription_object.tenant_id
         )
 
+
 def main():
     AzureRMSubscriptionInfo()
+
 
 if __name__ == '__main__':
     main()
