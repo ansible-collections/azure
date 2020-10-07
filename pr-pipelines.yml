@@ -64,6 +64,7 @@ parameters:
     - "azure_rm_storageaccount"
     - "azure_rm_storageblob"
     - "azure_rm_subnet"
+    - "azure_rm_subscription"
     - "azure_rm_trafficmanagerprofile"
     - "azure_rm_virtualmachine"
     - "azure_rm_virtualmachineextension"
