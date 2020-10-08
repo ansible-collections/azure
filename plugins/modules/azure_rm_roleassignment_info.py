@@ -231,15 +231,22 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         filter = "principalId eq '{0}'".format(self.assignee)
         response = self.list_assignments(filter=filter)
 
+        return results
+
+    def list_assignments(self, filter=None):
+        '''
+        Returns a list of assignments.
+        '''
+        results = []
         try:
-            response = list(self.authorization_client.role_assignments.list(filter=filter))
+            response = self.authorization_client.role_assignments.list(filter=filter)
 
             if response and len(response) > 0:
                 response = [roleassignment_to_dict(a) for a in response]
 
                 if self.role_definition_id:
-                    for r in response:
-                        if r['role_definition_id'] == self.role_definition_id:
+                    for role in response:
+                        if role['role_definition_id'] == self.role_definition_id:
                             results.append(r)
                 else:
                     results = response
@@ -248,13 +255,6 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             self.log("Didn't find role assignments to assignee {0}".format(self.assignee))
 
         return results
-
-    def list_assignments(self, filter=None):
-        '''
-        Returns a list of assignments.
-        '''
-        results = []
-        pass
 
     def list_by_scope(self):
         '''
