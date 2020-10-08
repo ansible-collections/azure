@@ -40,6 +40,13 @@ options:
     role_definition_id:
         description:
             - Resource id of role definition.
+    strict_scope_match:
+        description:
+            - If strict_scope_match is True, role assignments will only be returned for the exact scope defined.
+            - Inherited role assignments will be excluded from results.
+            - Option will be silently ignored if no scope is provided.
+        type: bool
+        default: False
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -141,12 +148,14 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             scope=dict(type='str'),
             assignee=dict(type='str'),
             role_definition_id=dict(type='str')
+            strict_scope_match=dict(type=bool, default=False)
         )
 
         self.name = None
         self.scope = None
         self.assignee = None
         self.role_definition_id = None
+        self.strict_scope_match = None
 
         self.results = dict(
             changed=False,
