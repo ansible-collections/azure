@@ -25,14 +25,16 @@ description:
 options:
     scope:
         description:
-            - The scope that the role assignment applies to.
+            - The scope to query for role assignments.
             - For example, use /subscriptions/{subscription-id}/ for a subscription.
             - /subscriptions/{subscription-id}/resourceGroups/{resourcegroup-name} for a resource group.
             - /subscriptions/{subscription-id}/resourceGroups/{resourcegroup-name}/providers/{resource-provider}/{resource-type}/{resource-name} for a resource.
+            - By default will return all inhereted assignments from parent scopes, see I(strict_scope_match).
     name:
         description:
             - Name of role assignment.
             - Mutual exclusive with I(assignee).
+            - Requires that I(scope) also be set.
     assignee:
         description:
             - Object id of a user, group or service principal.
@@ -147,7 +149,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             name=dict(type='str'),
             scope=dict(type='str'),
             assignee=dict(type='str'),
-            role_definition_id=dict(type='str')
+            role_definition_id=dict(type='str'),
             strict_scope_match=dict(type=bool, default=False)
         )
 
@@ -178,14 +180,15 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.name:
-            self.results['roleassignments'] = self.get_by_name()
-        elif self.assignee:
+        if self.assignee:
             self.results['roleassignments'] = self.get_by_assignee()
+        elif self.name and self.scope:
+            self.results['roleassignments'] = self.get_by_name()
         elif self.scope:
             self.results['roleassignments'] = self.list_by_scope()
-        else:
-            self.fail("Please specify name, assignee or scope.")
+        elif self.name:
+            self.fail("Name requires a scope to also be set.")
+            self.fail("Please specify assignee or scope.")
 
         return self.results
 
@@ -226,6 +229,8 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
         results = []
         filter = "principalId eq '{0}'".format(self.assignee)
+        response = self.list_assignments(filter=filter)
+
         try:
             response = list(self.authorization_client.role_assignments.list(filter=filter))
 
@@ -243,6 +248,13 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             self.log("Didn't find role assignments to assignee {0}".format(self.assignee))
 
         return results
+
+    def list_assignments(self, filter=None):
+        '''
+        Returns a list of assignments.
+        '''
+        results = []
+        pass
 
     def list_by_scope(self):
         '''
