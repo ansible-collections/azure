@@ -135,7 +135,7 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str', aliases=['subscription_name']),
             id=dict(type='str'),
-            tags=dict(type='list',  elements='dict'),
+            tags=dict(type='list', elements='dict'),
             all=dict(type='bool')
         )
 
