@@ -847,7 +847,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
         if 'resourceGroupId' not in self.body['properties']['clusterProfile']:
             resourcegroup_id = "/subscriptions/" + self.subscription_id + "/resourceGroups/" + self.name + "-cluster"
             self.body['properties']['clusterProfile']['resourceGroupId'] = resourcegroup_id
-        # if domain is not set in cluster profile or it is set to a empty string or null value then generate a random domain
+        # if domain is not set in cluster profile or it is set to an empty string or null value then generate a random domain
         if 'domain' not in self.body['properties']['clusterProfile'] or not self.body['properties']['clusterProfile']['domain']:
             self.body['properties']['clusterProfile']['domain'] = self.random_id()
 
