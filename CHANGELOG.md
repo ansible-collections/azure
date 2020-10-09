@@ -1,6 +1,26 @@
 # Change Log
 
-## v1.1.0 (2020-09-03)
+## v1.2.0 (2020-10-09)
+
+### NEW MODULES
+  - azure_rm_backupazurevm  ([#248](https://github.com/ansible-collections/azure/pull/248))
+  - azure_rm_backupazurevm_info ([#248](https://github.com/ansible-collections/azure/pull/248))
+  - azure_rm_recoveryservicesvault ([#254](https://github.com/ansible-collections/azure/pull/254))
+  - azure_rm_openshiftmanagedcluster ([#276](https://github.com/ansible-collections/azure/pull/276))
+
+### FEATURE ENHANCEMENT
+  - add python 3.8 support ([#246](https://github.com/ansible-collections/azure/pull/246))
+  - azure_rm_publicipaddress: support public Ipv6 address ([#125](https://github.com/ansible-collections/azure/pull/125))
+  - azure_rm_subnet: add private-endpoint-network-policies ([#256](https://github.com/ansible-collections/azure/pull/256))
+  - azure_rm: fetch availability zone info into hostvars ([#243](https://github.com/ansible-collections/azure/pull/243))
+  - azure_rm: make inventory_hostname configurable with hostvar_expressions ([#105](https://github.com/ansible-collections/azure/pull/105))
+
+### BUG FIXING
+  - azure_rm_openshiftmanagedcluster: fix issue [#270](https://github.com/ansible-collections/azure/issues/270) and [#269](https://github.com/ansible-collections/azure/issues/269)
+            ([#285](https://github.com/ansible-collections/azure/pull/285))
+
+
+# v1.1.0 (2020-09-03)
 
 ### FEATURE ENHANCEMENT
   - azure_rm_storageaccount: allow blob public access parameter ([#219](https://github.com/ansible-collections/azure/pull/219))

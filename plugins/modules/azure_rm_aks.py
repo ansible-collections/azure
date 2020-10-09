@@ -689,7 +689,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                     if self.addon:
                         for key in ADDONS.keys():
                             addon_name = ADDONS[key]['name']
-                            if not compare_addon(response['addon'].get(addon_name.lower()), self.addon.get(key), ADDONS[key].get('config')):
+                            if not compare_addon(response['addon'].get(addon_name), self.addon.get(key), ADDONS[key].get('config')):
                                 to_be_updated = True
 
                     for profile_result in response['agent_pool_profiles']:
