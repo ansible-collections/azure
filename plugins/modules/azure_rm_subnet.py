@@ -44,7 +44,7 @@ options:
         aliases:
             - address_prefixes
         type: list
-        version_added: "1.0.1"
+        version_added: "1.0.0"
     security_group:
         description:
             - Existing security group with which to associate the subnet.

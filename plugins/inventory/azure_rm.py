@@ -10,79 +10,13 @@ DOCUMENTATION = r'''
     short_description: Azure Resource Manager inventory plugin
     extends_documentation_fragment:
       - azure.azcollection.azure
+      - azure.azcollection.azure_rm
     description:
         - Query VM details from Azure Resource Manager
         - Requires a YAML configuration file whose name ends with 'azure_rm.(yml|yaml)'
         - By default, sets C(ansible_host) to the first public IP address found (preferring the primary NIC). If no
           public IPs are found, the first private IP (also preferring the primary NIC). The default may be overridden
           via C(hostvar_expressions); see examples.
-    options:
-        plugin:
-            description: marks this as an instance of the 'azure_rm' plugin
-            required: true
-            choices: ['azure_rm']
-        include_vm_resource_groups:
-            description: A list of resource group names to search for virtual machines. '\*' will include all resource
-                groups in the subscription.
-            default: ['*']
-        include_vmss_resource_groups:
-            description: A list of resource group names to search for virtual machine scale sets (VMSSs). '\*' will
-                include all resource groups in the subscription.
-            default: []
-        fail_on_template_errors:
-            description: When false, template failures during group and filter processing are silently ignored (eg,
-                if a filter or group expression refers to an undefined host variable)
-            choices: [True, False]
-            default: True
-        keyed_groups:
-            description: Creates groups based on the value of a host variable. Requires a list of dictionaries,
-                defining C(key) (the source dictionary-typed variable), C(prefix) (the prefix to use for the new group
-                name), and optionally C(separator) (which defaults to C(_))
-        conditional_groups:
-            description: A mapping of group names to Jinja2 expressions. When the mapped expression is true, the host
-                is added to the named group.
-        hostvar_expressions:
-            description: A mapping of hostvar names to Jinja2 expressions. The value for each host is the result of the
-                Jinja2 expression (which may refer to any of the host's existing variables at the time this inventory
-                plugin runs).
-        exclude_host_filters:
-            description: Excludes hosts from the inventory with a list of Jinja2 conditional expressions. Each
-                expression in the list is evaluated for each host; when the expression is true, the host is excluded
-                from the inventory.
-            default: []
-        batch_fetch:
-            description: To improve performance, results are fetched using an unsupported batch API. Disabling
-                C(batch_fetch) uses a much slower serial fetch, resulting in many more round-trips. Generally only
-                useful for troubleshooting.
-            default: true
-        default_host_filters:
-            description: A default set of filters that is applied in addition to the conditions in
-                C(exclude_host_filters) to exclude powered-off and not-fully-provisioned hosts. Set this to a different
-                value or empty list if you need to include hosts in these states.
-            default: ['powerstate != "running"', 'provisioning_state != "succeeded"']
-        use_contrib_script_compatible_sanitization:
-          description:
-            - By default this plugin is using a general group name sanitization to create safe and usable group names for use in Ansible.
-              This option allows you to override that, in efforts to allow migration from the old inventory script and
-              matches the sanitization of groups when the script's ``replace_dash_in_groups`` option is set to ``False``.
-              To replicate behavior of ``replace_dash_in_groups = True`` with constructed groups,
-              you will need to replace hyphens with underscores via the regex_replace filter for those entries.
-            - For this to work you should also turn off the TRANSFORM_INVALID_GROUP_CHARS setting,
-              otherwise the core engine will just use the standard sanitization on top.
-            - This is not the default as such names break certain functionality as not all characters are valid Python identifiers
-              which group names end up being used as.
-          type: bool
-          default: False
-          version_added: '2.8'
-        plain_host_names:
-          description:
-            - By default this plugin will use globally unique host names.
-              This option allows you to override that, and use the name that matches the old inventory script naming.
-            - This is not the default, as these names are not truly unique, and can conflict with other hosts.
-              The default behavior will add extra hashing to the end of the hostname to prevent such conflicts.
-          type: bool
-          default: False
-          version_added: '2.8'
 '''
 
 EXAMPLES = '''
@@ -140,6 +74,11 @@ hostvar_expressions:
   # if none are found, the first public IP address.
   ansible_host: (public_dns_hostnames + public_ipv4_addresses) | first
 
+# change how inventory_hostname is generated. Each item is a jinja2 expression similar to hostvar_expressions.
+hostnames:
+  - tags.vm_name
+  - default  # special var that uses the default hashed name
+
 # places hosts in dynamically-created groups based on a variable value.
 keyed_groups:
 # places each host in a group named 'tag_(tag name)_(tag value)' for each tag on a VM.
@@ -182,7 +121,7 @@ from ansible.module_utils.six import iteritems
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMAuth
 from ansible.errors import AnsibleParserError, AnsibleError
 from ansible.module_utils.parsing.convert_bool import boolean
-from ansible.module_utils._text import to_native, to_bytes
+from ansible.module_utils._text import to_native, to_bytes, to_text
 from itertools import chain
 from msrest import ServiceClient, Serializer, Deserializer
 from msrestazure import AzureConfiguration
@@ -330,8 +269,11 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         constructable_config_groups = self.get_option('conditional_groups')
         constructable_config_keyed_groups = self.get_option('keyed_groups')
 
+        constructable_hostnames = self.get_option('hostnames')
+
         for h in self._hosts:
-            inventory_hostname = self._get_hostname(h)
+            # FUTURE: track hostnames to warn if a hostname is repeated (can happen for legacy and for composed inventory_hostname)
+            inventory_hostname = self._get_hostname(h, hostnames=constructable_hostnames, strict=constructable_config_strict)
             if self._filter_host(inventory_hostname, h.hostvars):
                 continue
             self.inventory.add_host(inventory_hostname)
@@ -364,9 +306,30 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         return False
 
-    def _get_hostname(self, host):
-        # FUTURE: configurable hostname sources
-        return host.default_inventory_hostname
+    def _get_hostname(self, host, hostnames=None, strict=False):
+        hostname = None
+        errors = []
+
+        for preference in hostnames:
+            if preference == 'default':
+                return host.default_inventory_hostname
+            try:
+                hostname = self._compose(preference, host.hostvars)
+            except Exception as e:  # pylint: disable=broad-except
+                if strict:
+                    raise AnsibleError("Could not compose %s as hostnames - %s" % (preference, to_native(e)))
+                else:
+                    errors.append(
+                        (preference, str(e))
+                    )
+            if hostname:
+                return to_text(hostname)
+
+        raise AnsibleError(
+            'Could not template any hostname for host, errors for each preference: %s' % (
+                ', '.join(['%s: %s' % (pref, err) for pref, err in errors])
+            )
+        )
 
     def _process_queue_serial(self):
         try:
@@ -565,7 +528,8 @@ class AzureHost(object):
             ) if self._vmss else {},
             virtual_machine_size=self._vm_model['properties']['hardwareProfile']['vmSize'] if self._vm_model['properties'].get('hardwareProfile') else None,
             plan=self._vm_model['properties']['plan']['name'] if self._vm_model['properties'].get('plan') else None,
-            resource_group=parse_resource_id(self._vm_model['id']).get('resource_group').lower()
+            resource_group=parse_resource_id(self._vm_model['id']).get('resource_group').lower(),
+            default_inventory_hostname=self.default_inventory_hostname,
         )
 
         # set nic-related values from the primary NIC first
