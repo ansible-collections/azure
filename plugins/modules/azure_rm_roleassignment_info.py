@@ -187,9 +187,9 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         elif self.scope:
             self.results['roleassignments'] = self.list_by_scope()
         elif self.name:
-            self.fail("Name requires a scope to also be set.")
+            self.fail("Parameter Error: Name requires a scope to also be set.")
         else:
-            self.fail("Please specify assignee or scope.")
+            self.fail("Parameter Error: Please specify assignee or scope.")
 
         return self.results
 
