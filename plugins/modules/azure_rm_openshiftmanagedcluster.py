@@ -832,7 +832,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             self.body['properties']['ingressProfiles'] = [ingress_profile]
         else:
             # hard code the ingress profile name as default, so user don't need to specify it
-            for profile in  self.body['properties']['ingressProfiles']:
+            for profile in self.body['properties']['ingressProfiles']:
                 profile['name'] = "default"
         if 'name' not in self.body['properties']['workerProfiles'][0]:
             self.body['properties']['workerProfiles'][0]['name'] = 'worker'
