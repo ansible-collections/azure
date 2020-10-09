@@ -188,6 +188,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             self.results['roleassignments'] = self.list_by_scope()
         elif self.name:
             self.fail("Name requires a scope to also be set.")
+        else:
             self.fail("Please specify assignee or scope.")
 
         return self.results
@@ -210,9 +211,9 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
                 if self.role_definition_id:
                     if self.role_definition_id == response['role_definition_id']:
-                        results = [response]
+                        results.append(response)
                 else:
-                    results = [response]
+                        results.append(response)
 
         except CloudError as ex:
             self.log("Didn't find role assignment {0} in scope {1}".format(self.name, self.scope))
