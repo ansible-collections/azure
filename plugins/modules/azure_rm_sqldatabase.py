@@ -383,6 +383,9 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 if (('max_size_bytes' in self.parameters) and
                         (self.parameters['max_size_bytes'] != old_response['max_size_bytes'])):
                     self.to_do = Actions.Update
+                if (('edition' in self.parameters) and
+                        (self.parameters['edition'] != old_response['edition'])):
+                    self.to_do = Actions.Update
                 update_tags, newtags = self.update_tags(old_response.get('tags', dict()))
                 if update_tags:
                     self.tags = newtags
