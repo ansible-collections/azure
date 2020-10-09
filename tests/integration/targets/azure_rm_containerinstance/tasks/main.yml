@@ -91,9 +91,6 @@
         ports:
           - 80
           - 81
-        commands:
-          - echo abc
-          - echo cdf
         environment_variables:
           - name: myvar
             value: myvarvalue
@@ -119,7 +116,6 @@
       - output.containerinstances[0]['ip_address'] != None
       - output.containerinstances[0]['ports'] != None
       - output.containerinstances[0]['containers'] != None
-      - output.containerinstances[0]['containers'][0]['commands'] | length == 2
       - output.containerinstances[0]['containers'][0]['environment_variables'] | length == 1
       - output.containerinstances[0]['restart_policy'] == 'on_failure'
 
