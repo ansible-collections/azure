@@ -707,5 +707,17 @@ plugins/modules/azure_rm_adserviceprincipal.py validate-modules:required_if-unkn
 plugins/modules/azure_rm_adserviceprincipal_info.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_adserviceprincipal_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_adserviceprincipal_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_backupazurevm.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_backupazurevm.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_backupazurevm_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_backupazurevm_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_recoveryservicesvault.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_recoveryservicesvault.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_recoveryservicesvault_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_recoveryservicesvault_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:invalid-ansiblemodule-schema
+plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:parameter-list-no-elements
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang

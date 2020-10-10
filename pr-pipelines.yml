@@ -2,14 +2,15 @@ parameters:
 - name: PYTHON_VER
   displayName: 'Python Version'
   type: string
-  default: "2.7"
+  default: "3.6"
   values:
     - "2.7"
     - "3.6"
+    - "3.8"
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
-  default: "2.9"
+  default: "2.10"
   values:
     - "2.9"
     - "2.10"
@@ -50,6 +51,7 @@ parameters:
     - "azure_rm_monitorlogprofile"
     - "azure_rm_mysqlserver"
     - "azure_rm_networkinterface"
+    - "azure_rm_openshiftmanagedcluster"
     - "azure_rm_postgresqlserver"
     - "azure_rm_privatednszone"
     - "azure_rm_publicipaddress"
@@ -71,6 +73,8 @@ parameters:
     - "azure_rm_virtualnetwork"
     - "azure_rm_virtualnetworkgateway"
     - "azure_rm_virtualnetworkeepring"
+    - "azure_rm_backupazurevm"
+    - "azure_rm_recoveryservicesvault"  
     - "azure_rm_webapp"
     - "azure_rm_workspace"
     - "inventory_azure"

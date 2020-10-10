@@ -68,16 +68,19 @@ options:
     auth_source:
         description:
             - Controls the source of the credentials to use for authentication.
-            - If not specified, ANSIBLE_AZURE_AUTH_SOURCE environment variable will be used and default to C(auto) if variable is not defined.
-            - C(auto) will follow the default precedence of module parameters -> environment variables -> default profile in credential file
-              C(~/.azure/credentials).
-            - When set to C(cli), the credentials will be sources from the default Azure CLI profile.
             - Can also be set via the C(ANSIBLE_AZURE_AUTH_SOURCE) environment variable.
+            - When set to C(auto) (the default) the precedence is module parameters -> C(env) -> C(credential_file) -> C(cli).
+            - When set to C(env), the credentials will be read from the environment variables
+            - When set to C(credential_file), it will read the profile from C(~/.azure/credentials).
+            - When set to C(cli), the credentials will be sources from the Azure CLI profile. C(subscription_id) or the environment variable
+              C(AZURE_SUBSCRIPTION_ID) can be used to identify the subscription ID if more than one is present otherwise the default
+              az cli subscription is used.
             - When set to C(msi), the host machine must be an azure resource with an enabled MSI extension. C(subscription_id) or the
               environment variable C(AZURE_SUBSCRIPTION_ID) can be used to identify the subscription ID if the resource is granted
               access to more than one subscription, otherwise the first subscription is chosen.
             - The C(msi) was added in Ansible 2.6.
         type: str
+        default: auto
         choices:
         - auto
         - cli
