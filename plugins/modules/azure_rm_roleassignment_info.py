@@ -120,11 +120,8 @@ roleassignments:
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
-#import time # I don't think this is used.
-
 try:
     from msrestazure.azure_exceptions import CloudError
-    #from msrest.serialization import Model # I don't think this is used.
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -181,7 +178,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         if self.assignee:
-            self.results['roleassignments'] = self.get_by_assignee()
+            self.results['roleassignments'] = self.list_by_assignee()
         elif self.name and self.scope:
             self.results['roleassignments'] = self.get_by_name()
         elif self.scope:
@@ -220,7 +217,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
         return results
 
-    def get_by_assignee(self):
+    def list_by_assignee(self):
         '''
         Gets the role assignments by assignee.
 
@@ -267,7 +264,10 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
         results = []
         try:
-            response = list(self.authorization_client.role_assignments.list_for_scope(scope=self.scope, filter='atScope()'))
+            if self.strict_scope_match:
+                response = list(self.authorization_client.role_assignments.list_for_scope(scope=self.scope))
+            else:
+                response = list(self.authorization_client.role_assignments.list_for_scope(scope=self.scope, filter='atScope()'))
 
             if response and len(response) > 0:
                 response = [roleassignment_to_dict(a) for a in response]
