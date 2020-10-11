@@ -186,7 +186,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         elif self.name:
             self.fail("Parameter Error: Name requires a scope to also be set.")
         else:
-            self.fail("Parameter Error: Please specify assignee or scope.")
+            self.results['roleassignments'] = self.list_assignments()
 
         return self.results
 
@@ -236,9 +236,9 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         Returns a list of assignments.
         '''
         results = []
-        try:
-            response = self.authorization_client.role_assignments.list(filter=filter)
+        response = self.authorization_client.role_assignments.list(filter=filter)
 
+        try:
             if response and len(response) > 0:
                 response = [roleassignment_to_dict(a) for a in response]
 
@@ -248,9 +248,8 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
                             results.append(r)
                 else:
                     results = response
-
         except CloudError as ex:
-            self.log("Didn't find role assignments to assignee {0}".format(self.assignee))
+            self.log("Didn't find role assignments in subscription {0}.".format(self.subscription_id))
 
         return results
 
