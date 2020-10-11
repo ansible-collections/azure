@@ -86,7 +86,7 @@ class SDKProfile(object):  # pylint: disable=too-few-public-methods
 # For now, we have to copy from azure-cli
 AZURE_API_PROFILES = {
     'latest': {
-        'AuthorizationManagementClient': 'v2020_04_01_preview',
+        'AuthorizationManagementClient': '2018-09-01-preview'
         'ContainerInstanceManagementClient': '2018-02-01-preview',
         'ComputeManagementClient': dict(
             default_api_version='2018-10-01',
@@ -956,6 +956,19 @@ class AzureRMModuleBase(object):
     @property
     def storage_models(self):
         return StorageManagementClient.models("2019-06-01")
+
+    @property
+    def authorization_client(self):
+        self.log('Getting authorization client...')
+        if not self._authorization_client:
+            self._authorization_client = self.get_mgmt_svc_client(AuthorizationManagementClient,
+                                                                  base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                  api_version='2018-09-01-preview')
+        return self._authorization_client
+
+    @property
+    def authorization_models(self):
+        return StorageManagementClient.models('2018-09-01-preview')
 
     @property
     def network_client(self):
