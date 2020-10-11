@@ -86,7 +86,7 @@ class SDKProfile(object):  # pylint: disable=too-few-public-methods
 # For now, we have to copy from azure-cli
 AZURE_API_PROFILES = {
     'latest': {
-        'AuthorizationManagementClient': '2018-09-01-preview'
+        'AuthorizationManagementClient': '2018-09-01-preview',
         'ContainerInstanceManagementClient': '2018-02-01-preview',
         'ComputeManagementClient': dict(
             default_api_version='2018-10-01',
@@ -397,6 +397,7 @@ class AzureRMModuleBase(object):
             self.fail(msg=missing_required_lib('ansible[azure] (azure >= {0})'.format(AZURE_MIN_RELEASE)),
                       exception=HAS_AZURE_EXC)
 
+        self._authorization_client = None
         self._network_client = None
         self._storage_client = None
         self._resource_client = None

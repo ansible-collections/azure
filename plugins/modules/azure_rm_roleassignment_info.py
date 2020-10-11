@@ -128,14 +128,16 @@ except ImportError:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
+
 def roleassignment_to_dict(assignment):
     return dict(
-        id=assignment.id,
-        name=assignment.name,
-        type=assignment.type,
-        principal_id=assignment.principal_id,
-        role_definition_id=assignment.role_definition_id,
+        id=assignment.id
+        name=assignment.name
+        principal_id=assignment.principal_id
+        principal_type=assignment.principal_type
+        role_definition_id=assignment.role_definition_id
         scope=assignment.scope
+        type=assignment.type
     )
 
 
@@ -210,7 +212,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
                     if self.role_definition_id == response['role_definition_id']:
                         results.append(response)
                 else:
-                        results.append(response)
+                    results.append(response)
 
         except CloudError as ex:
             self.log("Didn't find role assignment {0} in scope {1}".format(self.name, self.scope))
@@ -236,18 +238,18 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         Returns a list of assignments.
         '''
         results = []
-        response = self.authorization_client.role_assignments.list(filter=filter)
 
         try:
-            if response and len(response) > 0:
-                response = [roleassignment_to_dict(a) for a in response]
+            response = self.authorization_client.role_assignments.list(filter=filter)
+            if response and len(list(response)) > 0:
+                role_dicts = [roleassignment_to_dict(a) for a in response]
 
                 if self.role_definition_id:
-                    for role in response:
+                    for role in role_dicts:
                         if role['role_definition_id'] == self.role_definition_id:
                             results.append(r)
                 else:
-                    results = response
+                    results = role_dicts
         except CloudError as ex:
             self.log("Didn't find role assignments in subscription {0}.".format(self.subscription_id))
 
