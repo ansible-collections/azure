@@ -131,12 +131,12 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 def roleassignment_to_dict(assignment):
     return dict(
-        id=assignment.id
-        name=assignment.name
-        principal_id=assignment.principal_id
-        principal_type=assignment.principal_type
-        role_definition_id=assignment.role_definition_id
-        scope=assignment.scope
+        id=assignment.id,
+        name=assignment.name,
+        principal_id=assignment.principal_id,
+        principal_type=assignment.principal_type,
+        role_definition_id=assignment.role_definition_id,
+        scope=assignment.scope,
         type=assignment.type
     )
 
