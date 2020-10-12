@@ -33,8 +33,8 @@ options:
     name:
         description:
             - Name of role assignment.
-            - Mutual exclusive with I(assignee).
             - Requires that I(scope) also be set.
+            - Mutual exclusive with I(assignee).
     assignee:
         description:
             - Object id of a user, group or service principal.
@@ -142,6 +142,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         )
 
         self.assignee = None
+        self.id = None
         self.name = None
         self.role_definition_id = None
         self.scope = None
@@ -152,7 +153,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             roleassignments=[]
         )
 
-        mutually_exclusive = [['name', 'assignee']]
+        mutually_exclusive = [['name', 'assignee', 'id']]
 
         super(AzureRMRoleAssignmentInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                         supports_tags=False,
@@ -170,16 +171,37 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
         if self.assignee:
             self.results['roleassignments'] = self.list_by_assignee()
+        elif self.id:
+            self.results['roleassignments'] = self.get_by_id()
         elif self.name and self.scope:
             self.results['roleassignments'] = self.get_by_name()
+        elif self.name and not self.scope:
+            self.fail("Parameter Error: Name requires a scope to also be set.")
         elif self.scope:
             self.results['roleassignments'] = self.list_by_scope()
-        elif self.name:
-            self.fail("Parameter Error: Name requires a scope to also be set.")
         else:
             self.results['roleassignments'] = self.list_assignments()
 
         return self.results
+
+    def get_by_id(self):
+        '''
+        Gets the role assignments by specific assignment id.
+
+        :return: deserialized role assignment dictionary
+        '''
+        self.log("Lists role assignment by scope {0}".format(self.scope))
+
+        results = []
+        try:
+            response = [self.authorization_client.role_assignments.get_by_id(role_id=self.id)]
+            response = [self.roleassignment_to_dict(a) for a in response]
+            results = response
+
+        except CloudError as ex:
+            self.log("Didn't find role assignments to scope {0}".format(self.scope))
+
+        return results
 
     def get_by_name(self):
         '''
@@ -192,16 +214,14 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         results = []
 
         try:
-            response = self.authorization_client.role_assignments.get(scope=self.scope, role_assignment_name=self.name)
+            response = [self.authorization_client.role_assignments.get(scope=self.scope, role_assignment_name=self.name)]
+            response = [self.roleassignment_to_dict(a) for a in response]
 
-            if response:
-                response = self.roleassignment_to_dict(response)
+            # If role_definition_id is set, we only want results matching that id.
+            if self.role_definition_id:
+                response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id') == self.role_definition_id]
 
-                if self.role_definition_id:
-                    if self.role_definition_id == response['role_definition_id']:
-                        results.append(response)
-                else:
-                    results.append(response)
+            results = response
 
         except CloudError as ex:
             self.log("Didn't find role assignment {0} in scope {1}".format(self.name, self.scope))
