@@ -129,26 +129,15 @@ except ImportError:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 
-def roleassignment_to_dict(assignment):
-    return dict(
-        id=assignment.id,
-        name=assignment.name,
-        principal_id=assignment.principal_id,
-        principal_type=assignment.principal_type,
-        role_definition_id=assignment.role_definition_id,
-        scope=assignment.scope,
-        type=assignment.type
-    )
-
-
 class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
     def __init__(self):
         self.module_arg_spec = dict(
-            name=dict(type='str'),
-            scope=dict(type='str'),
             assignee=dict(type='str'),
+            id=dict(type='str'),
+            name=dict(type='str'),
             role_definition_id=dict(type='str'),
+            scope=dict(type='str'),
             strict_scope_match=dict(type=bool, default=False)
         )
 
@@ -206,7 +195,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             response = self.authorization_client.role_assignments.get(scope=self.scope, role_assignment_name=self.name)
 
             if response:
-                response = roleassignment_to_dict(response)
+                response = self.roleassignment_to_dict(response)
 
                 if self.role_definition_id:
                     if self.role_definition_id == response['role_definition_id']:
@@ -227,11 +216,8 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         '''
         self.log("Gets role assignment {0} by name".format(self.name))
 
-        results = []
         filter = "principalId eq '{0}'".format(self.assignee)
-        response = self.list_assignments(filter=filter)
-
-        return results
+        return self.list_assignments(filter=filter)
 
     def list_assignments(self, filter=None):
         '''
@@ -241,15 +227,14 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
         try:
             response = self.authorization_client.role_assignments.list(filter=filter)
-            if response and len(list(response)) > 0:
-                role_dicts = [roleassignment_to_dict(a) for a in response]
+            response = [self.roleassignment_to_dict(a) for a in response]
 
-                if self.role_definition_id:
-                    for role in role_dicts:
-                        if role['role_definition_id'] == self.role_definition_id:
-                            results.append(r)
-                else:
-                    results = role_dicts
+            # If role_definition_id is set, we only want results matching that id.
+            if self.role_definition_id:
+                response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id') == self.role_definition_id]
+
+            else:
+                results = response
         except CloudError as ex:
             self.log("Didn't find role assignments in subscription {0}.".format(self.subscription_id))
 
@@ -265,25 +250,36 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
         results = []
         try:
+            # atScope filter limits to exact scope plus parent scopes. Without, returns all children too.
+            response = list(self.authorization_client.role_assignments.list_for_scope(scope=self.scope, filter='atScope()'))
+
+            response = [self.roleassignment_to_dict(role_assignment) for role_assignment in response]
+
+            # If strict_scope_match is true we only want results matching exact scope.
             if self.strict_scope_match:
-                response = list(self.authorization_client.role_assignments.list_for_scope(scope=self.scope))
-            else:
-                response = list(self.authorization_client.role_assignments.list_for_scope(scope=self.scope, filter='atScope()'))
+                response = [role_assignment for role_assignment in response if role_assignment.get('scope') == self.scope]
 
-            if response and len(response) > 0:
-                response = [roleassignment_to_dict(a) for a in response]
+            # If role_definition_id is set, we only want results matching that id.
+            if self.role_definition_id:
+                response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id') == self.role_definition_id]
 
-                if self.role_definition_id:
-                    for r in response:
-                        if r['role_definition_id'] == self.role_definition_id:
-                            results.append(r)
-                else:
-                    results = response
+            results = response
 
         except CloudError as ex:
             self.log("Didn't find role assignments to scope {0}".format(self.scope))
 
         return results
+
+    def roleassignment_to_dict(self, assignment):
+        return dict(
+            id=assignment.id,
+            name=assignment.name,
+            principal_id=assignment.principal_id,
+            principal_type=assignment.principal_type,
+            role_definition_id=assignment.role_definition_id,
+            scope=assignment.scope,
+            type=assignment.type
+        )
 
 
 def main():
