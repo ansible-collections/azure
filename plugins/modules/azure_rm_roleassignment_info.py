@@ -23,6 +23,23 @@ description:
     - Gets facts of Azure Role Assignment.
 
 options:
+    assignee:
+        description:
+            - Object id of a user, group or service principal.
+            - Mutually exclusive with I(name) and I(id).
+    id:
+        description:
+            - Fqid of role assignment to look up.
+            - If set, I(role_definition_id) and I(scope) will be ignored.
+            - Mutually exclusive with I(assignee) and I(name).
+    name:
+        description:
+            - Name of role assignment.
+            - Requires that I(scope) also be set.
+            - Mutual exclusive with I(assignee) and I(id).
+    role_definition_id:
+        description:
+            - Resource id of role definition.
     scope:
         description:
             - The scope to query for role assignments.
@@ -30,18 +47,6 @@ options:
             - /subscriptions/{subscription-id}/resourceGroups/{resourcegroup-name} for a resource group.
             - /subscriptions/{subscription-id}/resourceGroups/{resourcegroup-name}/providers/{resource-provider}/{resource-type}/{resource-name} for a resource.
             - By default will return all inhereted assignments from parent scopes, see I(strict_scope_match).
-    name:
-        description:
-            - Name of role assignment.
-            - Requires that I(scope) also be set.
-            - Mutual exclusive with I(assignee).
-    assignee:
-        description:
-            - Object id of a user, group or service principal.
-            - Mutually exclusive with I(name).
-    role_definition_id:
-        description:
-            - Resource id of role definition.
     strict_scope_match:
         description:
             - If strict_scope_match is True, role assignments will only be returned for the exact scope defined.
@@ -64,9 +69,24 @@ EXAMPLES = '''
       azure_rm_roleassignment_info:
         assignee: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Get role assignments for specific scope
+    - name: Get role assignments for specific scope that matches specific role definition
       azure_rm_roleassignment_info:
         scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        role_definition_id: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+    - name: Get role assignments for specific scope with no inherited assignments
+      azure_rm_roleassignment_info:
+        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        strict_scope_match: True
+
+    - name: Get role assignments by name
+      azure_rm_roleassignment_info:
+        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+    - name: Get role assignments by id
+      azure_rm_roleassignment_info:
+        id: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleAssignments/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 RETURN = '''
@@ -190,7 +210,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
         :return: deserialized role assignment dictionary
         '''
-        self.log("Lists role assignment by scope {0}".format(self.scope))
+        self.log("Lists role assignment by id {0}".format(self.id))
 
         results = []
         try:
@@ -199,7 +219,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             results = response
 
         except CloudError as ex:
-            self.log("Didn't find role assignments to scope {0}".format(self.scope))
+            self.log("Didn't find role assignments id {0}".format(self.scope))
 
         return results
 
@@ -270,7 +290,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
         results = []
         try:
-            # atScope filter limits to exact scope plus parent scopes. Without, returns all children too.
+            # atScope filter limits to exact scope plus parent scopes. Without it will return all children too.
             response = list(self.authorization_client.role_assignments.list_for_scope(scope=self.scope, filter='atScope()'))
 
             response = [self.roleassignment_to_dict(role_assignment) for role_assignment in response]
@@ -286,7 +306,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             results = response
 
         except CloudError as ex:
-            self.log("Didn't find role assignments to scope {0}".format(self.scope))
+            self.log("Didn't find role assignments at scope {0}".format(self.scope))
 
         return results
 
