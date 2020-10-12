@@ -141,10 +141,10 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             strict_scope_match=dict(type=bool, default=False)
         )
 
-        self.name = None
-        self.scope = None
         self.assignee = None
+        self.name = None
         self.role_definition_id = None
+        self.scope = None
         self.strict_scope_match = None
 
         self.results = dict(
