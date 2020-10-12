@@ -161,7 +161,7 @@ options:
                 type: str
     ingress_profiles:
         description:
-            - Ingress configuration.
+            - Ingress profiles configuration. only one profile is supported at the current API version.
         type: list
         suboptions:
             visibility:
@@ -830,6 +830,10 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
         if 'ingressProfiles' not in self.body['properties']:
             ingress_profile = dict(visibility="Public", name="default")
             self.body['properties']['ingressProfiles'] = [ingress_profile]
+        else:
+            # hard code the ingress profile name as default, so user don't need to specify it
+            for profile in self.body['properties']['ingressProfiles']:
+                profile['name'] = "default"
         if 'name' not in self.body['properties']['workerProfiles'][0]:
             self.body['properties']['workerProfiles'][0]['name'] = 'worker'
         if 'vmSize' not in self.body['properties']['workerProfiles'][0]:
@@ -843,7 +847,8 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
         if 'resourceGroupId' not in self.body['properties']['clusterProfile']:
             resourcegroup_id = "/subscriptions/" + self.subscription_id + "/resourceGroups/" + self.name + "-cluster"
             self.body['properties']['clusterProfile']['resourceGroupId'] = resourcegroup_id
-        if 'domain' not in self.body['properties']['clusterProfile']:
+        # if domain is not set in cluster profile or it is set to an empty string or null value then generate a random domain
+        if 'domain' not in self.body['properties']['clusterProfile'] or not self.body['properties']['clusterProfile']['domain']:
             self.body['properties']['clusterProfile']['domain'] = self.random_id()
 
 
