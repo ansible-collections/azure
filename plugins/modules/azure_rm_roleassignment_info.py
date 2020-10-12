@@ -30,7 +30,7 @@ options:
     id:
         description:
             - Fqid of role assignment to look up.
-            - If set, I(role_definition_id) and I(scope) will be ignored.
+            - If set, I(role_definition_id) and I(scope) will be silently ignored.
             - Mutually exclusive with I(assignee) and I(name).
     name:
         description:
