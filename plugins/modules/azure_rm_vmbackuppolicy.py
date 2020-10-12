@@ -37,27 +37,32 @@ options:
     time:
         description:
             - Retention times of retention policy in UTC. 
-        required: true
+        required: false
+        default: 12:00
         type: str
     weekdays:
         description:
             - List of days of the week.
-        required: true
+        required: false
+        default: ['Monday']
         type: list
     weeks:
         description:
             - List of weeks of month.
-        required: true
+        required: false
+        default: ['First']
         type: list
     months:
         description:
             - List of months of year of yearly retention policy.
-        required: true
+        required: false
+        default: ['January']
         type: list
     count:
         description:
             - Count of duration types. Retention duration is obtained by the counting the duration type Count times.
-        required: true
+        required: false
+        default: 1
         type: int
     state:
         description:
