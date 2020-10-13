@@ -276,6 +276,9 @@ plugins/modules/azure_rm_subnet.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_subnet_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_subnet_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_subnet_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_subscription_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_subscription_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_subscription_info.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_virtualmachine.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachine.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_virtualmachine.py validate-modules:doc-required-mismatch
@@ -715,5 +718,9 @@ plugins/modules/azure_rm_recoveryservicesvault.py validate-modules:required_if-r
 plugins/modules/azure_rm_recoveryservicesvault.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_recoveryservicesvault_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_recoveryservicesvault_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:invalid-ansiblemodule-schema
+plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:parameter-list-no-elements
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang
