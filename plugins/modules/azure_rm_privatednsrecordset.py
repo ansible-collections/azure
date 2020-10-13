@@ -27,14 +27,17 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     zone_name:
         description:
             - Name of the existing Private DNS zone in which to manage the record set.
         required: true
+        type: str
     relative_name:
         description:
             - Relative name of the record set.
         required: true
+        type: str
     record_type:
         description:
             - The type of record set to create or delete.
@@ -48,10 +51,12 @@ options:
             - SRV
             - TXT
         required: true
+        type: str
     record_mode:
         description:
             - Whether existing record values not sent to the module should be purged.
         default: purge
+        type: str
         choices:
             - append
             - purge
@@ -59,6 +64,7 @@ options:
         description:
             - Assert the state of the record set. Use C(present) to create or update and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -66,25 +72,33 @@ options:
         description:
             - Time to live of the record set in seconds.
         default: 3600
+        type: int
     records:
         description:
             - List of records to be created depending on the type of record (set).
+        type: list
+        elements: dict
         suboptions:
             preference:
                 description:
                     - Used for creating an C(MX) record set/records.
+                type: int
             priority:
                 description:
                    - Used for creating an C(SRV) record set/records.
+                type: int
             weight:
                 description:
                     - Used for creating an C(SRV) record set/records.
+                type: int
             port:
                 description:
                     - Used for creating an C(SRV) record set/records.
+                type: int
             entry:
                 description:
                     - Primary data value for all record types.
+                type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -183,38 +197,39 @@ state:
         fqdn:
             description:
                 - Fully qualified domain name of the record set.
-            return: always
+            returned: always
             type: str
             sample: www.b57dc95985712e4523282.com
         etag:
             description:
                 - The etag of the record set.
-            return: always
+            returned: always
             type: str
             sample: 692c3e92-a618-46fc-aecd-8f888807cd6c
         is_auto_registered:
             description:
                 - Is the record set auto-registered in the Private DNS zone through a virtual network link.
-            return: always
+            returned: always
             type: bool
             sample: false
         ttl:
             description:
                 - The TTL(time-to-live) of the records in the records set.
-            return: always
+            returned: always
             type: int
             sample: 3600
         type:
             description:
                 - The type of DNS record in this record set.
-            return: always
+            returned: always
             type: str
             sample: A
         a_records:
             description:
                 - A list of records in the record set.
-            return: always
+            returned: always
             type: list
+            elements: dict
             sample: [
             {
                 "ipv4_address": "192.0.2.2"

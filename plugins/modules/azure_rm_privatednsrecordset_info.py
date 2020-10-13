@@ -27,15 +27,19 @@ options:
     relative_name:
         description:
             - Only show results for a Record Set.
+        type: str
     resource_group:
         description:
             - Limit results by resource group. Required when filtering by name or type.
+        type: str
     zone_name:
         description:
             - Limit results by zones. Required when filtering by name or type.
+        type: str
     record_type:
         description:
             - Limit record sets by record type.
+        type:str
     top:
         description:
             - Limit the maximum number of record sets to return.
@@ -71,76 +75,11 @@ EXAMPLES = '''
 RETURN = '''
 dnsrecordsets:
     description:
-        - Gets a list of record set dict in a Private DNS zone.
+        - Gets a list of recordsets dict in a Private DNS zone.
     returned: always
     type: list
+    elements: dict
     sample: [
-        {
-            "fqdn": "servera.newzone.com",
-            "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/
-                   Microsoft.Network/privateDnsZones/newzone.com/A/servera",
-            "record_type": "A",
-            "records": [
-                {
-                    "ipv4_address": "10.10.10.10"
-                }
-            ],
-            "relative_name": "servera",
-            "time_to_live": 3600
-        }
-    ]
-dnsrecordsets:
-    description:
-        - Lists recordsets dict of a specified type in a Private DNS zone.
-    returned: always
-    type: list
-    sample: [
-        {
-            "fqdn": "servera.newzone.com.",
-            "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/
-                   Microsoft.Network/privateDnsZones/newzone.com/A/servera",
-            "record_type": "A",
-            "records": [
-                {
-                    "ipv4_address": "10.10.10.10"
-                }
-            ],
-            "relative_name": "servera",
-            "time_to_live": 3600
-        },
-        {
-            "fqdn": "serverb.newzone.com.",
-            "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/
-                   Microsoft.Network/privateDnsZones/newzone.com/A/serverb",
-            "record_type": "A",
-            "records": [
-                {
-                    "ipv4_address": "10.10.10.11"
-                }
-            ],
-            "relative_name": "serverb",
-            "time_to_live": 3600
-        }
-    ]
-dnsrecordsets:
-    description:
-        - Lists all record sets in a Private DNS zone.
-    returned: always
-    type: list
-    sample: [
-        {
-            "fqdn": "recordcname.newzone.com.",
-            "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/
-                   Microsoft.Network/privateDnsZones/newzone.com/CNAME/recordcname",
-            "record_type": "CNAME",
-            "records": [
-                {
-                    "cname": "newzone.com"
-                }
-            ],
-            "relative_name": "recordcname",
-            "time_to_live": 3600
-        },
         {
             "fqdn": "servera.newzone.com.",
             "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/

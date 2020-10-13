@@ -110,6 +110,24 @@
     that:
       - results.changed
 
+- name: Get information for A DNS recordset from Private DNS zone
+  azure_rm_privatednsrecordset_info:
+    resource_group: "{{ resource_group }}"
+    zone_name: "{{ domain_name }}.com"
+    relative_name: www
+    record_type: A
+  register: results
+
+- assert:
+    that:
+      - not results.changed
+      - results.dnsrecordsets[0].id != None
+      - results.dnsrecordsets[0].fqdn != None
+      - results.dnsrecordsets[0].record_type == 'A'
+      - results.dnsrecordsets[0].time_to_live != None
+      - results.dnsrecordsets[0].relative_name == 'www'
+      - results.dnsrecordsets[0].records | length > 0
+
 - name: delete a record set
   azure_rm_privatednsrecordset:
     resource_group: "{{ resource_group }}"
@@ -156,6 +174,24 @@
     that:
       - results.changed
 
+- name: Get information for SRV DNS recordset from Private DNS zone
+  azure_rm_privatednsrecordset_info:
+    resource_group: "{{ resource_group }}"
+    zone_name: "{{ domain_name }}.com"
+    relative_name: "_sip._tcp.{{ domain_name }}.com"
+    record_type: SRV
+  register: results
+
+- assert:
+    that:
+      - not results.changed
+      - results.dnsrecordsets[0].id != None
+      - results.dnsrecordsets[0].fqdn != None
+      - results.dnsrecordsets[0].record_type == 'SRV'
+      - results.dnsrecordsets[0].time_to_live == 7200
+      - results.dnsrecordsets[0].relative_name == "_sip._tcp.{{ domain_name }}.com"
+      - results.dnsrecordsets[0].records | length > 0
+
 - name: create TXT records in a new record set
   azure_rm_privatednsrecordset:
     resource_group: "{{ resource_group }}"
@@ -175,6 +211,24 @@
   assert:
     that:
       - results.changed
+
+- name: Get information for TXT DNS recordset from Private DNS zone
+  azure_rm_privatednsrecordset_info:
+    resource_group: "{{ resource_group }}"
+    zone_name: "{{ domain_name }}.com"
+    relative_name: "_txt.{{ domain_name }}.com"
+    record_type: TXT
+  register: results
+
+- assert:
+    that:
+      - not results.changed
+      - results.dnsrecordsets[0].id != None
+      - results.dnsrecordsets[0].fqdn != None
+      - results.dnsrecordsets[0].record_type == 'TXT'
+      - results.dnsrecordsets[0].time_to_live == 3600
+      - results.dnsrecordsets[0].relative_name == "_txt.{{ domain_name }}.com"
+      - results.dnsrecordsets[0].records | length > 0
 
 - name: Delete DNS zone
   azure_rm_privatednszone:
