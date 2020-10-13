@@ -180,7 +180,7 @@ class AzureRMVMExtension(AzureRMModuleBase):
                 type='dict'
             ),
             protected_settings=dict(
-                type='dict'
+                type='dict', no_log=True
             )
         )
 
