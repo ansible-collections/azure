@@ -345,7 +345,7 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                     self.parameters["recovery_services_recovery_point_resource_id"] = kwargs[key]
                 elif key == "sku":
                     ev = kwargs[key]
-                    self.parameters["sku"] = Sku(name = ev['name'])
+                    self.parameters["sku"] = Sku(name = ev['name'], tier = ev['tier'], size = ev['size'], family = ev['family'], capacity = ev['capacity'] )
                 elif key == "max_size_bytes":
                     self.parameters["max_size_bytes"] = kwargs[key]
                 elif key == "elastic_pool_name":
