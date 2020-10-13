@@ -276,6 +276,9 @@ plugins/modules/azure_rm_subnet.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_subnet_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_subnet_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_subnet_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_subscription_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_subscription_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_subscription_info.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_virtualmachine.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachine.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_virtualmachine.py validate-modules:doc-required-mismatch
