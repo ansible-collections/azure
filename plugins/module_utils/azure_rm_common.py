@@ -976,6 +976,7 @@ class AzureRMModuleBase(object):
     @property
     def authorization_models(self):
         return StorageManagementClient.models('2018-09-01-preview')
+
     def subscription_client(self):
         self.log('Getting subscription client...')
         if not self._subscription_client:
