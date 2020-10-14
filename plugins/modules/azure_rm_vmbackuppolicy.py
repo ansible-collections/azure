@@ -36,9 +36,9 @@ options:
         type: str
     time:
         description:
-            - Retention times of retention policy in UTC. 
+            - Retention times of retention policy in UTC.
         required: false
-        default: 12:00
+        default: '12:00'
         type: str
     weekdays:
         description:
@@ -98,7 +98,7 @@ EXAMPLES = '''
      name: 'myBackupPolicy'
      vault_name: 'myVault'
      resource_group: 'myResourceGroup'
-     state: absent         
+     state: absent
 '''
 
 RETURN = '''
@@ -203,7 +203,7 @@ response:
                     },
                     "timeZone": "Pacific Standard Time",
                     "protectedItemsCount": 0
-                   }                   
+                   }
         type:
             description:
                 - Resource type.

@@ -45,7 +45,7 @@ EXAMPLES = '''
    azure_rm_backvmuppolicy_info:
      name: 'myBackupPolicy'
      vault_name: 'myVault'
-     resource_group: 'myResourceGroup'        
+     resource_group: 'myResourceGroup'
 '''
 
 RETURN = '''
@@ -150,7 +150,7 @@ response:
                     },
                     "timeZone": "Pacific Standard Time",
                     "protectedItemsCount": 0
-                   }                   
+                   }
         type:
             description:
                 - Resource type.

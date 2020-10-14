@@ -16,7 +16,6 @@
   assert:
     that:
       - vault.changed
-      - vault.state.name is defined
 
 - name: Create VM Backup Policy
   azure_rm_vmbackuppolicy:
