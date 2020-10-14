@@ -99,6 +99,18 @@ options:
                     - 'VirtualMachineScaleSets'
                     - 'AvailabilitySet'
                 type: str
+            vnet_subnet_id:
+                description:
+                    - Specifies the VNet's subnet identifier.
+                type: str
+            availability_zones:
+                description:
+                    - Availability zones for nodes. Must use VirtualMachineScaleSets AgentPoolType.
+                type: list
+                choices:
+                    - 1
+                    - 2
+                    - 3
     service_principal:
         description:
             - The service principal suboptions.
@@ -423,6 +435,7 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         name=profile.name,
         os_disk_size_gb=profile.os_disk_size_gb,
         vnet_subnet_id=profile.vnet_subnet_id,
+        availability_zones=profile.availability_zones,
         os_type=profile.os_type,
         type=profile.type,
         enable_auto_scaling=profile.enable_auto_scaling,
@@ -477,6 +490,7 @@ agent_pool_profile_spec = dict(
     storage_profiles=dict(type='str', choices=[
                           'StorageAccount', 'ManagedDisks']),
     vnet_subnet_id=dict(type='str'),
+    availability_zones=dict(type='list', elements='int', choices=[1, 2, 3]),
     os_type=dict(type='str', choices=['Linux', 'Windows']),
     type=dict(type='str', choice=['VirtualMachineScaleSets', 'AvailabilitySet']),
     enable_auto_scaling=dict(type='bool'),
@@ -701,6 +715,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 vnet_subnet_id = profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id'])
                                 count = profile_self['count']
                                 vm_size = profile_self['vm_size']
+                                availability_zones = profile_self['availability_zones']
                                 enable_auto_scaling = profile_self['enable_auto_scaling']
                                 max_count = profile_self['max_count']
                                 min_count = profile_self['min_count']
@@ -713,9 +728,12 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 elif os_disk_size_gb is not None and profile_result['os_disk_size_gb'] != os_disk_size_gb:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
-                                elif profile_result['vnet_subnet_id'] != vnet_subnet_id:
+                                elif vnet_subnet_id is not None and profile_result['vnet_subnet_id'] != vnet_subnet_id:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
-                                    to_be_updated = True
+                                    self.fail("The vnet_subnet_id of the agent pool cannot be updated")
+                                elif availability_zones is not None and profile_result['availability_zones'] != availability_zones:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    self.fail("The availability_zones of the agent pool cannot be updated")
                                 elif enable_auto_scaling is not None and profile_result['enable_auto_scaling'] != enable_auto_scaling:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True

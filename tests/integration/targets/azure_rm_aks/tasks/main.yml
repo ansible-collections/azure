@@ -28,6 +28,9 @@
            enable_auto_scaling: True
            max_count: 3
            min_count: 1
+           availability_zones:
+             - 1
+             - 2
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
      network_profile:
@@ -66,6 +69,9 @@
            enable_auto_scaling: True
            max_count: 3
            min_count: 1
+           availability_zones:
+             - 1
+             - 2
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
      network_profile:
@@ -89,6 +95,7 @@
       that:
         - "fact.aks | length == 1"
         - fact.aks[0].id == output.id
+        - fact.aks[0].properties.agentPoolProfiles[0].availabilityZones == ["1", "2"]
 
  - name: Create an AKS instance (idempotent)
    azure_rm_aks:
