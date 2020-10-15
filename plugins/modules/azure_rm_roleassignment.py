@@ -25,6 +25,8 @@ options:
     name:
         description:
             - Unique name of role assignment.
+            - The role assignment name must be a GUID.
+        require: true
     assignee_object_id:
         description:
             - The object id of assignee. This maps to the ID inside the Active Directory.
@@ -114,7 +116,8 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
             name=dict(
-                type='str'
+                type='str',
+                require='true'
             ),
             scope=dict(
                 type='str'
@@ -166,9 +169,6 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
         # build cope
         self.scope = self.build_scope()
-
-        if self.name is None:
-            self.name = str(uuid.uuid4())
 
         # get existing role assignment
         old_response = self.get_roleassignment()
