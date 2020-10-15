@@ -25,7 +25,7 @@ options:
     name:
         description:
             - Unique name of role assignment.
-            - The role assignment name must be a GUID.
+            - The role assignment name must be a GUID, sample as "3ce0cbb0-58c4-4e6d-a16d-99d86a78b3ca".
         require: true
     assignee_object_id:
         description:
