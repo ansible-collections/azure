@@ -306,7 +306,7 @@ delegations_spec = dict(
         required=True,
         choices=['Microsoft.Web/serverFarms', 'Microsoft.ContainerInstance/containerGroups', 'Microsoft.Netapp/volumes',
                 'Microsoft.HardwareSecurityModules/dedicatedHSMs', 'Microsoft.ServiceFabricMesh/networks',
-                'Microsoft.Logic/integrationServiceEnvironments','Microsoft.Batch/batchAccounts', 'Microsoft.Sql/managedInstances',
+                'Microsoft.Logic/integrationServiceEnvironments', 'Microsoft.Batch/batchAccounts', 'Microsoft.Sql/managedInstances',
                 'Microsoft.Web/hostingEnvironments', 'Microsoft.BareMetal/CrayServers', 'Microsoft.BareMetal/MonitoringServers',
                 'Microsoft.Databricks/workspaces', 'Microsoft.BareMetal/AzureHostedService', 'Microsoft.BareMetal/AzureVMware',
                 'Microsoft.BareMetal/AzureHPC', 'Microsoft.BareMetal/AzurePaymentHSM', 'Microsoft.StreamAnalytics/streamingJobs',
