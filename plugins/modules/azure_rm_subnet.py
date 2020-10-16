@@ -182,7 +182,7 @@ EXAMPLES = '''
         virtual_network_name: myVirtualNetwork
         name: mySubnet
         address_prefix_cidr: "10.1.0.0/16"
-        delegation:
+        delegations:
           - name: 'mydeleg'
             serviceName: 'Microsoft.ContainerInstance/containerGroups'
 
