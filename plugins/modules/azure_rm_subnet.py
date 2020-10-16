@@ -183,8 +183,8 @@ EXAMPLES = '''
         name: mySubnet
         address_prefix_cidr: "10.1.0.0/16"
         delegation:
-          name: 'mydeleg'
-          serviceName: 'Microsoft.ContainerInstance/containerGroups'
+          - name: 'mydeleg'
+            serviceName: 'Microsoft.ContainerInstance/containerGroups'
 
     - name: Delete a subnet
       azure_rm_subnet:
