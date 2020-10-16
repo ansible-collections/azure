@@ -218,8 +218,8 @@
     virtual_network_name: My_Virtual_Network
     resource_group: "{{ resource_group }}"
     delegations:
-      name: 'mydeleg'
-      serviceName: 'Microsoft.ContainerInstance/containerGroups'
+      - name: 'mydeleg'
+        serviceName: 'Microsoft.ContainerInstance/containerGroups'
   register: output
 
 - assert:
@@ -232,7 +232,7 @@
     resource_group: "{{ resource_group }}"
     delegations:
       - name: 'mydeleg'
-      serviceName: 'Microsoft.ContainerInstance/containerGroups'
+        serviceName: 'Microsoft.ContainerInstance/containerGroups'
   register: output
 
 - assert:
