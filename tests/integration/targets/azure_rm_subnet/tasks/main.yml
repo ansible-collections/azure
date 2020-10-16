@@ -231,7 +231,7 @@
     virtual_network_name: My_Virtual_Network
     resource_group: "{{ resource_group }}"
     delegations:
-      name: 'mydeleg'
+      - name: 'mydeleg'
       serviceName: 'Microsoft.ContainerInstance/containerGroups'
   register: output
 
