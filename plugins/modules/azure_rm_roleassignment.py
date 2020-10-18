@@ -84,28 +84,15 @@ id:
     sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleAssignments/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 '''
 
+import uuid
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+
 try:
-    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
-    from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.serialization import Model
-    from azure.mgmt.authorization import AuthorizationManagementClient
-    from azure.mgmt.authorization.models import RoleAssignmentCreateParameters
 
 except ImportError:
     # This is handled in azure_rm_common
     pass
-
-
-def roleassignment_to_dict(assignment):
-    return dict(
-        id=assignment.id,
-        name=assignment.name,
-        type=assignment.type,
-        assignee_object_id=assignment.principal_id,
-        role_definition_id=assignment.role_definition_id,
-        scope=assignment.scope
-    )
 
 
 class AzureRMRoleAssignment(AzureRMModuleBase):
@@ -113,24 +100,11 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
     def __init__(self):
         self.module_arg_spec = dict(
-            name=dict(
-                type='str',
-                required=True
-            ),
-            scope=dict(
-                type='str'
-            ),
-            assignee_object_id=dict(
-                type='str'
-            ),
-            role_definition_id=dict(
-                type='str'
-            ),
-            state=dict(
-                type='str',
-                default='present',
-                choices=['present', 'absent']
-            )
+            name=dict(type='str'),
+            scope=dict(type='str'),
+            assignee_object_id=dict(type='str'),
+            role_definition_id=dict(type='str'),
+            state=dict(type='str', default='present', choices=['present', 'absent'])
         )
 
         self.name = None
@@ -144,8 +118,6 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         )
         self.state = None
 
-        self._client = None
-
         super(AzureRMRoleAssignment, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                     supports_check_mode=True,
                                                     supports_tags=False)
@@ -153,19 +125,13 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         """Main module execution method"""
 
-        for key in list(self.module_arg_spec.keys()):
-            if hasattr(self, key):
-                setattr(self, key, kwargs[key])
+        for key in self.module_arg_spec:
+            setattr(self, key, kwargs[key])
 
         old_response = None
         response = None
 
-        # get management client
-        self._client = self.get_mgmt_svc_client(AuthorizationManagementClient,
-                                                base_url=self._cloud_environment.endpoints.resource_manager,
-                                                api_version="2018-01-01-preview")
-
-        # build cope
+        # build scope
         self.scope = self.build_scope()
 
         # get existing role assignment
@@ -224,15 +190,15 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
         try:
             # pylint: disable=missing-kwoa
-            parameters = RoleAssignmentCreateParameters(role_definition_id=self.role_definition_id, principal_id=self.assignee_object_id)
-            response = self._client.role_assignments.create(scope=self.scope,
-                                                            role_assignment_name=self.name,
-                                                            parameters=parameters)
+            parameters = self.assignment_models.RoleAssignmentCreateParameters(role_definition_id=self.role_definition_id, principal_id=self.assignee_object_id)
+            response = self.assignment_client.role_assignments.create(scope=self.scope,
+                                                                      role_assignment_name=self.name,
+                                                                      parameters=parameters)
 
         except CloudError as exc:
             self.log('Error attempting to create role assignment.')
             self.fail("Error creating role assignment: {0}".format(str(exc)))
-        return roleassignment_to_dict(response)
+        return self.roleassignment_to_dict(response)
 
     def delete_roleassignment(self, assignment_id):
         '''
@@ -243,7 +209,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         self.log("Deleting the role assignment {0}".format(self.name))
         scope = self.build_scope()
         try:
-            response = self._client.role_assignments.delete_by_id(role_id=assignment_id)
+            response = self.assignment_client.role_assignments.delete_by_id(role_id=assignment_id)
         except CloudError as e:
             self.log('Error attempting to delete the role assignment.')
             self.fail("Error deleting the role assignment: {0}".format(str(e)))
@@ -261,16 +227,27 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         response = None
 
         try:
-            response = list(self._client.role_assignments.list())
+            response = list(self.assignment_client.role_assignments.list())
             if response:
                 for assignment in response:
                     if assignment.name == self.name and assignment.scope == self.scope:
-                        return roleassignment_to_dict(assignment)
+                        return self.roleassignment_to_dict(assignment)
 
         except CloudError as ex:
             self.log("Didn't find role assignment {0} in scope {1}".format(self.name, self.scope))
 
         return False
+
+    def roleassignment_to_dict(self, assignment):
+        return dict(
+            id=assignment.id,
+            name=assignment.name,
+            principal_id=assignment.principal_id,
+            principal_type=assignment.principal_type,
+            role_definition_id=assignment.role_definition_id,
+            scope=assignment.scope,
+            type=assignment.type
+        )
 
 
 def main():
