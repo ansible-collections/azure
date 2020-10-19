@@ -154,3 +154,33 @@
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
     state: absent
   register: az_role_assignment_delete
+
+- name: absent assignment that doesn't exist - id
+  azure.azcollection.azure_rm_roleassignment:
+    id: "{{ az_role_assignment_delete.id }}"
+    state: absent
+  register: absent_nochange_id
+
+- name: absent assignment that doesn't exist - name
+  azure.azcollection.azure_rm_roleassignment:
+    name: "{{ az_role_assignment_delete.name }}"
+    scope: "{{ az_role_assignment_delete.scope }}"
+    state: absent
+  register: absent_nochange_name
+
+- name: absent assignment that doesn't exist - properties
+  azure.azcollection.azure_rm_roleassignment:
+    scope: "{{ az_role_assignment_delete.scope }}"
+    assignee_object_id: "{{ az_role_assignment_delete.assignee_object_id }}"
+    role_definition_id: "{{ az_role_assignment_delete.role_definition_id }}"
+    state: absent
+  register: absent_nochange_properties
+
+- name: check intended failures info
+  assert:
+    that:
+      - item.changed == false
+  loop: 
+    - "{{ absent_nochange_properties }}"
+    - "{{ absent_nochange_id }}"
+    - "{{ absent_nochange_name }}"
