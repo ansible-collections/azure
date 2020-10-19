@@ -104,6 +104,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
             scope=dict(type='str'),
             assignee_object_id=dict(type='str'),
             role_definition_id=dict(type='str'),
+            role_assignment_id=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent'])
         )
 
@@ -118,6 +119,8 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         )
         self.state = None
 
+        mutually_exclusive = [['name', 'role_assignment_id'], ['scope', 'role_assignment_id']]
+
         super(AzureRMRoleAssignment, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                     supports_check_mode=True,
                                                     supports_tags=False)
@@ -128,13 +131,13 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
+        if self.name and not self.scope:
+            self.fail("Parameter Error: setting name requires a scope to also be set.")
+
         old_response = None
         response = None
 
-        # build scope
-        self.scope = self.build_scope()
-
-        # get existing role assignment
+        # TODO get existing assignment
         old_response = self.get_roleassignment()
 
         if old_response:
@@ -173,13 +176,6 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
         return self.results
 
-    # build scope
-    def build_scope(self):
-        subscription_scope = '/subscription/' + self.subscription_id
-        if self.scope is None:
-            return subscription_scope
-        return self.scope
-
     def create_roleassignment(self):
         '''
         Creates role assignment.
@@ -207,7 +203,8 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         :return: True
         '''
         self.log("Deleting the role assignment {0}".format(self.name))
-        scope = self.build_scope()
+        if not self.scope:
+            scope = '/subscriptions/' + self.subscription_id
         try:
             response = self.assignment_client.role_assignments.delete_by_id(role_id=assignment_id)
         except CloudError as e:
@@ -225,6 +222,11 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         self.log("Checking if the role assignment {0} is present".format(self.name))
 
         response = None
+
+        if self.role_assignment_id:
+            response = [self.authorization_client.role_assignments.get_by_id(role_id=self.role_assignment_id)]
+        elif self.name and self.scope:
+            response = [self.authorization_client.role_assignments.get(scope=self.scope, role_assignment_name=self.name)]
 
         try:
             response = list(self.assignment_client.role_assignments.list())
