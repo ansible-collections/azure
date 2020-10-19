@@ -133,19 +133,27 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
         if self.name and not self.scope:
             self.fail("Parameter Error: setting name requires a scope to also be set.")
+        if not self.scope and not self.role_assignment_id:
+            self.fail("Parameter Error: either a scope or an assignment_id must be set.")
 
-        old_response = None
+        existing_assignment = None
         response = None
 
         # TODO get existing assignment
-        old_response = self.get_roleassignment()
+        existing_assignment = self.get_roleassignment()
 
-        if old_response:
-            self.results['id'] = old_response['id']
+        if existing_assignment:
+            self.results['id'] = existing_assignment.get('id')
+            self.results['name'] = existing_assignment.get('name')
+            self.results['principal_id'] = existing_assignment.get('principal_id')
+            self.results['principal_type'] = existing_assignment.get('principal_type')
+            self.results['role_definition_id'] = existing_assignment.get('role_definition_id')
+            self.results['scope'] = existing_assignment.get('scope')
+            self.results['type'] = existing_assignment.get('assignment')
 
         if self.state == 'present':
             # check if the role assignment exists
-            if not old_response:
+            if not existing_assignment:
                 self.log("Role assignment doesn't exist in this scope")
 
                 self.results['changed'] = True
@@ -157,17 +165,17 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
             else:
                 self.log("Role assignment already exists, not updatable")
-                self.log('Result: {0}'.format(old_response))
+                self.log('Result: {0}'.format(existing_assignment))
 
         elif self.state == 'absent':
-            if old_response:
+            if existing_assignment:
                 self.log("Delete role assignment")
                 self.results['changed'] = True
 
                 if self.check_mode:
                     return self.results
 
-                self.delete_roleassignment(old_response['id'])
+                self.delete_roleassignment(existing_assignment.get('id'))
 
                 self.log('role assignment deleted')
 
@@ -185,7 +193,6 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         self.log("Creating role assignment {0}".format(self.name))
 
         try:
-            # pylint: disable=missing-kwoa
             parameters = self.assignment_models.RoleAssignmentCreateParameters(role_definition_id=self.role_definition_id, principal_id=self.assignee_object_id)
             response = self.assignment_client.role_assignments.create(scope=self.scope,
                                                                       role_assignment_name=self.name,
@@ -203,8 +210,6 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         :return: True
         '''
         self.log("Deleting the role assignment {0}".format(self.name))
-        if not self.scope:
-            scope = '/subscriptions/' + self.subscription_id
         try:
             response = self.assignment_client.role_assignments.delete_by_id(role_id=assignment_id)
         except CloudError as e:
@@ -221,24 +226,28 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         '''
         self.log("Checking if the role assignment {0} is present".format(self.name))
 
-        response = None
-
-        if self.role_assignment_id:
-            response = [self.authorization_client.role_assignments.get_by_id(role_id=self.role_assignment_id)]
-        elif self.name and self.scope:
-            response = [self.authorization_client.role_assignments.get(scope=self.scope, role_assignment_name=self.name)]
+        role_assignment = None
 
         try:
-            response = list(self.assignment_client.role_assignments.list())
+            response = self.authorization_client.role_assignments.list()
+
+            if self.name:
+                response = [role_assignment for role_assignment in response if role_assignment.get('name') == self.name]
+            if self.scope:
+                response = [role_assignment for role_assignment in response if role_assignment.get('scope') == self.scope]
+            if self.assignee_object_id:
+                response = [role_assignment for role_assignment in response if role_assignment.get('assignee_object_id') == self.assignee_object_id]
+            if self.role_definition_id:
+                response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id') == self.role_definition_id]
+            if self.id:
+                response = [role_assignment for role_assignment in response if role_assignment.get('id') == self.id]
             if response:
-                for assignment in response:
-                    if assignment.name == self.name and assignment.scope == self.scope:
-                        return self.roleassignment_to_dict(assignment)
+                role_assignment = self.roleassignment_to_dict(response[0])
 
         except CloudError as ex:
-            self.log("Didn't find role assignment {0} in scope {1}".format(self.name, self.scope))
+            self.log("Error when fetching state from Azure.")
 
-        return False
+        return role_assignment
 
     def roleassignment_to_dict(self, assignment):
         return dict(
