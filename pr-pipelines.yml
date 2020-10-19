@@ -59,6 +59,7 @@ parameters:
     - "azure_rm_resource"
     - "azure_rm_resourcegroup"
     - "azure_rm_routetable"
+    - "azure_rm_roleassignment"
     - "azure_rm_securitygroup"
     - "azure_rm_servicebus"
     - "azure_rm_sqlserver"
