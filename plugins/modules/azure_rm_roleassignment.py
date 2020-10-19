@@ -23,16 +23,20 @@ description:
     - Create and delete instance of Azure Role Assignment.
 
 options:
-    name:
-        description:
-            - Unique name of role assignment.
-            - The role assignment name must be a GUID, sample as "3ce0cbb0-58c4-4e6d-a16d-99d86a78b3ca".
-        required: True
     assignee_object_id:
         description:
             - The object id of assignee. This maps to the ID inside the Active Directory.
             - It can point to a user, service principal or security group.
             - Required when creating role assignment.
+    id:
+        description:
+            - Fully qualified id of assignment to delete or create.
+            - Mutually Exclusive with I(scope) and I(name)
+    name:
+        description:
+            - Unique name of role assignment.
+            - The role assignment name must be a GUID, sample as "3ce0cbb0-58c4-4e6d-a16d-99d86a78b3ca".
+            - Mutually Exclusive with I(id)
     role_definition_id:
         description:
             - The role definition id used in the role assignment.
@@ -43,6 +47,7 @@ options:
             - For example, use /subscriptions/{subscription-id}/ for subscription.
             - /subscriptions/{subscription-id}/resourceGroups/{resource-group-name} for resource group.
             - /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}/providers/{resource-provider}/{resource-type}/{resource-name} for resource.
+            - Mutually Exclusive with I(id)
     state:
         description:
             - Assert the state of the role assignment.
@@ -69,12 +74,30 @@ EXAMPLES = '''
         role_definition_id:
           "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
+    - name: Create a role assignment
+      azure_rm_roleassignment:
+        name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        role_definition_id:
+          "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
     - name: Delete a role assignment
       azure_rm_roleassignment:
         name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         state: absent
 
+    - name: Delete a role assignment
+      azure_rm_roleassignment:
+        id: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/rgname/providers/Microsoft.Authorization/roleAssignments/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+    - name: Delete a role assignment
+      azure_rm_roleassignment:
+        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        role_definition_id:
+          "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 '''
 
 RETURN = '''
@@ -84,6 +107,42 @@ id:
     returned: always
     type: str
     sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleAssignments/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+name:
+    description:
+        - Name of role assignment.
+    type: str
+    returned: always
+    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+type:
+    description:
+        - Type of role assignment.
+    type: str
+    returned: always
+    sample: Microsoft.Authorization/roleAssignments
+assignee_object_id:
+    description:
+        - Principal Id of the role assignee.
+    type: str
+    returned: always
+    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+principal_type:
+    description:
+        - Principal type of the role assigned to.
+    type: str
+    returned: always
+    sample: ServicePrincipal
+role_definition_id:
+    description:
+        - Role definition id that was assigned to principal_id.
+    type: str
+    returned: always
+    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+scope:
+    description:
+        - The role assignment scope.
+    type: str
+    returned: always
+    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 import uuid
@@ -264,9 +323,9 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
         else:
             try:
-                response = list(self.authorization_client.role_assignments.list())
-                response = [self.roleassignment_to_dict(role_assignment) for role_assignment in response]
                 if self.scope and self.assignee_object_id and self.role_definition_id:
+                    response = list(self.authorization_client.role_assignments.list())
+                    response = [self.roleassignment_to_dict(role_assignment) for role_assignment in response]
                     response = [role_assignment for role_assignment in response if role_assignment.get('scope') == self.scope]
                     response = [role_assignment for role_assignment in response if role_assignment.get('assignee_object_id') == self.assignee_object_id]
                     response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id') == self.role_definition_id]
