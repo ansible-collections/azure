@@ -146,7 +146,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(type='str'),
             name=dict(type='str'),
-            tags=dict(type='str'),
+            tags=dict(type='list'),
             managed_by=dict(type='str')
         )
 
