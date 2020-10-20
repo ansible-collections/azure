@@ -13,7 +13,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
 
-DOCUMENTATION = '''
+DOCUMENTATION = r'''
 ---
 module: azure_rm_manageddisk_info
 
@@ -56,7 +56,7 @@ author:
     - Paul Aiton (@paultaiton)
 '''
 
-EXAMPLES = '''
+EXAMPLES = r'''
 - name: Get facts for one managed disk
   azure_rm_manageddisk_info:
     name: Testing
@@ -75,7 +75,7 @@ EXAMPLES = '''
     - testing
 '''
 
-RETURN = '''
+RETURN = r'''
 azure_managed_disk:
     description:
         - List of managed disk dicts.
