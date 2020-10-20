@@ -189,7 +189,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
 
         try:
             results = [self.compute_client.disks.get(self.resource_group,
-                                                    self.name)]
+                                                     self.name)]
             if self.managed_by:
                 results = [disk for disk in results if disk.managed_by == self.managed_by]
             if self.tags:
