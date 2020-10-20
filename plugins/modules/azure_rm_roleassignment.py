@@ -52,6 +52,7 @@ options:
         description:
             - Assert the state of the role assignment.
             - Use C(present) to create or update a role assignment and C(absent) to delete it.
+            - If C(present), then I(role_definition_id) and I(assignee_object_id) are both required
         default: present
         choices:
             - absent
