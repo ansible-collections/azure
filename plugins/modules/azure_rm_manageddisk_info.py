@@ -45,6 +45,7 @@ options:
     managed_by:
         description:
             - Limit results to disks managed by the given VM fqid.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -184,52 +185,52 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
 
     def get_disk(self):
         """Get a single managed disk"""
-        result = []
+        results = []
 
         try:
-            result = [self.compute_client.disks.get(self.resource_group,
+            results = [self.compute_client.disks.get(self.resource_group,
                                                     self.name)]
             if self.managed_by:
-                result = [disk for disk in result if disk.managed_by == self.managed_by]
+                results = [disk for disk in results if disk.managed_by == self.managed_by]
             if self.tags:
-                result = [disk for disk in result if self.has_tags(disk.tags, self.tags)]
-            result = [self.managed_disk_to_dict(disk) for disk in result]
+                results = [disk for disk in results if self.has_tags(disk.tags, self.tags)]
+            results = [self.managed_disk_to_dict(disk) for disk in results]
         except CloudError:
             self.log('Could not find disk {0} in resource group {1}'.format(self.name, self.resource_group))
 
-        return result
+        return results
 
     def list_disks(self):
         """Get all managed disks"""
-        result = []
+        results = []
 
         try:
-            result = self.compute_client.disks.list()
+            results = self.compute_client.disks.list()
             if self.managed_by:
-                result = [disk for disk in result if disk.managed_by == self.managed_by]
+                results = [disk for disk in results if disk.managed_by == self.managed_by]
             if self.tags:
-                result = [disk for disk in result if self.has_tags(disk.tags, self.tags)]
-            result = [self.managed_disk_to_dict(disk) for disk in result]
+                results = [disk for disk in results if self.has_tags(disk.tags, self.tags)]
+            results = [self.managed_disk_to_dict(disk) for disk in results]
         except CloudError as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
-        return result
+        return results
 
     def list_disks_by_resource_group(self):
         """Get managed disks in a resource group"""
-        result = []
+        results = []
 
         try:
-            result = self.compute_client.disks.list_by_resource_group(resource_group_name=self.resource_group)
+            results = self.compute_client.disks.list_by_resource_group(resource_group_name=self.resource_group)
             if self.managed_by:
-                result = [disk for disk in result if disk.managed_by == self.managed_by]
+                results = [disk for disk in results if disk.managed_by == self.managed_by]
             if self.tags:
-                result = [disk for disk in result if self.has_tags(disk.tags, self.tags)]
-            result = [self.managed_disk_to_dict(disk) for disk in result]
+                results = [disk for disk in results if self.has_tags(disk.tags, self.tags)]
+            results = [self.managed_disk_to_dict(disk) for disk in results]
         except CloudError as exc:
             self.fail('Failed to list items by resource group - {0}'.format(str(exc)))
 
-        return result
+        return results
 
     def managed_disk_to_dict(self, managed_disk):
         create_data = managed_disk.creation_data
