@@ -195,7 +195,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
         if self.managed_by:
             result = [disk for disk in result if disk.managed_by == self.managed_by]
         if self.tags:
-            result = [disk for disk in result if self.has_tags(result.tags, self.tags)]
+            result = [disk for disk in result if self.has_tags(disk.tags, self.tags)]
         result = [self.managed_disk_to_dict(disk) for disk in result]
         return result
 
@@ -209,7 +209,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
         if self.managed_by:
             result = [disk for disk in result if disk.managed_by == self.managed_by]
         if self.tags:
-            result = [disk for disk in result if self.has_tags(result.tags, self.tags)]
+            result = [disk for disk in result if self.has_tags(disk.tags, self.tags)]
         result = [self.managed_disk_to_dict(disk) for disk in result]
         return result
 
@@ -223,7 +223,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
         if self.managed_by:
             result = [disk for disk in result if disk.managed_by == self.managed_by]
         if self.tags:
-            result = [disk for disk in result if self.has_tags(result.tags, self.tags)]
+            result = [disk for disk in result if self.has_tags(disk.tags, self.tags)]
         result = [self.managed_disk_to_dict(disk) for disk in result]
         return result
 
