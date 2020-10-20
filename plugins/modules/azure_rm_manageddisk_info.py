@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+# Copyright: (c) 2020, Paul Aiton <@paultaiton>
 # Copyright: (c) 2016, Bruno Medina Bolanos Cacho <bruno.medina@microsoft.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -12,7 +13,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
 
-DOCUMENTATION = r'''
+DOCUMENTATION = '''
 ---
 module: azure_rm_manageddisk_info
 
@@ -34,12 +35,16 @@ options:
     resource_group:
         description:
             - Limit results to a specific resource group.
+            - Required if I(name) is set
         type: str
     tags:
         description:
             - Limit results by providing a list of tags.
             - Format tags as 'key' or 'key:value'.
         type: list
+    managed_by:
+        description:
+            - Limit results to disks managed by the given VM fqid.
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -47,9 +52,10 @@ extends_documentation_fragment:
 
 author:
     - Bruno Medina (@brusMX)
+    - Paul Aiton (@paultaiton)
 '''
 
-EXAMPLES = r'''
+EXAMPLES = '''
 - name: Get facts for one managed disk
   azure_rm_manageddisk_info:
     name: Testing
@@ -58,13 +64,17 @@ EXAMPLES = r'''
 - name: Get facts for all managed disks
   azure_rm_manageddisk_info:
 
+- name: Get facts for all managed disks managed by a specific vm
+  azure_rm_manageddisk_info:
+    managed_by: '/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/rgName/Microsoft.Compute/virtualMachines/vmName'
+
 - name: Get facts by tags
   azure_rm_manageddisk_info:
     tags:
     - testing
 '''
 
-RETURN = r'''
+RETURN = '''
 azure_managed_disk:
     description:
         - List of managed disk dicts.
@@ -129,114 +139,112 @@ except Exception:
     pass
 
 
-# duplicated in azure_rm_manageddisk
-def managed_disk_to_dict(managed_disk):
-    create_data = managed_disk.creation_data
-    return dict(
-        id=managed_disk.id,
-        name=managed_disk.name,
-        location=managed_disk.location,
-        tags=managed_disk.tags,
-        create_option=create_data.create_option.lower(),
-        source_uri=create_data.source_uri or create_data.source_resource_id,
-        disk_size_gb=managed_disk.disk_size_gb,
-        os_type=managed_disk.os_type.lower() if managed_disk.os_type else None,
-        storage_account_type=managed_disk.sku.name if managed_disk.sku else None,
-        managed_by=managed_disk.managed_by,
-        zone=managed_disk.zones[0] if managed_disk.zones and len(managed_disk.zones) > 0 else ''
-    )
-
-
 class AzureRMManagedDiskInfo(AzureRMModuleBase):
     """Utility class to get managed disk facts"""
 
     def __init__(self):
         self.module_arg_spec = dict(
-            resource_group=dict(
-                type='str'
-            ),
-            name=dict(
-                type='str'
-            ),
-            tags=dict(
-                type='str'
-            ),
+            resource_group=dict(type='str'),
+            name=dict(type='str'),
+            tags=dict(type='str'),
+            managed_by=dict(type='str')
         )
         self.results = dict(
             ansible_info=dict(
                 azure_managed_disk=[]
             )
         )
+
         self.resource_group = None
         self.name = None
-        self.create_option = None
-        self.source_uri = None
-        self.source_resource_uri = None
         self.tags = None
-        super(AzureRMManagedDiskInfo, self).__init__(
-            derived_arg_spec=self.module_arg_spec,
-            supports_check_mode=True,
-            facts_module=True,
-            supports_tags=True)
+        self.managed_by = None
+
+        super(AzureRMManagedDiskInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                     supports_check_mode=True,
+                                                     facts_module=True,
+                                                     supports_tags=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        self.results['ansible_info']['azure_managed_disk'] = (
-            self.get_item() if self.name
-            else (self.list_items_by_resource_group() if self.resource_group else self.list_items())
-        )
+        if self.name and not self.resource_group:
+            self.fail('Parameter Error: name requires that resource_group also be set.')
+
+        if self.name:
+            self.results['ansible_info']['azure_managed_disk'] = self.get_disk()
+        elif self.resource_group:
+            self.results['ansible_info']['azure_managed_disk'] = self.list_disks_by_resource_group()
+        else:
+            self.results['ansible_info']['azure_managed_disk'] = self.list_disks()
 
         return self.results
 
-    def get_item(self):
+    def get_disk(self):
         """Get a single managed disk"""
-        item = None
         result = []
 
         try:
-            item = self.compute_client.disks.get(
-                self.resource_group,
-                self.name)
+            result = [self.compute_client.disks.get(self.resource_group,
+                                                      self.name)]
         except CloudError:
-            pass
+            self.log('Could not find disk {0} in resource group {1}'.format(self.name, self.resource_group))
 
-        if item and self.has_tags(item.tags, self.tags):
-            result = [managed_disk_to_dict(item)]
-
+        if self.managed_by:
+            result = [disk for disk in result if disk.managed_by == self.managed_by]
+        if self.tags:
+            result = [disk for disk in result if self.has_tags(result.tags, self.tags)]
+        result = [self.managed_disk_to_dict(disk) for disk in result]
         return result
 
-    def list_items(self):
+    def list_disks(self):
         """Get all managed disks"""
         try:
-            response = self.compute_client.disks.list()
+            result = self.compute_client.disks.list()
         except CloudError as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
-        results = []
-        for item in response:
-            if self.has_tags(item.tags, self.tags):
-                results.append(managed_disk_to_dict(item))
-        return results
+        if self.managed_by:
+            result = [disk for disk in result if disk.managed_by == self.managed_by]
+        if self.tags:
+            result = [disk for disk in result if self.has_tags(result.tags, self.tags)]
+        result = [self.managed_disk_to_dict(disk) for disk in result]
+        return result
 
-    def list_items_by_resource_group(self):
+    def list_disks_by_resource_group(self):
         """Get managed disks in a resource group"""
         try:
-            response = self.compute_client.disks.list_by_resource_group(resource_group_name=self.resource_group)
+            result = self.compute_client.disks.list_by_resource_group(resource_group_name=self.resource_group)
         except CloudError as exc:
             self.fail('Failed to list items by resource group - {0}'.format(str(exc)))
 
-        results = []
-        for item in response:
-            if self.has_tags(item.tags, eval(self.tags)):
-                results.append(managed_disk_to_dict(item))
-        return results
+        if self.managed_by:
+            result = [disk for disk in result if disk.managed_by == self.managed_by]
+        if self.tags:
+            result = [disk for disk in result if self.has_tags(result.tags, self.tags)]
+        result = [self.managed_disk_to_dict(disk) for disk in result]
+        return result
+
+    def managed_disk_to_dict(self, managed_disk):
+        create_data = managed_disk.creation_data
+        return dict(
+            id=managed_disk.id,
+            name=managed_disk.name,
+            location=managed_disk.location,
+            tags=managed_disk.tags,
+            create_option=create_data.create_option.lower(),
+            source_uri=create_data.source_uri or create_data.source_resource_id,
+            disk_size_gb=managed_disk.disk_size_gb,
+            os_type=managed_disk.os_type.lower() if managed_disk.os_type else None,
+            storage_account_type=managed_disk.sku.name if managed_disk.sku else None,
+            managed_by=managed_disk.managed_by,
+            zone=managed_disk.zones[0] if managed_disk.zones and len(managed_disk.zones) > 0 else ''
+        )
 
 
 def main():
     """Main module execution code path"""
-
     AzureRMManagedDiskInfo()
 
 
