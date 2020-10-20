@@ -149,6 +149,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             tags=dict(type='str'),
             managed_by=dict(type='str')
         )
+
         self.results = dict(
             ansible_info=dict(
                 azure_managed_disk=[]
@@ -187,7 +188,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
 
         try:
             result = [self.compute_client.disks.get(self.resource_group,
-                                                      self.name)]
+                                                    self.name)]
         except CloudError:
             self.log('Could not find disk {0} in resource group {1}'.format(self.name, self.resource_group))
 
