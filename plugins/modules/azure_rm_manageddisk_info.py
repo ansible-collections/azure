@@ -189,42 +189,46 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
         try:
             result = [self.compute_client.disks.get(self.resource_group,
                                                     self.name)]
+            if self.managed_by:
+                result = [disk for disk in result if disk.managed_by == self.managed_by]
+            if self.tags:
+                result = [disk for disk in result if self.has_tags(disk.tags, self.tags)]
+            result = [self.managed_disk_to_dict(disk) for disk in result]
         except CloudError:
             self.log('Could not find disk {0} in resource group {1}'.format(self.name, self.resource_group))
 
-        if self.managed_by:
-            result = [disk for disk in result if disk.managed_by == self.managed_by]
-        if self.tags:
-            result = [disk for disk in result if self.has_tags(disk.tags, self.tags)]
-        result = [self.managed_disk_to_dict(disk) for disk in result]
         return result
 
     def list_disks(self):
         """Get all managed disks"""
+        result = []
+
         try:
             result = self.compute_client.disks.list()
+            if self.managed_by:
+                result = [disk for disk in result if disk.managed_by == self.managed_by]
+            if self.tags:
+                result = [disk for disk in result if self.has_tags(disk.tags, self.tags)]
+            result = [self.managed_disk_to_dict(disk) for disk in result]
         except CloudError as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
-        if self.managed_by:
-            result = [disk for disk in result if disk.managed_by == self.managed_by]
-        if self.tags:
-            result = [disk for disk in result if self.has_tags(disk.tags, self.tags)]
-        result = [self.managed_disk_to_dict(disk) for disk in result]
         return result
 
     def list_disks_by_resource_group(self):
         """Get managed disks in a resource group"""
+        result = []
+
         try:
             result = self.compute_client.disks.list_by_resource_group(resource_group_name=self.resource_group)
+            if self.managed_by:
+                result = [disk for disk in result if disk.managed_by == self.managed_by]
+            if self.tags:
+                result = [disk for disk in result if self.has_tags(disk.tags, self.tags)]
+            result = [self.managed_disk_to_dict(disk) for disk in result]
         except CloudError as exc:
             self.fail('Failed to list items by resource group - {0}'.format(str(exc)))
 
-        if self.managed_by:
-            result = [disk for disk in result if disk.managed_by == self.managed_by]
-        if self.tags:
-            result = [disk for disk in result if self.has_tags(disk.tags, self.tags)]
-        result = [self.managed_disk_to_dict(disk) for disk in result]
         return result
 
     def managed_disk_to_dict(self, managed_disk):
