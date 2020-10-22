@@ -158,7 +158,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             name=dict(type='str'),
             role_definition_id=dict(type='str'),
             scope=dict(type='str'),
-            strict_scope_match=dict(type=bool, default=False)
+            strict_scope_match=dict(type='bool', default=False)
         )
 
         self.assignee = None
