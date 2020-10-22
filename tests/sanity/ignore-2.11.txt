@@ -197,7 +197,7 @@ plugins/modules/azure_rm_keyvaultsecret_info.py validate-modules:required_if-unk
 plugins/modules/azure_rm_manageddisk.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_manageddisk.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_manageddisk.py validate-modules:required_if-unknown-key
-plugins/modules/azure_rm_manageddisk_info.py validate-modules:doc-type-does-not-match-spec
+plugins/modules/azure_rm_manageddisk_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_manageddisk_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_manageddisk_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_manageddisk_info.py validate-modules:return-syntax-error

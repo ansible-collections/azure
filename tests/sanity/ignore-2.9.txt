@@ -51,7 +51,6 @@ plugins/modules/azure_rm_keyvault.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_keyvaultkey.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_keyvaultsecret.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_manageddisk.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_manageddisk_info.py validate-modules:doc-type-does-not-match-spec
 plugins/modules/azure_rm_networkinterface.py validate-modules:doc-missing-type
 plugins/modules/azure_rm_networkinterface.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_networkinterface_info.py validate-modules:parameter-type-not-in-doc
