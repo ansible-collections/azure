@@ -46,8 +46,8 @@
     that:
       - output.changed
       - output.retention_in_days == retention_days
-      - output.intelligence_packs | json_query('[?name == `Backup`].enabled') | first == true
-      - output.intelligence_packs | json_query('[?name == `Containers`].enabled') | first == true
+      # - output.intelligence_packs | json_query('[?name == `Backup`].enabled') | first == true
+      # - output.intelligence_packs | json_query('[?name == `Containers`].enabled') | first == true
       - output.sku == 'pergb2018'
 
 - name: Get Log Analytics workspace information (Show full information)
@@ -66,8 +66,8 @@
       - facts.workspaces | length > 0
       - facts.workspaces[0].retention_in_days == retention_days
       - facts.workspaces[0].intelligence_packs | length > 0
-      - facts.workspaces[0].intelligence_packs | json_query('[?name == `Backup`].enabled') | first == true
-      - facts.workspaces[0].intelligence_packs | json_query('[?name == `Containers`].enabled') | first == true
+      # - facts.workspaces[0].intelligence_packs | json_query('[?name == `Backup`].enabled') | first == true
+      # - facts.workspaces[0].intelligence_packs | json_query('[?name == `Containers`].enabled') | first == true
       - facts.workspaces[0].shared_keys is defined
       - facts.workspaces[0].shared_keys.primary_shared_key is defined
       - facts.workspaces[0].shared_keys.secondary_shared_key is defined
