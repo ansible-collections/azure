@@ -256,6 +256,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
         response = None
         try:
+            # pylint: disable=missing-kwoa
             parameters = self.authorization_models.RoleAssignmentCreateParameters(role_definition_id=self.role_definition_id,
                                                                                   principal_id=self.assignee_object_id)
             if self.id:
