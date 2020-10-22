@@ -72,7 +72,7 @@ EXAMPLES = '''
     - name: Get role assignments for specific scope that matches specific role definition
       azure_rm_roleassignment_info:
         scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        role_definition_id: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        role_definition_id: /subscriptions/xxx-sub-guid-xxx/providers/Microsoft.Authorization/roleDefinitions/xxx-role-guid-xxxx
 
     - name: Get role assignments for specific scope with no inherited assignments
       azure_rm_roleassignment_info:

@@ -91,7 +91,7 @@ EXAMPLES = '''
 
     - name: Delete a role assignment
       azure_rm_roleassignment:
-        id: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/rgname/providers/Microsoft.Authorization/roleAssignments/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        id: /subscriptions/xxx-sub-guid-xxx/resourceGroups/rgname/providers/Microsoft.Authorization/roleAssignments/xxx-assign-guid-xxx"
 
     - name: Delete a role assignment
       azure_rm_roleassignment:
@@ -256,9 +256,11 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
         response = None
         try:
-            parameters = self.authorization_models.RoleAssignmentCreateParameters(role_definition_id=self.role_definition_id, principal_id=self.assignee_object_id)
+            parameters = self.authorization_models.RoleAssignmentCreateParameters(role_definition_id=self.role_definition_id,
+                                                                                  principal_id=self.assignee_object_id)
             if self.id:
-                response = self.authorization_client.role_assignments.create_by_id(role_id=self.id, parameters=parameters)
+                response = self.authorization_client.role_assignments.create_by_id(role_id=self.id,
+                                                                                   parameters=parameters)
             elif self.scope:
                 if not self.name:
                     self.name = str(uuid.uuid4())
