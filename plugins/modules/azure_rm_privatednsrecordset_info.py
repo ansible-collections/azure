@@ -20,7 +20,7 @@ version_added: "1.1.0"
 short_description: Get Private DNS Record Set facts
 
 description:
-    - Get facts for a specific DNS Record Set in a Private DNS Zone, or a specific type of DNS record in all zones or 
+    - Get facts for a specific DNS Record Set in a Private DNS Zone, or a specific type of DNS record in all zones or
       one zone etc.
 
 options:
