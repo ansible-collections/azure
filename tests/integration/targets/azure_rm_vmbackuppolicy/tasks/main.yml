@@ -16,7 +16,7 @@
   azure_rm_vmbackuppolicy:
     resource_group: "{{ resource_group }}"
     name: "{{ name }}"
-    vault_name: "{{ vault.state.name }}"
+    vault_name: "{{ vault.response.name }}"
     state: "present"
   register: output
 
@@ -29,7 +29,7 @@
   azure_rm_vmbackuppolicy:
     resource_group: "{{ resource_group }}"
     name: "{{ name }}"
-    vault_name: "{{ vault.state.name }}"
+    vault_name: "{{ vault.response.name }}"
     state: "present"
   register: output
 
@@ -42,7 +42,7 @@
   azure_rm_vmbackuppolicy_info:
     resource_group: "{{ resource_group }}"
     name: "{{ name }}"
-    vault_name: "{{ vault.state.name }}"
+    vault_name: "{{ vault.response.name }}"
   register: output
 
 - name: Assert that output has changed
@@ -55,7 +55,7 @@
   azure_rm_vmbackuppolicy:
     resource_group: "{{ resource_group }}"
     name: "{{ name }}"
-    vault_name: "{{ vault.state.name }}"
+    vault_name: "{{ vault.response.name }}"
     state: "absent"
   register: output
 
@@ -67,7 +67,7 @@
 - name: Delete Azure Recovery Service vault
   azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
-    name: "{{ vault.state.name }}"
+    name: "{{ vault.response.name }}"
     location: "{{ location }}"
     state: "absent"
   register: output
