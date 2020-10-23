@@ -94,6 +94,12 @@ options:
             capacity:
                 description:
                     - Capacity of the particular SKU.
+            size:
+                description:
+                    - Size of the particular SKU
+            family:
+                description:
+                    - If the service has different generations of hardware, for the same SKU, then that can be used here
     max_size_bytes:
         description:
             - The max size of the database expressed in bytes.
@@ -394,8 +400,8 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                         (self.parameters['max_size_bytes'] != old_response['max_size_bytes'])):
                     self.to_do = Actions.Update
                 if (('sku' in self.parameters) and
-                         (self.parameters['sku'] != old_response['sku'])):
-                     self.to_do = Actions.Update
+                        (self.parameters['sku'] != old_response['sku'])):
+                    self.to_do = Actions.Update
                 update_tags, newtags = self.update_tags(old_response.get('tags', dict()))
                 if update_tags:
                     self.tags = newtags
