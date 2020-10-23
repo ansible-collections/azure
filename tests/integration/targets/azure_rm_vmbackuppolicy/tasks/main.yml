@@ -12,11 +12,6 @@
     state: "present"
   register: vault
 
-- name: Assert ssucceeded and results include vault name
-  assert:
-    that:
-      - vault.changed
-
 - name: Create VM Backup Policy
   azure_rm_vmbackuppolicy:
     resource_group: "{{ resource_group }}"
