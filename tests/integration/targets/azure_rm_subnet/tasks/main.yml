@@ -257,7 +257,7 @@
       - output.subnets[0]['address_prefixes_cidr'] != None
       - output.subnets[0]['security_group'] != None
       - output.subnets[0]['provisioning_state'] != None
-      - output.subnets[0]['private_endpoint_network_policies'] == 'Enabled'
+      - output.subnets[0]['private_endpoint_network_policies'] != None
       - output.subnets[0]['private_link_service_network_policies'] == 'Disabled'
       - output.subnets[0]['delegations'] != None
 
