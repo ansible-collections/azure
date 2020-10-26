@@ -1,0 +1,78 @@
+- name: Fix resource prefix
+  set_fact:
+    name: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    vault_name: "myVault"
+    location: "eastus"
+
+- name: Create Azure Recovery Service vault
+  azure_rm_recoveryservicesvault:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    location: "{{ location }}"
+    state: "present"
+  register: vault
+
+- name: Create VM Backup Policy
+  azure_rm_vmbackuppolicy:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    vault_name: "{{ vault.response.name }}"
+    state: "present"
+  register: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.changed
+      
+- name: Create VM Backup Policy (idempotent)
+  azure_rm_vmbackuppolicy:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    vault_name: "{{ vault.response.name }}"
+    state: "present"
+  register: output
+
+- name: Assert that output has no changed
+  assert:
+    that:
+      - not output.changed
+
+- name: Get VM Backup Policy Details
+  azure_rm_vmbackuppolicy_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    vault_name: "{{ vault.response.name }}"
+  register: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.response.id != None
+      - output.response.name != None
+
+- name: Delete VM Backup Policy
+  azure_rm_vmbackuppolicy:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    vault_name: "{{ vault.response.name }}"
+    state: "absent"
+  register: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.changed
+
+- name: Delete Azure Recovery Service vault
+  azure_rm_recoveryservicesvault:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vault.response.name }}"
+    location: "{{ location }}"
+    state: "absent"
+  register: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.changed
