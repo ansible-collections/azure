@@ -39,7 +39,7 @@ options:
     record_type:
         description:
             - Limit record sets by record type.
-        type:str
+        type: str
     top:
         description:
             - Limit the maximum number of record sets to return.
