@@ -212,6 +212,32 @@
 - assert:
     that: not output.changed
 
+- name: Update the subnet with delegations
+  azure_rm_subnet:
+    name: foobar01
+    virtual_network_name: My_Virtual_Network
+    resource_group: "{{ resource_group }}"
+    delegations:
+      - name: 'mydeleg'
+        serviceName: 'Microsoft.ContainerInstance/containerGroups'
+  register: output
+
+- assert:
+    that: output
+
+- name: The subnet with delegations should be idempotent
+  azure_rm_subnet:
+    name: foobar01
+    virtual_network_name: My_Virtual_Network
+    resource_group: "{{ resource_group }}"
+    delegations:
+      - name: 'mydeleg'
+        serviceName: 'Microsoft.ContainerInstance/containerGroups'
+  register: output
+
+- assert:
+    that: not output.changed
+
 - name: Get subnet facts
   azure_rm_subnet_info:
     name: foobar01
@@ -231,8 +257,9 @@
       - output.subnets[0]['address_prefixes_cidr'] != None
       - output.subnets[0]['security_group'] != None
       - output.subnets[0]['provisioning_state'] != None
-      - output.subnets[0]['private_endpoint_network_policies'] == 'Enabled'
-      - output.subnets[0]['private_link_service_network_policies'] == 'Disabled'
+      - output.subnets[0]['private_endpoint_network_policies'] != None
+      - output.subnets[0]['private_link_service_network_policies'] != None
+      - output.subnets[0]['delegations'] != None
 
 - name: Get subnet facts
   azure_rm_subnet_info:
