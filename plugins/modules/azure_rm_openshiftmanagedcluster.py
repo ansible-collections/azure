@@ -824,7 +824,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
 ###
 
     def set_default(self):
-        if 'apiServerProfile' not in self.body['properties']:
+        if 'apiserverProfile' not in self.body['properties']:
             api_profile = dict(visibility="Public")
             self.body['properties']['apiserverProfile'] = api_profile
         if 'ingressProfiles' not in self.body['properties']:
