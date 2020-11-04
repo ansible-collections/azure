@@ -186,7 +186,7 @@ EXAMPLES = '''
           - service: "Microsoft.Sql"
             locations:
               - "eastus"
-            
+
     - name: Create a subnet with delegations
       azure_rm_subnet:
         resource_group: myResourceGroup
