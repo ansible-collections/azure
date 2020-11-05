@@ -5,6 +5,8 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
+import time
 __metaclass__ = type
 
 
@@ -77,12 +79,29 @@ options:
         description:
             - Required if I(create_mode=restore_long_term_retention_backup), then this value is required.
             - Specifies the resource ID of the recovery point to restore from.
+    edition:
+        description:
+            - (Deprecate)The edition of the database. The DatabaseEditions enumeration contains all the valid editions.
+            - This option will be deprecated in 2.11, use I(sku) instead.
+            - Cannot set C(sku) when this field set.
+        choices:
+            - 'web'
+            - 'business'
+            - 'basic'
+            - 'standard'
+            - 'premium'
+            - 'free'
+            - 'stretch'
+            - 'data_warehouse'
+            - 'system'
+            - 'system2'
     sku:
         description:
             - The sku of the database. The DatabaseEditions enumeration contains all the valid sku.
             - If I(create_mode=non_readable_secondary) or I(create_mode=online_secondary), this value is ignored.
             - To see possible values, query the capabilities API (/subscriptions/{subscriptionId}/providers/Microsoft.Sql/locations/{locationID}/capabilities)
               referred to by operationId:'Capabilities_ListByLocation'.
+            - Cannot set C(edition) when this field set.
         suboptions:
             name:
                 description:
@@ -210,8 +229,6 @@ status:
     sample: Online
 '''
 
-import time
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -230,6 +247,28 @@ sku_spec = dict(
     family=dict(type='str'),
     capacity=dict(type='int')
 )
+
+
+def get_sku_name(edition):
+    edition = edition.upper()
+    if edition == 'FREE':
+        return 'Free'
+    elif edition == 'SYSTEM':
+        return 'GP_Gen5_2'
+    elif edition in ['BUSINESS', 'SYSTEM2']:
+        return 'BC_Gen5_2'
+    elif edition == 'BASIC':
+        return 'Basic'
+    elif edition in ['STANDARD', 'WEB']:
+        return 'S1'
+    elif edition == 'PREMIUM':
+        return 'P2'
+    elif edition == 'STRETCH':
+        return 'DS100'
+    elif edition == 'DATA_WAREHOUSE':
+        return 'DW100c'
+    else:
+        return None
 
 
 class Actions:
@@ -282,6 +321,19 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
             recovery_services_recovery_point_resource_id=dict(
                 type='str'
             ),
+            edition=dict(
+                type='str',
+                choices=['web',
+                         'business',
+                         'basic',
+                         'standard',
+                         'premium',
+                         'free',
+                         'stretch',
+                         'data_warehouse',
+                         'system',
+                         'system2']
+            ),
             sku=dict(
                 type='dict',
                 options=sku_spec
@@ -313,6 +365,7 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 choices=['present', 'absent']
             )
         )
+        mutually_exclusive = [['sky', 'edition']]
 
         self.resource_group = None
         self.server_name = None
@@ -340,7 +393,8 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 elif key == "collation":
                     self.parameters["collation"] = kwargs[key]
                 elif key == "create_mode":
-                    self.parameters["create_mode"] = _snake_to_camel(kwargs[key], True)
+                    self.parameters["create_mode"] = _snake_to_camel(
+                        kwargs[key], True)
                 elif key == "source_database_id":
                     self.parameters["source_database_id"] = kwargs[key]
                 elif key == "source_database_deletion_date":
@@ -349,9 +403,13 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                     self.parameters["restore_point_in_time"] = kwargs[key]
                 elif key == "recovery_services_recovery_point_resource_id":
                     self.parameters["recovery_services_recovery_point_resource_id"] = kwargs[key]
+                elif key == "edition":
+                    ev = get_sku_name(kwargs[key])
+                    self.parameters["sku"] = Sku(name=ev)
                 elif key == "sku":
                     ev = kwargs[key]
-                    self.parameters["sku"] = Sku(name=ev['name'], tier=ev['tier'], size=ev['size'], family=ev['family'], capacity=ev['capacity'])
+                    self.parameters["sku"] = Sku(
+                        name=ev['name'], tier=ev['tier'], size=ev['size'], family=ev['family'], capacity=ev['capacity'])
                 elif key == "max_size_bytes":
                     self.parameters["max_size_bytes"] = kwargs[key]
                 elif key == "elastic_pool_name":
@@ -390,7 +448,8 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             elif self.state == 'present':
-                self.log("Need to check if SQL Database instance has to be deleted or may be updated")
+                self.log(
+                    "Need to check if SQL Database instance has to be deleted or may be updated")
                 if ('location' in self.parameters) and (self.parameters['location'] != old_response['location']):
                     self.to_do = Actions.Update
                 if (('read_scale' in self.parameters) and
@@ -402,7 +461,8 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 if (('sku' in self.parameters) and
                         (self.parameters['sku'] != old_response['sku'])):
                     self.to_do = Actions.Update
-                update_tags, newtags = self.update_tags(old_response.get('tags', dict()))
+                update_tags, newtags = self.update_tags(
+                    old_response.get('tags', dict()))
                 if update_tags:
                     self.tags = newtags
                     self.to_do = Actions.Update
@@ -452,7 +512,8 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
 
         :return: deserialized SQL Database instance state dictionary
         '''
-        self.log("Creating / Updating the SQL Database instance {0}".format(self.name))
+        self.log(
+            "Creating / Updating the SQL Database instance {0}".format(self.name))
 
         try:
             response = self.sql_client.databases.create_or_update(resource_group_name=self.resource_group,
@@ -464,7 +525,8 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
 
         except CloudError as exc:
             self.log('Error attempting to create the SQL Database instance.')
-            self.fail("Error creating the SQL Database instance: {0}".format(str(exc)))
+            self.fail(
+                "Error creating the SQL Database instance: {0}".format(str(exc)))
         return response.as_dict()
 
     def delete_sqldatabase(self):
@@ -480,7 +542,8 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                                                         database_name=self.name)
         except CloudError as e:
             self.log('Error attempting to delete the SQL Database instance.')
-            self.fail("Error deleting the SQL Database instance: {0}".format(str(e)))
+            self.fail(
+                "Error deleting the SQL Database instance: {0}".format(str(e)))
 
         return True
 
@@ -490,7 +553,8 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
 
         :return: deserialized SQL Database instance state dictionary
         '''
-        self.log("Checking if the SQL Database instance {0} is present".format(self.name))
+        self.log(
+            "Checking if the SQL Database instance {0} is present".format(self.name))
         found = False
         try:
             response = self.sql_client.databases.get(resource_group_name=self.resource_group,
@@ -512,7 +576,8 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                                         namespace="Microsoft.Sql",
                                         types="servers",
                                         resource_group=self.resource_group)
-        self.parameters['elastic_pool_id'] = parrent_id + "/elasticPools/" + self.parameters['elastic_pool_id']
+        self.parameters['elastic_pool_id'] = parrent_id + \
+            "/elasticPools/" + self.parameters['elastic_pool_id']
 
 
 def _snake_to_camel(snake, capitalize_first=False):

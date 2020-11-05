@@ -117,6 +117,7 @@
     server_name: sqlsrv{{ random_postfix }}
     name: database{{ random_postfix }}
     location: eastus
+    edition: premium
     tags:
       aaa: bbb
   register: output
@@ -132,6 +133,7 @@
     server_name: sqlsrv{{ random_postfix }}
     name: database{{ random_postfix }}
     location: eastus
+    edition: premium
     tags:
       aaa: bbb
   register: output
@@ -244,7 +246,7 @@
   azure_rm_sqldatabase:
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
-    name: database{{ random_postfix }}
+    name: database{{ random_postfix }}2
     location: eastus
     sku:
       name: S0
@@ -259,9 +261,8 @@
 - name: Create SQL Database with sku 
   azure_rm_sqldatabase:
     resource_group: "{{ resource_group }}"
-
     server_name: sqlsrv{{ random_postfix }}
-    name: database{{ random_postfix }}
+    name: database{{ random_postfix }}2
     location: eastus
     tags:
       aaa: bbb
@@ -279,7 +280,7 @@
   azure_rm_sqldatabase_info:
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
-    name: database{{ random_postfix }}
+    name: database{{ random_postfix }}2
   register: output
 - name: Assert that facts are returned
   assert:
@@ -298,7 +299,7 @@
   azure_rm_sqldatabase:
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
-    name: database{{ random_postfix }}
+    name: database{{ random_postfix }}2
     location: eastus
     tags:
       aaa: bbb
@@ -316,7 +317,7 @@
   azure_rm_sqldatabase:
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
-    name: database{{ random_postfix }}
+    name: database{{ random_postfix }}2
     location: eastus
     tags:
       aaa: bbb
@@ -334,7 +335,7 @@
   azure_rm_sqldatabase_info:
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
-    name: database{{ random_postfix }}
+    name: database{{ random_postfix }}2
   register: output
 - name: Assert that facts are returned
   assert:
@@ -353,7 +354,7 @@
   azure_rm_sqldatabase:
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
-    name: database{{ random_postfix }}
+    name: database{{ random_postfix }}2
     state: absent
   register: output
 - name: Assert the state has changed
@@ -366,7 +367,7 @@
   azure_rm_sqldatabase_info:
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
-    name: database{{ random_postfix }}
+    name: database{{ random_postfix }}2
   register: output
 - name: Assert that empty dictionary was returned
   assert:
