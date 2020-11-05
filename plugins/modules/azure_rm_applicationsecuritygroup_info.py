@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_applicationsecuritygroup_info
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Get Azure Application Security Group facts
 description:
     - Get facts of Azure Application Security Group.
@@ -139,7 +139,7 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
         is_old_facts = self.module._name == 'azure_rm_applicationsecuritygroup_facts'
         if is_old_facts:
             self.module.deprecate("The 'azure_rm_applicationsecuritygroup_facts' module has been renamed to 'azure_rm_applicationsecuritygroup_info'",
-                                  version=(2, 9))
+                                  version=(2.9, ))
 
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             if hasattr(self, key):

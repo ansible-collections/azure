@@ -17,7 +17,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachineextension
 
-version_added: "2.4"
+version_added: "0.1.2"
 
 short_description: Managed Azure Virtual Machine extension
 
@@ -180,7 +180,7 @@ class AzureRMVMExtension(AzureRMModuleBase):
                 type='dict'
             ),
             protected_settings=dict(
-                type='dict'
+                type='dict', no_log=True
             )
         )
 

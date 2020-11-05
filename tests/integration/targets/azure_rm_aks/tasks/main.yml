@@ -28,8 +28,13 @@
            enable_auto_scaling: True
            max_count: 3
            min_count: 1
+           availability_zones:
+             - 1
+             - 2
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
+     network_profile:
+         load_balancer_sku: standard
    check_mode: yes
 
  - name: Check there is no AKS created
@@ -64,8 +69,13 @@
            enable_auto_scaling: True
            max_count: 3
            min_count: 1
+           availability_zones:
+             - 1
+             - 2
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
+     network_profile:
+         load_balancer_sku: standard
    register: output
 
  - name: Assert the AKS instance is well created
@@ -85,6 +95,7 @@
       that:
         - "fact.aks | length == 1"
         - fact.aks[0].id == output.id
+        - fact.aks[0].properties.agentPoolProfiles[0].availabilityZones == ["1", "2"]
 
  - name: Create an AKS instance (idempotent)
    azure_rm_aks:
@@ -108,6 +119,8 @@
            min_count: 1
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
+     network_profile:
+         load_balancer_sku: standard
    register: output
 
  - name: Assert idempotent
@@ -143,6 +156,7 @@
         http_application_routing: {}
      network_profile:
           network_plugin: kubenet
+          load_balancer_sku: standard
      enable_rbac: yes
    register: output
 
@@ -177,6 +191,7 @@
         http_application_routing: {}
      network_profile:
           network_plugin: kubenet
+          load_balancer_sku: standard
      enable_rbac: yes
    register: output
 
@@ -207,6 +222,8 @@
            min_count: 3
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
+     network_profile:
+          load_balancer_sku: standard
    register: output
 
  - name: Assert the AKS instance is well created
@@ -238,6 +255,8 @@
            min_count: 3
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
+     network_profile:
+          load_balancer_sku: standard
    register: output
 
  - name: Assert the AKS instance is well created

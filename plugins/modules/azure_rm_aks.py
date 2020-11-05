@@ -15,7 +15,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_aks
-version_added: "2.6"
+version_added: "0.1.2"
 short_description: Manage a managed Azure Container Service (AKS) instance
 description:
     - Create, update and delete a managed Azure Container Service (AKS) instance.
@@ -99,6 +99,18 @@ options:
                     - 'VirtualMachineScaleSets'
                     - 'AvailabilitySet'
                 type: str
+            vnet_subnet_id:
+                description:
+                    - Specifies the VNet's subnet identifier.
+                type: str
+            availability_zones:
+                description:
+                    - Availability zones for nodes. Must use VirtualMachineScaleSets AgentPoolType.
+                type: list
+                choices:
+                    - 1
+                    - 2
+                    - 3
     service_principal:
         description:
             - The service principal suboptions.
@@ -116,7 +128,6 @@ options:
             - Existing non-RBAC enabled AKS clusters cannot currently be updated for RBAC use.
         type: bool
         default: no
-        version_added: "2.8"
     network_profile:
         description:
             - Profile of network configuration.
@@ -159,7 +170,12 @@ options:
                     - A CIDR notation IP range assigned to the Docker bridge network.
                     - It must not overlap with any Subnet IP ranges or the Kubernetes service address range.
                 default: "172.17.0.1/16"
-        version_added: "2.8"
+            load_balancer_sku:
+                description:
+                    - The load balancer sku for the managed cluster.
+                choices:
+                    - standard
+                    - basic
     aad_profile:
         description:
             - Profile of Azure Active Directory configuration.
@@ -174,7 +190,6 @@ options:
                 description:
                     - The AAD tenant ID to use for authentication.
                     - If not specified, will use the tenant of the deployment subscription.
-        version_added: "2.8"
     addon:
         description:
             - Profile of managed cluster add-on.
@@ -219,7 +234,6 @@ options:
                         description:
                             - Subnet associated to the cluster.
                         required: true
-        version_added: "2.8"
     node_resource_group:
         description:
             - Name of the resource group containing agent pool nodes.
@@ -365,7 +379,8 @@ def create_network_profiles_dict(network):
         pod_cidr=network.pod_cidr,
         service_cidr=network.service_cidr,
         dns_service_ip=network.dns_service_ip,
-        docker_bridge_cidr=network.docker_bridge_cidr
+        docker_bridge_cidr=network.docker_bridge_cidr,
+        load_balancer_sku=network.load_balancer_sku
     ) if network else dict()
 
 
@@ -420,6 +435,7 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         name=profile.name,
         os_disk_size_gb=profile.os_disk_size_gb,
         vnet_subnet_id=profile.vnet_subnet_id,
+        availability_zones=profile.availability_zones,
         os_type=profile.os_type,
         type=profile.type,
         enable_auto_scaling=profile.enable_auto_scaling,
@@ -474,6 +490,7 @@ agent_pool_profile_spec = dict(
     storage_profiles=dict(type='str', choices=[
                           'StorageAccount', 'ManagedDisks']),
     vnet_subnet_id=dict(type='str'),
+    availability_zones=dict(type='list', elements='int', choices=[1, 2, 3]),
     os_type=dict(type='str', choices=['Linux', 'Windows']),
     type=dict(type='str', choice=['VirtualMachineScaleSets', 'AvailabilitySet']),
     enable_auto_scaling=dict(type='bool'),
@@ -488,7 +505,8 @@ network_profile_spec = dict(
     pod_cidr=dict(type='str'),
     service_cidr=dict(type='str'),
     dns_service_ip=dict(type='str'),
-    docker_bridge_cidr=dict(type='str')
+    docker_bridge_cidr=dict(type='str'),
+    load_balancer_sku=dict(type='str')
 )
 
 
@@ -697,6 +715,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 vnet_subnet_id = profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id'])
                                 count = profile_self['count']
                                 vm_size = profile_self['vm_size']
+                                availability_zones = profile_self['availability_zones']
                                 enable_auto_scaling = profile_self['enable_auto_scaling']
                                 max_count = profile_self['max_count']
                                 min_count = profile_self['min_count']
@@ -709,9 +728,12 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 elif os_disk_size_gb is not None and profile_result['os_disk_size_gb'] != os_disk_size_gb:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
-                                elif profile_result['vnet_subnet_id'] != vnet_subnet_id:
+                                elif vnet_subnet_id is not None and profile_result['vnet_subnet_id'] != vnet_subnet_id:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
-                                    to_be_updated = True
+                                    self.fail("The vnet_subnet_id of the agent pool cannot be updated")
+                                elif availability_zones is not None and profile_result['availability_zones'] != availability_zones:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    self.fail("The availability_zones of the agent pool cannot be updated")
                                 elif enable_auto_scaling is not None and profile_result['enable_auto_scaling'] != enable_auto_scaling:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True

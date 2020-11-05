@@ -13,7 +13,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_virtualnetworkgateway
 
-version_added: "2.8"
+version_added: "0.0.1"
 
 short_description: Manage Azure virtual network gateways
 

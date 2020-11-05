@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_sqlfirewallrule_info
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Get Azure SQL Firewall Rule facts
 description:
     - Get facts of SQL Firewall Rule.
@@ -141,7 +141,7 @@ class AzureRMSqlFirewallRuleInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_sqlfirewallrule_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_sqlfirewallrule_facts' module has been renamed to 'azure_rm_sqlfirewallrule_info'", version=(2, 9))
+            self.module.deprecate("The 'azure_rm_sqlfirewallrule_facts' module has been renamed to 'azure_rm_sqlfirewallrule_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

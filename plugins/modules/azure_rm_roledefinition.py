@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_roledefinition
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage Azure Role Definition
 description:
     - Create, update and delete instance of Azure Role Definition.
@@ -284,7 +284,7 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
 
     # check update
     def check_update(self, old_definition):
-        if self.description and self.description != old_definition['properties']['description']:
+        if self.description and self.description != old_definition['description']:
             return True
         if self.permissions:
             if len(self.permissions) != len(old_definition['permissions']):

@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_sqldatabase
-version_added: "2.5"
+version_added: "0.1.2"
 short_description: Manage SQL Database instance
 description:
     - Create, update and delete instance of SQL Database.
@@ -77,23 +77,29 @@ options:
         description:
             - Required if I(create_mode=restore_long_term_retention_backup), then this value is required.
             - Specifies the resource ID of the recovery point to restore from.
-    edition:
+    sku:
         description:
-            - The edition of the database. The DatabaseEditions enumeration contains all the valid editions.
+            - The sku of the database. The DatabaseEditions enumeration contains all the valid sku.
             - If I(create_mode=non_readable_secondary) or I(create_mode=online_secondary), this value is ignored.
             - To see possible values, query the capabilities API (/subscriptions/{subscriptionId}/providers/Microsoft.Sql/locations/{locationID}/capabilities)
               referred to by operationId:'Capabilities_ListByLocation'.
-        choices:
-            - 'web'
-            - 'business'
-            - 'basic'
-            - 'standard'
-            - 'premium'
-            - 'free'
-            - 'stretch'
-            - 'data_warehouse'
-            - 'system'
-            - 'system2'
+        suboptions:
+            name:
+                description:
+                    - Name of the database SKU, typically, a letter + Number code, e.g. P3
+                required: True
+            tier:
+                description:
+                    - The tier or edition of the particular SKU, e.g. Basic, Premium
+            capacity:
+                description:
+                    - Capacity of the particular SKU.
+            size:
+                description:
+                    - Size of the particular SKU
+            family:
+                description:
+                    - If the service has different generations of hardware, for the same SKU, then that can be used here
     max_size_bytes:
         description:
             - The max size of the database expressed in bytes.
@@ -171,6 +177,15 @@ EXAMPLES = '''
       source_database_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Sql/servers/tests
                            vr/databases/testdb"
 
+  - name: Create (or update) SQL Database with SKU
+    azure_rm_sqldatabase:
+      resource_group: myResourceGroup
+      server_name: sqlcrudtest-5961
+      name: testdb
+      location: eastus
+      sku:
+        name: S0
+
 '''
 
 RETURN = '''
@@ -202,10 +217,19 @@ try:
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
     from azure.mgmt.sql import SqlManagementClient
+    from azure.mgmt.sql.models import Sku
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
+
+sku_spec = dict(
+    name=dict(type='str', required=True),
+    tier=dict(type='str'),
+    size=dict(type='str'),
+    family=dict(type='str'),
+    capacity=dict(type='int')
+)
 
 
 class Actions:
@@ -258,18 +282,9 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
             recovery_services_recovery_point_resource_id=dict(
                 type='str'
             ),
-            edition=dict(
-                type='str',
-                choices=['web',
-                         'business',
-                         'basic',
-                         'standard',
-                         'premium',
-                         'free',
-                         'stretch',
-                         'data_warehouse',
-                         'system',
-                         'system2']
+            sku=dict(
+                type='dict',
+                options=sku_spec
             ),
             max_size_bytes=dict(
                 type='str'
@@ -334,8 +349,9 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                     self.parameters["restore_point_in_time"] = kwargs[key]
                 elif key == "recovery_services_recovery_point_resource_id":
                     self.parameters["recovery_services_recovery_point_resource_id"] = kwargs[key]
-                elif key == "edition":
-                    self.parameters["edition"] = _snake_to_camel(kwargs[key], True)
+                elif key == "sku":
+                    ev = kwargs[key]
+                    self.parameters["sku"] = Sku(name=ev['name'], tier=ev['tier'], size=ev['size'], family=ev['family'], capacity=ev['capacity'])
                 elif key == "max_size_bytes":
                     self.parameters["max_size_bytes"] = kwargs[key]
                 elif key == "elastic_pool_name":
@@ -383,8 +399,8 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 if (('max_size_bytes' in self.parameters) and
                         (self.parameters['max_size_bytes'] != old_response['max_size_bytes'])):
                     self.to_do = Actions.Update
-                if (('edition' in self.parameters) and
-                        (self.parameters['edition'] != old_response['edition'])):
+                if (('sku' in self.parameters) and
+                        (self.parameters['sku'] != old_response['sku'])):
                     self.to_do = Actions.Update
                 update_tags, newtags = self.update_tags(old_response.get('tags', dict()))
                 if update_tags:
