@@ -253,7 +253,7 @@ EXAMPLES = '''
         - Monday
         name: Auto created scale condition 0
         rules:
-        - Time_aggregation: Average
+        - time_aggregation: Average
           time_window: 10
           direction: Increase
           metric_name: Percentage CPU
