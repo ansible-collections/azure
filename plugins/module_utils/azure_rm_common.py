@@ -86,6 +86,7 @@ class SDKProfile(object):  # pylint: disable=too-few-public-methods
 # For now, we have to copy from azure-cli
 AZURE_API_PROFILES = {
     'latest': {
+        'AuthorizationManagementClient': '2018-09-01-preview',
         'ContainerInstanceManagementClient': '2018-02-01-preview',
         'ComputeManagementClient': dict(
             default_api_version='2018-10-01',
@@ -97,6 +98,7 @@ AZURE_API_PROFILES = {
         'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
         'StorageManagementClient': '2019-06-01',
+        'SubscriptionClient': '2019-11-01',
         'WebSiteManagementClient': '2018-02-01',
         'PostgreSQLManagementClient': '2017-12-01',
         'MySQLManagementClient': '2017-12-01',
@@ -245,6 +247,7 @@ try:
     from azure.storage.cloudstorageaccount import CloudStorageAccount
     from azure.storage.blob import PageBlobService, BlockBlobService
     from adal.authentication_context import AuthenticationContext
+    from azure.mgmt.authorization import AuthorizationManagementClient
     from azure.mgmt.sql import SqlManagementClient
     from azure.mgmt.servicebus import ServiceBusManagementClient
     import azure.mgmt.servicebus.models as ServicebusModel
@@ -395,8 +398,10 @@ class AzureRMModuleBase(object):
             self.fail(msg=missing_required_lib('ansible[azure] (azure >= {0})'.format(AZURE_MIN_RELEASE)),
                       exception=HAS_AZURE_EXC)
 
+        self._authorization_client = None
         self._network_client = None
         self._storage_client = None
+        self._subscription_client = None
         self._resource_client = None
         self._compute_client = None
         self._dns_client = None
@@ -842,7 +847,7 @@ class AzureRMModuleBase(object):
 
         return client
 
-    def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None):
+    def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False):
         self.log('Getting management service client {0}'.format(client_type.__name__))
         self.check_client_version(client_type)
 
@@ -852,7 +857,11 @@ class AzureRMModuleBase(object):
             # most things are resource_manager, don't make everyone specify
             base_url = self.azure_auth._cloud_environment.endpoints.resource_manager
 
-        client_kwargs = dict(credentials=self.azure_auth.azure_credentials, subscription_id=self.azure_auth.subscription_id, base_url=base_url)
+        # Some management clients do not take a subscription ID as parameters.
+        if suppress_subscription_id:
+            client_kwargs = dict(credentials=self.azure_auth.azure_credentials, base_url=base_url)
+        else:
+            client_kwargs = dict(credentials=self.azure_auth.azure_credentials, subscription_id=self.azure_auth.subscription_id, base_url=base_url)
 
         api_profile_dict = {}
 
@@ -954,6 +963,33 @@ class AzureRMModuleBase(object):
     @property
     def storage_models(self):
         return StorageManagementClient.models("2019-06-01")
+
+    @property
+    def authorization_client(self):
+        self.log('Getting authorization client...')
+        if not self._authorization_client:
+            self._authorization_client = self.get_mgmt_svc_client(AuthorizationManagementClient,
+                                                                  base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                  api_version='2018-09-01-preview')
+        return self._authorization_client
+
+    @property
+    def authorization_models(self):
+        return AuthorizationManagementClient.models('2018-09-01-preview')
+
+    @property
+    def subscription_client(self):
+        self.log('Getting subscription client...')
+        if not self._subscription_client:
+            self._subscription_client = self.get_mgmt_svc_client(SubscriptionClient,
+                                                                 base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                 suppress_subscription_id=True,
+                                                                 api_version='2019-11-01')
+        return self._subscription_client
+
+    @property
+    def subscription_models(self):
+        return SubscriptionClient.models("2019-11-01")
 
     @property
     def network_client(self):
