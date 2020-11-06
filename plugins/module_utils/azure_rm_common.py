@@ -86,6 +86,7 @@ class SDKProfile(object):  # pylint: disable=too-few-public-methods
 # For now, we have to copy from azure-cli
 AZURE_API_PROFILES = {
     'latest': {
+        'AuthorizationManagementClient': '2018-09-01-preview',
         'ContainerInstanceManagementClient': '2018-02-01-preview',
         'ComputeManagementClient': dict(
             default_api_version='2018-10-01',
@@ -246,6 +247,7 @@ try:
     from azure.storage.cloudstorageaccount import CloudStorageAccount
     from azure.storage.blob import PageBlobService, BlockBlobService
     from adal.authentication_context import AuthenticationContext
+    from azure.mgmt.authorization import AuthorizationManagementClient
     from azure.mgmt.sql import SqlManagementClient
     from azure.mgmt.servicebus import ServiceBusManagementClient
     import azure.mgmt.servicebus.models as ServicebusModel
@@ -396,6 +398,7 @@ class AzureRMModuleBase(object):
             self.fail(msg=missing_required_lib('ansible[azure] (azure >= {0})'.format(AZURE_MIN_RELEASE)),
                       exception=HAS_AZURE_EXC)
 
+        self._authorization_client = None
         self._network_client = None
         self._storage_client = None
         self._subscription_client = None
@@ -960,6 +963,19 @@ class AzureRMModuleBase(object):
     @property
     def storage_models(self):
         return StorageManagementClient.models("2019-06-01")
+
+    @property
+    def authorization_client(self):
+        self.log('Getting authorization client...')
+        if not self._authorization_client:
+            self._authorization_client = self.get_mgmt_svc_client(AuthorizationManagementClient,
+                                                                  base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                  api_version='2018-09-01-preview')
+        return self._authorization_client
+
+    @property
+    def authorization_models(self):
+        return AuthorizationManagementClient.models('2018-09-01-preview')
 
     @property
     def subscription_client(self):
