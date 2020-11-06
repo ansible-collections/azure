@@ -176,6 +176,17 @@ EXAMPLES = '''
           resource_group: mySecondResourceGroup
         route_table: route
 
+    - name: Create a subnet with service endpoint
+      azure_rm_subnet:
+        resource_group: myResourceGroup
+        virtual_network_name: myVirtualNetwork
+        name: mySubnet
+        address_prefix_cidr: "10.1.0.0/16"
+        service_endpoints:
+          - service: "Microsoft.Sql"
+            locations:
+              - "eastus"
+
     - name: Create a subnet with delegations
       azure_rm_subnet:
         resource_group: myResourceGroup
