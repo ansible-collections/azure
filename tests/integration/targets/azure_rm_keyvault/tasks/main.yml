@@ -124,7 +124,7 @@
 
 - name: lookup secrets
   set_fact:
-          secret_var: "{{ lookup('azure.azcollection.azure_keyvault_secret','testsecret002', vault_url=https://vault{{ rpfx }}002.vault.azure.net, client_id=azure_client_id, azure_secret=azure_secret, tenant_id=azure_tenant) }}"
+          secret_var: "{{ lookup('azure.azcollection.azure_keyvault_secret','testsecret002', vault_url='https://vault{{ rpfx }}002.vault.azure.net', client_id=azure_client_id, azure_secret=azure_secret, tenant_id=azure_tenant) }}"
 
 - debug:
     var: secret_var
