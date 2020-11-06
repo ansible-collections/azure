@@ -149,6 +149,36 @@ subnets:
                     returned: always
                     type: str
                     sample: Succeeded
+        delegations:
+            description:
+                - Associated delegation of subnets
+            returned: always
+            type: list
+            contains:
+                name:
+                    description:
+                        - name of delegation
+                    returned: when delegation is present
+                    type: str
+                    sample: "delegationname"
+                serviceName:
+                    description:
+                        - service associated to delegation
+                    returned: when delegation is present
+                    type: str
+                    sample: "Microsoft.ContainerInstance/containerGroups"
+                actions:
+                    description:
+                        - list of actions associated with service of delegation
+                    returned : when delegation is present
+                    type: list
+                    sample: ["Microsoft.Network/virtualNetworks/subnets/action"]
+                provisioning_state:
+                    description:
+                        - Provisioning state of delegation.
+                    returned: when delegation is present
+                    type: str
+                    sample: Succeeded
         provisioning_state:
             description:
                 - Provisioning state.
@@ -254,7 +284,8 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'provisioning_state': d.get('provisioning_state'),
             'service_endpoints': d.get('service_endpoints'),
             'private_endpoint_network_policies': d.get('private_endpoint_network_policies'),
-            'private_link_service_network_policies': d.get('private_link_service_network_policies')
+            'private_link_service_network_policies': d.get('private_link_service_network_policies'),
+            'delegations': d.get('delegations')
         }
         return d
 

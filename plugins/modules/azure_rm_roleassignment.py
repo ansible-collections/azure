@@ -25,6 +25,8 @@ options:
     name:
         description:
             - Unique name of role assignment.
+            - The role assignment name must be a GUID, sample as "3ce0cbb0-58c4-4e6d-a16d-99d86a78b3ca".
+        required: True
     assignee_object_id:
         description:
             - The object id of assignee. This maps to the ID inside the Active Directory.
@@ -82,8 +84,6 @@ id:
     sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleAssignments/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 '''
 
-import uuid
-
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
@@ -114,7 +114,8 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
             name=dict(
-                type='str'
+                type='str',
+                required=True
             ),
             scope=dict(
                 type='str'
@@ -166,9 +167,6 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
         # build cope
         self.scope = self.build_scope()
-
-        if self.name is None:
-            self.name = str(uuid.uuid4())
 
         # get existing role assignment
         old_response = self.get_roleassignment()

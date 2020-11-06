@@ -1,0 +1,24 @@
+- name: Get list of all subscriptions
+  azure_rm_subscription_info:
+    all: True
+  register: az_all_subscriptions
+
+- name: Get a subscription by id
+  azure_rm_subscription_info:
+    id: "{{ az_all_subscriptions.subscriptions[0].subscription_id }}"
+
+- name: Get a subscription by name
+  azure_rm_subscription_info:
+    name: "{{ az_all_subscriptions.subscriptions[0].display_name }}"
+
+- name: Test invalid name id combo
+  azure_rm_subscription_info:
+    name: "{{ az_all_subscriptions.subscriptions[0].display_name }}"
+    id: "{{ az_all_subscriptions.subscriptions[0].subscription_id }}"
+  register: invalid_name
+  ignore_errors: yes  
+
+- name: Assert task failed
+  assert: 
+    that: 
+      - "invalid_name['failed'] == True"
