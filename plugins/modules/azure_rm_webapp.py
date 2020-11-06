@@ -100,7 +100,8 @@ options:
         suboptions:
             name:
                 description:
-                    - Name of container, for example C(imagename:tag).
+                    - Name of the container, for example C(imagename:tag).
+                    - To create a multi-container app, the name should be 'COMPOSE|' or 'KUBE|' followed by base64 encoded configuration.
             registry_server_url:
                 description:
                     - Container registry server URL, for example C(mydockerregistry.io).
@@ -233,6 +234,16 @@ EXAMPLES = '''
           registry_server_url: myregistry.io
           registry_server_user: user
           registry_server_password: pass
+
+    - name: Create a multi-container web app
+      azure_rm_webapp:
+        resource_group: myResourceGroup
+        name: myMultiContainerWebapp
+        plan: myAppServicePlan
+        app_settings:
+          testkey: testvalue
+        container_settings:
+          name: "COMPOSE|{{ lookup('file', 'docker-compose.yml') | b64encode }}"
 
     - name: Create a linux web app with Node 6.6 framework
       azure_rm_webapp:
@@ -636,6 +647,10 @@ class AzureRMWebApps(AzureRMModuleBase):
                     linux_fx_version += self.container_settings['registry_server_url'] + '/'
 
                 linux_fx_version += self.container_settings['name']
+
+                # Use given name as is if it starts with allowed values of multi-container application
+                if self.container_settings['name'].startswith('COMPOSE|') or self.container_settings['name'].startswith('KUBE|'):
+                    linux_fx_version = self.container_settings['name']
 
                 self.site_config['linux_fx_version'] = linux_fx_version
 
