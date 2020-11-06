@@ -1,6 +1,6 @@
 - name: Prepare random number
   set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    rpfx: fred0011
     tenant_id: "{{ azure_tenant }}"
   run_once: yes
 
@@ -124,7 +124,7 @@
 
 - name: lookup secrets
   set_fact:
-          secret_var: "{{ lookup('azure.azcollection.azure_keyvault_secret','testsecret002', vault_url='https://vault{{ rpfx }}002.vault.azure.net', client_id=azure_client_id, azure_secret=azure_secret, tenant_id=azure_tenant) }}"
+          secret_var: "{{ lookup('azure.azcollection.azure_keyvault_secret','testsecret002', vault_url='https://vaultfred0011002.vault.azure.net', client_id='ae12946a-f4de-4609-a5d1-68c36604f3b0', azure_secret='KcDB6CMlNn+MmtA+ZJv6xXmXQz+x2JRxGQBy6Dh6adw=', tenant_id=72f988bf-86f1-41af-91ab-2d7cd011db47) }}"
 
 - debug:
     var: secret_var
