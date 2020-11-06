@@ -5,8 +5,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
-import time
 __metaclass__ = type
 
 
@@ -229,6 +227,8 @@ status:
     sample: Online
 '''
 
+import time
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -365,7 +365,7 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 choices=['present', 'absent']
             )
         )
-        mutually_exclusive = [['sky', 'edition']]
+        mutually_exclusive = ['sku', 'edition']
 
         self.resource_group = None
         self.server_name = None
