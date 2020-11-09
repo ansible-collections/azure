@@ -268,7 +268,7 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
             'location': d.get('location', None),
             'tags': d.get('tags', None),
             'sku': {
-                'name': d.get('sku', {}).get('name', None),
+                'name': d.get('current_service_objective_name', None),
                 'tier': d.get('sku', {}).get('tier', None),
                 'capacity': d.get('sku', {}).get('capacity', None)
             },
