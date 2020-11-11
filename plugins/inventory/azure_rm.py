@@ -11,6 +11,7 @@ DOCUMENTATION = r'''
     extends_documentation_fragment:
       - azure.azcollection.azure
       - azure.azcollection.azure_rm
+      - inventory_cache
     description:
         - Query VM details from Azure Resource Manager
         - Requires a YAML configuration file whose name ends with 'azure_rm.(yml|yaml)'
@@ -119,7 +120,7 @@ except ImportError:
 
 from collections import namedtuple
 from ansible import release
-from ansible.plugins.inventory import BaseInventoryPlugin, Constructable
+from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
 from ansible.module_utils.six import iteritems
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMAuth
 from ansible.errors import AnsibleParserError, AnsibleError
@@ -154,7 +155,7 @@ UrlAction = namedtuple('UrlAction', ['url', 'api_version', 'handler', 'handler_a
 
 
 # FUTURE: add Cacheable support once we have a sane serialization format
-class InventoryModule(BaseInventoryPlugin, Constructable):
+class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     NAME = 'azure.azcollection.azure_rm'
 
@@ -204,11 +205,16 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         self._filters = self.get_option('exclude_host_filters') + self.get_option('default_host_filters')
 
+        
+
+
         try:
             self._credential_setup()
             self._get_hosts()
         except Exception:
             raise
+
+        
 
     def _credential_setup(self):
         auth_options = dict(
@@ -256,16 +262,46 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         self._enqueue_get(url=url, api_version=self._compute_api_version, handler=self._on_vmss_page_response)
 
     def _get_hosts(self):
-        for vm_rg in self.get_option('include_vm_resource_groups'):
-            self._enqueue_vm_list(vm_rg)
 
-        for vmss_rg in self.get_option('include_vmss_resource_groups'):
-            self._enqueue_vmss_list(vmss_rg)
 
-        if self._batch_fetch:
-            self._process_queue_batch()
+        # Cache logic
+        if cache:
+            cache = self.get_option("cache")
+            cache_key = self.get_cache_key(path)
         else:
-            self._process_queue_serial()
+            cache_key = None
+
+        cache_needs_update = False
+        if cache:
+            try:
+                results = self._cache[cache_key]
+                for h in results:
+                  self._hosts.append(AzureHost(h['vm_model'], self, vmss=h['vmss'], legacy_name=self._legacy_hostnames))
+            except KeyError:
+                cache_needs_update = True
+
+        if not cache or cache_needs_update:
+            for vm_rg in self.get_option('include_vm_resource_groups'):
+                self._enqueue_vm_list(vm_rg)
+
+            for vmss_rg in self.get_option('include_vmss_resource_groups'):
+                self._enqueue_vmss_list(vmss_rg)
+
+            if self._batch_fetch:
+                self._process_queue_batch()
+            else:
+                self._process_queue_serial()
+
+
+        if cache_needs_update:
+            cached_data = []
+            for h in self._hosts:
+                cached_data.append({
+                    'vm_model': h._vm_model,
+                    'vmss': h.vmss
+                })
+            self._cache[cache_key] = cached_data
+
 
         constructable_config_strict = boolean(self.get_option('fail_on_template_errors'))
         constructable_config_compose = self.get_option('hostvar_expressions')
