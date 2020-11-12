@@ -275,7 +275,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                     ah = AzureHost(h['vm_model'], self, vmss=h['vmss'], legacy_name=self._legacy_hostnames, powerstate=h['powerstate'])
 
                     for n in h['nics']:
-                        nic = AzureNic(nic_model=n['nic_model'], inventory_client=self._inventory_client, is_primary=n['is_primary'])
+                        nic = AzureNic(nic_model=n['nic_model'], inventory_client=self, is_primary=n['is_primary'])
                         ah.nics.append(nic)
 
                     self._hosts.append(ah)
