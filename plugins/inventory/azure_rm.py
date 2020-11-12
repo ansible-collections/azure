@@ -154,9 +154,7 @@ class AzureRMRestConfiguration(AzureConfiguration):
 UrlAction = namedtuple('UrlAction', ['url', 'api_version', 'handler', 'handler_args'])
 
 
-
-# Azure has no FUTURE, Baby RQ has to implement cachable supporting by herself.
-# Cacheable is working now.
+# ( Azure has no FUTURE, Baby RQ has to implement cachable supporting by herself. )
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     NAME = 'azure.azcollection.azure_rm'
@@ -274,7 +272,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             try:
                 results = self._cache[cache_key]
                 for h in results:
-                  self._hosts.append(AzureHost(h['vm_model'], self, vmss=h['vmss'], legacy_name=self._legacy_hostnames, powerstate=h['powerstate']))
+                    ah = AzureHost(h['vm_model'], self, vmss=h['vmss'], legacy_name=self._legacy_hostnames, powerstate=h['powerstate'])
+                    ah.nics = h['nics']
+                    self._hosts.append()
             except KeyError:
                 cache_needs_update = True
 
@@ -297,7 +297,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 cached_data.append({
                     'vm_model': h._vm_model,
                     'vmss': h._vmss,
-                    'powerstate': h._powerstate
+                    'powerstate': h._powerstate,
+                    'nics': h.nics
                 })
             self._cache[cache_key] = cached_data
 
