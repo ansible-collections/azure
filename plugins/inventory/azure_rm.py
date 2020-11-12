@@ -154,7 +154,9 @@ class AzureRMRestConfiguration(AzureConfiguration):
 UrlAction = namedtuple('UrlAction', ['url', 'api_version', 'handler', 'handler_args'])
 
 
-# FUTURE: add Cacheable support once we have a sane serialization format
+
+# Azure has no FUTURE, Baby RQ has to implement cachable supporting by herself.
+# Cacheable is working now.
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     NAME = 'azure.azcollection.azure_rm'
@@ -206,11 +208,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         self._filters = self.get_option('exclude_host_filters') + self.get_option('default_host_filters')
 
         
-
-
         try:
             self._credential_setup()
-            self._get_hosts()
+            self._get_hosts(path=path, cache=cache)
         except Exception:
             raise
 
@@ -261,9 +261,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         url = url.format(subscriptionId=self._clientconfig.subscription_id, rg=rg)
         self._enqueue_get(url=url, api_version=self._compute_api_version, handler=self._on_vmss_page_response)
 
-    def _get_hosts(self):
-
-
+    def _get_hosts(self, path, cache):
         # Cache logic
         if cache:
             cache = self.get_option("cache")
@@ -276,7 +274,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             try:
                 results = self._cache[cache_key]
                 for h in results:
-                  self._hosts.append(AzureHost(h['vm_model'], self, vmss=h['vmss'], legacy_name=self._legacy_hostnames))
+                  self._hosts.append(AzureHost(h['vm_model'], self, vmss=h['vmss'], legacy_name=self._legacy_hostnames, powerstate=h['powerstate']))
             except KeyError:
                 cache_needs_update = True
 
@@ -298,7 +296,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             for h in self._hosts:
                 cached_data.append({
                     'vm_model': h._vm_model,
-                    'vmss': h.vmss
+                    'vmss': h._vmss,
+                    'powerstate': h._powerstate
                 })
             self._cache[cache_key] = cached_data
 
@@ -313,8 +312,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         for h in self._hosts:
             # FUTURE: track hostnames to warn if a hostname is repeated (can happen for legacy and for composed inventory_hostname)
             inventory_hostname = self._get_hostname(h, hostnames=constructable_hostnames, strict=constructable_config_strict)
+
             if self._filter_host(inventory_hostname, h.hostvars):
                 continue
+
             self.inventory.add_host(inventory_hostname)
             # FUTURE: configurable default IP list? can already do this via hostvar_expressions
             self.inventory.set_variable(inventory_hostname, "ansible_host",
@@ -494,7 +495,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 class AzureHost(object):
     _powerstate_regex = re.compile('^PowerState/(?P<powerstate>.+)$')
 
-    def __init__(self, vm_model, inventory_client, vmss=None, legacy_name=False):
+    def __init__(self, vm_model, inventory_client, vmss=None, legacy_name=False, powerstate=None):
         self._inventory_client = inventory_client
         self._vm_model = vm_model
         self._vmss = vmss
@@ -512,9 +513,12 @@ class AzureHost(object):
 
         self._hostvars = {}
 
-        inventory_client._enqueue_get(url="{0}/instanceView".format(vm_model['id']),
-                                      api_version=self._inventory_client._compute_api_version,
-                                      handler=self._on_instanceview_response)
+        if powerstate == None:
+            inventory_client._enqueue_get(url="{0}/instanceView".format(vm_model['id']),
+                                        api_version=self._inventory_client._compute_api_version,
+                                        handler=self._on_instanceview_response)
+        else:
+            self._powerstate = powerstate
 
         nic_refs = vm_model['properties']['networkProfile']['networkInterfaces']
         for nic in nic_refs:
