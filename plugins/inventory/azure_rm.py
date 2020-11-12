@@ -273,8 +273,13 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 results = self._cache[cache_key]
                 for h in results:
                     ah = AzureHost(h['vm_model'], self, vmss=h['vmss'], legacy_name=self._legacy_hostnames, powerstate=h['powerstate'])
-                    ah.nics = h['nics']
-                    self._hosts.append()
+
+                    for n in h['nics']:
+                        nic = AzureNic(nic_model=n['nic_model'], inventory_client=self._inventory_client, is_primary=n['is_primary'])
+                        ah.nics.append(nic)
+
+                    self._hosts.append(ah)
+
             except KeyError:
                 cache_needs_update = True
 
@@ -298,7 +303,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                     'vm_model': h._vm_model,
                     'vmss': h._vmss,
                     'powerstate': h._powerstate,
-                    'nics': h.nics
+                    'nics': [{'nic_model': n._nic_model, 'is_primary': n.is_primary } for n in h.nics]
                 })
             self._cache[cache_key] = cached_data
 
