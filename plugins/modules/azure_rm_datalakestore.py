@@ -22,14 +22,9 @@ RETURN = '''
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-import uuid
 
 try:
     from msrestazure.azure_exceptions import CloudError
-    from azure.graphrbac.models import GraphErrorException
-    from azure.graphrbac.models import PasswordCredential
-    from azure.graphrbac.models import ApplicationUpdateParameters
-    from dateutil.relativedelta import relativedelta
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -50,8 +45,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         self.resource_group = None
         self.location = None
         self.results = dict(changed=False)
-
-        self.client = None
+        self.account_dict = None
 
         super(AzureRMDatalakeStore, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                 supports_check_mode=False,
@@ -65,10 +59,19 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         if not self.location:
             self.location = resource_group.location
 
-        if self.state == 'present':
-            self.create_datalake_store()
+        self.account_dict = self.get_datalake_store()
+
+        if self.account_dict is not None:
+            self.results['state'] = self.account_dict
         else:
-            self.dalete_datalake_store()
+            self.results['state'] = dict()
+
+        if self.state == 'present':
+            if not self.account_dict:
+                self.results['state'] = self.create_datalake_store()
+        else:
+            self.delete_datalake_store()
+            self.results['state'] = dict(state='Deleted')
 
         return self.results
 
@@ -114,20 +117,18 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             
         return self.get_datalake_store()
 
-    def dalete_datalake_store(self):
+    def delete_datalake_store(self):
         self.log('Delete datalake store {0}'.format(self.name))
 
-        datalake_store_obj = self.get_datalake_store()
-
-        self.results['changed'] = True if datalake_store_obj is not None else False
-        if not self.check_mode and datalake_store_obj is not None:
+        self.results['changed'] = True if self.account_dict is not None else False
+        if not self.check_mode and self.account_dict is not None:
             try:
                 status = self.datalake_store_client.accounts.delete(self.resource_group, self.name)
                 self.log("delete status: ")
                 self.log(str(status))
             except CloudError as e:
                 self.fail("Failed to delete datalake store: {0}".format(str(e)))
-                
+
         return True
 
     def get_datalake_store(self):
@@ -151,7 +152,27 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             name=datalake_store_obj.name,
             type=datalake_store_obj.type,
             location=datalake_store_obj.location,
-            tags=datalake_store_obj.tags
+            tags=datalake_store_obj.tags,
+            identity=datalake_store_obj.identity,
+            account_id=datalake_store_obj.account_id,
+            provisioning_state=datalake_store_obj.provisioning_state,
+            state=datalake_store_obj.state,
+            creation_time=datalake_store_obj.creation_time,
+            last_modified_time=datalake_store_obj.last_modified_time,
+            endpoint=datalake_store_obj.endpoint,
+            default_group=datalake_store_obj.default_group,
+            encryption_config=dict(type=datalake_store_obj.encryption_config.type,
+                                   key_vault_meta_info=datalake_store_obj.encryption_config.key_vault_meta_info),
+            encryption_state=datalake_store_obj.encryption_state,
+            encryption_provisioning_state=datalake_store_obj.encryption_provisioning_state,
+            firewall_rules=datalake_store_obj.firewall_rules,
+            virtual_network_rules=datalake_store_obj.virtual_network_rules,
+            firewall_state=datalake_store_obj.firewall_state,
+            firewall_allow_azure_ips=datalake_store_obj.firewall_allow_azure_ips,
+            trusted_id_providers=datalake_store_obj.trusted_id_providers,
+            trusted_id_provider_state=datalake_store_obj.trusted_id_provider_state,
+            new_tier=datalake_store_obj.new_tier,
+            current_tier=datalake_store_obj.current_tier
         )
         return account_dict
 
