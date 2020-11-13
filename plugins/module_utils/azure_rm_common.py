@@ -266,6 +266,8 @@ try:
     from msrestazure import AzureConfiguration
     from msrest.authentication import Authentication
     from azure.mgmt.resource.locks import ManagementLockClient
+    from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
+    import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
 except ImportError as exc:
     Authentication = object
     HAS_AZURE_EXC = traceback.format_exc()
@@ -424,6 +426,7 @@ class AzureRMModuleBase(object):
         self._automation_client = None
         self._IoThub_client = None
         self._lock_client = None
+        self._datalake_store_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1251,6 +1254,19 @@ class AzureRMModuleBase(object):
     def lock_models(self):
         self.log("Getting lock models")
         return ManagementLockClient.models('2016-09-01')
+
+    @property
+    def datalake_store_client(self):
+        self.log('Getting datalake store client...')
+        if not self._datalake_store_client:
+            self._datalake_store_client = self.get_mgmt_svc_client(DataLakeStoreAccountManagementClient,
+                                                            base_url=self._cloud_environment.endpoints.resource_manager,
+                                                            api_version='2016-11-01')
+        return self._datalake_store_client
+
+    @property
+    def datalake_store_models(self):
+        return DataLakeStoreAccountModel
 
 
 class AzureSASAuthentication(Authentication):
