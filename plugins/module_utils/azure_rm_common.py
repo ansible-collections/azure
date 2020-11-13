@@ -268,7 +268,8 @@ try:
     from azure.mgmt.resource.locks import ManagementLockClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
     import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
-
+    from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
+    import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
 except ImportError as exc:
     Authentication = object
     HAS_AZURE_EXC = traceback.format_exc()
@@ -428,6 +429,7 @@ class AzureRMModuleBase(object):
         self._IoThub_client = None
         self._lock_client = None
         self._recovery_services_backup_client = None
+        self._datalake_store_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1259,7 +1261,6 @@ class AzureRMModuleBase(object):
     @property
     def recovery_services_backup_client(self):
         self.log('Getting recovery services backup client')
-        if not self._recovery_services_backup_client:
             self._recovery_services_backup_client = self.get_mgmt_svc_client(RecoveryServicesBackupClient,
                                                                              base_url=self._cloud_environment.endpoints.resource_manager)
         return self._recovery_services_backup_client
@@ -1268,8 +1269,17 @@ class AzureRMModuleBase(object):
     def recovery_services_backup_models(self):
         return RecoveryServicesBackupModels
 
+    def datalake_store_client(self):
+        self.log('Getting datalake store client...')
+            self._datalake_store_client = self.get_mgmt_svc_client(DataLakeStoreAccountManagementClient,
+                                                            base_url=self._cloud_environment.endpoints.resource_manager,
+                                                            api_version='2016-11-01')
+        return self._datalake_store_client
 
-class AzureSASAuthentication(Authentication):
+    @property
+    def datalake_store_models(self):
+        return DataLakeStoreAccountModel
+
     """Simple SAS Authentication.
     An implementation of Authentication in
     https://github.com/Azure/msrest-for-python/blob/0732bc90bdb290e5f58c675ffdd7dbfa9acefc93/msrest/authentication.py
