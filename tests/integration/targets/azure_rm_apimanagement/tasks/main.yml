@@ -1,0 +1,83 @@
+- name: Fix resource prefix
+  set_fact:
+    name: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    service_name: "myService"
+
+- name: Create a new API instance
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ service_name.api.name }}"
+    description: "testDescription"
+    display_name: "TestAPI"
+    service_url: 'http://testapi.example.net/api'
+    path: "myapiPath"
+    protocols:
+      - https
+  register: newApi
+  
+- name: Assert that output has changed
+  assert:
+    that:
+      - newApi.changed == True
+      - newApi.failed == False
+
+- name: Create different format api
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ service_name.api.name }}"
+    path: "my-new-path"
+    format: openapi
+    display_name: "New-Test-API"
+  register: newOpenApi
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - newOpenApi.changed == True
+      - newOpenApi.failed == False
+
+- name: Test creating api without the path parameter
+  azure_rm_apimanagement:  
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ service_name.api.name }}"
+    description: "testDescription"
+    display_name: "TestAPI"
+    service_url: 'http://testapi.example.net/api'
+    protocols:
+      - https
+  register: noPath
+
+- name: Assert that output throws an error
+  assert:
+    that:
+      - noPath.changed == False
+      - noPath.failed == True
+
+- name: Delete an api
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ service_name.api.name }}"
+    state: absent
+  register: deleteApi
+
+- name: Assert the changes
+  assert:
+    that:
+      - deleteApi.changed == True
+
+- name: Get api information
+  azure_rm_apimanagement_info:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ service_name.api.name }}"
+  register: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.api.id != None
+

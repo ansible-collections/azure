@@ -26,6 +26,7 @@ parameters:
     - "azure_rm_acs"
     - "azure_rm_aduser"
     - "azure_rm_aks"
+    - "azure_rm_apimanagement"
     - "azure_rm_appgateway"
     - "azure_rm_appserviceplan"
     - "azure_rm_automationaccount"
