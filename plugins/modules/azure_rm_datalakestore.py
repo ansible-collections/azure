@@ -67,8 +67,8 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
 
         if self.state == 'present':
             self.create_datalake_store()
-        # else:
-            
+        else:
+            self.dalete_datalake_store()
 
         return self.results
 
@@ -112,9 +112,25 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             self.log('Error creating datalake store.')
             self.fail("Failed to create datalake store: {0}".format(str(e)))
             
-        return self.get_account()
+        return self.get_datalake_store()
 
-    def get_account(self):
+    def dalete_datalake_store(self):
+        self.log('Delete datalake store {0}'.format(self.name))
+
+        datalake_store_obj = self.get_datalake_store()
+
+        self.results['changed'] = True if datalake_store_obj is not None else False
+        if not self.check_mode and datalake_store_obj is not None:
+            try:
+                status = self.datalake_store_client.accounts.delete(self.resource_group, self.name)
+                self.log("delete status: ")
+                self.log(str(status))
+            except CloudError as e:
+                self.fail("Failed to delete datalake store: {0}".format(str(e)))
+                
+        return True
+
+    def get_datalake_store(self):
         self.log('Get properties for datalake store {0}'.format(self.name))
         datalake_store_obj = None
         account_dict = None
