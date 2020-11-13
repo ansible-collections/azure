@@ -34,16 +34,21 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            resource_group=dict(type='str',required=True),
-            name=dict(type='str',required=True),
             location=dict(type='str'),
+            name=dict(type='str',required=True),
+            new_tier=dict(type='str', choices=['Consumption', 'Commitment_1TB', 'Commitment_10TB', 'Commitment_100TB', 'Commitment_500TB', 'Commitment_1PB', 'Commitment_5PB']),
+            resource_group=dict(type='str',required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
+            tags=dict(type='dict'),
         )
 
         self.state = None
         self.name = None
         self.resource_group = None
         self.location = None
+        self.tags = None
+        self.new_tier = None
+
         self.results = dict(changed=False)
         self.account_dict = None
 
@@ -52,7 +57,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                                                 supports_tags=False)
 
     def exec_module(self, **kwargs):
-        for key in list(self.module_arg_spec.keys()):
+        for key in list(self.module_arg_spec.keys()) + ['tags']:
             setattr(self, key, kwargs[key])
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -69,6 +74,8 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         if self.state == 'present':
             if not self.account_dict:
                 self.results['state'] = self.create_datalake_store()
+            else:
+                self.results['state'] = self.update_datalake_store()
         else:
             self.delete_datalake_store()
             self.results['state'] = dict(state='Deleted')
@@ -104,12 +111,38 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             return account_dict
 
         parameters = self.datalake_store_models.CreateDataLakeStoreAccountParameters(
-            location=self.location
+            location=self.location,
+            new_tier=self.new_tier
         )
 
         self.log(str(parameters))
         try:
             poller = self.datalake_store_client.accounts.create(self.resource_group, self.name, parameters)
+            self.get_poller_result(poller)
+        except CloudError as e:
+            self.log('Error creating datalake store.')
+            self.fail("Failed to create datalake store: {0}".format(str(e)))
+            
+        return self.get_datalake_store()
+
+    def update_datalake_store(self):
+        self.log("Updating datalake store {0}".format(self.name))
+
+        parameters = self.datalake_store_models.UpdateDataLakeStoreAccountParameters()
+
+        if self.tags:
+            update_tags, self.account_dict['tags'] = self.update_tags(self.account_dict['tags'])
+            if update_tags:
+                self.results['changed'] = True
+                parameters.tags=self.account_dict['tags']
+
+        if self.new_tier:
+            self.results['changed'] = True
+            parameters.new_tier=self.new_tier
+
+        self.log(str(parameters))
+        try:
+            poller = self.datalake_store_client.accounts.update(self.resource_group, self.name, parameters)
             self.get_poller_result(poller)
         except CloudError as e:
             self.log('Error creating datalake store.')
@@ -174,6 +207,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             new_tier=datalake_store_obj.new_tier,
             current_tier=datalake_store_obj.current_tier
         )
+        
         return account_dict
 
 def main():
