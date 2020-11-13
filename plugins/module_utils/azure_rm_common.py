@@ -103,7 +103,8 @@ AZURE_API_PROFILES = {
         'PostgreSQLManagementClient': '2017-12-01',
         'MySQLManagementClient': '2017-12-01',
         'MariaDBManagementClient': '2019-03-01',
-        'ManagementLockClient': '2016-09-01'
+        'ManagementLockClient': '2016-09-01',
+        'DataLakeStoreAccountManagementClient': '2016-11-01'
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
