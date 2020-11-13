@@ -34,6 +34,22 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
+            default_group=dict(type='str'),
+            encryption_config=dict(
+                type='dict',
+                options=dict(
+                    type=dict(type='str', choices=['UserManaged', 'ServiceManaged']),
+                    key_vault_meta_info=dict(
+                        type='dict', 
+                        options=dict(
+                            key_vault_resource_id=dict(type='str',required=True),
+                            encryption_key_name=dict(type='str',required=True),
+                            encryption_key_version=dict(type='str')
+                        )
+                    ),
+                )
+            ),
+            encryption_state=dict(type='str', choices=['Enabled', 'Disabled']),
             location=dict(type='str'),
             name=dict(type='str',required=True),
             new_tier=dict(type='str', choices=['Consumption', 'Commitment_1TB', 'Commitment_10TB', 'Commitment_100TB', 'Commitment_500TB', 'Commitment_1PB', 'Commitment_5PB']),
@@ -48,6 +64,10 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         self.location = None
         self.tags = None
         self.new_tier = None
+        self.default_group = None
+        self.encryption_config = dict()
+        self.encryption_config_model = None
+        self.encryption_state = None
 
         self.results = dict(changed=False)
         self.account_dict = None
@@ -59,6 +79,11 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             setattr(self, key, kwargs[key])
+
+        if self.encryption_config:
+            # TODO: Revisar todo lo referente a Key Vault Meta Info y hacer pruebas
+            self.encryption_config_model=self.datalake_store_models.EncryptionConfig(type=self.encryption_config.get('type'),
+                                                                                     key_vault_meta_info=self.encryption_config.get('key_vault_meta_info'))
 
         resource_group = self.get_resource_group(self.resource_group)
         if not self.location:
@@ -111,8 +136,12 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             return account_dict
 
         parameters = self.datalake_store_models.CreateDataLakeStoreAccountParameters(
+            default_group=self.default_group,
+            encryption_config=self.encryption_config_model,
+            encryption_state=self.encryption_state,
             location=self.location,
-            new_tier=self.new_tier
+            new_tier=self.new_tier,
+            tags=self.tags
         )
 
         self.log(str(parameters))
@@ -139,6 +168,16 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         if self.new_tier:
             self.results['changed'] = True
             parameters.new_tier=self.new_tier
+
+        if self.default_group:
+            self.results['changed'] = True
+            parameters.default_group=self.default_group
+
+        if self.encryption_state and self.account_dict.get('encryption_state') != self.encryption_state:
+            self.fail("Encryption type cannot be updated.")
+
+        if self.encryption_config and self.account_dict.get('encryption_config').get('type') != self.encryption_config.get('type'):
+            self.fail("Encryption type cannot be updated.")
 
         self.log(str(parameters))
         try:
