@@ -50,6 +50,16 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                 )
             ),
             encryption_state=dict(type='str', choices=['Enabled', 'Disabled']),
+            firewall_allow_azure_ips=dict(type='str', choices=['Enabled', 'Disabled']),
+            firewall_rules=dict(
+                type='list',
+                options=dict(
+                    name=dict(type='str',required=True),
+                    start_ip_address=dict(type='str',required=True),
+                    end_ip_address=dict(type='str',required=True)
+                )
+            ),
+            firewall_state=dict(type='str', choices=['Enabled', 'Disabled']),
             location=dict(type='str'),
             name=dict(type='str',required=True),
             new_tier=dict(type='str', choices=['Consumption', 'Commitment_1TB', 'Commitment_10TB', 'Commitment_100TB', 'Commitment_500TB', 'Commitment_1PB', 'Commitment_5PB']),
@@ -68,6 +78,10 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         self.encryption_config = dict()
         self.encryption_config_model = None
         self.encryption_state = None
+        self.firewall_state = None
+        self.firewall_allow_azure_ips = None
+        self.firewall_rules = None
+        self.firewall_rules_model = None
 
         self.results = dict(changed=False)
         self.account_dict = None
@@ -134,11 +148,23 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                 location=self.location
             )
             return account_dict
+        
+        if self.firewall_rules:
+            self.firewall_rules_model = list()
+            for rule in self.firewall_rules:
+                rule_model = self.datalake_store_models.CreateFirewallRuleWithAccountParameters(
+                    name=rule.get('name'),
+                    start_ip_address=rule.get('start_ip_address'),
+                    end_ip_address=rule.get('end_ip_address'))
+                self.firewall_rules_model.append(rule_model)
 
         parameters = self.datalake_store_models.CreateDataLakeStoreAccountParameters(
             default_group=self.default_group,
             encryption_config=self.encryption_config_model,
             encryption_state=self.encryption_state,
+            firewall_allow_azure_ips=self.firewall_allow_azure_ips,
+            firewall_rules=self.firewall_rules_model,
+            firewall_state=self.firewall_state,
             location=self.location,
             new_tier=self.new_tier,
             tags=self.tags
@@ -165,11 +191,11 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                 self.results['changed'] = True
                 parameters.tags=self.account_dict['tags']
 
-        if self.new_tier:
+        if self.new_tier and self.account_dict.get('new_tier') != self.new_tier:
             self.results['changed'] = True
             parameters.new_tier=self.new_tier
 
-        if self.default_group:
+        if self.default_group and self.account_dict.get('default_group') != self.default_group:
             self.results['changed'] = True
             parameters.default_group=self.default_group
 
@@ -178,6 +204,25 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
 
         if self.encryption_config and self.account_dict.get('encryption_config').get('type') != self.encryption_config.get('type'):
             self.fail("Encryption type cannot be updated.")
+
+        if self.firewall_state and self.account_dict.get('firewall_state') != self.firewall_state:
+            self.results['changed'] = True
+            parameters.firewall_state=self.firewall_state
+
+        if self.firewall_allow_azure_ips and self.account_dict.get('firewall_allow_azure_ips') != self.firewall_allow_azure_ips:
+            self.results['changed'] = True
+            parameters.firewall_allow_azure_ips=self.firewall_allow_azure_ips
+        
+        if self.firewall_rules is not None:
+            self.firewall_rules_model = list()
+            for rule in self.firewall_rules:
+                rule_model = self.datalake_store_models.CreateFirewallRuleWithAccountParameters(
+                    name=rule.get('name'),
+                    start_ip_address=rule.get('start_ip_address'),
+                    end_ip_address=rule.get('end_ip_address'))
+                self.firewall_rules_model.append(rule_model)
+            self.results['changed'] = True
+            parameters.firewall_rules=self.firewall_rules_model
 
         self.log(str(parameters))
         try:
@@ -237,7 +282,6 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                                    key_vault_meta_info=datalake_store_obj.encryption_config.key_vault_meta_info),
             encryption_state=datalake_store_obj.encryption_state,
             encryption_provisioning_state=datalake_store_obj.encryption_provisioning_state,
-            firewall_rules=datalake_store_obj.firewall_rules,
             virtual_network_rules=datalake_store_obj.virtual_network_rules,
             firewall_state=datalake_store_obj.firewall_state,
             firewall_allow_azure_ips=datalake_store_obj.firewall_allow_azure_ips,
@@ -246,6 +290,15 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             new_tier=datalake_store_obj.new_tier,
             current_tier=datalake_store_obj.current_tier
         )
+
+        account_dict['firewall_rules']=list()
+        for rule in datalake_store_obj.firewall_rules:
+            rule_item = dict(
+                name=rule.name,
+                start_ip_address=rule.start_ip_address,
+                end_ip_address=rule.end_ip_address
+            )
+            account_dict['firewall_rules'].append(rule_item)
         
         return account_dict
 
