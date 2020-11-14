@@ -1,4 +1,8 @@
 #!/usr/bin/python
+#
+# Copyright (c) 2020 David Duque Hernández, (@next-davidduquehernandez)
+#
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
@@ -10,12 +14,264 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 
 DOCUMENTATION = '''
+---
+module: azure_rm_datalakestore_info
+version_added: "1.2.0"
+short_description: Get Azure Data Lake Store info
+description:
+    - Get Azure Data Lake Store info.
+
+options:
+    resource_group:
+        description:
+            - The name of the resource group.
+        type: str
+    name:
+        description:
+            - The name of the Azure Data Lake Store.
+        type: str
+
+extends_documentation_fragment:
+    - azure.azcollection.azure
+
+author:
+    - David Duque Hernández (@next-davidduquehernandez)
+
 '''
 
 EXAMPLES = '''
+  - name: Get Azure Data Lake Store info
+    azure_rm_datalakestore_info:
+      resource_group: myResourceGroup
+      name: myDataLakeStore
 '''
 
 RETURN = '''
+datalake:
+    description:
+        - A list of dictionaries containing facts for Azure Data Lake Store.
+    returned: always
+    type: complex
+    contains:
+        account_id:
+            description:
+                - The unique identifier associated with this Data Lake Store account.
+            returned: always
+            type: str
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        creation_time:
+            description:
+                - The account creation time.
+            returned: always
+            type: str
+            sample: 2020-01-01T00:00:00.000000+00:00
+        current_tier:
+            description:
+                - The commitment tier in use for the current month.
+            type: str
+            sample: Consumption
+        default_group:
+            description:
+                -  The default owner group for all new folders and files created in the Data Lake Store account.
+            type: str
+            sample: null
+        encryption_config:
+            description:
+                - The Key Vault encryption configuration.
+            type: complex
+            contains:
+                type:
+                    description:
+                        - The type of encryption configuration being used.
+                    type: str
+                    returned: always
+                    sample: ServiceManaged
+                key_vault_meta_info:
+                    description:
+                        - The Key Vault information for connecting to user managed encryption keys.
+                    type: complex
+                    contains:
+                        key_vault_resource_id:
+                            description:
+                                - The resource identifier for the user managed Key Vault being used to encrypt.
+                            type: str
+                            returned: always
+                            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.KeyVault/vaults/testkv
+                        encryption_key_name:
+                            description:
+                                - The name of the user managed encryption key.
+                            type: str
+                            returned: always
+                            sample: KeyName
+                        encryption_key_version:
+                            description:
+                                - The version of the user managed encryption key.
+                            type: str
+                            returned: always
+                            sample: 86a1e3b7406f45afa0d54e21eff47e39
+        encryption_provisioning_state:
+            description:
+                - The current state of encryption provisioning for this Data Lake Store account.
+            type: str
+            sample: Succeeded
+        encryption_state:
+            description:
+                - The current state of encryption for this Data Lake Store account.
+            type: str
+            sample: Enabled
+        endpoint:
+            description:
+                - The full CName endpoint for this account.
+            returned: always
+            type: str
+            sample: testaccount.azuredatalakestore.net
+        firewall_allow_azure_ips:
+            description:
+                - The current state of allowing or disallowing IPs originating within Azure through the firewall.
+            type: str
+            sample: Disabled
+        firewall_rules:
+            description:
+                - The list of firewall rules associated with this Data Lake Store account.
+            type: list
+            contains:
+                name:
+                    description:
+                        - The resource name.
+                    type: str
+                    returned: always
+                    sample: Example Name
+                start_ip_address:
+                    description:
+                        - The start IP address for the firewall rule. This can be either ipv4 or ipv6. Start and End should be in the same protocol.
+                    type: str
+                    returned: always
+                    sample: 192.168.1.1
+                end_ip_address:
+                    description:
+                        - The end IP address for the firewall rule. This can be either ipv4 or ipv6. Start and End should be in the same protocol.
+                    type: str
+                    returned: always
+                    sample: 192.168.1.254
+        firewall_state:
+            description:
+                - The current state of the IP address firewall for this Data Lake Store account.
+            type: str
+            sample: Enabled
+        id:
+            description:
+                - The resource identifier.
+            returned: always
+            type: str
+            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.DataLakeStore/accounts/testaccount
+        identity:
+            description:
+                - The Key Vault encryption identity, if any.
+            type: complex
+            contains:
+                type:
+                    description:
+                        - The type of encryption being used.
+                    type: str
+                    sample: SystemAssigned
+                name:
+                    description:
+                        - The principal identifier associated with the encryption.
+                    type: str
+                    sample: 00000000-0000-0000-0000-000000000000
+                name:
+                    description:
+                        - The tenant identifier associated with the encryption.
+                    type: str
+                    sample: 00000000-0000-0000-0000-000000000000
+        last_modified_time:
+            description:
+                - The account last modified time.
+            returned: always
+            type: str
+            sample: 2020-01-01T00:00:00.000000+00:00
+        location:
+            description:
+                - The resource location.
+            returned: always
+            type: str
+            sample: westeurope
+        name:
+            description:
+                - The resource name.
+            returned: always
+            type: str
+            sample: testaccount
+        new_tier:
+            description:
+                - The commitment tier to use for next month.
+            type: str
+            sample: Consumption
+        provisioning_state:
+            description:
+                - The provisioning status of the Data Lake Store account.
+            returned: always
+            type: str
+            sample: Succeeded
+        state:
+            description:
+                - The state of the Data Lake Store account.
+            returned: always
+            type: str
+            sample: Active
+        tags:
+            description:
+                - The resource tags.
+            returned: always
+            type: dict
+            sample: { "tag1":"abc" }
+        trusted_id_providers:
+            description:
+                - The current state of the trusted identity provider feature for this Data Lake Store account.
+            type: list
+            contains:
+                id:
+                    description:
+                        - The resource identifier.
+                    type: str
+                name:
+                    description:
+                        - The resource name.
+                    type: str
+                type:
+                    description:
+                        - The resource type.
+                    type: str
+                id_provider:
+                    description:
+                        - The URL of this trusted identity provider.
+                    type: str
+        trusted_id_provider_state:
+            description:
+                - The list of trusted identity providers associated with this Data Lake Store account.
+            type: str
+            sample: Enabled
+        type:
+            description:
+                - The resource type.
+            returned: always
+            type: str
+            sample: Microsoft.DataLakeStore/accounts
+        virtual_network_rules:
+            description:
+                - The list of virtual network rules associated with this Data Lake Store account.
+            type: list 
+            contains:
+                name:
+                    description:
+                        - The resource name.
+                    type: str
+                    sample: Rule Name
+                subnet_id:
+                    description:
+                        - The resource identifier for the subnet.
+                    type: str
+                    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/vnet/subnets/default
 '''
 
 try:
