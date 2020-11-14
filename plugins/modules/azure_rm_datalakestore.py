@@ -66,6 +66,13 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             resource_group=dict(type='str',required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             tags=dict(type='dict'),
+            virtual_network_rules=dict(
+                type='list',
+                options=dict(
+                    name=dict(type='str',required=True),
+                    subnet_id=dict(type='str',required=True)
+                )
+            ),
         )
 
         self.state = None
@@ -82,6 +89,8 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         self.firewall_allow_azure_ips = None
         self.firewall_rules = None
         self.firewall_rules_model = None
+        self.virtual_network_rules = None
+        self.virtual_network_rules_model = None
 
         self.results = dict(changed=False)
         self.account_dict = None
@@ -149,7 +158,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             )
             return account_dict
         
-        if self.firewall_rules:
+        if self.firewall_rules is not None:
             self.firewall_rules_model = list()
             for rule in self.firewall_rules:
                 rule_model = self.datalake_store_models.CreateFirewallRuleWithAccountParameters(
@@ -157,6 +166,14 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                     start_ip_address=rule.get('start_ip_address'),
                     end_ip_address=rule.get('end_ip_address'))
                 self.firewall_rules_model.append(rule_model)
+        
+        if self.virtual_network_rules is not None:
+            self.virtual_network_rules_model = list()
+            for vnet_rule in self.virtual_network_rules:
+                vnet_rule_model = self.datalake_store_models.CreateVirtualNetworkRuleWithAccountParameters(
+                    name=vnet_rule.get('name'),
+                    subnet_id=vnet_rule.get('subnet_id'))
+                self.virtual_network_rules_model.append(vnet_rule_model)
 
         parameters = self.datalake_store_models.CreateDataLakeStoreAccountParameters(
             default_group=self.default_group,
@@ -167,7 +184,8 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             firewall_state=self.firewall_state,
             location=self.location,
             new_tier=self.new_tier,
-            tags=self.tags
+            tags=self.tags,
+            virtual_network_rules=self.virtual_network_rules_model
         )
 
         self.log(str(parameters))
@@ -216,13 +234,23 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         if self.firewall_rules is not None:
             self.firewall_rules_model = list()
             for rule in self.firewall_rules:
-                rule_model = self.datalake_store_models.CreateFirewallRuleWithAccountParameters(
+                rule_model = self.datalake_store_models.UpdateFirewallRuleWithAccountParameters(
                     name=rule.get('name'),
                     start_ip_address=rule.get('start_ip_address'),
                     end_ip_address=rule.get('end_ip_address'))
                 self.firewall_rules_model.append(rule_model)
             self.results['changed'] = True
             parameters.firewall_rules=self.firewall_rules_model
+        
+        if self.virtual_network_rules is not None:
+            self.virtual_network_rules_model = list()
+            for vnet_rule in self.virtual_network_rules:
+                vnet_rule_model = self.datalake_store_models.UpdateVirtualNetworkRuleWithAccountParameters(
+                    name=vnet_rule.get('name'),
+                    subnet_id=vnet_rule.get('subnet_id'))
+                self.virtual_network_rules_model.append(vnet_rule_model)
+            self.results['changed'] = True
+            parameters.virtual_network_rules=self.virtual_network_rules_model
 
         self.log(str(parameters))
         try:
@@ -282,7 +310,6 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                                    key_vault_meta_info=datalake_store_obj.encryption_config.key_vault_meta_info),
             encryption_state=datalake_store_obj.encryption_state,
             encryption_provisioning_state=datalake_store_obj.encryption_provisioning_state,
-            virtual_network_rules=datalake_store_obj.virtual_network_rules,
             firewall_state=datalake_store_obj.firewall_state,
             firewall_allow_azure_ips=datalake_store_obj.firewall_allow_azure_ips,
             trusted_id_providers=datalake_store_obj.trusted_id_providers,
@@ -299,6 +326,14 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                 end_ip_address=rule.end_ip_address
             )
             account_dict['firewall_rules'].append(rule_item)
+
+        account_dict['virtual_network_rules']=list()
+        for vnet_rule in datalake_store_obj.virtual_network_rules:
+            vnet_rule_item = dict(
+                name=vnet_rule.name,
+                subnet_id=vnet_rule.subnet_id
+            )
+            account_dict['virtual_network_rules'].append(vnet_rule_item)
         
         return account_dict
 
