@@ -44,7 +44,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                         options=dict(
                             key_vault_resource_id=dict(type='str',required=True),
                             encryption_key_name=dict(type='str',required=True),
-                            encryption_key_version=dict(type='str')
+                            encryption_key_version=dict(type='str',required=True)
                         )
                     ),
                 )
@@ -60,6 +60,12 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                 )
             ),
             firewall_state=dict(type='str', choices=['Enabled', 'Disabled']),
+            identity=dict(
+                type='dict',
+                options=dict(
+                    type=dict(type='str', choices=['SystemAssigned'],required=True)
+                )
+            ),
             location=dict(type='str'),
             name=dict(type='str',required=True),
             new_tier=dict(type='str', choices=['Consumption', 'Commitment_1TB', 'Commitment_10TB', 'Commitment_100TB', 'Commitment_500TB', 'Commitment_1PB', 'Commitment_5PB']),
@@ -91,6 +97,8 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         self.firewall_rules_model = None
         self.virtual_network_rules = None
         self.virtual_network_rules_model = None
+        self.identity = None
+        self.identity_model = None
 
         self.results = dict(changed=False)
         self.account_dict = None
@@ -104,9 +112,20 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         if self.encryption_config:
-            # TODO: Revisar todo lo referente a Key Vault Meta Info y hacer pruebas
+            key_vault_meta_info_model = None
+            if self.encryption_config.get('key_vault_meta_info'):
+                key_vault_meta_info_model = self.datalake_store_models.KeyVaultMetaInfo(
+                    key_vault_resource_id=self.encryption_config.get('key_vault_meta_info').get('key_vault_resource_id'),
+                    encryption_key_name=self.encryption_config.get('key_vault_meta_info').get('encryption_key_name'),
+                    encryption_key_version=self.encryption_config.get('key_vault_meta_info').get('encryption_key_version')
+                )
             self.encryption_config_model=self.datalake_store_models.EncryptionConfig(type=self.encryption_config.get('type'),
-                                                                                     key_vault_meta_info=self.encryption_config.get('key_vault_meta_info'))
+                                                                                     key_vault_meta_info=key_vault_meta_info_model)
+
+        if self.identity is not None:
+            self.identity_model = self.datalake_store_models.EncryptionIdentity(
+                type=self.identity.get('type')
+            )
 
         resource_group = self.get_resource_group(self.resource_group)
         if not self.location:
@@ -182,6 +201,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             firewall_allow_azure_ips=self.firewall_allow_azure_ips,
             firewall_rules=self.firewall_rules_model,
             firewall_state=self.firewall_state,
+            identity=self.identity_model,
             location=self.location,
             new_tier=self.new_tier,
             tags=self.tags,
@@ -190,8 +210,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
 
         self.log(str(parameters))
         try:
-            poller = self.datalake_store_client.accounts.create(self.resource_group, self.name, parameters)
-            self.get_poller_result(poller)
+            self.datalake_store_client.accounts.create(self.resource_group, self.name, parameters)
         except CloudError as e:
             self.log('Error creating datalake store.')
             self.fail("Failed to create datalake store: {0}".format(str(e)))
@@ -220,8 +239,14 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         if self.encryption_state and self.account_dict.get('encryption_state') != self.encryption_state:
             self.fail("Encryption type cannot be updated.")
 
-        if self.encryption_config and self.account_dict.get('encryption_config').get('type') != self.encryption_config.get('type'):
-            self.fail("Encryption type cannot be updated.")
+        if self.encryption_config:
+            if self.encryption_config.get('type') == 'UserManaged' and self.encryption_config.get('key_vault_meta_info') != self.account_dict.get('encryption_config').get('key_vault_meta_info'):
+                self.results['changed'] = True
+                key_vault_meta_info_model = self.datalake_store_models.UpdateKeyVaultMetaInfo(
+                    encryption_key_version=self.encryption_config.get('key_vault_meta_info').get('encryption_key_version')
+                )
+                encryption_config_model = self.datalake_store_models.UpdateEncryptionConfig = key_vault_meta_info_model
+                parameters.encryption_config = encryption_config_model
 
         if self.firewall_state and self.account_dict.get('firewall_state') != self.firewall_state:
             self.results['changed'] = True
@@ -252,10 +277,13 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             self.results['changed'] = True
             parameters.virtual_network_rules=self.virtual_network_rules_model
 
+        if self.identity_model is not None:
+            self.results['changed'] = True
+            parameters.identity=self.identity_model
+
         self.log(str(parameters))
         try:
-            poller = self.datalake_store_client.accounts.update(self.resource_group, self.name, parameters)
-            self.get_poller_result(poller)
+            self.datalake_store_client.accounts.update(self.resource_group, self.name, parameters)
         except CloudError as e:
             self.log('Error creating datalake store.')
             self.fail("Failed to create datalake store: {0}".format(str(e)))
@@ -293,29 +321,31 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
 
     def account_obj_to_dict(self, datalake_store_obj):
         account_dict = dict(
-            id=datalake_store_obj.id,
-            name=datalake_store_obj.name,
-            type=datalake_store_obj.type,
-            location=datalake_store_obj.location,
-            tags=datalake_store_obj.tags,
-            identity=datalake_store_obj.identity,
             account_id=datalake_store_obj.account_id,
-            provisioning_state=datalake_store_obj.provisioning_state,
-            state=datalake_store_obj.state,
             creation_time=datalake_store_obj.creation_time,
-            last_modified_time=datalake_store_obj.last_modified_time,
-            endpoint=datalake_store_obj.endpoint,
+            current_tier=datalake_store_obj.current_tier,
             default_group=datalake_store_obj.default_group,
             encryption_config=dict(type=datalake_store_obj.encryption_config.type,
-                                   key_vault_meta_info=datalake_store_obj.encryption_config.key_vault_meta_info),
-            encryption_state=datalake_store_obj.encryption_state,
+                                   key_vault_meta_info=None),
             encryption_provisioning_state=datalake_store_obj.encryption_provisioning_state,
-            firewall_state=datalake_store_obj.firewall_state,
+            encryption_state=datalake_store_obj.encryption_state,
+            endpoint=datalake_store_obj.endpoint,
             firewall_allow_azure_ips=datalake_store_obj.firewall_allow_azure_ips,
+            firewall_rules=None,
+            firewall_state=datalake_store_obj.firewall_state,
+            id=datalake_store_obj.id,
+            identity=None,
+            last_modified_time=datalake_store_obj.last_modified_time,
+            location=datalake_store_obj.location,
+            name=datalake_store_obj.name,
+            new_tier=datalake_store_obj.new_tier,
+            provisioning_state=datalake_store_obj.provisioning_state,
+            state=datalake_store_obj.state,
+            tags=datalake_store_obj.tags,
             trusted_id_providers=datalake_store_obj.trusted_id_providers,
             trusted_id_provider_state=datalake_store_obj.trusted_id_provider_state,
-            new_tier=datalake_store_obj.new_tier,
-            current_tier=datalake_store_obj.current_tier
+            type=datalake_store_obj.type,
+            virtual_network_rules=None
         )
 
         account_dict['firewall_rules']=list()
@@ -334,6 +364,22 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                 subnet_id=vnet_rule.subnet_id
             )
             account_dict['virtual_network_rules'].append(vnet_rule_item)
+
+        if datalake_store_obj.identity:
+            account_dict['identity']=dict(
+                type=datalake_store_obj.identity.type,
+                principal_id=datalake_store_obj.identity.principal_id,
+                tenant_id=datalake_store_obj.identity.tenant_id
+            )
+
+        if datalake_store_obj.encryption_config.key_vault_meta_info:
+            account_dict['encryption_config'] = dict(
+                key_vault_meta_info = dict(
+                    key_vault_resource_id = datalake_store_obj.encryption_config.key_vault_meta_info.key_vault_resource_id,
+                    encryption_key_name = datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_name,
+                    encryption_key_version = datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_version
+                )
+            )
         
         return account_dict
 
