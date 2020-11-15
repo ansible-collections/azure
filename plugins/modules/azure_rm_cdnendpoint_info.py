@@ -16,7 +16,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_cdnendpoint_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get Azure CDN endpoint facts
 
@@ -218,7 +218,7 @@ class AzureRMCdnEndpointInfo(AzureRMModuleBase):
 
         is_old_facts = self.module._name == 'azure_rm_cdnendpoint_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_cdnendpoint_facts' module has been renamed to 'azure_rm_cdnendpoint_info'", version=(2, 9))
+            self.module.deprecate("The 'azure_rm_cdnendpoint_facts' module has been renamed to 'azure_rm_cdnendpoint_info'", version=(2.9, ))
 
         for key in self.module_args:
             setattr(self, key, kwargs[key])

@@ -18,7 +18,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_storageaccount_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get storage account facts
 
@@ -43,13 +43,11 @@ options:
             - For convenient usage, C(show_connection_string) will also show the access keys for each of the storageaccount's endpoints.
             - Note that it will cost a lot of time when list all storageaccount rather than query a single one.
         type: bool
-        version_added: "2.8"
     show_blob_cors:
         description:
             - Show the blob CORS settings for each blob related to the storage account.
             - Querying all storage accounts will take a long time.
         type: bool
-        version_added: "2.8"
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -449,7 +447,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_storageaccount_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_storageaccount_facts' module has been renamed to 'azure_rm_storageaccount_info'", version=(2, 9))
+            self.module.deprecate("The 'azure_rm_storageaccount_facts' module has been renamed to 'azure_rm_storageaccount_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
@@ -517,18 +515,20 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             id=account_obj.id,
             name=account_obj.name,
             location=account_obj.location,
-            access_tier=(account_obj.access_tier.value
+            access_tier=(account_obj.access_tier
                          if account_obj.access_tier is not None else None),
-            account_type=account_obj.sku.name.value,
-            kind=account_obj.kind.value if account_obj.kind else None,
-            provisioning_state=account_obj.provisioning_state.value,
+            account_type=account_obj.sku.name,
+            kind=account_obj.kind if account_obj.kind else None,
+            provisioning_state=account_obj.provisioning_state,
             secondary_location=account_obj.secondary_location,
-            status_of_primary=(account_obj.status_of_primary.value
+            status_of_primary=(account_obj.status_of_primary
                                if account_obj.status_of_primary is not None else None),
-            status_of_secondary=(account_obj.status_of_secondary.value
+            status_of_secondary=(account_obj.status_of_secondary
                                  if account_obj.status_of_secondary is not None else None),
             primary_location=account_obj.primary_location,
-            https_only=account_obj.enable_https_traffic_only
+            https_only=account_obj.enable_https_traffic_only,
+            minimum_tls_version=account_obj.minimum_tls_version,
+            allow_blob_public_access=account_obj.allow_blob_public_access
         )
 
         id_dict = self.parse_resource_to_dict(account_obj.id)

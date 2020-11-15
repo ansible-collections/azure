@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_devtestlabenvironment
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage Azure DevTest Lab Environment instance
 description:
     - Create, update and delete instance of Azure DevTest Lab Environment.
@@ -26,24 +26,30 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     lab_name:
         description:
             - The name of the lab.
         required: True
+        type: str
     user_name:
         description:
             - The name of the user profile.
         required: True
+        type: str
     name:
         description:
             - The name of the environment.
         required: True
+        type: str
     location:
         description:
             - The location of the resource.
+        type: str
     deployment_template:
         description:
             - The Azure Resource Manager template's identifier.
+        type: raw
     deployment_parameters:
         description:
             - The parameters of the Azure Resource Manager template.
@@ -52,14 +58,17 @@ options:
             name:
                 description:
                     - The name of the template parameter.
+                type: str
             value:
                 description:
                     - The value of the template parameter.
+                type: str
     state:
       description:
           - Assert the state of the Environment.
           - Use C((present) to create or update an Environment and C(absent) to delete it.
       default: present
+      type: str
       choices:
           - absent
           - present

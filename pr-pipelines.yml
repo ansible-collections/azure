@@ -2,16 +2,18 @@ parameters:
 - name: PYTHON_VER
   displayName: 'Python Version'
   type: string
-  default: "2.7"
+  default: "3.6"
   values:
     - "2.7"
     - "3.6"
+    - "3.8"
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
-  default: "2.9.0"
+  default: "2.10"
   values:
-    - "2.9.0"
+    - "2.9"
+    - "2.10"
     - "devel"
 - name: MODULE_NAME
   displayName: 'Test Module'
@@ -44,24 +46,29 @@ parameters:
     - "azure_rm_keyvaultkey"
     - "azure_rm_keyvaultsecret"
     - "azure_rm_loadbalancer"
+    - "azure_rm_loganalyticsworkspace"
     - "azure_rm_manageddisk"
     - "azure_rm_mariadbserver"
     - "azure_rm_monitorlogprofile"
     - "azure_rm_mysqlserver"
     - "azure_rm_networkinterface"
+    - "azure_rm_openshiftmanagedcluster"
     - "azure_rm_postgresqlserver"
+    - "azure_rm_privatednsrecordset"
     - "azure_rm_privatednszone"
     - "azure_rm_publicipaddress"
     - "azure_rm_rediscache"
     - "azure_rm_resource"
     - "azure_rm_resourcegroup"
     - "azure_rm_routetable"
+    - "azure_rm_roleassignment"
     - "azure_rm_securitygroup"
     - "azure_rm_servicebus"
     - "azure_rm_sqlserver"
     - "azure_rm_storageaccount"
     - "azure_rm_storageblob"
     - "azure_rm_subnet"
+    - "azure_rm_subscription"
     - "azure_rm_trafficmanagerprofile"
     - "azure_rm_virtualmachine"
     - "azure_rm_virtualmachineextension"
@@ -71,6 +78,9 @@ parameters:
     - "azure_rm_virtualnetworkgateway"
     - "azure_rm_virtualnetworkeepring"
     - "azure_rm_virtualwan"
+    - "azure_rm_backupazurevm"
+    - "azure_rm_recoveryservicesvault"
+    - "azure_rm_vmbackuppolicy"
     - "azure_rm_webapp"
     - "azure_rm_workspace"
     - "inventory_azure"
