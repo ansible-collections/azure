@@ -111,104 +111,96 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-id:
-  description:
-    - Resource ID.
-  returned: always
-  type: str
-  sample: null
-name:
-  description:
-    - Resource name.
-  returned: always
-  type: str
-  sample: null
-type:
-  description:
-    - Resource type.
-  returned: always
-  type: str
-  sample: null
-location:
-  description:
-    - Resource location.
-  returned: always
-  type: str
-  sample: null
-tags:
-  description:
-    - Resource tags.
-  returned: always
-  type: dict
-  sample: null
-etag:
-  description:
-    - A unique read-only string that changes whenever the resource is updated.
-  returned: always
-  type: str
-  sample: null
-disable_vpn_encryption:
-  description:
-    - Vpn encryption to be disabled or not.
-  returned: always
-  type: bool
-  sample: null
-virtual_hubs:
-  description:
-    - List of VirtualHubs in the VirtualWAN.
-  returned: always
-  type: list
-  sample: null
-  contains:
-    id:
-      description:
-        - Resource ID.
-      returned: always
-      type: str
-      sample: null
-vpn_sites:
-  description:
-    - List of VpnSites in the VirtualWAN.
-  returned: always
-  type: list
-  sample: null
-  contains:
-    id:
-      description:
-        - Resource ID.
-      returned: always
-      type: str
-      sample: null
-allow_branch_to_branch_traffic:
-  description:
-    - True if branch to branch traffic is allowed.
-  returned: always
-  type: bool
-  sample: null
-allow_vnet_to_vnet_traffic:
-  description:
-    - True if Vnet to Vnet traffic is allowed.
-  returned: always
-  type: bool
-  sample: null
-office365_local_breakout_category:
-  description:
-    - The office local breakout category.
-  returned: always
-  type: str
-  sample: null
-provisioning_state:
-  description:
-    - The provisioning state of the virtual WAN resource.
-  returned: always
-  type: str
-  sample: null
-virtual_wan_type:
-  description:
-    - The type of the VirtualWAN.
-  returned: always
-  type: str
-  sample: null
+state:
+    description:
+        - Current state of the virtual wan.
+    type: complex
+    returned: success
+    contains:
+        id:
+            description:
+                - Resource ID.
+            returned: always
+            type: str
+            sample: /subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualWans/virtual_wan_name
+        name:
+            description:
+                - Resource name.
+            returned: always
+            type: str
+            sample: virtualwanb57dc9555691
+        type:
+            description:
+                - Resource type.
+            returned: always
+            type: str
+            sample: Microsoft.Network/virtualWans
+        location:
+            description:
+                - Resource location.
+            returned: always
+            type: str
+            sample: eastus
+        tags:
+            description:
+                - Resource tags.
+            returned: always
+            type: dict
+            sample: { 'key1': 'value1'}
+        etag:
+            description:
+                - A unique read-only string that changes whenever the resource is updated.
+            returned: always
+            type: str
+            sample: 52def36b-84b6-49aa-a825-16ba167fc559
+        disable_vpn_encryption:
+            description:
+                - Vpn encryption to be disabled or not.
+            returned: always
+            type: bool
+            sample: true
+        vpn_sites:
+            description:
+                - List of VpnSites in the VirtualWAN.
+            returned: always
+            type: list
+            contains:
+                id:
+                    description:
+                        - Resource ID.
+                    returned: always
+                    type: str
+                    sample: /subscriptions/xxx-xxx/resourceGroups/resource_group/providers/Microsoft.Network/vpnSites/test1
+        allow_branch_to_branch_traffic:
+            description:
+                - True if branch to branch traffic is allowed.
+            returned: always
+            type: bool
+            sample: true
+        allow_vnet_to_vnet_traffic:
+            description:
+                - True if Vnet to Vnet traffic is allowed.
+            returned: always
+            type: bool
+            sample: true
+        office365_local_breakout_category:
+            description:
+                - The office local breakout category.
+            returned: always
+            type: str
+            sample: None
+        provisioning_state:
+            description:
+                - The provisioning state of the virtual WAN resource.
+            returned: always
+            type: str
+            sample: Succeeded
+        virtual_wan_type:
+            description:
+                - The type of the VirtualWAN.
+            returned: always
+            type: str
+            sample: Standard
 
 '''
 
@@ -350,7 +342,8 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
         else:
             self.results['changed'] = False
             response = old_response
-
+        if response is not None:
+            self.results['state'] = response
         return self.results
 
     def create_update_resource(self):
