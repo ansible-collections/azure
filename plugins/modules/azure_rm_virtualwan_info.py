@@ -87,7 +87,7 @@ virtual_wans:
             description:
                 - Resource tags.
             returned: always
-            type: dictionary
+            type: dict
             sample: { 'key1': 'value1'}
         etag:
             description:
