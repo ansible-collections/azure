@@ -1,4 +1,8 @@
 #!/usr/bin/python
+#
+# Copyright (c) 2020 David Duque, (@next-davidduquehernandez)
+#
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
 import datetime
@@ -210,7 +214,8 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
 
         self.log(str(parameters))
         try:
-            self.datalake_store_client.accounts.create(self.resource_group, self.name, parameters)
+            poller = self.datalake_store_client.accounts.create(self.resource_group, self.name, parameters)
+            self.get_poller_result(poller)
         except CloudError as e:
             self.log('Error creating datalake store.')
             self.fail("Failed to create datalake store: {0}".format(str(e)))
@@ -257,36 +262,40 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             parameters.firewall_allow_azure_ips=self.firewall_allow_azure_ips
         
         if self.firewall_rules is not None:
-            self.firewall_rules_model = list()
-            for rule in self.firewall_rules:
-                rule_model = self.datalake_store_models.UpdateFirewallRuleWithAccountParameters(
-                    name=rule.get('name'),
-                    start_ip_address=rule.get('start_ip_address'),
-                    end_ip_address=rule.get('end_ip_address'))
-                self.firewall_rules_model.append(rule_model)
-            self.results['changed'] = True
-            parameters.firewall_rules=self.firewall_rules_model
+            if not self.compare_lists(self.firewall_rules, self.account_dict.get('firewall_rules')):
+                self.firewall_rules_model = list()
+                for rule in self.firewall_rules:
+                    rule_model = self.datalake_store_models.UpdateFirewallRuleWithAccountParameters(
+                        name=rule.get('name'),
+                        start_ip_address=rule.get('start_ip_address'),
+                        end_ip_address=rule.get('end_ip_address'))
+                    self.firewall_rules_model.append(rule_model)
+                self.results['changed'] = True
+                parameters.firewall_rules=self.firewall_rules_model
         
         if self.virtual_network_rules is not None:
-            self.virtual_network_rules_model = list()
-            for vnet_rule in self.virtual_network_rules:
-                vnet_rule_model = self.datalake_store_models.UpdateVirtualNetworkRuleWithAccountParameters(
-                    name=vnet_rule.get('name'),
-                    subnet_id=vnet_rule.get('subnet_id'))
-                self.virtual_network_rules_model.append(vnet_rule_model)
-            self.results['changed'] = True
-            parameters.virtual_network_rules=self.virtual_network_rules_model
+            if not self.compare_lists(self.virtual_network_rules, self.account_dict.get('virtual_network_rules')):
+                self.virtual_network_rules_model = list()
+                for vnet_rule in self.virtual_network_rules:
+                    vnet_rule_model = self.datalake_store_models.UpdateVirtualNetworkRuleWithAccountParameters(
+                        name=vnet_rule.get('name'),
+                        subnet_id=vnet_rule.get('subnet_id'))
+                    self.virtual_network_rules_model.append(vnet_rule_model)
+                self.results['changed'] = True
+                parameters.virtual_network_rules=self.virtual_network_rules_model
 
         if self.identity_model is not None:
             self.results['changed'] = True
             parameters.identity=self.identity_model
 
         self.log(str(parameters))
-        try:
-            self.datalake_store_client.accounts.update(self.resource_group, self.name, parameters)
-        except CloudError as e:
-            self.log('Error creating datalake store.')
-            self.fail("Failed to create datalake store: {0}".format(str(e)))
+        if self.results['changed']:
+            try:
+                poller = self.datalake_store_client.accounts.update(self.resource_group, self.name, parameters)
+                self.get_poller_result(poller)
+            except CloudError as e:
+                self.log('Error creating datalake store.')
+                self.fail("Failed to create datalake store: {0}".format(str(e)))
             
         return self.get_datalake_store()
 
@@ -325,8 +334,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             creation_time=datalake_store_obj.creation_time,
             current_tier=datalake_store_obj.current_tier,
             default_group=datalake_store_obj.default_group,
-            encryption_config=dict(type=datalake_store_obj.encryption_config.type,
-                                   key_vault_meta_info=None),
+            encryption_config=None,
             encryption_provisioning_state=datalake_store_obj.encryption_provisioning_state,
             encryption_state=datalake_store_obj.encryption_state,
             endpoint=datalake_store_obj.endpoint,
@@ -349,21 +357,23 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         )
 
         account_dict['firewall_rules']=list()
-        for rule in datalake_store_obj.firewall_rules:
-            rule_item = dict(
-                name=rule.name,
-                start_ip_address=rule.start_ip_address,
-                end_ip_address=rule.end_ip_address
-            )
-            account_dict['firewall_rules'].append(rule_item)
+        if datalake_store_obj.firewall_rules:
+            for rule in datalake_store_obj.firewall_rules:
+                rule_item = dict(
+                    name=rule.name,
+                    start_ip_address=rule.start_ip_address,
+                    end_ip_address=rule.end_ip_address
+                )
+                account_dict['firewall_rules'].append(rule_item)
 
         account_dict['virtual_network_rules']=list()
-        for vnet_rule in datalake_store_obj.virtual_network_rules:
-            vnet_rule_item = dict(
-                name=vnet_rule.name,
-                subnet_id=vnet_rule.subnet_id
-            )
-            account_dict['virtual_network_rules'].append(vnet_rule_item)
+        if datalake_store_obj.virtual_network_rules:
+            for vnet_rule in datalake_store_obj.virtual_network_rules:
+                vnet_rule_item = dict(
+                    name=vnet_rule.name,
+                    subnet_id=vnet_rule.subnet_id
+                )
+                account_dict['virtual_network_rules'].append(vnet_rule_item)
 
         if datalake_store_obj.identity:
             account_dict['identity']=dict(
@@ -372,16 +382,25 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                 tenant_id=datalake_store_obj.identity.tenant_id
             )
 
-        if datalake_store_obj.encryption_config.key_vault_meta_info:
-            account_dict['encryption_config'] = dict(
-                key_vault_meta_info = dict(
-                    key_vault_resource_id = datalake_store_obj.encryption_config.key_vault_meta_info.key_vault_resource_id,
-                    encryption_key_name = datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_name,
-                    encryption_key_version = datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_version
+        if datalake_store_obj.encryption_config:
+            if datalake_store_obj.encryption_config.key_vault_meta_info:
+                account_dict['encryption_config'] = dict(
+                    key_vault_meta_info = dict(
+                        key_vault_resource_id = datalake_store_obj.encryption_config.key_vault_meta_info.key_vault_resource_id,
+                        encryption_key_name = datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_name,
+                        encryption_key_version = datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_version
+                    )
                 )
-            )
         
         return account_dict
+
+    def compare_lists(self, list1, list2):
+        if len(list1) != len(list2):
+            return False
+        for element in list1:
+            if element not in list2:
+                return False
+        return True
 
 def main():
     AzureRMDatalakeStore()
