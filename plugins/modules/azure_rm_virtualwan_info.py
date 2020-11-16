@@ -30,7 +30,7 @@ options:
             - The name of the VirtualWAN being retrieved.
         type: str
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
 author:
     - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
@@ -39,15 +39,15 @@ author:
 
 EXAMPLES = '''
     - name: Get Virtual WAN by name
-      azure_rm_virtualwan_info: 
+      azure_rm_virtualwan_info:
         resource_group_name: "{{ resource_group_name }}"
 
     - name: List all Virtual WANLs by resource group
-      azure_rm_virtualwan_info: 
+      azure_rm_virtualwan_info:
         resource_group_name: "{{ resource_group_name }}"
-        
+
     - name: List all Virtual WANs by subscription_id
-      azure_rm_virtualwan_info: 
+      azure_rm_virtualwan_info:
 
 '''
 
@@ -186,8 +186,7 @@ class AzureRMVirtualWanInfo(AzureRMModuleBase):
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
                                                     api_version='2020-04-01')
 
-        if (self.resource_group_name is not None and
-            self.virtual_wan_name is not None):
+        if (self.resource_group_name is not None and self.virtual_wan_name is not None):
             self.results['virtual_wans'] = self.format_item(self.get())
         elif (self.resource_group_name is not None):
             self.results['virtual_wans'] = self.format_item(self.list_by_resource_group())

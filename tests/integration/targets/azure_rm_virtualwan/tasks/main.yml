@@ -1,7 +1,7 @@
-- name: Prepare random number
-  set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+ - name: Prepare random number
+   set_fact:
+     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+   run_once: yes
 
  - name: Create a VirtualWan
    azure_rm_virtualwan:
@@ -38,12 +38,12 @@
      resource_group_name: "{{ resource_group }}"
      virtual_wan_name: "virtualwan{{ rpfx }}"
    register: output
+
  - assert:
      that:
-       - not output.changed
-       - output.virtual_wans['allow_branch_to_branch_traffic'] == true
-       - output.virtual_wans['virtual_wan_type'] == 'Standard'
-       - output.virtual_wans['disable_vpn_encryption'] == true
+       - output.virtual_wans[0]['allow_branch_to_branch_traffic'] == true
+       - output.virtual_wans[0]['virtual_wan_type'] == 'Standard'
+       - output.virtual_wans[0]['disable_vpn_encryption'] == true
 
  - name: Delete the VirtualWan
    azure_rm_virtualwan:

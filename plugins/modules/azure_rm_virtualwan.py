@@ -33,6 +33,11 @@ options:
             - The name of the VirtualWAN being deleted.
         required: true
         type: str
+    location:
+        description:
+            - The virtual wan location.
+        type: str
+        required: true
     disable_vpn_encryption:
         description:
             - Vpn encryption to be disabled or not.
@@ -76,7 +81,8 @@ options:
             - absent
             - present
 extends_documentation_fragment:
-    - azure
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 author:
     - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
@@ -100,7 +106,7 @@ EXAMPLES = '''
      resource_group_name: "{{ resource_group }}"
      virtual_wan_name: "{{ virtual_wan_name }}"
      location: eastus
-     state: absent       
+     state: absent
 
 '''
 
@@ -331,7 +337,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
                 if not self.default_compare(modifiers, self.body, old_response, '', self.results):
                     self.to_do = Actions.Update
                 if allo_vnet_to_vnet_traffic is not None:
-                    self.body['allow_vnet_to_vnet_traffic'] =  allo_vnet_to_vnet_traffic
+                    self.body['allow_vnet_to_vnet_traffic'] = allo_vnet_to_vnet_traffic
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.results['changed'] = True

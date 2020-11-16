@@ -323,6 +323,12 @@ plugins/modules/azure_rm_virtualmachinescalesetinstance_info.py validate-modules
 plugins/modules/azure_rm_virtualmachinescalesetinstance_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_virtualmachinescalesetinstance_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_virtualmachinescalesetinstance_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_virtualwan.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_virtualwan.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_virtualwan.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_virtualwan_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_virtualwan_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_virtualwan_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_webapp.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_webapp.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_webapp.py validate-modules:doc-required-mismatch
