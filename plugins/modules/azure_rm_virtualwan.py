@@ -139,7 +139,7 @@ tags:
   description:
     - Resource tags.
   returned: always
-  type: dictionary
+  type: dict
   sample: null
 etag:
   description:
@@ -250,7 +250,6 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
                 type='list',
                 updatable=False,
                 disposition='/virtual_hubs',
-                elements='dict',
                 options=dict(
                     id=dict(
                         type='str',
@@ -262,7 +261,6 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
                 type='list',
                 updatable=False,
                 disposition='/vpn_sites',
-                elements='dict',
                 options=dict(
                     id=dict(
                         type='str',

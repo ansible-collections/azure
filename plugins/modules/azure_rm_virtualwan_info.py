@@ -31,6 +31,7 @@ options:
         type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 author:
     - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
@@ -93,7 +94,7 @@ virtual_wans:
                 - A unique read-only string that changes whenever the resource is updated.
             returned: always
             type: str
-            sample:  "W/\"86df6f3d-19f2-4cc8-8574-47921de4a6f1\""
+            sample:  "86df6f3d-19f2-4cc8-8574-47921de4a6f1"
         disable_vpn_encryption:
             description:
                 - Vpn encryption to be disabled or not.
