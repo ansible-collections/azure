@@ -241,7 +241,7 @@ author:
 
 '''
 
-EXAMPLES ='''
+EXAMPLES = '''
     - name: Create a new API instance
       azure_rm_apimanagement:
         resource_group: 'myResourceGroup'
@@ -293,8 +293,10 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
+
 class Actions:
     NoAction, Create, Update, Delete = range(4)
+
 
 class AzureApiManagement(AzureRMModuleBaseExt):
     def __init__(self):
@@ -516,14 +518,14 @@ class AzureApiManagement(AzureRMModuleBaseExt):
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
         super(AzureApiManagement, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                         supports_check_mode=True,
-                                         supports_tags=True)
+                                                 supports_check_mode=True,
+                                                 supports_tags=True)
 
     def get_url(self):
-        return '/subscriptions' +'/' + self.subscription_id \
-                + '/resourceGroups' + '/' + self.resource_group \
-                + '/providers' + '/Microsoft.ApiManagement' + '/service' \
-                + '/' + self.service_name + '/apis' + '/' + self.api_id
+        return '/subscriptions' + '/' + self.subscription_id \
+               + '/resourceGroups' + '/' + self.resource_group \
+               + '/providers' + '/Microsoft.ApiManagement' + '/service' \
+               + '/' + self.service_name + '/apis' + '/' + self.api_id
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
@@ -586,7 +588,7 @@ class AzureApiManagement(AzureRMModuleBaseExt):
             response = old_response
 
         if response:
-           self.results["id"] = response["id"]
+            self.results["id"] = response["id"]
 
         return self.results
 
@@ -595,14 +597,15 @@ class AzureApiManagement(AzureRMModuleBaseExt):
 
         try:
             response = self.mgmt_client.query(
-                        self.url,
-                        'PUT',
-                        self.query_parameters,
-                        self.header_parameters,
-                        self.body,
-                        self.status_code,
-                        600,
-                        30)
+                self.url,
+                'PUT',
+                self.query_parameters,
+                self.header_parameters,
+                self.body,
+                self.status_code,
+                600,
+                30,
+            )
         except CloudError as exc:
             self.log('Error while creating/updating the Api instance.')
             self.fail('Error creating the Api instance: {0}'.format(str(exc)))
@@ -617,14 +620,15 @@ class AzureApiManagement(AzureRMModuleBaseExt):
         isDeleted = False
         try:
             response = self.mgmt_client.query(
-                        self.url,
-                        'DELETE',
-                        self.query_parameters,
-                        self.header_parameters,
-                        None,
-                        self.status_code,
-                        600,
-                        30)
+                self.url,
+                'DELETE',
+                self.query_parameters,
+                self.header_parameters,
+                self.body,
+                self.status_code,
+                600,
+                30,
+            )
             isDeleted = True
         except CloudError as e:
             self.log('Error attempting to delete the Api instance.')
@@ -636,14 +640,15 @@ class AzureApiManagement(AzureRMModuleBaseExt):
         isFound = False
         try:
             response = self.mgmt_client.query(
-                        self.url,
-                        'GET',
-                        self.query_parameters,
-                        self.header_parameters,
-                        None,
-                        self.status_code,
-                        600,
-                        30)
+                self.url,
+                'GET',
+                self.query_parameters,
+                self.header_parameters,
+                None,
+                self.status_code,
+                600,
+                30,
+            )
             isFound = True
             self.log("Response : {0}".format(response))
         except CloudError as e:

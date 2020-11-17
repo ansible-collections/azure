@@ -115,6 +115,7 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
+
 class AzureApiManagementInfo(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
@@ -156,8 +157,8 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
         super(AzureApiManagementInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                    supports_check_mode=True,
-                                                    supports_tags=True)
+                                                     supports_check_mode=True,
+                                                     supports_tags=True)
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
@@ -170,48 +171,50 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if (self.resource_group is not None and
-            self.service_name is not None and
-            self.api_id is not None):
+                self.service_name is not None and
+                self.api_id is not None):
             self.results['api'] = self.get_api_info()
         elif (self.resource_group is not None and
-              self.service_name is not None):
+                self.service_name is not None):
             self.results['api'] = self.listbytags()
         elif (self.resource_group is not None and
-              self.service_name is not None):
+                self.service_name is not None):
             self.results['api'] = self.listbyservice()
         return self.results
 
     def get_url(self):
-        return '/subscriptions' +'/' + self.subscription_id \
-                + '/resourceGroups' + '/' + self.resource_group \
-                + '/providers' + '/Microsoft.ApiManagement' + '/service' \
-                + '/' + self.service_name + '/apis' + '/' + self.api_id
+        return '/subscriptions' + '/' + self.subscription_id \
+               + '/resourceGroups' + '/' + self.resource_group \
+               + '/providers' + '/Microsoft.ApiManagement' + '/service' \
+               + '/' + self.service_name + '/apis' + '/' + self.api_id
 
     def get_url_bytags(self):
-        return '/subscriptions' +'/' + self.subscription_id \
-                + '/resourceGroups' + '/' + self.resource_group \
-                + '/providers' + '/Microsoft.ApiManagement' + '/service' \
-                + '/' + self.service_name + '/apisByTags'
+        return '/subscriptions' + '/' + self.subscription_id \
+               + '/resourceGroups' + '/' + self.resource_group \
+               + '/providers' + '/Microsoft.ApiManagement' + '/service' \
+               + '/' + self.service_name + '/apisByTags'
 
     def get_url_byservice(self):
-        return '/subscriptions' +'/' + self.subscription_id \
-                + '/resourceGroups' + '/' + self.resource_group \
-                + '/providers' + '/Microsoft.ApiManagement' + '/service' \
-                + '/' + self.service_name + '/apis'
+        return '/subscriptions' + '/' + self.subscription_id \
+               + '/resourceGroups' + '/' + self.resource_group \
+               + '/providers' + '/Microsoft.ApiManagement' + '/service' \
+               + '/' + self.service_name + '/apis'
 
     def get_api_info(self):
         self.url = self.get_url()
         response = None
 
         try:
-            response = self.mgmt_client.query(self.url,
-                        'GET',
-                        self.query_parameters,
-                        self.header_parameters,
-                        None,
-                        self.status_code,
-                        600,
-                        30)
+            response = self.mgmt_client.query(
+                self.url,
+                'GET',
+                self.query_parameters,
+                self.header_parameters,
+                None,
+                self.status_code,
+                600,
+                30,
+            )
         except CloudError as e:
             self.log('Could not get the information.{0}'.format(e))
         try:
@@ -225,20 +228,22 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
         self.url = self.get_url_bytags()
         response = None
         try:
-            response = self.mgmt_client.query(self.url,
-                        'GET',
-                        self.query_parameters,
-                        self.header_parameters,
-                        None,
-                        self.status_code,
-                        600,
-                        30)
+            response = self.mgmt_client.query(
+                self.url,
+                'GET',
+                self.query_parameters,
+                self.header_parameters,
+                None,
+                self.status_code,
+                600,
+                30,
+            )
         except CloudError as e:
             self.log('Could not get info for the given api tags {0}'.format(e))
         try:
-          response = json.loads(response.text)
+            response = json.loads(response.text)
         except Exception:
-          response = {'text': response.text}
+            response = {'text': response.text}
 
         return response
 
@@ -246,23 +251,26 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
         self.url = self.get_url_byservice()
         response = None
         try:
-            response = self.mgmt_client.query(self.url,
-                        'GET',
-                        self.query_parameters,
-                        self.header_parameters,
-                        None,
-                        self.status_code,
-                        600,
-                        30)
+            response = self.mgmt_client.query(
+                self.url,
+                'GET',
+                self.query_parameters,
+                self.header_parameters,
+                None,
+                self.status_code,
+                600,
+                30,
+            )
             response = json.loads(response.text)
         except CloudError as e:
             self.log('Could not get info for a given services.{0}'.format(e))
         try:
-          response = json.loads(response.text)
+            response = json.loads(response.text)
         except Exception:
-          response = {'text': response.text}
+            response = {'text': response.text}
 
         return response
+
 
 def main():
     AzureApiManagementInfo()
@@ -270,4 +278,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
