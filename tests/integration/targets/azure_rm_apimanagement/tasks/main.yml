@@ -7,7 +7,7 @@
   azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
-    api_id: "{{ service_name.api.name }}"
+    api_id: "{{ api_id }}"
     description: "testDescription"
     display_name: "TestAPI"
     service_url: 'http://testapi.example.net/api'
@@ -26,7 +26,7 @@
   azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
-    api_id: "{{ service_name.api.name }}"
+    api_id: "{{ api_id }}"
     path: "my-new-path"
     format: openapi
     display_name: "New-Test-API"
@@ -42,7 +42,7 @@
   azure_rm_apimanagement:  
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
-    api_id: "{{ service_name.api.name }}"
+    api_id: "{{ api_id }}"
     description: "testDescription"
     display_name: "TestAPI"
     service_url: 'http://testapi.example.net/api'
@@ -60,7 +60,7 @@
   azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
-    api_id: "{{ service_name.api.name }}"
+    api_id: "{{ api_id }}"
     state: absent
   register: deleteApi
 
@@ -73,7 +73,7 @@
   azure_rm_apimanagement_info:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
-    api_id: "{{ service_name.api.name }}"
+    api_id: "{{ api_id }}"
   register: output
 
 - name: Assert that output has changed
