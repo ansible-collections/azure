@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 GuopengLin, (@t-glin)
+# Copyright (c) 2020 Fred-Sun, (@Fred-Sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -16,28 +16,35 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualwan
-version_added: '2.0.0'
+version_added: '1.4.0'
 short_description: Manage Azure VirtualWan instance
 description:
     - Create, update and delete instance of Azure VirtualWan.
 options:
-    resource_group_name:
+    resource_group:
         description:
             - The resource group name of the VirtualWan.
         required: true
         type: str
-    virtual_wan_name:
+    office365_local_breakout_category:
+        description:
+            - Specifies the Office365 local breakout category.
+            - Default value is C(None).
+        type: str
+        choices:
+            - Optimize
+            - OptimizeAndAllow
+            - All
+            - None
+    name:
         description:
             - The name of the VirtualWAN being retrieved.
-            - The name of the VirtualWAN being created or updated.
-            - The name of the VirtualWAN being deleted.
         required: true
         type: str
     location:
         description:
             - The virtual wan location.
         type: str
-        required: true
     disable_vpn_encryption:
         description:
             - Vpn encryption to be disabled or not.
@@ -49,7 +56,7 @@ options:
         suboptions:
             id:
                 description:
-                    - Resource ID.
+                    - The virtual hub resource ID.
                 type: str
     vpn_sites:
         description:
@@ -58,7 +65,7 @@ options:
         suboptions:
             id:
                description:
-                   - Resource ID.
+                   - The vpn site resource ID.
                type: str
     allow_branch_to_branch_traffic:
         description:
@@ -84,18 +91,15 @@ extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 author:
-    - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
-    - Haiyuan Zhang (@haiyuazhang)
 
 '''
 
 EXAMPLES = '''
  - name: Create a VirtualWan
    azure_rm_virtualwan:
-     resource_group_name: "{{ resource_group }}"
-     virtual_wan_name: "{{ virtual_wan_name }}"
-     location: eastus
+     resource_group: myResouceGroup
+     name: testwan
      disable_vpn_encryption: true
      allow_branch_to_branch_traffic: true
      allow_vnet_to_vnet_traffic: true
@@ -103,9 +107,8 @@ EXAMPLES = '''
 
  - name: Delete the VirtualWan
    azure_rm_virtualwan:
-     resource_group_name: "{{ resource_group }}"
-     virtual_wan_name: "{{ virtual_wan_name }}"
-     location: eastus
+     resource_group: myResouceGroup
+     name: testwan
      state: absent
 
 '''
@@ -137,7 +140,7 @@ state:
             sample: Microsoft.Network/virtualWans
         location:
             description:
-                - Resource location.
+                - The virtual wan resource location.
             returned: always
             type: str
             sample: eastus
@@ -159,6 +162,18 @@ state:
             returned: always
             type: bool
             sample: true
+        virtual_hubs:
+            description:
+                - List of VirtualHubs in the VirtualWAN.
+            type: complex
+            returned: always
+            contains:
+                id:
+                    description:
+                        - The virtual hubs ID.
+                    type: str
+                    returned: always
+                    sample: /subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualHubs/test
         vpn_sites:
             description:
                 - List of VpnSites in the VirtualWAN.
@@ -167,7 +182,7 @@ state:
             contains:
                 id:
                     description:
-                        - Resource ID.
+                        - The vpn sites resouce ID.
                     returned: always
                     type: str
                     sample: /subscriptions/xxx-xxx/resourceGroups/resource_group/providers/Microsoft.Network/vpnSites/test1
@@ -223,14 +238,17 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
             location=dict(
+                type='str'
+            ),
+            resource_group=dict(
                 type='str',
                 required=True
             ),
-            resource_group_name=dict(
+            office365_local_breakout_category=dict(
                 type='str',
-                required=True
+                choices=['Optimize', 'OptimizeAndAllow', 'All', 'None']
             ),
-            virtual_wan_name=dict(
+            name=dict(
                 type='str',
                 required=True
             ),
@@ -279,8 +297,9 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             )
         )
 
-        self.resource_group_name = None
-        self.virtual_wan_name = None
+        self.resource_group = None
+        self.name = None
+        self.location = None
         self.body = {}
 
         self.results = dict(changed=False)
@@ -301,12 +320,18 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
 
         self.inflate_parameters(self.module_arg_spec, self.body, 0)
 
+        resource_group = self.get_resource_group(self.resource_group)
+        if self.location is None:
+            # Set default location
+            self.location = resource_group.location
+        self.body['location'] = self.location
+
         old_response = None
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2020-04-01')
+                                                    api_version='2020-06-01')
 
         old_response = self.get_resource()
 
@@ -321,13 +346,11 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
                 self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
                 self.results['modifiers'] = modifiers
                 self.results['compare'] = []
-                allo_vnet_to_vnet_traffic = self.body.get('allow_vnet_to_vnet_traffic', None)
-                if allo_vnet_to_vnet_traffic is not None:
-                    del self.body['allow_vnet_to_vnet_traffic']
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
+                new_body = self.body
+                if 'allow_vnet_to_vnet_traffic' in new_body.keys():
+                    del new_body['allow_vnet_to_vnet_traffic']
+                if not self.default_compare(modifiers, new_body, old_response, '', self.results):
                     self.to_do = Actions.Update
-                if allo_vnet_to_vnet_traffic is not None:
-                    self.body['allow_vnet_to_vnet_traffic'] = allo_vnet_to_vnet_traffic
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.results['changed'] = True
@@ -348,8 +371,8 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
 
     def create_update_resource(self):
         try:
-            response = self.mgmt_client.virtual_wans.create_or_update(resource_group_name=self.resource_group_name,
-                                                                      virtual_wan_name=self.virtual_wan_name,
+            response = self.mgmt_client.virtual_wans.create_or_update(resource_group_name=self.resource_group,
+                                                                      virtual_wan_name=self.name,
                                                                       wan_parameters=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
@@ -360,8 +383,8 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
 
     def delete_resource(self):
         try:
-            response = self.mgmt_client.virtual_wans.delete(resource_group_name=self.resource_group_name,
-                                                            virtual_wan_name=self.virtual_wan_name)
+            response = self.mgmt_client.virtual_wans.delete(resource_group_name=self.resource_group,
+                                                            virtual_wan_name=self.name)
         except CloudError as e:
             self.log('Error attempting to delete the VirtualWan instance.')
             self.fail('Error deleting the VirtualWan instance: {0}'.format(str(e)))
@@ -370,8 +393,8 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
 
     def get_resource(self):
         try:
-            response = self.mgmt_client.virtual_wans.get(resource_group_name=self.resource_group_name,
-                                                         virtual_wan_name=self.virtual_wan_name)
+            response = self.mgmt_client.virtual_wans.get(resource_group_name=self.resource_group,
+                                                         virtual_wan_name=self.name)
         except CloudError as e:
             return False
         return response.as_dict()
