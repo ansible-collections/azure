@@ -4,8 +4,8 @@
 
  - name: Create a VpnSite
    azure_rm_vpnsite:
-     resource_group_name: "{{ resource_group }}"
-     vpn_site_name: "{{ vpn_site }}"
+     resource_group: "{{ resource_group }}"
+     name: "{{ vpn_site }}"
      ip_address: 10.0.0.0
      is_security_site: true
      location: eastus
@@ -18,8 +18,8 @@
 
  - name: Update the VpnSite (no change)
    azure_rm_vpnsite:
-     resource_group_name: "{{ resource_group }}"
-     vpn_site_name: "{{ vpn_site }}"
+     resource_group: "{{ resource_group }}"
+     name: "{{ vpn_site }}"
      ip_address: 10.0.0.0
      is_security_site: true
      location: eastus
@@ -32,8 +32,8 @@
 
  - name: Update the VpnSite
    azure_rm_vpnsite:
-     resource_group_name: "{{ resource_group }}"
-     vpn_site_name: "{{ vpn_site }}"
+     resource_group: "{{ resource_group }}"
+     name: "{{ vpn_site }}"
      ip_address: 10.0.0.2
      location: eastus
      is_security_site: true
@@ -45,8 +45,8 @@
    
  - name: Get the VpnSite info
    azure_rm_vpnsite_info:
-     resource_group_name: "{{ resource_group }}"
-     vpn_site_name: "{{ vpn_site }}"
+     resource_group: "{{ resource_group }}"
+     name: "{{ vpn_site }}"
    register: output
 
  - assert:
@@ -56,7 +56,7 @@
 
  - name: Delete the VpnSite
    azure_rm_vpnsite:
-     resource_group_name: "{{ resource_group }}"
-     vpn_site_name: "{{ vpn_site }}"
+     resource_group: "{{ resource_group }}"
+     name: "{{ vpn_site }}"
      state: absent
      location: eastus

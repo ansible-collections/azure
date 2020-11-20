@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 GuopengLin, (@t-glin)
+# Copyright (c) 2020 Gu Fred-Sun, (@Fred-Sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -16,12 +16,12 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_vpnsite
-version_added: '2.0.0'
+version_added: '1.4.0'
 short_description: Manage Azure VpnSite instance
 description:
     - Create, update and delete instance of Azure VpnSite.
 options:
-    resource_group_name:
+    resource_group:
         description:
             - The resource group name of the VpnSite.
         required: true
@@ -30,12 +30,9 @@ options:
         description:
             - The location of the VpnSite
         type: str
-        required: true
-    vpn_site_name:
+    name:
         description:
-            - The name of the VpnSite being retrieved.
-            - The name of the VpnSite being created or updated.
-            - The name of the VpnSite being deleted.
+            - The name of the VpnSite.
         required: true
         type: str
     virtual_wan:
@@ -63,7 +60,7 @@ options:
             link_speed_in_mbps:
                 description:
                     - Link speed.
-                type: integer
+                type: int
     ip_address:
         description:
             - The ip-address for the vpn-site.
@@ -89,7 +86,7 @@ options:
             asn:
                 description:
                     - The BGP speaker's ASN.
-                type: integer
+                type: int
             bgp_peering_address:
                 description:
                     - The BGP peering address and BGP identifier of this BGP speaker.
@@ -133,40 +130,40 @@ options:
                     - The name of the resource that is unique within a resource group.
                     - This name can be used to access the resource.
                 type: str
-        link_properties:
-            description:
-                - The link provider properties.
-            type: dict
-            suboptions:
-                link_provider_name:
-                    description:
-                        - Name of the link provider.
-                    type: str
-                link_speed_in_mbps:
-                    description:
-                        - Link speed.
-                    type: int
-        ip_address:
-            description:
-                - The ip-address for the vpn-site-link.
+            link_properties:
+                description:
+                    - The link provider properties.
+                type: dict
+                suboptions:
+                    link_provider_name:
+                        description:
+                            - Name of the link provider.
+                        type: str
+                    link_speed_in_mbps:
+                        description:
+                            - Link speed.
+                        type: int
+            ip_address:
+                description:
+                - The IP address for the vpn site link.
             type: str
-        fqdn:
-            description:
-                - FQDN of vpn-site-link.
-            type: str
-        bgp_properties:
-            description:
-                - The set of bgp properties.
-            type: dict
-            suboptions:
-                asn:
-                    description:
-                        - The BGP speaker's ASN.
-                    type: integer
-          bgp_peering_address:
-            description:
-              - The BGP peering address and BGP identifier of this BGP speaker.
-            type: str
+            fqdn:
+                description:
+                    - FQDN of vpn-site-link.
+                type: str
+            bgp_properties:
+                description:
+                    - The set of bgp properties.
+                type: dict
+                suboptions:
+                    asn:
+                        description:
+                            - The BGP speaker's ASN.
+                        type: int
+                    bgp_peering_address:
+                        description:
+                            - The BGP peering address and BGP identifier of this BGP speaker.
+                        type: str
     o365_policy:
         description:
             - Office365 Policy.
@@ -201,22 +198,20 @@ extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 author:
-    - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
-    - Haiyuan Zhang (@haiyuazhang)
 
 '''
 
 EXAMPLES = '''
     - name: Create VpnSite
-      azure_rm_vpnsite: 
-        resource_group_name: myResourceGroup
-        vpn_site_name: vpnSite_name
+      azure_rm_vpnsite:
+        resource_group: myResourceGroup
+        name: vpnSite_name
 
-    - name: VpnSiteDelete
-      azure_rm_vpnsite: 
-        resource_group_name: myResourceGroup
-        vpn_site_name: vpnSite_name
+    - name: Delete Vpn Site
+      azure_rm_vpnsite:
+        resource_group: myResourceGroup
+        name: vpnSite_name
 
 '''
 
@@ -255,7 +250,7 @@ state:
             description:
                 - Resource tags.
             returned: always
-            type: dictionary
+            type: dict
             sample: { 'key1': 'value1'}
         etag:
             description:
@@ -267,7 +262,7 @@ state:
             description:
                 - The VirtualWAN to which the vpnSite belongs.
             returned: always
-            type: dict
+            type: complex
             contains:
                 id:
                     description:
@@ -279,8 +274,8 @@ state:
             description:
                 - The device properties.
             returned: always
-            type: dict
-            sample: 
+            type: complex
+            contains:
                 device_vendor:
                     description:
                         - Name of the device Vendor.
@@ -319,17 +314,16 @@ class Actions:
 class AzureRMVpnSite(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
-            resource_group_name=dict(
+            resource_group=dict(
                 type='str',
                 required=True
             ),
-            vpn_site_name=dict(
+            name=dict(
                 type='str',
                 required=True
             ),
             location=dict(
-                type='str',
-                required=True
+                type='str'
             ),
             virtual_wan=dict(
                 type='dict',
@@ -354,7 +348,7 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
                         disposition='device_model'
                     ),
                     link_speed_in_mbps=dict(
-                        type='integer',
+                        type='int',
                         disposition='link_speed_in_mbps'
                     )
                 )
@@ -383,7 +377,7 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
                 disposition='/bgp_properties',
                 options=dict(
                     asn=dict(
-                        type='integer',
+                        type='int',
                         disposition='asn'
                     ),
                     bgp_peering_address=dict(
@@ -391,7 +385,7 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
                         disposition='bgp_peering_address'
                     ),
                     peer_weight=dict(
-                        type='integer',
+                        type='int',
                         disposition='peer_weight'
                     ),
                     bgp_peering_addresses=dict(
@@ -446,7 +440,7 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
                                 disposition='link_provider_name'
                             ),
                             link_speed_in_mbps=dict(
-                                type='integer',
+                                type='int',
                                 disposition='link_speed_in_mbps'
                             )
                         )
@@ -464,7 +458,7 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
                         disposition='bgp_properties',
                         options=dict(
                             asn=dict(
-                                type='integer',
+                                type='int',
                                 disposition='asn'
                             ),
                             bgp_peering_address=dict(
@@ -506,8 +500,9 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
             )
         )
 
-        self.resource_group_name = None
-        self.vpn_site_name = None
+        self.resource_group = None
+        self.name = None
+        self.location = None
         self.body = {}
 
         self.results = dict(changed=False)
@@ -528,12 +523,17 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
 
         self.inflate_parameters(self.module_arg_spec, self.body, 0)
 
+        resource_group = self.get_resource_group(self.resource_group)
+        if self.location is None:
+            # Set default location
+            self.location = resource_group.location
+        self.body['location'] = self.location
         old_response = None
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2020-04-01')
+                                                    api_version='2020-06-01')
 
         old_response = self.get_resource()
 
@@ -571,8 +571,8 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
 
     def create_update_resource(self):
         try:
-            response = self.mgmt_client.vpn_sites.create_or_update(resource_group_name=self.resource_group_name,
-                                                                   vpn_site_name=self.vpn_site_name,
+            response = self.mgmt_client.vpn_sites.create_or_update(resource_group_name=self.resource_group,
+                                                                   vpn_site_name=self.name,
                                                                    vpn_site_parameters=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
@@ -583,8 +583,8 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
 
     def delete_resource(self):
         try:
-            response = self.mgmt_client.vpn_sites.delete(resource_group_name=self.resource_group_name,
-                                                         vpn_site_name=self.vpn_site_name)
+            response = self.mgmt_client.vpn_sites.delete(resource_group_name=self.resource_group,
+                                                         vpn_site_name=self.name)
         except CloudError as e:
             self.log('Error attempting to delete the VpnSite instance.')
             self.fail('Error deleting the VpnSite instance: {0}'.format(str(e)))
@@ -593,8 +593,8 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
 
     def get_resource(self):
         try:
-            response = self.mgmt_client.vpn_sites.get(resource_group_name=self.resource_group_name,
-                                                      vpn_site_name=self.vpn_site_name)
+            response = self.mgmt_client.vpn_sites.get(resource_group_name=self.resource_group,
+                                                      vpn_site_name=self.name)
         except CloudError as e:
             return False
         return response.as_dict()

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 GuopengLin, (@t-glin)
+# Copyright (c) 2020 Fred-Sun, (@Fred-Sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -16,16 +16,16 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_vpnsite_info
-version_added: '2.0.0'
+version_added: '1.4.0'
 short_description: Get VpnSite info
 description:
     - Get info of VpnSite.
 options:
-    resource_group_name:
+    resource_group:
         description:
             - The resource group name of the VpnSite.
         type: str
-    vpn_site_name:
+    name:
         description:
             - The name of the VpnSite being retrieved.
         type: str
@@ -33,24 +33,22 @@ extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 author:
-    - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
-    - Haiyuan Zhang (@haiyuazhang)
 
 '''
 
 EXAMPLES = '''
-    - name: VpnSiteGet
-      azure_rm_vpnsite_info: 
-        resource_group_name: myResourceGroup
-        vpn_site_name: vwan_site_name
+    - name: Get Vpn Site Info by name
+      azure_rm_vpnsite_info:
+        resource_group: myResourceGroup
+        name: vwan_site_name
 
-    - name: VpnSiteListByResourceGroup
-      azure_rm_vpnsite_info: 
-        resource_group_name: myResourceGroup  
+    - name: Get Vpn Site List By ResourceGroup
+      azure_rm_vpnsite_info:
+        resource_group: myResourceGroup
 
-    - name: VpnSiteList
-      azure_rm_vpnsite_info: 
+    - name: Get Vpn Site List By Subscription
+      azure_rm_vpnsite_info:
 
 '''
 
@@ -114,7 +112,7 @@ vpn_sites:
                 - The AddressSpace that contains an array of IP address ranges.
             returned: always
             type: dict
-            sample: {"address_prefixes": ["10.0.0.0/24",]}                  
+            sample: {"address_prefixes": ["10.0.0.0/24",]}
         provisioning_state:
             description:
                 - The provisioning state of the VPN site resource.
@@ -170,7 +168,7 @@ vpn_sites:
                     returned: always
                     type: str
                     sample: Microsoft.Network/vpnSites
-       o365_policy:
+        o365_policy:
             description:
                 - Office365 Policy.
             returned: always
@@ -193,27 +191,21 @@ except ImportError:
 class AzureRMVpnSiteInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
-            resource_group_name=dict(
+            resource_group=dict(
                 type='str'
             ),
-            vpn_site_name=dict(
+            name=dict(
                 type='str'
             )
         )
 
-        self.resource_group_name = None
-        self.vpn_site_name = None
+        self.resource_group = None
+        self.name = None
 
         self.results = dict(changed=False)
         self.mgmt_client = None
         self.state = None
         self.url = None
-        self.status_code = [200]
-
-        self.query_parameters = {}
-        self.query_parameters['api-version'] = '2020-06-01'
-        self.header_parameters = {}
-        self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
         self.mgmt_client = None
         super(AzureRMVpnSiteInfo, self).__init__(self.module_arg_spec, supports_tags=True)
@@ -227,10 +219,9 @@ class AzureRMVpnSiteInfo(AzureRMModuleBase):
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
                                                     api_version='2020-06-01')
 
-        if (self.resource_group_name is not None and
-            self.vpn_site_name is not None):
+        if (self.resource_group is not None and self.name is not None):
             self.results['vpn_sites'] = self.format_item(self.get())
-        elif (self.resource_group_name is not None):
+        elif (self.resource_group is not None):
             self.results['vpn_sites'] = self.format_item(self.list_by_resource_group())
         else:
             self.results['vpn_sites'] = self.format_item(self.list())
@@ -240,8 +231,8 @@ class AzureRMVpnSiteInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.vpn_sites.get(resource_group_name=self.resource_group_name,
-                                                      vpn_site_name=self.vpn_site_name)
+            response = self.mgmt_client.vpn_sites.get(resource_group_name=self.resource_group,
+                                                      vpn_site_name=self.name)
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
@@ -251,7 +242,7 @@ class AzureRMVpnSiteInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.vpn_sites.list_by_resource_group(resource_group_name=self.resource_group_name)
+            response = self.mgmt_client.vpn_sites.list_by_resource_group(resource_group_name=self.resource_group)
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
