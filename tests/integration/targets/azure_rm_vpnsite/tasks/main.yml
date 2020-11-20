@@ -1,0 +1,62 @@
+ - name: Create vpn site name
+   set_fact:
+     vpn_site: "vpn{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+
+ - name: Create a VpnSite
+   azure_rm_vpnsite:
+     resource_group_name: "{{ resource_group }}"
+     vpn_site_name: "{{ vpn_site }}"
+     ip_address: 10.0.0.0
+     is_security_site: true
+     location: eastus
+   register: output
+ 
+ - assert:
+     that:
+       - output.changed
+   
+
+ - name: Update the VpnSite (no change)
+   azure_rm_vpnsite:
+     resource_group_name: "{{ resource_group }}"
+     vpn_site_name: "{{ vpn_site }}"
+     ip_address: 10.0.0.0
+     is_security_site: true
+     location: eastus
+   register: output
+ 
+ - assert:
+     that:
+       - not output.changed
+   
+
+ - name: Update the VpnSite
+   azure_rm_vpnsite:
+     resource_group_name: "{{ resource_group }}"
+     vpn_site_name: "{{ vpn_site }}"
+     ip_address: 10.0.0.2
+     location: eastus
+     is_security_site: true
+   register: output
+ 
+ - assert:
+     that:
+       - output.changed
+   
+ - name: Get the VpnSite info
+   azure_rm_vpnsite_info:
+     resource_group_name: "{{ resource_group }}"
+     vpn_site_name: "{{ vpn_site }}"
+   register: output
+
+ - assert:
+     that:
+       - "output.vpn_sites[0].is_security_site == true"
+       - "output.vpn_sites[0].ip_address == '10.0.0.2'"
+
+ - name: Delete the VpnSite
+   azure_rm_vpnsite:
+     resource_group_name: "{{ resource_group }}"
+     vpn_site_name: "{{ vpn_site }}"
+     state: absent
+     location: eastus
