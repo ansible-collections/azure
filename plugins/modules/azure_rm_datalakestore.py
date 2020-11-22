@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 David Duque, (@next-davidduquehernandez)
+# Copyright (c) 2020 David Duque Hernández, (@next-davidduquehernandez)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -15,13 +15,398 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'supported_by': 'community'}
 
 DOCUMENTATION = '''
+module: azure_rm_datalakestore
+version_added: "1.2.0"
+short_description: Manage Azure data lake store
+description:
+    - Create, update or delete a data lake store.
+options:
+    default_group:
+        description:
+            - The default owner group for all new folders and files created in the Data Lake Store account.
+        type: str
+    encryption_config:
+        description:
+            - The Key Vault encryption configuration.
+        type: dict
+        suboptions:
+            type:
+                description:
+                    - The type of encryption configuration being used.
+                choices:
+                    - UserManaged
+                    - ServiceManaged
+                required: true
+            key_vault_meta_info:
+                description:
+                    - The Key Vault information for connecting to user managed encryption keys.
+                type: dict
+                suboptions:
+                    key_vault_resource_id:
+                        description:
+                            - The resource identifier for the user managed Key Vault being used to encrypt.
+                        type: str
+                        required: true
+                    encryption_key_name:
+                        description:
+                            - The name of the user managed encryption key.
+                        type: str
+                        required: true
+                    encryption_key_version:
+                        description:
+                            - The version of the user managed encryption key.
+                        type: str
+                        required: true
+    encryption_state:
+        description:
+            - The current state of encryption for this Data Lake Store account.
+        choices:
+            - Enabled
+            - Disabled
+    firewall_allow_azure_ips:
+        description:
+            - The current state of allowing or disallowing IPs originating within Azure through the firewall.
+            - If the firewall is disabled, this is not enforced.
+        choices:
+            - Enabled
+            - Disabled
+    firewall_rules:
+        description:
+            - The list of firewall rules associated with this Data Lake Store account.
+        type: list
+        suboptions:
+            name:
+                description:
+                    - The unique name of the firewall rule to create.
+                type: str
+                required: true
+            start_ip_address:
+                description:
+                    - The start IP address for the firewall rule. 
+                    - This can be either ipv4 or ipv6.
+                    - Start and End should be in the same protocol.
+                type: str
+                required: true
+            end_ip_address:
+                description:
+                    - The end IP address for the firewall rule.
+                    - This can be either ipv4 or ipv6.
+                    - Start and End should be in the same protocol.
+                type: str
+                required: true
+    firewall_state:
+        description:
+            - The current state of the IP address firewall for this Data Lake Store account.
+        choices:
+            - Enabled
+            - Disabled
+    identity:
+        description:
+            - The Key Vault encryption identity, if any.
+        choices:
+            - SystemAssigned
+    location:
+        description:
+            - The resource location.
+        type: str
+    name:
+        description:
+            - The name of the Data Lake Store account.
+        type: str
+        required: true
+    new_tier:
+        description:
+            - The commitment tier to use for next month.
+        choices:
+            - Consumption
+            - Commitment_1TB
+            - Commitment_10TB
+            - Commitment_100TB
+            - Commitment_500TB
+            - Commitment_1PB
+            - Commitment_5PB
+    resource_group:
+        description:
+            - The name of the Azure resource group to use.
+        required: true
+    state:
+        description:
+            - State of the data lake store. Use C(present) to create or update a data lake store and use C(absent) to delete it.
+        default: present
+        choices:
+            - absent
+            - present
+    virtual_network_rules:
+        description:
+            - The list of virtual network rules associated with this Data Lake Store account.
+        type: list
+        suboptions:
+            name:
+                description:
+                    - The unique name of the virtual network rule to create.
+                type: str
+                required: true
+            subnet_id:
+                description:
+                    - The resource identifier for the subnet.
+                type: str
+                required: true
 
+extends_documentation_fragment:
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
+
+author:
+    David Duque Hernández (@next-davidduquehernandez)
 '''
 
 EXAMPLES = '''
+  - name: Get Azure Data Lake Store info
+    azure_rm_datalakestore:
+      resource_group: myResourceGroup
+      name: myDataLakeStore
 '''
 
 RETURN = '''
+state:
+    description:
+        - Facts for Azure Data Lake Store created/updated.
+    returned: always
+    type: complex
+    contains:
+        account_id:
+            description:
+                - The unique identifier associated with this Data Lake Store account.
+            returned: always
+            type: str
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        creation_time:
+            description:
+                - The account creation time.
+            returned: always
+            type: str
+            sample: 2020-01-01T00:00:00.000000+00:00
+        current_tier:
+            description:
+                - The commitment tier in use for the current month.
+            type: str
+            returned: always
+            sample: Consumption
+        default_group:
+            description:
+                -  The default owner group for all new folders and files created in the Data Lake Store account.
+            type: str
+            sample: null
+        encryption_config:
+            description:
+                - The Key Vault encryption configuration.
+            type: complex
+            contains:
+                type:
+                    description:
+                        - The type of encryption configuration being used.
+                    type: str
+                    returned: always
+                    sample: ServiceManaged
+                key_vault_meta_info:
+                    description:
+                        - The Key Vault information for connecting to user managed encryption keys.
+                    type: complex
+                    contains:
+                        key_vault_resource_id:
+                            description:
+                                - The resource identifier for the user managed Key Vault being used to encrypt.
+                            type: str
+                            returned: always
+                            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.KeyVault/vaults/testkv
+                        encryption_key_name:
+                            description:
+                                - The name of the user managed encryption key.
+                            type: str
+                            returned: always
+                            sample: KeyName
+                        encryption_key_version:
+                            description:
+                                - The version of the user managed encryption key.
+                            type: str
+                            returned: always
+                            sample: 86a1e3b7406f45afa0d54e21eff47e39
+        encryption_provisioning_state:
+            description:
+                - The current state of encryption provisioning for this Data Lake Store account.
+            type: str
+            sample: Succeeded
+        encryption_state:
+            description:
+                - The current state of encryption for this Data Lake Store account.
+            type: str
+            returned: always
+            sample: Enabled
+        endpoint:
+            description:
+                - The full CName endpoint for this account.
+            returned: always
+            type: str
+            sample: testaccount.azuredatalakestore.net
+        firewall_allow_azure_ips:
+            description:
+                - The current state of allowing or disallowing IPs originating within Azure through the firewall. 
+                - If the firewall is disabled, this is not enforced.
+            type: str
+            returned: always
+            sample: Disabled
+        firewall_rules:
+            description:
+                - The list of firewall rules associated with this Data Lake Store account.
+            type: list
+            returned: always
+            contains:
+                name:
+                    description:
+                        - The resource name.
+                    type: str
+                    returned: always
+                    sample: Example Name
+                start_ip_address:
+                    description:
+                        - The start IP address for the firewall rule. 
+                        - This can be either ipv4 or ipv6.
+                        - Start and End should be in the same protocol.
+                    type: str
+                    returned: always
+                    sample: 192.168.1.1
+                end_ip_address:
+                    description:
+                        - The end IP address for the firewall rule.
+                        - This can be either ipv4 or ipv6.
+                        - Start and End should be in the same protocol.
+                    type: str
+                    returned: always
+                    sample: 192.168.1.254
+        firewall_state:
+            description:
+                - The current state of the IP address firewall for this Data Lake Store account.
+            type: str
+            returned: always
+            sample: Enabled
+        id:
+            description:
+                - The resource identifier.
+            returned: always
+            type: str
+            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.DataLakeStore/accounts/testaccount
+        identity:
+            description:
+                - The Key Vault encryption identity, if any.
+            type: complex
+            contains:
+                type:
+                    description:
+                        - The type of encryption being used.
+                    type: str
+                    sample: SystemAssigned
+                name:
+                    description:
+                        - The principal identifier associated with the encryption.
+                    type: str
+                    sample: 00000000-0000-0000-0000-000000000000
+                name:
+                    description:
+                        - The tenant identifier associated with the encryption.
+                    type: str
+                    sample: 00000000-0000-0000-0000-000000000000
+        last_modified_time:
+            description:
+                - The account last modified time.
+            returned: always
+            type: str
+            sample: 2020-01-01T00:00:00.000000+00:00
+        location:
+            description:
+                - The resource location.
+            returned: always
+            type: str
+            sample: westeurope
+        name:
+            description:
+                - The resource name.
+            returned: always
+            type: str
+            sample: testaccount
+        new_tier:
+            description:
+                - The commitment tier to use for next month.
+            type: str
+            returned: always
+            sample: Consumption
+        provisioning_state:
+            description:
+                - The provisioning status of the Data Lake Store account.
+            returned: always
+            type: str
+            sample: Succeeded
+        state:
+            description:
+                - The state of the Data Lake Store account.
+            returned: always
+            type: str
+            sample: Active
+        tags:
+            description:
+                - The resource tags.
+            returned: always
+            type: dict
+            sample: { "tag1":"abc" }
+        trusted_id_providers:
+            description:
+                - The current state of the trusted identity provider feature for this Data Lake Store account.
+            type: list
+            returned: always
+            contains:
+                id:
+                    description:
+                        - The resource identifier.
+                    type: str
+                name:
+                    description:
+                        - The resource name.
+                    type: str
+                type:
+                    description:
+                        - The resource type.
+                    type: str
+                id_provider:
+                    description:
+                        - The URL of this trusted identity provider.
+                    type: str
+        trusted_id_provider_state:
+            description:
+                - The list of trusted identity providers associated with this Data Lake Store account.
+            type: str
+            returned: always
+            sample: Enabled
+        type:
+            description:
+                - The resource type.
+            returned: always
+            type: str
+            sample: Microsoft.DataLakeStore/accounts
+        virtual_network_rules:
+            description:
+                - The list of virtual network rules associated with this Data Lake Store account.
+            type: list
+            returned: always
+            contains:
+                name:
+                    description:
+                        - The resource name.
+                    type: str
+                    sample: Rule Name
+                subnet_id:
+                    description:
+                        - The resource identifier for the subnet.
+                    type: str
+                    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/vnet/subnets/default
 
 '''
 
