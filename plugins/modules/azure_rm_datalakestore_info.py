@@ -24,11 +24,11 @@ description:
 options:
     resource_group:
         description:
-            - The name of the resource group.
+            - The name of the Azure resource group.
         type: str
     name:
         description:
-            - The name of the Azure Data Lake Store.
+            - The name of the Data Lake Store account.
         type: str
 
 extends_documentation_fragment:
@@ -40,10 +40,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get Azure Data Lake Store info
+  - name: Get Azure Data Lake Store info from resource group 'myResourceGroup' and name 'myDataLakeStore'
     azure_rm_datalakestore_info:
       resource_group: myResourceGroup
       name: myDataLakeStore
+
+  - name: Get Azure Data Lake Store info from resource group 'myResourceGroup'
+    azure_rm_datalakestore_info:
+      resource_group: myResourceGroup
+      
+  - name: Get Azure Data Lake Store info
+    azure_rm_datalakestore_info:
 '''
 
 RETURN = '''
@@ -143,13 +150,17 @@ datalake:
                     sample: Example Name
                 start_ip_address:
                     description:
-                        - The start IP address for the firewall rule. This can be either ipv4 or ipv6. Start and End should be in the same protocol.
+                        - The start IP address for the firewall rule.
+                        - This can be either ipv4 or ipv6.
+                        - Start and End should be in the same protocol.
                     type: str
                     returned: always
                     sample: 192.168.1.1
                 end_ip_address:
                     description:
-                        - The end IP address for the firewall rule. This can be either ipv4 or ipv6. Start and End should be in the same protocol.
+                        - The end IP address for the firewall rule.
+                        - This can be either ipv4 or ipv6.
+                        - Start and End should be in the same protocol.
                     type: str
                     returned: always
                     sample: 192.168.1.254
