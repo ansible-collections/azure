@@ -45,6 +45,10 @@ options:
     kubernetes_version:
         description:
             - Version of Kubernetes specified when creating the managed cluster.
+    enable_private_cluster:
+        description:
+            - Provision the cluster as private
+        type: bool
     linux_profile:
         description:
             - The Linux profile suboptions.
@@ -366,6 +370,7 @@ def create_aks_dict(aks):
         enable_rbac=aks.enable_rbac,
         network_profile=create_network_profiles_dict(aks.network_profile),
         aad_profile=create_aad_profiles_dict(aks.aad_profile),
+        api_server_access_profile=create_api_server_access_profile_dict(aks.api_server_access_profile)
         addon=create_addon_dict(aks.addon_profiles),
         fqdn=aks.fqdn,
         node_resource_group=aks.node_resource_group
@@ -387,6 +392,8 @@ def create_network_profiles_dict(network):
 def create_aad_profiles_dict(aad):
     return aad.as_dict() if aad else dict()
 
+def create_api_server_access_profile_dict(api_server):
+    return api_server.as_dict() if api_server else dict()
 
 def create_addon_dict(addon):
     result = dict()
@@ -517,6 +524,10 @@ aad_profile_spec = dict(
     tenant_id=dict(type='str')
 )
 
+api_server_access_profile_spec = dict(
+    authorized_ip_ranges=dict(type='list', elements='string'),
+    enable_private_cluster=dict(type='str'),
+)
 
 class AzureRMManagedCluster(AzureRMModuleBase):
     """Configuration class for an Azure RM container service (AKS) resource"""
@@ -570,6 +581,10 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                 type='dict',
                 options=aad_profile_spec
             ),
+            api_server_access_profile=dict(
+                type='dict',
+                options=api_server_access_profile_spec
+            )
             addon=dict(
                 type='dict',
                 options=create_addon_profiles_spec()
@@ -592,6 +607,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         self.enable_rbac = False
         self.network_profile = None
         self.aad_profile = None
+        self.api_server_access_profile = None
         self.addon = None
         self.node_resource_group = None
 
@@ -681,6 +697,15 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                     if response['enable_rbac'] != self.enable_rbac:
                         to_be_updated = True
 
+                    if response['api_server_access_profile'] != self.api_server_access_profile:
+                        enable_private_cluster = self.api_server_access_profile['enable_private_cluster']
+                        if enable_private_cluster != response['enable_private_cluster']:
+                            self.log(("Api Server Access Diff - Origin {0} / Update {1}".format(str(self.api_server_access_profile), str(response['api_server_access_profile']))))
+                            self.fail("The enable_private_cluster of the api server access profile cannot be updated")
+                        elif self.api_server_access_profile['authorized_ip_ranges'] != request['authorized_ip_ranges']:
+                            self.log(("Api Server Access Diff - Origin {0} / Update {1}".format(str(self.api_server_access_profile), str(response['api_server_access_profile']))))
+                            to_be_updated = True
+                        
                     if self.network_profile:
                         for key in self.network_profile.keys():
                             original = response['network_profile'].get(key) or ''
@@ -802,6 +827,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             enable_rbac=self.enable_rbac,
             network_profile=self.create_network_profile_instance(self.network_profile),
             aad_profile=self.create_aad_profile_instance(self.aad_profile),
+            api_server_access_profile=self.create_api_server_access_profile_instance(self.api_server_access_profile)
             addon_profiles=self.create_addon_profile_instance(self.addon),
             node_resource_group=self.node_resource_group
         )
@@ -920,6 +946,9 @@ class AzureRMManagedCluster(AzureRMModuleBase):
 
     def create_aad_profile_instance(self, aad):
         return self.managedcluster_models.ManagedClusterAADProfile(**aad) if aad else None
+
+    def create_api_server_access_profile_spec(self, server_access):
+    return self.managedcluster_models.ManagedClusterAPIServerAccessProfile(**server_access) if server_access else None
 
     def create_addon_profile_instance(self, addon):
         result = dict()
