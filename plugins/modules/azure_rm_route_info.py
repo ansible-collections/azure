@@ -47,14 +47,14 @@ author:
 
 EXAMPLES = '''
     - name: Get route
-      azure_rm_route_info: 
+      azure_rm_route_info:
         resource_group: myResourceGroup
         name: routename
         route_table_name: routetabename
- 
+
 
     - name: List routes
-      azure_rm_route_info: 
+      azure_rm_route_info:
         resource_group: myResourceGroup
         route_table_name: routetabename
 
@@ -163,9 +163,7 @@ class AzureRMRouteInfo(AzureRMModuleBase):
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
                                                     api_version='2020-04-01')
 
-        if (self.resource_group is not None and
-            self.route_table_name is not None and
-            self.name is not None):
+        if (self.resource_group is not None and self.route_table_name is not None and self.name is not None):
             self.results['routes'] = self.format_item(self.get())
         elif (self.resource_group is not None and
               self.route_table_name is not None):

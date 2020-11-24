@@ -111,7 +111,7 @@
 
 - name: Get facts of the route
   azure_rm_route_info:
-    route_name: "{{ route_name }}"
+    name: "{{ route_name }}"
     resource_group: "{{ resource_group }}"
     route_table_name: "{{ name }}"
   register: output
