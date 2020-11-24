@@ -45,10 +45,6 @@ options:
     kubernetes_version:
         description:
             - Version of Kubernetes specified when creating the managed cluster.
-    enable_private_cluster:
-        description:
-            - Provision the cluster as private
-        type: bool
     linux_profile:
         description:
             - The Linux profile suboptions.
