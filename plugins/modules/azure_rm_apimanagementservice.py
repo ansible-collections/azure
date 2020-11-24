@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2019 Nikhil Patne (@nikhilpatne), Sakar Mehra (@sakar97)
+# Copyright (c) 2020 Nikhil Patne (@nikhilpatne), Sakar Mehra (@sakar97)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -72,7 +72,7 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myService
     publisher_email: user@example.com
-    publisher_name: Nikhil Patne
+    publisher_name: Publisher Name
     sku_name: Developer
     sku_capacity: 1
 
@@ -81,7 +81,7 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myService
     publisher_email: user@example.com
-    publisher_name: Nikhil Patne
+    publisher_name: Publisher_name
 
 - name: ApiManagementServiceDeleteService
   azure_rm_apimanagementservice:
