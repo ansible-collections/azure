@@ -1,0 +1,57 @@
+- name: Fix resource prefix
+  set_fact:
+    name: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+
+- name: To create API Management service
+  azure_rm_apimanagementservice:
+    resource_group: "{{ resource_group }}"
+    name: myService
+    publisher_email: user@example.com
+    publisher_name: Username
+    sku_name: Developer
+    sku_capacity: 1
+  register: newService
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - newService.changed == True
+      - newService.failed == False
+
+- name: To update API Management service publisher details
+  azure_rm_apimanagementservice:
+    resource_group: "{{ resource_group }}"
+    name: myService
+    publisher_email: user@example.com
+    publisher_name: user_name
+  register: updatedService
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - updatedService.changed == True
+      - updatedService.failed == False
+
+- name: To delete an api management service
+  azure_rm_apimanagementservice:
+    resource_group: "{{ resource_group }}"
+    name: myService
+    state: absent
+  register: deleteService
+
+- name: Assert the changes
+  assert:
+    that:
+      - deleteService.changed == True
+
+- name: Get api management service information
+  azure_rm_apimanagementservice_info:
+    resource_group: "{{ resource_group }}"
+    name: myService
+  register: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output != None
+
