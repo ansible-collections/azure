@@ -194,6 +194,18 @@ options:
                 description:
                     - The AAD tenant ID to use for authentication.
                     - If not specified, will use the tenant of the deployment subscription.
+    api_server_access_profile:
+        description:
+            - Profile of API Access configuration.
+        suboptions:
+            authorized_ip_ranges:
+                description: Authorized IP Ranges to kubernetes API server.
+                type: list
+            enable_private_cluster:
+                description: 
+                    - Whether to create the cluster as a private cluster or not.
+                    - Cannot be changed for an existing cluster.
+                type: bool
     addon:
         description:
             - Profile of managed cluster add-on.
