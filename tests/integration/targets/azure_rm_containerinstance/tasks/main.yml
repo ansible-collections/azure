@@ -143,6 +143,95 @@
       - output.containerinstances[1]['ports'] != None
       - output.containerinstances[1]['containers'] != None
 
+- name: Create sample container instance with volume
+  azure_rm_containerinstance:
+    resource_group: "{{ resource_group }}"
+    name: myContainerInstanceGroup
+    os_type: linux
+    ip_address: public
+    location: eastus
+    ports:
+      - 80
+    containers:
+      - name: mycontainer1
+        image: httpd
+        memory: 1.5
+        volume_mounts:
+          - name: filesharevolume
+            mount_path: "/data/files"
+        ports:
+          - 80
+          - 81
+    volumes:
+      - name: filesharevolume
+        azure_file:
+          storage_account_name: mystorageaccount
+          share_name: acishare
+          storage_account_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  register: output
+
+- debug:
+    var: output
+
+- name: Assert the container instance is well created
+  assert:
+    that:
+      - output.changed
+      - output.provisioning_state == 'Succeeded'
+
+- name: Gather facts for Container Instance
+  azure_rm_containerinstance_info:
+    resource_group: myResourceGroup
+    name: myContainerInstanceGroup
+  register: output
+
+- debug:
+    var: output
+
+- name: Assert that facts are returned
+  assert:
+    that:
+      - output.changed == False
+      - output.containerinstances[0]['resource_group'] != None
+      - output.containerinstances[0]['name'] != None
+      - output.containerinstances[0]['os_type'] != None
+      - output.containerinstances[0]['location'] != None
+      - output.containerinstances[0]['ip_address'] != None
+      - output.containerinstances[0]['volumes'] != None
+      - output.containerinstances[0]['ports'] != None
+      - output.containerinstances[0]['containers'] != None
+      - output.containerinstances[0]['containers'][0]['volume_mounts'] | length == 1
+      - output.containerinstances[0]['containers'][0]['volume_mounts'][0]['name'] != None
+      - output.containerinstances[0]['containers'][0]['volume_mounts'][0]['mount_path'] != None
+
+- name: Remove container instance
+  azure_rm_containerinstance:
+    resource_group: "{{ resource_group }}"
+    name: myContainerInstanceGroup
+    os_type: linux
+    ip_address: public
+    location: eastus
+    ports:
+      - 80
+    containers:
+      - name: mycontainer1
+        image: httpd
+        memory: 1.5
+        volume_mounts:
+          - name: filesharevolume
+            mount_path: "/data/files"
+        ports:
+          - 80
+          - 81
+    volumes:
+      - name: filesharevolume
+        azure_file:
+          storage_account_name: mystorageaccount
+          share_name: acishare
+          storage_account_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    state: absent
+  register: output
+
 - name: Remove container instance
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"

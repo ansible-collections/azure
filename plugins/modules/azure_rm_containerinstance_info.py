@@ -25,13 +25,16 @@ options:
     resource_group:
         description:
             - The name of the resource group.
+        type: str
         required: True
     name:
         description:
             - The name of the container instance.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -152,6 +155,17 @@ container_groups:
                     returned: always
                     type: list
                     sample: [ "pip install abc" ]
+                volume_mounts:
+                    description:
+                        - The list of volumes mounted in container instance
+                    returned: If volumes mounted in container instance
+                    type: list
+                    sample: [
+                        {
+                            "mount_path": "/mnt/repo",
+                            "name": "myvolume1"
+                        }
+                    ]
                 environment_variables:
                     description:
                         - List of container environment variables.
@@ -165,6 +179,18 @@ container_groups:
                             description:
                                 - Environment variable value.
                             type: str
+        volumes:
+            description: The list of Volumes that can be mounted by container instances
+            returned: If container group has volumes
+            type: list
+            sample: [
+                {
+                    "git_repo": {
+                        "repository": "https://github.com/Azure-Samples/aci-helloworld.git"
+                    },
+                    "name": "myvolume1"
+                }
+            ]
         tags:
             description: Tags assigned to the resource. Dictionary of string:string pairs.
             type: dict
@@ -290,10 +316,14 @@ class AzureRMContainerInstanceInfo(AzureRMModuleBase):
                 'cpu': old_container['resources']['requests']['cpu'],
                 'ports': [],
                 'commands': old_container.get('command'),
-                'environment_variables': old_container.get('environment_variables')
+                'environment_variables': old_container.get('environment_variables'),
+                'volume_mounts': []
             }
             for port_index in range(len(old_container['ports'])):
                 new_container['ports'].append(old_container['ports'][port_index]['port'])
+            if 'volume_mounts' in old_container:
+                for volume_mount_index in range(len(old_container['volume_mounts'])):
+                    new_container['volume_mounts'].append(old_container['volume_mounts'][volume_mount_index])
             containers[container_index] = new_container
 
         d = {
@@ -307,7 +337,8 @@ class AzureRMContainerInstanceInfo(AzureRMModuleBase):
             'location': d['location'],
             'containers': containers,
             'restart_policy': _camel_to_snake(d.get('restart_policy')) if d.get('restart_policy') else None,
-            'tags': d.get('tags', None)
+            'tags': d.get('tags', None),
+            'volumes': d['volumes'] if 'volumes' in d else []
         }
         return d
 

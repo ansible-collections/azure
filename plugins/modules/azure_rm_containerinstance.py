@@ -25,14 +25,17 @@ options:
     resource_group:
         description:
             - Name of resource group.
+        type: str
         required: true
     name:
         description:
             - The name of the container group.
         required: true
+        type: str
     os_type:
         description:
             - The OS type of containers.
+        type: str
         choices:
             - linux
             - windows
@@ -40,6 +43,7 @@ options:
     state:
         description:
             - Assert the state of the container instance. Use C(present) to create or update an container instance and C(absent) to delete it.
+        type: str
         default: present
         choices:
             - absent
@@ -48,6 +52,7 @@ options:
         description:
             - The IP address type of the container group.
             - Default is C(none) and creating an instance without public IP.
+        type: str
         choices:
             - public
             - none
@@ -64,27 +69,35 @@ options:
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.
+        type: str
     registry_login_server:
         description:
             - The container image registry login server.
+        type: str
     registry_username:
         description:
             - The username to log in container image registry server.
+        type: str
     registry_password:
         description:
             - The password to log in container image registry server.
+        type: str
     containers:
         description:
             - List of containers.
             - Required when creation.
+        type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - The name of the container instance.
+                type: str
                 required: true
             image:
                 description:
                     - The container image name.
+                type: str
                 required: true
             memory:
                 description:
@@ -100,29 +113,54 @@ options:
                 description:
                     - List of ports exposed within the container group.
                 type: list
+                elements: int
             environment_variables:
                 description:
                     - List of container environment variables.
                     - When updating existing container all existing variables will be replaced by new ones.
-                type: dict
+                type: list
+                elements: dict
                 suboptions:
                     name:
                         description:
                             - Environment variable name.
                         type: str
+                        required: true
                     value:
                         description:
                             - Environment variable value.
                         type: str
+                        required: true
                     is_secure:
                         description:
                             - Is variable secure.
+                        type: bool
+            volume_mounts:
+                description:
+                    - The volume mounts for the container instance
+                type: list
+                elements: dict
+                suboptions:
+                    name:
+                        description:
+                            - The name of the volume mount
+                        required: true
+                        type: str
+                    mount_path:
+                        description:
+                            - The path within the container where the volume should be mounted
+                        required: true
+                        type: str
+                    read_only:
+                        description:
+                            - The flag indicating whether the volume mount is read-only
                         type: bool
             commands:
                 description:
                     - List of commands to execute within the container instance in exec form.
                     - When updating existing container all existing commands will be replaced by new ones.
                 type: list
+                elements: str
     restart_policy:
         description:
             - Restart policy for all containers within the container group.
@@ -131,6 +169,67 @@ options:
             - always
             - on_failure
             - never
+    volumes:
+        description:
+            - List of Volumes that can be mounted by containers in this container group.
+        type: list
+        elements: dict
+        suboptions:
+            name:
+                description:
+                    - The name of the Volume
+                required: true
+                type: str
+            azure_file:
+                description:
+                    - The Azure File volume
+                type: dict
+                suboptions:
+                    share_name:
+                        description:
+                            - The name of the Azure File share to be mounted as a volume
+                        required: true
+                        type: str
+                    read_only:
+                        description:
+                            - The flag indicating whether the Azure File shared mounted as a volume is read-only
+                        type: bool
+                    storage_account_name:
+                        description:
+                            - The name of the storage account that contains the Azure File share
+                        required: true
+                        type: str
+                    storage_account_key:
+                        description:
+                            - The storage account access key used to access the Azure File share
+                        required: true
+                        type: str
+            empty_dir:
+                description:
+                    - The empty directory volume
+                type: dict
+            secret:
+                description:
+                    - The secret volume
+                type: dict
+            git_repo:
+                description:
+                    - The git repo volume
+                type: dict
+                suboptions:
+                    directory:
+                        description:
+                            - Target directory name
+                        type: str
+                    repository:
+                        description:
+                            - Repository URL
+                        required: true
+                        type: str
+                    revision:
+                        description:
+                            - Commit hash for the specified revision
+                        type: str
     force_update:
         description:
             - Force update of existing container instance. Any update will result in deletion and recreation of existing containers.
@@ -160,6 +259,50 @@ EXAMPLES = '''
           ports:
             - 80
             - 81
+
+  - name: Create sample container group with azure file share volume
+    azure_rm_containerinstance:
+      resource_group: myResourceGroup
+      name: myContainerInstanceGroupz
+      os_type: linux
+      ip_address: public
+      containers:
+        - name: mycontainer1
+          image: httpd
+          memory: 1
+          volume_mounts:
+            - name: filesharevolume
+              mount_path: "/data/files"
+          ports:
+            - 80
+            - 81
+      volumes:
+        - name: filesharevolume
+          azure_file:
+            storage_account_name: mystorageaccount
+            share_name: acishare
+            storage_account_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+  - name: Create sample container group with git repo volume
+    azure_rm_containerinstance:
+      resource_group: myResourceGroup
+      name: myContainerInstanceGroup
+      os_type: linux
+      ip_address: public
+      containers:
+        - name: mycontainer1
+          image: httpd
+          memory: 1
+          volume_mounts:
+            - name: myvolume1
+              mount_path: "/mnt/test"
+          ports:
+            - 80
+            - 81
+      volumes:
+        - name: myvolume1
+          git_repo:
+            repository: "https://github.com/Azure-Samples/aci-helloworld.git"
 '''
 RETURN = '''
 id:
@@ -180,6 +323,79 @@ ip_address:
     returned: if address is public
     type: str
     sample: 175.12.233.11
+containers:
+    description:
+        - The containers within the container group.
+    returned: always
+    type: list
+    elements: dict
+    sample: [
+                {
+                    "commands": null,
+                    "cpu": 1.0,
+                    "environment_variables": null,
+                    "image": "httpd",
+                    "memory": 1.0,
+                    "name": "mycontainer1",
+                    "ports": [
+                        80,
+                        81
+                    ],
+                    "volume_mounts": [
+                        {
+                            "mount_path": "/data/files",
+                            "name": "filesharevolume",
+                            "read_only": false
+                        }
+                    ]
+                }
+    ]
+volumes:
+    description:
+        - The list of volumes that mounted by containers in container group
+    returned: if volumes specified
+    type: list
+    elements: dict
+    contains:
+        name:
+            description:
+                - The name of the Volume
+            returned: always
+            type: str
+            sample: filesharevolume
+        azure_file:
+            description:
+                - Azure file share volume details
+            returned: If Azure file share type of volume requested
+            type: dict
+            sample: {
+                        "read_only": null,
+                        "share_name": "acishare",
+                        "storage_account_key": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                        "storage_account_name": "mystorageaccount"
+            }
+        empty_dir:
+            description:
+                - Empty directory volume details
+            returned: If Empty directory type of volume requested
+            type: dict
+            sample: {}
+        secret:
+            description:
+                - Secret volume details
+            returned: If Secret type of volume requested
+            type: dict
+            sample: {}
+        git_repo:
+            description:
+                - Git Repo volume details
+            returned: If Git repo type of volume requested
+            type: dict
+            sample: {
+                        "directory": null,
+                        "repository": "https://github.com/Azure-Samples/aci-helloworld.git",
+                        "revision": null
+            }
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -239,6 +455,13 @@ env_var_spec = dict(
 )
 
 
+volume_mount_var_spec = dict(
+    name=dict(type='str', required=True),
+    mount_path=dict(type='str', required=True),
+    read_only=dict(type='bool')
+)
+
+
 container_spec = dict(
     name=dict(type='str', required=True),
     image=dict(type='str', required=True),
@@ -246,7 +469,32 @@ container_spec = dict(
     cpu=dict(type='float', default=1),
     ports=dict(type='list', elements='int'),
     commands=dict(type='list', elements='str'),
-    environment_variables=dict(type='list', elements='dict', options=env_var_spec)
+    environment_variables=dict(type='list', elements='dict', options=env_var_spec),
+    volume_mounts=dict(type='list', elements='dict', options=volume_mount_var_spec)
+)
+
+
+git_repo_volume_spec = dict(
+    directory=dict(type='str'),
+    repository=dict(type='str', required=True),
+    revision=dict(type='str')
+)
+
+
+azure_file_volume_spec = dict(
+    share_name=dict(type='str', required=True),
+    read_only=dict(type='bool'),
+    storage_account_name=dict(type='str', required=True),
+    storage_account_key=dict(type='str', required=True)
+)
+
+
+volumes_spec = dict(
+    name=dict(type='str', required=True),
+    azure_file=dict(type='dict', options=azure_file_volume_spec),
+    empty_dir=dict(type='dict'),
+    secret=dict(type='dict'),
+    git_repo=dict(type='dict', options=git_repo_volume_spec)
 )
 
 
@@ -314,6 +562,11 @@ class AzureRMContainerInstance(AzureRMModuleBase):
                 type='bool',
                 default=False
             ),
+            volumes=dict(
+                type='list',
+                elements='dict',
+                options=volumes_spec
+            )
         )
 
         self.resource_group = None
@@ -430,6 +683,7 @@ class AzureRMContainerInstance(AzureRMModuleBase):
             commands = container_def.get("commands")
             ports = []
             variables = []
+            volume_mounts = []
 
             port_list = container_def.get("ports")
             if port_list:
@@ -444,6 +698,13 @@ class AzureRMContainerInstance(AzureRMModuleBase):
                                                                        value=variable.get('value') if not variable.get('is_secure') else None,
                                                                        secure_value=variable.get('value') if variable.get('is_secure') else None))
 
+            volume_mounts_list = container_def.get("volume_mounts")
+            if volume_mounts_list:
+                for volume_mount in volume_mounts_list:
+                    volume_mounts.append(self.cgmodels.VolumeMount(name=volume_mount.get('name'),
+                                                                   mount_path=volume_mount.get('mount_path'),
+                                                                   read_only=volume_mount.get('read_only')))
+
             containers.append(self.cgmodels.Container(name=name,
                                                       image=image,
                                                       resources=self.cgmodels.ResourceRequirements(
@@ -451,7 +712,8 @@ class AzureRMContainerInstance(AzureRMModuleBase):
                                                       ),
                                                       ports=ports,
                                                       command=commands,
-                                                      environment_variables=variables))
+                                                      environment_variables=variables,
+                                                      volume_mounts=volume_mounts))
 
         if self.ip_address == 'public':
             # get list of ports
@@ -467,7 +729,7 @@ class AzureRMContainerInstance(AzureRMModuleBase):
                                                   restart_policy=_snake_to_camel(self.restart_policy, True) if self.restart_policy else None,
                                                   ip_address=ip_address,
                                                   os_type=self.os_type,
-                                                  volumes=None,
+                                                  volumes=self.volumes,
                                                   tags=self.tags)
 
         try:
