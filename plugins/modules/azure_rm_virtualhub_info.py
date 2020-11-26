@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualhub_info
-version_added: '2.0.0'
+version_added: '1.4.0'
 short_description: Get VirtualHub info
 description:
     - Get info of VirtualHub.
@@ -41,18 +41,18 @@ author:
 
 EXAMPLES = '''
     - name: VirtualHubGet
-      azure_rm_virtualhub_info: 
+      azure_rm_virtualhub_info:
         resource_group: myResourceGroup
         name: virtualHub
-        
+
 
     - name: VirtualHubListByResourceGroup
-      azure_rm_virtualhub_info: 
+      azure_rm_virtualhub_info:
         resource_group: myResourceGroup
-        
+
 
     - name: VirtualHubList
-      azure_rm_virtualhub_info: 
+      azure_rm_virtualhub_info:
 
 '''
 
@@ -217,7 +217,7 @@ virtual_hubs:
             description:
                 - List of all virtual hub route table v2s associated with this VirtualHub.
             returned: always
-            type: list
+            type: complex
             contains:
                 name:
                     description:
@@ -292,12 +292,12 @@ virtual_hubs:
             returned: always
             type: list
             contains:
-            id:
-                description:
-                    - Resource ID.
-                returned: always
-                type: str
-                sample: null
+                id:
+                    description:
+                        - Resource ID.
+                    returned: always
+                    type: str
+                    sample: null
         virtual_router_asn:
             description:
                 - VirtualRouter ASN.
@@ -320,7 +320,7 @@ virtual_hubs:
             description:
                 - List of VirtualHubs.
             returned: always
-            type: list
+            type: complex
             contains:
                 virtual_wan:
                     description:
@@ -434,7 +434,7 @@ virtual_hubs:
                     description:
                         - List of all virtual hub route table v2s associated with this VirtualHub.
                     returned: always
-                    type: list
+                    type: complex
                     contains:
                         name:
                             description:
@@ -473,12 +473,12 @@ virtual_hubs:
                                     returned: always
                                     type: list
                                     sample: null
-                    attached_connections:
-                        description:
-                            - List of all connections attached to this route table v2.
-                        returned: always
-                        type: list
-                        sample: null
+                        attached_connections:
+                            description:
+                                - List of all connections attached to this route table v2.
+                            returned: always
+                            type: list
+                            sample: null
                 sku:
                     description:
                         - The sku of this VirtualHub.
@@ -513,7 +513,7 @@ virtual_hubs:
                     description:
                         - VirtualRouter ASN.
                     returned: always
-                    type: integer
+                    type: int
                     sample: null
                 virtual_router_ips:
                     description:

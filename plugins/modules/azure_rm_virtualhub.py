@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualhub
-version_added: '2.0.0'
+version_added: '1.4.0'
 short_description: Manage Azure VirtualHub instance
 description:
     - Create, update and delete instance of Azure VirtualHub.
@@ -26,6 +26,11 @@ options:
             - The resource group name of the VirtualHub.
         required: true
         type: str
+    location:
+        description:
+            - The location of the VirtualHub.
+        type: str
+        required: true
     name:
         description:
             - The name of the VirtualHub.
@@ -39,7 +44,7 @@ options:
             id:
                 description:
                     - Resource ID.
-            type: str
+                type: str
     vpn_gateway:
         description:
             - The VpnGateway associated with this VirtualHub.
@@ -185,6 +190,7 @@ options:
             - Assert the state of the VirtualHub.
             - Use C(present) to create or update an VirtualHub and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -209,15 +215,15 @@ EXAMPLES = '''
         enable_virtual_router_route_propogation: false
         virtual_wan:
           id: /subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualWans/fredwan
-        
+
 
     - name: Delete VirtualHub
-      azure_rm_virtualhub: 
+      azure_rm_virtualhub:
         resource_group: myResourceGroup
         name: my_virtual_hub_name
         location: eastus
         state: absent
-        
+
 
 '''
 
@@ -251,13 +257,13 @@ tags:
         - Resource tags.
     returned: always
     type: dict
-    sample: {'key1':'value1'}
+    sample: { 'key1': 'value1' }
 etag:
     description:
         - A unique read-only string that changes whenever the resource is updated.
     returned: always
     type: str
-    sample: cf8c0b06-d339-4155-95fd-2a363945cce4\
+    sample: cf8c0b06-d339-4155-95fd-2a363945cce4
 virtual_wan:
     description:
         - The VirtualWAN to which the VirtualHub belongs.
@@ -377,7 +383,7 @@ virtual_hub_route_table_v2_s:
     description:
         - List of all virtual hub route table v2s associated with this VirtualHub.
     returned: always
-    type: list
+    type: complex
     contains:
         name:
             description:
@@ -669,7 +675,7 @@ class AzureRMVirtualHub(AzureRMModuleBaseExt):
                 )
             ),
             virtual_router_asn=dict(
-                type='integer',
+                type='int',
                 disposition='/virtual_router_asn'
             ),
             virtual_router_ips=dict(
