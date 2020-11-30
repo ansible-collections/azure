@@ -97,33 +97,6 @@ api_management_service:
           returned: always
           type: dict
           sample: null
-        identity:
-          description:
-            - Managed service identity of the Api Management service.
-          returned: always
-          type: dict
-          sample: null
-          contains:
-            type:
-              description:
-                - >-
-                  The identity type. Currently the only supported type is
-                  'SystemAssigned'.
-              returned: always
-              type: str
-              sample: null
-            principal_id:
-              description:
-                - The principal id of the identity.
-              returned: always
-              type: 'unknown-primary[uuid]'
-              sample: null
-            tenant_id:
-              description:
-                - The client tenant id of the identity.
-              returned: always
-              type: 'unknown-primary[uuid]'
-              sample: null
         location:
           description:
             - Resource location.
@@ -140,8 +113,8 @@ api_management_service:
 
 import time
 import json
-from ansible.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.azure_rm_common_rest import GenericRestClient
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from copy import deepcopy
 try:
     from msrestazure.azure_exceptions import CloudError

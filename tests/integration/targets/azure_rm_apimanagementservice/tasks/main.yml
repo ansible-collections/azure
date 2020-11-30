@@ -5,7 +5,7 @@
 - name: To create API Management service
   azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
-    name: myService
+    name: "{{ name }}"
     publisher_email: user@example.com
     publisher_name: Username
     sku_name: Developer
@@ -21,7 +21,7 @@
 - name: To update API Management service publisher details
   azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
-    name: myService
+    name: "{{ name }}"
     publisher_email: user@example.com
     publisher_name: user_name
   register: updatedService
@@ -35,7 +35,7 @@
 - name: To delete an api management service
   azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
-    name: myService
+    name: "{{ name }}"
     state: absent
   register: deleteService
 
@@ -47,7 +47,7 @@
 - name: Get api management service information
   azure_rm_apimanagementservice_info:
     resource_group: "{{ resource_group }}"
-    name: myService
+    name: "{{ name }}"
   register: output
 
 - name: Assert that output has changed
