@@ -24,6 +24,7 @@ parameters:
     - "azure_rm_acs"
     - "azure_rm_aks"
     - "azure_rm_appgateway"
+    - "azure_rm_applicationsecuritygroup"
     - "azure_rm_appserviceplan"
     - "azure_rm_automationaccount"
     - "azure_rm_autoscale"

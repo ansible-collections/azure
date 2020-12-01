@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2018 Yunge Zhu, <yungez@microsoft.com>
+# Copyright (c) 2020 GuopengLin, (@t-glin)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -16,91 +16,140 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_applicationsecuritygroup
-version_added: "0.1.2"
-short_description: Manage Azure Application Security Group
+version_added: '2.9'
+short_description: Manage Azure ApplicationSecurityGroup instance
 description:
-    - Create, update and delete instance of Azure Application Security Group.
-
+    - Create, update and delete instance of Azure ApplicationSecurityGroup.
 options:
     resource_group:
         description:
             - The name of the resource group.
-        required: True
+        required: true
+        type: str
+    locaion:
+        description:
+            - The location of the application security group.
+        type: str
     name:
         description:
             - The name of the application security group.
-        required: True
-    location:
-        description:
-            - Resource location. If not set, location from the resource group will be used as default.
+        required: true
+        type: str
     state:
-      description:
-        - Assert the state of the Application Security Group.
-        - Use C(present) to create or update an Application Security Group and C(absent) to delete it.
-      default: present
-      choices:
-        - absent
-        - present
-
+        description:
+            - Assert the state of the ApplicationSecurityGroup.
+            - Use C(present) to create or update an ApplicationSecurityGroup and C(absent) to delete it.
+        default: present
+        choices:
+            - absent
+            - present
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
-
 author:
-    - Yunge Zhu (@yungezz)
+    - GuopengLin (@t-glin)
+    - Fred-Sun (@Fred-Sun)
+    - Haiyuan Zhang (@haiyuazhang)
 
 '''
 
 EXAMPLES = '''
-  - name: Create application security group
-    azure_rm_applicationsecuritygroup:
-      resource_group: myResourceGroup
-      name: mySecurityGroup
-      location: eastus
-      tags:
-        foo: bar
+    - name: Delete application security group
+      azure_rm_applicationsecuritygroup: 
+        application_security_group_name: test-asg
+        resource_group_name: rg1
+        
+
+    - name: Create application security group
+      azure_rm_applicationsecuritygroup: 
+        application_security_group_name: test-asg
+        resource_group_name: rg1
+        location: westus
+        properties: {}
+        
+
 '''
 
 RETURN = '''
-id:
+state:
     description:
-        - Resource id of the application security group.
+        - Current state of the storage account
     returned: always
-    type: str
-    sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/applicationSecurityGroups/
-             mySecurityGroup"
+    type: complex
+    contains:
+        id:
+            description:
+                - Resource ID.
+            returned: always
+            type: str
+            sample: /subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/applicationSecurityGroups/fred03
+        name:
+            description:
+                - Resource name.
+            returned: always
+            type: str
+            sample: fred03
+        type:
+            description:
+                - Resource type.
+            returned: always
+            type: str
+            sample: Microsoft.Network/applicationSecurityGroups
+        location:
+            description:
+                - Resource location.
+            returned: always
+            type: str
+            sample: eastus
+        tags:
+            description:
+                - Resource tags.
+            returned: always
+            type: dictionary
+            sample: {'key1':'value1'}
+        etag:
+            description:
+                - A unique read-only string that changes whenever the resource is updated.
+            returned: always
+            type: str
+            sample: 25e03ada-e3d1-4129-bfbe-f7f1cb69ac60
+        provisioning_state:
+            description:
+                - The provisioning state of the application security group resource.
+            returned: always
+            type: str
+            sample: Succeeded
+
 '''
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
     from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.mgmt.network import NetworkManagementClient
     from msrestazure.azure_operation import AzureOperationPoller
+    from msrest.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
 
 class Actions:
-    NoAction, CreateOrUpdate, Delete = range(3)
+    NoAction, Create, Update, Delete = range(4)
 
 
-class AzureRMApplicationSecurityGroup(AzureRMModuleBase):
-    """Configuration class for an Azure RM Application Security Group resource"""
-
+class AzureRMApplicationSecurityGroup(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
             resource_group=dict(
                 type='str',
                 required=True
             ),
+            location=dict(
+                type='str',
+            ),
             name=dict(
                 type='str',
                 required=True
-            ),
-            location=dict(
-                type='str'
             ),
             state=dict(
                 type='str',
@@ -110,14 +159,12 @@ class AzureRMApplicationSecurityGroup(AzureRMModuleBase):
         )
 
         self.resource_group = None
-        self.location = None
         self.name = None
-        self.tags = None
-
-        self.state = None
+        self.body = {}
 
         self.results = dict(changed=False)
-
+        self.mgmt_client = None
+        self.state = None
         self.to_do = Actions.NoAction
 
         super(AzureRMApplicationSecurityGroup, self).__init__(derived_arg_spec=self.module_arg_spec,
@@ -125,124 +172,92 @@ class AzureRMApplicationSecurityGroup(AzureRMModuleBase):
                                                               supports_tags=True)
 
     def exec_module(self, **kwargs):
-        """Main module execution method"""
-
-        for key in list(self.module_arg_spec.keys()) + ['tags']:
+        for key in list(self.module_arg_spec.keys()):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
-
+            elif kwargs[key] is not None:
+                self.body[key] = kwargs[key]
+        
         resource_group = self.get_resource_group(self.resource_group)
+        if 'location' not in self.body.keys():
+            # Set default location
+            self.body['location'] = resource_group.location
 
-        if not self.location:
-            self.location = resource_group.location
+        self.inflate_parameters(self.module_arg_spec, self.body, 0)
 
-        old_response = self.get_applicationsecuritygroup()
+        old_response = None
+        response = None
+
+        self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
+                                                    base_url=self._cloud_environment.endpoints.resource_manager,
+                                                    api_version='2020-04-01')
+
+        old_response = self.get_resource()
 
         if not old_response:
-            self.log("Application Security Group instance doesn't exist")
             if self.state == 'present':
-                self.to_do = Actions.CreateOrUpdate
-            else:
-                self.log("Old instance didn't exist")
+                self.to_do = Actions.Create
         else:
-            self.log("Application Security Group instance already exists")
-            if self.state == 'present':
-                if self.check_update(old_response):
-                    self.to_do = Actions.CreateOrUpdate
-
-                update_tags, self.tags = self.update_tags(old_response.get('tags', None))
-                if update_tags:
-                    self.to_do = Actions.CreateOrUpdate
-
-            elif self.state == 'absent':
+            if self.state == 'absent':
                 self.to_do = Actions.Delete
+            else:
+                modifiers = {}
+                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
+                self.results['modifiers'] = modifiers
+                self.results['compare'] = []
+                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
+                    self.to_do = Actions.Update
 
-        if self.to_do == Actions.CreateOrUpdate:
-            self.log("Need to Create / Update the Application Security Group instance")
+        if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.results['changed'] = True
-
             if self.check_mode:
                 return self.results
-
-            response = self.create_update_applicationsecuritygroup()
-            self.results['id'] = response['id']
-
+            response = self.create_update_resource()
+            self.results['state'] = response
         elif self.to_do == Actions.Delete:
-            self.log("Delete Application Security Group instance")
             self.results['changed'] = True
-
             if self.check_mode:
                 return self.results
-
-            self.delete_applicationsecuritygroup()
+            self.delete_resource()
+        else:
+            self.results['changed'] = False
+            response = old_response
+            self.results['state'] = response
 
         return self.results
 
-    def check_update(self, existing_asg):
-        if self.location and self.location.lower() != existing_asg['location'].lower():
-            self.module.warn("location cannot be updated. Existing {0}, input {1}".format(existing_asg['location'], self.location))
-        return False
-
-    def create_update_applicationsecuritygroup(self):
-        '''
-        Create or update Application Security Group.
-
-        :return: deserialized Application Security Group instance state dictionary
-        '''
-        self.log("Creating / Updating the Application Security Group instance {0}".format(self.name))
-
-        param = dict(name=self.name,
-                     tags=self.tags,
-                     location=self.location)
+    def create_update_resource(self):
         try:
-            response = self.network_client.application_security_groups.create_or_update(resource_group_name=self.resource_group,
-                                                                                        application_security_group_name=self.name,
-                                                                                        parameters=param)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            response = self.mgmt_client.application_security_groups.create_or_update(resource_group_name=self.resource_group,
+                                                                                     application_security_group_name=self.name,
+                                                                                     parameters=self.body)
+            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
-
         except CloudError as exc:
-            self.log('Error creating/updating Application Security Group instance.')
-            self.fail("Error creating/updating Application Security Group instance: {0}".format(str(exc)))
+            self.log('Error attempting to create the ApplicationSecurityGroup instance.')
+            self.fail('Error creating the ApplicationSecurityGroup instance: {0}'.format(str(exc)))
         return response.as_dict()
 
-    def delete_applicationsecuritygroup(self):
-        '''
-        Deletes specified Application Security Group instance.
-
-        :return: True
-        '''
-        self.log("Deleting the Application Security Group instance {0}".format(self.name))
+    def delete_resource(self):
         try:
-            response = self.network_client.application_security_groups.delete(resource_group_name=self.resource_group,
-                                                                              application_security_group_name=self.name)
+            response = self.mgmt_client.application_security_groups.delete(resource_group_name=self.resource_group,
+                                                                           application_security_group_name=self.name)
         except CloudError as e:
-            self.log('Error deleting the Application Security Group instance.')
-            self.fail("Error deleting the Application Security Group instance: {0}".format(str(e)))
+            self.log('Error attempting to delete the ApplicationSecurityGroup instance.')
+            self.fail('Error deleting the ApplicationSecurityGroup instance: {0}'.format(str(e)))
 
         return True
 
-    def get_applicationsecuritygroup(self):
-        '''
-        Gets the properties of the specified Application Security Group.
-
-        :return: deserialized Application Security Group instance state dictionary
-        '''
-        self.log("Checking if the Application Security Group instance {0} is present".format(self.name))
-        found = False
+    def get_resource(self):
         try:
-            response = self.network_client.application_security_groups.get(resource_group_name=self.resource_group,
-                                                                           application_security_group_name=self.name)
-            self.log("Response : {0}".format(response))
-            self.log("Application Security Group instance : {0} found".format(response.name))
-            return response.as_dict()
+            response = self.mgmt_client.application_security_groups.get(resource_group_name=self.resource_group,
+                                                                        application_security_group_name=self.name)
         except CloudError as e:
-            self.log('Did not find the Application Security Group instance.')
-        return False
+            return False
+        return response.as_dict()
 
 
 def main():
-    """Main execution"""
     AzureRMApplicationSecurityGroup()
 
 

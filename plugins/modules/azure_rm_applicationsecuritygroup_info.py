@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2019 Yunge Zhu, <yungez@microsoft.com>
+# Copyright (c) 2020 GuopengLin, (@t-glin)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -16,102 +16,108 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_applicationsecuritygroup_info
-version_added: "0.1.2"
-short_description: Get Azure Application Security Group facts
+version_added: '2.9'
+short_description: Get ApplicationSecurityGroup info
 description:
-    - Get facts of Azure Application Security Group.
-
+    - Get info of ApplicationSecurityGroup.
 options:
     resource_group:
         description:
             - The name of the resource group.
+        type: str
     name:
         description:
             - The name of the application security group.
-    tags:
-        description:
-            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
-
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
-
+    - azure.azcollection.azure_tags
 author:
-    - Yunge Zhu (@yungezz)
+    - GuopengLin (@t-glin)
+    - Fred-Sun (@Fred-Sun)
+    - Haiyuan Zhang (@haiyuazhang)
 
 '''
 
 EXAMPLES = '''
-  - name: List application security groups in specific resource group
-    azure_rm_applicationsecuritygroup_info:
-      resource_group: myResourceGroup
-
-  - name: List application security groups in specific subscription
-    azure_rm_applicationsecuritygroup_info:
-
-  - name: Get application security group by name
-    azure_rm_applicationsecuritygroup_info:
+    - name: Get application security group by name
+      azure_rm_applicationsecuritygroup_info: 
+        name: testgroup
         resource_group: myResourceGroup
-        name: myApplicationSecurityGroup
-        tags:
-            - foo
+
+    - name: List all application security groups by subscription
+      azure_rm_applicationsecuritygroup_info: 
+
+    - name: List all application security groups by ressource group
+      azure_rm_applicationsecuritygroup_info: 
+        resource_group: myResourceGroup
+        
+
 '''
 
 RETURN = '''
-applicationsecuritygroups:
+application_security_groups:
     description:
-        - List of application security groups.
+        - A list of dict results where the key is the name of the ApplicationSecurityGroup and the values are the facts for that ApplicationSecurityGroup.
     returned: always
     type: complex
     contains:
         id:
-            description: Id of the application security group.
-            type: str
-            returned: always
-            sample:
-                "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/applicationSecurityGroups/MyAsg"
-        location:
             description:
-                - Location of the application security group.
-            type: str
+                - Resource ID.
             returned: always
-            sample: eastus
+            type: str
+            sample: /subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Network/applicationSecurityGroups/v-xisuRGname
         name:
             description:
-                - Name of the resource.
-            type: str
+                - Resource name.
             returned: always
-            sample: myAsg
+            type: str
+            sample: Fred01
+        type:
+            description:
+                - Resource type.
+            returned: always
+            type: str
+            sample: Microsoft.Network/applicationSecurityGroups
+        location:
+            description:
+                - Resource location.
+            returned: always
+            type: str
+            sample: eastus
+        tags:
+            description:
+                - Resource tags.
+            returned: always
+            type: dictionary
+            sample: “{{'key1':'value1'}}”
+        etag:
+            description:
+                - A unique read-only string that changes whenever the resource is updated.
+            returned: always
+            type: str
+            sample: ad671408-bc59-4880-8a64-523e01d1f26b
         provisioning_state:
             description:
-                - Provisioning state of application security group.
-            type: str
+                - The provisioning state of the application security group resource.
             returned: always
+            type: str
             sample: Succeeded
 '''
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 try:
     from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.mgmt.network import NetworkManagementClient
     from msrestazure.azure_operation import AzureOperationPoller
+    from msrest.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
 
-def applicationsecuritygroup_to_dict(asg):
-    return dict(
-        id=asg.id,
-        location=asg.location,
-        name=asg.name,
-        tags=asg.tags,
-        provisioning_state=asg.provisioning_state
-    )
-
-
 class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
-
     def __init__(self):
         self.module_arg_spec = dict(
             resource_group=dict(
@@ -119,109 +125,83 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
             ),
             name=dict(
                 type='str'
-            ),
-            tags=dict(type='list')
+            )
         )
 
         self.resource_group = None
         self.name = None
-        self.tags = None
 
         self.results = dict(changed=False)
+        self.mgmt_client = None
+        self.state = None
+        self.url = None
+        self.status_code = [200]
 
-        super(AzureRMApplicationSecurityGroupInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                                  supports_check_mode=False,
-                                                                  supports_tags=False)
+        self.mgmt_client = None
+        super(AzureRMApplicationSecurityGroupInfo, self).__init__(self.module_arg_spec, supports_tags=True)
 
     def exec_module(self, **kwargs):
-        """Main module execution method"""
 
-        is_old_facts = self.module._name == 'azure_rm_applicationsecuritygroup_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_rm_applicationsecuritygroup_facts' module has been renamed to 'azure_rm_applicationsecuritygroup_info'",
-                                  version=(2.9, ))
+        for key in self.module_arg_spec:
+            setattr(self, key, kwargs[key])
 
-        for key in list(self.module_arg_spec.keys()) + ['tags']:
-            if hasattr(self, key):
-                setattr(self, key, kwargs[key])
+        self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
+                                                    base_url=self._cloud_environment.endpoints.resource_manager,
+                                                    api_version='2020-04-01')
 
-        if self.name:
-            if self.resource_group:
-                self.results['applicationsecuritygroups'] = self.get()
-            else:
-                self.fail("resource_group is required when filtering by name")
-        elif self.resource_group:
-            self.results['applicationsecuritygroups'] = self.list_by_resource_group()
+        if (self.resource_group is not None and self.name is not None):
+            self.results['application_security_groups'] = self.format_item(self.get())
+        elif (self.resource_group is not None):
+            self.results['application_security_groups'] = self.format_item(self.list())
         else:
-            self.results['applicationsecuritygroups'] = self.list_all()
-
+            self.results['application_security_groups'] = self.format_item(self.list_all())
         return self.results
 
     def get(self):
-        '''
-        Gets the properties of the specified Application Security Group.
+        response = None
 
-        :return: deserialized Application Security Group instance state dictionary
-        '''
-        self.log("Get the Application Security Group instance {0}".format(self.name))
-
-        results = []
         try:
-            response = self.network_client.application_security_groups.get(resource_group_name=self.resource_group,
-                                                                           application_security_group_name=self.name)
-            self.log("Response : {0}".format(response))
-
-            if response and self.has_tags(response.tags, self.tags):
-                results.append(applicationsecuritygroup_to_dict(response))
+            response = self.mgmt_client.application_security_groups.get(resource_group_name=self.resource_group,
+                                                                        application_security_group_name=self.name)
         except CloudError as e:
-            self.fail('Did not find the Application Security Group instance.')
-        return results
+            self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
-    def list_by_resource_group(self):
-        '''
-        Lists the properties of Application Security Groups in specific resource group.
+        return response
 
-        :return: deserialized Application Security Group instance state dictionary
-        '''
-        self.log("Get the Application Security Groups in resource group {0}".format(self.resource_group))
+    def list(self):
+        response = None
 
-        results = []
         try:
-            response = list(self.network_client.application_security_groups.list(resource_group_name=self.resource_group))
-            self.log("Response : {0}".format(response))
-
-            if response:
-                for item in response:
-                    if self.has_tags(item.tags, self.tags):
-                        results.append(applicationsecuritygroup_to_dict(item))
+            response = self.mgmt_client.application_security_groups.list(resource_group_name=self.resource_group)
         except CloudError as e:
-            self.log('Did not find the Application Security Group instance.')
-        return results
+            self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
+
+        return response
 
     def list_all(self):
-        '''
-        Lists the properties of Application Security Groups in specific subscription.
+        response = None
 
-        :return: deserialized Application Security Group instance state dictionary
-        '''
-        self.log("Get the Application Security Groups in current subscription")
-
-        results = []
         try:
-            response = list(self.network_client.application_security_groups.list_all())
-            self.log("Response : {0}".format(response))
-
-            if response:
-                for item in response:
-                    if self.has_tags(item.tags, self.tags):
-                        results.append(applicationsecuritygroup_to_dict(item))
+            response = self.mgmt_client.application_security_groups.list_all()
         except CloudError as e:
-            self.log('Did not find the Application Security Group instance.')
-        return results
+            self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
+
+        return response
+
+    def format_item(self, item):
+        if hasattr(item, 'as_dict'):
+            return [item.as_dict()]
+        elif item is not None:
+            result = []
+            items = list(item)
+            for tmp in items:
+                result.append(tmp.as_dict())
+            return result
+        else:
+            return None
 
 
 def main():
-    """Main execution"""
     AzureRMApplicationSecurityGroupInfo()
 
 

@@ -1,0 +1,59 @@
+- name: Create application security group name
+  set_fact:
+    app_name: "app{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+  run_once: yes
+
+- name: Create application security group -- check mode
+  azure_rm_applicationsecuritygroup:
+    name: "{{ app_name }}"
+    resource_group: "{{ resource_group }}"
+    location: eastus
+  register: output
+  check_mode: yes
+
+- name: Assert the resource instance is well created
+  assert:
+      that:
+        - output.changed
+
+- name: Create application security group
+  azure_rm_applicationsecuritygroup:
+    name: "{{ app_name }}"
+    resource_group: "{{ resource_group }}"
+    location: eastus
+  register: output
+
+- name: Assert the resource instance is well created
+  assert:
+      that:
+        - output.changed
+
+- name: Create application security group (idempotent)
+  azure_rm_applicationsecuritygroup:
+    name: "{{ app_name }}"
+    resource_group: "{{ resource_group }}"
+    location: eastus
+  register: output
+
+- name: Assert the resource instance is well created
+  assert:
+      that:
+        - not output.changed
+
+- name: Get application security group
+  azure_rm_applicationsecuritygroup_info:
+    name: "{{ app_name }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert that facts are returned
+  assert:
+    that:
+      - output.application_security_groups[0].provisioning_state == "Succeeded"
+      - output.application_security_groups[0].type == "Microsoft.Network/applicationSecurityGroups"
+
+- name: delete the application security group
+  azure_rm_applicationsecuritygroup:
+    name: "{{ app_name }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
