@@ -16,25 +16,27 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_registrationdefinition_info
-version_added: '2.9'
-short_description: Get RegistrationDefinition info.
+version_added: '2.0.0'
+short_description: Get RegistrationDefinition info
 description:
-  - Get info of RegistrationDefinition.
+    - Get info of RegistrationDefinition.
 options:
-  scope:
-    description:
-      - Scope of the resource.
-    required: true
-    type: str
-  registration_definition_id:
-    description:
-      - Guid of the registration definition.
-    type: str
+    scope:
+        description:
+            - Scope of the resource.
+        required: true
+        type: str
+    registration_definition_id:
+        description:
+            - Guid of the registration definition.
+        type: str
 extends_documentation_fragment:
-  - azure
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 author:
-  - GuopengLin (@t-glin)
-
+    - GuopengLin (@t-glin)
+    - Fred-Sun (@Fred-Sun)
+    - Haiyuan Zhang (@haiyuazhang)
 '''
 
 EXAMPLES = '''
@@ -42,372 +44,319 @@ EXAMPLES = '''
       azure_rm_registrationdefinition_info: 
         registration_definition_id: 26c128c2-fefa-4340-9bb1-6e081c90ada2
         scope: subscription/0afefe50-734e-4610-8a82-a144ahf49dea
-        
+
 
     - name: Get Registration Definitions
       azure_rm_registrationdefinition_info: 
         scope: subscription/0afefe50-734e-4610-8a82-a144ahf49dea
-        
+
 
 '''
 
 RETURN = '''
 registration_definitions:
-  description: >-
-    A list of dict results where the key is the name of the
-    RegistrationDefinition and the values are the facts for that
-    RegistrationDefinition.
-  returned: always
-  type: complex
-  contains:
-    properties:
-      description:
-        - Properties of a registration definition.
-      returned: always
-      type: dict
-      sample: null
-      contains:
-        description:
-          description:
-            - Description of the registration definition.
-          returned: always
-          type: str
-          sample: null
-        authorizations:
-          description:
-            - >-
-              Authorization tuple containing principal id of the user/security
-              group or service principal and id of the build-in role.
-          returned: always
-          type: list
-          sample: null
-          contains:
-            principal_id:
-              description:
-                - >-
-                  Principal Id of the security group/service principal/user that
-                  would be assigned permissions to the projected subscription
-              returned: always
-              type: str
-              sample: null
-            principal_id_display_name:
-              description:
-                - Display name of the principal Id.
-              returned: always
-              type: str
-              sample: null
-            role_definition_id:
-              description:
-                - >-
-                  The role definition identifier. This role will define all the
-                  permissions that the security group/service principal/user
-                  must have on the projected subscription. This role cannot be
-                  an owner role.
-              returned: always
-              type: str
-              sample: null
-            delegated_role_definition_ids:
-              description:
-                - >-
-                  The delegatedRoleDefinitionIds field is required when the
-                  roleDefinitionId refers to the User Access Administrator Role.
-                  It is the list of role definition ids which define all the
-                  permissions that the user in the authorization can assign to
-                  other security groups/service principals/users.
-              returned: always
-              type: list
-              sample: null
-        eligible_authorizations:
-          description:
-            - >-
-              Eligible PIM authorization tuple containing principal id of the
-              user/security group or service principal, id of the built-in role,
-              and just-in-time access policy setting
-          returned: always
-          type: list
-          sample: null
-          contains:
-            principal_id:
-              description:
-                - >-
-                  Principal Id of the security group/service principal/user that
-                  would be delegated permissions to the projected subscription
-              returned: always
-              type: str
-              sample: null
-            principal_id_display_name:
-              description:
-                - Display name of the principal Id.
-              returned: always
-              type: str
-              sample: null
-            role_definition_id:
-              description:
-                - >-
-                  The role definition identifier. This role will delegate all
-                  the permissions that the security group/service principal/user
-                  must have on the projected subscription. This role cannot be
-                  an owner role.
-              returned: always
-              type: str
-              sample: null
-            just_in_time_access_policy:
-              description:
-                - Just-in-time access policy setting.
-              returned: always
-              type: dict
-              sample: null
-              contains:
-                multi_factor_auth_provider:
-                  description:
-                    - MFA provider.
-                  returned: always
-                  type: str
-                  sample: null
-                maximum_activation_duration:
-                  description:
-                    - >-
-                      Maximum access duration in ISO 8601 format.  The default
-                      value is "PT8H".
-                  returned: always
-                  type: duration
-                  sample: null
-        registration_definition_name:
-          description:
-            - Name of the registration definition.
-          returned: always
-          type: str
-          sample: null
-        managed_by_tenant_id:
-          description:
-            - Id of the managedBy tenant.
-          returned: always
-          type: str
-          sample: null
-    plan:
-      description:
-        - Plan details for the managed services.
-      returned: always
-      type: dict
-      sample: null
-      contains:
-        name:
-          description:
-            - The plan name.
-          returned: always
-          type: str
-          sample: null
-        publisher:
-          description:
-            - The publisher ID.
-          returned: always
-          type: str
-          sample: null
-        product:
-          description:
-            - The product code.
-          returned: always
-          type: str
-          sample: null
-        version:
-          description:
-            - The plan's version.
-          returned: always
-          type: str
-          sample: null
-    id:
-      description:
-        - Fully qualified path of the registration definition.
-      returned: always
-      type: str
-      sample: null
-    type:
-      description:
-        - Type of the resource.
-      returned: always
-      type: str
-      sample: null
-    name:
-      description:
-        - Name of the registration definition.
-      returned: always
-      type: str
-      sample: null
-    value:
-      description:
-        - List of registration definitions.
-      returned: always
-      type: list
-      sample: null
-      contains:
+    description:
+        - A list of dict results where the key is the name of the RegistrationDefinition and the values are the facts for that RegistrationDefinition.
+    returned: always
+    type: complex
+    contains:
         properties:
-          description:
-            - Properties of a registration definition.
-          returned: always
-          type: dict
-          sample: null
-          contains:
             description:
-              description:
-                - Description of the registration definition.
-              returned: always
-              type: str
-              sample: null
-            authorizations:
-              description:
-                - >-
-                  Authorization tuple containing principal id of the
-                  user/security group or service principal and id of the
-                  build-in role.
-              returned: always
-              type: list
-              sample: null
-              contains:
-                principal_id:
-                  description:
-                    - >-
-                      Principal Id of the security group/service principal/user
-                      that would be assigned permissions to the projected
-                      subscription
-                  returned: always
-                  type: str
-                  sample: null
-                principal_id_display_name:
-                  description:
-                    - Display name of the principal Id.
-                  returned: always
-                  type: str
-                  sample: null
-                role_definition_id:
-                  description:
-                    - >-
-                      The role definition identifier. This role will define all
-                      the permissions that the security group/service
-                      principal/user must have on the projected subscription.
-                      This role cannot be an owner role.
-                  returned: always
-                  type: str
-                  sample: null
-                delegated_role_definition_ids:
-                  description:
-                    - >-
-                      The delegatedRoleDefinitionIds field is required when the
-                      roleDefinitionId refers to the User Access Administrator
-                      Role. It is the list of role definition ids which define
-                      all the permissions that the user in the authorization can
-                      assign to other security groups/service principals/users.
-                  returned: always
-                  type: list
-                  sample: null
-            eligible_authorizations:
-              description:
-                - >-
-                  Eligible PIM authorization tuple containing principal id of
-                  the user/security group or service principal, id of the
-                  built-in role, and just-in-time access policy setting
-              returned: always
-              type: list
-              sample: null
-              contains:
-                principal_id:
-                  description:
-                    - >-
-                      Principal Id of the security group/service principal/user
-                      that would be delegated permissions to the projected
-                      subscription
-                  returned: always
-                  type: str
-                  sample: null
-                principal_id_display_name:
-                  description:
-                    - Display name of the principal Id.
-                  returned: always
-                  type: str
-                  sample: null
-                role_definition_id:
-                  description:
-                    - >-
-                      The role definition identifier. This role will delegate
-                      all the permissions that the security group/service
-                      principal/user must have on the projected subscription.
-                      This role cannot be an owner role.
-                  returned: always
-                  type: str
-                  sample: null
-                just_in_time_access_policy:
-                  description:
-                    - Just-in-time access policy setting.
-                  returned: always
-                  type: dict
-                  sample: null
-                  contains:
-                    multi_factor_auth_provider:
-                      description:
-                        - MFA provider.
-                      returned: always
-                      type: str
-                      sample: null
-                    maximum_activation_duration:
-                      description:
-                        - >-
-                          Maximum access duration in ISO 8601 format.  The
-                          default value is "PT8H".
-                      returned: always
-                      type: duration
-                      sample: null
-            registration_definition_name:
-              description:
-                - Name of the registration definition.
-              returned: always
-              type: str
-              sample: null
-            managed_by_tenant_id:
-              description:
-                - Id of the managedBy tenant.
-              returned: always
-              type: str
-              sample: null
+                - Properties of a registration definition.
+            returned: always
+            type: complex
+            contains:
+                description:
+                    description:
+                        - Description of the registration definition.
+                    returned: always
+                    type: str
+                    sample: null
+                authorizations:
+                    description:
+                        - Authorization tuple containing principal id of the user/security group or service principal and id of the build-in role.
+                    returned: always
+                    type: comlex
+                    contains:
+                        principal_id:
+                            description:
+                                - Principal ID of the security group/service principal/user that would be assigned permissions to the projected subscription
+                            returned: always
+                            type: str
+                            sample: null
+                        principal_id_display_name:
+                            description:
+                                - Display name of the principal Id.
+                            returned: always
+                            type: str
+                            sample: null
+                        role_definition_id:
+                            description:
+                                - The role definition identifier.
+                                - This role will define all the permissions that the security group/service principal/user must have on the projected subscription.
+                                - This role cannot be an owner role.
+                            returned: always
+                            type: str
+                            sample: null
+                        delegated_role_definition_ids:
+                            description:
+                                - The delegatedRoleDefinitionIds field is required when the roleDefinitionId refers to the User Access Administrator Role.
+                                - It is the list of role definition ids which define all the permissions that the user in the authorization can assign to other security groups/service principals/users.
+                            returned: always
+                            type: list
+                            sample: null
+                eligible_authorizations:
+                    description:
+                        - Eligible PIM authorization tuple containing principal id of the user/security group or service principal, id of the built-in role and just-in-time access policy setting.
+                    returned: always
+                    type: complex
+                    contains:
+                        principal_id:
+                            description:
+                                - Principal Id of the security group/service principal/user that would be delegated permissions to the projected subscription
+                            returned: always
+                            type: str
+                            sample: null
+                        principal_id_display_name:
+                            description:
+                                - Display name of the principal Id.
+                            returned: always
+                            type: str
+                            sample: null
+                        role_definition_id:
+                            description:
+                                - The role definition identifier.
+                                - This role will delegate all the permissions that the security group/service principal/user must have on the projected subscription.
+                                - This role cannot be an owner role.
+                            returned: always
+                            type: str
+                            sample: null
+                        just_in_time_access_policy:
+                            description:
+                                - Just-in-time access policy setting.
+                            returned: always
+                            type:complex 
+                            contains:
+                                multi_factor_auth_provider:
+                                    description:
+                                        - MFA provider.
+                                    returned: always
+                                    type: str
+                                    sample: null
+                                maximum_activation_duration:
+                                    description:
+                                        - Maximum access duration in ISO 8601 format.
+                                        - The default value is "PT8H"
+                                    returned: always
+                                    type: duration
+                                    sample: null
+                registration_definition_name:
+                    description:
+                        - Name of the registration definition.
+                    returned: always
+                    type: str
+                    sample: null
+                managed_by_tenant_id:
+                    description:
+                        - ID of the managedBy tenant.
+                    returned: always
+                    type: str
+                    sample: null
         plan:
-          description:
-            - Plan details for the managed services.
-          returned: always
-          type: dict
-          sample: null
-          contains:
-            name:
-              description:
-                - The plan name.
-              returned: always
-              type: str
-              sample: null
-            publisher:
-              description:
-                - The publisher ID.
-              returned: always
-              type: str
-              sample: null
-            product:
-              description:
-                - The product code.
-              returned: always
-              type: str
-              sample: null
-            version:
-              description:
-                - The plan's version.
-              returned: always
-              type: str
-              sample: null
-    next_link:
-      description:
-        - Link to next page of registration definitions.
-      returned: always
-      type: str
-      sample: null
+            description:
+                - Plan details for the managed services.
+            returned: always
+            type: complex
+            contains:
+                name:
+                    description:
+                        - The plan name.
+                    returned: always
+                    type: str
+                    sample: null
+                publisher:
+                    description:
+                        - The publisher ID.
+                    returned: always
+                    type: str
+                    sample: null
+                product:
+                    description:
+                        - The product code.
+                    returned: always
+                    type: str
+                    sample: null
+                version:
+                    description:
+                        - The plan's version.
+                    returned: always
+                    type: str
+                    sample: null
+        id:
+            description:
+                - Fully qualified path of the registration definition.
+            returned: always
+            type: str
+            sample: null
+        type:
+            description:
+                - Type of the resource.
+            returned: always
+            type: str
+            sample: null
+        name:
+            description:
+                - Name of the registration definition.
+            returned: always
+            type: str
+            sample: null
+        value:
+            description:
+                - List of registration definitions.
+            returned: always
+            type: list
+            sample: null
+            contains:
+                properties:
+                    description:
+                        - Properties of a registration definition.
+                    returned: always
+                    type: complex
+                    contains:
+                        description:
+                            description:
+                                - Description of the registration definition.
+                            returned: always
+                            type: str
+                            sample: null
+                        authorizations:
+                            description:
+                                - Authorization tuple containing principal id of the user/security group or service principal and id of the build-in role.
+                            returned: always
+                            type: complex
+                            contains:
+                                principal_id:
+                                    description:
+                                        - Principal ID of the security group/service principal/user that would be assigned permissions to the projected subscription.
+                                    returned: always
+                                    type: str
+                                    sample: null
+                                principal_id_display_name:
+                                    description:
+                                        - Display name of the principal ID.
+                                    returned: always
+                                    type: str
+                                    sample: null
+                                role_definition_id:
+                                    description:
+                                        - The role definition identifier.
+                                        - This role will define all the permissions that the security group/service principal/user must have on the projected subscription.
+                                        - This role cannot be an owner role.
+                                    returned: always
+                                    type: str
+                                    sample: null
+                                delegated_role_definition_ids:
+                                    description:
+                                        - The delegatedRoleDefinitionIds field is required when the roleDefinitionId refers to the User Access Administrator Role.
+                                        - It is the list of role definition ids which define all the permissions that the user in the authorization can assign to other security groups/service principals/users.
+                                    returned: always
+                                    type: list
+                                  sample: null
+                        eligible_authorizations:
+                            description:
+                                - Eligible PIM authorization tuple containing principal ID of the user/security group or service principal, ID of the built-in role and just-in-time access policy setting
+                            returned: always
+                            type: complex
+                            contains:
+                                principal_id:
+                                    description:
+                                        - Principal ID of the security group/service principal/user that would be delegated permissions to the projected subscription
+                                    returned: always
+                                    type: str
+                                    sample: null
+                                principal_id_display_name:
+                                    description:
+                                        - Display name of the principal Id.
+                                    returned: always
+                                    type: str
+                                    sample: null
+                                role_definition_id:
+                                    description:
+                                        - The role definition identifier.
+                                        - This role will delegate all the permissions that the security group/service principal/user must have on the projected subscription.
+                                        - This role cannot be an owner role.
+                                    returned: always
+                                    type: str
+                                    sample: null
+                                just_in_time_access_policy:
+                                    description:
+                                        - Just-in-time access policy setting.
+                                    returned: always
+                                    type: complex
+                                    contains:
+                                        multi_factor_auth_provider:
+                                            description:
+                                                - MFA provider.
+                                            returned: always
+                                            type: str
+                                            sample: null
+                                        maximum_activation_duration:
+                                            description:
+                                                - Maximum access duration in ISO 8601 format.
+                                                - The default value is "PT8H".
+                                            returned: always
+                                            type: duration
+                                            sample: null
+                        registration_definition_name:
+                            description:
+                                - Name of the registration definition.
+                            returned: always
+                            type: str
+                            sample: null
+                        managed_by_tenant_id:
+                            description:
+                                - ID of the managedBy tenant.
+                            returned: always
+                            type: str
+                            sample: null
+                plan:
+                    description:
+                        - Plan details for the managed services.
+                    returned: always
+                    type: complex
+                    contains:
+                        name:
+                            description:
+                                - The plan name.
+                            returned: always
+                            type: str
+                            sample: null
+                        publisher:
+                            description:
+                                - The publisher ID.
+                            returned: always
+                            type: str
+                            sample: null
+                        product:
+                            description:
+                                - The product code.
+                            returned: always
+                            type: str
+                            sample: null
+                        version:
+                            description:
+                                - The plan's version.
+                            returned: always
+                            type: str
+                            sample: null
+        next_link:
+            description:
+                - Link to next page of registration definitions.
+            returned: always
+            type: str
+            sample: null
 
 '''
-import logging
-logging.basicConfig(filename='log.log', level=logging.INFO)
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 try:
@@ -441,11 +390,6 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
         self.url = None
         self.status_code = [200]
 
-        self.query_parameters = {}
-        self.query_parameters['api-version'] = '2020-02-01-preview'
-        self.header_parameters = {}
-        self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
-
         self.mgmt_client = None
         super(AzureRMRegistrationDefinitionInfo, self).__init__(self.module_arg_spec, supports_tags=True)
 
@@ -467,9 +411,6 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
 
     def get(self):
         response = None
-        logging.info('11111111111111111')
-        logging.info(self.mgmt_client.registration_definitions)
-        logging.info('11111111111111111')
 
         try:
             response = self.mgmt_client.registration_definitions.get(scope=self.scope,
@@ -477,8 +418,6 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
-        logging.info('tttttttttttttt')
-        logging.info(response)
         return response
 
     def list(self):

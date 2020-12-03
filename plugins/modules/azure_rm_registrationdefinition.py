@@ -226,13 +226,13 @@ properties:
                     sample: null
         eligible_authorizations:
             description:
-                - Eligible PIM authorization tuple containing principal id of the user/security group or service principal, id of the built-in role, and just-in-time access policy setting
+                - Eligible PIM authorization tuple containing principal ID of the user/security group or service principal, id of the built-in role, and just-in-time access policy setting
             returned: always
             type: complex
             contains:
                 principal_id:
                     description:
-                        - Principal Id of the security group/service principal/user that would be delegated permissions to the projected subscription.
+                        - Principal ID of the security group/service principal/user that would be delegated permissions to the projected subscription.
                     returned: always
                     type: str
                     sample: null
@@ -276,7 +276,7 @@ properties:
             sample: null
         managed_by_tenant_id:
             description:
-                - Id of the managedBy tenant.
+                - ID of the managedBy tenant.
             returned: always
             type: str
             sample: null
@@ -477,8 +477,6 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
         self.scope = None
         self.registration_definition_id = None
         self.body = {}
-        self.plan = None
-        self.properties = None
 
         self.results = dict(changed=False)
         self.mgmt_client = None
@@ -544,8 +542,8 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
         try:
             response = self.mgmt_client.registration_definitions.create_or_update(registration_definition_id=self.registration_definition_id,
                                                                                   scope=self.scope,
-                                                                                  plan=self.plan,
-                                                                                  properties=self.properties,
+                                                                                  plan=self.body.get('plan', None),
+                                                                                  properties=self.body.get('properties', None),
                                                                                   request_body=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
