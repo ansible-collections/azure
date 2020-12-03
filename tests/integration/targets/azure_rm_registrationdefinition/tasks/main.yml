@@ -1,0 +1,27 @@
+- name: Create a RegistrationDefinition
+  azure_rm_registrationdefinition:
+    registration_definition_id: 2e853c04-ad29-4d0b-9f6b-e72c225d96c2
+    scope: subscriptions/f64d4ee8-be94-457d-ba26-3fa6b6506cef
+    properties:
+      description: test
+      authorizations:
+        - principal_id: 99e3227f-8701-4099-869f-bc3efc7f1e64
+          role_definition_id: b24988ac-6180-42a0-ab88-20f7382dd24c
+      managed_by_tenant_id: fbcdd0f3-dc82-4cee-bcde-7301d24e9bf6
+      registration_definition_name: def4
+#    plan:
+#      name: "addesai-plan"
+#      product: test
+#      publisher: marketplace-test
+#      version: 1.0.0
+
+  register: output
+- debug:
+    var: output
+- name: Create a RegistrationDefinition
+  azure_rm_registrationdefinition_info:
+    registration_definition_id: 2e853c04-ad29-4d0b-9f6b-e72c225d96c2
+    scope: subscriptions/f64d4ee8-be94-457d-ba26-3fa6b6506cef
+  register: output
+- debug:
+    var: output
