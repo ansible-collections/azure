@@ -79,6 +79,7 @@ parameters:
     - "azure_rm_virtualnetworkeepring"
     - "azure_rm_backupazurevm"
     - "azure_rm_recoveryservicesvault"
+    - "azure_rm_registrationassignment"
     - "azure_rm_vmbackuppolicy"
     - "azure_rm_webapp"
     - "azure_rm_workspace"
