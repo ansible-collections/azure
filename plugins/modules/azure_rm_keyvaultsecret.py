@@ -194,8 +194,8 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
                 client_id=self.credentials['client_id'],
                 secret=self.credentials['secret'],
                 tenant=tenant,
-                cloud_environment=self._cloud_environment,
-                resource="https://vault.azure.net")
+                cloud_environment=self.azure_auth._cloud_environment,
+                resource = f"https://{self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()}")
 
             token = authcredential.token
             return token['token_type'], token['access_token']
