@@ -29,7 +29,6 @@ options:
     registration_definition_id:
         description:
             - Guid of the registration definition.
-        required: true
         type: str
     properties:
         description:
@@ -75,7 +74,7 @@ options:
                 suboptions:
                     principal_id:
                         description:
-                            - Principal Id of the security group/service principal/user that would be delegated permissions to the projected subscription
+                            - Principal ID of the security group/service principal/user that would be delegated permissions to the projected subscription.
                         required: true
                         type: str
                     principal_id_display_name:
@@ -85,8 +84,8 @@ options:
                     role_definition_id:
                         description:
                             - The role definition identifier.
-                            - This role will delegate all the permissions that the security group/service principal/user must have on the projected subscription.
-                            - This role cannot be an owner role.
+                            - The role will delegate all the permissions that the security group/service principal/user must have on the projected subscription.
+                            - The role cannot be an owner role.
                         required: true
                         type: str
                     just_in_time_access_policy:
@@ -335,6 +334,7 @@ name:
     sample: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/2e853c04-ad29-4d0b-9f6b-e72c225d96c2
 
 '''
+import uuid
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -344,7 +344,6 @@ try:
 except ImportError:
     # This is handled in azure_rm_common
     pass
-
 
 class Actions:
     NoAction, Create, Update, Delete = range(4)
@@ -359,7 +358,6 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
             ),
             registration_definition_id=dict(
                 type='str',
-                required=True
             ),
             properties=dict(
                 type='dict',
@@ -500,6 +498,9 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
 
         self.inflate_parameters(self.module_arg_spec, self.body, 0)
 
+        if self.registration_definition_id is None:
+            self.registration_definition_id = str(uuid.uuid4())
+
         old_response = None
         response = None
 
@@ -516,13 +517,12 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                self.to_do = Actions.Update
-                #modifiers = {}
-                #self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                #self.results['modifiers'] = modifiers
-                #self.results['compare'] = []
-                #if not self.default_compare(modifiers, self.body, old_response, '', self.results):
-                #    self.to_do = Actions.Update
+                modifiers = {}
+                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
+                self.results['modifiers'] = modifiers
+                self.results['compare'] = []
+                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
+                    self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.results['changed'] = True
@@ -567,13 +567,12 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
         return True
 
     def get_resource(self):
-        #try:
-        #    response = self.mgmt_client.registration_definitions.get(scope=self.scope,
-        #                                                             registration_definition_id=self.registration_definition_id)
-        #except CloudError as e:
-        #    return False
-        #return response.as_dict()
-        return True
+        try:
+            response = self.mgmt_client.registration_definitions.get(scope=self.scope,
+                                                                     registration_definition_id=self.registration_definition_id)
+        except Exception as e:
+            return False
+        return response.as_dict()
 
 
 def main():

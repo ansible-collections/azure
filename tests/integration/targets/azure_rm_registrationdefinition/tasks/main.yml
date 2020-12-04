@@ -1,20 +1,27 @@
 - name: set guid for registration definition id
   set_fact:
-     registration_definition_id: 2e853c04-ad29-4d0b-9f6b-e72c225d96c4
+     registration_definition_id: 2e853c04-ad29-4d0b-9f6b-e72c225d96c8
      subscription_id: "{{ azure_subscription_id }}"
+     reg_def_name: test_name
   run_once: yes
+  tags: fred
+
+- name: Delete the registration definition
+  azure_rm_registrationdefinition:
+    registration_definition_id: "{{ registration_definition_id }}"
+    scope: subscriptions//{{ subscription_id }}
 
 - name: Create a RegistrationDefinition -- check mode
   azure_rm_registrationdefinition:
     registration_definition_id: "{{ registration_definition_id }}"
     scope: subscriptions//{{ subscription_id }}
     properties:
-      description: test
+      description: first_test
       authorizations:
         - principal_id: 99e3227f-8701-4099-869f-bc3efc7f1e64
           role_definition_id: b24988ac-6180-42a0-ab88-20f7382dd24c
       managed_by_tenant_id: fbcdd0f3-dc82-4cee-bcde-7301d24e9bf6
-      registration_definition_name: def5
+      registration_definition_name: "{{ reg_def_name }}"
   check_mode: yes
   register: output
 
@@ -28,12 +35,48 @@
     registration_definition_id: "{{ registration_definition_id }}"
     scope: subscriptions//{{ subscription_id }}
     properties:
-      description: test
+      description: first_test
       authorizations:
         - principal_id: 99e3227f-8701-4099-869f-bc3efc7f1e64
           role_definition_id: b24988ac-6180-42a0-ab88-20f7382dd24c
       managed_by_tenant_id: fbcdd0f3-dc82-4cee-bcde-7301d24e9bf6
-      registration_definition_name: def5
+      registration_definition_name: "{{ reg_def_name }}"
+  register: output
+
+- name: Assert creating registration definition
+  assert:
+    that:
+      - output.changed
+
+- name: Create a RegistrationDefinition (idempotent)
+  azure_rm_registrationdefinition:
+    registration_definition_id: "{{ registration_definition_id }}"
+    scope: subscriptions//{{ subscription_id }}
+    properties:
+      description: first_test
+      authorizations:
+        - principal_id: 99e3227f-8701-4099-869f-bc3efc7f1e64
+          role_definition_id: b24988ac-6180-42a0-ab88-20f7382dd24c
+      managed_by_tenant_id: fbcdd0f3-dc82-4cee-bcde-7301d24e9bf6
+      registration_definition_name: "{{ reg_def_name }}"
+  register: output
+
+- name: Assert creating registration definition
+  assert:
+    that:
+      - not output.changed
+
+- name: Update the RegistrationDefinition properties description and name
+  azure_rm_registrationdefinition:
+    registration_definition_id: "{{ registration_definition_id }}"
+    scope: subscriptions//{{ subscription_id }}
+    properties:
+      description: second_test
+      authorizations:
+        - principal_id: 99e3227f-8701-4099-869f-bc3efc7f1e64
+          role_definition_id: b24988ac-6180-42a0-ab88-20f7382dd24c
+      managed_by_tenant_id: fbcdd0f3-dc82-4cee-bcde-7301d24e9bf6
+      registration_definition_name: "{{ reg_def_name }}02"
   register: output
 
 - name: Assert creating registration definition
@@ -54,6 +97,8 @@
       - output.registration_definitions[0].properties.authorizations[0].principal_id == "99e3227f-8701-4099-869f-bc3efc7f1e64"
       - output.registration_definitions[0].properties.authorizations[0].role_definition_id == "b24988ac-6180-42a0-ab88-20f7382dd24c"
       - output.registration_definitions[0].properties.provisioning_state == "Succeeded"
+      - output.registration_definitions[0].properties.description == "second_test"
+      - output.registration_definitions[0].properties.registration_definition_name == "test_name02"
 
 - name: Delete the registration definition
   azure_rm_registrationdefinition:
@@ -65,3 +110,4 @@
 - name: Assert delete registration definition success
   assert:
     that:
+      - output.changed

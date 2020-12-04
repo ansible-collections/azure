@@ -91,8 +91,8 @@ registration_definitions:
                         role_definition_id:
                             description:
                                 - The role definition identifier.
-                                - This role will define all the permissions that the security group/service principal/user must have on the projected subscription.
-                                - This role cannot be an owner role.
+                                - The role will define all the permissions that the security group/service principal/user must have on the subscription.
+                                - The role cannot be an owner role.
                             returned: always
                             type: str
                             sample: null
@@ -125,8 +125,8 @@ registration_definitions:
                         role_definition_id:
                             description:
                                 - The role definition identifier.
-                                - This role will delegate all the permissions that the security group/service principal/user must have on the projected subscription.
-                                - This role cannot be an owner role.
+                                - The role will delegate all the permissions that the security group/service principal/user must have on the subscription.
+                                - The role cannot be an owner role.
                             returned: always
                             type: str
                             sample: null
@@ -236,7 +236,7 @@ registration_definitions:
                             contains:
                                 principal_id:
                                     description:
-                                        - Principal ID of the security group/service principal/user that would be assigned permissions to the projected subscription.
+                                        - Principal ID of the security group/service principal/user that would be assigned permissions to the subscription.
                                     returned: always
                                     type: str
                                     sample: null
@@ -249,8 +249,8 @@ registration_definitions:
                                 role_definition_id:
                                     description:
                                         - The role definition identifier.
-                                        - This role will define all the permissions that the security group/service principal/user must have on the projected subscription.
-                                        - This role cannot be an owner role.
+                                        - The role will define all the permissions that the security group/service principal/user must have on the subscription.
+                                        - The role cannot be an owner role.
                                     returned: always
                                     type: str
                                     sample: null
@@ -270,7 +270,7 @@ registration_definitions:
                             contains:
                                 principal_id:
                                     description:
-                                        - Principal ID of the security group/service principal/user that would be delegated permissions to the projected subscription
+                                        - Principal ID of the security group/service principal/user that would be delegated permissions to the subscription.
                                     returned: always
                                     type: str
                                     sample: null
@@ -283,8 +283,8 @@ registration_definitions:
                                 role_definition_id:
                                     description:
                                         - The role definition identifier.
-                                        - This role will delegate all the permissions that the security group/service principal/user must have on the projected subscription.
-                                        - This role cannot be an owner role.
+                                        - The role will delegate all the permissions that the security group/service principal/user must have on the subscription.
+                                        - The role cannot be an owner role.
                                     returned: always
                                     type: str
                                     sample: null
@@ -414,7 +414,7 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
         try:
             response = self.mgmt_client.registration_definitions.get(scope=self.scope,
                                                                      registration_definition_id=self.registration_definition_id)
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response
@@ -424,7 +424,7 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
 
         try:
             response = self.mgmt_client.registration_definitions.list(scope=self.scope)
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response
