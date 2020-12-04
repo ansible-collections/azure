@@ -1,27 +1,67 @@
-- name: Create a RegistrationDefinition
+- name: set guid for registration definition id
+  set_fact:
+     registration_definition_id: 2e853c04-ad29-4d0b-9f6b-e72c225d96c4
+     subscription_id: "{{ azure_subscription_id }}"
+  run_once: yes
+
+- name: Create a RegistrationDefinition -- check mode
   azure_rm_registrationdefinition:
-    registration_definition_id: 2e853c04-ad29-4d0b-9f6b-e72c225d96c2
-    scope: subscriptions/f64d4ee8-be94-457d-ba26-3fa6b6506cef
+    registration_definition_id: "{{ registration_definition_id }}"
+    scope: subscriptions//{{ subscription_id }}
     properties:
       description: test
       authorizations:
         - principal_id: 99e3227f-8701-4099-869f-bc3efc7f1e64
           role_definition_id: b24988ac-6180-42a0-ab88-20f7382dd24c
       managed_by_tenant_id: fbcdd0f3-dc82-4cee-bcde-7301d24e9bf6
-      registration_definition_name: def4
-#    plan:
-#      name: "addesai-plan"
-#      product: test
-#      publisher: marketplace-test
-#      version: 1.0.0
+      registration_definition_name: def5
+  check_mode: yes
+  register: output
 
-  register: output
-- debug:
-    var: output
+- name: Assert creating registration definition check mode
+  assert:
+    that:
+      - output.changed
+
 - name: Create a RegistrationDefinition
-  azure_rm_registrationdefinition_info:
-    registration_definition_id: 2e853c04-ad29-4d0b-9f6b-e72c225d96c2
-    scope: subscriptions/f64d4ee8-be94-457d-ba26-3fa6b6506cef
+  azure_rm_registrationdefinition:
+    registration_definition_id: "{{ registration_definition_id }}"
+    scope: subscriptions//{{ subscription_id }}
+    properties:
+      description: test
+      authorizations:
+        - principal_id: 99e3227f-8701-4099-869f-bc3efc7f1e64
+          role_definition_id: b24988ac-6180-42a0-ab88-20f7382dd24c
+      managed_by_tenant_id: fbcdd0f3-dc82-4cee-bcde-7301d24e9bf6
+      registration_definition_name: def5
   register: output
-- debug:
-    var: output
+
+- name: Assert creating registration definition
+  assert:
+    that:
+      - output.changed
+
+- name: Get the Registration Definition info
+  azure_rm_registrationdefinition_info:
+    registration_definition_id:  "{{ registration_definition_id }}"
+    scope: subscriptions/{{ subscription_id }}
+  register: output
+
+- name: Assert the registration definition info
+  assert:
+    that:
+      - output.registration_definitions[0].name == "{{ registration_definition_id }}"
+      - output.registration_definitions[0].properties.authorizations[0].principal_id == "99e3227f-8701-4099-869f-bc3efc7f1e64"
+      - output.registration_definitions[0].properties.authorizations[0].role_definition_id == "b24988ac-6180-42a0-ab88-20f7382dd24c"
+      - output.registration_definitions[0].properties.provisioning_state == "Succeeded"
+
+- name: Delete the registration definition
+  azure_rm_registrationdefinition:
+    registration_definition_id: "{{ registration_definition_id }}"
+    scope: subscriptions//{{ subscription_id }}
+    state: absent
+  register: output
+
+- name: Assert delete registration definition success
+  assert:
+    that:

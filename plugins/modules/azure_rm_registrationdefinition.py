@@ -65,11 +65,12 @@ options:
                     delegated_role_definition_ids:
                         description:
                             - The delegatedRoleDefinitionIds field is required when the roleDefinitionId refers to the User Access Administrator Role.
-                            - It is the list of role definition ids which define all the permissions that the user in the authorization can assign to other security groups/service principals/users.
+                            - It is the list of role definition ids which define all the permissions that the user in the authorization.
+                            - It can assign to other security groups/service principals/users.
                         type: list
             eligible_authorizations:
                 description:
-                    - Eligible PIM authorization tuple containing principal id of the user/security group or service principal, id of the built-in role, and just-in-time access policy setting
+                    - Eligible PIM authorization tuple containing principal ID of the user/security group or service principal ID of the built-in role.
                 type: list
                 suboptions:
                     principal_id:
@@ -83,7 +84,8 @@ options:
                         type: str
                     role_definition_id:
                         description:
-                            - The role definition identifier. This role will delegate all the permissions that the security group/service principal/user must have on the projected subscription.
+                            - The role definition identifier.
+                            - This role will delegate all the permissions that the security group/service principal/user must have on the projected subscription.
                             - This role cannot be an owner role.
                         required: true
                         type: str
@@ -144,6 +146,7 @@ options:
             - Assert the state of the RegistrationDefinition.
             - Use C(present) to create or update an RegistrationDefinition and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -159,13 +162,13 @@ author:
 
 EXAMPLES = '''
     - name: Delete Registration Definition
-      azure_rm_registrationdefinition: 
+      azure_rm_registrationdefinition:
         registration_definition_id: 2e853c04-ad29-4d0b-9f6b-e72c225d96c2
         scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         state: absent
 
     - name: Create Registration Definition
-      azure_rm_registrationdefinition: 
+      azure_rm_registrationdefinition:
         registration_definition_id: 2e853c04-ad29-4d0b-9f6b-e72c225d96c2
         scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         properties:
@@ -220,13 +223,14 @@ properties:
                 delegated_role_definition_ids:
                     description:
                         - The delegatedRoleDefinitionIds field is required when the roleDefinitionId refers to the User Access Administrator Role.
-                        - It is the list of role definition ids which define all the permissions that the user in the authorization can assign to other security groups/service principals/users.
+                        - It is the list of role definition ID which define all the permissions that the user in the authorization.
+                        - It can assign to other security groups/service principals/users.
                     returned: always
                     type: list
                     sample: null
         eligible_authorizations:
             description:
-                - Eligible PIM authorization tuple containing principal ID of the user/security group or service principal, id of the built-in role, and just-in-time access policy setting
+                - Eligible PIM authorization tuple containing principal ID of the user/security group or service principal ID of the built-in role.
             returned: always
             type: complex
             contains:
@@ -244,7 +248,8 @@ properties:
                     sample: null
                 role_definition_id:
                     description:
-                        - The role definition identifier. This role will delegate all the permissions that the security group/service principal/user must have on the projected subscription.
+                        - The role definition identifier.
+                        - This role will delegate all the permissions that the security group/service principal/user must have on the projected subscription.
                         - This role cannot be an owner role.
                     returned: always
                     type: str
@@ -330,7 +335,6 @@ name:
     sample: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/2e853c04-ad29-4d0b-9f6b-e72c225d96c2
 
 '''
-
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -512,13 +516,13 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                modifiers = {}
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                self.results['modifiers'] = modifiers
-                self.results['compare'] = []
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
-                    self.to_do = Actions.Update
                 self.to_do = Actions.Update
+                #modifiers = {}
+                #self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
+                #self.results['modifiers'] = modifiers
+                #self.results['compare'] = []
+                #if not self.default_compare(modifiers, self.body, old_response, '', self.results):
+                #    self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.results['changed'] = True
@@ -563,12 +567,13 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
         return True
 
     def get_resource(self):
-        try:
-            response = self.mgmt_client.registration_definitions.get(scope=self.scope,
-                                                                     registration_definition_id=self.registration_definition_id)
-        except CloudError as e:
-            return False
-        return response.as_dict()
+        #try:
+        #    response = self.mgmt_client.registration_definitions.get(scope=self.scope,
+        #                                                             registration_definition_id=self.registration_definition_id)
+        #except CloudError as e:
+        #    return False
+        #return response.as_dict()
+        return True
 
 
 def main():

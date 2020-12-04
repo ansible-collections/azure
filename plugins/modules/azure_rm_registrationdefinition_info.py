@@ -41,15 +41,13 @@ author:
 
 EXAMPLES = '''
     - name: Get Registration Definition
-      azure_rm_registrationdefinition_info: 
+      azure_rm_registrationdefinition_info:
         registration_definition_id: 26c128c2-fefa-4340-9bb1-6e081c90ada2
         scope: subscription/0afefe50-734e-4610-8a82-a144ahf49dea
 
-
     - name: Get Registration Definitions
-      azure_rm_registrationdefinition_info: 
+      azure_rm_registrationdefinition_info:
         scope: subscription/0afefe50-734e-4610-8a82-a144ahf49dea
-
 
 '''
 
@@ -76,11 +74,11 @@ registration_definitions:
                     description:
                         - Authorization tuple containing principal id of the user/security group or service principal and id of the build-in role.
                     returned: always
-                    type: comlex
+                    type: complex
                     contains:
                         principal_id:
                             description:
-                                - Principal ID of the security group/service principal/user that would be assigned permissions to the projected subscription
+                                - Principal ID of the security group/service principal/user that would be assigned permissions to the projected subscription.
                             returned: always
                             type: str
                             sample: null
@@ -101,13 +99,14 @@ registration_definitions:
                         delegated_role_definition_ids:
                             description:
                                 - The delegatedRoleDefinitionIds field is required when the roleDefinitionId refers to the User Access Administrator Role.
-                                - It is the list of role definition ids which define all the permissions that the user in the authorization can assign to other security groups/service principals/users.
+                                - It is the list of role definition ID which define all the permissions that the user in the authorization.
+                                - It can assign to other security groups/service principals/users.
                             returned: always
                             type: list
                             sample: null
                 eligible_authorizations:
                     description:
-                        - Eligible PIM authorization tuple containing principal id of the user/security group or service principal, id of the built-in role and just-in-time access policy setting.
+                        - Eligible PIM authorization tuple containing principal id of the user/security group or service principal ID of the built-in role.
                     returned: always
                     type: complex
                     contains:
@@ -135,7 +134,7 @@ registration_definitions:
                             description:
                                 - Just-in-time access policy setting.
                             returned: always
-                            type:complex 
+                            type:complex
                             contains:
                                 multi_factor_auth_provider:
                                     description:
@@ -258,13 +257,14 @@ registration_definitions:
                                 delegated_role_definition_ids:
                                     description:
                                         - The delegatedRoleDefinitionIds field is required when the roleDefinitionId refers to the User Access Administrator Role.
-                                        - It is the list of role definition ids which define all the permissions that the user in the authorization can assign to other security groups/service principals/users.
+                                        - It is the list of role definition ids which define all the permissions that the user in the authorization.
+                                        - It can assign to other security groups/service principals/users.
                                     returned: always
                                     type: list
-                                  sample: null
+                                    sample: null
                         eligible_authorizations:
                             description:
-                                - Eligible PIM authorization tuple containing principal ID of the user/security group or service principal, ID of the built-in role and just-in-time access policy setting
+                                - Eligible PIM authorization tuple containing principal ID of the user/security group or service principal ID of the built-in role.
                             returned: always
                             type: complex
                             contains:
@@ -402,8 +402,7 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
                                                     api_version='2020-02-01-preview')
 
-        if (self.scope is not None and
-            self.registration_definition_id is not None):
+        if (self.scope is not None and self.registration_definition_id is not None):
             self.results['registration_definitions'] = self.format_item(self.get())
         elif (self.scope is not None):
             self.results['registration_definitions'] = self.format_item(self.list())
