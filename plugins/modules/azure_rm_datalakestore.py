@@ -82,7 +82,7 @@ options:
                 required: true
             start_ip_address:
                 description:
-                    - The start IP address for the firewall rule. 
+                    - The start IP address for the firewall rule.
                     - This can be either ipv4 or ipv6.
                     - Start and End should be in the same protocol.
                 type: str
@@ -218,7 +218,7 @@ state:
                                 - The resource identifier for the user managed Key Vault being used to encrypt.
                             type: str
                             returned: always
-                            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.KeyVault/vaults/testkv
+                            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.KeyVault/vaults/tstkv
                         encryption_key_name:
                             description:
                                 - The name of the user managed encryption key.
@@ -250,7 +250,7 @@ state:
             sample: testaccount.azuredatalakestore.net
         firewall_allow_azure_ips:
             description:
-                - The current state of allowing or disallowing IPs originating within Azure through the firewall. 
+                - The current state of allowing or disallowing IPs originating within Azure through the firewall.
                 - If the firewall is disabled, this is not enforced.
             type: str
             returned: always
@@ -269,7 +269,7 @@ state:
                     sample: Example Name
                 start_ip_address:
                     description:
-                        - The start IP address for the firewall rule. 
+                        - The start IP address for the firewall rule.
                         - This can be either ipv4 or ipv6.
                         - Start and End should be in the same protocol.
                     type: str
@@ -406,7 +406,7 @@ state:
                     description:
                         - The resource identifier for the subnet.
                     type: str
-                    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/vnet/subnets/default
+                    sample: /subscriptions/{subscriptionId}/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/vnet/subnets/default
 
 '''
 
@@ -429,11 +429,11 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                 options=dict(
                     type=dict(type='str', choices=['UserManaged', 'ServiceManaged']),
                     key_vault_meta_info=dict(
-                        type='dict', 
+                        type='dict',
                         options=dict(
-                            key_vault_resource_id=dict(type='str',required=True),
-                            encryption_key_name=dict(type='str',required=True),
-                            encryption_key_version=dict(type='str',required=True)
+                            key_vault_resource_id=dict(type='str', required=True),
+                            encryption_key_name=dict(type='str', required=True),
+                            encryption_key_version=dict(type='str', required=True)
                         )
                     ),
                 )
@@ -443,29 +443,30 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             firewall_rules=dict(
                 type='list',
                 options=dict(
-                    name=dict(type='str',required=True),
-                    start_ip_address=dict(type='str',required=True),
-                    end_ip_address=dict(type='str',required=True)
+                    name=dict(type='str', required=True),
+                    start_ip_address=dict(type='str', required=True),
+                    end_ip_address=dict(type='str', required=True)
                 )
             ),
             firewall_state=dict(type='str', choices=['Enabled', 'Disabled']),
             identity=dict(
                 type='dict',
                 options=dict(
-                    type=dict(type='str', choices=['SystemAssigned'],required=True)
+                    type=dict(type='str', choices=['SystemAssigned'], required=True)
                 )
             ),
             location=dict(type='str'),
-            name=dict(type='str',required=True),
-            new_tier=dict(type='str', choices=['Consumption', 'Commitment_1TB', 'Commitment_10TB', 'Commitment_100TB', 'Commitment_500TB', 'Commitment_1PB', 'Commitment_5PB']),
-            resource_group=dict(type='str',required=True),
+            name=dict(type='str', required=True),
+            new_tier=dict(type='str', choices=['Consumption', 'Commitment_1TB', 'Commitment_10TB', 'Commitment_100TB',
+                                               'Commitment_500TB', 'Commitment_1PB', 'Commitment_5PB']),
+            resource_group=dict(type='str', required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             tags=dict(type='dict'),
             virtual_network_rules=dict(
                 type='list',
                 options=dict(
-                    name=dict(type='str',required=True),
-                    subnet_id=dict(type='str',required=True)
+                    name=dict(type='str', required=True),
+                    subnet_id=dict(type='str', required=True)
                 )
             ),
         )
@@ -493,8 +494,8 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         self.account_dict = None
 
         super(AzureRMDatalakeStore, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                supports_check_mode=False,
-                                                supports_tags=False)
+                                                   supports_check_mode=False,
+                                                   supports_tags=False)
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:
@@ -508,8 +509,8 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                     encryption_key_name=self.encryption_config.get('key_vault_meta_info').get('encryption_key_name'),
                     encryption_key_version=self.encryption_config.get('key_vault_meta_info').get('encryption_key_version')
                 )
-            self.encryption_config_model=self.datalake_store_models.EncryptionConfig(type=self.encryption_config.get('type'),
-                                                                                     key_vault_meta_info=key_vault_meta_info_model)
+            self.encryption_config_model = self.datalake_store_models.EncryptionConfig(type=self.encryption_config.get('type'),
+                                                                                       key_vault_meta_info=key_vault_meta_info_model)
 
         if self.identity is not None:
             self.identity_model = self.datalake_store_models.EncryptionIdentity(
@@ -565,7 +566,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                 location=self.location
             )
             return account_dict
-        
+
         if self.firewall_rules is not None:
             self.firewall_rules_model = list()
             for rule in self.firewall_rules:
@@ -574,7 +575,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                     start_ip_address=rule.get('start_ip_address'),
                     end_ip_address=rule.get('end_ip_address'))
                 self.firewall_rules_model.append(rule_model)
-        
+
         if self.virtual_network_rules is not None:
             self.virtual_network_rules_model = list()
             for vnet_rule in self.virtual_network_rules:
@@ -604,7 +605,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         except CloudError as e:
             self.log('Error creating datalake store.')
             self.fail("Failed to create datalake store: {0}".format(str(e)))
-            
+
         return self.get_datalake_store()
 
     def update_datalake_store(self):
@@ -616,21 +617,24 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             update_tags, self.account_dict['tags'] = self.update_tags(self.account_dict['tags'])
             if update_tags:
                 self.results['changed'] = True
-                parameters.tags=self.account_dict['tags']
+                parameters.tags = self.account_dict['tags']
 
         if self.new_tier and self.account_dict.get('new_tier') != self.new_tier:
             self.results['changed'] = True
-            parameters.new_tier=self.new_tier
+            parameters.new_tier = self.new_tier
 
         if self.default_group and self.account_dict.get('default_group') != self.default_group:
             self.results['changed'] = True
-            parameters.default_group=self.default_group
+            parameters.default_group = self.default_group
 
         if self.encryption_state and self.account_dict.get('encryption_state') != self.encryption_state:
             self.fail("Encryption type cannot be updated.")
 
         if self.encryption_config:
-            if self.encryption_config.get('type') == 'UserManaged' and self.encryption_config.get('key_vault_meta_info') != self.account_dict.get('encryption_config').get('key_vault_meta_info'):
+            if (
+                self.encryption_config.get('type') == 'UserManaged'
+                and self.encryption_config.get('key_vault_meta_info') != self.account_dict.get('encryption_config').get('key_vault_meta_info')
+            ):
                 self.results['changed'] = True
                 key_vault_meta_info_model = self.datalake_store_models.UpdateKeyVaultMetaInfo(
                     encryption_key_version=self.encryption_config.get('key_vault_meta_info').get('encryption_key_version')
@@ -640,12 +644,12 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
 
         if self.firewall_state and self.account_dict.get('firewall_state') != self.firewall_state:
             self.results['changed'] = True
-            parameters.firewall_state=self.firewall_state
+            parameters.firewall_state = self.firewall_state
 
         if self.firewall_allow_azure_ips and self.account_dict.get('firewall_allow_azure_ips') != self.firewall_allow_azure_ips:
             self.results['changed'] = True
-            parameters.firewall_allow_azure_ips=self.firewall_allow_azure_ips
-        
+            parameters.firewall_allow_azure_ips = self.firewall_allow_azure_ips
+
         if self.firewall_rules is not None:
             if not self.compare_lists(self.firewall_rules, self.account_dict.get('firewall_rules')):
                 self.firewall_rules_model = list()
@@ -656,8 +660,8 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                         end_ip_address=rule.get('end_ip_address'))
                     self.firewall_rules_model.append(rule_model)
                 self.results['changed'] = True
-                parameters.firewall_rules=self.firewall_rules_model
-        
+                parameters.firewall_rules = self.firewall_rules_model
+
         if self.virtual_network_rules is not None:
             if not self.compare_lists(self.virtual_network_rules, self.account_dict.get('virtual_network_rules')):
                 self.virtual_network_rules_model = list()
@@ -667,11 +671,11 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                         subnet_id=vnet_rule.get('subnet_id'))
                     self.virtual_network_rules_model.append(vnet_rule_model)
                 self.results['changed'] = True
-                parameters.virtual_network_rules=self.virtual_network_rules_model
+                parameters.virtual_network_rules = self.virtual_network_rules_model
 
         if self.identity_model is not None:
             self.results['changed'] = True
-            parameters.identity=self.identity_model
+            parameters.identity = self.identity_model
 
         self.log(str(parameters))
         if self.results['changed']:
@@ -681,7 +685,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             except CloudError as e:
                 self.log('Error creating datalake store.')
                 self.fail("Failed to create datalake store: {0}".format(str(e)))
-            
+
         return self.get_datalake_store()
 
     def delete_datalake_store(self):
@@ -741,7 +745,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             virtual_network_rules=None
         )
 
-        account_dict['firewall_rules']=list()
+        account_dict['firewall_rules'] = list()
         if datalake_store_obj.firewall_rules:
             for rule in datalake_store_obj.firewall_rules:
                 rule_item = dict(
@@ -751,7 +755,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                 )
                 account_dict['firewall_rules'].append(rule_item)
 
-        account_dict['virtual_network_rules']=list()
+        account_dict['virtual_network_rules'] = list()
         if datalake_store_obj.virtual_network_rules:
             for vnet_rule in datalake_store_obj.virtual_network_rules:
                 vnet_rule_item = dict(
@@ -761,7 +765,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                 account_dict['virtual_network_rules'].append(vnet_rule_item)
 
         if datalake_store_obj.identity:
-            account_dict['identity']=dict(
+            account_dict['identity'] = dict(
                 type=datalake_store_obj.identity.type,
                 principal_id=datalake_store_obj.identity.principal_id,
                 tenant_id=datalake_store_obj.identity.tenant_id
@@ -770,13 +774,13 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         if datalake_store_obj.encryption_config:
             if datalake_store_obj.encryption_config.key_vault_meta_info:
                 account_dict['encryption_config'] = dict(
-                    key_vault_meta_info = dict(
-                        key_vault_resource_id = datalake_store_obj.encryption_config.key_vault_meta_info.key_vault_resource_id,
-                        encryption_key_name = datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_name,
-                        encryption_key_version = datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_version
+                    key_vault_meta_info=dict(
+                        key_vault_resource_id=datalake_store_obj.encryption_config.key_vault_meta_info.key_vault_resource_id,
+                        encryption_key_name=datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_name,
+                        encryption_key_version=datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_version
                     )
                 )
-        
+
         return account_dict
 
     def compare_lists(self, list1, list2):
@@ -786,6 +790,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             if element not in list2:
                 return False
         return True
+
 
 def main():
     AzureRMDatalakeStore()
