@@ -5,8 +5,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-import datetime
-
 __metaclass__ = type
 
 
@@ -37,6 +35,7 @@ options:
                     - UserManaged
                     - ServiceManaged
                 required: true
+                type: str
             key_vault_meta_info:
                 description:
                     - The Key Vault information for connecting to user managed encryption keys.
@@ -63,6 +62,7 @@ options:
         choices:
             - Enabled
             - Disabled
+        type: str
     firewall_allow_azure_ips:
         description:
             - The current state of allowing or disallowing IPs originating within Azure through the firewall.
@@ -70,6 +70,7 @@ options:
         choices:
             - Enabled
             - Disabled
+        type: str
     firewall_rules:
         description:
             - The list of firewall rules associated with this Data Lake Store account.
@@ -100,11 +101,13 @@ options:
         choices:
             - Enabled
             - Disabled
+        type: str
     identity:
         description:
             - The Key Vault encryption identity, if any.
         choices:
             - SystemAssigned
+        type: str
     location:
         description:
             - The resource location.
@@ -125,10 +128,12 @@ options:
             - Commitment_500TB
             - Commitment_1PB
             - Commitment_5PB
+        type: str
     resource_group:
         description:
             - The name of the Azure resource group to use.
         required: true
+        type: str
     state:
         description:
             - State of the data lake store. Use C(present) to create or update a data lake store and use C(absent) to delete it.
@@ -136,6 +141,7 @@ options:
         choices:
             - absent
             - present
+        type: str
     virtual_network_rules:
         description:
             - The list of virtual network rules associated with this Data Lake Store account.
@@ -185,7 +191,7 @@ state:
                 - The account creation time.
             returned: always
             type: str
-            sample: 2020-01-01T00:00:00.000000+00:00
+            sample: '2020-01-01T00:00:00.000000+00:00'
         current_tier:
             description:
                 - The commitment tier in use for the current month.
@@ -320,7 +326,7 @@ state:
                 - The account last modified time.
             returned: always
             type: str
-            sample: 2020-01-01T00:00:00.000000+00:00
+            sample: '2020-01-01T00:00:00.000000+00:00'
         location:
             description:
                 - The resource location.
@@ -411,6 +417,7 @@ state:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+import datetime
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -418,6 +425,16 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
+firewall_rules_item = dict(
+    name=dict(type='str', required=True),
+    start_ip_address=dict(type='str', required=True),
+    end_ip_address=dict(type='str', required=True)
+)
+
+virtual_network_rules_item = dict(
+    name=dict(type='str', required=True),
+    subnet_id=dict(type='str', required=True)
+)
 
 class AzureRMDatalakeStore(AzureRMModuleBase):
     def __init__(self):
@@ -427,7 +444,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             encryption_config=dict(
                 type='dict',
                 options=dict(
-                    type=dict(type='str', choices=['UserManaged', 'ServiceManaged']),
+                    type=dict(type='str', choices=['UserManaged', 'ServiceManaged'], required=True),
                     key_vault_meta_info=dict(
                         type='dict',
                         options=dict(
@@ -442,19 +459,11 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             firewall_allow_azure_ips=dict(type='str', choices=['Enabled', 'Disabled']),
             firewall_rules=dict(
                 type='list',
-                options=dict(
-                    name=dict(type='str', required=True),
-                    start_ip_address=dict(type='str', required=True),
-                    end_ip_address=dict(type='str', required=True)
-                )
+                elements='dict',
+                options=firewall_rules_item
             ),
             firewall_state=dict(type='str', choices=['Enabled', 'Disabled']),
-            identity=dict(
-                type='dict',
-                options=dict(
-                    type=dict(type='str', choices=['SystemAssigned'], required=True)
-                )
-            ),
+            identity=dict(type='str', choices=['SystemAssigned']),
             location=dict(type='str'),
             name=dict(type='str', required=True),
             new_tier=dict(type='str', choices=['Consumption', 'Commitment_1TB', 'Commitment_10TB', 'Commitment_100TB',
@@ -464,10 +473,8 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             tags=dict(type='dict'),
             virtual_network_rules=dict(
                 type='list',
-                options=dict(
-                    name=dict(type='str', required=True),
-                    subnet_id=dict(type='str', required=True)
-                )
+                elements='dict',
+                options=virtual_network_rules_item
             ),
         )
 
@@ -514,7 +521,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
 
         if self.identity is not None:
             self.identity_model = self.datalake_store_models.EncryptionIdentity(
-                type=self.identity.get('type')
+                type=self.identity
             )
 
         resource_group = self.get_resource_group(self.resource_group)

@@ -152,7 +152,7 @@
       - output.state.last_modified_time is defined
       - output.state.new_tier == "Commitment_1TB"
       - output.state.provisioning_state == "Succeeded"
-      - output.state.tags | length == 4
+      - output.state.tags | length == 3
       - output.state.trusted_id_provider_state == "Disabled"
       - output.state.virtual_network_rules | length == 1
       - output.state.virtual_network_rules[0].name == "vnet_rule_1"
@@ -196,7 +196,7 @@
     resource_group: "{{ resource_group }}"
     state: absent
 
-- name: Delete acccount
+- name: Delete Data Lake Store
   azure_rm_datalakestore:
     resource_group: "{{ resource_group }}" 
     name: "{{ adl_name }}"
