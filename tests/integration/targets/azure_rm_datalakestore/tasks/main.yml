@@ -113,7 +113,6 @@
     resource_group: "{{ resource_group }}" 
     name: "{{ adl_name }}"
     tags:
-      BillingIdentifier: PI-3000012219_100%
       P1: V1
       P2: V4
       P3: V3
@@ -164,7 +163,6 @@
     resource_group: "{{ resource_group }}" 
     name: "{{ adl_name }}"
     tags:
-      BillingIdentifier: PI-3000012219_100%
       P1: V1
       P2: V4
       P3: V3
