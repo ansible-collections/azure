@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 GuopengLin, (@t-glin)
+# Copyright (c) 2020 Fred-Sun, (@Fred-Sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_registrationassignment
-version_added: '2.0.0'
+version_added: '1.3.0'
 short_description: Manage Azure RegistrationAssignment instance
 description:
     - Create, update and delete instance of Azure RegistrationAssignment.
@@ -34,56 +34,23 @@ options:
         description:
             - Tells whether to return registration definition details also along with registration assignment details.
         type: bool
+        default: True
     properties:
         description:
             - Properties of a registration assignment.
         type: dict
-        required: true
         suboptions:
             registration_definition_id:
                 description:
                   - Fully qualified path of the registration definition.
                 required: true
                 type: str
-            registration_definition:
-                description:
-                    - Registration definition inside registration assignment.
-                type: dict
-                suboptions:
-                    properties:
-                        description:
-                            - Properties of registration definition inside registration assignment.
-                        type: dict
-                    plan:
-                        description:
-                            - Plan details for the managed services.
-                        type: dict
-                        suboptions:
-                            name:
-                                description:
-                                    - The plan name.
-                                required: true
-                                type: str
-                            publisher:
-                                description:
-                                    - The publisher ID.
-                                required: true
-                                type: str
-                            product:
-                                description:
-                                    - The product code.
-                                required: true
-                                type: str
-                            version:
-                                description:
-                                    - The plan's version.
-                                required: true
-                                type: str
     state:
         description:
             - Assert the state of the RegistrationAssignment.
             - Use C(present) to create or update an RegistrationAssignment and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -91,102 +58,72 @@ extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 author:
-    - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
-    - Haiyuan Zhang (@haiyuazhang)
 
 '''
 
 EXAMPLES = '''
     - name: Delete Registration Assignment
-      azure_rm_registrationassignment: 
-        scope: subscriptions//{{ subscription_id }}
-        registration_assignment_id:  d96f61e7-af14-440c-be1b-8395c327ae29
+      azure_rm_registrationassignment:
+        scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         state: absent
-        
 
-    - name: Put Registration Assignment
-      azure_rm_registrationassignment: 
-        scope: subscriptions//{{ subscription_id }}
-        registration_assignment_id:  d96f61e7-af14-440c-be1b-8395c327ae29
+
+    - name: Put Registration Assignment in subscription level
+      azure_rm_registrationassignment:
+        scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        properties:
+          registration_definition_id: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxx-xxx
+
+
+    - name: Put Registration Assignment in resourcegroup level
+      azure_rm_registrationassignment:
+        scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
+        registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         properties:
           registration_definition_id: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxx-xxx
 
 '''
 
 RETURN = '''
-properties:
-  description:
-      - Properties of a registration assignment.
-  returned: always
-  type: complex
-  contains:
-      registration_definition_id:
-          description:
-              - Fully qualified path of the registration definition.
-          returned: always
-          type: str
-          sample: null
-      registration_definition:
-          description:
-              - Registration definition inside registration assignment.
-          returned: always
-          type: complex
-          contains:
-              properties:
-                  description:
-                      - Properties of registration definition inside registration assignment.
-                  returned: always
-                  type: dict
-                  sample: null
-              plan:
-                  description:
-                      - Plan details for the managed services.
-                  returned: always
-                  type: complex
-                  contains:
-                      name:
-                          description:
-                              - The plan name.
-                          returned: always
-                          type: str
-                          sample: null
-                      publisher:
-                          description:
-                              - The publisher ID.
-                          returned: always
-                          type: str
-                          sample: null
-                      product:
-                          description:
-                              - The product code.
-                          returned: always
-                          type: str
-                          sample: null
-                      version:
-                          description:
-                              - The plan's version.
-                          returned: always
-                          type: str
-                          sample: null
-id:
+state:
     description:
-        - The fully qualified path of the registration assignment.
+        - The state info of the registration assignment.
+    type: complex
     returned: always
-    type: str
-    sample: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationAssignments/xxx-xxx
-type:
-    description:
-        - Type of the resource.
-    returned: always
-    type: str
-    sample: Microsoft.ManagedServices/registrationAssignments
-name:
-    description:
-        - Name of the registration assignment.
-    returned: always
-    type: str
-    sample: 9b2895ec-fb1e-4a1e-a978-abd9933d6b20
+    contains:
+        properties:
+            description:
+                - Properties of a registration assignment.
+            returned: always
+            type: complex
+            contains:
+                registration_definition_id:
+                    description:
+                        - Fully qualified path of the registration definition.
+                    returned: always
+                    type: str
+                    sample: null
+        id:
+            description:
+                - The fully qualified path of the registration assignment.
+            returned: always
+            type: str
+            sample: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationAssignments/xxx-xxx
+        type:
+            description:
+                - Type of the resource.
+            returned: always
+            type: str
+            sample: Microsoft.ManagedServices/registrationAssignments
+        name:
+            description:
+                - Name of the registration assignment.
+            returned: always
+            type: str
+            sample: 9b2895ec-fb1e-4a1e-a978-abd9933d6b20
 
 '''
 import uuid
@@ -216,7 +153,8 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
                 type='str',
             ),
             expand_registration_definition=dict(
-                type='bool'
+                type='bool',
+                default=True
             ),
             properties=dict(
                 type='dict',
@@ -226,43 +164,6 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
                         type='str',
                         disposition='registration_definition_id',
                         required=True
-                    ),
-                    registration_definition=dict(
-                        type='dict',
-                        updatable=False,
-                        disposition='registration_definition',
-                        options=dict(
-                            properties=dict(
-                                type='dict',
-                                disposition='properties'
-                            ),
-                            plan=dict(
-                                type='dict',
-                                disposition='plan',
-                                options=dict(
-                                    name=dict(
-                                        type='str',
-                                        disposition='name',
-                                        required=True
-                                    ),
-                                    publisher=dict(
-                                        type='str',
-                                        disposition='publisher',
-                                        required=True
-                                    ),
-                                    product=dict(
-                                        type='str',
-                                        disposition='product',
-                                        required=True
-                                    ),
-                                    version=dict(
-                                        type='str',
-                                        disposition='version',
-                                        required=True
-                                    )
-                                )
-                            )
-                        )
                     )
                 )
             ),
@@ -275,6 +176,7 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
 
         self.scope = None
         self.registration_assignment_id = None
+        self.expand_registration_definition = None
         self.body = {}
 
         self.results = dict(changed=False)
@@ -302,7 +204,8 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
 
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2019-09-01')
+                                                    api_version='2019-09-01',
+                                                    suppress_subscription_id=True)
 
         old_response = self.get_resource()
 
@@ -336,6 +239,12 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
             response = old_response
             self.results['state'] = response
 
+        if self.state is 'present':
+            if self.results['state'].get('properties', None) is not None:
+                registration_definition_id = self.results['state']['properties']['registration_definition_id']
+                self.results['state']['properties'].clear()
+                self.results['state']['properties']['registration_definition_id'] = registration_definition_id
+
         return self.results
 
     def create_update_resource(self):
@@ -365,9 +274,8 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
         try:
             response = self.mgmt_client.registration_assignments.get(scope=self.scope,
                                                                      registration_assignment_id=self.registration_assignment_id,
-                                                                     expand_registration_definition=self.body.get('expand_registration_definition', True))
+                                                                     expand_registration_definition=self.expand_registration_definition)
         except Exception as e:
-        #except CloudError as e:
             return False
         return response.as_dict()
 

@@ -243,6 +243,7 @@ plugins/modules/azure_rm_resourcegroup_info.py validate-modules:required_if-requ
 plugins/modules/azure_rm_resourcegroup_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_registrationassignment.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_registrationassignment.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_registrationassignment.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_registrationassignment_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_registrationassignment_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_registrationdefinition.py validate-modules:doc-elements-mismatch

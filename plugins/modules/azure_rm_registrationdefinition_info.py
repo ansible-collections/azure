@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 GuopengLin, (@t-glin)
+# Copyright (c) 2020 Fred-Sun, (@Fred-Sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_registrationdefinition_info
-version_added: '2.0.0'
+version_added: '1.3.0'
 short_description: Get RegistrationDefinition info
 description:
     - Get info of RegistrationDefinition.
@@ -34,20 +34,18 @@ extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 author:
-    - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
-    - Haiyuan Zhang (@haiyuazhang)
 '''
 
 EXAMPLES = '''
     - name: Get Registration Definition
       azure_rm_registrationdefinition_info:
-        registration_definition_id: 26c128c2-fefa-4340-9bb1-6e081c90ada2
-        scope: subscription/0afefe50-734e-4610-8a82-a144ahf49dea
+        registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        scope: subscription/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
     - name: Get Registration Definitions
       azure_rm_registrationdefinition_info:
-        scope: subscription/0afefe50-734e-4610-8a82-a144ahf49dea
+        scope: subscription/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 '''
 
@@ -150,94 +148,6 @@ registration_definitions:
             returned: always
             type: str
             sample: null
-        value:
-            description:
-                - List of registration definitions.
-            returned: always
-            type: list
-            sample: null
-            contains:
-                properties:
-                    description:
-                        - Properties of a registration definition.
-                    returned: always
-                    type: complex
-                    contains:
-                        description:
-                            description:
-                                - Description of the registration definition.
-                            returned: always
-                            type: str
-                            sample: null
-                        authorizations:
-                            description:
-                                - Authorization tuple containing principal id of the user/security group or service principal and id of the build-in role.
-                            returned: always
-                            type: complex
-                            contains:
-                                principal_id:
-                                    description:
-                                        - Principal ID of the security group/service principal/user that would be assigned permissions to the subscription.
-                                    returned: always
-                                    type: str
-                                    sample: null
-                                role_definition_id:
-                                    description:
-                                        - The role definition identifier.
-                                        - The role will define all the permissions that the security group/service principal/user must have on the subscription.
-                                        - The role cannot be an owner role.
-                                    returned: always
-                                    type: str
-                                    sample: null
-                        registration_definition_name:
-                            description:
-                                - Name of the registration definition.
-                            returned: always
-                            type: str
-                            sample: null
-                        managed_by_tenant_id:
-                            description:
-                                - ID of the managedBy tenant.
-                            returned: always
-                            type: str
-                            sample: null
-                plan:
-                    description:
-                        - Plan details for the managed services.
-                    returned: always
-                    type: complex
-                    contains:
-                        name:
-                            description:
-                                - The plan name.
-                            returned: always
-                            type: str
-                            sample: null
-                        publisher:
-                            description:
-                                - The publisher ID.
-                            returned: always
-                            type: str
-                            sample: null
-                        product:
-                            description:
-                                - The product code.
-                            returned: always
-                            type: str
-                            sample: null
-                        version:
-                            description:
-                                - The plan's version.
-                            returned: always
-                            type: str
-                            sample: null
-        next_link:
-            description:
-                - Link to next page of registration definitions.
-            returned: always
-            type: str
-            sample: null
-
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
@@ -282,7 +192,8 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
 
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2019-09-01')
+                                                    api_version='2019-09-01',
+                                                    suppress_subscription_id=True)
 
         if (self.scope is not None and self.registration_definition_id is not None):
             self.results['registration_definitions'] = self.format_item(self.get())

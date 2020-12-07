@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 GuopengLin, (@t-glin)
+# Copyright (c) 2020 Fred-Sun, (@Fred-Sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_registrationdefinition
-version_added: '2.0.0'
+version_added: '1.3.0'
 short_description: Manage Azure RegistrationDefinition instance
 description:
     - Create, update and delete instance of Azure RegistrationDefinition.
@@ -104,126 +104,130 @@ extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 author:
-    - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
-    - Haiyuan Zhang (@haiyuazhang)
 
 '''
 
 EXAMPLES = '''
     - name: Delete Registration Definition
       azure_rm_registrationdefinition:
-        registration_definition_id: 2e853c04-ad29-4d0b-9f6b-e72c225d96c2
+        registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         state: absent
 
     - name: Create Registration Definition
       azure_rm_registrationdefinition:
-        registration_definition_id: 2e853c04-ad29-4d0b-9f6b-e72c225d96c2
+        registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         properties:
           description: test
           authorizations:
             - principal_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-              role_definition_id: b24988ac-6180-42a0-ab88-20f7382dd24c
-          managed_by_tenant_id: fbcdd0f3-dc82-4cee-bcde-7301d24e9bf6
+              role_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+          managed_by_tenant_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
           registration_definition_name: def4
 
 '''
 
 RETURN = '''
-properties:
+state:
     description:
-        - Properties of a registration definition.
-    returned: always
+        - The state info of the registration assignment.
     type: complex
+    returned: always
     contains:
-        description:
+        properties:
             description:
-                - Description of the registration definition.
-            returned: always
-            type: str
-            sample: test
-        authorizations:
-            description:
-                - Authorization tuple containing principal id of the user/security group or service principal and id of the build-in role.
+                - Properties of a registration definition.
             returned: always
             type: complex
             contains:
-                principal_id:
+                description:
                     description:
-                        - Principal ID of the security group/service principal/user that would be assigned permissions to the projected subscription
+                        - Description of the registration definition.
                     returned: always
                     type: str
-                    sample: 99e3227f-8701-4099-869f-bc3efc7f1e64
-                role_definition_id:
+                    sample: test
+                authorizations:
                     description:
-                        - The role definition identifier.
-                        - This role will define all the permissions that the security group/service principal/user must have on the projected subscription.
-                        - This role cannot be an owner role.
+                        - Authorization tuple containing principal ID of the user/security group or service principal and ID of the build-in role.
+                    returned: always
+                    type: complex
+                    contains:
+                        principal_id:
+                            description:
+                                - Principal ID of the security group/service principal/user that would be assigned permissions to the projected subscription
+                            returned: always
+                            type: str
+                            sample: 99e3227f-8701-4099-869f-bc3efc7f1e64
+                        role_definition_id:
+                            description:
+                                - The role definition identifier.
+                                - This role will define all the permissions that the security group/service principal/user must have on the subscription.
+                                - This role cannot be an owner role.
+                            returned: always
+                            type: str
+                            sample: b24988ac-6180-42a0-ab88-20f7382dd24c
+                registration_definition_name:
+                    description:
+                        - Name of the registration definition.
                     returned: always
                     type: str
-                    sample: b24988ac-6180-42a0-ab88-20f7382dd24c
-        registration_definition_name:
+                    sample: null
+                managed_by_tenant_id:
+                    description:
+                        - ID of the managedBy tenant.
+                    returned: always
+                    type: str
+                    sample: null
+        plan:
+            description:
+                - Plan details for the managed services.
+            returned: always
+            type: complex
+            contains:
+                name:
+                    description:
+                        - The plan name.
+                    returned: always
+                    type: str
+                    sample: null
+                publisher:
+                    description:
+                        - The publisher ID.
+                    returned: always
+                    type: str
+                    sample: null
+                product:
+                    description:
+                        - The product code.
+                    returned: always
+                    type: str
+                    sample: null
+                version:
+                    description:
+                        - The plan's version.
+                    returned: always
+                    type: str
+                    sample: null
+        id:
+            description:
+                - Fully qualified path of the registration definition.
+            returned: always
+            type: str
+            sample: null
+        type:
+            description:
+                - Type of the resource.
+            returned: always
+            type: str
+            sample: Microsoft.ManagedServices/registrationDefinitions
+        name:
             description:
                 - Name of the registration definition.
             returned: always
             type: str
-            sample: null
-        managed_by_tenant_id:
-            description:
-                - ID of the managedBy tenant.
-            returned: always
-            type: str
-            sample: null
-plan:
-    description:
-        - Plan details for the managed services.
-    returned: always
-    type: complex
-    contains:
-        name:
-            description:
-                - The plan name.
-            returned: always
-            type: str
-            sample: null
-        publisher:
-            description:
-                - The publisher ID.
-            returned: always
-            type: str
-            sample: null
-        product:
-            description:
-                - The product code.
-            returned: always
-            type: str
-            sample: null
-        version:
-            description:
-                - The plan's version.
-            returned: always
-            type: str
-            sample: null
-id:
-    description:
-        - Fully qualified path of the registration definition.
-    returned: always
-    type: str
-    sample: null
-type:
-    description:
-        - Type of the resource.
-    returned: always
-    type: str
-    sample: Microsoft.ManagedServices/registrationDefinitions
-name:
-    description:
-        - Name of the registration definition.
-    returned: always
-    type: str
-    sample: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/2e853c04-ad29-4d0b-9f6b-e72c225d96c2
+            sample: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 '''
 import uuid
@@ -352,7 +356,8 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
 
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2019-09-01')
+                                                    api_version='2019-09-01',
+                                                    suppress_subscription_id=True)
 
         old_response = self.get_resource()
 

@@ -85,6 +85,7 @@ options:
         description:
             - Attempt deletion if resource already exists and cannot be updated.
         type: bool
+        default: False
         aliases:
             - force
     https_only:

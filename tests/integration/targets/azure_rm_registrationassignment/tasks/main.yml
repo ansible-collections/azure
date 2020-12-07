@@ -1,13 +1,28 @@
 - name: set guid for registration assignment id
   set_fact:
-    registration_definition_id: 2e853c04-ad29-4d0b-9f6b-e72c225d96c8
+    subscription_id: "{{ azure_subscription_id }}"
+    managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
+    principal_id: "{{ azure_principal_id }}"
+    role_definition_id: "{{ azure_role_definition_id }}"
+  run_once: yes
+
+- name: Create a RegistrationDefinition
+  azure_rm_registrationdefinition:
+    scope: subscriptions/{{ subscription_id }}
+    properties:
+      description: first_test
+      authorizations:
+        - principal_id: "{{ principal_id }}"
+          role_definition_id: "{{ role_definition_id }}"
+      managed_by_tenant_id: "{{ managed_by_tenant_id }}"
+      registration_definition_name: test_def
+  register: def_output
 
 - name: Create a RegistrationAssignment ---check mode
   azure_rm_registrationassignment:
-    scope: subscriptions//{{ subscription_id }}
-    registration_assignment_id:  d96f61e7-af14-440c-be1b-8395c327ae29
+    scope: subscriptions/{{ subscription_id }}
     properties:
-      registration_definition_id: /subscriptions/f64d4ee8-be94-457d-ba26-3fa6b6506cef/providers/Microsoft.ManagedServices/registrationDefinitions/d96f61e7-af14-440c-be1b-8395c327ae29
+      registration_definition_id: "{{ def_output.state.id }}"
   register: output
   check_mode: yes
 
@@ -17,23 +32,22 @@
 
 - name: Create a RegistrationAssignment 
   azure_rm_registrationassignment:
-    scope: subscriptions//{{ subscription_id }}
-    registration_assignment_id:  d96f61e7-af14-440c-be1b-8395c327ae29
+    scope: subscriptions/{{ subscription_id }}
     properties:
-      registration_definition_id: /subscriptions/f64d4ee8-be94-457d-ba26-3fa6b6506cef/providers/Microsoft.ManagedServices/registrationDefinitions/2e853c04-ad29-4d0b-9f6b-e72c225d96c6
+      registration_definition_id: "{{ def_output.state.id }}"
     expand_registration_definition: true
-  register: output
+  register: ass_output
 
 - assert:
     that:
-      - output.changed
+      - ass_output.changed
 
 - name: Create a RegistrationAssignment -- idempotent
   azure_rm_registrationassignment:
-    scope: subscriptions//{{ subscription_id }}
-    registration_assignment_id:  d96f61e7-af14-440c-be1b-8395c327ae29
+    scope: subscriptions/{{ subscription_id }}
+    registration_assignment_id:  "{{ ass_output.state.name }}"
     properties:
-      registration_definition_id: /subscriptions/f64d4ee8-be94-457d-ba26-3fa6b6506cef/providers/Microsoft.ManagedServices/registrationDefinitions/d96f61e7-af14-440c-be1b-8395c327ae29
+      registration_definition_id: "{{ def_output.state.id }}"
     expand_registration_definition: true
   register: output
 
@@ -41,33 +55,25 @@
     that:
       - not output.changed
 
-- name: Update the RegistrationAssignment
-  azure_rm_registrationassignment:
-    scope: subscriptions//{{ subscription_id }}
-    registration_assignment_id:  d96f61e7-af14-440c-be1b-8395c327ae29
-    properties:
-      registration_definition_id: /subscriptions/f64d4ee8-be94-457d-ba26-3fa6b6506cef/providers/Microsoft.ManagedServices/registrationDefinitions/d96f61e7-af14-440c-be1b-8395c327ae29
-    expand_registration_definition: false
-  register: output
-
-- assert:
-    that:
-      - output.changed
-
 - name: Get a RegistrationAssignment
   azure_rm_registrationassignment_info:
-    scope: subscriptions//{{ subscription_id }}
-    registration_assignment_id:  d96f61e7-af14-440c-be1b-8395c327ae29
+    scope: subscriptions/{{ subscription_id }}
+    registration_assignment_id:  "{{ ass_output.state.name }}"
     expand_registration_definition: true
   register: output
 
 - assert:
     that:
-      - output.registration_assignments[0].properties.provisioning_state == "Succeeded"
+      - output.registration_assignments[0].properties.registration_definition_id == "{{ def_output.state.id }}"
 
 - name: Delete the RegistrationAssignment
   azure_rm_registrationassignment:
-    scope: subscriptions//{{ subscription_id }}
-    registration_assignment_id:  d96f61e7-af14-440c-be1b-8395c327ae29
+    scope: subscriptions/{{ subscription_id }}
+    registration_assignment_id:  "{{ ass_output.state.name }}"
     state: absent
 
+#- name: Delete the registration definition
+#  azure_rm_registrationdefinition:
+#    registration_definition_id: "{{ def_output.state.name }}"
+#    scope: subscriptions//{{ subscription_id }}
+#    state: absent
