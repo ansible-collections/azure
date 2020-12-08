@@ -73,9 +73,11 @@ options:
             - Set to C(true) with I(state=present) to generalize the VM.
             - Generalizing a VM is irreversible.
         type: bool
+        default: False
     restarted:
         description:
             - Set to C(true) with I(state=present) to restart a running VM.
+        default: False
         type: bool
     location:
         description:
