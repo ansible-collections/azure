@@ -270,12 +270,14 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
         return self.results
 
     def get_keyvault_client(self):
-        try:
-            self.log("Get KeyVaultClient from MSI")
-            credentials = MSIAuthentication(resource='https://vault.azure.net')
-            return KeyVaultClient(credentials)
-        except Exception:
-            self.log("Get KeyVaultClient from service principal")
+        if self.module.params['auth_source'] == 'msi':
+        #Don't use MSI credentials if the auth_source isn't set to MSI.  The below will Always result in credentials when running on an Azure VM.
+            try:
+                self.log("Get KeyVaultClient from MSI")
+                credentials = MSIAuthentication(resource=f"https://{self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()}")
+                return KeyVaultClient(credentials)
+            except Exception:
+                self.log("Get KeyVaultClient from service principal")
 
         # Create KeyVault Client using KeyVault auth class and auth_callback
         def auth_callback(server, resource, scope):
