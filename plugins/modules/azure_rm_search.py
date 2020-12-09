@@ -148,11 +148,16 @@ class AzureRMSearch(AzureRMModuleBase):
             partition_count=self.partition_count,
             public_network_access=self.public_network_access,
             replica_count=self.replica_count,
-            sku=self.search_client.services.models.Sku(name='basic'),
+            sku=self.search_client.services.models.Sku(name=self.sku),
             tags=self.tags
         )
 
-        self.search_client.services.create_or_update(self.resource_group, self.name, search_model)
+        try:
+            poller = self.search_client.services.create_or_update(self.resource_group, self.name, search_model)
+            self.get_poller_result(poller)
+        except CloudError as e:
+            self.log('Error creating Azure Search.')
+            self.fail("Failed to create Azure Search: {0}".format(str(e)))
 
         return self.get_search()
 
@@ -231,6 +236,7 @@ class AzureRMSearch(AzureRMModuleBase):
 
     def account_obj_to_dict(self, search_obj):
         account_dict = dict(
+            hosting_mode=search_obj.hosting_mode,
             id=search_obj.id,
             location=search_obj.location,
             name=search_obj.name,

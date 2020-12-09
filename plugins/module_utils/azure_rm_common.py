@@ -1259,6 +1259,7 @@ class AzureRMModuleBase(object):
         self.log("Getting lock models")
         return ManagementLockClient.models('2016-09-01')
 
+<<<<<<< HEAD
     @property
     def recovery_services_backup_client(self):
         self.log('Getting recovery services backup client')
@@ -1271,6 +1272,8 @@ class AzureRMModuleBase(object):
     def recovery_services_backup_models(self):
         return RecoveryServicesBackupModels
 
+=======
+>>>>>>> Added info module, poller to sync creation, and minimal tests
     @property
     def search_client(self):
         self.log('Getting search client...')
