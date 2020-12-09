@@ -1,4 +1,3 @@
- 
 #!/usr/bin/python
 #
 # Copyright (c) 2020 David Duque Hernández, (@next-davidduquehernandez)
@@ -32,6 +31,7 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
+
 class AzureRMSearch(AzureRMModuleBase):
     def __init__(self):
 
@@ -44,6 +44,8 @@ class AzureRMSearch(AzureRMModuleBase):
             public_network_access=dict(type='str', default='enabled', choices=['enabled', 'disabled']),
             replica_count=dict(type='int', default=1),
             resource_group=dict(type='str', required=True),
+            sku=dict(type='str', default='basic', choices=['free', 'basic', 'standard', 'standard2', 'standard3',
+                                                           'storage_optimized_l1', 'storage_optimized_l2']),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             tags=dict(type='dict')
         )
@@ -56,14 +58,15 @@ class AzureRMSearch(AzureRMModuleBase):
         self.public_network_access = None
         self.replica_count = None
         self.resource_group = None
+        self.sku = None
         self.tags = None
 
         self.results = dict(changed=False)
         self.account_dict = None
 
         super(AzureRMSearch, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                supports_check_mode=False,
-                                                supports_tags=False)
+                                            supports_check_mode=False,
+                                            supports_tags=False)
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:
@@ -83,11 +86,11 @@ class AzureRMSearch(AzureRMModuleBase):
         if self.state == 'present':
             if not self.account_dict:
                 self.results['state'] = self.create_search()
-        #     else:
-        #         self.results['state'] = self.update_search()
-        # else:
-        #     self.delete_search()
-        #     self.results['state'] = dict(state='Deleted')
+            else:
+                self.results['state'] = self.update_search()
+        else:
+            self.delete_search()
+            self.results['state'] = dict(state='Deleted')
 
         return self.results
 
@@ -106,8 +109,34 @@ class AzureRMSearch(AzureRMModuleBase):
 
         return account_dict
 
+    def check_values(self, hosting_mode, sku, partition_count, replica_count):
+        if (
+            hosting_mode == 'highDensity' and
+            sku != 'standard3'
+        ):
+            self.fail("Hosting mode could not be 'highDensity' if sku is not 'standard3'.")
+
+        if (
+            sku == 'standard3' and
+            hosting_mode == 'highDensity'
+            and partition_count not in [1, 2, 3]
+        ):
+            self.fail("Partition count must be 1, 2 or 3 if hosting mode is 'highDensity' and sku 'standard3'.")
+
+        if partition_count not in [1, 2, 3, 4, 6, 12]:
+            self.fail("Partition count must be 1, 2, 3, 4, 6 or 12.")
+
+        if sku == 'basic':
+            if replica_count not in [1, 2, 3]:
+                self.fail("Replica count must be between 1 and 3.")
+        else:
+            if replica_count < 1 or replica_count > 12:
+                self.fail("Replica count must be between 1 and 12.")
+
     def create_search(self):
         self.log("Creating search {0}".format(self.name))
+
+        self.check_values(self.hosting_mode, self.sku, self.partition_count, self.replica_count)
 
         self.check_name_availability()
         self.results['changed'] = True
@@ -127,6 +156,68 @@ class AzureRMSearch(AzureRMModuleBase):
 
         return self.get_search()
 
+    def update_search(self):
+        self.log("Updating search {0}".format(self.name))
+
+        self.check_values(
+            self.hosting_mode or self.account_dict.get('hosting_mode'),
+            self.sku or self.account_dict.get('sku'),
+            self.partition_count or self.account_dict.get('partition_count'),
+            self.replica_count or self.account_dict.get('replica_count')
+        )
+
+        search_update_model = self.search_client.services.models.SearchServiceUpdate(
+            location=self.location
+        )
+
+        if self.hosting_mode and self.account_dict.get('hosting_mode') != self.hosting_mode:
+            self.results['changed'] = True
+            search_update_model.hosting_mode = self.hosting_mode
+
+        # if self.network_rule_set and self.account_dict.get('network_rule_set') != self.network_rule_set:
+        #     self.results['changed'] = True
+        #     search_update_model.network_rule_set = self.network_rule_set
+
+        if self.partition_count and self.account_dict.get('partition_count') != self.partition_count:
+            self.results['changed'] = True
+            search_update_model.partition_count = self.partition_count
+
+        if self.public_network_access and self.account_dict.get('public_network_access') != self.public_network_access:
+            self.results['changed'] = True
+            search_update_model.public_network_access = self.public_network_access
+
+        if self.replica_count and self.account_dict.get('replica_count') != self.replica_count:
+            self.results['changed'] = True
+            search_update_model.replica_count = self.replica_count
+
+        if self.sku and self.account_dict.get('sku') != self.sku:
+            self.results['changed'] = True
+            search_update_model.sku = self.sku
+
+        if self.tags and self.account_dict.get('tags') != self.tags:
+            self.results['changed'] = True
+            search_update_model.tags = self.tags
+
+        self.log('Updating search {0}'.format(self.name))
+
+        try:
+            if self.results['changed']:
+                self.search_client.services.update(self.resource_group, self.name, search_update_model)
+        except CloudError as e:
+            self.fail("Failed to update the search: {0}".format(str(e)))
+
+        return self.get_search()
+
+    def delete_search(self):
+        self.log('Delete search {0}'.format(self.name))
+
+        try:
+            if self.account_dict is not None:
+                self.results['changed'] = True
+                self.search_client.services.delete(self.resource_group, self.name)
+        except CloudError as e:
+            self.fail("Failed to delete the search: {0}".format(str(e)))
+
     def check_name_availability(self):
         self.log('Checking name availability for {0}'.format(self.name))
         try:
@@ -138,7 +229,6 @@ class AzureRMSearch(AzureRMModuleBase):
             self.log('Error name not available.')
             self.fail("{0} - {1}".format(response.message, response.reason))
 
-        
     def account_obj_to_dict(self, search_obj):
         account_dict = dict(
             id=search_obj.id,
@@ -151,8 +241,9 @@ class AzureRMSearch(AzureRMModuleBase):
             status=search_obj.status,
             tags=search_obj.tags
         )
-        
+
         return account_dict
+
 
 def main():
     AzureRMSearch()
