@@ -97,6 +97,7 @@ AZURE_API_PROFILES = {
         ),
         'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
+        'SearchManagementClient': '2020-08-01',
         'StorageManagementClient': '2019-06-01',
         'SubscriptionClient': '2019-11-01',
         'WebSiteManagementClient': '2018-02-01',
@@ -268,6 +269,7 @@ try:
     from azure.mgmt.resource.locks import ManagementLockClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
     import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
+    from azure.mgmt.search import SearchManagementClient
 
 except ImportError as exc:
     Authentication = object
@@ -428,6 +430,7 @@ class AzureRMModuleBase(object):
         self._IoThub_client = None
         self._lock_client = None
         self._recovery_services_backup_client = None
+        self._search_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1267,6 +1270,15 @@ class AzureRMModuleBase(object):
     @property
     def recovery_services_backup_models(self):
         return RecoveryServicesBackupModels
+
+    @property
+    def search_client(self):
+        self.log('Getting search client...')
+        if not self._search_client:
+            self._search_client = self.get_mgmt_svc_client(SearchManagementClient,
+                                                            base_url=self._cloud_environment.endpoints.resource_manager,
+                                                            api_version='2020-08-01')
+        return self._search_client
 
 
 class AzureSASAuthentication(Authentication):
