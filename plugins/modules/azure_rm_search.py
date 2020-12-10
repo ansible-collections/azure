@@ -55,7 +55,7 @@ class AzureRMSearch(AzureRMModuleBase):
         self.identity = None
         self.location = None
         self.name = None
-        self.network_rule_set = None
+        self.network_rule_set = list()
         self.partition_count = None
         self.public_network_access = None
         self.replica_count = None
@@ -65,6 +65,7 @@ class AzureRMSearch(AzureRMModuleBase):
 
         self.results = dict(changed=False)
         self.account_dict = None
+        self.firewall_list = list()
 
         super(AzureRMSearch, self).__init__(derived_arg_spec=self.module_arg_spec,
                                             supports_check_mode=False,
@@ -143,11 +144,15 @@ class AzureRMSearch(AzureRMModuleBase):
         self.check_name_availability()
         self.results['changed'] = True
 
+        if self.network_rule_set:
+            for rule in self.network_rule_set:
+                self.firewall_list.append(self.search_client.services.models.IpRule(value=rule))
+
         search_model = self.search_client.services.models.SearchService(
             hosting_mode=self.hosting_mode,
             identity=self.search_client.services.models.Identity(type=self.identity),
             location=self.location,
-            network_rule_set=self.network_rule_set,
+            network_rule_set=dict(ip_rules=self.firewall_list) if len(self.firewall_list) > 0 else None,
             partition_count=self.partition_count,
             public_network_access=self.public_network_access,
             replica_count=self.replica_count,
@@ -186,9 +191,12 @@ class AzureRMSearch(AzureRMModuleBase):
             self.results['changed'] = True
             search_update_model.identity = self.search_client.services.models.Identity(type=self.identity)
 
-        # if self.network_rule_set and self.account_dict.get('network_rule_set') != self.network_rule_set:
-        #     self.results['changed'] = True
-        #     search_update_model.network_rule_set = self.network_rule_set
+        # TODO: Creo que la comparación no es buena, habría que comprobar que no existe ninguna
+        if self.network_rule_set and self.account_dict.get('network_rule_set') != self.network_rule_set:
+            self.results['changed'] = True
+            for rule in self.network_rule_set:
+                self.firewall_list.append(self.search_client.services.models.IpRule(value=rule))
+                search_update_model.network_rule_set = dict(ip_rules=self.firewall_list)
 
         if self.partition_count and self.account_dict.get('partition_count') != self.partition_count:
             self.results['changed'] = True
@@ -248,6 +256,7 @@ class AzureRMSearch(AzureRMModuleBase):
             identity=dict(type=search_obj.identity.type),
             location=search_obj.location,
             name=search_obj.name,
+            network_rule_set=list(),
             partition_count=search_obj.partition_count,
             provisioning_state=search_obj.provisioning_state,
             public_network_access=search_obj.public_network_access,
@@ -259,6 +268,9 @@ class AzureRMSearch(AzureRMModuleBase):
 
         if search_obj.identity.principal_id is not None:
             account_dict['identity']['principal_id'] = search_obj.identity.principal_id
+
+        for rule in search_obj.network_rule_set.ip_rules:
+            account_dict['network_rule_set'].append(rule.value)
 
         return account_dict
 

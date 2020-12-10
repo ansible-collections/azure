@@ -125,6 +125,7 @@ class AzureRMSearchInfo(AzureRMModuleBase):
             identity=dict(type=search_obj.identity.type),
             location=search_obj.location,
             name=search_obj.name,
+            network_rule_set=list(),
             partition_count=search_obj.partition_count,
             provisioning_state=search_obj.provisioning_state,
             public_network_access=search_obj.public_network_access,
@@ -136,6 +137,9 @@ class AzureRMSearchInfo(AzureRMModuleBase):
 
         if search_obj.identity.principal_id is not None:
             account_dict['identity']['principal_id'] = search_obj.identity.principal_id
+
+        for rule in search_obj.network_rule_set.ip_rules:
+            account_dict['network_rule_set'].append(rule.value)
 
         return account_dict
 
