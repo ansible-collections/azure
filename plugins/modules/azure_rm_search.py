@@ -184,21 +184,21 @@ class AzureRMSearch(AzureRMModuleBase):
             hosting_mode=None,
             partition_count=None,
             public_network_access=None,
-            replica_count=None
+            replica_count=None,
+            sku=self.search_client.services.models.Sku(name=self.account_dict.get('sku'))
         )
 
         if self.hosting_mode and self.account_dict.get('hosting_mode') != self.hosting_mode:
-            self.results['changed'] = True
-            search_update_model.hosting_mode = self.hosting_mode
+            self.fail("Updating hosting_mode of an existing search service is not allowed.")
 
         if self.identity and self.account_dict.get('identity').get('type') != self.identity:
             self.results['changed'] = True
             search_update_model.identity = self.search_client.services.models.Identity(type=self.identity)
 
-        # TODO: Creo que la comparación no es buena, habría que comprobar que no existe ninguna
-        if self.network_rule_set and self.account_dict.get('network_rule_set') != self.network_rule_set:
-            self.results['changed'] = True
+        if self.network_rule_set:
             for rule in self.network_rule_set:
+                if len(self.network_rule_set) != len(self.account_dict.get('network_rule_set')) or rule not in self.account_dict.get('network_rule_set'):
+                    self.results['changed'] = True
                 self.firewall_list.append(self.search_client.services.models.IpRule(value=rule))
                 search_update_model.network_rule_set = dict(ip_rules=self.firewall_list)
 
@@ -215,8 +215,7 @@ class AzureRMSearch(AzureRMModuleBase):
             search_update_model.replica_count = self.replica_count
 
         if self.sku and self.account_dict.get('sku') != self.sku:
-            self.results['changed'] = True
-            search_update_model.sku = self.sku
+            self.fail("Updating sku of an existing search service is not allowed.")
 
         if self.tags and self.account_dict.get('tags') != self.tags:
             self.results['changed'] = True
@@ -226,7 +225,8 @@ class AzureRMSearch(AzureRMModuleBase):
 
         try:
             if self.results['changed']:
-                self.search_client.services.update(self.resource_group, self.name, search_update_model)
+                poller = self.search_client.services.create_or_update(self.resource_group, self.name, search_update_model)
+                self.get_poller_result(poller)
         except CloudError as e:
             self.fail("Failed to update the search: {0}".format(str(e)))
 
