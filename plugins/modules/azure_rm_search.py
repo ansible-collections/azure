@@ -37,6 +37,7 @@ class AzureRMSearch(AzureRMModuleBase):
 
         self.module_arg_spec = dict(
             hosting_mode=dict(type='str', default='default', choices=['default', 'highDensity']),
+            identity=dict(type='str', default='None', choices=['None', 'SystemAssigned']),
             location=dict(type='str'),
             name=dict(type='str', required=True),
             network_rule_set=dict(type='list'),
@@ -51,6 +52,7 @@ class AzureRMSearch(AzureRMModuleBase):
         )
 
         self.hosting_mode = None
+        self.identity = None
         self.location = None
         self.name = None
         self.network_rule_set = None
@@ -143,6 +145,7 @@ class AzureRMSearch(AzureRMModuleBase):
 
         search_model = self.search_client.services.models.SearchService(
             hosting_mode=self.hosting_mode,
+            identity=self.search_client.services.models.Identity(type=self.identity),
             location=self.location,
             network_rule_set=self.network_rule_set,
             partition_count=self.partition_count,
@@ -178,6 +181,10 @@ class AzureRMSearch(AzureRMModuleBase):
         if self.hosting_mode and self.account_dict.get('hosting_mode') != self.hosting_mode:
             self.results['changed'] = True
             search_update_model.hosting_mode = self.hosting_mode
+
+        if self.identity and self.account_dict.get('identity') != self.identity:
+            self.results['changed'] = True
+            search_update_model.identity = self.search_client.services.models.Identity(type=self.identity)
 
         # if self.network_rule_set and self.account_dict.get('network_rule_set') != self.network_rule_set:
         #     self.results['changed'] = True
@@ -238,15 +245,20 @@ class AzureRMSearch(AzureRMModuleBase):
         account_dict = dict(
             hosting_mode=search_obj.hosting_mode,
             id=search_obj.id,
+            identity=dict(type=search_obj.identity.type),
             location=search_obj.location,
             name=search_obj.name,
             partition_count=search_obj.partition_count,
             provisioning_state=search_obj.provisioning_state,
+            public_network_access=search_obj.public_network_access,
             replica_count=search_obj.replica_count,
             sku=search_obj.sku.name,
             status=search_obj.status,
             tags=search_obj.tags
         )
+
+        if search_obj.identity.principal_id is not None:
+            account_dict['identity']['principal_id'] = search_obj.identity.principal_id
 
         return account_dict
 

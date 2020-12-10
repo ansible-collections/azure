@@ -122,15 +122,20 @@ class AzureRMSearchInfo(AzureRMModuleBase):
         account_dict = dict(
             hosting_mode=search_obj.hosting_mode,
             id=search_obj.id,
+            identity=dict(type=search_obj.identity.type),
             location=search_obj.location,
             name=search_obj.name,
             partition_count=search_obj.partition_count,
             provisioning_state=search_obj.provisioning_state,
+            public_network_access=search_obj.public_network_access,
             replica_count=search_obj.replica_count,
             sku=search_obj.sku.name,
             status=search_obj.status,
             tags=search_obj.tags
         )
+
+        if search_obj.identity.principal_id is not None:
+            account_dict['identity']['principal_id'] = search_obj.identity.principal_id
 
         return account_dict
 

@@ -75,21 +75,25 @@
   azure_rm_search:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
-    tags:
-      BillingIdentifier2: 'PI-3000014205_100%'
   register: search_info
+
+- debug:
+    var: search_info
 
 - name: Assert status succeeded and results
   assert:
     that:
       - search_info.changed
       - search_info.state.id is defined
+      - search_info.state.identity.type == "None"
+      - search_info.state.identity.principal_id is not defined
       - search_info.state.hosting_mode == "default"
       - search_info.state.name == search_name
       - search_info.state.partition_count == 1
       - search_info.state.replica_count == 1
       - search_info.state.sku == "basic"
       - search_info.state.provisioning_state == "succeeded"
+      - search_info.state.public_network_access == "enabled"
       - search_info.state.status == "running"
 
 - name: Delete Azure Search
@@ -103,6 +107,7 @@
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
     hosting_mode: highDensity
+    identity: SystemAssigned
     sku: standard3
     partition_count: 2
     public_network_access: disabled
@@ -117,6 +122,8 @@
     that:
       - search_info.changed
       - search_info.state.id is defined
+      - search_info.state.identity.type == "SystemAssigned"
+      - search_info.state.identity.principal_id is defined
       - search_info.state.hosting_mode == "highDensity"
       - search_info.state.name == search_name
       - search_info.state.partition_count == 2
@@ -130,4 +137,3 @@
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
     state: absent
-    
