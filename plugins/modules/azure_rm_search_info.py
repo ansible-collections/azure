@@ -37,7 +37,8 @@ class AzureRMSearchInfo(AzureRMModuleBase):
 
         self.module_arg_spec = dict(
             name=dict(type='str'),
-            resource_group=dict(type='str')
+            resource_group=dict(type='str'),
+            show_keys=dict(type='bool', default=False)
         )
 
         self.results = dict(
@@ -47,6 +48,7 @@ class AzureRMSearchInfo(AzureRMModuleBase):
 
         self.name = None
         self.resource_group = None
+        self.show_keys = False
 
         super(AzureRMSearchInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                 supports_tags=False)
@@ -140,6 +142,18 @@ class AzureRMSearchInfo(AzureRMModuleBase):
 
         for rule in search_obj.network_rule_set.ip_rules:
             account_dict['network_rule_set'].append(rule.value)
+
+        if self.show_keys:
+            account_dict['keys'] = dict()
+
+            admin_keys = self.search_client.admin_keys.get(self.resource_group, self.name)
+            account_dict['keys']['admin_primary'] = admin_keys.primary_key
+            account_dict['keys']['admin_secondary'] = admin_keys.secondary_key
+
+            query_keys = self.search_client.query_keys.list_by_search_service(self.resource_group, self.name)
+            account_dict['keys']['query'] = list()
+            for key in query_keys:
+                account_dict['keys']['query'].append(dict(name=key.name, key=key.key))
 
         return account_dict
 
