@@ -180,14 +180,18 @@ class AzureRMSearch(AzureRMModuleBase):
         )
 
         search_update_model = self.search_client.services.models.SearchServiceUpdate(
-            location=self.location
+            location=self.location,
+            hosting_mode=None,
+            partition_count=None,
+            public_network_access=None,
+            replica_count=None
         )
 
         if self.hosting_mode and self.account_dict.get('hosting_mode') != self.hosting_mode:
             self.results['changed'] = True
             search_update_model.hosting_mode = self.hosting_mode
 
-        if self.identity and self.account_dict.get('identity') != self.identity:
+        if self.identity and self.account_dict.get('identity').get('type') != self.identity:
             self.results['changed'] = True
             search_update_model.identity = self.search_client.services.models.Identity(type=self.identity)
 

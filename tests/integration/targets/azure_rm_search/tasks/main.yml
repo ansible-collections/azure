@@ -1,6 +1,6 @@
 - name: Create Azure Search name
   set_fact:
-    search_name: "search{{ resource_group | hash('md5') | truncate(18, True, '') }}"
+    search_name: "search{{ resource_group | hash('md5') | truncate(16, True, '') }}"
 
 - name: Create invalid Azure Search - Hosting Name
   azure_rm_search:
@@ -75,10 +75,10 @@
   azure_rm_search:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
+    tags:
+      BillingIdentifier: 'PI-3000012219_100%'
+      BillingIdentifier2: 'PI-3000012219_100%'
   register: search_info
-
-- debug:
-    var: search_info
 
 - name: Assert status succeeded and results
   assert:
@@ -96,6 +96,20 @@
       - search_info.state.public_network_access == "enabled"
       - search_info.state.status == "running"
 
+- name: Update basic Azure Search (Idempotence)
+  azure_rm_search:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+    tags:
+      BillingIdentifier: 'PI-3000012219_100%'
+      BillingIdentifier2: 'PI-3000012219_100%'
+  register: search_info
+
+- name: Assert that idempotence is ok
+  assert:
+    that:
+      - not search_info.changed
+
 - name: Delete Azure Search
   azure_rm_search:
     name: "{{ search_name }}"
@@ -108,13 +122,17 @@
     resource_group: "{{ resource_group }}"
     hosting_mode: highDensity
     identity: SystemAssigned
-    sku: standard3
+    network_rule_set:
+      - 8.8.8.8/31
+      - 1.1.1.1
     partition_count: 2
     public_network_access: disabled
     replica_count: 2
+    sku: standard3
     tags:
       foo: bar
-      BillingIdentifier2: 'PI-3000014205_100%'
+      BillingIdentifier: 'PI-3000012219_100%'
+      BillingIdentifier2: 'PI-3000012219_100%'
   register: search_info
 
 - name: Assert status succeeded and results
@@ -132,8 +150,33 @@
       - search_info.state.provisioning_state == "succeeded"
       - search_info.state.status == "running"
 
+- name: Update Azure Search '{{ search_name }}' not default parameters (Idempotence)
+  azure_rm_search:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+    hosting_mode: highDensity
+    identity: SystemAssigned
+    network_rule_set:
+      - 8.8.8.8/31
+      - 1.1.1.1
+    partition_count: 2
+    public_network_access: disabled
+    replica_count: 2
+    sku: standard3
+    tags:
+      foo: bar
+      BillingIdentifier: 'PI-3000012219_100%'
+      BillingIdentifier2: 'PI-3000012219_100%'
+  register: search_info
+
+- name: Assert that idempotence is ok
+  assert:
+    that:
+      - not search_info.changed
+
 - name: Delete Azure Search
   azure_rm_search:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
     state: absent
+  
