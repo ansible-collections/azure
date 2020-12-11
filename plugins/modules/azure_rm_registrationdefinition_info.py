@@ -186,9 +186,9 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
                                                     api_version='2019-09-01',
                                                     suppress_subscription_id=True)
 
-        if (self.scope is not None and self.registration_definition_id is not None):
+        if self.registration_definition_id is not None:
             self.results['registration_definitions'] = self.format_item(self.get())
-        elif (self.scope is not None):
+        else:
             self.results['registration_definitions'] = self.format_item(self.list())
         return self.results
 

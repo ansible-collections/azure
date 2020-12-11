@@ -90,6 +90,15 @@
       - output.registration_definitions[0].properties.description == "second_test"
       - output.registration_definitions[0].properties.registration_definition_name == "test_name02"
 
+- name: Get All Registration Definition info in the subscription
+  azure_rm_registrationdefinition_info:
+  register: output
+
+- name: Assert all the registration definition info
+  assert:
+    that:
+      - output.registration_definitions | length >=1
+
 - name: Delete the registration definition
   azure_rm_registrationdefinition:
     registration_definition_id: "{{ def_output.state.name }}"
