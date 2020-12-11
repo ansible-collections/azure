@@ -8,7 +8,6 @@
 
 - name: Create a RegistrationDefinition
   azure_rm_registrationdefinition:
-    scope: subscriptions/{{ subscription_id }}
     properties:
       description: first_test
       authorizations:
@@ -68,9 +67,3 @@
     scope: subscriptions/{{ subscription_id }}
     registration_assignment_id:  "{{ ass_output.state.name }}"
     state: absent
-
-#- name: Delete the registration definition
-#  azure_rm_registrationdefinition:
-#    registration_definition_id: "{{ def_output.state.name }}"
-#    scope: subscriptions//{{ subscription_id }}
-#    state: absent
