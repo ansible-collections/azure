@@ -138,6 +138,7 @@ options:
         description:
             - Purge any existing application settings. Replace slot application settings with app_settings.
         type: bool
+        default: False
     deployment_source:
         description:
             - Deployment source for git.
