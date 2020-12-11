@@ -21,14 +21,9 @@ short_description: Get RegistrationDefinition info
 description:
     - Get info of RegistrationDefinition.
 options:
-    scope:
-        description:
-            - Scope of the resource.
-        required: true
-        type: str
     registration_definition_id:
         description:
-            - Guid of the registration definition.
+            - ID of the registration definition.
         type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -41,11 +36,9 @@ EXAMPLES = '''
     - name: Get Registration Definition
       azure_rm_registrationdefinition_info:
         registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        scope: subscription/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Get Registration Definitions
+    - name: Get All Registration Definitions in subscription level
       azure_rm_registrationdefinition_info:
-        scope: subscription/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 '''
 
@@ -164,10 +157,6 @@ except ImportError:
 class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
-            scope=dict(
-                type='str',
-                required=True
-            ),
             registration_definition_id=dict(
                 type='str'
             )
@@ -189,6 +178,8 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
+
+        self.scope = "/subscriptions/" + self.subscription_id
 
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,

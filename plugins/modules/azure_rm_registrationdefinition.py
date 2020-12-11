@@ -21,14 +21,10 @@ short_description: Manage Azure RegistrationDefinition instance
 description:
     - Create, update and delete instance of Azure RegistrationDefinition.
 options:
-    scope:
-        description:
-            - Scope of the resource.
-        required: true
-        type: str
     registration_definition_id:
         description:
-            - Guid of the registration definition.
+            - ID of the registration definition.
+            - If is not specified, an UUID will be generated for it.
         type: str
     properties:
         description:
@@ -112,13 +108,11 @@ EXAMPLES = '''
     - name: Delete Registration Definition
       azure_rm_registrationdefinition:
         registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         state: absent
 
     - name: Create Registration Definition
       azure_rm_registrationdefinition:
         registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         properties:
           description: test
           authorizations:
@@ -249,10 +243,6 @@ class Actions:
 class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
-            scope=dict(
-                type='str',
-                required=True
-            ),
             registration_definition_id=dict(
                 type='str',
             ),
@@ -350,6 +340,8 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
 
         if self.registration_definition_id is None:
             self.registration_definition_id = str(uuid.uuid4())
+
+        self.scope = "/subscriptions/" + self.subscription_id
 
         old_response = None
         response = None

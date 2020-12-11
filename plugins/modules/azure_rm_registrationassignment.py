@@ -23,12 +23,13 @@ description:
 options:
     scope:
         description:
-            - Scope of the registration assignment..
+            - Scope of the registration assignment. Can be in subscription or group level.
         required: true
         type: str
     registration_assignment_id:
         description:
             - ID of the registration assignment.
+            - If is not specified, an UUID will be generated for it.
         type: str
     properties:
         description:
@@ -73,10 +74,9 @@ EXAMPLES = '''
           registration_definition_id: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxx-xxx
 
 
-    - name: Create Registration Assignment in resourcegroup level
+    - name: Create Registration Assignment in resourcegroup level with randomly generating registration_assignment_id
       azure_rm_registrationassignment:
         scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
-        registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         properties:
           registration_definition_id: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxx-xxx
 

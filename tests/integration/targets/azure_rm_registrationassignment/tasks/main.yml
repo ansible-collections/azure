@@ -1,4 +1,4 @@
-- name: set guid for registration assignment id
+- name: set facts
   set_fact:
     subscription_id: "{{ azure_subscription_id }}"
     managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
@@ -35,7 +35,6 @@
     scope: subscriptions/{{ subscription_id }}
     properties:
       registration_definition_id: "{{ def_output.state.id }}"
-    expand_registration_definition: true
   register: ass_output
 
 - assert:
@@ -48,7 +47,6 @@
     registration_assignment_id:  "{{ ass_output.state.name }}"
     properties:
       registration_definition_id: "{{ def_output.state.id }}"
-    expand_registration_definition: true
   register: output
 
 - assert:
@@ -59,7 +57,6 @@
   azure_rm_registrationassignment_info:
     scope: subscriptions/{{ subscription_id }}
     registration_assignment_id:  "{{ ass_output.state.name }}"
-    expand_registration_definition: true
   register: output
 
 - assert:

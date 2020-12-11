@@ -1,4 +1,4 @@
-- name: set guid for registration definition id
+- name: set facts
   set_fact:
      subscription_id: "{{ azure_subscription_id }}"
      managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
@@ -9,7 +9,6 @@
 
 - name: Create a RegistrationDefinition -- check mode
   azure_rm_registrationdefinition:
-    scope: subscriptions/{{ subscription_id }}
     properties:
       description: first_test
       authorizations:
@@ -27,7 +26,6 @@
 
 - name: Create a RegistrationDefinition
   azure_rm_registrationdefinition:
-    scope: subscriptions/{{ subscription_id }}
     properties:
       description: first_test
       authorizations:
@@ -46,7 +44,6 @@
 - name: Create a RegistrationDefinition (idempotent)
   azure_rm_registrationdefinition:
     registration_definition_id: "{{ def_output.state.name }}"
-    scope: subscriptions/{{ subscription_id }}
     properties:
       description: first_test
       authorizations:
@@ -64,7 +61,6 @@
 - name: Update the RegistrationDefinition properties description and name
   azure_rm_registrationdefinition:
     registration_definition_id: "{{ def_output.state.name }}"
-    scope: subscriptions/{{ subscription_id }}
     properties:
       description: second_test
       authorizations:
@@ -82,7 +78,6 @@
 - name: Get the Registration Definition info
   azure_rm_registrationdefinition_info:
     registration_definition_id:  "{{ def_output.state.name }}"
-    scope: subscriptions/{{ subscription_id }}
   register: output
 
 - name: Assert the registration definition info
@@ -98,7 +93,6 @@
 - name: Delete the registration definition
   azure_rm_registrationdefinition:
     registration_definition_id: "{{ def_output.state.name }}"
-    scope: subscriptions/{{ subscription_id }}
     state: absent
   register: output
 
