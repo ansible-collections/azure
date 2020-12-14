@@ -1,7 +1,7 @@
 - name: set facts
   set_fact:
      subscription_id: "{{ azure_subscription_id }}"
-     subscription_sec_id: "{{ azure_subscription)_sec_id }}"
+     subscription_sec_id: "{{ azure_subscription_sec_id }}"
      managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
      principal_id: "{{ azure_principal_id }}"
      role_definition_id: "{{ azure_role_definition_id }}"

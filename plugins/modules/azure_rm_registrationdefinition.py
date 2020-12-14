@@ -348,7 +348,10 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
         if self.registration_definition_id is None:
             self.registration_definition_id = str(uuid.uuid4())
 
-        self.scope = "/subscriptions/" + self.subscription_id
+        if not self.scope:
+            self.scope = "/subscriptions/" + self.subscription_id
+        else:
+            self.scope = "/subscriptions/" + self.scope
 
         old_response = None
         response = None
