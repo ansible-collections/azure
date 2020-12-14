@@ -1,6 +1,7 @@
 - name: set facts
   set_fact:
      subscription_id: "{{ azure_subscription_id }}"
+     subscription_sec_id: "{{ azure_subscription_sec_id }}"
      managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
      principal_id: "{{ azure_principal_id }}"
      role_definition_id: "{{ azure_role_definition_id }}"
@@ -24,6 +25,23 @@
     that:
       - output.changed
 
+- name: Create a RegistrationDefinition with scope
+  azure_rm_registrationdefinition:
+    scope:  "{{ subscription_sec_id }}"
+    properties:
+      description: test definition with scope
+      authorizations:
+        - principal_id: "{{ principal_id }}"
+          role_definition_id: "{{ role_definition_id }}"
+      managed_by_tenant_id: "{{ managed_by_tenant_id }}"
+      registration_definition_name: "{{ reg_def_name }}"
+  register: output2
+
+- name: Assert creating registration definition
+  assert:
+    that:
+      - output2.changed
+
 - name: Create a RegistrationDefinition
   azure_rm_registrationdefinition:
     properties:
@@ -33,17 +51,16 @@
           role_definition_id: "{{ role_definition_id }}"
       managed_by_tenant_id: "{{ managed_by_tenant_id }}"
       registration_definition_name: "{{ reg_def_name }}"
-  register: def_output
-  tags: fred
+  register: output1
 
 - name: Assert creating registration definition
   assert:
     that:
-      - output.changed
+      - output1.changed
 
 - name: Create a RegistrationDefinition (idempotent)
   azure_rm_registrationdefinition:
-    registration_definition_id: "{{ def_output.state.name }}"
+    registration_definition_id: "{{ output1.state.name }}"
     properties:
       description: first_test
       authorizations:
@@ -77,13 +94,13 @@
 
 - name: Get the Registration Definition info
   azure_rm_registrationdefinition_info:
-    registration_definition_id:  "{{ def_output.state.name }}"
+    registration_definition_id:  "{{ output1.state.name }}"
   register: output
 
 - name: Assert the registration definition info
   assert:
     that:
-      - output.registration_definitions[0].name == "{{ def_output.state.name }}"
+      - output.registration_definitions[0].name == "{{ output1.state.name }}"
       - output.registration_definitions[0].properties.authorizations[0].principal_id == "{{ principal_id }}"
       - output.registration_definitions[0].properties.authorizations[0].role_definition_id == "{{ role_definition_id }}"
       - output.registration_definitions[0].properties.provisioning_state == "Succeeded"
@@ -101,7 +118,7 @@
 
 - name: Delete the registration definition
   azure_rm_registrationdefinition:
-    registration_definition_id: "{{ def_output.state.name }}"
+    registration_definition_id: "{{ output1.state.name }}"
     state: absent
   register: output
 
@@ -109,3 +126,8 @@
   assert:
     that:
       - output.changed
+
+- name: Delete the registration definition
+  azure_rm_registrationdefinition:
+    registration_definition_id: "{{ output2.state.name }}"
+    state: absent

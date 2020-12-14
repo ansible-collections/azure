@@ -26,6 +26,11 @@ options:
             - ID of the registration definition.
             - If is not specified, an UUID will be generated for it.
         type: str
+    scope:
+        description:
+            - The subscription ID defines the subscription in which the registration definition will be created.
+            - If not specified, will use the subscription derived from AzureRMAuth.
+        type: str
     properties:
         description:
             - Properties of a registration definition.
@@ -37,13 +42,13 @@ options:
                 type: str
             authorizations:
                 description:
-                    - Authorization tuple containing principal id of the user/security group or service principal and id of the build-in role.
+                    - Authorization tuple containing principal ID of the user/security group or service principal and ID of the build-in role.
                 required: true
                 type: list
                 suboptions:
                     principal_id:
                         description:
-                            - Principal Id of the security group/service principal/user that would be assigned permissions to the projected subscription
+                            - Principal ID of the security group/service principal/user that would be assigned permissions to the projected subscription.
                         required: true
                         type: str
                     role_definition_id:
@@ -59,7 +64,7 @@ options:
                 type: str
             managed_by_tenant_id:
                 description:
-                    - Id of the managedBy tenant.
+                    - ID of the managedBy tenant.
                 required: true
                 type: str
     plan:
@@ -243,6 +248,9 @@ class Actions:
 class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
+            scope=dict(
+                type='str'
+            ),
             registration_definition_id=dict(
                 type='str',
             ),
@@ -341,7 +349,10 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
         if self.registration_definition_id is None:
             self.registration_definition_id = str(uuid.uuid4())
 
-        self.scope = "/subscriptions/" + self.subscription_id
+        if not self.scope:
+            self.scope = "/subscriptions/" + self.subscription_id
+        else:
+            self.scope = "/subscriptions/" + self.scope
 
         old_response = None
         response = None
