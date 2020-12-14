@@ -77,7 +77,7 @@
 
 - name: Update the RegistrationDefinition properties description and name
   azure_rm_registrationdefinition:
-    registration_definition_id: "{{ def_output.state.name }}"
+    registration_definition_id: "{{ output1.state.name }}"
     properties:
       description: second_test
       authorizations:
