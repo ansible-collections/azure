@@ -109,6 +109,7 @@
 
 - name: Get All Registration Definition info in the subscription
   azure_rm_registrationdefinition_info:
+    scope:  "{{ subscription_id }}"
   register: output
 
 - name: Assert all the registration definition info
