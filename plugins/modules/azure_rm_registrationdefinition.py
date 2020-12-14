@@ -26,6 +26,10 @@ options:
             - ID of the registration definition.
             - If is not specified, an UUID will be generated for it.
         type: str
+    scope:
+        description:
+            - The subscription in which the registration definition will be created.
+            - If not specified, will use the subscription derived from AzureRMAuth. 
     properties:
         description:
             - Properties of a registration definition.
@@ -243,6 +247,9 @@ class Actions:
 class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
+            scope=dict(
+                type='str'
+            ),
             registration_definition_id=dict(
                 type='str',
             ),

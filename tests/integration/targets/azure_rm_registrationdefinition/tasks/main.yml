@@ -1,6 +1,7 @@
 - name: set facts
   set_fact:
      subscription_id: "{{ azure_subscription_id }}"
+     subscription_sec_id: "{{ azure_subscription)_sec_id }}"
      managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
      principal_id: "{{ azure_principal_id }}"
      role_definition_id: "{{ azure_role_definition_id }}"
@@ -24,6 +25,23 @@
     that:
       - output.changed
 
+- name: Create a RegistrationDefinition with scope
+  azure_rm_registrationdefinition:
+    properties:
+      description: test definition with scope
+      authorizations:
+        - principal_id: "{{ principal_id }}"
+          role_definition_id: "{{ role_definition_id }}"
+      scope:  "{{ subscription_sec_id }}"
+      managed_by_tenant_id: "{{ managed_by_tenant_id }}"
+      registration_definition_name: "{{ reg_def_name }}"
+  register: output
+
+- name: Assert creating registration definition
+  assert:
+    that:
+      - output.changed
+
 - name: Create a RegistrationDefinition
   azure_rm_registrationdefinition:
     properties:
@@ -33,8 +51,7 @@
           role_definition_id: "{{ role_definition_id }}"
       managed_by_tenant_id: "{{ managed_by_tenant_id }}"
       registration_definition_name: "{{ reg_def_name }}"
-  register: def_output
-  tags: fred
+  register: output
 
 - name: Assert creating registration definition
   assert:
