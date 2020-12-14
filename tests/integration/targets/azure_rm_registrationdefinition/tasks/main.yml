@@ -27,12 +27,12 @@
 
 - name: Create a RegistrationDefinition with scope
   azure_rm_registrationdefinition:
+    scope:  "{{ subscription_sec_id }}"
     properties:
       description: test definition with scope
       authorizations:
         - principal_id: "{{ principal_id }}"
           role_definition_id: "{{ role_definition_id }}"
-      scope:  "{{ subscription_sec_id }}"
       managed_by_tenant_id: "{{ managed_by_tenant_id }}"
       registration_definition_name: "{{ reg_def_name }}"
   register: output
