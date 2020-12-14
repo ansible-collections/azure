@@ -11,6 +11,7 @@ DOCUMENTATION = r'''
     extends_documentation_fragment:
       - azure.azcollection.azure
       - azure.azcollection.azure_rm
+      - constructed
     description:
         - Query VM details from Azure Resource Manager
         - Requires a YAML configuration file whose name ends with 'azure_rm.(yml|yaml)'
