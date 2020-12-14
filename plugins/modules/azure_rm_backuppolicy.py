@@ -1,7 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Paul Aiton, (@paultaiton)
-# Copyright (c) 2018 Yunge Zhu, (@yungezz)
+# Copyright (c) 2020 Cole Neubauer, (@coleneubauer)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -16,43 +15,29 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_roleassignment
-version_added: "0.1.2"
-short_description: Manage Azure Role Assignment
+module: azure_rm_backuppolicy
+version_added: "#.#.#"
+short_description: Manage Azure Backup Policy
 description:
-    - Create and delete instance of Azure Role Assignment.
+    - Create and delete instance of Azure Backup Policy.
 
 options:
-    assignee_object_id:
+    vault_name:
         description:
-            - The object id of assignee. This maps to the ID inside the Active Directory.
-            - It can point to a user, service principal or security group.
-            - Required when creating role assignment.
-    id:
+            - The name of the Recovery Services Vault the policy belongs to.
+            - Required
+    policy_name:
         description:
-            - Fully qualified id of assignment to delete or create.
-            - Mutually Exclusive with I(scope) and I(name)
-    name:
+            - The name of the backup policy.
+            - Required
+    resource_group_name:
         description:
-            - Unique name of role assignment.
-            - The role assignment name must be a GUID, sample as "3ce0cbb0-58c4-4e6d-a16d-99d86a78b3ca".
-            - Mutually Exclusive with I(id)
-    role_definition_id:
-        description:
-            - The role definition id used in the role assignment.
-            - Required when creating role assignment.
-    scope:
-        description:
-            - The scope of the role assignment to create.
-            - For example, use /subscriptions/{subscription-id}/ for subscription.
-            - /subscriptions/{subscription-id}/resourceGroups/{resource-group-name} for resource group.
-            - /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}/providers/{resource-provider}/{resource-type}/{resource-name} for resource.
-            - Mutually Exclusive with I(id)
+            - The name of the resource group the vault is in.
+            - Required
     state:
         description:
-            - Assert the state of the role assignment.
-            - Use C(present) to create or update a role assignment and C(absent) to delete it.
-            - If C(present), then I(role_definition_id) and I(assignee_object_id) are both required
+            - Assert the state of the backup policy.
+            - Use C(present) to create or update a backup policy and C(absent) to delete it.
         default: present
         choices:
             - absent
@@ -62,88 +47,37 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
-    - Yunge Zhu(@yungezz)
-    - Paul Aiton(@paultaiton)
+    - Cole Neubauer(@coleneubauer)
 
 '''
 
 EXAMPLES = '''
-    - name: Create a role assignment
-      azure_rm_roleassignment:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        role_definition_id:
-          "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-
-    - name: Create a role assignment
-      azure_rm_roleassignment:
-        name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        role_definition_id:
-          "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-
-    - name: Delete a role assignment
-      azure_rm_roleassignment:
-        name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        state: absent
-
-    - name: Delete a role assignment
-      azure_rm_roleassignment:
-        id: /subscriptions/xxx-sub-guid-xxx/resourceGroups/rgname/providers/Microsoft.Authorization/roleAssignments/xxx-assign-guid-xxx"
-
-    - name: Delete a role assignment
-      azure_rm_roleassignment:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        role_definition_id:
-          "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    - name: Delete a backup policy
+      azure_rm_backuppolicy:
+        vault_name: Vault_Name
+        policy_name: Policy_Name
+        resource_group_name: Resource_Group_Name
 '''
 
 RETURN = '''
 id:
     description:
-        - Id of current role assignment.
+        - Id of specified backup policy.
     returned: always
     type: str
-    sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleAssignments/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.RecoveryServices/vaults/Vault_Name/backupPolicies/Policy_Name"
 name:
     description:
-        - Name of role assignment.
+        - Name of backup policy.
     type: str
     returned: always
-    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    sample: DefaultPolicy
 type:
     description:
-        - Type of role assignment.
+        - Type of backup policy.
     type: str
     returned: always
-    sample: Microsoft.Authorization/roleAssignments
-assignee_object_id:
-    description:
-        - Principal Id of the role assignee.
-    type: str
-    returned: always
-    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-principal_type:
-    description:
-        - Principal type of the role assigned to.
-    type: str
-    returned: always
-    sample: ServicePrincipal
-role_definition_id:
-    description:
-        - Role definition id that was assigned to principal_id.
-    type: str
-    returned: always
-    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-scope:
-    description:
-        - The role assignment scope.
-    type: str
-    returned: always
-    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    sample: Microsoft.RecoveryServices/vaults/backupPolicies
 '''
 
 import uuid
@@ -157,38 +91,31 @@ except ImportError:
     pass
 
 
-class AzureRMRoleAssignment(AzureRMModuleBase):
-    """Configuration class for an Azure RM Role Assignment"""
+class AzureRMBackupPolicy(AzureRMModuleBase):
+    """Configuration class for an Azure RM Backup Policy"""
 
     def __init__(self):
         self.module_arg_spec = dict(
-            assignee_object_id=dict(type='str'),
-            id=dict(type='str'),
-            name=dict(type='str'),
-            role_definition_id=dict(type='str'),
-            scope=dict(type='str'),
+            vault_name=dict(type='str'),
+            policy_name=dict(type='str'),
+            resource_group_name=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent'])
         )
 
-        self.assignee_object_id = None
-        self.id = None
-        self.name = None
-        self.role_definition_id = None
-        self.scope = None
-        self.state = None
+        self.vault_name = None
+        self.policy_name = None
+        self.resource_group_name = None
 
         self.results = dict(
             changed=False,
             id=None,
         )
 
-        mutually_exclusive = [['name', 'id'], ['scope', 'id']]
-        required_one_of = [['scope', 'id']]
-        required_if = [
-            ["state", "present", ["assignee_object_id", "role_definition_id"]]
-        ]
+        mutually_exclusive = []
+        required_one_of = []
+        required_if = []
 
-        super(AzureRMRoleAssignment, self).__init__(derived_arg_spec=self.module_arg_spec,
+        super(AzureRMBackupPolicy, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                     supports_check_mode=True,
                                                     supports_tags=False,
                                                     required_one_of=required_one_of,
@@ -201,171 +128,101 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.name and not self.scope:
-            self.fail("Parameter Error: setting name requires a scope to also be set.")
-
-        existing_assignment = None
+        existing_backup_policy = None
         response = None
 
-        existing_assignment = self.get_roleassignment()
+        existing_backup_policy = self.get_backup_policy()
 
-        if existing_assignment:
-            self.set_results(existing_assignment)
+        if existing_backup_policy:
+            self.set_results(existing_backup_policy)
 
         if self.state == 'present':
-            # check if the role assignment exists
-            if not existing_assignment:
-                self.log("Role assignment doesn't exist in this scope")
+            # check if the backup policy exists
+            if not existing_backup_policy:
+                self.log("Backup policy {0} for vault {1} in resource group {2} does not exist.".format( self.policy_name, self.vault_name, self.resource_group_name ))
 
                 self.results['changed'] = True
 
                 if self.check_mode:
                     return self.results
-                response = self.create_roleassignment()
+
+                response = self.create_backup_policy()
                 self.set_results(response)
 
             else:
-                self.log("Role assignment already exists, not updatable")
-                self.log('Result: {0}'.format(existing_assignment))
+                self.log("Backup policy already exists, not updatable")
+                self.log('Result: {0}'.format(existing_backup_policy))
 
         elif self.state == 'absent':
-            if existing_assignment:
-                self.log("Delete role assignment")
+            if existing_backup_policy:
+                self.log("Delete backup policy")
                 self.results['changed'] = True
 
                 if self.check_mode:
                     return self.results
 
-                self.delete_roleassignment(existing_assignment.get('id'))
+                self.delete_backup_policy()
 
-                self.log('role assignment deleted')
+                self.log('backup policy deleted')
 
             else:
-                # If assignment doesn't exist, that's the desired state.
-                self.log("role assignment {0} does not exist.".format(self.name))
+                # If backup policy doesn't exist, that's the desired state.
+                self.log("Backup policy {0} for vault {1} in resource group {2} does not exist.".format( self.policy_name, self.vault_name, self.resource_group_name ))
 
         return self.results
 
-    def create_roleassignment(self):
+    def create_backup_policy(self):
         '''
-        Creates role assignment.
+        Creates backup policy.
 
-        :return: deserialized role assignment
+        :return: ProtectionPolicyResource
         '''
-        self.log("Creating role assignment {0}".format(self.name))
-
-        response = None
-        try:
-            # pylint: disable=missing-kwoa
-            parameters = self.authorization_models.RoleAssignmentCreateParameters(role_definition_id=self.role_definition_id,
-                                                                                  principal_id=self.assignee_object_id)
-            if self.id:
-                response = self.authorization_client.role_assignments.create_by_id(role_id=self.id,
-                                                                                   parameters=parameters)
-            elif self.scope:
-                if not self.name:
-                    self.name = str(uuid.uuid4())
-                response = self.authorization_client.role_assignments.create(scope=self.scope,
-                                                                             role_assignment_name=self.name,
-                                                                             parameters=parameters)
-
-        except CloudError as exc:
-            self.log('Error attempting to create role assignment.')
-            self.fail("Error creating role assignment: {0}".format(str(exc)))
-        return self.roleassignment_to_dict(response)
-
-    def delete_roleassignment(self, assignment_id):
-        '''
-        Deletes specified role assignment.
-
-        :return: True
-        '''
-        self.log("Deleting the role assignment {0}".format(self.name))
-        try:
-            response = self.authorization_client.role_assignments.delete_by_id(role_id=assignment_id)
-        except CloudError as e:
-            self.log('Error attempting to delete the role assignment.')
-            self.fail("Error deleting the role assignment: {0}".format(str(e)))
+        self.log("Creating backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
+        self.log("Creating backup policy not implemented")
 
         return True
 
-    def get_roleassignment(self):
+    def delete_backup_policy(self):
         '''
-        Gets the properties of the specified role assignment.
+        Deletes specified backup policy.
 
-        :return: deserialized role assignment dictionary
+        :return: bool true on success, else fail
         '''
-        self.log("Checking if the role assignment {0} is present".format(self.name))
+        self.log("Deleting the backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
+        try:
+            response = self.recovery_services_backup_client.protection_policies.delete( self.policy_name, self.vault_name, self.resource_group_name )
+            return True
 
-        role_assignment = None
+        except CloudError as e:
+            self.log('Error attempting to delete the backup policy.')
+            self.fail("Error deleting the backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
+            return False
 
-        if self.id:
-            try:
-                response = self.authorization_client.role_assignments.get_by_id(role_id=self.id)
-                role_assignment = self.roleassignment_to_dict(response)
-                if role_assignment and self.assignee_object_id and role_assignment.get('assignee_object_id') != self.assignee_object_id:
-                    self.fail('State Mismatch Error: The assignment ID exists, but does not match the provided assignee.')
+    def get_backup_policy(self):
+        '''
+        Gets the properties of the specified backup policy.
 
-                if role_assignment and self.role_definition_id and role_assignment.get('role_definition_id') != self.role_definition_id:
-                    self.fail('State Mismatch Error: The assignment ID exists, but does not match the provided role.')
+        :return: ProtectionPolicyResource
+        '''
+        self.log("Checking if the backup policy {0} for vault {1} in resource group {2} is present".format( self.policy_name, self.vault_name, self.resource_group_name ))
 
-            except CloudError as ex:
-                self.log("Didn't find role assignments id {0}".format(self.id))
+        policy = None
 
-        elif self.name and self.scope:
-            try:
-                response = self.authorization_client.role_assignments.get(scope=self.scope, role_assignment_name=self.name)
-                role_assignment = self.roleassignment_to_dict(response)
-                if role_assignment and self.assignee_object_id and role_assignment.get('assignee_object_id') != self.assignee_object_id:
-                    self.fail('State Mismatch Error: The assignment name exists, but does not match the provided assignee.')
+        try:
+            policy = self.recovery_services_backup_client.protection_policies.get( vault_name=self.vault_name, resource_group_name=self.resource_group_name, policy_name=self.policy_name )
+        except CloudError as ex:
+            self.log("Could not find backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
 
-                if role_assignment and self.role_definition_id and role_assignment.get('role_definition_id') != self.role_definition_id:
-                    self.fail('State Mismatch Error: The assignment name exists, but does not match the provided role.')
+        return policy
 
-            except CloudError as ex:
-                self.log("Didn't find role assignment by name {0} at scope {1}".format(self.name, self.scope))
-
-        else:
-            try:
-                if self.scope and self.assignee_object_id and self.role_definition_id:
-                    response = list(self.authorization_client.role_assignments.list())
-                    response = [self.roleassignment_to_dict(role_assignment) for role_assignment in response]
-                    response = [role_assignment for role_assignment in response if role_assignment.get('scope') == self.scope]
-                    response = [role_assignment for role_assignment in response if role_assignment.get('assignee_object_id') == self.assignee_object_id]
-                    response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id') == self.role_definition_id]
-                else:
-                    self.fail('If id or name are not supplied, then assignee_object_id and role_definition_id are required.')
-                if response:
-                    role_assignment = response[0]
-            except CloudError as ex:
-                self.log("Didn't find role assignments for subscription {0}".format(self.subscription_id))
-
-        return role_assignment
-
-    def set_results(self, assignment):
-        self.results['id'] = assignment.get('id')
-        self.results['name'] = assignment.get('name')
-        self.results['type'] = assignment.get('type')
-        self.results['assignee_object_id'] = assignment.get('assignee_object_id')
-        self.results['principal_type'] = assignment.get('principal_type')
-        self.results['role_definition_id'] = assignment.get('role_definition_id')
-        self.results['scope'] = assignment.get('scope')
-
-    def roleassignment_to_dict(self, assignment):
-        return dict(
-            assignee_object_id=assignment.principal_id,
-            id=assignment.id,
-            name=assignment.name,
-            principal_type=assignment.principal_type,
-            role_definition_id=assignment.role_definition_id,
-            scope=assignment.scope,
-            type=assignment.type
-        )
-
+    def set_results(self, policy):
+        self.results['id'] = policy.get('id')
+        self.results['name'] = policy.get('name')
+        self.results['type'] = policy.get('type')
 
 def main():
     """Main execution"""
-    AzureRMRoleAssignment()
+    AzureRMBackupPolicy()
 
 
 if __name__ == '__main__':

@@ -424,6 +424,7 @@ class AzureRMModuleBase(object):
         self._automation_client = None
         self._IoThub_client = None
         self._lock_client = None
+        self._recovery_services_backup_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1252,6 +1253,13 @@ class AzureRMModuleBase(object):
         self.log("Getting lock models")
         return ManagementLockClient.models('2016-09-01')
 
+    @property
+    def recovery_services_backup_client(self):
+        self.log('Getting recovery services backup client')
+        if not self._recovery_services_backup_client:
+            self._recovery_services_backup_client = self.get_mgmt_svc_client(RecoveryServicesBackupClient,
+                                                         base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._recovery_services_backup_client
 
 class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
