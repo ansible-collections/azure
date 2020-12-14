@@ -28,8 +28,9 @@ options:
         type: str
     scope:
         description:
-            - The subscription in which the registration definition will be created.
-            - If not specified, will use the subscription derived from AzureRMAuth. 
+            - The subscription id defines the subscription in which the registration definition will be created.
+            - If not specified, will use the subscription derived from AzureRMAuth.
+        type: str
     properties:
         description:
             - Properties of a registration definition.
