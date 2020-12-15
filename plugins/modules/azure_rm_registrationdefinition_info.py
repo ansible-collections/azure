@@ -23,7 +23,7 @@ description:
 options:
     scope:
         description:
-            - The subscription ID defines the subscription in which the registration definition will be got.
+            - The subscription ID defines the subscription in which the registration definition will be retrieved.
             - If not specified, will use the subscription derived from AzureRMAuth.
         type: str
     registration_definition_id:

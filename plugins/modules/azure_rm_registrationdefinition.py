@@ -110,12 +110,7 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Delete Registration Definition
-      azure_rm_registrationdefinition:
-        registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        state: absent
-
-    - name: Create Registration Definition
+    - name: Create Registration Definition without scope
       azure_rm_registrationdefinition:
         registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         properties:
@@ -125,6 +120,23 @@ EXAMPLES = '''
               role_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
           managed_by_tenant_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
           registration_definition_name: def4
+
+    - name: Create Registration Definition with scope
+      azure_rm_registrationdefinition:
+        scope: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        properties:
+          description: test
+          authorizations:
+            - principal_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+              role_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+          managed_by_tenant_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+          registration_definition_name: def5
+
+    - name: Delete Registration Definition
+      azure_rm_registrationdefinition:
+        registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        state: absent
 
 '''
 

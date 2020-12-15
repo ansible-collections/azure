@@ -15,13 +15,13 @@
           role_definition_id: "{{ role_definition_id }}"
       managed_by_tenant_id: "{{ managed_by_tenant_id }}"
       registration_definition_name: test_def
-  register: def_output
+  register: output1
 
 - name: Create a RegistrationAssignment ---check mode
   azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
     properties:
-      registration_definition_id: "{{ def_output.state.id }}"
+      registration_definition_id: "{{ output1.state.id }}"
   register: output
   check_mode: yes
 
@@ -33,19 +33,19 @@
   azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
     properties:
-      registration_definition_id: "{{ def_output.state.id }}"
-  register: ass_output
+      registration_definition_id: "{{ output1.state.id }}"
+  register: output2
 
 - assert:
     that:
-      - ass_output.changed
+      - output2.changed
 
 - name: Create a RegistrationAssignment -- idempotent
   azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
-    registration_assignment_id:  "{{ ass_output.state.name }}"
+    registration_assignment_id:  "{{ output2.state.name }}"
     properties:
-      registration_definition_id: "{{ def_output.state.id }}"
+      registration_definition_id: "{{ output1.state.id }}"
   register: output
 
 - assert:
@@ -55,12 +55,12 @@
 - name: Get a RegistrationAssignment
   azure_rm_registrationassignment_info:
     scope: subscriptions/{{ subscription_id }}
-    registration_assignment_id:  "{{ ass_output.state.name }}"
+    registration_assignment_id:  "{{ output2.state.name }}"
   register: output
 
 - assert:
     that:
-      - output.registration_assignments[0].properties.registration_definition_id == "{{ def_output.state.id }}"
+      - output.registration_assignments[0].properties.registration_definition_id == "{{ output1.state.id }}"
 
 - name: Get all RegistrationAssignment
   azure_rm_registrationassignment_info:
@@ -74,5 +74,5 @@
 - name: Delete the RegistrationAssignment
   azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
-    registration_assignment_id:  "{{ ass_output.state.name }}"
+    registration_assignment_id:  "{{ output2.state.name }}"
     state: absent
