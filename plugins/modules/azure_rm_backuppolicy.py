@@ -143,7 +143,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
                 self.results['changed'] = True
 
-                if true:
+                if True:
                     return self.results
 
                 response = self.create_backup_policy()
