@@ -23,16 +23,16 @@
   - azure_rm: added computer_name parameter to available variables ([#312](https://github.com/ansible-collections/azure/pull/312))
 
 ### BUG FIXING
-  - azure_rm_webapp: Add support for multi-container apps to azure_rm_webapp ([#257](https://github.com/ansible-collectiyyons/azure/pull/257))
+  - azure_rm_webapp: Add support for multi-container apps to azure_rm_webapp ([#257](https://github.com/ansible-collections/azure/pull/257))
   - azure_rm_virtualmachineextension: added no_log to protected_settings variable ([#278](https://github.com/ansible-collections/azure/pull/278))
-  - azure_rm_keyvault: fix azure_rm_keyvault idempotency ([#295](https://github.com/ansible-collectiyyons/azure/pull/295))
+  - azure_rm_keyvault: fix azure_rm_keyvault idempotency ([#295](https://github.com/ansible-collections/azure/pull/295))
   - azure_rm_roleassignment: Fix azure_rm_roleassignment idempotence error ([#296](https://github.com/ansible-collections/azure/pull/296))
-  - azure_rm_common: Azure rm role 20201018 ([#301](https://github.com/ansible-collectiyyons/azure/pull/301))
-  - azure_rm_roleassignment: Azure rm role 20201018 ([#301](https://github.com/ansible-collectiyyons/azure/pull/301))
-  - azure_rm_roleassignment_info: Azure rm role 20201018 ([#301](https://github.com/ansible-collectiyyons/azure/pull/301))
+  - azure_rm_common: Azure rm role 20201018 ([#301](https://github.com/ansible-collections/azure/pull/301))
+  - azure_rm_roleassignment: Azure rm role 20201018 ([#301](https://github.com/ansible-collections/azure/pull/301))
+  - azure_rm_roleassignment_info: Azure rm role 20201018 ([#301](https://github.com/ansible-collections/azure/pull/301))
   - azure_rm_autoscale: fix typo ([#314](https://github.com/ansible-collections/azure/pull/314))
   - Fix sanity fail in python3.8 environment ([#355](https://github.com/ansible-collections/azure/pull/355))
-  - azure_rm: Extend doc fragment from base constructed class to fix error ([#364](https://github.com/ansible-collectiyyons/azure/pull/364))
+  - azure_rm: Extend doc fragment from base constructed class to fix error ([#364](https://github.com/ansible-collections/azure/pull/364))
 
 
 ## v1.2.0 (2020-10-09)
