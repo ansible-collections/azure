@@ -81,6 +81,11 @@ options:
                 description:
                     - To enable auto-scaling.
                 type: bool
+                :param max_pods: Maximum number of pods that can run on a node.
+            max_pods:
+                description:
+                    - Maximum number of pods that can run on a node.
+                type: int
             max_count:
                 description:
                     - Maximum number of nodes for auto-scaling.
@@ -272,6 +277,7 @@ EXAMPLES = '''
             type: VirtualMachineScaleSets
             max_count: 3
             min_count: 1
+            max_pods: 30
             enable_rbac: yes
 
     - name: Create a managed Azure Container Services (AKS) instance
@@ -440,7 +446,8 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         type=profile.type,
         enable_auto_scaling=profile.enable_auto_scaling,
         max_count=profile.max_count,
-        min_count=profile.min_count
+        min_count=profile.min_count,
+        max_pods=profile.max_pods
     ) for profile in agentpoolprofiles] if agentpoolprofiles else None
 
 
@@ -495,7 +502,8 @@ agent_pool_profile_spec = dict(
     type=dict(type='str', choice=['VirtualMachineScaleSets', 'AvailabilitySet']),
     enable_auto_scaling=dict(type='bool'),
     max_count=dict(type='int'),
-    min_count=dict(type='int')
+    min_count=dict(type='int'),
+    max_pods=dict(type='int')
 )
 
 
