@@ -136,9 +136,6 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         if existing_backup_policy:
             self.set_results(existing_backup_policy)
 
-        if self.state == 'test':
-            return self.results
-            
         if self.state == 'present':
             # check if the backup policy exists
             if not existing_backup_policy:
@@ -146,7 +143,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
                 self.results['changed'] = True
 
-                if self.check_mode:
+                if true:
                     return self.results
 
                 response = self.create_backup_policy()
