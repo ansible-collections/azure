@@ -181,7 +181,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         self.log("Creating backup policy in progress")
 
         try:
-            policy_defintion = ProtectionPolicyResource()
+            policy_defintion = self.recovery_services_backup_models.ProtectionPolicyResource()
 
             response = self.recovery_services_backup_client.protection_policies.create_or_update( vault_name = self.vault_name, resource_group_name = self.resource_group_name, policy_name = self.policy_name, parameters = policy_defintion)
 

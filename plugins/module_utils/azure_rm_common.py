@@ -267,6 +267,8 @@ try:
     from msrest.authentication import Authentication
     from azure.mgmt.resource.locks import ManagementLockClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
+    import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
+    
 except ImportError as exc:
     Authentication = object
     HAS_AZURE_EXC = traceback.format_exc()
@@ -1261,6 +1263,10 @@ class AzureRMModuleBase(object):
             self._recovery_services_backup_client = self.get_mgmt_svc_client(RecoveryServicesBackupClient,
                                                          base_url=self._cloud_environment.endpoints.resource_manager)
         return self._recovery_services_backup_client
+
+    @property
+    def recovery_services_backup_models(self):
+        return RecoveryServicesBackupModels
 
 class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
