@@ -727,6 +727,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 enable_auto_scaling = profile_self['enable_auto_scaling']
                                 max_count = profile_self['max_count']
                                 min_count = profile_self['min_count']
+                                max_pods = profile_self['max_pods']
                                 if count is not None and profile_result['count'] != count:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
@@ -751,6 +752,9 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 elif min_count is not None and profile_result['min_count'] != min_count:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
+                                elif min_count is not None and profile_result['max_pods'] != max_pods:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    self.fail("The max_pods of the agent pool cannot be updated")
                         if not matched:
                             self.log("Agent Pool not found")
                             to_be_updated = True
