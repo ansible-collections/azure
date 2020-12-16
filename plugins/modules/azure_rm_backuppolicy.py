@@ -216,9 +216,9 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         return policy
 
     def set_results(self, policy):
-        self.results['id'] = policy.get('id')
-        self.results['name'] = policy.get('name')
-        self.results['type'] = policy.get('type')
+        self.results['id'] = policy.id
+        self.results['name'] = policy.name
+        self.results['type'] = policy.type
 
 def main():
     """Main execution"""
