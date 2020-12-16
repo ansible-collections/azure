@@ -517,7 +517,7 @@ class AzureHost(object):
             id=self._vm_model['id'],
             location=self._vm_model['location'],
             name=self._vm_model['name'],
-            computer_name=self._vm_model['properties']['osProfile'].get('computerName'),
+            computer_name=self._vm_model['properties'].get('osProfile', {}).get('computerName'),
             availability_zone=av_zone,
             powerstate=self._powerstate,
             provisioning_state=self._vm_model['properties']['provisioningState'].lower(),
