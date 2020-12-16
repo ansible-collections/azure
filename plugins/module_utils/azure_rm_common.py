@@ -266,6 +266,7 @@ try:
     from msrestazure import AzureConfiguration
     from msrest.authentication import Authentication
     from azure.mgmt.resource.locks import ManagementLockClient
+    from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
 except ImportError as exc:
     Authentication = object
     HAS_AZURE_EXC = traceback.format_exc()
