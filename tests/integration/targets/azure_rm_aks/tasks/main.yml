@@ -29,6 +29,8 @@
            max_count: 3
            min_count: 1
            max_pods: 30
+           node_taints:
+             - key=value:NoSchedule
            availability_zones:
              - 1
              - 2
@@ -71,6 +73,8 @@
            max_count: 3
            min_count: 1
            max_pods: 30
+           node_taints:
+             - key=value:NoSchedule
            availability_zones:
              - 1
              - 2
@@ -120,6 +124,8 @@
            max_count: 3
            min_count: 1
            max_pods: 30
+           node_taints:
+             - key=value:NoSchedule
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
      network_profile:
@@ -155,6 +161,8 @@
            vm_size: Standard_DS1_v2
            type: VirtualMachineScaleSets
            max_pods: 30
+           node_taints:
+             - key=value:NoSchedule
      node_resource_group: "node{{ noderpfx }}"
      addon:
         http_application_routing: {}
@@ -191,6 +199,8 @@
            vm_size: Standard_DS1_v2
            type: VirtualMachineScaleSets
            max_pods: 30
+           node_taints:
+             - key=value:NoSchedule
      node_resource_group: "node{{ noderpfx }}"
      addon:
         http_application_routing: {}
@@ -226,6 +236,8 @@
            max_count: 6
            min_count: 3
            max_pods: 30
+           node_taints:
+             - key=value:NoSchedule
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
      network_profile:
@@ -260,6 +272,8 @@
            max_count: 6
            min_count: 3
            max_pods: 30
+           node_taints:
+             - key=value:NoSchedule
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
      network_profile:

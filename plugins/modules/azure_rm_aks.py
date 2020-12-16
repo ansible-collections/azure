@@ -116,6 +116,10 @@ options:
                     - 1
                     - 2
                     - 3
+            node_taints:
+                description:
+                    - Taints added to new nodes during node pool create and scale
+                type: list 
     service_principal:
         description:
             - The service principal suboptions.
@@ -279,6 +283,8 @@ EXAMPLES = '''
             min_count: 1
             max_pods: 30
             enable_rbac: yes
+            node_taints:
+                - key=value:NoSchedule
 
     - name: Create a managed Azure Container Services (AKS) instance
       azure_rm_aks:
@@ -447,7 +453,8 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         enable_auto_scaling=profile.enable_auto_scaling,
         max_count=profile.max_count,
         min_count=profile.min_count,
-        max_pods=profile.max_pods
+        max_pods=profile.max_pods,
+        node_taints=profile.node_taints
     ) for profile in agentpoolprofiles] if agentpoolprofiles else None
 
 
@@ -503,7 +510,8 @@ agent_pool_profile_spec = dict(
     enable_auto_scaling=dict(type='bool'),
     max_count=dict(type='int'),
     min_count=dict(type='int'),
-    max_pods=dict(type='int')
+    max_pods=dict(type='int'),
+    node_taints=dict(type='list', elements='str')
 )
 
 
@@ -728,6 +736,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 max_count = profile_self['max_count']
                                 min_count = profile_self['min_count']
                                 max_pods = profile_self['max_pods']
+                                node_taints = profile_self['node_taints']
                                 if count is not None and profile_result['count'] != count:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
@@ -752,9 +761,12 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 elif min_count is not None and profile_result['min_count'] != min_count:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
-                                elif min_count is not None and profile_result['max_pods'] != max_pods:
+                                elif max_pods is not None and profile_result['max_pods'] != max_pods:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     self.fail("The max_pods of the agent pool cannot be updated")
+                                elif node_taints is not None and profile_result['node_taints'] != node_taints:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    self.fail("The node_taints of the agent pool cannot be updated")
                         if not matched:
                             self.log("Agent Pool not found")
                             to_be_updated = True
