@@ -178,7 +178,19 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         :return: ProtectionPolicyResource
         '''
         self.log("Creating backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
-        self.log("Creating backup policy not implemented")
+        self.log("Creating backup policy in progress")
+
+        try:
+            policy_defintion = ProtectionPolicyResource()
+
+            response = self.recovery_services_backup_client.protection_policies.create_or_update( vault_name = self.vault_name, resource_group_name = self.resource_group_name, policy_name = self.policy_name, parameters = policy_defintion)
+
+            return True
+
+        except CloudError as e:
+            self.log('Error attempting to create the backup policy.')
+            self.fail("Error creating the backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
+            return False
 
         return True
 
