@@ -80,6 +80,9 @@ type:
     sample: Microsoft.RecoveryServices/vaults/backupPolicies
 '''
 
+from datetime import datetime
+from pytz import timezone
+import pytz
 import uuid
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
@@ -180,19 +183,33 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         self.log("Creating backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
         self.log("Creating backup policy in progress")
 
+        response = None
+
         try:
-            policy_defintion = self.recovery_services_backup_models.ProtectionPolicyResource()
+            instant_rp_details = None
+            #
+            dt = datetime.utcnow()
+            dt = datetime(dt.year, dt.month, dt.day, 1, 0)
+            # dt = dt.astimezone(pytz.timezone("US/Pacific"))
+            dt = dt.replace(hour=20, minute=0)
 
-            response = self.recovery_services_backup_client.protection_policies.create_or_update( vault_name = self.vault_name, resource_group_name = self.resource_group_name, policy_name = self.policy_name, parameters = policy_defintion)
+            schedule_policy = self.recovery_services_backup_models.SimpleSchedulePolicy( schedule_run_frequency="Daily", schedule_run_days=None, schedule_run_times=[dt], schedule_weekly_frequency=0 )
 
-            return True
+            retention_duration = self.recovery_services_backup_models.RetentionDuration( count = 30, duration_type = "Days" )
+            daily_retention_schedule = self.recovery_services_backup_models.DailyRetentionSchedule( retention_times=[dt], retention_duration = retention_duration )
+            retention_policy = self.recovery_services_backup_models.LongTermRetentionPolicy( daily_schedule = daily_retention_schedule )
+
+            policy_definition = self.recovery_services_backup_models.AzureIaaSVMProtectionPolicy( instant_rp_details = instant_rp_details, schedule_policy = schedule_policy, retention_policy = retention_policy, instant_rp_retention_range_in_days = 5, time_zone = "Pacific Standard Time"  )
+
+            policy_resource = self.recovery_services_backup_models.ProtectionPolicyResource( location = "westus", properties = policy_definition )
+
+            response = self.recovery_services_backup_client.protection_policies.create_or_update( vault_name = self.vault_name, resource_group_name = self.resource_group_name, policy_name = self.policy_name, parameters = policy_resource )
 
         except CloudError as e:
             self.log('Error attempting to create the backup policy.')
-            self.fail("Error creating the backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
-            return False
+            self.fail("Error creating the backup policy {0} for vault {1} in resource group {2}. Error Reads: {3}".format( self.policy_name, self.vault_name, self.resource_group_name, e ))
 
-        return True
+        return response
 
     def delete_backup_policy(self):
         '''
@@ -201,14 +218,17 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         :return: bool true on success, else fail
         '''
         self.log("Deleting the backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
+
+        response = None
+
         try:
-            response = self.recovery_services_backup_client.protection_policies.delete( self.policy_name, self.vault_name, self.resource_group_name )
-            return True
+            response = self.recovery_services_backup_client.protection_policies.delete( vault_name=self.vault_name, resource_group_name=self.resource_group_name, policy_name=self.policy_name )
 
         except CloudError as e:
             self.log('Error attempting to delete the backup policy.')
-            self.fail("Error deleting the backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
-            return False
+            self.fail("Error deleting the backup policy {0} for vault {1} in resource group {2}. Error Reads: {3}".format( self.policy_name, self.vault_name, self.resource_group_name, e ))
+
+        return response
 
     def get_backup_policy(self):
         '''
