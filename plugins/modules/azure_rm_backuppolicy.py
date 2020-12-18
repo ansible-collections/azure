@@ -303,6 +303,12 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                 if self.schedule_run_frequency == "Weekly" and self.instant_recovery_snapshot_retention != 5:
                     raise ValueError('Paramater instant_recovery_snapshot_retention was {} but must be 5 when schedule_run_frequency is Weekly'.format(self.instant_recovery_snapshot_retention))
 
+                if self.schedule_run_frequency == "Weekly" and not (1 <= self.weekly_retention_count <= 5163):
+                    raise ValueError('Paramater weekly_retention_count was {} but must be between 1 and 5163 when schedule_run_frequency is Weekly'.format(self.weekly_retention_count))
+
+                if self.schedule_run_frequency == "Daily" and not (7 <= self.daily_retention_count <= 9999):
+                    raise ValueError('Paramater daily_retention_count was {} but must be between 7 and 9999 when schedule_run_frequency is Daily'.format(self.daily_retention_count))
+
             except ValueError as e:
                 self.results['changed'] = False
                 self.fail(e)
