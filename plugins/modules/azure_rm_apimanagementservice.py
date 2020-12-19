@@ -42,6 +42,12 @@ options:
   sku_name:
     description:
       - Name of the Sku.
+    choices:
+      - Developer
+      - Standard
+      - Premium
+      - Basic
+      - Consumption
     type: str
   sku_capacity:
     description:
@@ -322,8 +328,7 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
                                               600,
                                               30)
             found = True
-            # self.log("Response : {0}".format(response))
-            self.log("ApiManagementService instance : {0} found".format(response.name))
+            self.log("Response : {0}".format(response))
         except CloudError as e:
             self.log('Did not find the ApiManagementService instance.')
         if found is True:

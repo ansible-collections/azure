@@ -123,7 +123,7 @@ except ImportError:
     pass
 
 
-class AzureRMApiManagementServiceInfo(AzureRMModuleBase):
+class AzureRMApiManagementServiceInfo(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
             resource_group=dict(
