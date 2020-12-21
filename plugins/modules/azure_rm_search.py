@@ -5,8 +5,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-import datetime
-
 __metaclass__ = type
 
 
@@ -15,12 +13,207 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'supported_by': 'community'}
 
 DOCUMENTATION = '''
+---
+module: azure_rm_search
+version_added: "1.2.0"
+short_description: Manage Azure Cognitive Search service.
+description:
+    - Create, update or delete Azure Cognitive Search service.
+options:
+    name:
+        description:
+            - The name of the Azure Cognitive Search service.
+            - Search service names must only contain lowercase letters, digits or dashes.
+            - Cannot use dash as the first two or last one characters.
+            - Cannot contain consecutive dashes.
+            - Must be between 2 and 60 characters in length.
+            - Search service names must be globally unique.
+            - You cannot change the service name after the service is created.
+        required: true
+    resource_group:
+        description:
+            - The name of the resource group within the current subscription.
+        required: true
+    location:
+        description:
+            - Valid azure location. Defaults to location of the resource group.
+    hosting_mode:
+        description:
+            - Applicable only for the standard3 SKU.
+            - You can set this property to enable up to 3 high density partitions that allow up to 1000 indexes.
+            - For the standard3 SKU, the value is either 'default' or 'highDensity'.
+            - For all other SKUs, this value must be 'default'.
+        choices:
+            - default
+            - highDensity
+        default: 'default'
+    identity:
+        description:
+            - The identity for the resource.
+        choices:
+            - None
+            - SystemAssigned
+        default: 'None'
+    network_rule_set:
+        description:
+            - Network specific rules that determine how the Azure Cognitive Search service may be reached.
+        type: list
+    partition_count:
+        description:
+            - The number of partitions in the search service.
+            - It can be 1, 2, 3, 4, 6, or 12.
+            - Values greater than 1 are only valid for standard SKUs.
+            - For 'standard3' services with hostingMode set to 'highDensity', the allowed values are between 1 and 3.
+        default: 1
+    public_network_access:
+        description:
+            - This value can be set to 'enabled' to avoid breaking changes on existing customer resources and templates.
+            - If set to 'disabled', traffic over public interface is not allowed, and private endpoint connections would be the exclusive access method.
+        choices:
+            - enabled
+            - disabled
+        default: 'enabled'
+    replica_count:
+        description:
+            - The number of replicas in the search service.
+            - It must be a value between 1 and 12 inclusive for standard SKUs.
+            - It must be a value between 1 and 3 inclusive for basic SKU.
+        default: 1
+    sku:
+        description:
+            - The SKU of the Search Service, which determines price tier and capacity limits.
+            - This property is required when creating a new Search Service.
+        choices:
+            - free
+            - basic
+            - standard
+            - standard2
+            - standard3
+            - storage_optimized_l1
+            - storage_optimized_l2
+        default: 'basic'
+    state:
+        description:
+            - Assert the state of the search instance. Set to C(present) to create or update a search instance. Set to C(absent) to remove a search instance.
+        default: present
+        choices:
+            - absent
+            - present
+
+extends_documentation_fragment:
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
+
+author:
+    - David Duque Hernández (@next-davidduquehernandez)
 '''
 
 EXAMPLES = '''
+  - name: Create Azure Cognitive Search
+    azure_rm_datalakestore:
+      resource_group: myResourceGroup
+      name: myAzureSearch
 '''
 
 RETURN = '''
+state:
+    description:
+        - Info for Azure Cognitive Search.
+    returned: always
+    type: dict
+    contains:
+        hosting_mode:
+            description:
+                - Type of hosting mode selected.
+            returned: always
+            type: str
+            sample: default
+        id:
+            description:
+                - The unique identifier associated with this Azure Cognitive Search.
+            returned: always
+            type: str
+            sample: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}
+        identity:
+            description:
+                - The identity of the Azure Cognitive Search Service.
+            returned: always
+            type: dict
+            contains:
+                principal_id:
+                    description:
+                        - Identifier assigned.
+                    type: str
+                    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                type:
+                    description:
+                        - Identity type.
+                    returned: always
+                    type: str
+                    sample: SystemAssigned
+            sample:
+                principal_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                type: SystemAssigned
+        location:
+            description:
+                - The geo-location where the Azure Cognitive Search Service lives.
+            returned: always
+            type: str
+            sample: West Europe
+        name:
+            description:
+                - The name of the Azure Cognitive Search Service.
+            returned: always
+            type: str
+            sample: myazuresearch
+        network_rule_set:
+            description:
+                - Network specific rules that determine how the Azure Cognitive Search service may be reached.
+            returned: always
+            type: list
+            sample: ['1.1.1.1', '8.8.8.8/31']
+        partition_count:
+            description:
+                - The number of partitions in the Azure Cognitive Search Service.
+            returned: always
+            type: int
+            sample: 3
+        provisioning_state:
+            description:
+                - The state of the provisioning state of Azure Cognitive Search Service.
+            returned: always
+            type: str
+            sample: succeeded
+        public_network_access:
+            description:
+                - If it's allowed traffic over public interface.
+            returned: always
+            type: str
+            sample: enabled
+        replica_count:
+            description:
+                - The number of replicas in the Azure Cognitive Search Service.
+            returned: always
+            type: int
+            sample: 3
+        sku:
+            description:
+                - The SKU of the Azure Cognitive Search Service.
+            returned: always
+            type: str
+            sample: standard
+        status:
+            description:
+                - The state of the Azure Cognitive Search.
+            returned: always
+            type: str
+            sample: Active running
+        tags:
+            description:
+                - The resource tags.
+            returned: always
+            type: dict
+            sample: { "tag1":"abc" }
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase

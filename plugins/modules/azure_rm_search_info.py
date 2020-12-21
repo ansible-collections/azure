@@ -5,8 +5,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-import datetime
-
 __metaclass__ = type
 
 
@@ -15,12 +13,167 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'supported_by': 'community'}
 
 DOCUMENTATION = '''
+module: azure_rm_search_info
+version_added: "1.2.0"
+short_description: Get Azure Cognitive Search service info.
+description:
+    - Get info for a specific Azure Cognitive Search service or all Azure Cognitive Search service within a resource group.
+
+options:
+    resource_group:
+        description:
+            - The name of the Azure resource group.
+        type: str
+    name:
+        description:
+            - The name of the Azure Cognitive Search service.
+        type: str
+    show_keys:
+        description:
+            - Retrieve admin and query keys.
+        type: bool
+        default: False
+
+extends_documentation_fragment:
+    - azure.azcollection.azure
+
+author:
+    - David Duque Hernández (@next-davidduquehernandez)
 '''
 
 EXAMPLES = '''
+  - name: Get Azure Cognitive Search info from resource group 'myResourceGroup' and name 'myAzureSearch'
+    azure_rm_search_info:
+      resource_group: myResourceGroup
+      name: myAzureSearch
+
+  - name: Get Azure Cognitive Search info from resource group 'myResourceGroup'
+    azure_rm_search_info:
+      resource_group: myResourceGroup
+
+  - name: Get all Azure Cognitive Search info
+    azure_rm_search_info:
 '''
 
 RETURN = '''
+search:
+    description:
+        - Info for Azure Cognitive Search.
+    returned: always
+    type: list
+    contains:
+        hosting_mode:
+            description:
+                - Type of hosting mode selected.
+            returned: always
+            type: str
+            sample: default
+        id:
+            description:
+                - The unique identifier associated with this Azure Cognitive Search.
+            returned: always
+            type: str
+            sample: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}
+        identity:
+            description:
+                - The identity of the Azure Cognitive Search Service.
+            returned: always
+            type: dict
+            contains:
+                principal_id:
+                    description:
+                        - Identifier assigned.
+                    type: str
+                    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                type:
+                    description:
+                        - Identity type.
+                    returned: always
+                    type: str
+                    sample: SystemAssigned
+            sample:
+                principal_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                type: SystemAssigned
+        keys:
+            description:
+                - Admin and query keys for Azure Cognitive Search Service.
+            type: dict
+            contains:
+                admin_primary:
+                    description:
+                        - Primary admin key for Azure Cognitive Search Service.
+                    type: str
+                    sample: 12345ABCDE67890FGHIJ123ABC456DEF
+                admin_secondary:
+                    description:
+                        - Secondary admin key for Azure Cognitive Search Service.
+                    type: str
+                    sample: 12345ABCDE67890FGHIJ123ABC456DEF
+                query:
+                    description:
+                        - List of query keys for Azure Cognitive Search Service.
+                    type: list
+                    sample: [{'key': '12345ABCDE67890FGHIJ123ABC456DEF', 'name': 'Query key'}]
+        location:
+            description:
+                - The geo-location where the Azure Cognitive Search Service lives.
+            returned: always
+            type: str
+            sample: West Europe
+        name:
+            description:
+                - The name of the Azure Cognitive Search Service.
+            returned: always
+            type: str
+            sample: myazuresearch
+        network_rule_set:
+            description:
+                - Network specific rules that determine how the Azure Cognitive Search service may be reached.
+            returned: always
+            type: list
+            sample: ['1.1.1.1', '8.8.8.8/31']
+        partition_count:
+            description:
+                - The number of partitions in the Azure Cognitive Search Service.
+            returned: always
+            type: int
+            sample: 3
+        provisioning_state:
+            description:
+                - The state of the provisioning state of Azure Cognitive Search Service.
+            returned: always
+            type: str
+            sample: succeeded
+        public_network_access:
+            description:
+                - If it's allowed traffic over public interface.
+            returned: always
+            type: str
+            sample: enabled
+        replica_count:
+            description:
+                - The number of replicas in the Azure Cognitive Search Service.
+            returned: always
+            type: int
+            sample: 3
+        sku:
+            description:
+                - The SKU of the Azure Cognitive Search Service.
+            returned: always
+            type: str
+            sample: standard
+        status:
+            description:
+                - The state of the Azure Cognitive Search.
+            returned: always
+            type: str
+            sample: Active running
+        tags:
+            description:
+                - The resource tags.
+            returned: always
+            type: dict
+            sample: { "tag1":"abc" }
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
