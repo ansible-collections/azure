@@ -224,7 +224,7 @@ state:
                                 - The resource identifier for the user managed Key Vault being used to encrypt.
                             type: str
                             returned: always
-                            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.KeyVault/vaults/tstkv
+                            sample: /subscriptions/{subscriptionId}/resourceGroups/myResourceGroup/providers/Microsoft.KeyVault/vaults/tstkv
                         encryption_key_name:
                             description:
                                 - The name of the user managed encryption key.
@@ -300,7 +300,7 @@ state:
                 - The resource identifier.
             returned: always
             type: str
-            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.DataLakeStore/accounts/testaccount
+            sample: /subscriptions/{subscriptionId}/resourceGroups/myResourceGroup/providers/Microsoft.DataLakeStore/accounts/testaccount
         identity:
             description:
                 - The Key Vault encryption identity, if any.
@@ -436,6 +436,7 @@ virtual_network_rules_item = dict(
     subnet_id=dict(type='str', required=True)
 )
 
+
 class AzureRMDatalakeStore(AzureRMModuleBase):
     def __init__(self):
 
@@ -468,7 +469,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             name=dict(type='str', required=True),
             new_tier=dict(type='str', choices=['Consumption', 'Commitment_1TB', 'Commitment_10TB', 'Commitment_100TB',
                                                'Commitment_500TB', 'Commitment_1PB', 'Commitment_5PB']),
-            resource_group=dict(type='str', required=True),
+            resource_group=dict(type='str', required=True, aliases=['resource_group_name']),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             tags=dict(type='dict'),
             virtual_network_rules=dict(
