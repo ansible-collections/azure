@@ -391,6 +391,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             self.results['name'] = None
             self.results['type'] = None
 
+
 def main():
     """Main execution"""
     AzureRMBackupPolicy()
