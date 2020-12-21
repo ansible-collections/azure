@@ -1273,8 +1273,8 @@ class AzureRMModuleBase(object):
     def datalake_store_client(self):
         self.log('Getting datalake store client...')
             self._datalake_store_client = self.get_mgmt_svc_client(DataLakeStoreAccountManagementClient,
-                                                            base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2016-11-01')
+                                                                   base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                   api_version='2016-11-01')
         return self._datalake_store_client
 
     @property

@@ -48,7 +48,7 @@ EXAMPLES = '''
   - name: Get Azure Data Lake Store info from resource group 'myResourceGroup'
     azure_rm_datalakestore_info:
       resource_group: myResourceGroup
-      
+
   - name: Get Azure Data Lake Store info
     azure_rm_datalakestore_info:
 '''
@@ -71,7 +71,7 @@ datalake:
                 - The account creation time.
             returned: always
             type: str
-            sample: 2020-01-01T00:00:00.000000+00:00
+            sample: '2020-01-01T00:00:00.000000+00:00'
         current_tier:
             description:
                 - The commitment tier in use for the current month.
@@ -103,7 +103,7 @@ datalake:
                                 - The resource identifier for the user managed Key Vault being used to encrypt.
                             type: str
                             returned: always
-                            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.KeyVault/vaults/testkv
+                            sample: /subscriptions/{subscriptionId}/resourceGroups/myRG/providers/Microsoft.KeyVault/vaults/testkv
                         encryption_key_name:
                             description:
                                 - The name of the user managed encryption key.
@@ -174,7 +174,7 @@ datalake:
                 - The resource identifier.
             returned: always
             type: str
-            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.DataLakeStore/accounts/testaccount
+            sample: /subscriptions/{subscriptionId}/resourceGroups/myResourceGroup/providers/Microsoft.DataLakeStore/accounts/testaccount
         identity:
             description:
                 - The Key Vault encryption identity, if any.
@@ -200,7 +200,7 @@ datalake:
                 - The account last modified time.
             returned: always
             type: str
-            sample: 2020-01-01T00:00:00.000000+00:00
+            sample: '2020-01-01T00:00:00.000000+00:00'
         location:
             description:
                 - The resource location.
@@ -271,7 +271,7 @@ datalake:
         virtual_network_rules:
             description:
                 - The list of virtual network rules associated with this Data Lake Store account.
-            type: list 
+            type: list
             contains:
                 name:
                     description:
@@ -282,7 +282,7 @@ datalake:
                     description:
                         - The resource identifier for the subnet.
                     type: str
-                    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/vnet/subnets/default
+                    sample: /subscriptions/{subscriptionId}/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/vnet/subnets/default
 '''
 
 try:
@@ -311,7 +311,7 @@ class AzureRMDatalakeStoreInfo(AzureRMModuleBase):
         self.resource_group = None
 
         super(AzureRMDatalakeStoreInfo, self).__init__(self.module_arg_spec,
-                                                        supports_tags=False)
+                                                       supports_tags=False)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
@@ -408,7 +408,7 @@ class AzureRMDatalakeStoreInfo(AzureRMModuleBase):
             virtual_network_rules=None
         )
 
-        account_dict['firewall_rules']=list()
+        account_dict['firewall_rules'] = list()
         for rule in datalake_store_obj.firewall_rules:
             rule_item = dict(
                 name=rule.name,
@@ -417,7 +417,7 @@ class AzureRMDatalakeStoreInfo(AzureRMModuleBase):
             )
             account_dict['firewall_rules'].append(rule_item)
 
-        account_dict['virtual_network_rules']=list()
+        account_dict['virtual_network_rules'] = list()
         for vnet_rule in datalake_store_obj.virtual_network_rules:
             vnet_rule_item = dict(
                 name=vnet_rule.name,
@@ -426,7 +426,7 @@ class AzureRMDatalakeStoreInfo(AzureRMModuleBase):
             account_dict['virtual_network_rules'].append(vnet_rule_item)
 
         if datalake_store_obj.identity:
-            account_dict['identity']=dict(
+            account_dict['identity'] = dict(
                 type=datalake_store_obj.identity.type,
                 principal_id=datalake_store_obj.identity.principal_id,
                 tenant_id=datalake_store_obj.identity.tenant_id
@@ -434,13 +434,13 @@ class AzureRMDatalakeStoreInfo(AzureRMModuleBase):
 
         if datalake_store_obj.encryption_config.key_vault_meta_info:
             account_dict['encryption_config'] = dict(
-                key_vault_meta_info = dict(
-                    key_vault_resource_id = datalake_store_obj.encryption_config.key_vault_meta_info.key_vault_resource_id,
-                    encryption_key_name = datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_name,
-                    encryption_key_version = datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_version
+                key_vault_meta_info=dict(
+                    key_vault_resource_id=datalake_store_obj.encryption_config.key_vault_meta_info.key_vault_resource_id,
+                    encryption_key_name=datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_name,
+                    encryption_key_version=datalake_store_obj.encryption_config.key_vault_meta_info.encryption_key_version
                 )
             )
-        
+
         return account_dict
 
     def account_obj_to_dict_basic(self, datalake_store_obj):
@@ -459,6 +459,7 @@ class AzureRMDatalakeStoreInfo(AzureRMModuleBase):
         )
 
         return account_dict
+
 
 def main():
     AzureRMDatalakeStoreInfo()
