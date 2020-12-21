@@ -277,7 +277,7 @@ class AzureRMSearchInfo(AzureRMModuleBase):
         account_dict = dict(
             hosting_mode=search_obj.hosting_mode,
             id=search_obj.id,
-            identity=dict(type=search_obj.identity.type),
+            identity=dict(type=search_obj.identity.type if search_obj.identity else None),
             location=search_obj.location,
             name=search_obj.name,
             network_rule_set=list(),
@@ -290,7 +290,7 @@ class AzureRMSearchInfo(AzureRMModuleBase):
             tags=search_obj.tags
         )
 
-        if search_obj.identity.principal_id is not None:
+        if search_obj.identity and search_obj.identity.principal_id:
             account_dict['identity']['principal_id'] = search_obj.identity.principal_id
 
         for rule in search_obj.network_rule_set.ip_rules:
