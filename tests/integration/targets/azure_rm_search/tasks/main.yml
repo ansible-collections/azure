@@ -75,9 +75,6 @@
   azure_rm_search:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
-    tags:
-      BillingIdentifier: 'PI-3000012219_100%'
-      BillingIdentifier2: 'PI-3000012219_100%'
   register: search_info
 
 - name: Assert status succeeded and results
@@ -100,9 +97,6 @@
   azure_rm_search:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
-    tags:
-      BillingIdentifier: 'PI-3000012219_100%'
-      BillingIdentifier2: 'PI-3000012219_100%'
   register: search_info
 
 - name: Assert that idempotence is ok
@@ -131,8 +125,6 @@
     sku: standard3
     tags:
       foo: bar
-      BillingIdentifier: 'PI-3000012219_100%'
-      BillingIdentifier2: 'PI-3000012219_100%'
   register: search_info
 
 - name: Assert status succeeded and results
@@ -165,8 +157,6 @@
     sku: standard3
     tags:
       foo: bar
-      BillingIdentifier: 'PI-3000012219_100%'
-      BillingIdentifier2: 'PI-3000012219_100%'
   register: search_info
 
 - name: Assert that idempotence is ok
