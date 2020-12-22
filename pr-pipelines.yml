@@ -30,6 +30,7 @@ parameters:
     - "azure_rm_availabilityset"
     - "azure_rm_azurefirewall"
     - "azure_rm_batchaccount"
+    - "azure_rm_backuppolicy"
     - "azure_rm_cdnprofile"
     - "azure_rm_containerinstance"
     - "azure_rm_containerregistry"
@@ -114,7 +115,7 @@ jobs:
               az group create -l eastus -n $(setvar.resource_group_secondary)
 
   - job: RunTests
-    dependsOn: CreateResourceGroups 
+    dependsOn: CreateResourceGroups
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
@@ -185,7 +186,7 @@ jobs:
       displayName: 'Running Tests'
 
   - job: CleanupResourceGroups
-    dependsOn: 
+    dependsOn:
       - CreateResourceGroups
       - RunTests
     condition: always()

@@ -136,12 +136,24 @@ id:
     returned: always
     type: str
     sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.RecoveryServices/vaults/Vault_Name/backupPolicies/Policy_Name"
+location:
+    description:
+        - Location of backup policy.
+    type: str
+    returned: always
+    sample: eastus
 name:
     description:
         - Name of backup policy.
     type: str
     returned: always
     sample: DefaultPolicy
+properties:
+    description:
+        - Properties of the backup policy.
+        - Contains definition information such as run time frequency or run time schedule
+    type: str
+    returned: always
 type:
     description:
         - Type of backup policy.
@@ -384,11 +396,16 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
     def set_results(self, policy):
         if policy:
             self.results['id'] = policy.id
+            self.results['location'] = policy.location
             self.results['name'] = policy.name
+            self.results['properties'] = policy.properties
             self.results['type'] = policy.type
+
         else:
             self.results['id'] = None
+            self.results['location'] = None
             self.results['name'] = None
+            self.results['properties'] = None
             self.results['type'] = None
 
 

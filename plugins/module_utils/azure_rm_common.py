@@ -268,7 +268,7 @@ try:
     from azure.mgmt.resource.locks import ManagementLockClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
     import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
-    
+
 except ImportError as exc:
     Authentication = object
     HAS_AZURE_EXC = traceback.format_exc()
