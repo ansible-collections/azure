@@ -163,7 +163,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure_tags
 
 author:
-    David Duque Hernández (@next-davidduquehernandez)
+    - David Duque Hernández (@next-davidduquehernandez)
 '''
 
 EXAMPLES = '''
