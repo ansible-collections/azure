@@ -114,6 +114,7 @@ ansible --version
 echo '--------------------------------------------'
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
+export
 
 cat <<EOF >> "${TEST_DIR}"/tests/integration/cloud-config-azure.ini
 [default]
@@ -128,6 +129,7 @@ AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
 AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
 RESOURCE_GROUP_SECONDARY:${RESOURCE_GROUP_SECONDARY}
 EOF
+export
 
 if [ "sanity" = "${group}" ]
 then
