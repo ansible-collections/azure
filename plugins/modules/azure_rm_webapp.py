@@ -166,6 +166,7 @@ options:
         description:
             - Purge any existing application settings. Replace web app application settings with app_settings.
         type: bool
+        default: False
 
     app_state:
         description:
