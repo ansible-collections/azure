@@ -148,12 +148,6 @@ name:
     type: str
     returned: always
     sample: DefaultPolicy
-properties:
-    description:
-        - Properties of the backup policy.
-        - Contains definition information such as run time frequency or run time schedule
-    type: str
-    returned: always
 type:
     description:
         - Type of backup policy.
@@ -398,14 +392,12 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             self.results['id'] = policy.id
             self.results['location'] = policy.location
             self.results['name'] = policy.name
-            self.results['properties'] = policy.properties
             self.results['type'] = policy.type
 
         else:
             self.results['id'] = None
             self.results['location'] = None
             self.results['name'] = None
-            self.results['properties'] = None
             self.results['type'] = None
 
 

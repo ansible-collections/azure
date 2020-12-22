@@ -31,7 +31,6 @@
     that:
       - daily_policy_output.changed
       - daily_policy_output.name == policy_name_daily
-      - daily_policy_output.properties is defined
 
 - name: Update daily VM backup policy
   azure_rm_backuppolicy:
@@ -52,13 +51,11 @@
     that:
       - daily_policy_output_update.changed
       - daily_policy_output_update.name == policy_name_daily
-      - daily_policy_output_update.properties is defined
-      - daily_policy_output.properties !=  daily_policy_output_update.properties
 
 - name: Create a weekly VM backup policy
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
-    policy_name: "{{ policy_name_daily }}"
+    policy_name: "{{ policy_name_weekly }}"
     resource_group_name: "{{ resource_group }}"
     state: present
     backup_management_type: "AzureIaasVM"
@@ -78,12 +75,11 @@
     that:
       - weekly_policy_output.changed
       - weekly_policy_output.name == policy_name_weekly
-      - weekly_policy_output.properties is defined
 
 - name: Update weekly VM backup policy
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
-    policy_name: "{{ policy_name_daily }}"
+    policy_name: "{{ policy_name_weekly }}"
     resource_group_name: "{{ resource_group }}"
     state: present
     backup_management_type: "AzureIaasVM"
@@ -102,11 +98,9 @@
   assert:
     that:
       - weekly_policy_output_update.changed
-      - weekly_policy_output_update.name == policy_name_daily
-      - weekly_policy_output_update.properties is defined
-      - weekly_policy_output.properties !=  weekly_policy_output_update.properties
+      - weekly_policy_output_update.name == policy_name_weekly
 
-- name: Delete a weekly VM backup policy
+- name: Delete a daily VM backup policy
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     policy_name: "{{ policy_name_daily }}"
@@ -114,7 +108,7 @@
     state: absent
   register: daily_policy_output_delete
 
-- name: Assert success on weekly backup policy deletion
+- name: Assert success on daily backup policy deletion
   assert:
     that:
       - daily_policy_output_delete.changed
@@ -122,7 +116,7 @@
 - name: Delete a weekly VM backup policy
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
-    policy_name: "{{ policy_name_daily }}"
+    policy_name: "{{ policy_name_weekly }}"
     resource_group_name: "{{ resource_group }}"
     state: absent
   register: weekly_policy_output_delete
@@ -131,3 +125,29 @@
   assert:
     that:
       - weekly_policy_output_delete.changed
+
+- name: Delete a daily VM backup policy (idempotent)
+  azure_rm_backuppolicy:
+    vault_name: "{{ vault_name }}"
+    policy_name: "{{ policy_name_daily }}"
+    resource_group_name: "{{ resource_group }}"
+    state: absent
+  register: daily_policy_output_delete_idempotent
+
+- name: Assert that there is no change after second deletion of daily backup policy
+  assert:
+    that:
+      - not daily_policy_output_delete_idempotent.changed
+
+- name: Delete a weekly VM backup policy (idempotent)
+  azure_rm_backuppolicy:
+    vault_name: "{{ vault_name }}"
+    policy_name: "{{ policy_name_weekly }}"
+    resource_group_name: "{{ resource_group }}"
+    state: absent
+  register: weekly_policy_output_delete_idempotent
+
+- name: Assert that there is no change after second deletion of weekly backup policy
+  assert:
+    that:
+      - not weekly_policy_output_delete_idempotent.changed
