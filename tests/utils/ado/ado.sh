@@ -137,3 +137,4 @@ then
 else
     ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
 fi
+export
