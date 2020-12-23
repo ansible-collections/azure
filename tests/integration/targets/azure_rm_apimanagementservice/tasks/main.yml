@@ -44,6 +44,18 @@
     that:
       - deleteService.changed == True
 
+- name: (idempotence test) To delete an api management service
+  azure_rm_apimanagementservice:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    state: absent
+  register: deleteService
+
+- name: Assert the changes
+  assert:
+    that:
+      - deleteService.changed == False
+
 - name: Get api management service information
   azure_rm_apimanagementservice_info:
     resource_group: "{{ resource_group }}"
