@@ -1,11 +1,3 @@
-plugins/modules/azure_rm_aks.py validate-modules:doc-choices-do-not-match-spec
-plugins/modules/azure_rm_aks.py validate-modules:doc-default-does-not-match-spec
-plugins/modules/azure_rm_aks.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_aks.py validate-modules:undocumented-parameter
-plugins/modules/azure_rm_aks.py validate-modules:doc-elements-mismatch
-plugins/modules/azure_rm_aks.py validate-modules:invalid-ansiblemodule-schema
-plugins/modules/azure_rm_aks.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_aks.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_aks_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_aks_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_aks_info.py validate-modules:required_if-requirements-unknown
