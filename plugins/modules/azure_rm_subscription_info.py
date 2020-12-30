@@ -42,7 +42,6 @@ options:
             - If true, will return all subscriptions.
             - If false will omit disabled subscriptions (default).
             - Option has no effect when searching by id or name, and will be silently ignored.
-        default: False
         type: bool
     tags:
         description:
