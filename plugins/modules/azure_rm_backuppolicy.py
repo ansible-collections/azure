@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_backuppolicy
-version_added: "#.#.#"
+version_added: "1.3.2"
 short_description: Manage Azure Backup Policy
 description:
     - Create and delete instance of Azure Backup Policy.
@@ -26,14 +26,17 @@ options:
         description:
             - The name of the Recovery Services Vault the policy belongs to.
             - Required
+        type: str
     policy_name:
         description:
             - The name of the backup policy.
             - Required
+        type: str
     resource_group_name:
         description:
             - The name of the resource group the vault is in.
             - Required
+        type: str
     state:
         description:
             - Assert the state of the backup policy.
@@ -42,46 +45,64 @@ options:
         choices:
             - absent
             - present
+        type: str
     backup_management_type:
         description:
             - Defines the type of resource the policy will be applied to
         choices:
             - AzureIaasVM
+        type: str
     schedule_run_time:
         description:
             - The hour to run backups.
             - Valid choices are on 24 hour scale (0-23)
+        type: int
     instant_recovery_snapshot_retention:
         description:
             - How many days to retain instant recovery snapshots
+        type: int
     schedule_run_frequency:
         description:
             - The frequency to run the policy
         choices:
             - Daily
             - Weekly
+        type: str
     schedule_days:
         description:
             - List of days to execute the schedule.
             - Does not apply to Daily frequency
+        type: list
+        elements: str
     weekly_retention_count:
         description:
             - The amount of weeks to retain backups
+        type: int
     daily_retention_count:
         description:
             - The amount of days to retain backups
             - Does not apply to Weekly frequency
+        type: int
     schedule_weekly_frequency:
         description:
             - The amount of weeks between backups
             - Backup every schedule_weekly_frequency week(s)
             - Azure will default behavior to running weekly if this is left blank
             - Does not apply to Daily frequency
+        type: int
     time_zone:
         description:
             - Timezone to apply schedule_run_time
         default: UTC
-
+        type: str
+    log_path:
+        description:
+            - parent argument
+        type: str
+    log_mode:
+        description:
+            - parent argument
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 
@@ -185,7 +206,9 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             weekly_retention_count=dict(type='int'),
             daily_retention_count=dict(type='int'),
             schedule_weekly_frequency=dict(type='int'),
-            time_zone=dict(type='str', default='UTC')
+            time_zone=dict(type='str', default='UTC'),
+            log_path=dict(type='str'),
+            log_mode=dict(type='str')
         )
 
         self.vault_name = None
@@ -206,18 +229,15 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             id=None,
         )
 
-        mutually_exclusive = []
-        required_one_of = []
-        required_if = [ ('schedule_run_frequency', 'Weekly', ('schedule_days', 'weekly_retention_count', 'schedule_run_time')),
-                        ('schedule_run_frequency', 'Daily', ('daily_retention_count', 'schedule_run_time')),
-                        ('state', 'present', ('schedule_run_frequency', 'backup_management_type')) ]
+        required_if = [('schedule_run_frequency', 'Weekly', ['schedule_days', 'weekly_retention_count', 'schedule_run_time']),
+                       ('schedule_run_frequency', 'Daily', ['daily_retention_count', 'schedule_run_time']),
+                       ('state', 'present', ['schedule_run_frequency', 'backup_management_type']),
+                       ('log_mode', 'file', ['log_path'])]
 
         super(AzureRMBackupPolicy, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                    supports_check_mode=True,
-                                                    supports_tags=False,
-                                                    required_one_of=required_one_of,
-                                                    required_if=required_if,
-                                                    mutually_exclusive=mutually_exclusive)
+                                                  supports_check_mode=True,
+                                                  supports_tags=False,
+                                                  required_if=required_if)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
@@ -237,7 +257,9 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         if self.state == 'present':
             # check if the backup policy exists
             if not existing_backup_policy:
-                self.log("Backup policy {0} for vault {1} in resource group {2} does not exist.".format( self.policy_name, self.vault_name, self.resource_group_name ))
+                self.log("Backup policy {0} for vault {1} in resource group {2} does not exist.".format(self.policy_name,
+                                                                                                        self.vault_name,
+                                                                                                        self.resource_group_name))
 
                 self.results['changed'] = True
 
@@ -249,7 +271,9 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
             # log that we're doing an update
             else:
-                self.log("Backup policy {0} for vault {1} in resource group {2} already exists, updating".format( self.policy_name, self.vault_name, self.resource_group_name ))
+                self.log("Backup policy {0} for vault {1} in resource group {2} already exists, updating".format(self.policy_name,
+                                                                                                                 self.vault_name,
+                                                                                                                 self.resource_group_name))
 
                 self.results['changed'] = True
 
@@ -273,7 +297,9 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
             else:
                 # If backup policy doesn't exist, that's the desired state.
-                self.log("Backup policy {0} for vault {1} in resource group {2} does not exist.".format( self.policy_name, self.vault_name, self.resource_group_name ))
+                self.log("Backup policy {0} for vault {1} in resource group {2} does not exist.".format(self.policy_name,
+                                                                                                        self.vault_name,
+                                                                                                        self.resource_group_name))
 
         return self.results
 
@@ -283,7 +309,9 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
         :return: ProtectionPolicyResource
         '''
-        self.log("Creating backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
+        self.log("Creating backup policy {0} for vault {1} in resource group {2}".format(self.policy_name,
+                                                                                         self.vault_name,
+                                                                                         self.resource_group_name))
         self.log("Creating backup policy in progress")
 
         response = None
@@ -295,7 +323,8 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             dt = datetime.utcnow()
             dt = datetime(dt.year, dt.month, dt.day, 0, 0)
 
-            # azure requires this as a list but at this time doesn't support multiple run times should easily be converted at this step if they support it in the future
+            # azure requires this as a list but at this time doesn't support multiple run times
+            # should easily be converted at this step if they support it in the future
             schedule_run_times_as_datetimes = []
             schedule_run_time = self.schedule_run_time
 
@@ -304,50 +333,72 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                 if 0 <= schedule_run_time <= 23:
                     schedule_run_times_as_datetimes = [(dt.replace(hour=schedule_run_time))]
                 else:
-                    raise ValueError('Paramater schedule_run_time {} is badly formed must be on the 24 hour scale'.format(schedule_run_time))
+                    raise ValueError('Paramater schedule_run_time {0} is badly formed must be on the 24 hour scale'.format(schedule_run_time))
                 # azure forces instant_recovery_snapshot_retention to be 5 when schedule type is Weekly
                 if self.schedule_run_frequency == "Weekly" and self.instant_recovery_snapshot_retention != 5:
-                    raise ValueError('Paramater instant_recovery_snapshot_retention was {} but must be 5 when schedule_run_frequency is Weekly'.format(self.instant_recovery_snapshot_retention))
+                    raise ValueError('Paramater instant_recovery_snapshot_retention was {0} but must be 5 when schedule_run_frequency is Weekly'
+                                     .format(self.instant_recovery_snapshot_retention))
 
                 if self.schedule_run_frequency == "Weekly" and not (1 <= self.weekly_retention_count <= 5163):
-                    raise ValueError('Paramater weekly_retention_count was {} but must be between 1 and 5163 when schedule_run_frequency is Weekly'.format(self.weekly_retention_count))
+                    raise ValueError('Paramater weekly_retention_count was {0} but must be between 1 and 5163 when schedule_run_frequency is Weekly'
+                                     .format(self.weekly_retention_count))
 
                 if self.schedule_run_frequency == "Daily" and not (7 <= self.daily_retention_count <= 9999):
-                    raise ValueError('Paramater daily_retention_count was {} but must be between 7 and 9999 when schedule_run_frequency is Daily'.format(self.daily_retention_count))
+                    raise ValueError('Paramater daily_retention_count was {0} but must be between 7 and 9999 when schedule_run_frequency is Daily'
+                                     .format(self.daily_retention_count))
 
             except ValueError as e:
                 self.results['changed'] = False
                 self.fail(e)
 
             # create a schedule policy based on schedule_run_frequency
-            schedule_policy = self.recovery_services_backup_models.SimpleSchedulePolicy( schedule_run_frequency=self.schedule_run_frequency, schedule_run_days=self.schedule_days, schedule_run_times=schedule_run_times_as_datetimes, schedule_weekly_frequency=self.schedule_weekly_frequency )
+            schedule_policy = self.recovery_services_backup_models.SimpleSchedulePolicy(schedule_run_frequency=self.schedule_run_frequency,
+                                                                                        schedule_run_days=self.schedule_days,
+                                                                                        schedule_run_times=schedule_run_times_as_datetimes,
+                                                                                        schedule_weekly_frequency=self.schedule_weekly_frequency)
 
             daily_retention_schedule = None
             weekly_retention_schedule = None
 
             # Daily backups can have a daily retention or weekly but Weekly backups cannot have a daily retention
             if (self.daily_retention_count and self.schedule_run_frequency == "Daily"):
-                retention_duration = self.recovery_services_backup_models.RetentionDuration( count = self.daily_retention_count, duration_type = "Days" )
-                daily_retention_schedule = self.recovery_services_backup_models.DailyRetentionSchedule( retention_times=schedule_run_times_as_datetimes, retention_duration = retention_duration )
+                retention_duration = self.recovery_services_backup_models.RetentionDuration(count=self.daily_retention_count, duration_type="Days")
+                daily_retention_schedule = self.recovery_services_backup_models.DailyRetentionSchedule(retention_times=schedule_run_times_as_datetimes,
+                                                                                                       retention_duration=retention_duration)
 
-            if( self.weekly_retention_count):
-                retention_duration = self.recovery_services_backup_models.RetentionDuration( count = self.weekly_retention_count, duration_type = "Weeks" )
-                weekly_retention_schedule = self.recovery_services_backup_models.WeeklyRetentionSchedule( days_of_the_week=self.schedule_days, retention_times=schedule_run_times_as_datetimes, retention_duration = retention_duration )
+            if(self.weekly_retention_count):
+                retention_duration = self.recovery_services_backup_models.RetentionDuration(count=self.weekly_retention_count,
+                                                                                            duration_type="Weeks")
+                weekly_retention_schedule = self.recovery_services_backup_models.WeeklyRetentionSchedule(days_of_the_week=self.schedule_days,
+                                                                                                         retention_times=schedule_run_times_as_datetimes,
+                                                                                                         retention_duration=retention_duration)
 
-            retention_policy = self.recovery_services_backup_models.LongTermRetentionPolicy( daily_schedule = daily_retention_schedule, weekly_schedule = weekly_retention_schedule )
+            retention_policy = self.recovery_services_backup_models.LongTermRetentionPolicy(daily_schedule=daily_retention_schedule,
+                                                                                            weekly_schedule=weekly_retention_schedule)
 
             policy_definition = None
 
             if self.backup_management_type == "AzureIaasVM":
-                policy_definition = self.recovery_services_backup_models.AzureIaaSVMProtectionPolicy( instant_rp_details = instant_rp_details, schedule_policy = schedule_policy, retention_policy = retention_policy, instant_rp_retention_range_in_days = self.instant_recovery_snapshot_retention, time_zone = self.time_zone  )
+                # This assignment exists exclusively to deal with the following line being too long otherwise
+                AzureIaaSVMProtectionPolicy = self.recovery_services_backup_models.AzureIaaSVMProtectionPolicy
+                policy_definition = AzureIaaSVMProtectionPolicy(instant_rp_details=instant_rp_details,
+                                                                schedule_policy=schedule_policy,
+                                                                retention_policy=retention_policy,
+                                                                instant_rp_retention_range_in_days=self.instant_recovery_snapshot_retention,
+                                                                time_zone=self.time_zone)
 
             if policy_definition:
-                policy_resource = self.recovery_services_backup_models.ProtectionPolicyResource( properties = policy_definition )
-                response = self.recovery_services_backup_client.protection_policies.create_or_update( vault_name = self.vault_name, resource_group_name = self.resource_group_name, policy_name = self.policy_name, parameters = policy_resource )
+                policy_resource = self.recovery_services_backup_models.ProtectionPolicyResource(properties=policy_definition)
+                response = self.recovery_services_backup_client.protection_policies.create_or_update(vault_name=self.vault_name,
+                                                                                                     resource_group_name=self.resource_group_name,
+                                                                                                     policy_name=self.policy_name,
+                                                                                                     parameters=policy_resource)
 
         except CloudError as e:
             self.log('Error attempting to create the backup policy.')
-            self.fail("Error creating the backup policy {0} for vault {1} in resource group {2}. Error Reads: {3}".format( self.policy_name, self.vault_name, self.resource_group_name, e ))
+            self.fail("Error creating the backup policy {0} for vault {1} in resource group {2}. Error Reads: {3}".format(self.policy_name,
+                                                                                                                          self.vault_name,
+                                                                                                                          self.resource_group_name, e))
 
         return response
 
@@ -357,16 +408,20 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
         :return: ProtectionPolicyResource
         '''
-        self.log("Deleting the backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
+        self.log("Deleting the backup policy {0} for vault {1} in resource group {2}".format(self.policy_name, self.vault_name, self.resource_group_name))
 
         response = None
 
         try:
-            response = self.recovery_services_backup_client.protection_policies.delete( vault_name=self.vault_name, resource_group_name=self.resource_group_name, policy_name=self.policy_name )
+            response = self.recovery_services_backup_client.protection_policies.delete(vault_name=self.vault_name,
+                                                                                       resource_group_name=self.resource_group_name,
+                                                                                       policy_name=self.policy_name)
 
         except CloudError as e:
             self.log('Error attempting to delete the backup policy.')
-            self.fail("Error deleting the backup policy {0} for vault {1} in resource group {2}. Error Reads: {3}".format( self.policy_name, self.vault_name, self.resource_group_name, e ))
+            self.fail("Error deleting the backup policy {0} for vault {1} in resource group {2}. Error Reads: {3}".format(self.policy_name,
+                                                                                                                          self.vault_name,
+                                                                                                                          self.resource_group_name, e))
 
         return response
 
@@ -376,14 +431,18 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
         :return: ProtectionPolicyResource
         '''
-        self.log("Checking if the backup policy {0} for vault {1} in resource group {2} is present".format( self.policy_name, self.vault_name, self.resource_group_name ))
+        self.log("Checking if the backup policy {0} for vault {1} in resource group {2} is present".format(self.policy_name,
+                                                                                                           self.vault_name,
+                                                                                                           self.resource_group_name))
 
         policy = None
 
         try:
-            policy = self.recovery_services_backup_client.protection_policies.get( vault_name=self.vault_name, resource_group_name=self.resource_group_name, policy_name=self.policy_name )
+            policy = self.recovery_services_backup_client.protection_policies.get(vault_name=self.vault_name,
+                                                                                  resource_group_name=self.resource_group_name,
+                                                                                  policy_name=self.policy_name)
         except CloudError as ex:
-            self.log("Could not find backup policy {0} for vault {1} in resource group {2}".format( self.policy_name, self.vault_name, self.resource_group_name ))
+            self.log("Could not find backup policy {0} for vault {1} in resource group {2}".format(self.policy_name, self.vault_name, self.resource_group_name))
 
         return policy
 

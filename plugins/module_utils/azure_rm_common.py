@@ -1261,12 +1261,13 @@ class AzureRMModuleBase(object):
         self.log('Getting recovery services backup client')
         if not self._recovery_services_backup_client:
             self._recovery_services_backup_client = self.get_mgmt_svc_client(RecoveryServicesBackupClient,
-                                                         base_url=self._cloud_environment.endpoints.resource_manager)
+                                                                             base_url=self._cloud_environment.endpoints.resource_manager)
         return self._recovery_services_backup_client
 
     @property
     def recovery_services_backup_models(self):
         return RecoveryServicesBackupModels
+
 
 class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
