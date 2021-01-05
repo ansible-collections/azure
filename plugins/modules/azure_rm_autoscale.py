@@ -187,6 +187,7 @@ options:
                     - The custom e-mails list. This value can be null or empty, in which case this attribute will be ignored.
             send_to_subscription_administrator:
                 type: bool
+                default: False
                 description:
                     - A value indicating whether to send email to subscription administrator.
             webhooks:
@@ -194,6 +195,7 @@ options:
                     - The list of webhook notifications service uri.
             send_to_subscription_co_administrators:
                 type: bool
+                default: False
                 description:
                     - A value indicating whether to send email to subscription co-administrators.
     state:
