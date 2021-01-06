@@ -121,7 +121,6 @@ options:
             - Parameters of ephemeral disk settings that can be specified for operating system disk.
             - Ephemeral OS disk is only supported for VMS Instances using Managed Disk.
         type: bool
-        default: False
     managed_disk_type:
         description:
             - Managed disk type.
