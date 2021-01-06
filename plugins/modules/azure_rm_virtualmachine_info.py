@@ -19,7 +19,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachine_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get virtual machine facts
 
@@ -290,7 +290,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_virtualmachine_facts'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_virtualmachine_facts' module has been renamed to 'azure_rm_virtualmachine_info'", version=(2, 9))
+            self.module.deprecate("The 'azure_rm_virtualmachine_facts' module has been renamed to 'azure_rm_virtualmachine_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
@@ -414,7 +414,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                        result['properties']['diagnosticsProfile']['bootDiagnostics']['enabled'] or False,
             'storage_uri': 'diagnosticsProfile' in result['properties'] and
                            'bootDiagnostics' in result['properties']['diagnosticsProfile'] and
-                           result['properties']['diagnosticsProfile']['bootDiagnostics']['storageUri'] or None
+                           result['properties']['diagnosticsProfile']['bootDiagnostics'].get('storageUri', None)
         }
         if new_result['boot_diagnostics']['enabled']:
             new_result['boot_diagnostics']['console_screenshot_uri'] = result['properties']['instanceView']['bootDiagnostics']['consoleScreenshotBlobUri']

@@ -14,7 +14,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_cdnendpoint
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage a Azure CDN endpoint
 description:
     - Create, update, start, stop and delete a Azure CDN endpoint.
@@ -39,7 +39,6 @@ options:
         description:
             - Use with I(state=present) to purge the endpoint.
         type: bool
-        default: false
     purge_content_paths:
         description:
             - Use with I(state=present) and I(purge=true) to specify content paths to be purged.

@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_loganalyticsworkspace_info
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Get facts of Azure Log Analytics workspaces
 description:
     - Get, query Azure Log Analytics workspaces.
@@ -182,7 +182,7 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
         is_old_facts = self.module._name == 'azure_rm_loganalyticsworkspace_facts'
         if is_old_facts:
             self.module.deprecate("The 'azure_rm_loganalyticsworkspace_facts' module has been renamed to 'azure_rm_loganalyticsworkspace_info'",
-                                  version=(2, 9))
+                                  version=(2.9, ))
 
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
@@ -205,14 +205,14 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
 
     def list_by_resource_group(self):
         try:
-            return self.log_analytics_client.workspaces.list_by_resource_group(self.resource_group)
+            return self.log_analytics_client.resource_group.list(self.resource_group)
         except CloudError:
             pass
         return []
 
     def list_intelligence_packs(self):
         try:
-            response = self.log_analytics_client.workspaces.list_intelligence_packs(self.resource_group, self.name)
+            response = self.log_analytics_client.intelligence_packs.list(self.resource_group, self.name)
             return [x.as_dict() for x in response]
         except CloudError as exc:
             self.fail('Error when listing intelligence packs {0}'.format(exc.message or str(exc)))
@@ -220,7 +220,7 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
     def list_management_groups(self):
         result = []
         try:
-            response = self.log_analytics_client.workspaces.list_management_groups(self.resource_group, self.name)
+            response = self.log_analytics_client.management_groups.list(self.resource_group, self.name)
             while True:
                 result.append(response.next().as_dict())
         except StopIteration:
@@ -232,7 +232,7 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
     def list_usages(self):
         result = []
         try:
-            response = self.log_analytics_client.workspaces.list_usages(self.resource_group, self.name)
+            response = self.log_analytics_client.usages.list(self.resource_group, self.name)
             while True:
                 result.append(response.next().as_dict())
         except StopIteration:
@@ -243,7 +243,7 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
 
     def get_shared_keys(self):
         try:
-            return self.log_analytics_client.workspaces.get_shared_keys(self.resource_group, self.name).as_dict()
+            return self.log_analytics_client.shared_keys.get_shared_keys(self.resource_group, self.name).as_dict()
         except CloudError as exc:
             self.fail('Error when getting shared key {0}'.format(exc.message or str(exc)))
 

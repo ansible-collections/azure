@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_hdinsightcluster_info
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Get Azure HDInsight Cluster facts
 description:
     - Get facts of Azure HDInsight Cluster.
@@ -222,7 +222,7 @@ class AzureRMHDInsightclusterInfo(AzureRMModuleBase):
         is_old_facts = self.module._name == 'azure_rm_hdinsightcluster_facts'
         if is_old_facts:
             self.module.deprecate("The 'azure_rm_hdinsightcluster_facts' module has been renamed to 'azure_rm_hdinsightcluster_info'",
-                                  version=(2, 9))
+                                  version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

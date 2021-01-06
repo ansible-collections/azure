@@ -17,7 +17,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachinescalesetextension
 
-version_added: "2.8"
+version_added: "0.1.2"
 
 short_description: Manage Azure Virtual Machine Scale Set (VMSS) extensions
 

@@ -18,7 +18,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_publicipaddress
 
-version_added: "2.1"
+version_added: "0.1.0"
 
 short_description: Manage Azure Public IP Addresses
 
@@ -65,12 +65,13 @@ options:
     sku:
         description:
             - The public IP address SKU.
+            - When I(version=ipv6), if I(sku=standard) then set I(allocation_method=static).
+            - When I(version=ipv4), if I(sku=standard) then set I(allocation_method=static).
         choices:
             - basic
             - standard
             - Basic
             - Standard
-        version_added: "2.6"
     ip_tags:
         description:
             - List of IpTag associated with the public IP address.
@@ -82,12 +83,10 @@ options:
             value:
                 description:
                     - Sets the ip_tags value.
-        version_added: "2.8"
     idle_timeout:
         description:
             - Idle timeout in minutes.
         type: int
-        version_added: "2.8"
     version:
         description:
             - The public IP address version.
@@ -95,7 +94,6 @@ options:
             - ipv4
             - ipv6
         default: ipv4
-        version_added: "2.8"
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -369,7 +367,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                     pip = self.network_models.PublicIPAddress(
                         location=self.location,
                         public_ip_address_version=self.version,
-                        public_ip_allocation_method=self.allocation_method if self.version == 'IPv4' else None,
+                        public_ip_allocation_method=self.allocation_method,
                         sku=self.network_models.PublicIPAddressSku(name=self.sku) if self.sku else None,
                         idle_timeout_in_minutes=self.idle_timeout if self.idle_timeout and self.idle_timeout > 0 else None
                     )

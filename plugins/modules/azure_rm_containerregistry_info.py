@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_containerregistry_info
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Get Azure Container Registry facts
 description:
     - Get facts for Container Registry.
@@ -183,7 +183,7 @@ class AzureRMContainerRegistryInfo(AzureRMModuleBase):
 
         is_old_facts = self.module._name == 'azure_rm_containerregistry_info'
         if is_old_facts:
-            self.module.deprecate("The 'azure_rm_containerregistry_facts' module has been renamed to 'azure_rm_containerregistry_info'", version=(2, 9))
+            self.module.deprecate("The 'azure_rm_containerregistry_facts' module has been renamed to 'azure_rm_containerregistry_info'", version=(2.9, ))
 
         for key in list(self.module_arg_spec) + ['tags']:
             setattr(self, key, kwargs[key])
