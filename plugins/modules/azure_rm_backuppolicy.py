@@ -25,17 +25,17 @@ options:
     vault_name:
         description:
             - The name of the Recovery Services Vault the policy belongs to.
-            - Required
+required: true
         type: str
     name:
         description:
             - The name of the backup policy.
-            - Required
+required: true
         type: str
     resource_group:
         description:
             - The name of the resource group the vault is in.
-            - Required
+required: true
         type: str
     state:
         description:
@@ -194,9 +194,9 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
     def __init__(self):
         self.module_arg_spec = dict(
-            vault_name=dict(type='str'),
-            policy_name=dict(type='str'),
-            resource_group_name=dict(type='str'),
+            vault_name=dict(type='str', required=True),
+            policy_name=dict(type='str', required=True),
+            resource_group_name=dict(type='str', required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             backup_management_type=dict(type='str', choices=['AzureIaasVM']),
             schedule_run_time=dict(type='int'),
