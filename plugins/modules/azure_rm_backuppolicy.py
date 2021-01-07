@@ -27,12 +27,12 @@ options:
             - The name of the Recovery Services Vault the policy belongs to.
             - Required
         type: str
-    policy_name:
+    name:
         description:
             - The name of the backup policy.
             - Required
         type: str
-    resource_group_name:
+    resource_group:
         description:
             - The name of the resource group the vault is in.
             - Required
@@ -114,15 +114,15 @@ EXAMPLES = '''
     - name: Delete a backup policy
       azure_rm_backuppolicy:
         vault_name: Vault_Name
-        policy_name: Policy_Name
-        resource_group_name: Resource_Group_Name
+        name: Policy_Name
+        resource_group: Resource_Group_Name
         state: absent
 
     - name: Create a daily VM backup policy
       azure_rm_backuppolicy:
         vault_name: Vault_Name
-        policy_name: Policy_Name
-        resource_group_name: Resource_Group_Name
+        name: Policy_Name
+        resource_group: Resource_Group_Name
         state: present
         backup_management_type: "AzureIaasVM"
         schedule_run_frequency: "Daily"
@@ -134,8 +134,8 @@ EXAMPLES = '''
     - name: Create a weekly VM backup policy
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: Vault_Name
-        policy_name: Policy_Name
-        resource_group_name: Resource_Group_Name
+        name: Policy_Name
+        resource_group: Resource_Group_Name
         state: present
         backup_management_type: "AzureIaasVM"
         schedule_run_frequency: "Weekly"
@@ -212,8 +212,8 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         )
 
         self.vault_name = None
-        self.policy_name = None
-        self.resource_group_name = None
+        self.name = None
+        self.resource_group = None
         self.backup_management_type = None
         self.schedule_run_time = None
         self.instant_recovery_snapshot_retention = None
@@ -257,9 +257,9 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         if self.state == 'present':
             # check if the backup policy exists
             if not existing_backup_policy:
-                self.log("Backup policy {0} for vault {1} in resource group {2} does not exist.".format(self.policy_name,
+                self.log("Backup policy {0} for vault {1} in resource group {2} does not exist.".format(self.name,
                                                                                                         self.vault_name,
-                                                                                                        self.resource_group_name))
+                                                                                                        self.resource_group))
 
                 self.results['changed'] = True
 
@@ -271,9 +271,9 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
             # log that we're doing an update
             else:
-                self.log("Backup policy {0} for vault {1} in resource group {2} already exists, updating".format(self.policy_name,
+                self.log("Backup policy {0} for vault {1} in resource group {2} already exists, updating".format(self.name,
                                                                                                                  self.vault_name,
-                                                                                                                 self.resource_group_name))
+                                                                                                                 self.resource_group))
 
                 self.results['changed'] = True
 
@@ -297,9 +297,9 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
             else:
                 # If backup policy doesn't exist, that's the desired state.
-                self.log("Backup policy {0} for vault {1} in resource group {2} does not exist.".format(self.policy_name,
+                self.log("Backup policy {0} for vault {1} in resource group {2} does not exist.".format(self.name,
                                                                                                         self.vault_name,
-                                                                                                        self.resource_group_name))
+                                                                                                        self.resource_group))
 
         return self.results
 
@@ -309,9 +309,9 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
         :return: ProtectionPolicyResource
         '''
-        self.log("Creating backup policy {0} for vault {1} in resource group {2}".format(self.policy_name,
+        self.log("Creating backup policy {0} for vault {1} in resource group {2}".format(self.name,
                                                                                          self.vault_name,
-                                                                                         self.resource_group_name))
+                                                                                         self.resource_group))
         self.log("Creating backup policy in progress")
 
         response = None
@@ -390,15 +390,15 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             if policy_definition:
                 policy_resource = self.recovery_services_backup_models.ProtectionPolicyResource(properties=policy_definition)
                 response = self.recovery_services_backup_client.protection_policies.create_or_update(vault_name=self.vault_name,
-                                                                                                     resource_group_name=self.resource_group_name,
-                                                                                                     policy_name=self.policy_name,
+                                                                                                     resource_group_name=self.resource_group,
+                                                                                                     policy_name=self.name,
                                                                                                      parameters=policy_resource)
 
         except CloudError as e:
             self.log('Error attempting to create the backup policy.')
-            self.fail("Error creating the backup policy {0} for vault {1} in resource group {2}. Error Reads: {3}".format(self.policy_name,
+            self.fail("Error creating the backup policy {0} for vault {1} in resource group {2}. Error Reads: {3}".format(self.name,
                                                                                                                           self.vault_name,
-                                                                                                                          self.resource_group_name, e))
+                                                                                                                          self.resource_group, e))
 
         return response
 
@@ -408,20 +408,20 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
         :return: ProtectionPolicyResource
         '''
-        self.log("Deleting the backup policy {0} for vault {1} in resource group {2}".format(self.policy_name, self.vault_name, self.resource_group_name))
+        self.log("Deleting the backup policy {0} for vault {1} in resource group {2}".format(self.name, self.vault_name, self.resource_group))
 
         response = None
 
         try:
             response = self.recovery_services_backup_client.protection_policies.delete(vault_name=self.vault_name,
-                                                                                       resource_group_name=self.resource_group_name,
-                                                                                       policy_name=self.policy_name)
+                                                                                       resource_group_name=self.resource_group,
+                                                                                       policy_name=self.name)
 
         except CloudError as e:
             self.log('Error attempting to delete the backup policy.')
-            self.fail("Error deleting the backup policy {0} for vault {1} in resource group {2}. Error Reads: {3}".format(self.policy_name,
+            self.fail("Error deleting the backup policy {0} for vault {1} in resource group {2}. Error Reads: {3}".format(self.name,
                                                                                                                           self.vault_name,
-                                                                                                                          self.resource_group_name, e))
+                                                                                                                          self.resource_group, e))
 
         return response
 
@@ -431,18 +431,18 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
         :return: ProtectionPolicyResource
         '''
-        self.log("Checking if the backup policy {0} for vault {1} in resource group {2} is present".format(self.policy_name,
+        self.log("Checking if the backup policy {0} for vault {1} in resource group {2} is present".format(self.name,
                                                                                                            self.vault_name,
-                                                                                                           self.resource_group_name))
+                                                                                                           self.resource_group))
 
         policy = None
 
         try:
             policy = self.recovery_services_backup_client.protection_policies.get(vault_name=self.vault_name,
-                                                                                  resource_group_name=self.resource_group_name,
-                                                                                  policy_name=self.policy_name)
+                                                                                  resource_group_name=self.resource_group,
+                                                                                  policy_name=self.name)
         except CloudError as ex:
-            self.log("Could not find backup policy {0} for vault {1} in resource group {2}".format(self.policy_name, self.vault_name, self.resource_group_name))
+            self.log("Could not find backup policy {0} for vault {1} in resource group {2}".format(self.name, self.vault_name, self.resource_group))
 
         return policy
 
