@@ -48,22 +48,22 @@ required: true
         type: str
     backup_management_type:
         description:
-            - Defines the type of resource the policy will be applied to
+            - Defines the type of resource the policy will be applied to.
         choices:
             - AzureIaasVM
         type: str
     schedule_run_time:
         description:
             - The hour to run backups.
-            - Valid choices are on 24 hour scale (0-23)
+            - Valid choices are on 24 hour scale (0-23).
         type: int
     instant_recovery_snapshot_retention:
         description:
-            - How many days to retain instant recovery snapshots
+            - How many days to retain instant recovery snapshots.
         type: int
     schedule_run_frequency:
         description:
-            - The frequency to run the policy
+            - The frequency to run the policy.
         choices:
             - Daily
             - Weekly
@@ -71,37 +71,39 @@ required: true
     schedule_days:
         description:
             - List of days to execute the schedule.
-            - Does not apply to Daily frequency
+            - Does not apply to Daily frequency.
         type: list
         elements: str
     weekly_retention_count:
         description:
-            - The amount of weeks to retain backups
+            - The amount of weeks to retain backups.
         type: int
     daily_retention_count:
         description:
-            - The amount of days to retain backups
-            - Does not apply to Weekly frequency
+            - The amount of days to retain backups.
+            - Does not apply to Weekly frequency.
         type: int
     schedule_weekly_frequency:
         description:
-            - The amount of weeks between backups
+            - The amount of weeks between backups.
             - Backup every schedule_weekly_frequency week(s)
             - Azure will default behavior to running weekly if this is left blank
-            - Does not apply to Daily frequency
+            - Backup every schedule_weekly_frequency week(s).
+            - Azure will default behavior to running weekly if this is left blank.
+            - Does not apply to Daily frequency.
         type: int
     time_zone:
         description:
-            - Timezone to apply schedule_run_time
+            - Timezone to apply schedule_run_time.
         default: UTC
         type: str
     log_path:
         description:
-            - parent argument
+            - parent argument.
         type: str
     log_mode:
         description:
-            - parent argument
+            - parent argument.
         type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
