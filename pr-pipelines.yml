@@ -62,6 +62,8 @@ parameters:
     - "azure_rm_resourcegroup"
     - "azure_rm_routetable"
     - "azure_rm_roleassignment"
+    - "azure_rm_registrationassignment"
+    - "azure_rm_registrationdefinition"
     - "azure_rm_securitygroup"
     - "azure_rm_servicebus"
     - "azure_rm_sqlserver"
@@ -99,9 +101,11 @@ jobs:
       - bash: |
           echo "##vso[task.setvariable variable=resource_group;isOutput=true]ansibletest-$(uuidgen)"
           echo "##vso[task.setvariable variable=resource_group_secondary;isOutput=true]ansibletest2-$(uuidgen)"
+          echo "##vso[task.setvariable variable=resource_group_datalake;isOutput=true]ansibletest-$(uuidgen)"
+
         name: setvar
       - bash: |
-          echo "Generate test resource group $(setvar.resource_group), $(setvar.resource_group_secondary)"
+          echo "Generate test resource group $(setvar.resource_group), $(setvar.resource_group_secondary), $(setvar.resource_group_datalake)"
       - task: AzureCLI@2
         inputs:
           azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
@@ -110,12 +114,14 @@ jobs:
           inlineScript: |
               az group create -l eastus -n $(setvar.resource_group)
               az group create -l eastus -n $(setvar.resource_group_secondary)
+              az group create -l eastus2 -n $(setvar.resource_group_datalake)
 
   - job: RunTests
     dependsOn: CreateResourceGroups 
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
+      TEST_RESOURCE_GROUP_DATALAKE:  $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_datalake'] ]
     strategy:
       matrix:
         "Python${{ parameters.PYTHON_VER }}_sanity":
@@ -173,9 +179,14 @@ jobs:
         AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
         AZURE_SECRET: $(AZURE_SECRET)
         AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+        AZURE_SUBSCRIPTION_SEC_ID: $(AZURE_SUBSCRIPTION_SEC_ID)
         AZURE_TENANT: $(AZURE_TENANT)
+        AZURE_PRINCIPAL_ID: $(AZURE_PRINCIPAL_ID)
+        AZURE_MANAGED_BY_TENANT_ID: $(AZURE_MANAGED_BY_TENANT_ID)
+        AZURE_ROLE_DEFINITION_ID: $(AZURE_ROLE_DEFINITION_ID)
         RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
         RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
+        RESOURCE_GROUP_DATALAKE: $(TEST_RESOURCE_GROUP_DATALAKE)
       displayName: 'Running Tests'
 
   - job: CleanupResourceGroups
