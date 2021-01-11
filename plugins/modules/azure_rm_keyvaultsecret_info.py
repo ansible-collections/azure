@@ -187,8 +187,7 @@ def secretbundle_to_dict(bundle):
                     recovery_level=bundle.attributes.recovery_level),
                 sid=bundle.id,
                 version=KeyVaultId.parse_secret_id(bundle.id).version,
-                type=bundle,
-                #type=bundle.content_type,
+                type=bundle.content_type,
                 secret=bundle.value)
 
 
