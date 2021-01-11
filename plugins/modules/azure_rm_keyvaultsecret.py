@@ -32,6 +32,10 @@ options:
     secret_value:
         description:
             - Secret to be secured by keyvault.
+    content_type:
+        description:
+            - Type of the secret value such as a password.
+        type: str
     state:
         description:
             - Assert the state of the subnet. Use C(present) to create or update a secret and C(absent) to delete a secret .
@@ -101,6 +105,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             secret_name=dict(type='str', required=True),
             secret_value=dict(type='str', no_log=True),
             keyvault_uri=dict(type='str', required=True),
+            content_type=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent'])
         )
 
@@ -116,6 +121,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         self.secret_name = None
         self.secret_value = None
         self.keyvault_uri = None
+        self.content_type = None
         self.state = None
         self.data_creds = None
         self.client = None

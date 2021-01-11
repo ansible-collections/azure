@@ -50,6 +50,7 @@
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         secret_name: testsecret
         secret_value: 'mysecret'
+        content_type: 'For password test'
         tags:
           testing: test
           delete: on-exit
