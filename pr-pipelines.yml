@@ -204,6 +204,6 @@ jobs:
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-              #az group delete -n $(TEST_RESOURCE_GROUP) --yes --no-wait
-              #az group delete -n $(TEST_RESOURCE_GROUP_SECONDARY) --yes --no-wait
-              az account show
+              az group delete -n $(TEST_RESOURCE_GROUP) --yes --no-wait
+              az group delete -n $(TEST_RESOURCE_GROUP_SECONDARY) --yes --no-wait
+              export
