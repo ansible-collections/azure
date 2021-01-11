@@ -184,11 +184,11 @@ def secretbundle_to_dict(bundle):
                     expires=bundle.attributes.expires,
                     created=bundle.attributes.created,
                     updated=bundle.attributes.updated,
-                    tt=bundle.attributes,
                     recovery_level=bundle.attributes.recovery_level),
                 sid=bundle.id,
                 version=KeyVaultId.parse_secret_id(bundle.id).version,
                 type=bundle.content_type,
+                dd=bundle,
                 secret=bundle.value)
 
 
@@ -210,7 +210,6 @@ def secretitem_to_dict(secretitem):
                     expires=secretitem.attributes.expires,
                     created=secretitem.attributes.created,
                     updated=secretitem.attributes.updated,
-                    content_type=bundle.attributes,
                     recovery_level=secretitem.attributes.recovery_level))
 
 
