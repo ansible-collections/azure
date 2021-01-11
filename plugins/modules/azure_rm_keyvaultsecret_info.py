@@ -187,7 +187,7 @@ def secretbundle_to_dict(bundle):
                     recovery_level=bundle.attributes.recovery_level),
                 sid=bundle.id,
                 version=KeyVaultId.parse_secret_id(bundle.id).version,
-                type=bundle.attributes.content_type,
+                type=bundle.content_type,
                 secret=bundle.value)
 
 
@@ -324,7 +324,8 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
 
             if response and self.has_tags(response.tags, self.tags):
                 self.log("Response : {0}".format(response))
-                results.append(secretbundle_to_dict(response))
+                #results.append(secretbundle_to_dict(response))
+                results.append(response.attributes))
 
         except KeyVaultErrorException as e:
             self.log("Did not find the key vault secret {0}: {1}".format(
