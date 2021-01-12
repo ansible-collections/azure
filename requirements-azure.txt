@@ -15,6 +15,7 @@ azure-mgmt-dns==2.1.0
 azure-mgmt-keyvault==1.1.0
 azure-mgmt-marketplaceordering==0.1.0
 azure-mgmt-monitor==0.5.2
+azure-mgmt-managedservices==1.0.0
 azure-mgmt-network==10.2.0
 azure-mgmt-nspkg==2.0.0
 azure-mgmt-privatedns==0.1.0
