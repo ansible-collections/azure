@@ -22,6 +22,25 @@
       - newApi.changed == True
       - newApi.failed == False
 
+- name: Create a new API instance(Idempotent)
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ api_id }}"
+    description: "testDescription"
+    display_name: "TestAPI"
+    service_url: 'http://testapi.example.net/api'
+    path: "myapiPath"
+    protocols:
+      - https
+  register: newApi_idempotent
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - newApi_idempotent.changed == False
+      - newApi_idempotent.failed == True
+
 - name: Create different format api
   azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
@@ -68,6 +87,19 @@
   assert:
     that:
       - deleteApi.changed == True
+
+- name: Delete an api(Idempotent)
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ api_id }}"
+    state: absent
+  register: deleteApi_idempotent
+
+- name: Assert the changes
+  assert:
+    that:
+      - deleteApi_idempotent.changed == False
 
 - name: Get api information
   azure_rm_apimanagement_info:

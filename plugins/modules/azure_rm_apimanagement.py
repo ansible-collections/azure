@@ -281,12 +281,14 @@ id:
   sample: null
 '''
 
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+from copy import deepcopy
+import time
+import json
+import re
 try:
     from msrestazure.azure_exceptions import CloudError
-    from msrestazure.azure_operation import AzureOperationPoller
-    from azure.mgmt.apimanagement import ApiManagementClient
-    from msrest.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -505,13 +507,25 @@ class AzureApiManagement(AzureRMModuleBaseExt):
         self.results = dict(changed=False)
         self.mgmt_client = None
         self.state = None
+        self.url = None
+        self.status_code = [200, 201, 202]
         self.to_do = Actions.NoAction
 
         self.body = {}
+        self.query_parameters = {}
+        self.query_parameters['api-version'] = '2020-06-01-preview'
+        self.header_parameters = {}
+        self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
         super(AzureApiManagement, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                  supports_check_mode=True,
                                                  supports_tags=True)
+
+    def get_url(self):
+        return '/subscriptions' + '/' + self.subscription_id \
+               + '/resourceGroups' + '/' + self.resource_group \
+               + '/providers' + '/Microsoft.ApiManagement' + '/service' \
+               + '/' + self.service_name + '/apis' + '/' + self.api_id
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
@@ -522,16 +536,16 @@ class AzureApiManagement(AzureRMModuleBaseExt):
 
         # https://docs.microsoft.com/en-us/azure/templates/microsoft.apimanagement/service/apis
         self.inflate_parameters(self.module_arg_spec, self.body, 0)
+        self.url = self.get_url()
         old_response = None
         response = None
 
-        self.mgmt_client = self.get_mgmt_svc_client(ApiManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2020-06-01-preview')
+        self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    base_url=self._cloud_environment.endpoints.resource_manager)
 
         old_response = self.get_resource()
 
-        if old_response is False:
+        if not old_response:
             self.log("Api instance does not exist in the given service.")
             if self.state == 'present':
                 self.to_do = Actions.Create
@@ -573,34 +587,49 @@ class AzureApiManagement(AzureRMModuleBaseExt):
             self.results['changed'] = False
             response = old_response
 
+        if response:
+            self.results["id"] = response["id"]
+
         return self.results
 
     # This function will create and update resource on the api management service.
     def create_and_update_resource(self):
 
         try:
-          response = self.mgmt_client.api.create_or_update(resource_group_name=self.resource_group,
-                                                           service_name=self.service_name,
-                                                           api_id=self.api_id,
-                                                           parameters=self.body,
-							   if_match="*")
-          if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
-                response = self.get_poller_result(response)
-
+            response = self.mgmt_client.query(
+                self.url,
+                'PUT',
+                self.query_parameters,
+                self.header_parameters,
+                self.body,
+                self.status_code,
+                600,
+                30,
+            )
         except CloudError as exc:
             self.log('Error while creating/updating the Api instance.')
             self.fail('Error creating the Api instance: {0}'.format(str(exc)))
+        try:
+            response = json.loads(response.text)
+        except Exception:
+            response = {'text': response.text}
 
         return response
 
     def delete_resource(self):
         isDeleted = False
         try:
-          response = self.mgmt_client.api.delete(resource_group_name=self.resource_group,
-                                                 service_name=self.service_name,
-                                                 api_id=self.api_id,
-                                                 if_match="*")
-          isDeleted = True
+            response = self.mgmt_client.query(
+                self.url,
+                'DELETE',
+                self.query_parameters,
+                self.header_parameters,
+                self.body,
+                self.status_code,
+                600,
+                30,
+            )
+            isDeleted = True
         except CloudError as e:
             self.log('Error attempting to delete the Api instance.')
             self.fail('Error deleting the Api instance: {0}'.format(str(e)))
@@ -610,11 +639,18 @@ class AzureApiManagement(AzureRMModuleBaseExt):
     def get_resource(self):
         isFound = False
         try:
-          response = self.mgmt_client.api.get(resource_group_name=self.resource_group,
-                                              service_name=self.service_name,
-                                              api_id=self.api_id)
-          isFound = True
-          self.log("Response : {0}".format(response))
+            response = self.mgmt_client.query(
+                self.url,
+                'GET',
+                self.query_parameters,
+                self.header_parameters,
+                None,
+                self.status_code,
+                600,
+                30,
+            )
+            isFound = True
+            self.log("Response : {0}".format(response))
         except CloudError as e:
             self.log('Could not find the Api instance from the given parameters.')
         if isFound is True:
@@ -628,4 +664,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
