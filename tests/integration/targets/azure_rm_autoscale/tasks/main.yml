@@ -23,7 +23,6 @@
     name: testVMSS{{ rpfx }}
     vm_size: Standard_DS1_v2
     admin_username: testuser
-    ssh_password_enabled: true
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
