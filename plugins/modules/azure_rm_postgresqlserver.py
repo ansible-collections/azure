@@ -69,6 +69,11 @@ options:
             - Enable SSL enforcement.
         type: bool
         default: False
+    storage_autogrow:
+        description:
+            - Enable storage autogrow.
+        type: bool
+        default: False
     admin_username:
         description:
             - The administrator's login name of a server. Can only be specified when the server is being created (and is required for creation).
@@ -107,6 +112,7 @@ EXAMPLES = '''
       location: eastus
       storage_mb: 1024
       enforce_ssl: True
+      storage_autogrow: True
       admin_username: cloudsa
       admin_password: password
 '''
@@ -185,6 +191,10 @@ class AzureRMPostgreSqlServers(AzureRMModuleBase):
                 type='bool',
                 default=False
             ),
+            storage_autogrow=dict(
+                type='bool',
+                default=False
+            ),
             create_mode=dict(
                 type='str',
                 default='Default'
@@ -235,6 +245,9 @@ class AzureRMPostgreSqlServers(AzureRMModuleBase):
                     self.parameters["location"] = kwargs[key]
                 elif key == "storage_mb":
                     self.parameters.setdefault("properties", {}).setdefault("storage_profile", {})["storage_mb"] = kwargs[key]
+                elif key == "storage_autogrow":
+                    self.parameters.setdefault("properties", {}).setdefault("storage_profile", {})["storage_autogrow"] = ('Enabled' if kwargs[key]
+                                                                                                                          else 'Disabled')
                 elif key == "version":
                     self.parameters.setdefault("properties", {})["version"] = kwargs[key]
                 elif key == "enforce_ssl":
