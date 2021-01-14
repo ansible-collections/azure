@@ -26,11 +26,26 @@
     schedule_run_time: 14
   register: daily_policy_output
 
+ - name: Check for existing backup policy
+   azure_rm_backuppolicy_info:
+    vault_name: "{{ vault_name }}"
+    policy_name: "{{ policy_name_daily }}"
+    resource_group_name: "{{ resource_group }}"
+   register: backup_policy_exists
+
 - name: Assert success on daily backup policy creation
   assert:
     that:
       - daily_policy_output.changed
       - daily_policy_output.name == policy_name_daily
+
+- name: Assert Policy Success Retrieving Info
+  assert:
+    that:
+      - backup_policy_exists.id == daily_policy_output.id
+      - backup_policy_exists.location == daily_policy_output.location
+      - backup_policy_exists.name == daily_policy_output.name
+      - backup_policy_exists.type == daily_policy_output.type
 
 - name: Update daily VM backup policy
   azure_rm_backuppolicy:

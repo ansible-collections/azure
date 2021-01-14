@@ -197,7 +197,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
             vault_name=dict(type='str', required=True),
-            policy_name=dict(type='str', required=True),
+            name=dict(type='str', required=True),
             resource_group_name=dict(type='str', required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             backup_management_type=dict(type='str', choices=['AzureIaasVM']),
