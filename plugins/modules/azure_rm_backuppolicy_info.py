@@ -25,17 +25,18 @@ options:
     vault_name:
         description:
             - The name of the Recovery Services Vault the policy belongs to.
-required: true
+        required: true
         type: str
     name:
         description:
             - The name of the backup policy.
-required: true
+        required: true
         type: str
-    resource_group:
+    resource_group_name:
         description:
             - The name of the resource group the vault is in.
-required: true
+        required: true
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 
@@ -92,7 +93,7 @@ except ImportError:
 
 
 class AzureRMBackupPolicyInfo(AzureRMModuleBase):
-    """Configuration class for an Azure RM Backup Policy"""
+    """Information class for an Azure RM Backup Policy"""
 
     def __init__(self):
         self.module_arg_spec = dict(
@@ -107,12 +108,12 @@ class AzureRMBackupPolicyInfo(AzureRMModuleBase):
 
         self.results = dict(
             id=None,
+            changed=False
         )
 
-
         super(AzureRMBackupPolicyInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                  supports_check_mode=True,
-                                                  supports_tags=False)
+                                                      supports_tags=False,
+                                                      facts_module=True)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""

@@ -25,17 +25,17 @@ options:
     vault_name:
         description:
             - The name of the Recovery Services Vault the policy belongs to.
-required: true
+        required: true
         type: str
     name:
         description:
             - The name of the backup policy.
-required: true
+        required: true
         type: str
-    resource_group:
+    resource_group_name:
         description:
             - The name of the resource group the vault is in.
-required: true
+        required: true
         type: str
     state:
         description:
