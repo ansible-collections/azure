@@ -86,7 +86,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-keyvaults:
+secrets:
     description:
         - List of secrets in Azure Key Vault.
     returned: always
