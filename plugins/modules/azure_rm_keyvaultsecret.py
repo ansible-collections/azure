@@ -163,7 +163,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         if not self.check_mode:
             # Create secret
             if self.state == 'present' and changed:
-                results['secret_id'] = self.create_update_secret(self.secret_name, self.secret_value, self.tags)
+                results['secret_id'] = self.create_update_secret(self.secret_name, self.secret_value, self.tags, self.content_type)
                 self.results['state'] = results
                 self.results['state']['status'] = 'Created'
             # Delete secret
@@ -216,9 +216,9 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             return dict(secret_id=secret_id.id, secret_value=secret_bundle.value)
         return None
 
-    def create_update_secret(self, name, secret, tags):
+    def create_update_secret(self, name, secret, tags, content_type):
         ''' Creates/Updates a secret '''
-        secret_bundle = self.client.set_secret(self.keyvault_uri, name, secret, tags)
+        secret_bundle = self.client.set_secret(self.keyvault_uri, name, secret, tags=tags, content_type=content_type)
         secret_id = KeyVaultId.parse_secret_id(secret_bundle.id)
         return secret_id.id
 
