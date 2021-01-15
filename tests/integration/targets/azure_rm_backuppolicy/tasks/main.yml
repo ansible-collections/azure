@@ -16,7 +16,7 @@
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_daily }}"
-    resource_group_name: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}"
     state: present
     backup_management_type: "AzureIaasVM"
     schedule_run_frequency: "Daily"
@@ -30,7 +30,7 @@
   azure_rm_backuppolicy_info:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_daily }}"
-    resource_group_name: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}"
   register: backup_policy_exists
 
 - name: Assert success on daily backup policy creation
@@ -51,7 +51,7 @@
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_daily }}"
-    resource_group_name: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}"
     state: present
     backup_management_type: "AzureIaasVM"
     schedule_run_frequency: "Daily"
@@ -71,7 +71,7 @@
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_weekly }}"
-    resource_group_name: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}"
     state: present
     backup_management_type: "AzureIaasVM"
     schedule_run_frequency: "Weekly"
@@ -95,7 +95,7 @@
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_weekly }}"
-    resource_group_name: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}"
     state: present
     backup_management_type: "AzureIaasVM"
     schedule_run_frequency: "Weekly"
@@ -119,7 +119,7 @@
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_daily }}"
-    resource_group_name: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}"
     state: absent
   register: daily_policy_output_delete
 
@@ -132,7 +132,7 @@
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_weekly }}"
-    resource_group_name: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}"
     state: absent
   register: weekly_policy_output_delete
 
@@ -145,7 +145,7 @@
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_daily }}"
-    resource_group_name: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}"
     state: absent
   register: daily_policy_output_delete_idempotent
 
@@ -158,7 +158,7 @@
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_weekly }}"
-    resource_group_name: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}"
     state: absent
   register: weekly_policy_output_delete_idempotent
 

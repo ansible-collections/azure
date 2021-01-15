@@ -32,7 +32,7 @@ options:
             - The name of the backup policy.
         required: true
         type: str
-    resource_group_name:
+    resource_group:
         description:
             - The name of the resource group the vault is in.
         required: true
@@ -99,7 +99,7 @@ class AzureRMBackupPolicyInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             vault_name=dict(type='str', required=True),
             name=dict(type='str', required=True),
-            resource_group_name=dict(type='str', required=True)
+            resource_group=dict(type='str', required=True)
         )
 
         self.vault_name = None
