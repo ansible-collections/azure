@@ -37,6 +37,14 @@ options:
             - The name of the resource group the vault is in.
         required: true
         type: str
+    log_path:
+        description:
+            - parent argument.
+        type: str
+    log_mode:
+        description:
+            - parent argument.
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 
@@ -99,12 +107,16 @@ class AzureRMBackupPolicyInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             vault_name=dict(type='str', required=True),
             name=dict(type='str', required=True),
-            resource_group=dict(type='str', required=True)
+            resource_group=dict(type='str', required=True),
+            log_path=dict(type='str'),
+            log_mode=dict(type='str')
         )
 
         self.vault_name = None
         self.name = None
         self.resource_group = None
+        self.log_path = None
+        self.log_mode = None
 
         self.results = dict(
             id=None,
