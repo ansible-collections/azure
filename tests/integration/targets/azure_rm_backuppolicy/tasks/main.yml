@@ -26,8 +26,8 @@
     schedule_run_time: 14
   register: daily_policy_output
 
- - name: Check for existing backup policy
-   azure_rm_backuppolicy_info:
+- name: Check for existing backup policy
+  azure_rm_backuppolicy_info:
     vault_name: "{{ vault_name }}"
     policy_name: "{{ policy_name_daily }}"
     resource_group_name: "{{ resource_group }}"
