@@ -101,6 +101,7 @@
     location: westus2
     storage_mb: 51200
     enforce_ssl: True
+    storage_autogrow: True
     admin_username: zimxyz
     admin_password: Password123!
     tags:
@@ -116,6 +117,7 @@
     location: westus2
     storage_mb: 51200
     enforce_ssl: True
+    storage_autogrow: True
     admin_username: zimxyz
     admin_password: Password123!
     tags:
@@ -125,7 +127,7 @@
   azure_rm_postgresqlserver_info:
     resource_group: "{{ resource_group }}"
     name: postgresqlsrv{{ rpfx }}second
-  register: output 
+  register: output
 
 - name: Assert that facts are returned
   assert:
@@ -255,7 +257,7 @@
     resource_group: "{{ resource_group }}"
     server_name: postgresqlsrv{{ rpfx }}
     name: testdatabase
-  register: output 
+  register: output
 
 - name: Assert that facts are returned
   assert:
