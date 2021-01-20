@@ -14,8 +14,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = '''
 module: azure_rm_search_info
-version_added: "1.2.0"
-short_description: Get Azure Cognitive Search service info.
+version_added: "1.4.0"
+short_description: Get Azure Cognitive Search service info
 description:
     - Get info for a specific Azure Cognitive Search service or all Azure Cognitive Search service within a resource group.
 

@@ -15,8 +15,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_search
-version_added: "1.2.0"
-short_description: Manage Azure Cognitive Search service.
+version_added: "1.4.0"
+short_description: Manage Azure Cognitive Search service
 description:
     - Create, update or delete Azure Cognitive Search service.
 options:
@@ -61,14 +61,14 @@ options:
     partition_count:
         description:
             - The number of partitions in the search service.
-            - It can be 1, 2, 3, 4, 6, or 12.
+            - It can be C(1), C(2), C(3), C(4), C(6), or C(12).
             - Values greater than 1 are only valid for standard SKUs.
             - For 'standard3' services with hostingMode set to 'highDensity', the allowed values are between 1 and 3.
         default: 1
     public_network_access:
         description:
-            - This value can be set to 'enabled' to avoid breaking changes on existing customer resources and templates.
-            - If set to 'disabled', traffic over public interface is not allowed, and private endpoint connections would be the exclusive access method.
+            - This value can be set to C(enabled) to avoid breaking changes on existing customer resources and templates.
+            - If set to C(enabled), traffic over public interface is not allowed, and private endpoint connections would be the exclusive access method.
         choices:
             - enabled
             - disabled
@@ -76,8 +76,8 @@ options:
     replica_count:
         description:
             - The number of replicas in the search service.
-            - It must be a value between 1 and 12 inclusive for standard SKUs.
-            - It must be a value between 1 and 3 inclusive for basic SKU.
+            - It must be a value between 1 and 12 inclusive for I(sku=standard).
+            - It must be a value between 1 and 3 inclusive for I(sku=basic).
         default: 1
     sku:
         description:
@@ -110,7 +110,7 @@ author:
 
 EXAMPLES = '''
   - name: Create Azure Cognitive Search
-    azure_rm_datalakestore:
+    azure_rm_search:
       resource_group: myResourceGroup
       name: myAzureSearch
 '''
