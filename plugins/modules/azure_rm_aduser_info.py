@@ -85,16 +85,19 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             user_principle_name=dict(type='str'),
             object_id=dict(type='str'),
-            filter_parameter_name=dict(type='str'),
-            filter_parameter_value=dict(type='str'),
+            attribute_name=dict(type='str'),
+            attribute_value=dict(type='str'),
+            odata_filter=dict(type='str'),
             tenant=dict(type='str', required=True),
         )
 
         self.tenant = None
         self.user_principle_name = None
         self.object_id = None
-        self.filter_parameter_name = None
-        self.filter_parameter_value = None
+        self.attribute_name = None
+        self.attribute_value = None
+        self.odata_filter = None
+
         self.results = dict(changed=False)
 
         # TODO: limit object id, user_principle_name, and filter params
@@ -123,18 +126,21 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                 ad_users = [client.users.get(self.user_principle_name)]
             elif self.object_id is not None:
                 ad_users = [client.users.get(self.object_id)]
-            else: # run a filter based on user input to return based on any given var
+            elif self.attribute_name is not None and self.attribute_value is not None:
                 try:
-                    ad_users = list(client.users.list(filter="{0} eq '{1}'".format(self.filter_parameter_name, self.filter_parameter_value)))
+                    ad_users = list(client.users.list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
                 except GraphErrorException as e:
                     # the type doesn't get more specific. Could check the error message but no guarantees that message doesn't change in the future
-                    # more stable to try again assuming the first error came from the parameter being a list and try again
+                    # more stable to try again assuming the first error came from the attribute being a list
                     try:
-                        ad_users = list(client.users.list(filter="{0}/any(c:c eq '{1}')".format(self.filter_parameter_name, self.filter_parameter_value)))
+                        ad_users = list(client.users.list(filter="{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
                     except GraphErrorException as sub_e:
                         raise #TODO add previous failure message as well before raising
+            else: # run a filter based on user input to return based on any given attribute/query
+                ad_users = list(client.users.list(filter=self.odata_filter))
 
             self.results['ad_users'] = [self.to_dict(user) for user in ad_users]
+
         except GraphErrorException as e:
             self.fail("failed to get ad user info {0}".format(str(e)))
 
