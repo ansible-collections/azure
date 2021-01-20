@@ -108,9 +108,9 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         # Would probably be easier for most to do the query directly
 
         super(AzureRMADUserInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                            supports_check_mode=False,
-                                                            supports_tags=False,
-                                                            is_ad_resource=True)
+                                                supports_check_mode=False,
+                                                supports_tags=False,
+                                                is_ad_resource=True)
 
     def exec_module(self, **kwargs):
 
@@ -135,8 +135,8 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                     try:
                         ad_users = list(client.users.list(filter="{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
                     except GraphErrorException as sub_e:
-                        raise #TODO add previous failure message as well before raising
-            else: # run a filter based on user input to return based on any given attribute/query
+                        raise  # TODO add previous failure message as well before raising
+            else:  # run a filter based on user input to return based on any given attribute/query
                 ad_users = list(client.users.list(filter=self.odata_filter))
 
             self.results['ad_users'] = [self.to_dict(user) for user in ad_users]
@@ -156,6 +156,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             account_enabled=object.account_enabled,
             user_type=object.user_type
         )
+
 
 def main():
     AzureRMADUserInfo()
