@@ -30,11 +30,37 @@ options:
         required: True
     object_id:
         description:
-            - It's service principal's object ID.
+            - The object id for the user.
+            - returns the user who has this object ID.
         type: str
-    app_id:
+    user_principle_name:
         description:
-            - The application ID.
+            - The principal name of the user.
+            - returns the user who has this principal name.
+        type: str
+    attribute_name:
+        description:
+            - The name of an attribute that you want to match to attribute_value.
+            - If attribute_name is not a collection type it will return users where attribute_name is equal to attribute_value.
+            - If attribute_name is a collection type it will return users where attribute_value is in attribute_name.
+        type: str
+    attribute_value:
+        description:
+            - The value to match attribute_name to.
+            - If attribute_name is not a collection type it will return users where attribute_name is equal to attribute_value.
+            - If attribute_name is a collection type it will return users where attribute_value is in attribute_name.
+        type: str
+    odata_filter:
+        description:
+            - returns users based on the the OData filter passed into this parameter.
+        type: str
+    log_path:
+        description:
+            - parent argument.
+        type: str
+    log_mode:
+        description:
+            - parent argument.
         type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -45,28 +71,82 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: get ad user info
-    azure_rm_adserviceprincipal_info:
-      app_id: "{{ app_id }}"
-      tenant: "{{ tenant_id }}"
+    - name: Using user_principle_name
+      azure.azcollection.azure_rm_aduser_info:
+        user_principle_name: user@contoso.com
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
+    - name: Using object_id
+      azure.azcollection.azure_rm_aduser_info:
+        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+    - name: Using attribute mailNickname - not a collection
+      azure.azcollection.azure_rm_aduser_info:
+        attribute_name: mailNickname
+        attribute_value: users_mailNickname
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+    - name: Using attribute proxyAddresses - a collection
+      azure.azcollection.azure_rm_aduser_info:
+        attribute_name: proxyAddresses
+        attribute_value: SMTP:onprema@contoso.com
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+    - name: Using Filter mailNickname
+      azure.azcollection.azure_rm_aduser_info:
+        odata_filter: mailNickname eq 'user@contoso.com'
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+    - name: Using Filter proxyAddresses
+      azure.azcollection.azure_rm_aduser_info:
+        odata_filter: proxyAddresses/any(c:c eq 'SMTP:user@contoso.com')
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 RETURN = '''
-app_role_assignment_required:
-    description:
-        - Whether the Role of the Service Principal is set.
-    type: bool
-    returned: always
-    sample: false
 object_id:
     description:
-        - It's service principal's object ID.
+        - The object_id for the user.
+    type: str
+    returned: always
+    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+display_name:
+    description:
+        - The display name of the user.
     returned: always
     type: str
-    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-
-
+    sample: John Smith
+user_principal_name:
+    description:
+        - The principal name of the user.
+    returned: always
+    type: str
+    sample: jsmith@contoso.com
+mail_nickname:
+    description:
+        - The mail alias for the user.
+    returned: always
+    type: str
+    sample: jsmith
+mail:
+    description:
+        - The primary email address of the user.
+    returned: always
+    type: str
+    sample: John.Smith@contoso.com
+account_enabled:
+    description:
+        - Whether the account is enabled.
+    returned: always
+    type: bool
+    sample: False
+user_type:
+    description:
+        - A string value that can be used to classify user types in your directory.
+    returned: always
+    type: str
+    sample: Member
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
@@ -89,6 +169,8 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             attribute_value=dict(type='str'),
             odata_filter=dict(type='str'),
             tenant=dict(type='str', required=True),
+            log_path=dict(type='str'),
+            log_mode=dict(type='str'),
         )
 
         self.tenant = None
@@ -97,19 +179,21 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         self.attribute_name = None
         self.attribute_value = None
         self.odata_filter = None
+        self.log_path = None
+        self.log_mode = None
 
         self.results = dict(changed=False)
 
-        # TODO: limit object id, user_principle_name, and filter params
-        # TODO: add tests
-        # TODO: documentation
-        # TODO: cleanup
-        # TODO: consider adding a "filter" parameter for more complex limits.
-        # Would probably be easier for most to do the query directly
+        mutually_exclusive = [['odata_filter', 'attribute_name', 'object_id', 'user_principle_name']]
+        required_together = [['attribute_name', 'attribute_value']]
+        required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principle_name']]
 
         super(AzureRMADUserInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                 supports_check_mode=False,
                                                 supports_tags=False,
+                                                mutually_exclusive=mutually_exclusive,
+                                                required_together=required_together,
+                                                required_one_of=required_one_of,
                                                 is_ad_resource=True)
 
     def exec_module(self, **kwargs):
@@ -135,8 +219,8 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                     try:
                         ad_users = list(client.users.list(filter="{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
                     except GraphErrorException as sub_e:
-                        raise  # TODO add previous failure message as well before raising
-            else:  # run a filter based on user input to return based on any given attribute/query
+                        raise
+            elif self.odata_filter is not None:  # run a filter based on user input to return based on any given attribute/query
                 ad_users = list(client.users.list(filter=self.odata_filter))
 
             self.results['ad_users'] = [self.to_dict(user) for user in ad_users]
