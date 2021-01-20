@@ -83,17 +83,28 @@ class AzureRMADUserInfo(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            app_id=dict(type='str'),
+            user_principle_name=dict(type='str'),
             object_id=dict(type='str'),
+            filter_parameter_name=dict(type='str'),
+            filter_parameter_value=dict(type='str'),
             tenant=dict(type='str', required=True),
         )
 
         self.tenant = None
-        self.app_id = None
+        self.user_principle_name = None
         self.object_id = None
+        self.filter_parameter_name = None
+        self.filter_parameter_value = None
         self.results = dict(changed=False)
 
-        super(AzureRMADServicePrincipalInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
+        # TODO: limit object id, user_principle_name, and filter params
+        # TODO: add tests
+        # TODO: documentation
+        # TODO: cleanup
+        # TODO: consider adding a "filter" parameter for more complex limits.
+        # Would probably be easier for most to do the query directly
+
+        super(AzureRMADUserInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                             supports_check_mode=False,
                                                             supports_tags=False,
                                                             is_ad_resource=True)
@@ -103,32 +114,45 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        service_principals = []
+        ad_users = []
 
         try:
             client = self.get_graphrbac_client(self.tenant)
-            if self.object_id is None:
-                service_principals = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id)))
-            else:
-                service_principals = [client.service_principals.get(self.object_id)]
 
-            self.results['service_principals'] = [self.to_dict(sp) for sp in service_principals]
-        except GraphErrorException as ge:
-            self.fail("failed to get service principal info {0}".format(str(ge)))
+            if self.user_principle_name is not None:
+                ad_users = [client.users.get(self.user_principle_name)]
+            elif self.object_id is not None:
+                ad_users = [client.users.get(self.object_id)]
+            else: # run a filter based on user input to return based on any given var
+                try:
+                    ad_users = list(client.users.list(filter="{0} eq '{1}'".format(self.filter_parameter_name, self.filter_parameter_value)))
+                except GraphErrorException as e:
+                    # the type doesn't get more specific. Could check the error message but no guarantees that message doesn't change in the future
+                    # more stable to try again assuming the first error came from the parameter being a list and try again
+                    try:
+                        ad_users = list(client.users.list(filter="{0}/any(c:c eq '{1}')".format(self.filter_parameter_name, self.filter_parameter_value)))
+                    except GraphErrorException as sub_e:
+                        raise #TODO add previous failure message as well before raising
+
+            self.results['ad_users'] = [self.to_dict(user) for user in ad_users]
+        except GraphErrorException as e:
+            self.fail("failed to get ad user info {0}".format(str(e)))
 
         return self.results
 
     def to_dict(self, object):
         return dict(
-            app_id=object.app_id,
             object_id=object.object_id,
-            app_display_name=object.display_name,
-            app_role_assignment_required=object.app_role_assignment_required
+            display_name=object.display_name,
+            user_principal_name=object.user_principal_name,
+            mail_nickname=object.mail_nickname,
+            mail=object.mail,
+            account_enabled=object.account_enabled,
+            user_type=object.user_type
         )
 
-
 def main():
-    AzureRMADServicePrincipalInfo()
+    AzureRMADUserInfo()
 
 
 if __name__ == '__main__':
