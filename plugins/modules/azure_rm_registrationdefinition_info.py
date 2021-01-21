@@ -428,6 +428,7 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
 
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
+                                                    suppress_subscription_id=True,
                                                     api_version='2020-02-01-preview')
 
         if (self.scope is not None and
@@ -461,6 +462,8 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
     def format_item(self, item):
         if hasattr(item, 'as_dict'):
             return [item.as_dict()]
+        elif item is None:
+            return None
         else:
             result = []
             items = list(item)
