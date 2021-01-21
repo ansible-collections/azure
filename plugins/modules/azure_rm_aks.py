@@ -81,7 +81,6 @@ options:
                 description:
                     - To enable auto-scaling.
                 type: bool
-                :param max_pods: Maximum number of pods that can run on a node.
             max_pods:
                 description:
                     - Maximum number of pods that can run on a node.
@@ -119,7 +118,7 @@ options:
             node_taints:
                 description:
                     - Taints added to new nodes during node pool create and scale
-                type: list 
+                type: list
     service_principal:
         description:
             - The service principal suboptions.
