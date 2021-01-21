@@ -82,7 +82,7 @@ options:
     description:
         - If I(state=present), template will be created.
         - If I(state=present) and deployment exists, it will be updated.
-        - If I(state=absent), stack will be removed.
+        - If I(state=absent), the resource group will be removed.
     default: present
     choices:
         - present
