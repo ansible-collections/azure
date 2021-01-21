@@ -4,6 +4,7 @@
      subscription_sec_id: "{{ azure_subscription_sec_id }}"
      managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
      principal_id: "{{ azure_principal_id }}"
+     role_definition_id: "{{ azure_role_definition_id }}"
      reg_def_name: test_name
      registration_definition_id: 182973c7-a90a-4220-a504-8c6a20eefd00
   run_once: yes
