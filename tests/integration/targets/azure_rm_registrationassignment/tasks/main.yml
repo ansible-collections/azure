@@ -65,5 +65,5 @@
 - name: Delete the RegistrationAssignment
   azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
-    registration_assignment_id:  "{{ stration_assignment_id }}"
+    registration_assignment_id:  "{{ registration_assignment_id }}"
     state: absent
