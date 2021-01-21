@@ -33,7 +33,7 @@ options:
             - The object id for the user.
             - returns the user who has this object ID.
         type: str
-    user_principle_name:
+    user_principal_name:
         description:
             - The principal name of the user.
             - returns the user who has this principal name.
@@ -77,9 +77,9 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Using user_principle_name
+    - name: Using user_principal_name
       azure.azcollection.azure_rm_aduser_info:
-        user_principle_name: user@contoso.com
+        user_principal_name: user@contoso.com
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
     - name: Using object_id
@@ -169,7 +169,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            user_principle_name=dict(type='str'),
+            user_principal_name=dict(type='str'),
             object_id=dict(type='str'),
             attribute_name=dict(type='str'),
             attribute_value=dict(type='str'),
@@ -181,7 +181,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         )
 
         self.tenant = None
-        self.user_principle_name = None
+        self.user_principal_name = None
         self.object_id = None
         self.attribute_name = None
         self.attribute_value = None
@@ -192,9 +192,9 @@ class AzureRMADUserInfo(AzureRMModuleBase):
 
         self.results = dict(changed=False)
 
-        mutually_exclusive = [['odata_filter', 'attribute_name', 'object_id', 'user_principle_name', 'all']]
+        mutually_exclusive = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name', 'all']]
         required_together = [['attribute_name', 'attribute_value']]
-        required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principle_name', 'all']]
+        required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name', 'all']]
 
         super(AzureRMADUserInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                 supports_check_mode=False,
@@ -214,8 +214,8 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         try:
             client = self.get_graphrbac_client(self.tenant)
 
-            if self.user_principle_name is not None:
-                ad_users = [client.users.get(self.user_principle_name)]
+            if self.user_principal_name is not None:
+                ad_users = [client.users.get(self.user_principal_name)]
             elif self.object_id is not None:
                 ad_users = [client.users.get(self.object_id)]
             elif self.attribute_name is not None and self.attribute_value is not None:

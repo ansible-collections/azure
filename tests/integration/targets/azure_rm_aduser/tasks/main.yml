@@ -7,7 +7,7 @@
 
 - name: Run with bad tenant Should Fail
   azure.azcollection.azure_rm_aduser_info:
-    user_principle_name: "{{user_id}}"
+    user_principal_name: "{{user_id}}"
     tenant: None
   register: missing_tenant
   ignore_errors: yes
@@ -30,7 +30,7 @@
 
 - name: Too many identifiers Should Fail
   azure.azcollection.azure_rm_aduser_info:
-    user_principle_name: "{{ user_id }}"
+    user_principal_name: "{{ user_id }}"
     object_id: "{{ object_id }}"
     tenant: "{{ tenant_id }}"
     register: too_many_identifiers
@@ -68,7 +68,7 @@
 - name: Using all with principal name should fail
   azure.azcollection.azure_rm_aduser_info:
     all: True
-    user_principle_name: "{{ user_id }}"
+    user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
     register: using_all_with_principal_name
   ignore_errors: yes
