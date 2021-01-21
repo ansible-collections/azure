@@ -20,13 +20,14 @@
           role_definition_id: "{{ role_definition_id }}"
       managed_by_tenant_id: "{{ managed_by_tenant_id }}"
       name: test_def
+  register: output1
 
 - name: Create a RegistrationAssignment ---check mode
   azure_rm_registrationassignment:
     registration_assignment_id: "{{ registration_assignment_id }}"
     scope: subscriptions/{{ subscription_id }}
     properties:
-      registration_definition_id: "{{ registration_definition_id }}"
+      registration_definition_id: "{{ output1.state.id }}"
   register: output
   check_mode: yes
 
@@ -35,14 +36,14 @@
     registration_assignment_id: "{{ registration_assignment_id }}"
     scope: subscriptions/{{ subscription_id }}
     properties:
-      registration_definition_id: "{{ registration_definition_id }}"
+      registration_definition_id: "{{ output1.state.id }}"
 
 - name: Create a RegistrationAssignment -- idempotent
   azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
     registration_assignment_id:  "{{ registration_assignment_id }}"
     properties:
-      registration_definition_id: "{{ registration_definition_id }}"
+      registration_definition_id: "{{ output1.state.id }}"
   register: output
 
 
@@ -62,5 +63,5 @@
 - name: Delete the RegistrationAssignment
   azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
-    registration_assignment_id:  "{{ stration_assignment_id e}}"
+    registration_assignment_id:  "{{ stration_assignment_id }}"
     state: absent
