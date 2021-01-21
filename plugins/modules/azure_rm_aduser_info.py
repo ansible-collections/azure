@@ -54,6 +54,12 @@ options:
         description:
             - returns users based on the the OData filter passed into this parameter.
         type: str
+    all:
+        description:
+            - If True, will return all users in tenant.
+            - If False will return no users.
+            - It is recommended that you instead identify a subset of users and use filter
+        type: bool
     log_path:
         description:
             - parent argument.
@@ -168,6 +174,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             attribute_name=dict(type='str'),
             attribute_value=dict(type='str'),
             odata_filter=dict(type='str'),
+            all=dict(type='bool'),
             tenant=dict(type='str', required=True),
             log_path=dict(type='str'),
             log_mode=dict(type='str'),
@@ -179,14 +186,15 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         self.attribute_name = None
         self.attribute_value = None
         self.odata_filter = None
+        self.all = None
         self.log_path = None
         self.log_mode = None
 
         self.results = dict(changed=False)
 
-        mutually_exclusive = [['odata_filter', 'attribute_name', 'object_id', 'user_principle_name']]
+        mutually_exclusive = [['odata_filter', 'attribute_name', 'object_id', 'user_principle_name', 'all']]
         required_together = [['attribute_name', 'attribute_value']]
-        required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principle_name']]
+        required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principle_name', 'all']]
 
         super(AzureRMADUserInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                 supports_check_mode=False,
@@ -222,7 +230,8 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                         raise
             elif self.odata_filter is not None:  # run a filter based on user input to return based on any given attribute/query
                 ad_users = list(client.users.list(filter=self.odata_filter))
-
+            elif self.all:
+                ad_users = list(client.users.list())
             self.results['ad_users'] = [self.to_dict(user) for user in ad_users]
 
         except GraphErrorException as e:
