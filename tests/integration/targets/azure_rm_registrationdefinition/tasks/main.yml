@@ -82,5 +82,6 @@
 
 - name: Delete the registration definition
   azure_rm_registrationdefinition:
+    scope:  subscriptions/{{ subscription_id }}
     registration_definition_id: "{{ registration_definition_id }}"
     state: absent

@@ -556,7 +556,7 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
         else:
             self.results['changed'] = False
             response = old_response
-            self.result['state'] = response
+            self.results['state'] = response
 
         return self.results
 
