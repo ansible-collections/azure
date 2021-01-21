@@ -96,7 +96,7 @@ EXAMPLES = '''
     - name: Using attribute proxyAddresses - a collection
       azure.azcollection.azure_rm_aduser_info:
         attribute_name: proxyAddresses
-        attribute_value: SMTP:onprema@contoso.com
+        attribute_value: SMTP:user@contoso.com
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
     - name: Using Filter mailNickname

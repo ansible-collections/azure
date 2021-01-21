@@ -22,6 +22,7 @@ parameters:
   values:
     - 'all'
     - "azure_rm_acs"
+    - "azure_rm_aduser"
     - "azure_rm_aks"
     - "azure_rm_appgateway"
     - "azure_rm_appserviceplan"
@@ -117,7 +118,7 @@ jobs:
               az group create -l eastus2 -n $(setvar.resource_group_datalake)
 
   - job: RunTests
-    dependsOn: CreateResourceGroups 
+    dependsOn: CreateResourceGroups
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
@@ -190,7 +191,7 @@ jobs:
       displayName: 'Running Tests'
 
   - job: CleanupResourceGroups
-    dependsOn: 
+    dependsOn:
       - CreateResourceGroups
       - RunTests
     condition: always()
