@@ -93,6 +93,27 @@
       - search_info.state.public_network_access == "enabled"
       - search_info.state.status == "running"
 
+- name: Get info for Azure Search
+  azure_rm_search_info:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+  register: search_info_module
+
+- name: Assert status succeeded and results
+  assert:
+    that:
+      - search_info_module.search.id is defined
+      - search_info_module.search.identity.type == "None"
+      - search_info_module.search.identity.principal_id is not defined
+      - search_info_module.search.hosting_mode == "default"
+      - search_info_module.search.name == search_name
+      - search_info_module.search.partition_count == 1
+      - search_info_module.search.replica_count == 1
+      - search_info_module.search.sku == "basic"
+      - search_info_module.search.provisioning_state == "succeeded"
+      - search_info_module.search.public_network_access == "enabled"
+      - search_info_module.search.status == "running"
+
 - name: Update basic Azure Search (Idempotence)
   azure_rm_search:
     name: "{{ search_name }}"
