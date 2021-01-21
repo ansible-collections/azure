@@ -51,12 +51,14 @@
   azure_rm_registrationassignment_info:
     scope: subscriptions/{{ subscription_id }}
     registration_assignment_id:  "{{ registration_assignment_id }}"
+    expand_registration_definition: False
   register: output
 
 
 - name: Get all RegistrationAssignment
   azure_rm_registrationassignment_info:
     scope: subscriptions/{{ subscription_id }}
+    expand_registration_definition: False
   register: output
 
 
