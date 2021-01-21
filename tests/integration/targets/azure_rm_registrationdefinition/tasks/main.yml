@@ -66,6 +66,7 @@
 - name: Get the Registration Definition info
   azure_rm_registrationdefinition_info:
     registration_definition_id: "{{ registration_definition_id }}"
+    scope:  subscriptions/{{ subscription_id }}
   register: output
 
 - name: Get All Registration Definition info in the subscription
