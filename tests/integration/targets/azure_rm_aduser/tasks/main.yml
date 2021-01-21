@@ -1,79 +1,79 @@
 - name: Prepare facts
   set_fact:
     tenant_id: "{{ azure_tenant }}"
-        user_id: "user{{ 999999999999999999994 | random | to_uuid }}@contoso.com"
-        object_id: "{{ 999999999999999999994 | random | to_uuid }}"
-      run_once: yes
+    user_id: "user{{ 999999999999999999994 | random | to_uuid }}@contoso.com"
+    object_id: "{{ 999999999999999999994 | random | to_uuid }}"
+  run_once: yes
 
-    - name: Run with bad tenant Should Fail
-      azure.azcollection.azure_rm_aduser_info:
-        user_principle_name: "{{user_id}}"
-        tenant: None
-      register: missing_tenant
-      ignore_errors: yes
+- name: Run with bad tenant Should Fail
+  azure.azcollection.azure_rm_aduser_info:
+    user_principle_name: "{{user_id}}"
+    tenant: None
+  register: missing_tenant
+  ignore_errors: yes
 
-    - name: Assert task failed
-      assert:
-        that:
-          - "missing_tenant['failed'] == True"
+- name: Assert task failed
+  assert:
+    that:
+      - "missing_tenant['failed'] == True"
 
-    - name: Missing any identifiers Should Fail
-      azure.azcollection.azure_rm_aduser_info:
-        tenant: "{{ tenant_id }}"
-        register: missing_any_identifiers
-      ignore_errors: yes
+- name: Missing any identifiers Should Fail
+  azure.azcollection.azure_rm_aduser_info:
+    tenant: "{{ tenant_id }}"
+    register: missing_any_identifiers
+  ignore_errors: yes
 
-    - name: Assert task failed
-      assert:
-        that:
-          - "missing_any_identifiers is undefined"
+- name: Assert task failed
+  assert:
+    that:
+      - "missing_any_identifiers is undefined"
 
-    - name: Too many identifiers Should Fail
-      azure.azcollection.azure_rm_aduser_info:
-        user_principle_name: "{{ user_id }}"
-        object_id: "{{ object_id }}"
-        tenant: "{{ tenant_id }}"
-        register: too_many_identifiers
-      ignore_errors: yes
+- name: Too many identifiers Should Fail
+  azure.azcollection.azure_rm_aduser_info:
+    user_principle_name: "{{ user_id }}"
+    object_id: "{{ object_id }}"
+    tenant: "{{ tenant_id }}"
+    register: too_many_identifiers
+  ignore_errors: yes
 
-    - name: Assert task failed
-      assert:
-        that:
-          - "too_many_identifiers is undefined"
+- name: Assert task failed
+  assert:
+    that:
+      - "too_many_identifiers is undefined"
 
-    - name: Missing attribute_value Should Fail
-      azure.azcollection.azure_rm_aduser_info:
-        attribute_name: proxyAddresses
-        tenant: "{{ tenant_id }}"
-        register: missing attribute_value
-      ignore_errors: yes
+- name: Missing attribute_value Should Fail
+  azure.azcollection.azure_rm_aduser_info:
+    attribute_name: proxyAddresses
+    tenant: "{{ tenant_id }}"
+    register: missing attribute_value
+  ignore_errors: yes
 
-    - name: Assert task failed
-      assert:
-        that:
-          - "attribute_value is undefined"
+- name: Assert task failed
+  assert:
+    that:
+      - "attribute_value is undefined"
 
-    - name: Missing attribute_name Should Fail
-      azure.azcollection.azure_rm_aduser_info:
-        attribute_value: SMTP:user@contoso.com
-        tenant: "{{ tenant_id }}"
-        register: missing attribute_name
-      ignore_errors: yes
+- name: Missing attribute_name Should Fail
+  azure.azcollection.azure_rm_aduser_info:
+    attribute_value: SMTP:user@contoso.com
+    tenant: "{{ tenant_id }}"
+    register: missing attribute_name
+  ignore_errors: yes
 
-    - name: Assert task failed
-      assert:
-        that:
-          - "attribute_name is undefined"
+- name: Assert task failed
+  assert:
+    that:
+      - "attribute_name is undefined"
 
-    - name: Using all with principal name should fail
-      azure.azcollection.azure_rm_aduser_info:
-        all: True
-        user_principle_name: "{{ user_id }}"
-        tenant: "{{ tenant_id }}"
-        register: using_all_with_principal_name
-      ignore_errors: yes
+- name: Using all with principal name should fail
+  azure.azcollection.azure_rm_aduser_info:
+    all: True
+    user_principle_name: "{{ user_id }}"
+    tenant: "{{ tenant_id }}"
+    register: using_all_with_principal_name
+  ignore_errors: yes
 
-    - name: Assert task failed
-      assert:
-        that:
-          - "using_all_with_principal_name is undefined"
+- name: Assert task failed
+  assert:
+    that:
+      - "using_all_with_principal_name is undefined"
