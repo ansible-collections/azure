@@ -239,7 +239,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                 ad_users = list(client.users.list(filter=self.odata_filter))
             elif self.all:
                 ad_users = list(client.users.list())
-                
+
             self.results['ad_users'] = [self.to_dict(user) for user in ad_users]
 
         except GraphErrorException as e:
