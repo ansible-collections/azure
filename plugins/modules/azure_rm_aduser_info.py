@@ -32,33 +32,40 @@ options:
         description:
             - The object id for the user.
             - returns the user who has this object ID.
+            - Mutually exclusive with I(user_principal_name), I(attribute_name), I(odata_filter) and I(all).
         type: str
     user_principal_name:
         description:
             - The principal name of the user.
             - returns the user who has this principal name.
+            - Mutually exclusive with I(object_id), I(attribute_name), I(odata_filter) and I(all).
         type: str
     attribute_name:
         description:
             - The name of an attribute that you want to match to attribute_value.
             - If attribute_name is not a collection type it will return users where attribute_name is equal to attribute_value.
             - If attribute_name is a collection type it will return users where attribute_value is in attribute_name.
+            - Mutually exclusive with I(object_id), I(user_principal_name), I(odata_filter) and I(all).
+            - Required together with I(attribute_value).
         type: str
     attribute_value:
         description:
             - The value to match attribute_name to.
             - If attribute_name is not a collection type it will return users where attribute_name is equal to attribute_value.
             - If attribute_name is a collection type it will return users where attribute_value is in attribute_name.
+            - Required together with I(attribute_name).
         type: str
     odata_filter:
         description:
             - returns users based on the the OData filter passed into this parameter.
         type: str
+            - Mutually exclusive with I(object_id), I(attribute_name), I(user_principal_name) and I(all).
     all:
         description:
             - If True, will return all users in tenant.
             - If False will return no users.
-            - It is recommended that you instead identify a subset of users and use filter
+            - It is recommended that you instead identify a subset of users and use filter.
+            - Mutually exclusive with I(object_id), I(attribute_name), I(odata_filter) and I(user_principal_name).
         type: bool
     log_path:
         description:
@@ -232,6 +239,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                 ad_users = list(client.users.list(filter=self.odata_filter))
             elif self.all:
                 ad_users = list(client.users.list())
+                
             self.results['ad_users'] = [self.to_dict(user) for user in ad_users]
 
         except GraphErrorException as e:
