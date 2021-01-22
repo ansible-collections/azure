@@ -58,8 +58,8 @@ options:
     odata_filter:
         description:
             - returns users based on the the OData filter passed into this parameter.
-        type: str
             - Mutually exclusive with I(object_id), I(attribute_name), I(user_principal_name) and I(all).
+        type: str
     all:
         description:
             - If True, will return all users in tenant.
