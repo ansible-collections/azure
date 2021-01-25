@@ -188,9 +188,9 @@ class BackupAzureVM(AzureRMModuleBaseExt):
                    + '/Microsoft.RecoveryServices' + '/vaults' + '/' \
                    + self.recovery_vault_name \
                    + '/backupFabrics/Azure/protectionContainers/' \
-                   + 'iaasvmcontainer;iaasvmcontainerv2;' + self.resource_group \
+                   + 'iaasvmcontainer;iaasvmcontainerv2;' + self.resource_id.split('/')[-5] \
                    + ';' + self.resource_id.split('/')[-1] + '/protectedItems/' \
-                   + 'vm;iaasvmcontainerv2;' + self.resource_group + ';' \
+                   + 'vm;iaasvmcontainerv2;' + self.resource_id.split('/')[-5] + ';' \
                    + self.resource_id.split('/')[-1]
         if self.state == 'backup':
             return '/subscriptions' + '/' + self.subscription_id \
@@ -198,9 +198,9 @@ class BackupAzureVM(AzureRMModuleBaseExt):
                    + '/Microsoft.RecoveryServices' + '/vaults' + '/' \
                    + self.recovery_vault_name \
                    + '/backupFabrics/Azure/protectionContainers/' \
-                   + 'iaasvmcontainer;iaasvmcontainerv2;' + self.resource_group \
+                   + 'iaasvmcontainer;iaasvmcontainerv2;' + self.resource_id.split('/')[-5] \
                    + ';' + self.resource_id.split('/')[-1] + '/protectedItems/' \
-                   + 'vm;iaasvmcontainerv2;' + self.resource_group + ';' \
+                   + 'vm;iaasvmcontainerv2;' + self.resource_id.split('/')[-5] + ';' \
                    + self.resource_id.split('/')[-1] + '/backup'
 
     def get_body(self):
