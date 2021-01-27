@@ -17,7 +17,7 @@ module: azure_rm_adgroup_info
 version_added: "1.3.2"
 short_description: Get Azure Active Directory group info
 description:
-    - Get Azure Active Directory user info.
+    - Get Azure Active Directory group info.
 options:
     tenant:
         description:
@@ -149,12 +149,14 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from msrestazure.azure_exceptions import CloudError
     from azure.graphrbac.models import GraphErrorException
+    from azure.graphrbac.models import CheckGroupMembershipParameters
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
-
-class AzureRMADUserInfo(AzureRMModuleBase):
+# TODO:
+    # Handle checking if a member is in the group
+class AzureRMADGroupInfo(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
@@ -163,6 +165,10 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             attribute_name=dict(type='str'),
             attribute_value=dict(type='str'),
             odata_filter=dict(type='str'),
+            check_membership=dict(type='str'),
+            return_owners=dict(type='bool',default=False),
+            return_group_members=dict(type='bool',default=False),
+            return_member_groups=dict(type='bool',default=False),
             all=dict(type='bool'),
             tenant=dict(type='str', required=True),
             log_path=dict(type='str'),
@@ -175,6 +181,10 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         self.attribute_name = None
         self.attribute_value = None
         self.odata_filter = None
+        self.check_membership = False
+        self.return_owners = False
+        self.return_group_members = False
+        self.return_member_groups = False
         self.all = None
         self.log_path = None
         self.log_mode = None
@@ -185,7 +195,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         required_together = [['attribute_name', 'attribute_value']]
         required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name', 'all']]
 
-        super(AzureRMADUserInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
+        super(AzureRMADGroupInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                 supports_check_mode=False,
                                                 supports_tags=False,
                                                 mutually_exclusive=mutually_exclusive,
@@ -198,37 +208,39 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        ad_users = []
+        ad_groups = []
 
         try:
             client = self.get_graphrbac_client(self.tenant)
 
-            if self.user_principal_name is not None:
-                ad_users = [client.users.get(self.user_principal_name)]
-            elif self.object_id is not None:
-                ad_users = [client.users.get(self.object_id)]
+            if self.object_id is not None:
+                ad_groups = [client.groups.get(self.object_id)]
             elif self.attribute_name is not None and self.attribute_value is not None:
-                try:
-                    ad_users = list(client.users.list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
-                except GraphErrorException as e:
-                    # the type doesn't get more specific. Could check the error message but no guarantees that message doesn't change in the future
-                    # more stable to try again assuming the first error came from the attribute being a list
-                    try:
-                        ad_users = list(client.users.list(filter="{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
-                    except GraphErrorException as sub_e:
-                        raise
-            elif self.odata_filter is not None:  # run a filter based on user input to return based on any given attribute/query
-                ad_users = list(client.users.list(filter=self.odata_filter))
+                ad_groups = list(client.groups.list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
+            elif self.odata_filter is not None:  # run a filter based on user input
+                ad_groups = list(client.groups.list(filter=self.odata_filter))
             elif self.all:
-                ad_users = list(client.users.list())
-            self.results['ad_users'] = [self.to_dict(user) for user in ad_users]
+                ad_groups = list(client.groups.list())
+
+            self.results['ad_groups'] = [self.set_results(group, client) for group in ad_groups]
 
         except GraphErrorException as e:
-            self.fail("failed to get ad user info {0}".format(str(e)))
+            self.fail("failed to get ad group info {0}".format(str(e)))
 
         return self.results
 
-    def to_dict(self, object):
+
+    def group_to_dict(self, object):
+        return dict(
+            object_id=object.object_id,
+            display_name=object.display_name,
+            mail_nickname=object.mail_nickname,
+            mail_enabled=object.mail_enabled,
+            security_enabled=object.security_enabled,
+            mail=object.mail
+        )
+
+    def user_to_dict(self, object):
         return dict(
             object_id=object.object_id,
             display_name=object.display_name,
@@ -239,9 +251,26 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             user_type=object.user_type
         )
 
+    def set_results(self, object, client):
+        results = self.group_to_dict(object)
+
+        if results["object_id"] and self.return_owners:
+            results["group_owners"] = list(client.groups.list_owners(results["object_id"]))
+
+        if results["object_id"] and self.return_group_members:
+            results["group_members"] = [self.user_to_dict(user) for user in list(client.groups.get_group_members(results["object_id"]))]
+
+        if results["object_id"] and self.return_member_groups:
+            results["member_groups"] = [self.group_to_dict(group) for group in list(client.groups.get_member_groups(results["object_id"], False))]
+
+        if results["object_id"] and self.check_membership:
+            results["is_member_of"] = client.groups.is_member_of(CheckGroupMembershipParameters(group_id=results["object_id"], member_id=self.check_membership)).value            
+
+        return results
+
 
 def main():
-    AzureRMADUserInfo()
+    AzureRMADGroupInfo()
 
 
 if __name__ == '__main__':
