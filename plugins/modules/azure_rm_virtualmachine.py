@@ -832,7 +832,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             plan=dict(type='dict'),
             zones=dict(type='list'),
             accept_terms=dict(type='bool', default=False),
-            license_type=dict(type='str', choices=['Windows_Server', 'Windows_Client', 'RHEL_BYOS']),
+            license_type=dict(type='str', choices=['Windows_Server', 'Windows_Client', 'RHEL_BYOS', 'SLES_BYOS']),
             vm_identity=dict(type='str', choices=['SystemAssigned']),
             winrm=dict(type='list'),
             boot_diagnostics=dict(type='dict'),
