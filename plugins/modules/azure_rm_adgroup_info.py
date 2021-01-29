@@ -26,35 +26,50 @@ options:
         required: True
     object_id:
         description:
-            - The object id for the user.
-            - returns the user who has this object ID.
-        type: str
-    user_principal_name:
-        description:
-            - The principal name of the user.
-            - returns the user who has this principal name.
+            - The object id for the ad group.
+            - returns the group which has this object ID.
         type: str
     attribute_name:
         description:
             - The name of an attribute that you want to match to attribute_value.
-            - If attribute_name is not a collection type it will return users where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will return users where attribute_value is in attribute_name.
+            - If attribute_name is not a collection type it will return groups where attribute_name is equal to attribute_value.
+            - If attribute_name is a collection type it will return groups where attribute_value is in attribute_name.
         type: str
     attribute_value:
         description:
             - The value to match attribute_name to.
-            - If attribute_name is not a collection type it will return users where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will return users where attribute_value is in attribute_name.
+            - If attribute_name is not a collection type it will return groups where attribute_name is equal to attribute_value.
+            - If attribute_name is a collection type it will groups users where attribute_value is in attribute_name.
         type: str
     odata_filter:
         description:
-            - returns users based on the the OData filter passed into this parameter.
+            - returns groups based on the the OData filter passed into this parameter.
         type: str
+    check_membership:
+        description:
+            - The object ID of the contact, group, user, or service principal to check for membership against returned groups.
+        type: str
+    return_owners:
+        description:
+            - Indicate whether the owners of a group should be returned with the returned groups.
+        default: False
+        type: bool
+    return_group_members:
+        description:
+            - Indicate whether the members of a group should be returned with the returned groups.
+        default: False
+        type: bool
+    return_member_groups:
+        description:
+            - Indicate whether the groups in which a groups is a member should be returned with the returned groups.
+        default: False
+        type: bool
     all:
         description:
-            - If True, will return all users in tenant.
+            - If True, will return all groups in tenant.
             - If False will return no users.
-            - It is recommended that you instead identify a subset of users and use filter
+            - It is recommended that you instead identify a subset of groups and use filter
+        default: False
         type: bool
     log_path:
         description:
@@ -71,32 +86,52 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Using user_principal_name
-      azure.azcollection.azure_rm_aduser_info:
-        user_principal_name: user@contoso.com
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    - name: Using object_id
-      azure.azcollection.azure_rm_aduser_info:
+    - name: Return a specific group using object_id
+      azure.azcollection.azure_rm_adgroup_info:
         object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    - name: Using attribute mailNickname - not a collection
-      azure.azcollection.azure_rm_aduser_info:
-        attribute_name: mailNickname
-        attribute_value: users_mailNickname
+
+    - name: Return a specific group using object_id and  return the owners of the group
+      azure.azcollection.azure_rm_adgroup_info:
+        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        return_owners: True
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    - name: Using attribute proxyAddresses - a collection
-      azure.azcollection.azure_rm_aduser_info:
-        attribute_name: proxyAddresses
-        attribute_value: SMTP:user@contoso.com
+
+    - name: Return a specific group using object_id and return the owners and members of the group
+      azure.azcollection.azure_rm_adgroup_info:
+        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        return_owners: True
+        return_group_members: True
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    - name: Using Filter mailNickname
-      azure.azcollection.azure_rm_aduser_info:
-        odata_filter: mailNickname eq 'user@contoso.com'
+
+    - name: Return a specific group using object_id and return the groups the group is a member of
+      azure.azcollection.azure_rm_adgroup_info:
+        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        return_member_groups: True
+        tenant: "{{ tenant_id }}"
+
+    - name: Return a specific group using object_id and check an ID for membership
+      azure.azcollection.azure_rm_adgroup_info:
+        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        check_membership: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    - name: Using Filter proxyAddresses
-      azure.azcollection.azure_rm_aduser_info:
-        odata_filter: proxyAddresses/any(c:c eq 'SMTP:user@contoso.com')
+
+    - name: Return a specific group using displayName for attribute_name
+      azure.azcollection.azure_rm_adgroup_info:
+        attribute_name: "displayName"
+        attribute_value: "Display-Name-Of-AD-Group"
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+    - name: Return groups matching odata_filter
+      azure.azcollection.azure_rm_adgroup_info:
+        odata_filter: "mailNickname eq 'Mail-Nickname-Of-AD-Group'"
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+    - name: Return all groups
+      azure.azcollection.azure_rm_adgroup_info:
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        all: True
+
 '''
 
 RETURN = '''
@@ -154,54 +189,51 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
-# TODO:
-    # Handle checking if a member is in the group
+
 class AzureRMADGroupInfo(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            user_principal_name=dict(type='str'),
             object_id=dict(type='str'),
             attribute_name=dict(type='str'),
             attribute_value=dict(type='str'),
             odata_filter=dict(type='str'),
             check_membership=dict(type='str'),
-            return_owners=dict(type='bool',default=False),
-            return_group_members=dict(type='bool',default=False),
-            return_member_groups=dict(type='bool',default=False),
-            all=dict(type='bool'),
+            return_owners=dict(type='bool', default=False),
+            return_group_members=dict(type='bool', default=False),
+            return_member_groups=dict(type='bool', default=False),
+            all=dict(type='bool', default=False),
             tenant=dict(type='str', required=True),
             log_path=dict(type='str'),
             log_mode=dict(type='str'),
         )
 
         self.tenant = None
-        self.user_principal_name = None
         self.object_id = None
         self.attribute_name = None
         self.attribute_value = None
         self.odata_filter = None
-        self.check_membership = False
+        self.check_membership = None
         self.return_owners = False
         self.return_group_members = False
         self.return_member_groups = False
-        self.all = None
+        self.all = False
         self.log_path = None
         self.log_mode = None
 
         self.results = dict(changed=False)
 
-        mutually_exclusive = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name', 'all']]
+        mutually_exclusive = [['odata_filter', 'attribute_name', 'object_id', 'all']]
         required_together = [['attribute_name', 'attribute_value']]
-        required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name', 'all']]
+        required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'all']]
 
         super(AzureRMADGroupInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                supports_check_mode=False,
-                                                supports_tags=False,
-                                                mutually_exclusive=mutually_exclusive,
-                                                required_together=required_together,
-                                                required_one_of=required_one_of,
-                                                is_ad_resource=True)
+                                                 supports_check_mode=False,
+                                                 supports_tags=False,
+                                                 mutually_exclusive=mutually_exclusive,
+                                                 required_together=required_together,
+                                                 required_one_of=required_one_of,
+                                                 is_ad_resource=True)
 
     def exec_module(self, **kwargs):
 
@@ -228,7 +260,6 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             self.fail("failed to get ad group info {0}".format(str(e)))
 
         return self.results
-
 
     def group_to_dict(self, object):
         return dict(
@@ -264,7 +295,8 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             results["member_groups"] = [self.group_to_dict(group) for group in list(client.groups.get_member_groups(results["object_id"], False))]
 
         if results["object_id"] and self.check_membership:
-            results["is_member_of"] = client.groups.is_member_of(CheckGroupMembershipParameters(group_id=results["object_id"], member_id=self.check_membership)).value            
+            results["is_member_of"] = client.groups.is_member_of(
+                CheckGroupMembershipParameters(group_id=results["object_id"], member_id=self.check_membership)).value
 
         return results
 
