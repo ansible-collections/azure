@@ -3,7 +3,7 @@
 ## v1.3.2 (2021-01-26)
 
 ### NEW MODULES
-  - azure_rm_route_info: Add azure_rm_route_info module ([#334](https://github.com/ansible-collections/azure/pull/334))
+  - azure_rm_route_info: add azure_rm_route_info module ([#334](https://github.com/ansible-collections/azure/pull/334))
 
 ### FEATURE ENHANCEMENT
   - azure_rm_postgresqlserver: add storage_autogrow option to postgresqlserver ([#387](https://github.com/ansible-collections/azure/pull/387))
@@ -15,7 +15,7 @@
   - Test_unit: add resource group for datalake store testing in ado pipeline ([#375](https://github.com/ansible-collections/azure/pull/375))
   - README.md: update README to include a link to documentation ([#376](https://github.com/ansible-collections/azure/pull/376))
   - azure_rm_deployment: update azure_rm_deployment document ([#384](https://github.com/ansible-collections/azure/pull/384))
-  - azure_rm_azurefirewall: added support for tags in exec_module ([#360](https://github.com/ansible-collections/azure/pull/360))
+  - azure_rm_azurefirewall: add support for tags in exec_module ([#360](https://github.com/ansible-collections/azure/pull/360))
   - Test_unit: disable generate VM using password for regression testing purpose ([#393](https://github.com/ansible-collections/azure/pull/393))
   - azure_rm_keyvaultsecret_info: Fix doc on returned field name ([#389](https://github.com/ansible-collections/azure/pull/389))
   - azure_rm_virtualnetworkpeering: azure_rm_virtualnetworkpeering: Fix unable to remove non-existing pee…([#400](https://github.com/ansible-collections/azure/pull/400))
