@@ -96,13 +96,8 @@ except Exception:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 
-AZURE_OBJECT_CLASS = 'Subscription'
-
-
 class AzureRMSubscriptionInfo(AzureRMModuleBase):
-
     def __init__(self):
-
         self.module_arg_spec = dict(
             name=dict(type='str', aliases=['subscription_name']),
             id=dict(type='str')
@@ -110,7 +105,7 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
 
         self.results = dict(
             changed=False,
-            subscriptions=[]
+            management_groups=[]
         )
 
         self.name = None
