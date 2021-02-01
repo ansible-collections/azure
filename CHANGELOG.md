@@ -6,15 +6,15 @@
   - azure_rm_route_info: Add azure_rm_route_info module ([#334](https://github.com/ansible-collections/azure/pull/334))
 
 ### FEATURE ENHANCEMENT
-  - azure_rm_postgresqlserver: added storage_autogrow option to postgresqlserver ([#387](https://github.com/ansible-collections/azure/pull/387))
-  - azure_rm_keyvaultsecret: Added content type parameter to azure_rm_keyvaultsecret ([#317](https://github.com/ansible-collections/azure/pull/317))
-  - azure_rm_keyvaultsecret_info: Added content type parameter to azure_rm_keyvaultsecret ([#317](https://github.com/ansible-collections/azure/pull/317))
-  - azure_rm_mysqlserver: Add missing Mysql version 8.0 ([#319](https://github.com/ansible-collections/azure/pull/319))
+  - azure_rm_postgresqlserver: add storage_autogrow option to postgresqlserver ([#387](https://github.com/ansible-collections/azure/pull/387))
+  - azure_rm_keyvaultsecret: add content type parameter to azure_rm_keyvaultsecret ([#317](https://github.com/ansible-collections/azure/pull/317))
+  - azure_rm_keyvaultsecret_info: add content type parameter to azure_rm_keyvaultsecret ([#317](https://github.com/ansible-collections/azure/pull/317))
+  - azure_rm_mysqlserver: add missing Mysql version 8.0 ([#319](https://github.com/ansible-collections/azure/pull/319))
 
 ### BUG FIXING
   - Test_unit: add resource group for datalake store testing in ado pipeline ([#375](https://github.com/ansible-collections/azure/pull/375))
-  - README.md: Update README to include a link to documentation ([#376](https://github.com/ansible-collections/azure/pull/376))
-  - azure_rm_deployment: Update azure_rm_deployment document ([#384](https://github.com/ansible-collections/azure/pull/384))
+  - README.md: update README to include a link to documentation ([#376](https://github.com/ansible-collections/azure/pull/376))
+  - azure_rm_deployment: update azure_rm_deployment document ([#384](https://github.com/ansible-collections/azure/pull/384))
   - azure_rm_azurefirewall: added support for tags in exec_module ([#360](https://github.com/ansible-collections/azure/pull/360))
   - Test_unit: disable generate VM using password for regression testing purpose ([#393](https://github.com/ansible-collections/azure/pull/393))
   - azure_rm_keyvaultsecret_info: Fix doc on returned field name ([#389](https://github.com/ansible-collections/azure/pull/389))
@@ -179,4 +179,3 @@
 ## v0.0.1 (2019-11-05)
 
 - Init release
-
