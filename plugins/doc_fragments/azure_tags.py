@@ -18,6 +18,9 @@ options:
             - Dictionary of string:string pairs to assign as metadata to the object.
             - Metadata tags on the object will be updated with any provided values.
             - To remove tags set append_tags option to false.
+            - Currently, Azure DNS zones and Traffic Manager services also don't allow the use of spaces in the tag.
+            - Azure Front Door doesn't support the use of # in the tag name.
+            - Azure Automation and Azure CDN only support 15 tags on resources.
         type: dict
     append_tags:
         description:
