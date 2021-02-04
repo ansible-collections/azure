@@ -174,28 +174,32 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
 
     def to_dict(self, azure_object):
         if azure_object.type == '/providers/Microsoft.Management/managementGroups':
-            mg_dict = dict(
+            return_dict = dict(
                 display_name=azure_object.display_name,
                 id=azure_object.id,
                 name=azure_object.name,
                 type=azure_object.type
             )
             if self.children and azure_object.as_dict().get('children'):
-                mg_dict['children'] = [self.to_dict(item) for item in azure_object.children]  # if item.type == '/providers/Microsoft.Management/managementGroups']
+                return_dict['children'] = [self.to_dict(item) for item in azure_object.children]  # if item.type == '/providers/Microsoft.Management/managementGroups']
         elif azure_object.type == '/subscriptions':
-            mg_dict = dict(
+            return_dict = dict(
                 display_name=azure_object.display_name,
                 id=azure_object.id,
                 subscription_id=azure_object.name,
                 type=azure_object.type
             )
         else:
-            mg_dict = dict()
+            # This should never happen. The code here will prevent a problem,
+            # but there should be logic to take care of a new child type of management groups.
+            return_dict = dict(
+                state='You should report this as a bug.'
+            )
 
         if azure_object.as_dict().get('tenant_id'):
-            mg_dict['tenant_id'] = azure_object.tenant_id
+            return_dict['tenant_id'] = azure_object.tenant_id
 
-        return mg_dict
+        return return_dict
 
     def flatten(self, azure_object):
         return [azure_object]
