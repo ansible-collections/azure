@@ -1,2 +1,3 @@
 *.pyc
 /tests/output/
+.vscode/settings.json

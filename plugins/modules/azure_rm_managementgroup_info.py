@@ -1,10 +1,11 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Paul Aiton, < @paultaiton >
+# Copyright (c) 2021 Paul Aiton, < @paultaiton >
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+from msrestazure.tools import parse_resource_id
 __metaclass__ = type
 
 
@@ -17,7 +18,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_managementgroup_info
 
-version_added: "1.2.0"
+version_added: "1.5.0"
 
 short_description: Get Azure Management Group facts
 
@@ -37,11 +38,6 @@ options:
         aliases:
             - management_group_name
         type: str
-    tags:
-        description:
-            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
-            - Option has no effect when searching by id or name, and will be silently ignored.
-        type: list
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -96,11 +92,15 @@ except Exception:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 
-class AzureRMSubscriptionInfo(AzureRMModuleBase):
+class AzureRMManagementGroupInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
-            name=dict(type='str', aliases=['subscription_name']),
-            id=dict(type='str')
+            # display_name_filter=dict(type='str')
+            name=dict(type='str'),
+            id=dict(type='str'),
+            flatten=dict(type='bool', default=False),
+            children=dict(type='bool', default=False),
+            recurse=dict(type='bool', default=False)
         )
 
         self.results = dict(
@@ -110,78 +110,99 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
 
         self.name = None
         self.id = None
-        self.tags = None
-        self.all = False
+        self.flatten = None
+        self.children = None
+        self.recurse = None
 
         mutually_exclusive = [['name', 'id']]
 
-        super(AzureRMSubscriptionInfo, self).__init__(self.module_arg_spec,
-                                                      supports_tags=False,
-                                                      mutually_exclusive=mutually_exclusive,
-                                                      facts_module=True)
+        super(AzureRMManagementGroupInfo, self).__init__(self.module_arg_spec,
+                                                         supports_tags=False,
+                                                         mutually_exclusive=mutually_exclusive,
+                                                         facts_module=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.id and self.name:
-            self.fail("Parameter error: cannot search subscriptions by both name and id.")
+        response = []
 
-        result = []
-
-        if self.id:
-            result = self.get_item()
+        if self.name or self.id:
+            response = [self.get_item()]
         else:
-            result = self.list_items()
+            response = self.list_items()
 
-        self.results['subscriptions'] = result
+        self.results['management_groups'] = response
         return self.results
 
-    def get_item(self):
-        self.log('Get properties for {0}'.format(self.id))
-        item = None
-        result = []
+    def get_item(self, mg_name=None):
+        if not mg_name:
+            if self.id and not self.name:
+                mg_name = self.id.split('/')[-1]
+            else:
+                mg_name = self.name
+
+        expand = 'children' if self.children else None
 
         try:
-            item = self.subscription_client.subscriptions.get(self.id)
+            # The parameter to SDK's management_groups.get(group_id) is not correct,
+            # it only works with a bare name value.
+            response = self.management_groups_client.management_groups.get(group_id=mg_name, expand=expand, recurse=self.recurse)
         except CloudError:
-            pass
+            response = None
 
-        result = self.to_dict(item)
-
-        return result
+        return self.to_dict(response)
 
     def list_items(self):
-        self.log('List all items')
-        try:
-            response = self.subscription_client.subscriptions.list()
-        except CloudError as exc:
-            self.fail("Failed to list all items - {0}".format(str(exc)))
+        self.log('List all management groups.')
 
         results = []
-        for item in response:
-            # If the name matches, return result regardless of anything else.
-            # If name is not defined and either state is Enabled or all is true, and tags match, return result.
-            if self.name and self.name.lower() == item.display_name.lower():
-                results.append(self.to_dict(item))
-            elif not self.name and (self.all or item.state == "Enabled") and self.has_tags(item.tags, self.tags):
-                results.append(self.to_dict(item))
+        response = []
+
+        try:
+            response = self.management_groups_client.management_groups.list()
+        except CloudError:
+            pass  # default to response empty list
+
+        if self.children:
+            # list method cannot return children, so we must iterate over root management groups to get each one individually.
+            results = [self.get_item(mg_name=item.name) for item in response]
+        else:
+            results = [self.to_dict(item) for item in response]
 
         return results
 
-    def to_dict(self, subscription_object):
-        return dict(
-            display_name=subscription_object.display_name,
-            fqid=subscription_object.id,
-            state=subscription_object.state,
-            subscription_id=subscription_object.subscription_id,
-            tags=subscription_object.tags,
-            tenant_id=subscription_object.tenant_id
-        )
+    def to_dict(self, azure_object):
+        if azure_object.type == '/providers/Microsoft.Management/managementGroups':
+            mg_dict = dict(
+                display_name=azure_object.display_name,
+                id=azure_object.id,
+                name=azure_object.name,
+                type=azure_object.type
+            )
+            if self.children and azure_object.as_dict().get('children'):
+                mg_dict['children'] = [self.to_dict(item) for item in azure_object.children]  # if item.type == '/providers/Microsoft.Management/managementGroups']
+        elif azure_object.type == '/subscriptions':
+            mg_dict = dict(
+                display_name=azure_object.display_name,
+                id=azure_object.id,
+                subscription_id=azure_object.name,
+                type=azure_object.type
+            )
+        else:
+            mg_dict = dict()
+
+        if azure_object.as_dict().get('tenant_id'):
+            mg_dict['tenant_id'] = azure_object.tenant_id
+
+        return mg_dict
+
+    def flatten(self, azure_object):
+        return [azure_object]
 
 
 def main():
-    AzureRMSubscriptionInfo()
+    AzureRMManagementGroupInfo()
 
 
 if __name__ == '__main__':
