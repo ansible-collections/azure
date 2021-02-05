@@ -122,6 +122,20 @@
   register: output1
 - debug:
     var: output1
+- name: Delete a weekly VM backup policy
+  azure_rm_backuppolicy:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_weekly }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: weekly_policy_output_delete
+- debug:
+    var: weekly_policy_output_delete
+
+- name: Assert success on weekly backup policy deletion
+  assert:
+    that:
+      - weekly_policy_output_delete.changed
 
 - name: Delete a daily VM backup policy
   azure_rm_backuppolicy:
@@ -145,20 +159,6 @@
   register: output1
 - debug:
     var: output1
-- name: Delete a weekly VM backup policy
-  azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_weekly }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: weekly_policy_output_delete
-- debug:
-    var: weekly_policy_output_delete
-
-- name: Assert success on weekly backup policy deletion
-  assert:
-    that:
-      - weekly_policy_output_delete.changed
 
 - name: Delete a daily VM backup policy (idempotent)
   azure_rm_backuppolicy:
