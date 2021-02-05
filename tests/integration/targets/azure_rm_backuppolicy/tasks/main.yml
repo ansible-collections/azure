@@ -122,7 +122,8 @@
     resource_group: "{{ resource_group }}"
     state: absent
   register: daily_policy_output_delete
-
+- debug:
+    var: daily_policy_output_delete
 - name: Assert success on daily backup policy deletion
   assert:
     that:
@@ -135,6 +136,8 @@
     resource_group: "{{ resource_group }}"
     state: absent
   register: weekly_policy_output_delete
+- debug:
+    var: weekly_policy_output_delete
 
 - name: Assert success on weekly backup policy deletion
   assert:
