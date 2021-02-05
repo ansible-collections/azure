@@ -114,6 +114,14 @@
     that:
       - weekly_policy_output_update.changed
       - weekly_policy_output_update.name == policy_name_weekly
+- name: Get a weekly VM backup policy
+  azure_rm_backuppolicy_info:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_weekly }}"
+    resource_group: "{{ resource_group }}"
+  register: output1
+- debug:
+    var: output1
 
 - name: Delete a daily VM backup policy
   azure_rm_backuppolicy:
@@ -129,6 +137,14 @@
     that:
       - daily_policy_output_delete.changed
 
+- name: Get a weekly VM backup policy
+  azure_rm_backuppolicy_info:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_weekly }}"
+    resource_group: "{{ resource_group }}"
+  register: output1
+- debug:
+    var: output1
 - name: Delete a weekly VM backup policy
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
