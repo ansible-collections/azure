@@ -25,6 +25,10 @@ options:
             description:
                 - URI of the keyvault endpoint.
             required: true
+    content_type:
+        description:
+            - Type of the secret value such as a password.
+        type: str
     secret_name:
         description:
             - Name of the keyvault secret.
@@ -101,7 +105,8 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             secret_name=dict(type='str', required=True),
             secret_value=dict(type='str', no_log=True),
             keyvault_uri=dict(type='str', required=True),
-            state=dict(type='str', default='present', choices=['present', 'absent'])
+            state=dict(type='str', default='present', choices=['present', 'absent']),
+            content_type=dict(type='str')
         )
 
         required_if = [
@@ -120,6 +125,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         self.data_creds = None
         self.client = None
         self.tags = None
+        self.content_type = None
 
         super(AzureRMKeyVaultSecret, self).__init__(self.module_arg_spec,
                                                     supports_check_mode=True,
@@ -157,7 +163,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         if not self.check_mode:
             # Create secret
             if self.state == 'present' and changed:
-                results['secret_id'] = self.create_update_secret(self.secret_name, self.secret_value, self.tags)
+                results['secret_id'] = self.create_update_secret(self.secret_name, self.secret_value, self.tags, self.content_type)
                 self.results['state'] = results
                 self.results['state']['status'] = 'Created'
             # Delete secret
@@ -212,9 +218,9 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             return dict(secret_id=secret_id.id, secret_value=secret_bundle.value)
         return None
 
-    def create_update_secret(self, name, secret, tags):
+    def create_update_secret(self, name, secret, tags, content_type):
         ''' Creates/Updates a secret '''
-        secret_bundle = self.client.set_secret(self.keyvault_uri, name, secret, tags)
+        secret_bundle = self.client.set_secret(self.keyvault_uri, name, secret, tags=tags, content_type=content_type)
         secret_id = KeyVaultId.parse_secret_id(secret_bundle.id)
         return secret_id.id
 
