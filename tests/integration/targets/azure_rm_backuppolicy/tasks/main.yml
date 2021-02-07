@@ -2,8 +2,8 @@
   set_fact:
     vault_name: "rsv{{ resource_group | hash('md5') | truncate(22, True, '') }}"
     location: "eastus"
-    policy_name_daily: "bp{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-    policy_name_weekly: "bp{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    policy_name_daily: "daily{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    policy_name_weekly: "weekly{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create Azure Recovery Service vault
   azure_rm_recoveryservicesvault:
