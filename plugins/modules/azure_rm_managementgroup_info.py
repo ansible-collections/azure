@@ -121,6 +121,20 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
                                                          mutually_exclusive=mutually_exclusive,
                                                          facts_module=True)
 
+    def flatten_group(self, management_group):
+        management_group_list = []
+        subscription_list = []
+        if management_group.get('children'):
+            for child in management_group.children:
+                if child.type == '/providers/Microsoft.Management/managementGroups':
+                    management_group_list.append(child)
+                    new_groups, new_subscriptions = self.flatten(child)
+                    management_group_list + new_groups
+                    subscription_list + new_subscriptions
+                elif child.type == '/subscriptions':
+                    subscription_list.append(child)
+        return management_group_list, subscription_list
+
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
@@ -132,7 +146,18 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
         else:
             response = self.list_items()
 
-        self.results['management_groups'] = response
+        if self.flatten and self.children:
+            self.results['subscriptions'] = []
+            for group in response:
+                new_groups = []
+                new_subscriptions = []
+                self.results['management_groups'].append(group)
+                new_groups, new_subscriptions = self.flatten_group(group)
+                self.results['management_groups'] + new_groups
+                self.results['subscriptions'] + new_subscriptions
+        else:
+            self.results['management_groups'] = response
+
         return self.results
 
     def get_item(self, mg_name=None):
