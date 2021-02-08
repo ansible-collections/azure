@@ -270,8 +270,8 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
         return self.results
 
     def get_keyvault_client(self):
+        # Don't use MSI credentials if the auth_source isn't set to MSI.  The below will Always result in credentials when running on an Azure VM.
         if self.module.params['auth_source'] == 'msi':
-        #Don't use MSI credentials if the auth_source isn't set to MSI.  The below will Always result in credentials when running on an Azure VM.
             try:
                 self.log("Get KeyVaultClient from MSI")
                 credentials = MSIAuthentication(resource=f"https://{self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()}")
