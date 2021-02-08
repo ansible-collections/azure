@@ -321,7 +321,7 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
             try:
                 self.log("Get KeyVaultClient from MSI")
                 resource = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
-                credentials = MSIAuthentication(resource=f"https://{resource}")
+                credentials = MSIAuthentication(resource="https://{0}".format(resource))
                 return KeyVaultClient(credentials)
             except Exception:
                 self.log("Get KeyVaultClient from service principal")
