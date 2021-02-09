@@ -125,13 +125,13 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
         management_group_list = []
         subscription_list = []
         if management_group.get('children'):
-            for child in management_group.children:
-                if child.type == '/providers/Microsoft.Management/managementGroups':
+            for child in management_group.get('children', []):
+                if child.get('type') == '/providers/Microsoft.Management/managementGroups':
                     management_group_list.append(child)
-                    new_groups, new_subscriptions = self.flatten(child)
-                    management_group_list + new_groups
-                    subscription_list + new_subscriptions
-                elif child.type == '/subscriptions':
+                    new_groups, new_subscriptions = self.flatten_group(child)
+                    management_group_list += new_groups
+                    subscription_list += new_subscriptions
+                elif child.get('type') == '/subscriptions':
                     subscription_list.append(child)
         return management_group_list, subscription_list
 
@@ -153,8 +153,8 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
                 new_subscriptions = []
                 self.results['management_groups'].append(group)
                 new_groups, new_subscriptions = self.flatten_group(group)
-                self.results['management_groups'] + new_groups
-                self.results['subscriptions'] + new_subscriptions
+                self.results['management_groups'] += new_groups
+                self.results['subscriptions'] += new_subscriptions
         else:
             self.results['management_groups'] = response
 
