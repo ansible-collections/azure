@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Cole Neubauer, (@coleneubauer)
+# Copyright (c) 2021 Cole Neubauer, (@coleneubauer)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 

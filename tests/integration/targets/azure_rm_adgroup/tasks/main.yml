@@ -1,12 +1,13 @@
 - set_fact:
-    app_id: "e0a62513-1d81-480e-a6dc-5c99cdd58d9a"
     tenant_id: "72f988bf-86f1-41af-91ab-2d7cd011db47"
-    app_object_id: "b52e8275-a1ee-4c4a-86ff-15992e0920ed"
+    resource_prefix: "{{ 999999999999999999994 | random | to_uuid }}"
+  run_once: yes
 
+# management tests
 - name: Try to return non-existent group using display name
   azure.azcollection.azure_rm_adgroup_info:
     attribute_name: "displayName"
-    attribute_value: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Root"
+    attribute_value: "{{ resource_prefix }}-Group-Root"
     tenant: "{{ tenant_id }}"
   register: get_nonexistent_group_display_name_ShouldFail
   failed_when:
@@ -15,16 +16,16 @@
 - name: Create Group Root
   azure.azcollection.azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
-    display_name: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Root"
-    mail_nickname: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Root"
+    display_name: "{{ resource_prefix }}-Group-Root"
+    mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
   register: group_create_changed_ShouldPass
 
 - name: Create Group Should Return Not Changed
   azure.azcollection.azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
-    display_name: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Root"
-    mail_nickname: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Root"
+    display_name: "{{ resource_prefix }}-Group-Root"
+    mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
   register: group_create_unchanged_ShouldPass
 
@@ -53,30 +54,29 @@
 - name: Create Group Member 1
   azure.azcollection.azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
-    display_name: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Member-1"
-    mail_nickname: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Member-1"
+    display_name: "{{ resource_prefix }}-Group-Member-1"
+    mail_nickname: "{{ resource_prefix }}-Group-Member-1"
     state: 'present'
   register: create_group_member_1_ShouldPass
 
 - name: Create Group Member 2
   azure.azcollection.azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
-    display_name: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Member-2"
-    mail_nickname: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Member-2"
+    display_name: "{{ resource_prefix }}-Group-Member-2"
+    mail_nickname: "{{ resource_prefix }}-Group-Member-2"
     state: 'present'
   register: create_group_member_2_ShouldPass
 
 - name: Ensure member is in group using display_name and mail_nickname
   azure.azcollection.azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
-    display_name: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Root"
-    mail_nickname: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Root"
+    display_name: "{{ resource_prefix }}-Group-Root"
+    mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
     present_members:
       - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ create_group_member_1_ShouldPass.ad_group.object_id }}"
       - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ create_group_member_2_ShouldPass.ad_group.object_id }}"
   register: add_members_to_group_ShouldPass
-
 
 - name: Validate members are in the group
   assert:
@@ -116,8 +116,8 @@
 - name: Ensure member is not in group that is already not in group using display_name and mail_nickname
   azure.azcollection.azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
-    display_name: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Root"
-    mail_nickname: "fcb115c0-8369-4cba-889d-2249f53284a4-Group-Root"
+    display_name: "{{ resource_prefix }}-Group-Root"
+    mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
     absent_members:
       - "{{ create_group_member_2_ShouldPass.ad_group.object_id }}"
@@ -148,8 +148,8 @@
     object_id: "{{ group_create_changed_ShouldPass.ad_group.object_id }}"
     return_owners: True
     return_group_members: True
-    tenant: "{{ tenant_id }}"
-  register: object_id_return_owners_and_group_members_ShouldPass
+      tenant: "{{ tenant_id }}"
+    register: object_id_return_owners_and_group_members_ShouldPass
 
 - name: Return a specific group using object_id and member_groups
   azure.azcollection.azure_rm_adgroup_info:

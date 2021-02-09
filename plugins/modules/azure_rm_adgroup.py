@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Cole Neubauer, (@coleneubauer)
+# Copyright (c) 2021 Cole Neubauer, (@coleneubauer)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -13,7 +13,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'supported_by': 'community'}
 
 DOCUMENTATION = '''
-module: azure_rm_adgroup_info
+module: azure_rm_adgroup
 version_added: "1.4.0"
 short_description: Get Azure Active Directory group info
 description:
@@ -32,7 +32,6 @@ options:
             - absent
             - present
         type: str
-        required: True
     object_id:
         description:
             - The object id for the ad group.
@@ -88,7 +87,99 @@ author:
 '''
 
 EXAMPLES = '''
+    - name: Create Group
+      azure.azcollection.azure_rm_adgroup:
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        display_name: "Group-Name"
+        mail_nickname: "Group-Mail-Nickname"
+        state: 'present'
 
+    - name: Delete Group using display_name and mail_nickname
+      azure.azcollection.azure_rm_adgroup:
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        display_name: "Group-Name"
+        mail_nickname: "Group-Mail-Nickname"
+        state: 'absent'
+
+    - name: Delete Group using object_id
+      azure.azcollection.azure_rm_adgroup:
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        state: 'absent'
+
+    - name: Ensure Users are Members of a Group using display_name and mail_nickname
+      azure.azcollection.azure_rm_adgroup:
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        display_name: "Group-Name"
+        mail_nickname: "Group-Mail-Nickname"
+        state: 'present'
+        present_members:
+          - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
+          - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
+
+    - name: Ensure Users are Members of a Group using object_id
+      azure.azcollection.azure_rm_adgroup:
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        state: 'present'
+        present_members:
+          - "https://graph.windows.net/{{ ad_object_1_tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
+          - "https://graph.windows.net/{{ ad_object_2_tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
+
+    - name: Ensure Users are not Members of a Group using display_name and mail_nickname
+      azure.azcollection.azure_rm_adgroup:
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        display_name: "Group-Name"
+        mail_nickname: "Group-Mail-Nickname"
+        state: 'present'
+        absent_members:
+          - "{{ ad_object_1_object_id }}"
+
+    - name: Ensure Users are Members of a Group using object_id
+      azure.azcollection.azure_rm_adgroup:
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        state: 'present'
+        absent_members:
+          - "{{ ad_object_1_object_id }}"
+
+    - name: Ensure Users are Owners of a Group using display_name and mail_nickname
+      azure.azcollection.azure_rm_adgroup:
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        display_name: "Group-Name"
+        mail_nickname: "Group-Mail-Nickname"
+        state: 'present'
+        present_owners:
+          - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
+          - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
+
+    - name: Ensure Users are Owners of a Group using object_id
+      azure.azcollection.azure_rm_adgroup:
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        state: 'present'
+        present_owners:
+          - "https://graph.windows.net/{{ ad_object_1_tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
+          - "https://graph.windows.net/{{ ad_object_2_tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
+
+    - name: Ensure Users are not Owners of a Group using display_name and mail_nickname
+      azure.azcollection.azure_rm_adgroup:
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        display_name: "Group-Name"
+        mail_nickname: "Group-Mail-Nickname"
+        state: 'present'
+        absent_owners:
+          - "{{ ad_object_1_object_id }}"
+          - "{{ ad_object_2_object_id }}"
+
+    - name: Ensure Users are Owners of a Group using object_id
+      azure.azcollection.azure_rm_adgroup:
+        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        state: 'present'
+        absent_owners:
+          - "{{ ad_object_1_object_id }}"
+          - "{{ ad_object_2_object_id }}"
 
 '''
 
@@ -120,7 +211,6 @@ class AzureRMADGroup(AzureRMModuleBase):
             tenant=dict(type='str', required=True),
             state=dict(
                 type='str',
-                required=True,
                 default='present',
                 choices=['present', 'absent']
             ),
@@ -142,16 +232,16 @@ class AzureRMADGroup(AzureRMModuleBase):
         self.results = dict(changed=False)
 
         super(AzureRMADGroup, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                 supports_check_mode=False,
-                                                 supports_tags=False,
-                                                 is_ad_resource=True)
+                                             supports_check_mode=False,
+                                             supports_tags=False,
+                                             is_ad_resource=True)
 
     def exec_module(self, **kwargs):
 
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        #TODO remove ad_groups return. Returns as one object always
+        # TODO remove ad_groups return. Returns as one object always
         ad_groups = []
 
         try:
@@ -180,16 +270,14 @@ class AzureRMADGroup(AzureRMModuleBase):
                         self.results["changed"] = True
                     else:
                         raise ValueError('The group does not exist. Both display_name : {0} and mail_nickname : {1} must be passed to create a new group'
-                                     .format(self.display_name, self.mail_nickname))
+                                         .format(self.display_name, self.mail_nickname))
                 elif self.state == "absent":
                     self.results["changed"] = False
 
             if ad_groups[0] is not None:
                 self.update_members(ad_groups[0].object_id, client)
                 self.update_owners(ad_groups[0].object_id, client)
-                self.results["ad_group"] = self.set_results(ad_groups[0], client)
-            else:
-                self.results["ad_group"] = None
+                self.results.update(self.set_results(ad_groups[0], client))
 
         except GraphErrorException as e:
             self.fail(e)
@@ -316,7 +404,6 @@ class AzureRMADGroup(AzureRMModuleBase):
             results["group_members"] = [self.result_to_dict(object) for object in list(client.groups.get_group_members(results["object_id"]))]
 
         return results
-
 
 
 def main():
