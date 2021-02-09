@@ -59,7 +59,7 @@ author:
 
 EXAMPLES = '''
   - name: create ad sp
-    azure_ad_serviceprincipal:
+    azure_rm_adserviceprincipal:
       app_id: "{{ app_id }}"
       state: present
       tenant: "{{ tenant_id }}"
