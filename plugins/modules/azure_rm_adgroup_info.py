@@ -14,7 +14,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = '''
 module: azure_rm_adgroup_info
-version_added: "1.3.2"
+version_added: "1.4.0"
 short_description: Get Azure Active Directory group info
 description:
     - Get Azure Active Directory group info.
@@ -261,6 +261,21 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
 
         return self.results
 
+    def application_to_dict(self, object):
+        return dict(
+            app_id=object.app_id,
+            object_id=object.object_id,
+            display_name=object.display_name,
+        )
+
+    def serviceprincipal_to_dict(self, object):
+        return dict(
+            app_id=object.app_id,
+            object_id=object.object_id,
+            app_display_name=object.display_name,
+            app_role_assignment_required=object.app_role_assignment_required
+        )
+
     def group_to_dict(self, object):
         return dict(
             object_id=object.object_id,
@@ -282,17 +297,29 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             user_type=object.user_type
         )
 
+    def result_to_dict(self, object):
+        if object.object_type == "Group":
+            return self.group_to_dict(object)
+        elif object.object_type == "User":
+            return self.user_to_dict(object)
+        elif object.object_type == "Application":
+            return self.application_to_dict(object)
+        elif object.object_type == "ServicePrincipal":
+            return self.serviceprincipal_to_dict(object)
+        else:
+            return object.object_type
+
     def set_results(self, object, client):
         results = self.group_to_dict(object)
 
         if results["object_id"] and self.return_owners:
-            results["group_owners"] = list(client.groups.list_owners(results["object_id"]))
+            results["group_owners"] = [self.result_to_dict(object) for object in list(client.groups.list_owners(results["object_id"]))]
 
         if results["object_id"] and self.return_group_members:
-            results["group_members"] = [self.user_to_dict(user) for user in list(client.groups.get_group_members(results["object_id"]))]
+            results["group_members"] = [self.result_to_dict(object) for object in list(client.groups.get_group_members(results["object_id"]))]
 
         if results["object_id"] and self.return_member_groups:
-            results["member_groups"] = [self.group_to_dict(group) for group in list(client.groups.get_member_groups(results["object_id"], False))]
+            results["member_groups"] = [self.result_to_dict(object) for object in list(client.groups.get_member_groups(results["object_id"], False))]
 
         if results["object_id"] and self.check_membership:
             results["is_member_of"] = client.groups.is_member_of(
