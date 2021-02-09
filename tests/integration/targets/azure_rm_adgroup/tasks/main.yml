@@ -77,7 +77,6 @@
       - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ create_group_member_2_ShouldPass.object_id }}"
   register: add_members_to_group_ShouldPass
 
-
 - name: Validate members are in the group
   assert:
     that:
@@ -123,13 +122,11 @@
       - "{{ create_group_member_2_ShouldPass.object_id }}"
   register: remove_already_absent_member_from_group_ShouldPass
 
-
 - name: Validate nothing changed from already absent member
   assert:
     that:
       - remove_already_absent_member_from_group_ShouldPass.changed == false
 
-# Info tests
 - name: Return a specific group using object_id
   azure.azcollection.azure_rm_adgroup_info:
     object_id: "{{ group_create_changed_ShouldPass.object_id }}"
@@ -196,7 +193,6 @@
     that:
       - object_id_ShouldPass != displayName_attribute_different_ShouldPass
 
-# Cleanup
 - name: Delete group Group Root on object_id
   azure.azcollection.azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
