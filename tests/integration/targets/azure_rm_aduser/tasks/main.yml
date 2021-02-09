@@ -6,7 +6,7 @@
   run_once: yes
 
 - name: Run with bad tenant Should Fail
-  azure.azcollection.azure_rm_aduser_info:
+azure_rm_aduser_info:
     user_principal_name: "{{user_id}}"
     tenant: None
   register: missing_tenant
