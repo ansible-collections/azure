@@ -230,7 +230,7 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
             response = old_response
             self.results['state'] = response
 
-        if self.state is 'present':
+        if self.state == 'present':
             if self.results['state'].get('properties', None) is not None:
                 registration_definition_id = self.results['state']['properties']['registration_definition_id']
                 self.results['state']['properties'].clear()
