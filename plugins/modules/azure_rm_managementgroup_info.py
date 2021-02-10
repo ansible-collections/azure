@@ -121,20 +121,6 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
                                                          mutually_exclusive=mutually_exclusive,
                                                          facts_module=True)
 
-    def flatten_group(self, management_group):
-        management_group_list = []
-        subscription_list = []
-        if management_group.get('children'):
-            for child in management_group.get('children', []):
-                if child.get('type') == '/providers/Microsoft.Management/managementGroups':
-                    management_group_list.append(child)
-                    new_groups, new_subscriptions = self.flatten_group(child)
-                    management_group_list += new_groups
-                    subscription_list += new_subscriptions
-                elif child.get('type') == '/subscriptions':
-                    subscription_list.append(child)
-        return management_group_list, subscription_list
-
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
@@ -162,18 +148,18 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
 
     def get_item(self, mg_name=None):
         if not mg_name:
+            # The parameter to SDK's management_groups.get(group_id) is not correct,
+            # it only works with a bare name value, and not the fqid.
             if self.id and not self.name:
                 mg_name = self.id.split('/')[-1]
             else:
                 mg_name = self.name
 
         expand = 'children' if self.children else None
-
         try:
-            # The parameter to SDK's management_groups.get(group_id) is not correct,
-            # it only works with a bare name value.
             response = self.management_groups_client.management_groups.get(group_id=mg_name, expand=expand, recurse=self.recurse)
         except CloudError:
+            self.log('No Management group {} found.'.format(mg_name))
             response = None
 
         return self.to_dict(response)
@@ -187,7 +173,8 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
         try:
             response = self.management_groups_client.management_groups.list()
         except CloudError:
-            pass  # default to response empty list
+            self.log('No Management groups found.')
+            pass  # default to response of an empty list
 
         if self.children:
             # list method cannot return children, so we must iterate over root management groups to get each one individually.
@@ -205,8 +192,22 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
                 name=azure_object.name,
                 type=azure_object.type
             )
+
+            # If group has no children, then property will be set to None type.
+            # We want an empty list so that it can be used in loops without issue.
             if self.children and azure_object.as_dict().get('children'):
                 return_dict['children'] = [self.to_dict(item) for item in azure_object.children]  # if item.type == '/providers/Microsoft.Management/managementGroups']
+            elif self.children:
+                return_dict['children'] = []
+
+            if azure_object.as_dict().get('details', {}).get('parent'):
+                parent_dict = azure_object.as_dict().get('details', {}).get('parent')
+                return_dict['parent'] = dict(
+                    display_name=parent.get('display_name'),
+                    id=parent.get('id'),
+                    name=parent.get('name')
+                )
+
         elif azure_object.type == '/subscriptions':
             return_dict = dict(
                 display_name=azure_object.display_name,
@@ -215,10 +216,11 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
                 type=azure_object.type
             )
         else:
-            # This should never happen. The code here will prevent a problem,
-            # but there should be logic to take care of a new child type of management groups.
+            # In theory if the Azure API is updated to include another child type of management groups,
+            # the code here will prevent a problem. But there should be logic added in an update to take
+            # care of a new child type of management groups.
             return_dict = dict(
-                state='You should report this as a bug.'
+                state='You should report this as a bug to the ansible-collection/azcollection project on github.'
             )
 
         if azure_object.as_dict().get('tenant_id'):
@@ -226,8 +228,19 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
 
         return return_dict
 
-    def flatten(self, azure_object):
-        return [azure_object]
+    def flatten_group(self, management_group):
+        management_group_list = []
+        subscription_list = []
+        if management_group.get('children'):
+            for child in management_group.get('children', []):
+                if child.get('type') == '/providers/Microsoft.Management/managementGroups':
+                    management_group_list.append(child)
+                    new_groups, new_subscriptions = self.flatten_group(child)
+                    management_group_list += new_groups
+                    subscription_list += new_subscriptions
+                elif child.get('type') == '/subscriptions':
+                    subscription_list.append(child)
+        return management_group_list, subscription_list
 
 
 def main():
