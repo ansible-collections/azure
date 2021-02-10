@@ -26,11 +26,6 @@ description:
     - Get facts for a specific Management Group or all Management Groups.
 
 options:
-    id:
-        description:
-            - Limit results to a specific management group by id.
-            - Mutually exclusive with I(name).
-        type: str
     name:
         description:
             - Limit results to a specific management group by name.
@@ -38,6 +33,44 @@ options:
         aliases:
             - management_group_name
         type: str
+    id:
+        description:
+            - Limit results to a specific management group by id.
+            - Mutually exclusive with I(name).
+        type: str
+    flatten:
+        description:
+            - If c(True) then child management_groups and subscriptions will be copied to the root
+              of the management_groups return list.
+            - By default c(False), child elements will only apear in the nested complex.
+            - Option only matters when I(children) is c(True), and will otherwise be silently ignored.
+        type: bool
+        default: False
+    children:
+        description:
+            - If c(False), then only I(name) or I(id) group will be fetched, or only the list of root groups.
+            - If c(True), then the children groups will also be returned.
+        type: bool
+        default: False
+    recurse:
+        description:
+            - By default, c(False), only the direct children are returned if I(children) is c(True).
+            - If c(True), then all descendants of the heirarchy are returned.
+            - Option only matters when I(children) is c(True), and will otherwise be silently ignored.
+        type: bool
+        default: False
+
+notes:
+    - azure_rm_managementgroup_info - The roles assigned to the principal executing the playbook will determine what is a root management_group.
+      You may also be able to request the details of a parent management group, but unable to fetch that group.
+      It is highly recommended that if I(children) is set c(True) that specific management groups are requested
+      since a list of all groups will require an additional Azure API call for each returned group.
+
+seealso:
+    - module: azure_rm_subscription_info
+      description: module to look up more in depth information on subscriptions; for example tags.
+    - module: azure_rm_roleassignment_info
+      description: module to look up RBAC role assignments, which can use management group id as scope.
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -47,6 +80,20 @@ author:
 '''
 
 EXAMPLES = '''
+- name: Get facts for all root management groups for authenticated principal
+  azure_rm_managementgroup_info:
+
+- name: Get facts for one management group by id with direct children
+  azure_rm_managementgroup_info:
+    id: /providers/Microsoft.Management/managementGroups/contoso-group
+    children: True
+
+- name: Get facts for one management group by name with all children, flattened into top list
+  azure_rm_managementgroup_info:
+    name: "contoso-group"
+    children: True
+    recurse: True
+    flatten: True
 '''
 
 RETURN = '''
@@ -61,7 +108,7 @@ management_groups:
             returned: always
             type: str
             sample: "My Management Group"
-        fqid:
+        id:
             description: Management Group fully qualified id.
             returned: always
             type: str
@@ -81,6 +128,37 @@ management_groups:
             returned: always
             type: str
             sample: "/providers/Microsoft.Management/managementGroups"
+        children:
+            description: Child management groups or subscriptions.
+            returned: if I(children) is c(True)
+            type: list
+            sample: Nested list of children. Same as top groups, but without tenant_id.
+subscriptions:
+    description:
+        - List of subscription objects.
+    returned: if I(children) and I(flatten) are both c(True)
+    type: list
+    contains:
+        display_name:
+            description: subscription display name.
+            returned: always
+            type: str
+            sample: "some-subscription-name"
+        id:
+            description: subscription fully qualified id.
+            returned: always
+            type: str
+            sample: "/subscriptions/00000000-0000-0000-0000-feedc0ffee000000"
+        subscription_id:
+            description: subscription guid.
+            returned: always
+            type: str
+            sample: "00000000-0000-0000-0000-feedc0ffee000000"
+        type:
+            description: Management Group type
+            returned: always
+            type: str
+            sample: "/subscriptions"
 '''
 
 try:
@@ -95,11 +173,10 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 class AzureRMManagementGroupInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
-            # display_name_filter=dict(type='str')
-            name=dict(type='str'),
-            id=dict(type='str'),
-            flatten=dict(type='bool', default=False),
             children=dict(type='bool', default=False),
+            flatten=dict(type='bool', default=False),
+            id=dict(type='str'),
+            name=dict(type='str'),
             recurse=dict(type='bool', default=False)
         )
 
@@ -108,10 +185,10 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
             management_groups=[]
         )
 
-        self.name = None
-        self.id = None
-        self.flatten = None
         self.children = None
+        self.flatten = None
+        self.id = None
+        self.name = None
         self.recurse = None
 
         mutually_exclusive = [['name', 'id']]
@@ -203,9 +280,9 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
             if azure_object.as_dict().get('details', {}).get('parent'):
                 parent_dict = azure_object.as_dict().get('details', {}).get('parent')
                 return_dict['parent'] = dict(
-                    display_name=parent.get('display_name'),
-                    id=parent.get('id'),
-                    name=parent.get('name')
+                    display_name=parent_dict.get('display_name'),
+                    id=parent_dict.get('id'),
+                    name=parent_dict.get('name')
                 )
 
         elif azure_object.type == '/subscriptions':
