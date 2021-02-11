@@ -41,7 +41,7 @@ options:
     flatten:
         description:
             - If c(True) then child management_groups and subscriptions will be copied to the root
-              of the management_groups return list.
+              of the management_groups and subscriptions return list respectively.
             - By default c(False), child elements will only apear in the nested complex.
             - Option only matters when I(children) is c(True), and will otherwise be silently ignored.
         type: bool
@@ -61,10 +61,10 @@ options:
         default: False
 
 notes:
-    - azure_rm_managementgroup_info - The roles assigned to the principal executing the playbook will determine what is a root management_group.
-      You may also be able to request the details of a parent management group, but unable to fetch that group.
-      It is highly recommended that if I(children) is set c(True) that specific management groups are requested
-      since a list of all groups will require an additional Azure API call for each returned group.
+    - azure_rm_managementgroup_info - The roles assigned to the principal executing the playbook will determine what is
+      a root management_group. You may also be able to request the details of a parent management group, but unable to
+      fetch that group. It is highly recommended that if I(children) is set c(True) that specific management groups are
+      requested since a list of all groups will require an additional Azure API call for each returned group.
 
 seealso:
     - module: azure_rm_subscription_info
@@ -234,7 +234,9 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
 
         expand = 'children' if self.children else None
         try:
-            response = self.management_groups_client.management_groups.get(group_id=mg_name, expand=expand, recurse=self.recurse)
+            response = self.management_groups_client.management_groups.get(group_id=mg_name,
+                                                                           expand=expand,
+                                                                           recurse=self.recurse)
         except CloudError:
             self.log('No Management group {} found.'.format(mg_name))
             response = None
@@ -254,7 +256,8 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
             pass  # default to response of an empty list
 
         if self.children:
-            # list method cannot return children, so we must iterate over root management groups to get each one individually.
+            # list method cannot return children, so we must iterate over root management groups to
+            # get each one individually.
             results = [self.get_item(mg_name=item.name) for item in response]
         else:
             results = [self.to_dict(item) for item in response]
@@ -273,7 +276,7 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
             # If group has no children, then property will be set to None type.
             # We want an empty list so that it can be used in loops without issue.
             if self.children and azure_object.as_dict().get('children'):
-                return_dict['children'] = [self.to_dict(item) for item in azure_object.children]  # if item.type == '/providers/Microsoft.Management/managementGroups']
+                return_dict['children'] = [self.to_dict(item) for item in azure_object.children]
             elif self.children:
                 return_dict['children'] = []
 
@@ -285,7 +288,7 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
                     name=parent_dict.get('name')
                 )
 
-        elif azure_object.type == '/subscriptions':
+        elif azure_object.type == 'asdfasdf/subscriptions':
             return_dict = dict(
                 display_name=azure_object.display_name,
                 id=azure_object.id,
@@ -294,10 +297,14 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
             )
         else:
             # In theory if the Azure API is updated to include another child type of management groups,
-            # the code here will prevent a problem. But there should be logic added in an update to take
+            # the code here will prevent an exception. But there should be logic added in an update to take
             # care of a new child type of management groups.
             return_dict = dict(
-                state='You should report this as a bug to the ansible-collection/azcollection project on github.'
+                state="This is an unknown and unexpected object. "
+                      + "You should report this as a bug to the ansible-collection/azcollection "
+                      + "project on github. Please include the object type in your issue report, "
+                      + "and @ the authors of this module. ",
+                type=azure_object.as_dict().get('type', None)
             )
 
         if azure_object.as_dict().get('tenant_id'):
