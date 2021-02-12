@@ -18,7 +18,7 @@ azure_rm_aduser_info:
       - "missing_tenant['failed'] == True"
 
 - name: Missing any identifiers Should Fail
-  azure.azcollection.azure_rm_aduser_info:
+  azure_rm_aduser_info:
     tenant: "{{ tenant_id }}"
     register: missing_any_identifiers
   ignore_errors: yes
@@ -29,7 +29,7 @@ azure_rm_aduser_info:
       - "missing_any_identifiers is undefined"
 
 - name: Too many identifiers Should Fail
-  azure.azcollection.azure_rm_aduser_info:
+  azure_rm_aduser_info:
     user_principal_name: "{{ user_id }}"
     object_id: "{{ object_id }}"
     tenant: "{{ tenant_id }}"
@@ -42,7 +42,7 @@ azure_rm_aduser_info:
       - "too_many_identifiers is undefined"
 
 - name: Missing attribute_value Should Fail
-  azure.azcollection.azure_rm_aduser_info:
+  azure_rm_aduser_info:
     attribute_name: proxyAddresses
     tenant: "{{ tenant_id }}"
     register: missing attribute_value
@@ -54,7 +54,7 @@ azure_rm_aduser_info:
       - "attribute_value is undefined"
 
 - name: Missing attribute_name Should Fail
-  azure.azcollection.azure_rm_aduser_info:
+  azure_rm_aduser_info:
     attribute_value: SMTP:user@contoso.com
     tenant: "{{ tenant_id }}"
     register: missing attribute_name
@@ -66,7 +66,7 @@ azure_rm_aduser_info:
       - "attribute_name is undefined"
 
 - name: Using all with principal name should fail
-  azure.azcollection.azure_rm_aduser_info:
+  azure_rm_aduser_info:
     all: True
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
