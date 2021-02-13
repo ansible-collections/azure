@@ -29,14 +29,17 @@ options:
             - Must be between 2 and 60 characters in length.
             - Search service names must be globally unique.
             - You cannot change the service name after the service is created.
+        type: str
         required: true
     resource_group:
         description:
             - The name of the resource group within the current subscription.
+        type: str
         required: true
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.
+        type: str
     hosting_mode:
         description:
             - Applicable only for the standard3 SKU.
@@ -46,6 +49,7 @@ options:
         choices:
             - default
             - highDensity
+        type: str
         default: 'default'
     identity:
         description:
@@ -53,6 +57,7 @@ options:
         choices:
             - None
             - SystemAssigned
+        type: str
         default: 'None'
     network_rule_set:
         description:
@@ -64,6 +69,7 @@ options:
             - It can be C(1), C(2), C(3), C(4), C(6), or C(12).
             - Values greater than 1 are only valid for standard SKUs.
             - For 'standard3' services with hostingMode set to 'highDensity', the allowed values are between 1 and 3.
+        type: int
         default: 1
     public_network_access:
         description:
@@ -72,12 +78,14 @@ options:
         choices:
             - enabled
             - disabled
+        type: str
         default: 'enabled'
     replica_count:
         description:
             - The number of replicas in the search service.
             - It must be a value between 1 and 12 inclusive for I(sku=standard).
             - It must be a value between 1 and 3 inclusive for I(sku=basic).
+        type: int
         default: 1
     sku:
         description:
@@ -91,10 +99,12 @@ options:
             - standard3
             - storage_optimized_l1
             - storage_optimized_l2
+        type: str
         default: 'basic'
     state:
         description:
             - Assert the state of the search instance. Set to C(present) to create or update a search instance. Set to C(absent) to remove a search instance.
+        type: str
         default: present
         choices:
             - absent
