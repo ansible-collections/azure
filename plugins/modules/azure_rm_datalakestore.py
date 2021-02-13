@@ -167,7 +167,7 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get Azure Data Lake Store info
+  - name: Create Azure Data Lake Store
     azure_rm_datalakestore:
       resource_group: myResourceGroup
       name: myDataLakeStore
@@ -311,12 +311,12 @@ state:
                         - The type of encryption being used.
                     type: str
                     sample: SystemAssigned
-                name:
+                principal_id:
                     description:
                         - The principal identifier associated with the encryption.
                     type: str
                     sample: 00000000-0000-0000-0000-000000000000
-                name:
+                tenant_id:
                     description:
                         - The tenant identifier associated with the encryption.
                     type: str

@@ -185,12 +185,12 @@ datalake:
                         - The type of encryption being used.
                     type: str
                     sample: SystemAssigned
-                name:
+                principal_id:
                     description:
                         - The principal identifier associated with the encryption.
                     type: str
                     sample: 00000000-0000-0000-0000-000000000000
-                name:
+                tenant_id:
                     description:
                         - The tenant identifier associated with the encryption.
                     type: str
