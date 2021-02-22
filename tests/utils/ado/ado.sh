@@ -129,7 +129,6 @@ AZURE_PRINCIPAL_ID:${AZURE_PRINCIPAL_ID}
 AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
 AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
 EOF
-cat /home/vsts/ansible-venv/lib/python3.6/site-packages/azure/mgmt/compute/_compute_management_client.py
 
 if [ "sanity" = "${group}" ]
 then
