@@ -1025,8 +1025,8 @@ class AzureRMModuleBase(object):
         self.log('Getting compute image client')
         if not self._image_client:
             self._image_client = self.get_mgmt_svc_client(ComputeManagementClient,
-                                                            base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2018-10-01')
+                                                          base_url=self._cloud_environment.endpoints.resource_manager,
+                                                          api_version='2018-10-01')
         return self._image_client
 
     @property

@@ -199,8 +199,8 @@ class AzureRMImage(AzureRMModuleBase):
                     if self.data_disk_sources:
                         self.fail('data_disk_sources is not allowed when capturing image from vm')
                     image_instance = self.image_models.Image(location=self.location,
-                                                               source_virtual_machine=self.image_models.SubResource(id=vm.id),
-                                                               tags=self.tags)
+                                                             source_virtual_machine=self.image_models.SubResource(id=vm.id),
+                                                             tags=self.tags)
                 else:
                     if not self.os_type:
                         self.fail('os_type is required to create the image')
@@ -277,10 +277,10 @@ class AzureRMImage(AzureRMModuleBase):
         snapshot_resource = self.image_models.SubResource(id=snapshot) if snapshot else None
         managed_disk = self.image_models.SubResource(id=disk) if disk else None
         return self.image_models.ImageOSDisk(os_type=self.os_type,
-                                               os_state=self.image_models.OperatingSystemStateTypes.generalized,
-                                               snapshot=snapshot_resource,
-                                               managed_disk=managed_disk,
-                                               blob_uri=blob_uri)
+                                             os_state=self.image_models.OperatingSystemStateTypes.generalized,
+                                             snapshot=snapshot_resource,
+                                             managed_disk=managed_disk,
+                                             blob_uri=blob_uri)
 
     def create_data_disk(self, lun, source):
         blob_uri, disk, snapshot = self.resolve_storage_source(source)
@@ -288,9 +288,9 @@ class AzureRMImage(AzureRMModuleBase):
             snapshot_resource = self.image_models.SubResource(id=snapshot) if snapshot else None
             managed_disk = self.image_models.SubResource(id=disk) if disk else None
             return self.image_models.ImageDataDisk(lun=lun,
-                                                     blob_uri=blob_uri,
-                                                     snapshot=snapshot_resource,
-                                                     managed_disk=managed_disk)
+                                                   blob_uri=blob_uri,
+                                                   snapshot=snapshot_resource,
+                                                   managed_disk=managed_disk)
 
     def create_data_disks(self):
         return list(filter(None, [self.create_data_disk(lun, source) for lun, source in enumerate(self.data_disk_sources)]))
