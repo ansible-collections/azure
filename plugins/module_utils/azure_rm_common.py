@@ -404,6 +404,7 @@ class AzureRMModuleBase(object):
         self._subscription_client = None
         self._resource_client = None
         self._compute_client = None
+        self._image_client = None
         self._dns_client = None
         self._private_dns_client = None
         self._web_client = None
@@ -1018,6 +1019,20 @@ class AzureRMModuleBase(object):
     def rm_models(self):
         self.log("Getting resource manager models")
         return ResourceManagementClient.models("2017-05-10")
+
+    @property
+    def image_client(self):
+        self.log('Getting compute image client')
+        if not self._image_client:
+            self._image_client = self.get_mgmt_svc_client(ComputeManagementClient,
+                                                            base_url=self._cloud_environment.endpoints.resource_manager,
+                                                            api_version='2018-10-01')
+        return self._image_client
+
+    @property
+    def image_models(self):
+        self.log("Getting compute image models")
+        return ComputeManagementClient.models("2018-10-01")
 
     @property
     def compute_client(self):
