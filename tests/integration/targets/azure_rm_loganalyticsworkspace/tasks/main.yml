@@ -40,6 +40,8 @@
       Containers: true
     retention_in_days: "{{ retention_days }}"
     resource_group: "{{ resource_group }}"
+    tags:
+      key1: value1
   register: output
 
 - assert:
@@ -49,6 +51,7 @@
       # - output.intelligence_packs | json_query('[?name == `Backup`].enabled') | first == true
       # - output.intelligence_packs | json_query('[?name == `Containers`].enabled') | first == true
       - output.sku == 'pergb2018'
+      - output.tags.key1 == 'value1'
 
 - name: Get Log Analytics workspace information (Show full information)
   azure_rm_loganalyticsworkspace_info:

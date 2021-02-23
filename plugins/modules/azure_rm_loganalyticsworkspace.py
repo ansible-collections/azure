@@ -219,7 +219,8 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
             changed = True
             workspace = self.log_analytics_models.Workspace(sku=self.log_analytics_models.WorkspaceSku(name=self.sku),
                                                             retention_in_days=self.retention_in_days,
-                                                            location=self.location)
+                                                            location=self.location,
+                                                            tags=self.tags)
             if not self.check_mode:
                 workspace = self.create_workspace(workspace)
         elif workspace and self.state == 'absent':
