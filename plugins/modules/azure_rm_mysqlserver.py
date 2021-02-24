@@ -62,6 +62,7 @@ options:
         choices:
             - 5.6
             - 5.7
+            - 8.0
     enforce_ssl:
         description:
             - Enable SSL enforcement.
@@ -119,7 +120,7 @@ id:
     sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.DBforMySQL/servers/mysqlsrv1b6dd89593
 version:
     description:
-        - Server version. Possible values include C(5.6), C(5.7).
+        - Server version. Possible values include C(5.6), C(5.7), C(8.0).
     returned: always
     type: str
     sample: 5.6
@@ -178,7 +179,7 @@ class AzureRMMySqlServers(AzureRMModuleBase):
             ),
             version=dict(
                 type='str',
-                choices=['5.6', '5.7']
+                choices=['5.6', '5.7', '8.0']
             ),
             enforce_ssl=dict(
                 type='bool',

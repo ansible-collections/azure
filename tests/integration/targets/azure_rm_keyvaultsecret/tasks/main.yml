@@ -50,6 +50,7 @@
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         secret_name: testsecret
         secret_value: 'mysecret'
+        content_type: 'Content Type Secret'
         tags:
           testing: test
           delete: on-exit
@@ -76,6 +77,7 @@
       - facts['secrets'][0]['secret']
       - facts['secrets'][0]['tags']
       - facts['secrets'][0]['version']
+      - facts['secrets'][0]['content_type'] == 'Content Type Secret'
 
 - name: delete a kevyault secret
   azure_rm_keyvaultsecret:
