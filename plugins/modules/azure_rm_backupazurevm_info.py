@@ -123,10 +123,10 @@ class BackupAzureVMInfo(AzureRMModuleBaseExt):
                + '/Microsoft.RecoveryServices' + '/vaults' + '/' \
                + self.recovery_vault_name \
                + '/backupFabrics/Azure/protectionContainers/' \
-               + 'iaasvmcontainer;iaasvmcontainerv2;' + self.resource_group \
-               + ';' + self.resource_id.split('/')[-1] + '/protectedItems/' \
-               + 'vm;iaasvmcontainerv2;' + self.resource_group + ';' \
-               + self.resource_id.split('/')[-1]
+               + 'iaasvmcontainer;iaasvmcontainerv2;' + self.parse_resource_to_dict(self.resource_id)['resource_group'] \
+               + ';' + self.parse_resource_to_dict(self.resource_id)['name'] + '/protectedItems/' \
+               + 'vm;iaasvmcontainerv2;' + self.parse_resource_to_dict(self.resource_id)['resource_group'] + ';' \
+               + self.parse_resource_to_dict(self.resource_id)['name']
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):

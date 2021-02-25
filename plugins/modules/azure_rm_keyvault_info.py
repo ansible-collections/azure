@@ -129,7 +129,7 @@ keyvaults:
                     sample: standard
         access_policies:
             description:
-                - Location of the vault.
+                - List of policies.
             returned: always
             type: list
             contains:
