@@ -157,13 +157,13 @@
         image: httpd
         memory: 1.5
         volume_mounts:
-          - name: filesharevolume
+          - name: "aci_fileshare_volume{{ resource_group | hash('md5') | truncate(7, True, '') }}"
             mount_path: "/data/files"
         ports:
           - 80
           - 81
     volumes:
-      - name: filesharevolume
+      - name: "aci_fileshare_volume{{ resource_group | hash('md5') | truncate(7, True, '') }}"
         azure_file:
           storage_account_name: mystorageaccount
           share_name: acishare
@@ -218,13 +218,13 @@
         image: httpd
         memory: 1.5
         volume_mounts:
-          - name: filesharevolume
+          - name: "aci_fileshare_volume{{ resource_group | hash('md5') | truncate(7, True, '') }}"
             mount_path: "/data/files"
         ports:
           - 80
           - 81
     volumes:
-      - name: filesharevolume
+      - name: "aci_fileshare_volume{{ resource_group | hash('md5') | truncate(7, True, '') }}"
         azure_file:
           storage_account_name: mystorageaccount
           share_name: acishare
