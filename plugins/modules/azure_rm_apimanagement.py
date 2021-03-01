@@ -5,13 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
+__metaclass__ = type
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
-
 
 DOCUMENTATION = '''
 ---
@@ -19,225 +18,226 @@ module: azure_rm_apimanagement
 version_added: '1.1.0'
 short_description: Manage Azure api instances.
 description:
-  - Create azure api instance.
-  - Update the existing azure api instance.
-  - Delete azure api instance.
+    - Create azure api instance.
+    - Update the existing azure api instance.
+    - Delete azure api instance.
+
 options:
-  resource_group:
-    description:
-      - The name of the resource group.
-    required: true
-    type: str
-  service_name:
-    description:
-      - The name of the API Management service.
-    required: true
-    type: str
-  api_id:
-    description:
-      - API revision identifier. It must be unique in the current API Management
-        service instance.
-    required: true
-    type: str
-  description:
-    description:
-      - Description of the API.
-    type: str
-  authentication_settings:
-    description:
-      - Collection of authentication settings included into this API.
-    type: dict
-    suboptions:
-      o_auth2:
+    resource_group:
         description:
-          - OAuth2 Authentication settings
+          - The name of the resource group.
+        required: true
+        type: str
+    service_name:
+        description:
+            - The name of the API Management service.
+        required: true
+        type: str
+    api_id:
+        description:
+            - API revision identifier. It must be unique in the current API Management service instance.
+        required: true
+        type: str
+    description:
+        description:
+        - Description of the API.
+      type: str
+    authentication_settings:
+        description:
+            - Collection of authentication settings included into this API.
         type: dict
         suboptions:
-          authorization_server_id:
-            description:
-              - OAuth authorization server identifier.
-            type: str
-          scope:
-            description:
-              - operations scope.
-            type: str
-      openid:
+            o_auth2:
+                description:
+                    - OAuth2 Authentication settings
+                type: dict
+                suboptions:
+                    authorization_server_id:
+                        description:
+                            - OAuth authorization server identifier.
+                        type: str
+                    scope:
+                        description:
+                            - operations scope.
+                        type: str
+            openid:
+                description:
+                    - OpenID Connect Authentication Settings
+                type: dict
+                suboptions:
+                    openid_provider_id:
+                        description:
+                            - OAuth authorization server identifier.
+                        type: str
+                    bearer_token_sending_methods:
+                        description:
+                            - How to send token to the server.
+                        type: list
+                        choices:
+                            - authorizationHeader
+                            - query
+    subscription_key_parameter_names:
         description:
-          - OpenID Connect Authentication Settings
+            - Protocols over which API is made available.
         type: dict
         suboptions:
-          openid_provider_id:
-            description:
-              - OAuth authorization server identifier.
-            type: str
-          bearer_token_sending_methods:
-            description:
-              - How to send token to the server.
-            type: list
-            choices:
-                - authorizationHeader
-                - query
-  subscription_key_parameter_names:
-    description:
-      - Protocols over which API is made available.
-    type: dict
-    suboptions:
-      header:
+            header:
+                description:
+                    - Subscription key header name.
+                type: str
+            query:
+                description:
+                    - Subscription key query string parameter name.
+                type: str
+    type:
         description:
-          - Subscription key header name.
-        type: str
-      query:
-        description:
-          - Subscription key query string parameter name.
-        type: str
-  type:
-    description:
-      - Type of API
-    type: str
-    choices:
-      - http
-      - soap
-  api_revision:
-    description:
-      - Describes the Revision of the Api.
-      - If no value is provided, default
-        revision 1 is created
-    type: str
-  api_version:
-    description:
-      - Indicates the Version identifier of the API if the API is versioned
-    type: str
-  is_current:
-    description:
-      - Indicates if API revision is current api revision.
-    type: boolean
-  api_revision_description:
-    description:
-      - Description of the Api Revision.
-    type: str
-  api_version_description:
-    description:
-      - Description of the Api Version.
-    type: str
-  api_version_set_id:
-    description:
-      - A resource identifier for the related ApiVersionSet.
-    type: str
-  subscription_required:
-    description:
-      - Specifies whether an API or Product subscription is required for accessing the API.
-    type: boolean
-  source_api_id:
-    description:
-      - API identifier of the source API.
-    type: str
-  display_name:
-    description:
-      - API Name to be displayed. It must be 1 to 300 characters long.
-    type: str
-  service_url:
-    description:
-      - Absolute URL of the backend service implementing this API
-      - Cannot be more than 2000 characters long.
-      type: str
-  path:
-    description:
-      - Relative URL uniquely identifying this API.
-      type: str
-    required: true
-  protocols:
-    description:
-      - Describes on which protocols the operations in this API can be invoked.
-    type: list
-    choices:
-      - http
-      - https
-  api_version_set:
-    description:
-      - Version set details
-    type: dict
-    suboptions:
-      id:
-        description:
-          - Identifier for existing API Version Set
-          - Omit this value to create a new Version Set.
-        type: str
-      name:
-        description:
-          - The display Name of the API Version Set.
-        type: str
-      description:
-        description:
-          - Description of API Version Set.
-        type: str
-      versioning_scheme:
-        description:
-          - An value that determines where the API Version identifer will be located in a HTTP request.
+            - Type of API
         type: str
         choices:
-          - Segment
-          - Query
-          - Header
-      version_query_name:
+            - http
+            - soap
+    api_revision:
         description:
-          - Name of query parameter that indicates the API Version if versioningScheme is set to `query`.
+            - Describes the Revision of the Api.
+            - If no value is provided, default revision 1 is created
         type: str
-      version_header_name:
+    api_version:
         description:
-          - Name of HTTP header parameter that indicates the API Version if versioningScheme is set to `header`.
-         type: str
-  value:
-    description:
-      - Content value when Importing an API.
-    type: str
-  format:
-    description:
-      - Format of the Content in which the API is getting imported.
-    type: str
-    choices:
-      - wadl-xml
-      - wadl-link-json
-      - swagger-json
-      - swagger-link-json
-      - wsdl
-      - wsdl-link
-      - openapi
-      - openapi+json
-      - openapi-link
-  wsdl_selector:
-    description:
-      - Criteria to limit import of WSDL to a subset of the document.
-    type: dict
-    suboptions:
-      wsdl_service_name:
-        description:
-          - Name of service to import from WSDL
+            - Indicates the Version identifier of the API if the API is versioned
         type: str
-      wsdl_endpoint_name:
+    is_current:
         description:
-          - Name of endpoint(port) to import from WSDL
+            - Indicates if API revision is current api revision.
+        type: boolean
+    api_revision_description:
+        description:
+            - Description of the Api Revision.
         type: str
-  api_type:
-    description:
-      - Type of Api to create.
-      - `http` creates a SOAP to REST API.
-      - `soap` creates a SOAP pass-through API.
-    type: str
-  state:
-    description:
-      - State of the Api.
-      - Use C(present) to create or update an Api and C(absent) to delete it.
-    type: str
-    default: present
-    choices:
-      - absent
-      - present
+    api_version_description:
+        description:
+            - Description of the Api Version.
+        type: str
+    api_version_set_id:
+        description:
+            - A resource identifier for the related ApiVersionSet.
+        type: str
+    subscription_required:
+        description:
+            - Specifies whether an API or Product subscription is required for accessing the API.
+        type: boolean
+    source_api_id:
+        description:
+            - API identifier of the source API.
+        type: str
+    display_name:
+        description:
+            - API Name to be displayed. It must be 1 to 300 characters long.
+        type: str
+    service_url:
+        description:
+            - Absolute URL of the backend service implementing this API
+            - Cannot be more than 2000 characters long.
+        type: str
+    path:
+        description:
+            - Relative URL uniquely identifying this API.
+        type: str
+        required: true
+    protocols:
+        description:
+            - Describes on which protocols the operations in this API can be invoked.
+        type: list
+        choices:
+            - http
+            - https
+    api_version_set:
+        description:
+            - Version set details
+        type: dict
+        suboptions:
+            id:
+                description:
+                    - Identifier for existing API Version Set
+                    - Omit this value to create a new Version Set.
+                type: str
+            name:
+                description:
+                    - The display Name of the API Version Set.
+                type: str
+            description:
+                description:
+                    - Description of API Version Set.
+                type: str
+            versioning_scheme:
+                description:
+                    - An value that determines where the API Version identifer will be located in a HTTP request.
+                type: str
+                choices:
+                    - Segment
+                    - Query
+                    - Header
+            version_query_name:
+                description:
+                    - Name of query parameter that indicates the API Version if versioningScheme is set to `query`.
+                type: str
+            version_header_name:
+                description:
+                    - Name of HTTP header parameter that indicates the API Version if versioningScheme is set to `header`.
+                type: str
+    value:
+        description:
+            - Content value when Importing an API.
+        type: str
+    format:
+        description:
+            - Format of the Content in which the API is getting imported.
+        type: str
+        choices:
+            - wadl-xml
+            - wadl-link-json
+            - swagger-json
+            - swagger-link-json
+            - wsdl
+            - wsdl-link
+            - openapi
+            - openapi+json
+            - openapi-link
+    wsdl_selector:
+        description:
+            - Criteria to limit import of WSDL to a subset of the document.
+        type: dict
+        suboptions:
+            wsdl_service_name:
+                description:
+                    - Name of service to import from WSDL
+                type: str
+            wsdl_endpoint_name:
+              description:
+                  - Name of endpoint(port) to import from WSDL
+              type: str
+    api_type:
+        description:
+            - Type of Api to create.
+            - `http` creates a SOAP to REST API.
+            - `soap` creates a SOAP pass-through API.
+        type: str
+    state:
+        description:
+            - State of the Api.
+            - Use C(present) to create or update an Api and C(absent) to delete it.
+        type: str
+        default: present
+        choices:
+            - absent
+            - present
+
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
+
 author:
-  - Sakar Mehra (sakar97)
-  - Nikhil Patne (nikhilpatne)
+    - Sakar Mehra (sakar97)
+    - Nikhil Patne (nikhilpatne)
 
 '''
 
@@ -269,7 +269,7 @@ EXAMPLES = '''
         service_name: myService
         api_id: testApi
         state: absent
-    '''
+'''
 
 RETURN = \
     '''

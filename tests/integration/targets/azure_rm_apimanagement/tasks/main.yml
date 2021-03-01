@@ -2,6 +2,7 @@
   set_fact:
     name: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
     service_name: "myService"
+    api_id: "api_id"
 
 - name: Create a new API instance
   azure_rm_apimanagement:
@@ -112,4 +113,3 @@
   assert:
     that:
       - output.api.id != None
-
