@@ -93,6 +93,20 @@
         - fact.aks[0].id == output.id
         - fact.aks[0].properties.agentPoolProfiles[0].availabilityZones == ["1", "2"]
 
+ - name: Get AKS upgrade versions
+   azure_rm_aksupgrade_info:
+      name: "aks{{ rpfx }}"
+      resource_group: "{{ resource_group }}"
+   register: upgrades
+
+ - name: Assert available versions for upgrade
+   assert:
+      that:
+        - "upgrades.azure_aks_upgrades.agent_pool_profiles[0].kubernetes_version == versions.azure_aks_versions[0]"
+        - "upgrades.azure_aks_upgrades.agent_pool_profiles[0].upgrades | length > 0"
+        - "upgrades.azure_aks_upgrades.control_plane_profile.kubernetes_version == versions.azure_aks_versions[0]"
+        - "upgrades.azure_aks_upgrades.control_plane_profile.upgrades | length > 0"
+
  - name: Create an AKS instance (idempotent)
    azure_rm_aks:
      name: "aks{{ rpfx }}"
