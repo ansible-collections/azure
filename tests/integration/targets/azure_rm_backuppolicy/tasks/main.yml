@@ -1,0 +1,168 @@
+- name: Set Facts for Tests
+  set_fact:
+    vault_name: "rsv{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    location: "eastus"
+    policy_name_daily: "bp-daily-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    policy_name_weekly: "bp-weekly-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+
+- name: Create Azure Recovery Service vault
+  azure_rm_recoveryservicesvault:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vault_name }}"
+    location: "{{ location }}"
+    state: "present"
+
+- name: Create a daily VM backup policy
+  azure_rm_backuppolicy:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_daily }}"
+    resource_group: "{{ resource_group }}"
+    state: present
+    backup_management_type: "AzureIaasVM"
+    schedule_run_frequency: "Daily"
+    instant_recovery_snapshot_retention: 2
+    daily_retention_count: 12
+    time_zone: "Pacific Standard Time"
+    schedule_run_time: 14
+  register: daily_policy_output
+
+- name: Create a daily VM backup policy
+  azure_rm_backuppolicy_info:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_daily }}"
+    resource_group: "{{ resource_group }}"
+  register: backup_policy_exists
+
+- name: Assert success on daily backup policy creation
+  assert:
+    that:
+      - daily_policy_output.changed
+      - daily_policy_output.name == policy_name_daily
+
+- name: Assert Policy Success Retrieving Info
+  assert:
+    that:
+      - backup_policy_exists.id == daily_policy_output.id
+      - backup_policy_exists.location == daily_policy_output.location
+      - backup_policy_exists.name == daily_policy_output.name
+      - backup_policy_exists.type == daily_policy_output.type
+
+- name: Update daily VM backup policy
+  azure_rm_backuppolicy:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_daily }}"
+    resource_group: "{{ resource_group }}"
+    state: present
+    backup_management_type: "AzureIaasVM"
+    schedule_run_frequency: "Daily"
+    instant_recovery_snapshot_retention: 5
+    daily_retention_count: 10
+    time_zone: "Pacific Standard Time"
+    schedule_run_time: 10
+  register: daily_policy_output_update
+
+- name: Assert success on update of daily policy
+  assert:
+    that:
+      - daily_policy_output_update.changed
+      - daily_policy_output_update.name == policy_name_daily
+
+- name: Create a weekly VM backup policy
+  azure_rm_backuppolicy:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_weekly }}"
+    resource_group: "{{ resource_group }}"
+    state: present
+    backup_management_type: "AzureIaasVM"
+    schedule_run_frequency: "Weekly"
+    instant_recovery_snapshot_retention: 5
+    weekly_retention_count: 4
+    schedule_days:
+      - "Monday"
+      - "Wednesday"
+      - "Friday"
+    time_zone: "Pacific Standard Time"
+    schedule_run_time: 8
+  register: weekly_policy_output
+
+- name: Assert success on weekly backup policy creation
+  assert:
+    that:
+      - weekly_policy_output.changed
+      - weekly_policy_output.name == policy_name_weekly
+
+- name: Update weekly VM backup policy
+  azure_rm_backuppolicy:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_weekly }}"
+    resource_group: "{{ resource_group }}"
+    state: present
+    backup_management_type: "AzureIaasVM"
+    schedule_run_frequency: "Weekly"
+    instant_recovery_snapshot_retention: 5
+    weekly_retention_count: 4
+    schedule_days:
+      - "Monday"
+      - "Wednesday"
+      - "Thursday"
+    time_zone: "Pacific Standard Time"
+    schedule_run_time: 10
+  register: weekly_policy_output_update
+
+- name: Assert success on update of weekly policy
+  assert:
+    that:
+      - weekly_policy_output_update.changed
+      - weekly_policy_output_update.name == policy_name_weekly
+
+- name: Delete a daily VM backup policy
+  azure_rm_backuppolicy:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_daily }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: daily_policy_output_delete
+
+- name: Assert success on daily backup policy deletion
+  assert:
+    that:
+      - daily_policy_output_delete.changed
+
+- name: Delete a weekly VM backup policy
+  azure_rm_backuppolicy:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_weekly }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: weekly_policy_output_delete
+
+- name: Assert success on weekly backup policy deletion
+  assert:
+    that:
+      - weekly_policy_output_delete.changed
+
+- name: Delete a daily VM backup policy (idempotent)
+  azure_rm_backuppolicy:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_daily }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: daily_policy_output_delete_idempotent
+
+- name: Assert that there is no change after second deletion of daily backup policy
+  assert:
+    that:
+      - not daily_policy_output_delete_idempotent.changed
+
+- name: Delete a weekly VM backup policy (idempotent)
+  azure_rm_backuppolicy:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_weekly }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: weekly_policy_output_delete_idempotent
+
+- name: Assert that there is no change after second deletion of weekly backup policy
+  assert:
+    that:
+      - not weekly_policy_output_delete_idempotent.changed
