@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_keyvault_info
@@ -129,7 +124,7 @@ keyvaults:
                     sample: standard
         access_policies:
             description:
-                - Location of the vault.
+                - List of policies.
             returned: always
             type: list
             contains:
