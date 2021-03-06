@@ -31,6 +31,7 @@ parameters:
     - "azure_rm_availabilityset"
     - "azure_rm_azurefirewall"
     - "azure_rm_batchaccount"
+    - "azure_rm_backuppolicy"
     - "azure_rm_cdnprofile"
     - "azure_rm_containerinstance"
     - "azure_rm_containerregistry"
