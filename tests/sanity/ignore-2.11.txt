@@ -207,7 +207,7 @@ plugins/modules/azure_rm_managementgroup.py validate-modules:invalid-ansiblemodu
 plugins/modules/azure_rm_managementgroup.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_managementgroup.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_managementgroup_info.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_managementgroup_info.py validate-modules:required_if-unknown-keyp
+plugins/modules/azure_rm_managementgroup_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_networkinterface.py validate-modules:doc-missing-type
 plugins/modules/azure_rm_networkinterface.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_networkinterface.py validate-modules:doc-elements-mismatch
