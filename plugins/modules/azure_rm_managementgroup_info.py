@@ -170,7 +170,7 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
             children=dict(type='bool', default=False),
             flatten=dict(type='bool', default=False),
             id=dict(type='str'),
-            name=dict(type='str'， aliases=['management_group_name']),
+            name=dict(type='str', aliases=['management_group_name']),
             recurse=dict(type='bool', default=False)
         )
 
