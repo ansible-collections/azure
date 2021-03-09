@@ -232,7 +232,7 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
                                                                            expand=expand,
                                                                            recurse=self.recurse)
         except CloudError:
-            self.log('No Management group {} found.'.format(mg_name))
+            self.log('No Management group {0} found.'.format(mg_name))
             response = None
 
         return self.to_dict(response)
