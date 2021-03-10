@@ -28,6 +28,18 @@
     name: "{{ lbname_a }}"
     state: absent
 
+- name: create load balancer -- check mode
+  azure_rm_loadbalancer:
+    resource_group: '{{ resource_group }}'
+    name: "{{ lbname_a }}"
+    public_ip: "{{ pipaname }}"
+  check_mode: yes
+  register: output
+
+- name: assert load balancer created
+  assert:
+    that: output.changed
+
 - name: create load balancer
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
@@ -38,6 +50,18 @@
 - name: assert load balancer created
   assert:
     that: output.changed
+
+- name: create load balancer -- idempotent
+  azure_rm_loadbalancer:
+    resource_group: '{{ resource_group }}'
+    name: "{{ lbname_a }}"
+    public_ip: "{{ pipaname }}"
+  register: output
+
+- name: assert no change
+  assert:
+    that:
+      - not output.changed
 
 - name: delete load balancer
   azure_rm_loadbalancer:

@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlserver_info
@@ -244,6 +239,7 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
             'sku': d['sku'],
             'location': d['location'],
             'storage_mb': d['storage_profile']['storage_mb'],
+            'storage_autogrow': (d['storage_profile']['storage_autogrow'] == 'Enabled'),
             'version': d['version'],
             'enforce_ssl': (d['ssl_enforcement'] == 'Enabled'),
             'admin_username': d['administrator_login'],
