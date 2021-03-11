@@ -1,7 +1,7 @@
 - name: Prepare random number
   set_fact:
     name: "loganalytics{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    retention_days: 30
+    retention_days: 60
 
 - name: Create Log Analytics Workspace (Check Mode On)
   azure_rm_loganalyticsworkspace:
@@ -38,17 +38,39 @@
     intelligence_packs:
       Backup: true
       Containers: true
+    retention_in_days: 30
+    resource_group: "{{ resource_group }}"
+    tags:
+      key1: value1
+  register: output
+
+- assert:
+    that:
+      - output.changed
+      - output.retention_in_days == 30
+      # - output.intelligence_packs | json_query('[?name == `Backup`].enabled') | first == true
+      # - output.intelligence_packs | json_query('[?name == `Containers`].enabled') | first == true
+      - output.sku == 'pergb2018'
+      - output.tags.key1 == 'value1'
+
+- name: Update Log Analytics Workspace
+  azure_rm_loganalyticsworkspace:
+    name: "{{ name }}"
+    intelligence_packs:
+      Backup: true
+      Containers: true
     retention_in_days: "{{ retention_days }}"
     resource_group: "{{ resource_group }}"
+    tags:
+      key1: value1
+      key2: value2
   register: output
 
 - assert:
     that:
       - output.changed
       - output.retention_in_days == retention_days
-      # - output.intelligence_packs | json_query('[?name == `Backup`].enabled') | first == true
-      # - output.intelligence_packs | json_query('[?name == `Containers`].enabled') | first == true
-      - output.sku == 'pergb2018'
+      - output.tags.key2 == 'value2'
 
 - name: Get Log Analytics workspace information (Show full information)
   azure_rm_loganalyticsworkspace_info:
