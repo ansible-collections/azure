@@ -266,6 +266,9 @@ options:
                     - The I(probe) retry count.
                     - Backend server is marked down after consecutive probe failure count reaches UnhealthyThreshold.
                     - Acceptable values are from 1 second to 20.
+            pick_host_name_from_backend_http_settings:
+                description:
+                    - Whether host header should be picked from the host name of the backend server. Default value is false.
     backend_http_settings_collection:
         description:
             - Backend http settings of the application gateway resource.
@@ -306,7 +309,7 @@ options:
                     - Host header to be sent to the backend servers.
             pick_host_name_from_backend_address:
                 description:
-                    - Whether to pick host header should be picked from the host name of the backend server. Default value is false.
+                    - Whether host header should be picked from the host name of the backend server. Default value is false.
             affinity_cookie_name:
                 description:
                     - Cookie name to use for the affinity cookie.
@@ -476,7 +479,8 @@ probe_spec = dict(
     path=dict(type='str'),
     protocol=dict(type='str', choices=['http', 'https']),
     timeout=dict(type='int'),
-    unhealthy_threshold=dict(type='int')
+    unhealthy_threshold=dict(type='int'),
+    pick_host_name_from_backend_http_settings=dict(type='bool')
 )
 
 
