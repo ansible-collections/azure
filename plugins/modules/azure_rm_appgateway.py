@@ -340,6 +340,35 @@ options:
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
+    url_path_maps:
+        description:
+            - List of URL path maps of the application gateway resource.
+        suboptions:
+            name:
+                description:
+                    - Name of the resource that is unique within the application gateway. This name can be used to access the resource.
+            default_backend_address_pool:
+                description:
+                    - Backend address pool resource of the application gateway which will be used if no path matches occur.
+            default_backend_http_settings:
+                description:
+                    - Backend http settings resource of the application gateway; used for the I(default_backend_address_pool).
+            path_rules:
+                description:
+                    - List of URL path rules.
+                suboptions:
+                    name:
+                        description:
+                            - Name of the resource that is unique within the path map.
+                    backend_address_pool:
+                        description:
+                            - Backend address pool resource of the application gateway which will be used if the path is matched.
+                    backend_http_settings:
+                        description:
+                            - Backend http settings resource of the application gateway; used for the path's I(backend_address_pool).
+                    paths:
+                        description:
+                            - List of paths.
     request_routing_rules:
         description:
             - List of request routing rules of the application gateway resource.
@@ -365,6 +394,9 @@ options:
             redirect_configuration:
                 description:
                     - Redirect configuration resource of the application gateway.
+            url_path_map:
+                description:
+                    - URL path map resource of the application gateway. Required if I(rule_type) is C(path_based_routing).
     state:
         description:
             - Assert the state of the Public IP. Use C(present) to create or update a and
@@ -422,6 +454,57 @@ EXAMPLES = '''
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
+
+- name: Create instance of Application Gateway with path based rules
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myAppGateway
+    sku:
+      name: standard_small
+      tier: standard
+      capacity: 2
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          id: "{{ subnet_id }}"
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - port: 90
+        name: ag_frontend_port
+    backend_address_pools:
+      - backend_addresses:
+          - ip_address: 10.0.0.4
+        name: test_backend_address_pool
+    backend_http_settings_collection:
+      - port: 80
+        protocol: http
+        cookie_based_affinity: enabled
+        name: sample_appgateway_http_settings
+    http_listeners:
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: ag_frontend_port
+        name: sample_http_listener
+    request_routing_rules:
+      - rule_type: path_based_routing
+        backend_address_pool: test_backend_address_pool
+        backend_http_settings: sample_appgateway_http_settings
+        http_listener: sample_http_listener
+        name: rule1
+        url_path_map: path_mappings
+    url_path_maps:
+      - name: path_mappings
+        default_backend_address_pool: test_backend_address_pool
+        default_backend_http_settings: sample_appgateway_http_settings
+        path_rules:
+          - name: path_rules
+            backend_address_pool: test_backend_address_pool
+            backend_http_settings: sample_appgateway_http_settings
+            paths:
+              - "/abc"
+              - "/123/*"
 '''
 
 RETURN = '''
