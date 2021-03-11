@@ -263,7 +263,7 @@ options:
                     - Acceptable values are from 1 second to 20.
             pick_host_name_from_backend_http_settings:
                 description:
-                    - Whether host header should be picked from the host name of the backend server. Default value is false.
+                    - Whether host header should be picked from the host name of the backend HTTP settings. Default value is false.
     backend_http_settings_collection:
         description:
             - Backend http settings of the application gateway resource.
