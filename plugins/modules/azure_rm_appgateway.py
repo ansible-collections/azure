@@ -546,6 +546,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             http_listeners=dict(
                 type='list'
             ),
+            url_path_maps=dict(
+                type='list'
+            ),
             request_routing_rules=dict(
                 type='list'
             ),
@@ -724,6 +727,41 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             item['protocol'] = _snake_to_camel(item['protocol'], True)
                         ev[i] = item
                     self.parameters["http_listeners"] = ev
+                elif key == "url_path_maps":
+                    ev = kwargs[key]
+                    for i in range(len(ev)):
+                        item = ev[i]
+                        if 'default_backend_address_pool' in item:
+                            id = backend_address_pool_id(self.subscription_id,
+                                                         kwargs['resource_group'],
+                                                         kwargs['name'],
+                                                         item['default_backend_address_pool'])
+                            item['default_backend_address_pool'] = {'id': id}
+                        if 'default_backend_http_settings' in item:
+                            id = backend_http_settings_id(self.subscription_id,
+                                                  kwargs['resource_group'],
+                                                  kwargs['name'],
+                                                  item['default_backend_http_settings'])
+                            item['default_backend_http_settings'] = {'id': id}
+                        if 'path_rules' in item:
+                            ev2 = item['path_rules']
+                            for j in range(len(ev2)):
+                                item2 = ev2[j]
+                                if 'backend_address_pool' in item2:
+                                    id = backend_address_pool_id(self.subscription_id,
+                                                         kwargs['resource_group'],
+                                                         kwargs['name'],
+                                                         item2['backend_address_pool'])
+                                    item2['backend_address_pool'] = {'id': id}
+                                if 'backend_http_settings' in item2:
+                                    id = backend_http_settings_id(self.subscription_id,
+                                                         kwargs['resource_group'],
+                                                         kwargs['name'],
+                                                         item2['backend_http_settings'])
+                                    item2['backend_http_settings'] = {'id': id}
+                                ev2[j] = item2
+                        ev[i] = item
+                    self.parameters["url_path_maps"] = ev
                 elif key == "request_routing_rules":
                     ev = kwargs[key]
                     for i in range(len(ev)):
@@ -756,6 +794,12 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                                            kwargs['name'],
                                                            item['redirect_configuration'])
                             item['redirect_configuration'] = {'id': id}
+                        if 'url_path_map' in item:
+                            id = url_path_map_id(self.subscription_id,
+                                                    kwargs['resource_group'],
+                                                    kwargs['name'],
+                                                    item['url_path_map'])
+                            item['url_path_map'] = {'id': id}
                         ev[i] = item
                     self.parameters["request_routing_rules"] = ev
                 elif key == "etag":
@@ -802,7 +846,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     not compare_arrays(old_response, self.parameters, 'probes') or
                     not compare_arrays(old_response, self.parameters, 'backend_http_settings_collection') or
                     not compare_arrays(old_response, self.parameters, 'request_routing_rules') or
-                    not compare_arrays(old_response, self.parameters, 'http_listeners')):
+                    not compare_arrays(old_response, self.parameters, 'http_listeners') or
+                    not compare_arrays(old_response, self.parameters, 'url_path_maps')):
 
                 self.to_do = Actions.Update
             else:
@@ -985,6 +1030,16 @@ def backend_http_settings_id(subscription_id, resource_group_name, appgateway_na
 def http_listener_id(subscription_id, resource_group_name, appgateway_name, name):
     """Generate the id for a http listener"""
     return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/applicationGateways/{2}/httpListeners/{3}'.format(
+        subscription_id,
+        resource_group_name,
+        appgateway_name,
+        name
+    )
+
+
+def url_path_map_id(subscription_id, resource_group_name, appgateway_name, name):
+    """Generate the id for a url path map"""
+    return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/applicationGateways/{2}/urlPathMaps/{3}'.format(
         subscription_id,
         resource_group_name,
         appgateway_name,
