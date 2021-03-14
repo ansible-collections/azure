@@ -1262,6 +1262,7 @@ class AzureRMModuleBase(object):
     @property
     def recovery_services_backup_client(self):
         self.log('Getting recovery services backup client')
+        if not self._recovery_services_backup_client:
             self._recovery_services_backup_client = self.get_mgmt_svc_client(RecoveryServicesBackupClient,
                                                                              base_url=self._cloud_environment.endpoints.resource_manager)
         return self._recovery_services_backup_client
@@ -1272,6 +1273,7 @@ class AzureRMModuleBase(object):
 
     def datalake_store_client(self):
         self.log('Getting datalake store client...')
+        if not self._datalake_store_client:
             self._datalake_store_client = self.get_mgmt_svc_client(DataLakeStoreAccountManagementClient,
                                                                    base_url=self._cloud_environment.endpoints.resource_manager,
                                                                    api_version='2016-11-01')
@@ -1281,6 +1283,7 @@ class AzureRMModuleBase(object):
     def datalake_store_models(self):
         return DataLakeStoreAccountModel
 
+class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
     An implementation of Authentication in
     https://github.com/Azure/msrest-for-python/blob/0732bc90bdb290e5f58c675ffdd7dbfa9acefc93/msrest/authentication.py
