@@ -1271,6 +1271,7 @@ class AzureRMModuleBase(object):
     def recovery_services_backup_models(self):
         return RecoveryServicesBackupModels
 
+    @property
     def datalake_store_client(self):
         self.log('Getting datalake store client...')
         if not self._datalake_store_client:
