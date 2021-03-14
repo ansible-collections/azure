@@ -460,7 +460,7 @@ class AzureRMSearch(AzureRMModuleBase):
         account_dict = dict(
             hosting_mode=search_obj.hosting_mode,
             id=search_obj.id,
-            identity=dict(type=search_obj.identity.type if search_obj.identity else None),
+            identity=dict(type=search_obj.identity.type if search_obj.identity else 'None'),
             location=search_obj.location,
             name=search_obj.name,
             network_rule_set=list(),
