@@ -95,7 +95,7 @@ AZURE_API_PROFILES = {
             snapshots='2018-10-01',
             virtual_machine_run_commands='2018-10-01'
         ),
-        'ManagementGroupsAPI': '2020-05-01',
+        'ManagementGroupsClient': '2020-05-01',
         'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
         'StorageManagementClient': '2019-06-01',
@@ -1003,7 +1003,7 @@ class AzureRMModuleBase(object):
     def management_groups_client(self):
         self.log('Getting Management Groups client...')
         if not self._management_group_client:
-            self._management_group_client = self.get_mgmt_svc_client(ManagementGroupsAPI,
+            self._management_group_client = self.get_mgmt_svc_client(ManagementGroupsClient,
                                                                      base_url=self._cloud_environment.endpoints.resource_manager,
                                                                      suppress_subscription_id=True,
                                                                      api_version='2020-05-01')
