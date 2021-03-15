@@ -823,7 +823,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             if self.blob_cors:
                 account_dict['blob_cors'] = self.blob_cors
             return account_dict
-        if bool(self.https_only):
+        if not bool(self.https_only):
             self.https_only = False
         if bool(self.minimum_tls_version):
             self.minimum_tls_version = 'TLS1_0'
