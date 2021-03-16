@@ -86,6 +86,7 @@ options:
     https_only:
         description:
             - Allows https traffic only to storage service when set to C(true).
+            - Allows update storage account property when set to C(False).
             - Default value is C(True).
         type: bool
     minimum_tls_version:
