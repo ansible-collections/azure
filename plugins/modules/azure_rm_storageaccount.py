@@ -92,18 +92,18 @@ options:
     minimum_tls_version:
         description:
             - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
-            - Default value is C(TLS1_0).
         choices:
             - TLS1_0
             - TLS1_1
             - TLS1_2
+        default: 'TLS1_0'
         version_added: "1.0.0"
     allow_blob_public_access:
         description:
             - Allows blob containers in account to be set for anonymous public access.
             - If set to false, no containers in this account will be able to allow anonymous public access.
-            - Default value is C(True).
         type: bool
+        default: True
         version_added: "1.1.0"
     network_acls:
         description:
@@ -458,8 +458,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
             access_tier=dict(type='str', choices=['Hot', 'Cool']),
             https_only=dict(type='bool', default=True),
-            minimum_tls_version=dict(type='str', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
-            allow_blob_public_access=dict(type='bool'),
+            minimum_tls_version=dict(type='str', default='TLS1_0', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
+            allow_blob_public_access=dict(type='bool', default=True),
             network_acls=dict(type='dict'),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict')
         )
@@ -823,10 +823,6 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             if self.blob_cors:
                 account_dict['blob_cors'] = self.blob_cors
             return account_dict
-        if bool(self.minimum_tls_version):
-            self.minimum_tls_version = 'TLS1_0'
-        if bool(self.allow_blob_public_access):
-            self.allow_blob_public_access = True
         sku = self.storage_models.Sku(name=self.storage_models.SkuName(self.account_type))
         sku.tier = self.storage_models.SkuTier.standard if 'Standard' in self.account_type else \
             self.storage_models.SkuTier.premium
