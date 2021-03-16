@@ -271,6 +271,7 @@ try:
     import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
     from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
+
 except ImportError as exc:
     Authentication = object
     HAS_AZURE_EXC = traceback.format_exc()
@@ -1298,6 +1299,7 @@ class AzureRMModuleBase(object):
     @property
     def datalake_store_models(self):
         return DataLakeStoreAccountModel
+
 
 class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
