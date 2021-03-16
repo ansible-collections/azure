@@ -16,7 +16,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: azure_rm_backuppolicy
-version_added: "1.3.2"
+version_added: "1.4.0"
 short_description: Manage Azure Backup Policy
 description:
     - Create and delete instance of Azure Backup Policy.
