@@ -130,6 +130,7 @@ plugins/modules/azure_rm_roledefinition_info.py validate-modules:parameter-type-
 plugins/modules/azure_rm_route.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_routetable.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_routetable_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_search.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_servicebus.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_servicebus_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_servicebusqueue.py validate-modules:parameter-type-not-in-doc
