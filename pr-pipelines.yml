@@ -49,6 +49,7 @@ parameters:
     - "azure_rm_loadbalancer"
     - "azure_rm_loganalyticsworkspace"
     - "azure_rm_manageddisk"
+    - "azure_rm_managementgroup"
     - "azure_rm_mariadbserver"
     - "azure_rm_monitorlogprofile"
     - "azure_rm_mysqlserver"
