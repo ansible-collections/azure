@@ -4,7 +4,7 @@
   run_once: yes
 
 - name: Try to return non-existent group using display name
-  azure.azcollection.azure_rm_adgroup_info:
+azure_rm_adgroup_info:
     attribute_name: "displayName"
     attribute_value: "{{ resource_prefix }}-Group-Root"
     tenant: "{{ tenant_id }}"
