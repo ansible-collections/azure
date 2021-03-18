@@ -154,6 +154,7 @@
       - facts['keyvaults'][0]['access_policies'] != None
       - facts['keyvaults'][0]['sku'] != None
       - facts['keyvaults'][0]['id'] != None
+      - facts['keyvaults'][0]['enable_soft_delete'] == true
 #
 # azure_rm_keyvaultkey tests
 #
