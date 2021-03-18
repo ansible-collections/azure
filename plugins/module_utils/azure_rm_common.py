@@ -95,6 +95,7 @@ AZURE_API_PROFILES = {
             snapshots='2018-10-01',
             virtual_machine_run_commands='2018-10-01'
         ),
+        'ManagementGroupsClient': '2020-05-01',
         'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
         'StorageManagementClient': '2019-06-01',
@@ -233,6 +234,7 @@ try:
     from azure.mgmt.web.version import VERSION as web_client_version
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource.resources import ResourceManagementClient
+    from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
     from azure.mgmt.resource.subscriptions import SubscriptionClient
     from azure.mgmt.storage import StorageManagementClient
     from azure.mgmt.compute import ComputeManagementClient
@@ -405,8 +407,10 @@ class AzureRMModuleBase(object):
         self._network_client = None
         self._storage_client = None
         self._subscription_client = None
+        self._management_group_client = None
         self._resource_client = None
         self._compute_client = None
+        self._image_client = None
         self._dns_client = None
         self._private_dns_client = None
         self._web_client = None
@@ -996,6 +1000,16 @@ class AzureRMModuleBase(object):
         return SubscriptionClient.models("2019-11-01")
 
     @property
+    def management_groups_client(self):
+        self.log('Getting Management Groups client...')
+        if not self._management_group_client:
+            self._management_group_client = self.get_mgmt_svc_client(ManagementGroupsClient,
+                                                                     base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                     suppress_subscription_id=True,
+                                                                     api_version='2020-05-01')
+        return self._management_group_client
+
+    @property
     def network_client(self):
         self.log('Getting network client')
         if not self._network_client:
@@ -1022,6 +1036,20 @@ class AzureRMModuleBase(object):
     def rm_models(self):
         self.log("Getting resource manager models")
         return ResourceManagementClient.models("2017-05-10")
+
+    @property
+    def image_client(self):
+        self.log('Getting compute image client')
+        if not self._image_client:
+            self._image_client = self.get_mgmt_svc_client(ComputeManagementClient,
+                                                          base_url=self._cloud_environment.endpoints.resource_manager,
+                                                          api_version='2018-06-01')
+        return self._image_client
+
+    @property
+    def image_models(self):
+        self.log("Getting compute image models")
+        return ComputeManagementClient.models("2018-06-01")
 
     @property
     def compute_client(self):
