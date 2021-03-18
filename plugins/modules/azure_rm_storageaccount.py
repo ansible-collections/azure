@@ -125,29 +125,28 @@ options:
                     - It can be any combination of the example C(AzureServices), C(Logging), C(Metrics).
                     - If no Azure components are allowed, explicitly set I(bypass="").
                 default: AzureServices
+            virtual_network_rules:
+                description:
+                    - A list of subnets and their actions.
                 suboptions:
-                    virtual_network_rules:
+                    id:
                         description:
-                            - A list of subnets and their actions.
-                        suboptions:
-                            id:
-                                description:
-                                    - The complete path to the subnet.
-                            action:
-                                description:
-                                    - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
-                                default: 'Allow'
-                    ip_rules:
+                            - The complete path to the subnet.
+                    action:
                         description:
-                            - A list of IP addresses or ranges in CIDR format.
-                        suboptions:
-                            value:
-                                description:
-                                    - The IP address or range.
-                            action:
-                                description:
-                                    - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
-                                default: 'Allow'
+                            - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
+                        default: 'Allow'
+            ip_rules:
+                description:
+                    - A list of IP addresses or ranges in CIDR format.
+                suboptions:
+                    value:
+                        description:
+                            - The IP address or range.
+                    action:
+                        description:
+                            - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
+                        default: 'Allow'
     blob_cors:
         description:
             - Specifies CORS rules for the Blob service.
