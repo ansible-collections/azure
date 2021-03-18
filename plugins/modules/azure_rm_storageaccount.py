@@ -85,25 +85,24 @@ options:
             - force
     https_only:
         description:
-            - Allows https traffic only to storage service when set to C(true).
-            - Allows update storage account property when set to C(False).
-        default: True
+            - Allows https traffic only to storage service when set to C(True).
+            - If omitted, new account creation will default to True, while exiting accounts will not be change.
         type: bool
     minimum_tls_version:
         description:
             - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
+            - If omitted, new account creation will default to TLS1_0, while exiting accounts will not be change.
         choices:
             - TLS1_0
             - TLS1_1
             - TLS1_2
-        default: 'TLS1_0'
         version_added: "1.0.0"
     allow_blob_public_access:
         description:
             - Allows blob containers in account to be set for anonymous public access.
             - If set to false, no containers in this account will be able to allow anonymous public access.
+            - If omitted, new account creation will default to True, while exiting accounts will not be change.
         type: bool
-        default: True
         version_added: "1.1.0"
     network_acls:
         description:
@@ -457,9 +456,9 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             tags=dict(type='dict'),
             kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
             access_tier=dict(type='str', choices=['Hot', 'Cool']),
-            https_only=dict(type='bool', default=True),
-            minimum_tls_version=dict(type='str', default='TLS1_0', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
-            allow_blob_public_access=dict(type='bool', default=True),
+            https_only=dict(type='bool'),
+            minimum_tls_version=dict(type='str', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
+            allow_blob_public_access=dict(type='bool'),
             network_acls=dict(type='dict'),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict')
         )
