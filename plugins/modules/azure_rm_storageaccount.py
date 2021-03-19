@@ -681,7 +681,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                     self.results['changed'] = True
                     self.update_network_rule_set()
 
-        if self.https_only is not None and self.https_only != self.account_dict.get('https_only'):
+        if self.https_only is not None and bool(self.https_only) != bool(self.account_dict.get('https_only')):
             self.results['changed'] = True
             self.account_dict['https_only'] = self.https_only
             if not self.check_mode:
