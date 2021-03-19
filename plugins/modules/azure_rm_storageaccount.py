@@ -86,12 +86,12 @@ options:
     https_only:
         description:
             - Allows https traffic only to storage service when set to C(True).
-            - If omitted, new account creation will default to True, while exiting accounts will not be change.
+            - If omitted, new account creation will default to True, while existing accounts will not be change.
         type: bool
     minimum_tls_version:
         description:
             - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
-            - If omitted, new account creation will default to TLS1_0, while exiting accounts will not be change.
+            - If omitted, new account creation will default to null which is currently interpreted to TLS1_0. Existing accounts will not be modified.
         choices:
             - TLS1_0
             - TLS1_1
@@ -101,7 +101,7 @@ options:
         description:
             - Allows blob containers in account to be set for anonymous public access.
             - If set to false, no containers in this account will be able to allow anonymous public access.
-            - If omitted, new account creation will default to True, while exiting accounts will not be change.
+            - If omitted, new account creation will default to null which is currently interpreted to True. Existing accounts will not be modified.
         type: bool
         version_added: "1.1.0"
     network_acls:
@@ -681,7 +681,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                     self.results['changed'] = True
                     self.update_network_rule_set()
 
-        if self.https_only is not None and bool(self.https_only) != bool(self.account_dict.get('https_only')):
+        if self.https_only is not None and self.https_only != self.account_dict.get('https_only'):
             self.results['changed'] = True
             self.account_dict['https_only'] = self.https_only
             if not self.check_mode:
@@ -705,8 +705,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 except Exception as exc:
                     self.fail("Failed to update account type: {0}".format(str(exc)))
 
-        if self.allow_blob_public_access is not None:
-            if bool(self.allow_blob_public_access) != bool(self.account_dict.get('allow_blob_public_access')):
+        if self.allow_blob_public_access is not None and self.allow_blob_public_access != self.account_dict.get('allow_blob_public_access'):
                 self.results['changed'] = True
                 self.account_dict['allow_blob_public_access'] = self.allow_blob_public_access
                 if not self.check_mode:
