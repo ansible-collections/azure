@@ -9,7 +9,7 @@ __metaclass__ = type
 
 
 DOCUMENTATION = '''
-module: azure_rm_search_info
+module: azure_rm_cognitivesearch_info
 version_added: "1.4.0"
 short_description: Get Azure Cognitive Search service info
 description:
@@ -39,16 +39,16 @@ author:
 
 EXAMPLES = '''
   - name: Get Azure Cognitive Search info from resource group 'myResourceGroup' and name 'myAzureSearch'
-    azure_rm_search_info:
+    azure_rm_cognitivesearch_info:
       resource_group: myResourceGroup
       name: myAzureSearch
 
   - name: Get Azure Cognitive Search info from resource group 'myResourceGroup'
-    azure_rm_search_info:
+    azure_rm_cognitivesearch_info:
       resource_group: myResourceGroup
 
   - name: Get all Azure Cognitive Search info
-    azure_rm_search_info:
+    azure_rm_cognitivesearch_info:
 '''
 
 RETURN = '''

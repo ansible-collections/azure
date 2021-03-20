@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_search
+module: azure_rm_cognitivesearch
 version_added: "1.4.0"
 short_description: Manage Azure Cognitive Search service
 description:
@@ -116,7 +116,7 @@ author:
 
 EXAMPLES = '''
   - name: Create Azure Cognitive Search
-    azure_rm_search:
+    azure_rm_cognitivesearch:
       resource_group: myResourceGroup
       name: myAzureSearch
 '''
