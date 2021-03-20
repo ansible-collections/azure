@@ -144,8 +144,8 @@
     public_network_access: disabled
     replica_count: 2
     sku: standard
-    # tags:
-    #   foo: bar
+    tags:
+      foo: bar
   register: search_info
 
 - name: Assert status succeeded and results
@@ -176,8 +176,8 @@
     public_network_access: disabled
     replica_count: 2
     sku: standard
-    # tags:
-    #   foo: bar
+    tags:
+      foo: bar
   register: search_info
 
 - name: Assert that idempotence is ok
