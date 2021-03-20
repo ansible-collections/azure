@@ -8,13 +8,9 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = '''
 module: azure_rm_datalakestore
-version_added: "1.2.0"
+version_added: "1.4.0"
 short_description: Manage Azure data lake store
 description:
     - Create, update or delete a data lake store.
@@ -134,6 +130,8 @@ options:
             - The name of the Azure resource group to use.
         required: true
         type: str
+        aliases:
+            - resource_group_name
     state:
         description:
             - State of the data lake store. Use C(present) to create or update a data lake store and use C(absent) to delete it.
