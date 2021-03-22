@@ -2,6 +2,12 @@
   set_fact:
     adl_name: "adl{{ resource_group | hash('md5') | truncate(21, True, '') }}"
     vnet_name: "vnet{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+    resource_group: datalake_group
+
+- name: create data lake resource group
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus2
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
@@ -201,3 +207,9 @@
     resource_group: "{{ resource_group }}" 
     name: "{{ adl_name }}"
     state: absent
+
+- name: delte resource group
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    state: absent
+    force_delete_nonempty: true
