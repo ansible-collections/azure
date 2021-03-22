@@ -85,14 +85,13 @@ options:
             - force
     https_only:
         description:
-            - Allows https traffic only to storage service when set to C(true).
-            - Allows update storage account property when set to C(False).
-            - Default value is C(False).
+            - Allows https traffic only to storage service when set to C(True).
+            - If omitted, new account creation will default to True, while existing accounts will not be change.
         type: bool
     minimum_tls_version:
         description:
             - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
-            - Default value is C(TLS1_0).
+            - If omitted, new account creation will default to null which is currently interpreted to TLS1_0. Existing accounts will not be modified.
         choices:
             - TLS1_0
             - TLS1_1
@@ -102,7 +101,7 @@ options:
         description:
             - Allows blob containers in account to be set for anonymous public access.
             - If set to false, no containers in this account will be able to allow anonymous public access.
-            - Default value is C(True).
+            - If omitted, new account creation will default to null which is currently interpreted to True. Existing accounts will not be modified.
         type: bool
         version_added: "1.1.0"
     network_acls:
@@ -706,18 +705,17 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 except Exception as exc:
                     self.fail("Failed to update account type: {0}".format(str(exc)))
 
-        if self.allow_blob_public_access is not None:
-            if bool(self.allow_blob_public_access) != bool(self.account_dict.get('allow_blob_public_access')):
-                self.results['changed'] = True
-                self.account_dict['allow_blob_public_access'] = self.allow_blob_public_access
-                if not self.check_mode:
-                    try:
-                        parameters = self.storage_models.StorageAccountUpdateParameters(allow_blob_public_access=self.allow_blob_public_access)
-                        self.storage_client.storage_accounts.update(self.resource_group,
-                                                                    self.name,
-                                                                    parameters)
-                    except Exception as exc:
-                        self.fail("Failed to update account type: {0}".format(str(exc)))
+        if self.allow_blob_public_access is not None and self.allow_blob_public_access != self.account_dict.get('allow_blob_public_access'):
+            self.results['changed'] = True
+            self.account_dict['allow_blob_public_access'] = self.allow_blob_public_access
+            if not self.check_mode:
+                try:
+                    parameters = self.storage_models.StorageAccountUpdateParameters(allow_blob_public_access=self.allow_blob_public_access)
+                    self.storage_client.storage_accounts.update(self.resource_group,
+                                                                self.name,
+                                                                parameters)
+                except Exception as exc:
+                    self.fail("Failed to update account type: {0}".format(str(exc)))
 
         if self.account_type:
             if self.account_type != self.account_dict['sku_name']:
@@ -822,12 +820,6 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             if self.blob_cors:
                 account_dict['blob_cors'] = self.blob_cors
             return account_dict
-        if bool(self.https_only):
-            self.https_only = False
-        if bool(self.minimum_tls_version):
-            self.minimum_tls_version = 'TLS1_0'
-        if bool(self.allow_blob_public_access):
-            self.allow_blob_public_access = True
         sku = self.storage_models.Sku(name=self.storage_models.SkuName(self.account_type))
         sku.tier = self.storage_models.SkuTier.standard if 'Standard' in self.account_type else \
             self.storage_models.SkuTier.premium
