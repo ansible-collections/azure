@@ -236,7 +236,8 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
             # If role_definition_id is set, we only want results matching that id.
             if self.role_definition_id:
-                response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id').split('/')[-1].lower() == self.role_definition_id.split('/')[-1].lower()]
+                response = [role_assignment for role_assignment in response if (role_assignment.get('role_definition_id').split('/')[-1].lower()
+                                                                                == self.role_definition_id.split('/')[-1].lower())]
 
             results = response
 
@@ -268,7 +269,8 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
             # If role_definition_id is set, we only want results matching that id.
             if self.role_definition_id:
-                response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id').split('/')[-1].lower() == self.role_definition_id.split('/')[-1].lower()]
+                response = [role_assignment for role_assignment in response if (role_assignment.get('role_definition_id').split('/')[-1].lower()
+                                                                                == self.role_definition_id.split('/')[-1].lower())]
 
             results = response
 
@@ -298,7 +300,8 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
             # If role_definition_id is set, we only want results matching that id.
             if self.role_definition_id:
-                response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id').split('/')[-1].lower() == self.role_definition_id.split('/')[-1].lower()]
+                response = [role_assignment for role_assignment in response if (role_assignment.get('role_definition_id').split('/')[-1].lower()
+                                                                                == self.role_definition_id.split('/')[-1].lower())]
 
             results = response
 
