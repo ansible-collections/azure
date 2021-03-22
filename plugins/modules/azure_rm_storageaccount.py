@@ -706,16 +706,16 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                     self.fail("Failed to update account type: {0}".format(str(exc)))
 
         if self.allow_blob_public_access is not None and self.allow_blob_public_access != self.account_dict.get('allow_blob_public_access'):
-                self.results['changed'] = True
-                self.account_dict['allow_blob_public_access'] = self.allow_blob_public_access
-                if not self.check_mode:
-                    try:
-                        parameters = self.storage_models.StorageAccountUpdateParameters(allow_blob_public_access=self.allow_blob_public_access)
-                        self.storage_client.storage_accounts.update(self.resource_group,
-                                                                    self.name,
-                                                                    parameters)
-                    except Exception as exc:
-                        self.fail("Failed to update account type: {0}".format(str(exc)))
+            self.results['changed'] = True
+            self.account_dict['allow_blob_public_access'] = self.allow_blob_public_access
+            if not self.check_mode:
+                try:
+                    parameters = self.storage_models.StorageAccountUpdateParameters(allow_blob_public_access=self.allow_blob_public_access)
+                    self.storage_client.storage_accounts.update(self.resource_group,
+                                                                self.name,
+                                                                parameters)
+                except Exception as exc:
+                    self.fail("Failed to update account type: {0}".format(str(exc)))
 
         if self.account_type:
             if self.account_type != self.account_dict['sku_name']:
