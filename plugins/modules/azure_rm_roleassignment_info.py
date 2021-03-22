@@ -22,7 +22,7 @@ options:
         description:
             - Object id of a user, group or service principal.
             - Mutually exclusive with I(name) and I(id).
-        aliases: 
+        aliases:
           - assignee_object_id
     id:
         description:

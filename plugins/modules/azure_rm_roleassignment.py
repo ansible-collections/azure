@@ -23,7 +23,7 @@ options:
             - The object id of assignee. This maps to the ID inside the Active Directory.
             - It can point to a user, service principal or security group.
             - Required when creating role assignment.
-        aliases: 
+        aliases:
           - assignee
     id:
         description:
