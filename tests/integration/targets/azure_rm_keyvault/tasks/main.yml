@@ -79,7 +79,7 @@
 - name: get key vault info
   azure_rm_keyvault_info:
     resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}"
+    name: "vault{{ rpfx }}"
   register: test
 - debug:
     var: test
