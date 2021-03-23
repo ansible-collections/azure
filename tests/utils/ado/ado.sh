@@ -16,6 +16,15 @@ then
     pip --version
     pip list --disable-pip-version-check
 else
+    if [ "$2" = "3.8" ]
+    then
+        sudo apt update
+        sudo apt install software-properties-common
+        sudo add-apt-repository ppa:deadsnakes/ppa
+        sudo apt install python"$2" -y
+        sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
+    fi
+
     command -v pip3
     pip3 --version
     pip3 list --disable-pip-version-check
@@ -44,14 +53,22 @@ then
     then
         pip install git+https://github.com/ansible/ansible.git@devel  --disable-pip-version-check
     else
-        pip install ansible=="$3" --disable-pip-version-check
+	git clone https://github.com/ansible/ansible.git
+	cd "ansible"
+	git checkout "stable-$3"
+	source hacking/env-setup
+	pip install paramiko PyYAML Jinja2  httplib2 six
     fi
 else
     if [ "$3" = "devel" ]
     then
         pip3 install git+https://github.com/ansible/ansible.git@devel  --disable-pip-version-check
     else
-        pip3 install ansible=="$3" --disable-pip-version-check
+	git clone https://github.com/ansible/ansible.git
+	cd "ansible"
+	git checkout "stable-$3"
+	source hacking/env-setup
+	pip3 install paramiko PyYAML Jinja2  httplib2 six
     fi
 fi
 
@@ -63,9 +80,15 @@ mkdir -p shippable/testresults
 
 if [ "$2" = "2.7" ]
 then
+    pip install --upgrade pip
     pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
+    pip3 install setuptools
+    pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
+    pip3 list
 else
     pip3 install  -I -r "${TEST_DIR}/requirements-azure.txt"
+    pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
+    pip3 list
 fi
 
 timeout=60
@@ -86,6 +109,9 @@ else
         fi
     done
 fi
+echo '--------------------------------------------'
+ansible --version
+echo '--------------------------------------------'
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
 
@@ -94,14 +120,19 @@ cat <<EOF >> "${TEST_DIR}"/tests/integration/cloud-config-azure.ini
 AZURE_CLIENT_ID:${AZURE_CLIENT_ID}
 AZURE_SECRET:${AZURE_SECRET}
 AZURE_SUBSCRIPTION_ID:${AZURE_SUBSCRIPTION_ID}
+AZURE_SUBSCRIPTION_SEC_ID:${AZURE_SUBSCRIPTION_SEC_ID}
 AZURE_TENANT:${AZURE_TENANT}
 RESOURCE_GROUP:${RESOURCE_GROUP}
 RESOURCE_GROUP_SECONDARY:${RESOURCE_GROUP_SECONDARY}
+RESOURCE_GROUP_DATALAKE:${RESOURCE_GROUP_DATALAKE}
+AZURE_PRINCIPAL_ID:${AZURE_PRINCIPAL_ID}
+AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
+AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
 EOF
 
 if [ "sanity" = "${group}" ]
 then
-    ansible-test sanity --color -v --junit --docker
+    ansible-test sanity --color -v --junit
 else
     ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
 fi

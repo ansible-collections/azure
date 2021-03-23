@@ -1,0 +1,69 @@
+ - set_fact:
+     cluster_name: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+ 
+ - name: get resource group info
+   azure_rm_resourcegroup_info:
+     name: "{{ resource_group_secondary }}"
+   register: rg_output
+
+ - name: Create virtual network
+   azure_rm_virtualnetwork:
+     resource_group: "{{ resource_group_secondary }}"
+     name: testVnet
+     address_prefixes_cidr:
+       - 10.151.0.0/16
+       - 10.152.0.0/16
+
+ - name: create master subnet
+   azure_rm_subnet:
+     name: master_foobar
+     virtual_network_name: testVnet
+     resource_group: "{{ resource_group_secondary }}"
+     address_prefix_cidr: 10.151.0.0/24
+   register: master_sub_output
+
+ - name: create work subnet
+   azure_rm_subnet:
+     name: worker_foobar
+     virtual_network_name: testVnet
+     resource_group: "{{ resource_group_secondary }}"
+     address_prefix_cidr: 10.152.0.0/24
+   register: worker_sub_output
+
+ - name: Create openshift cluster 
+   azure_rm_openshiftmanagedcluster:
+     resource_group: "{{ resource_group }}"
+     name: "{{ cluster_name }}"
+     location: "eastus"
+     cluster_profile:
+       cluster_resource_group_id: "{{ rg_output.resourcegroups[0].id }}"
+       domain: "{{ cluster_name }}"
+     service_principal_profile:
+       client_id: "{{ azure_client_id }}"
+       client_secret: "{{ azure_secret }}"
+     network_profile:
+       pod_cidr: "10.128.0.0/14"
+       service_cidr: "172.30.0.0/16"
+     worker_profiles:
+       - vm_size: "Standard_D4s_v3"
+         subnet_id: "{{ worker_sub_output.state.id }}"
+         disk_size: 128
+         count: 3
+     master_profile:
+       vm_size: "Standard_D8s_v3"
+       subnet_id: "{{ master_sub_output.state.id }}"
+   register: output
+
+ - assert:
+     that: output.changed
+
+ - name: Delete openshift cluster
+   azure_rm_openshiftmanagedcluster:
+     resource_group: "{{ resource_group }}"
+     name: "{{ cluster_name }}"
+     location: "eastus"
+     state: absent
+   register: output
+
+ - assert:
+     that: output.changed

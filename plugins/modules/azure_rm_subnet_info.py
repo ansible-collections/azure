@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_subnet_info
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Get Azure Subnet facts
 description:
     - Get facts of Azure Subnet.
@@ -94,12 +89,30 @@ subnets:
             returned: always
             type: str
             sample: "10.1.0.0/16"
+        address_prefixes_cidr:
+            description:
+                - CIDR defining the IPv4 and IPv6 address space of the subnet.
+            returned: always
+            type: list
+            sample: ["10.2.0.0/24", "fdda:e69b:1587:495e::/64"]
         route_table:
             description:
                 - Associated route table ID.
             returned: always
             type: str
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/routeTables/myRouteTable
+        private_endpoint_network_policies:
+            description:
+                - C(Enabled) or C(Disabled) apply network policies on private endpoints in the subnet.
+            returned: always
+            type: str
+            sample: Enabled
+        private_link_service_network_policies:
+            description:
+                - C(Enabled) or C(Disabled) apply network policies on private link service in the subnet.
+            returned: always
+            type: str
+            sample: Disabled
         security_group:
             description:
                 - Associated security group ID.
@@ -129,6 +142,36 @@ subnets:
                     description:
                         - Provisioning state.
                     returned: always
+                    type: str
+                    sample: Succeeded
+        delegations:
+            description:
+                - Associated delegation of subnets
+            returned: always
+            type: list
+            contains:
+                name:
+                    description:
+                        - name of delegation
+                    returned: when delegation is present
+                    type: str
+                    sample: "delegationname"
+                serviceName:
+                    description:
+                        - service associated to delegation
+                    returned: when delegation is present
+                    type: str
+                    sample: "Microsoft.ContainerInstance/containerGroups"
+                actions:
+                    description:
+                        - list of actions associated with service of delegation
+                    returned : when delegation is present
+                    type: list
+                    sample: ["Microsoft.Network/virtualNetworks/subnets/action"]
+                provisioning_state:
+                    description:
+                        - Provisioning state of delegation.
+                    returned: when delegation is present
                     type: str
                     sample: Succeeded
         provisioning_state:
@@ -230,10 +273,14 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'name': d.get('name'),
             'id': d.get('id'),
             'address_prefix_cidr': d.get('address_prefix'),
+            'address_prefixes_cidr': d.get('address_prefixes'),
             'route_table': d.get('route_table', {}).get('id'),
             'security_group': d.get('network_security_group', {}).get('id'),
             'provisioning_state': d.get('provisioning_state'),
-            'service_endpoints': d.get('service_endpoints')
+            'service_endpoints': d.get('service_endpoints'),
+            'private_endpoint_network_policies': d.get('private_endpoint_network_policies'),
+            'private_link_service_network_policies': d.get('private_link_service_network_policies'),
+            'delegations': d.get('delegations')
         }
         return d
 

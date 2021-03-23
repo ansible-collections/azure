@@ -7,14 +7,10 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualnetworkpeering
-version_added: "2.8"
+version_added: "0.0.1"
 short_description: Manage Azure Virtual Network Peering
 description:
     - Create, update and delete Azure Virtual Network Peering.
@@ -275,7 +271,7 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
                 response = self.delete_vnet_peering()
 
             else:
-                self.fail("Azure Virtual Network Peering {0} does not exist in resource group {1}".format(self.name, self.resource_group))
+                self.log("Azure Virtual Network Peering {0} does not exist in resource group {1}".format(self.name, self.resource_group))
 
         if to_be_updated:
             self.results['changed'] = True

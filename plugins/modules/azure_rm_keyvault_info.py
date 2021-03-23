@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_keyvault_info
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Get Azure Key Vault facts
 description:
     - Get facts of Azure Key Vault.
@@ -25,12 +20,15 @@ options:
     resource_group:
         description:
             - The name of the resource group to which the key vault belongs.
+        type: str
     name:
         description:
             - The name of the key vault.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -102,6 +100,12 @@ keyvaults:
             returned: always
             type: bool
             sample: False
+        enable_soft_delete:
+            description:
+                - Property to specify whether Azure Resource Manager is permitted to retrieve secrets from the key vault.
+            type: bool
+            returned: always
+            sample: True
         tags:
             description:
                 - List of tags.
@@ -126,7 +130,7 @@ keyvaults:
                     sample: standard
         access_policies:
             description:
-                - Location of the vault.
+                - List of policies.
             returned: always
             type: list
             contains:
@@ -192,6 +196,7 @@ def keyvault_to_dict(vault):
         enabled_for_deployment=vault.properties.enabled_for_deployment,
         enabled_for_disk_encryption=vault.properties.enabled_for_disk_encryption,
         enabled_for_template_deployment=vault.properties.enabled_for_template_deployment,
+        enable_soft_delete=vault.properties.enable_soft_delete,
         access_policies=[dict(
             tenant_id=policy.tenant_id,
             object_id=policy.object_id,

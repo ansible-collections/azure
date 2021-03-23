@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_functionapp
-version_added: "2.4"
+version_added: "0.1.2"
 short_description: Manage Azure Function Apps
 description:
     - Create, update or delete an Azure Function App.
@@ -43,7 +38,6 @@ options:
             - It can be a dict which contains C(name), C(resource_group).
             - C(name). Name of app service plan.
             - C(resource_group). Resource group name of app service plan.
-        version_added: "2.8"
     container_settings:
         description: Web app container settings.
         suboptions:
@@ -59,7 +53,6 @@ options:
             registry_server_password:
                 description:
                     - The container registry server password.
-        version_added: "2.8"
     storage_account:
         description:
             - Name of the storage account to use.

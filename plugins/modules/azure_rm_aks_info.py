@@ -8,15 +8,11 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_aks_info
 
-version_added: "2.9"
+version_added: "0.1.2"
 
 short_description: Get Azure Kubernetes Service facts
 
@@ -37,7 +33,6 @@ options:
         description:
             - Show kubeconfig of the AKS cluster.
             - Note the operation will cost more network overhead, not recommended when listing AKS.
-        version_added: "2.8"
         choices:
             - user
             - admin

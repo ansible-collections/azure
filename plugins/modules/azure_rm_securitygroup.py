@@ -9,15 +9,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_securitygroup
-version_added: "2.1"
+version_added: "0.1.0"
 short_description: Manage Azure network security groups
 description:
     - Create, update or delete a network security group.

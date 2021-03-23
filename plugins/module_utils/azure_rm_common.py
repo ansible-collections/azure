@@ -15,9 +15,15 @@ import inspect
 import traceback
 import json
 
+try:
+    from azure.graphrbac import GraphRbacManagementClient
+except Exception:
+    pass
 from os.path import expanduser
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import \
+    AnsibleModule, missing_required_lib, env_fallback
+
 try:
     from ansible.module_utils.ansible_release import __version__ as ANSIBLE_VERSION
 except Exception:
@@ -28,7 +34,9 @@ import ansible.module_utils.six.moves.urllib.parse as urlparse
 AZURE_COMMON_ARGS = dict(
     auth_source=dict(
         type='str',
-        choices=['auto', 'cli', 'env', 'credential_file', 'msi']
+        choices=['auto', 'cli', 'env', 'credential_file', 'msi'],
+        fallback=(env_fallback, ['ANSIBLE_AZURE_AUTH_SOURCE']),
+        default="auto"
     ),
     profile=dict(type='str'),
     subscription_id=dict(type='str'),
@@ -78,6 +86,7 @@ class SDKProfile(object):  # pylint: disable=too-few-public-methods
 # For now, we have to copy from azure-cli
 AZURE_API_PROFILES = {
     'latest': {
+        'AuthorizationManagementClient': '2018-09-01-preview',
         'ContainerInstanceManagementClient': '2018-02-01-preview',
         'ComputeManagementClient': dict(
             default_api_version='2018-10-01',
@@ -86,14 +95,17 @@ AZURE_API_PROFILES = {
             snapshots='2018-10-01',
             virtual_machine_run_commands='2018-10-01'
         ),
+        'ManagementGroupsClient': '2020-05-01',
         'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
-        'StorageManagementClient': '2017-10-01',
+        'StorageManagementClient': '2019-06-01',
+        'SubscriptionClient': '2019-11-01',
         'WebSiteManagementClient': '2018-02-01',
         'PostgreSQLManagementClient': '2017-12-01',
         'MySQLManagementClient': '2017-12-01',
         'MariaDBManagementClient': '2019-03-01',
-        'ManagementLockClient': '2016-09-01'
+        'ManagementLockClient': '2016-09-01',
+        'DataLakeStoreAccountManagementClient': '2016-11-01'
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
@@ -223,6 +235,7 @@ try:
     from azure.mgmt.web.version import VERSION as web_client_version
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource.resources import ResourceManagementClient
+    from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
     from azure.mgmt.resource.subscriptions import SubscriptionClient
     from azure.mgmt.storage import StorageManagementClient
     from azure.mgmt.compute import ComputeManagementClient
@@ -237,6 +250,7 @@ try:
     from azure.storage.cloudstorageaccount import CloudStorageAccount
     from azure.storage.blob import PageBlobService, BlockBlobService
     from adal.authentication_context import AuthenticationContext
+    from azure.mgmt.authorization import AuthorizationManagementClient
     from azure.mgmt.sql import SqlManagementClient
     from azure.mgmt.servicebus import ServiceBusManagementClient
     import azure.mgmt.servicebus.models as ServicebusModel
@@ -255,6 +269,11 @@ try:
     from msrestazure import AzureConfiguration
     from msrest.authentication import Authentication
     from azure.mgmt.resource.locks import ManagementLockClient
+    from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
+    import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
+    from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
+    import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
+
 except ImportError as exc:
     Authentication = object
     HAS_AZURE_EXC = traceback.format_exc()
@@ -272,7 +291,7 @@ except ImportError:
 
 try:
     from azure.cli.core.util import CLIError
-    from azure.common.credentials import get_azure_cli_credentials, get_cli_profile
+    from azure.common.credentials import get_cli_profile
     from azure.common.cloud import get_cli_active_cloud
 except ImportError:
     HAS_AZURE_CLI_CORE = False
@@ -307,7 +326,7 @@ def normalize_location_name(name):
 AZURE_PKG_VERSIONS = {
     'StorageManagementClient': {
         'package_name': 'storage',
-        'expected_version': '3.1.0'
+        'expected_version': '11.1.0'
     },
     'ComputeManagementClient': {
         'package_name': 'compute',
@@ -387,10 +406,14 @@ class AzureRMModuleBase(object):
             self.fail(msg=missing_required_lib('ansible[azure] (azure >= {0})'.format(AZURE_MIN_RELEASE)),
                       exception=HAS_AZURE_EXC)
 
+        self._authorization_client = None
         self._network_client = None
         self._storage_client = None
+        self._subscription_client = None
+        self._management_group_client = None
         self._resource_client = None
         self._compute_client = None
+        self._image_client = None
         self._dns_client = None
         self._private_dns_client = None
         self._web_client = None
@@ -411,6 +434,8 @@ class AzureRMModuleBase(object):
         self._automation_client = None
         self._IoThub_client = None
         self._lock_client = None
+        self._recovery_services_backup_client = None
+        self._datalake_store_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -828,14 +853,13 @@ class AzureRMModuleBase(object):
         return dict(default_api_version=profile_raw)
 
     def get_graphrbac_client(self, tenant_id):
-        from azure.graphrbac import GraphRbacManagementClient
         cred = self.azure_auth.azure_credentials
         base_url = self.azure_auth._cloud_environment.endpoints.active_directory_graph_resource_id
         client = GraphRbacManagementClient(cred, tenant_id, base_url)
 
         return client
 
-    def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None):
+    def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False):
         self.log('Getting management service client {0}'.format(client_type.__name__))
         self.check_client_version(client_type)
 
@@ -845,7 +869,11 @@ class AzureRMModuleBase(object):
             # most things are resource_manager, don't make everyone specify
             base_url = self.azure_auth._cloud_environment.endpoints.resource_manager
 
-        client_kwargs = dict(credentials=self.azure_auth.azure_credentials, subscription_id=self.azure_auth.subscription_id, base_url=base_url)
+        # Some management clients do not take a subscription ID as parameters.
+        if suppress_subscription_id:
+            client_kwargs = dict(credentials=self.azure_auth.azure_credentials, base_url=base_url)
+        else:
+            client_kwargs = dict(credentials=self.azure_auth.azure_credentials, subscription_id=self.azure_auth.subscription_id, base_url=base_url)
 
         api_profile_dict = {}
 
@@ -941,12 +969,49 @@ class AzureRMModuleBase(object):
         if not self._storage_client:
             self._storage_client = self.get_mgmt_svc_client(StorageManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2018-07-01')
+                                                            api_version='2019-06-01')
         return self._storage_client
 
     @property
     def storage_models(self):
-        return StorageManagementClient.models("2018-07-01")
+        return StorageManagementClient.models("2019-06-01")
+
+    @property
+    def authorization_client(self):
+        self.log('Getting authorization client...')
+        if not self._authorization_client:
+            self._authorization_client = self.get_mgmt_svc_client(AuthorizationManagementClient,
+                                                                  base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                  api_version='2018-09-01-preview')
+        return self._authorization_client
+
+    @property
+    def authorization_models(self):
+        return AuthorizationManagementClient.models('2018-09-01-preview')
+
+    @property
+    def subscription_client(self):
+        self.log('Getting subscription client...')
+        if not self._subscription_client:
+            self._subscription_client = self.get_mgmt_svc_client(SubscriptionClient,
+                                                                 base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                 suppress_subscription_id=True,
+                                                                 api_version='2019-11-01')
+        return self._subscription_client
+
+    @property
+    def subscription_models(self):
+        return SubscriptionClient.models("2019-11-01")
+
+    @property
+    def management_groups_client(self):
+        self.log('Getting Management Groups client...')
+        if not self._management_group_client:
+            self._management_group_client = self.get_mgmt_svc_client(ManagementGroupsClient,
+                                                                     base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                     suppress_subscription_id=True,
+                                                                     api_version='2020-05-01')
+        return self._management_group_client
 
     @property
     def network_client(self):
@@ -960,7 +1025,7 @@ class AzureRMModuleBase(object):
     @property
     def network_models(self):
         self.log("Getting network models...")
-        return NetworkManagementClient.models("2018-08-01")
+        return NetworkManagementClient.models("2019-06-01")
 
     @property
     def rm_client(self):
@@ -975,6 +1040,20 @@ class AzureRMModuleBase(object):
     def rm_models(self):
         self.log("Getting resource manager models")
         return ResourceManagementClient.models("2017-05-10")
+
+    @property
+    def image_client(self):
+        self.log('Getting compute image client')
+        if not self._image_client:
+            self._image_client = self.get_mgmt_svc_client(ComputeManagementClient,
+                                                          base_url=self._cloud_environment.endpoints.resource_manager,
+                                                          api_version='2018-06-01')
+        return self._image_client
+
+    @property
+    def image_models(self):
+        self.log("Getting compute image models")
+        return ComputeManagementClient.models("2018-06-01")
 
     @property
     def compute_client(self):
@@ -1209,6 +1288,31 @@ class AzureRMModuleBase(object):
         self.log("Getting lock models")
         return ManagementLockClient.models('2016-09-01')
 
+    @property
+    def recovery_services_backup_client(self):
+        self.log('Getting recovery services backup client')
+        if not self._recovery_services_backup_client:
+            self._recovery_services_backup_client = self.get_mgmt_svc_client(RecoveryServicesBackupClient,
+                                                                             base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._recovery_services_backup_client
+
+    @property
+    def recovery_services_backup_models(self):
+        return RecoveryServicesBackupModels
+
+    @property
+    def datalake_store_client(self):
+        self.log('Getting datalake store client...')
+        if not self._datalake_store_client:
+            self._datalake_store_client = self.get_mgmt_svc_client(DataLakeStoreAccountManagementClient,
+                                                                   base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                   api_version='2016-11-01')
+        return self._datalake_store_client
+
+    @property
+    def datalake_store_models(self):
+        return DataLakeStoreAccountModel
+
 
 class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
@@ -1231,7 +1335,10 @@ class AzureRMAuthException(Exception):
 
 
 class AzureRMAuth(object):
-    def __init__(self, auth_source='auto', profile=None, subscription_id=None, client_id=None, secret=None,
+    _cloud_environment = None
+    _adfs_authority_url = None
+
+    def __init__(self, auth_source=None, profile=None, subscription_id=None, client_id=None, secret=None,
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
                  api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False, **kwargs):
 
@@ -1239,16 +1346,22 @@ class AzureRMAuth(object):
             self._fail_impl = fail_impl
         else:
             self._fail_impl = self._default_fail_impl
-
-        self._cloud_environment = None
-        self._adfs_authority_url = None
         self.is_ad_resource = is_ad_resource
 
         # authenticate
         self.credentials = self._get_credentials(
-            dict(auth_source=auth_source, profile=profile, subscription_id=subscription_id, client_id=client_id, secret=secret,
-                 tenant=tenant, ad_user=ad_user, password=password, cloud_environment=cloud_environment,
-                 cert_validation_mode=cert_validation_mode, api_profile=api_profile, adfs_authority_url=adfs_authority_url))
+            auth_source=auth_source,
+            profile=profile,
+            subscription_id=subscription_id,
+            client_id=client_id,
+            secret=secret,
+            tenant=tenant,
+            ad_user=ad_user,
+            password=password,
+            cloud_environment=cloud_environment,
+            cert_validation_mode=cert_validation_mode,
+            api_profile=api_profile,
+            adfs_authority_url=adfs_authority_url)
 
         if not self.credentials:
             if HAS_AZURE_CLI_CORE:
@@ -1259,8 +1372,10 @@ class AzureRMAuth(object):
                           "define a profile in ~/.azure/credentials, or install Azure CLI and log in (`az login`).")
 
         # cert validation mode precedence: module-arg, credential profile, env, "validate"
-        self._cert_validation_mode = cert_validation_mode or self.credentials.get('cert_validation_mode') or \
-            os.environ.get('AZURE_CERT_VALIDATION_MODE') or 'validate'
+        self._cert_validation_mode = cert_validation_mode or \
+            self.credentials.get('cert_validation_mode') or \
+            self._get_env('cert_validation_mode') or \
+            'validate'
 
         if self._cert_validation_mode not in ['validate', 'ignore']:
             self.fail('invalid cert_validation_mode: {0}'.format(self._cert_validation_mode))
@@ -1350,6 +1465,10 @@ class AzureRMAuth(object):
     def _default_fail_impl(self, msg, exception=None, **kwargs):
         raise AzureRMAuthException(msg)
 
+    def _get_env(self, module_key, default=None):
+        "Read envvar matching module parameter"
+        return os.environ.get(AZURE_CREDENTIAL_ENV_MAPPING[module_key], default)
+
     def _get_profile(self, profile="default"):
         path = expanduser("~/.azure/credentials")
         try:
@@ -1370,10 +1489,9 @@ class AzureRMAuth(object):
 
         return None
 
-    def _get_msi_credentials(self, subscription_id_param=None, **kwargs):
-        client_id = kwargs.get('client_id', None)
+    def _get_msi_credentials(self, subscription_id=None, client_id=None, **kwargs):
         credentials = MSIAuthentication(client_id=client_id)
-        subscription_id = subscription_id_param or os.environ.get(AZURE_CREDENTIAL_ENV_MAPPING['subscription_id'], None)
+        subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
             try:
                 # use the first subscription of the MSI
@@ -1388,10 +1506,13 @@ class AzureRMAuth(object):
             'subscription_id': subscription_id
         }
 
-    def _get_azure_cli_credentials(self, resource=None):
+    def _get_azure_cli_credentials(self, subscription_id=None, resource=None):
         if self.is_ad_resource:
             resource = 'https://graph.windows.net/'
-        credentials, subscription_id = get_azure_cli_credentials(resource)
+        subscription_id = subscription_id or self._get_env('subscription_id')
+        profile = get_cli_profile()
+        credentials, subscription_id, tenant = profile.get_login_credentials(
+            subscription_id=subscription_id, resource=resource)
         cloud_environment = get_cli_active_cloud()
 
         cli_credentials = {
@@ -1415,8 +1536,7 @@ class AzureRMAuth(object):
 
         return None
 
-    # TODO: use explicit kwargs instead of intermediate dict
-    def _get_credentials(self, params):
+    def _get_credentials(self, auth_source=None, **params):
         # Get authentication credentials.
         self.log('Getting credentials')
 
@@ -1424,13 +1544,9 @@ class AzureRMAuth(object):
         for attribute, env_variable in AZURE_CREDENTIAL_ENV_MAPPING.items():
             arg_credentials[attribute] = params.get(attribute, None)
 
-        auth_source = params.get('auth_source', None)
-        if not auth_source:
-            auth_source = os.environ.get('ANSIBLE_AZURE_AUTH_SOURCE', 'auto')
-
         if auth_source == 'msi':
-            self.log('Retrieving credenitals from MSI')
-            return self._get_msi_credentials(arg_credentials['subscription_id'], client_id=params.get('client_id', None))
+            self.log('Retrieving credentials from MSI')
+            return self._get_msi_credentials(subscription_id=params.get('subscription_id'), client_id=params.get('client_id'))
 
         if auth_source == 'cli':
             if not HAS_AZURE_CLI_CORE:
@@ -1438,7 +1554,7 @@ class AzureRMAuth(object):
                           exception=HAS_AZURE_CLI_CORE_EXC)
             try:
                 self.log('Retrieving credentials from Azure CLI profile')
-                cli_credentials = self._get_azure_cli_credentials()
+                cli_credentials = self._get_azure_cli_credentials(subscription_id=params.get('subscription_id'))
                 return cli_credentials
             except CLIError as err:
                 self.fail("Azure CLI profile cannot be loaded - {0}".format(err))
@@ -1454,14 +1570,14 @@ class AzureRMAuth(object):
             default_credentials = self._get_profile(profile)
             return default_credentials
 
-        # auto, precedence: module parameters -> environment variables -> default profile in ~/.azure/credentials
+        # auto, precedence: module parameters -> environment variables -> default profile in ~/.azure/credentials -> azure cli
         # try module params
         if arg_credentials['profile'] is not None:
             self.log('Retrieving credentials with profile parameter.')
             credentials = self._get_profile(arg_credentials['profile'])
             return credentials
 
-        if arg_credentials['subscription_id']:
+        if arg_credentials['client_id'] or arg_credentials['ad_user']:
             self.log('Received credentials from parameters.')
             return arg_credentials
 
@@ -1480,7 +1596,7 @@ class AzureRMAuth(object):
         try:
             if HAS_AZURE_CLI_CORE:
                 self.log('Retrieving credentials from AzureCLI profile')
-            cli_credentials = self._get_azure_cli_credentials()
+            cli_credentials = self._get_azure_cli_credentials(subscription_id=params.get('subscription_id'))
             return cli_credentials
         except CLIError as ce:
             self.log('Error getting AzureCLI profile credentials - {0}'.format(ce))

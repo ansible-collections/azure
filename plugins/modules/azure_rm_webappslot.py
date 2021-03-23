@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_webappslot
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage Azure Web App slot
 description:
     - Create, update and delete Azure Web App slot.
@@ -138,6 +133,7 @@ options:
         description:
             - Purge any existing application settings. Replace slot application settings with app_settings.
         type: bool
+        default: False
     deployment_source:
         description:
             - Deployment source for git.

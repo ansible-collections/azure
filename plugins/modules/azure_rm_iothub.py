@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_iothub
-version_added: "2.9"
+version_added: "0.1.2"
 short_description: Manage Azure IoT hub
 description:
     - Create, delete an Azure IoT hub.

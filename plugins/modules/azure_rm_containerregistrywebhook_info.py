@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
-module: azure_rm_containerregistrywebhook_facts
-version_added: "2.5"
+module: azure_rm_containerregistrywebhook_info
+version_added: "0.1.2"
 short_description: Get Webhook facts.
 description:
     - Get facts of Webhook.
@@ -45,7 +40,7 @@ author:
 
 EXAMPLES = '''
   - name: Get instance of Webhook
-    azure_rm_containerregistrywebhook_facts:
+    azure_rm_containerregistrywebhook_info:
       resource_group: resource_group_name
       registry_name: registry_name
       webhook_name: webhook_name

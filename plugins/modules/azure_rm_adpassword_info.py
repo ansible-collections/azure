@@ -10,14 +10,10 @@ import datetime
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = '''
 module: azure_rm_adpassword_info
 
-version_added: "2.10"
+version_added: "0.2.0"
 
 short_description: Get application password info
 

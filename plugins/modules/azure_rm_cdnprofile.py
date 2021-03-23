@@ -7,14 +7,10 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_cdnprofile
-version_added: "2.8"
+version_added: "0.1.2"
 short_description: Manage a Azure CDN profile
 description:
     - Create, update and delete a Azure CDN profile.

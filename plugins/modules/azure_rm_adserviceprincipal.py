@@ -8,15 +8,11 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_adserviceprincipal
 
-version_added: "2.10"
+version_added: "0.2.0"
 
 short_description: Manage Azure Active Directory service principal
 
@@ -59,7 +55,7 @@ author:
 
 EXAMPLES = '''
   - name: create ad sp
-    azure_ad_serviceprincipal:
+    azure_rm_adserviceprincipal:
       app_id: "{{ app_id }}"
       state: present
       tenant: "{{ tenant_id }}"
@@ -94,6 +90,11 @@ object_id:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+try:
+    from azure.graphrbac.models import ServicePrincipalCreateParameters
+    from azure.graphrbac.models import ServicePrincipalUpdateParameters
+except Exception:
+    pass
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -147,7 +148,6 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
         return self.results
 
     def create_resource(self):
-        from azure.graphrbac.models import ServicePrincipalCreateParameters
         try:
             client = self.get_graphrbac_client(self.tenant)
             response = client.service_principals.create(ServicePrincipalCreateParameters(app_id=self.app_id, account_enabled=True))
@@ -159,7 +159,6 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
 
     def update_resource(self, old_response):
         try:
-            from azure.graphrbac.models import ServicePrincipalUpdateParameters
             client = self.get_graphrbac_client(self.tenant)
             to_update = {}
             if self.app_role_assignment_required is not None:

@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_azurefirewall
-version_added: '2.9'
+version_added: '0.1.2'
 short_description: Manage Azure Firewall instance
 description:
     - Create, update and delete instance of Azure Firewall.
@@ -567,7 +562,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                                                     supports_tags=True)
 
     def exec_module(self, **kwargs):
-        for key in list(self.module_arg_spec.keys()):
+        for key in list(self.module_arg_spec.keys()) + ['tags']:
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:

@@ -9,16 +9,11 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_resourcegroup_info
 
-version_added: "2.1"
+version_added: "0.1.2"
 
 short_description: Get resource group facts
 
@@ -36,7 +31,6 @@ options:
         description:
             - List all resources under the resource group.
             - Note this will cost network overhead for each resource group. Suggest use this when I(name) set.
-        version_added: "2.8"
 
 extends_documentation_fragment:
     - azure.azcollection.azure

@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_mysqlserver
-version_added: "2.5"
+version_added: "0.1.2"
 short_description: Manage MySQL Server instance
 description:
     - Create, update and delete instance of MySQL Server.
@@ -62,6 +57,7 @@ options:
         choices:
             - 5.6
             - 5.7
+            - 8.0
     enforce_ssl:
         description:
             - Enable SSL enforcement.
@@ -119,7 +115,7 @@ id:
     sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.DBforMySQL/servers/mysqlsrv1b6dd89593
 version:
     description:
-        - Server version. Possible values include C(5.6), C(5.7).
+        - Server version. Possible values include C(5.6), C(5.7), C(8.0).
     returned: always
     type: str
     sample: 5.6
@@ -178,7 +174,7 @@ class AzureRMMySqlServers(AzureRMModuleBase):
             ),
             version=dict(
                 type='str',
-                choices=['5.6', '5.7']
+                choices=['5.6', '5.7', '8.0']
             ),
             enforce_ssl=dict(
                 type='bool',

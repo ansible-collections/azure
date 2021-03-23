@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
-module: azure_rm_containerregistryreplication_facts
-version_added: "2.5"
+module: azure_rm_containerregistryreplication_info
+version_added: "0.0.1"
 short_description: Get Replication facts.
 description:
     - Get facts of Replication.
@@ -45,7 +40,7 @@ author:
 
 EXAMPLES = '''
   - name: Get instance of Replication
-    azure_rm_containerregistryreplication_facts:
+    azure_rm_containerregistryreplication_info:
       resource_group: resource_group_name
       registry_name: registry_name
       replication_name: replication_name

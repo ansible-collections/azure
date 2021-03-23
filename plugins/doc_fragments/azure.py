@@ -51,12 +51,12 @@ options:
               the C(AZURE_CLOUD_ENVIRONMENT) environment variable.
         type: str
         default: AzureCloud
-        version_added: '2.4'
+        version_added: '0.0.1'
     adfs_authority_url:
         description:
             - Azure AD authority url. Use when authenticating with Username/password, and has your own ADFS authority.
         type: str
-        version_added: '2.6'
+        version_added: '0.0.1'
     cert_validation_mode:
         description:
             - Controls the certificate validation behavior for Azure endpoints. By default, all modules will validate the server certificate, but
@@ -64,34 +64,37 @@ options:
               set via credential file profile or the C(AZURE_CERT_VALIDATION) environment variable.
         type: str
         choices: [ ignore, validate ]
-        version_added: '2.5'
+        version_added: '0.0.1'
     auth_source:
         description:
             - Controls the source of the credentials to use for authentication.
-            - If not specified, ANSIBLE_AZURE_AUTH_SOURCE environment variable will be used and default to C(auto) if variable is not defined.
-            - C(auto) will follow the default precedence of module parameters -> environment variables -> default profile in credential file
-              C(~/.azure/credentials).
-            - When set to C(cli), the credentials will be sources from the default Azure CLI profile.
             - Can also be set via the C(ANSIBLE_AZURE_AUTH_SOURCE) environment variable.
+            - When set to C(auto) (the default) the precedence is module parameters -> C(env) -> C(credential_file) -> C(cli).
+            - When set to C(env), the credentials will be read from the environment variables
+            - When set to C(credential_file), it will read the profile from C(~/.azure/credentials).
+            - When set to C(cli), the credentials will be sources from the Azure CLI profile. C(subscription_id) or the environment variable
+              C(AZURE_SUBSCRIPTION_ID) can be used to identify the subscription ID if more than one is present otherwise the default
+              az cli subscription is used.
             - When set to C(msi), the host machine must be an azure resource with an enabled MSI extension. C(subscription_id) or the
               environment variable C(AZURE_SUBSCRIPTION_ID) can be used to identify the subscription ID if the resource is granted
               access to more than one subscription, otherwise the first subscription is chosen.
             - The C(msi) was added in Ansible 2.6.
         type: str
+        default: auto
         choices:
         - auto
         - cli
         - credential_file
         - env
         - msi
-        version_added: '2.5'
+        version_added: '0.0.1'
     api_profile:
         description:
         - Selects an API profile to use when communicating with Azure services. Default value of C(latest) is appropriate for public clouds;
           future values will allow use with Azure Stack.
         type: str
         default: latest
-        version_added: '2.5'
+        version_added: '0.0.1'
 requirements:
     - python >= 2.7
     - azure >= 2.0.0
