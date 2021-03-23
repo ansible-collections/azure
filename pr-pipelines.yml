@@ -36,6 +36,7 @@ parameters:
     - "azure_rm_containerinstance"
     - "azure_rm_containerregistry"
     - "azure_rm_cosmosdbaccount"
+    - "azure_rm_datalakestore"
     - "azure_rm_deployment"
     - "azure_rm_dnsrecordset"
     - "azure_rm_dnszone"
@@ -50,6 +51,7 @@ parameters:
     - "azure_rm_loadbalancer"
     - "azure_rm_loganalyticsworkspace"
     - "azure_rm_manageddisk"
+    - "azure_rm_managementgroup"
     - "azure_rm_mariadbserver"
     - "azure_rm_monitorlogprofile"
     - "azure_rm_mysqlserver"
@@ -199,6 +201,7 @@ jobs:
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
+      TEST_RESOURCE_GROUP_DATALAKE: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_datalake'] ]
     steps:
       - task: AzureCLI@2
         inputs:
@@ -208,3 +211,4 @@ jobs:
           inlineScript: |
               az group delete -n $(TEST_RESOURCE_GROUP) --yes --no-wait
               az group delete -n $(TEST_RESOURCE_GROUP_SECONDARY) --yes --no-wait
+              az group delete -n $(TEST_RESOURCE_GROUP_DATALAKE) --yes --no-wait
