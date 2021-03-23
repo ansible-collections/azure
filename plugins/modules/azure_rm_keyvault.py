@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_keyvault
@@ -137,6 +132,7 @@ options:
         description:
             - Property to specify whether the soft delete functionality is enabled for this key vault.
         type: bool
+        default: True
     recover_mode:
         description:
             - Create vault in recovery mode.
@@ -248,7 +244,8 @@ class AzureRMVaults(AzureRMModuleBase):
                 type='bool'
             ),
             enable_soft_delete=dict(
-                type='bool'
+                type='bool',
+                default=True
             ),
             recover_mode=dict(
                 type='bool'

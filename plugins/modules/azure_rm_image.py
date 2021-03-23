@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_image
@@ -198,16 +193,16 @@ class AzureRMImage(AzureRMModuleBase):
                 if vm:
                     if self.data_disk_sources:
                         self.fail('data_disk_sources is not allowed when capturing image from vm')
-                    image_instance = self.compute_models.Image(location=self.location,
-                                                               source_virtual_machine=self.compute_models.SubResource(id=vm.id),
-                                                               tags=self.tags)
+                    image_instance = self.image_models.Image(location=self.location,
+                                                             source_virtual_machine=self.image_models.SubResource(id=vm.id),
+                                                             tags=self.tags)
                 else:
                     if not self.os_type:
                         self.fail('os_type is required to create the image')
                     os_disk = self.create_os_disk()
                     data_disks = self.create_data_disks()
-                    storage_profile = self.compute_models.ImageStorageProfile(os_disk=os_disk, data_disks=data_disks)
-                    image_instance = self.compute_models.Image(location=self.location, storage_profile=storage_profile, tags=self.tags)
+                    storage_profile = self.image_models.ImageStorageProfile(os_disk=os_disk, data_disks=data_disks)
+                    image_instance = self.image_models.Image(location=self.location, storage_profile=storage_profile, tags=self.tags)
 
                 # finally make the change if not check mode
                 if not self.check_mode and image_instance:
@@ -274,23 +269,23 @@ class AzureRMImage(AzureRMModuleBase):
 
     def create_os_disk(self):
         blob_uri, disk, snapshot = self.resolve_storage_source(self.source)
-        snapshot_resource = self.compute_models.SubResource(id=snapshot) if snapshot else None
-        managed_disk = self.compute_models.SubResource(id=disk) if disk else None
-        return self.compute_models.ImageOSDisk(os_type=self.os_type,
-                                               os_state=self.compute_models.OperatingSystemStateTypes.generalized,
-                                               snapshot=snapshot_resource,
-                                               managed_disk=managed_disk,
-                                               blob_uri=blob_uri)
+        snapshot_resource = self.image_models.SubResource(id=snapshot) if snapshot else None
+        managed_disk = self.image_models.SubResource(id=disk) if disk else None
+        return self.image_models.ImageOSDisk(os_type=self.os_type,
+                                             os_state=self.image_models.OperatingSystemStateTypes.generalized,
+                                             snapshot=snapshot_resource,
+                                             managed_disk=managed_disk,
+                                             blob_uri=blob_uri)
 
     def create_data_disk(self, lun, source):
         blob_uri, disk, snapshot = self.resolve_storage_source(source)
         if blob_uri or disk or snapshot:
-            snapshot_resource = self.compute_models.SubResource(id=snapshot) if snapshot else None
-            managed_disk = self.compute_models.SubResource(id=disk) if disk else None
-            return self.compute_models.ImageDataDisk(lun=lun,
-                                                     blob_uri=blob_uri,
-                                                     snapshot=snapshot_resource,
-                                                     managed_disk=managed_disk)
+            snapshot_resource = self.image_models.SubResource(id=snapshot) if snapshot else None
+            managed_disk = self.image_models.SubResource(id=disk) if disk else None
+            return self.image_models.ImageDataDisk(lun=lun,
+                                                   blob_uri=blob_uri,
+                                                   snapshot=snapshot_resource,
+                                                   managed_disk=managed_disk)
 
     def create_data_disks(self):
         return list(filter(None, [self.create_data_disk(lun, source) for lun, source in enumerate(self.data_disk_sources)]))
@@ -316,16 +311,16 @@ class AzureRMImage(AzureRMModuleBase):
         return self.get_vm(resource['resource_group'], resource['name']) if resource['type'] == 'virtualMachines' else None
 
     def get_snapshot(self, resource_group, snapshot_name):
-        return self._get_resource(self.compute_client.snapshots.get, resource_group, snapshot_name)
+        return self._get_resource(self.image_client.snapshots.get, resource_group, snapshot_name)
 
     def get_disk(self, resource_group, disk_name):
-        return self._get_resource(self.compute_client.disks.get, resource_group, disk_name)
+        return self._get_resource(self.image_client.disks.get, resource_group, disk_name)
 
     def get_vm(self, resource_group, vm_name):
-        return self._get_resource(self.compute_client.virtual_machines.get, resource_group, vm_name, 'instanceview')
+        return self._get_resource(self.image_client.virtual_machines.get, resource_group, vm_name, 'instanceview')
 
     def get_image(self):
-        return self._get_resource(self.compute_client.images.get, self.resource_group, self.name)
+        return self._get_resource(self.image_client.images.get, self.resource_group, self.name)
 
     def _get_resource(self, get_method, resource_group, name, expand=None):
         try:
@@ -344,7 +339,7 @@ class AzureRMImage(AzureRMModuleBase):
 
     def create_image(self, image):
         try:
-            poller = self.compute_client.images.create_or_update(self.resource_group, self.name, image)
+            poller = self.image_client.images.create_or_update(self.resource_group, self.name, image)
             new_image = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating image {0} - {1}".format(self.name, str(exc)))
@@ -354,7 +349,7 @@ class AzureRMImage(AzureRMModuleBase):
     def delete_image(self):
         self.log('Deleting image {0}'.format(self.name))
         try:
-            poller = self.compute_client.images.delete(self.resource_group, self.name)
+            poller = self.image_client.images.delete(self.resource_group, self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting image {0} - {1}".format(self.name, str(exc)))

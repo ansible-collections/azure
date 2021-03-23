@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_openshiftmanagedcluster
@@ -824,7 +819,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
 ###
 
     def set_default(self):
-        if 'apiServerProfile' not in self.body['properties']:
+        if 'apiserverProfile' not in self.body['properties']:
             api_profile = dict(visibility="Public")
             self.body['properties']['apiserverProfile'] = api_profile
         if 'ingressProfiles' not in self.body['properties']:
