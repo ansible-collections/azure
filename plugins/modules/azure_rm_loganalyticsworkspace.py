@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_loganalyticsworkspace
@@ -219,8 +214,22 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
             changed = True
             workspace = self.log_analytics_models.Workspace(sku=self.log_analytics_models.WorkspaceSku(name=self.sku),
                                                             retention_in_days=self.retention_in_days,
-                                                            location=self.location)
+                                                            location=self.location,
+                                                            tags=self.tags)
             if not self.check_mode:
+                workspace = self.create_workspace(workspace)
+        elif workspace and self.state == 'present':
+            if workspace.retention_in_days != self.retention_in_days:
+                changed = True
+            results = dict()
+            update_tags, results['tags'] = self.update_tags(workspace.tags)
+            if update_tags:
+                changed = True
+            if not self.check_mode and changed:
+                workspace = self.log_analytics_models.Workspace(sku=self.log_analytics_models.WorkspaceSku(name=self.sku),
+                                                                retention_in_days=self.retention_in_days,
+                                                                location=self.location,
+                                                                tags=results['tags'])
                 workspace = self.create_workspace(workspace)
         elif workspace and self.state == 'absent':
             changed = True

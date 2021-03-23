@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_webapp
@@ -166,6 +161,7 @@ options:
         description:
             - Purge any existing application settings. Replace web app application settings with app_settings.
         type: bool
+        default: False
 
     app_state:
         description:

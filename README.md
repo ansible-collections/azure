@@ -5,6 +5,8 @@
 
 This collection provides a series of Ansible modules and plugins for interacting with the [Azure](https://azure.microsoft.com).
 
+Documentation of individual modules is [available in the Ansible docs site](https://docs.ansible.com/ansible/latest/collections/azure/azcollection/index.html#plugins-in-azure-azcollection)
+
 ## Requirements
 
 - ansible version >= 2.9

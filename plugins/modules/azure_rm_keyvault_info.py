@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_keyvault_info
@@ -105,6 +100,12 @@ keyvaults:
             returned: always
             type: bool
             sample: False
+        enable_soft_delete:
+            description:
+                - Property to specify whether Azure Resource Manager is permitted to retrieve secrets from the key vault.
+            type: bool
+            returned: always
+            sample: True
         tags:
             description:
                 - List of tags.
@@ -129,7 +130,7 @@ keyvaults:
                     sample: standard
         access_policies:
             description:
-                - Location of the vault.
+                - List of policies.
             returned: always
             type: list
             contains:
@@ -195,6 +196,7 @@ def keyvault_to_dict(vault):
         enabled_for_deployment=vault.properties.enabled_for_deployment,
         enabled_for_disk_encryption=vault.properties.enabled_for_disk_encryption,
         enabled_for_template_deployment=vault.properties.enabled_for_template_deployment,
+        enable_soft_delete=vault.properties.enable_soft_delete,
         access_policies=[dict(
             tenant_id=policy.tenant_id,
             object_id=policy.object_id,

@@ -95,6 +95,7 @@ AZURE_API_PROFILES = {
             snapshots='2018-10-01',
             virtual_machine_run_commands='2018-10-01'
         ),
+        'ManagementGroupsClient': '2020-05-01',
         'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
         'StorageManagementClient': '2019-06-01',
@@ -103,7 +104,8 @@ AZURE_API_PROFILES = {
         'PostgreSQLManagementClient': '2017-12-01',
         'MySQLManagementClient': '2017-12-01',
         'MariaDBManagementClient': '2019-03-01',
-        'ManagementLockClient': '2016-09-01'
+        'ManagementLockClient': '2016-09-01',
+        'DataLakeStoreAccountManagementClient': '2016-11-01'
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
@@ -233,6 +235,7 @@ try:
     from azure.mgmt.web.version import VERSION as web_client_version
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource.resources import ResourceManagementClient
+    from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
     from azure.mgmt.resource.subscriptions import SubscriptionClient
     from azure.mgmt.storage import StorageManagementClient
     from azure.mgmt.compute import ComputeManagementClient
@@ -266,6 +269,11 @@ try:
     from msrestazure import AzureConfiguration
     from msrest.authentication import Authentication
     from azure.mgmt.resource.locks import ManagementLockClient
+    from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
+    import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
+    from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
+    import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
+
 except ImportError as exc:
     Authentication = object
     HAS_AZURE_EXC = traceback.format_exc()
@@ -402,8 +410,10 @@ class AzureRMModuleBase(object):
         self._network_client = None
         self._storage_client = None
         self._subscription_client = None
+        self._management_group_client = None
         self._resource_client = None
         self._compute_client = None
+        self._image_client = None
         self._dns_client = None
         self._private_dns_client = None
         self._web_client = None
@@ -424,6 +434,8 @@ class AzureRMModuleBase(object):
         self._automation_client = None
         self._IoThub_client = None
         self._lock_client = None
+        self._recovery_services_backup_client = None
+        self._datalake_store_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -992,6 +1004,16 @@ class AzureRMModuleBase(object):
         return SubscriptionClient.models("2019-11-01")
 
     @property
+    def management_groups_client(self):
+        self.log('Getting Management Groups client...')
+        if not self._management_group_client:
+            self._management_group_client = self.get_mgmt_svc_client(ManagementGroupsClient,
+                                                                     base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                     suppress_subscription_id=True,
+                                                                     api_version='2020-05-01')
+        return self._management_group_client
+
+    @property
     def network_client(self):
         self.log('Getting network client')
         if not self._network_client:
@@ -1018,6 +1040,20 @@ class AzureRMModuleBase(object):
     def rm_models(self):
         self.log("Getting resource manager models")
         return ResourceManagementClient.models("2017-05-10")
+
+    @property
+    def image_client(self):
+        self.log('Getting compute image client')
+        if not self._image_client:
+            self._image_client = self.get_mgmt_svc_client(ComputeManagementClient,
+                                                          base_url=self._cloud_environment.endpoints.resource_manager,
+                                                          api_version='2018-06-01')
+        return self._image_client
+
+    @property
+    def image_models(self):
+        self.log("Getting compute image models")
+        return ComputeManagementClient.models("2018-06-01")
 
     @property
     def compute_client(self):
@@ -1251,6 +1287,31 @@ class AzureRMModuleBase(object):
     def lock_models(self):
         self.log("Getting lock models")
         return ManagementLockClient.models('2016-09-01')
+
+    @property
+    def recovery_services_backup_client(self):
+        self.log('Getting recovery services backup client')
+        if not self._recovery_services_backup_client:
+            self._recovery_services_backup_client = self.get_mgmt_svc_client(RecoveryServicesBackupClient,
+                                                                             base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._recovery_services_backup_client
+
+    @property
+    def recovery_services_backup_models(self):
+        return RecoveryServicesBackupModels
+
+    @property
+    def datalake_store_client(self):
+        self.log('Getting datalake store client...')
+        if not self._datalake_store_client:
+            self._datalake_store_client = self.get_mgmt_svc_client(DataLakeStoreAccountManagementClient,
+                                                                   base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                   api_version='2016-11-01')
+        return self._datalake_store_client
+
+    @property
+    def datalake_store_models(self):
+        return DataLakeStoreAccountModel
 
 
 class AzureSASAuthentication(Authentication):

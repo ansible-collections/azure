@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_subscription_info
@@ -42,7 +37,6 @@ options:
             - If true, will return all subscriptions.
             - If false will omit disabled subscriptions (default).
             - Option has no effect when searching by id or name, and will be silently ignored.
-        default: False
         type: bool
     tags:
         description:

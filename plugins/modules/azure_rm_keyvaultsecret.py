@@ -6,11 +6,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_keyvaultsecret
@@ -25,6 +20,10 @@ options:
             description:
                 - URI of the keyvault endpoint.
             required: true
+    content_type:
+        description:
+            - Type of the secret value such as a password.
+        type: str
     secret_name:
         description:
             - Name of the keyvault secret.
@@ -101,7 +100,8 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             secret_name=dict(type='str', required=True),
             secret_value=dict(type='str', no_log=True),
             keyvault_uri=dict(type='str', required=True),
-            state=dict(type='str', default='present', choices=['present', 'absent'])
+            state=dict(type='str', default='present', choices=['present', 'absent']),
+            content_type=dict(type='str')
         )
 
         required_if = [
@@ -120,6 +120,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         self.data_creds = None
         self.client = None
         self.tags = None
+        self.content_type = None
 
         super(AzureRMKeyVaultSecret, self).__init__(self.module_arg_spec,
                                                     supports_check_mode=True,
@@ -157,7 +158,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         if not self.check_mode:
             # Create secret
             if self.state == 'present' and changed:
-                results['secret_id'] = self.create_update_secret(self.secret_name, self.secret_value, self.tags)
+                results['secret_id'] = self.create_update_secret(self.secret_name, self.secret_value, self.tags, self.content_type)
                 self.results['state'] = results
                 self.results['state']['status'] = 'Created'
             # Delete secret
@@ -174,12 +175,15 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         return self.results
 
     def get_keyvault_client(self):
-        try:
-            self.log("Get KeyVaultClient from MSI")
-            credentials = MSIAuthentication(resource='https://vault.azure.net')
-            return KeyVaultClient(credentials)
-        except Exception:
-            self.log("Get KeyVaultClient from service principal")
+        # Don't use MSI credentials if the auth_source isn't set to MSI.  The below will Always result in credentials when running on an Azure VM.
+        if self.module.params['auth_source'] == 'msi':
+            try:
+                self.log("Get KeyVaultClient from MSI")
+                resource = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
+                credentials = MSIAuthentication(resource="https://{0}".format(resource))
+                return KeyVaultClient(credentials)
+            except Exception:
+                self.log("Get KeyVaultClient from service principal")
 
         # Create KeyVault Client using KeyVault auth class and auth_callback
         def auth_callback(server, resource, scope):
@@ -210,9 +214,9 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             return dict(secret_id=secret_id.id, secret_value=secret_bundle.value)
         return None
 
-    def create_update_secret(self, name, secret, tags):
+    def create_update_secret(self, name, secret, tags, content_type):
         ''' Creates/Updates a secret '''
-        secret_bundle = self.client.set_secret(self.keyvault_uri, name, secret, tags)
+        secret_bundle = self.client.set_secret(self.keyvault_uri, name, secret, tags=tags, content_type=content_type)
         secret_id = KeyVaultId.parse_secret_id(secret_bundle.id)
         return secret_id.id
 

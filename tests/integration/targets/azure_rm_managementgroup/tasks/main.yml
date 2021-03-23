@@ -1,0 +1,28 @@
+- name: Get list of all managementgroups
+  azure_rm_managementgroup_info:
+  register: az_all_managementgroups
+
+- name: Get a managementgroup by id
+  azure_rm_managementgroup_info:
+    id: "{{ az_all_managementgroups.management_groups[0].id }}"
+    recurse: True
+    flatten: True
+    children: True
+
+- name: Get a managementgroup by name
+  azure_rm_managementgroup_info:
+    name: "{{ az_all_managementgroups.management_groups[0].name }}"
+    recurse: True
+    flatten: True
+
+- name: Test invalid name id combo
+  azure_rm_managementgroup_info:
+    name: "{{ az_all_managementgroups.management_groups[0].name }}"
+    id: "{{ az_all_managementgroups.management_groups[0].id }}"
+  register: invalid_name
+  ignore_errors: yes
+
+- name: Assert task failed
+  assert:
+    that:
+      - invalid_name['failed']
