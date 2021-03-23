@@ -1,12 +1,12 @@
 - name: Create data lake store name
   set_fact:
-    adl_name: "adl{{ resource_group | hash('md5') | truncate(21, True, '') }}"
-    vnet_name: "vnet{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+    adl_name: "adl{{ resource_group_datalake | hash('md5') | truncate(21, True, '') }}"
+    vnet_name: "vnet{{ resource_group_datalake | hash('md5') | truncate(20, True, '') }}"
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
     name: "{{ vnet_name }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     address_prefixes_cidr:
       - 10.1.0.0/16
   register: vnet_output
@@ -15,7 +15,7 @@
   azure_rm_subnet:
     name: foobar
     virtual_network_name: "{{ vnet_name }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     address_prefix_cidr: "10.1.1.0/24"
     service_endpoints:
       - service: Microsoft.AzureActiveDirectory
@@ -23,7 +23,7 @@
 
 - name: Create minimal data lake store
   azure_rm_datalakestore:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
   register: output
 
@@ -47,7 +47,7 @@
 
 - name: Create minimal data lake store (Idempotence)
   azure_rm_datalakestore:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
   register: output
 
@@ -58,7 +58,7 @@
 
 - name: Update data lake store to add virtual_network_rules
   azure_rm_datalakestore:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     virtual_network_rules:
       - name: vnet_rule_1
@@ -75,7 +75,7 @@
 
 - name: Update data lake store to change encryption state that must fail
   azure_rm_datalakestore:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     encryption_state: Disabled
   register: output
@@ -89,7 +89,7 @@
 
 - name: Update data lake store to add new_tier
   azure_rm_datalakestore:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     new_tier: Commitment_1TB
   register: output
@@ -103,14 +103,14 @@
 
 - name: Delete minimal data lake store
   azure_rm_datalakestore:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     state: absent
   register: output
 
 - name: Create new data lake store
   azure_rm_datalakestore:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     tags:
       P1: V1
@@ -160,7 +160,7 @@
 
 - name: Create new data lake store (Idempotence)
   azure_rm_datalakestore:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     tags:
       P1: V1
@@ -193,11 +193,11 @@
 - name: Delete virtual network
   azure_rm_virtualnetwork:
     name: "{{ vnet_name }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     state: absent
 
 - name: Delete Data Lake Store
   azure_rm_datalakestore:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     state: absent
