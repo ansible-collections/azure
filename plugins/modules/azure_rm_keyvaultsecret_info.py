@@ -7,12 +7,6 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_keyvaultsecret_info
@@ -86,7 +80,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-keyvaults:
+secrets:
     description:
         - List of secrets in Azure Key Vault.
     returned: always
@@ -115,7 +109,7 @@ keyvaults:
             returned: always
             type: dict
             sample: {"delete": "on-exit"}
-        type:
+        content_type:
             description:
                 - Content type (optional)
             returned: always
@@ -187,7 +181,7 @@ def secretbundle_to_dict(bundle):
                     recovery_level=bundle.attributes.recovery_level),
                 sid=bundle.id,
                 version=KeyVaultId.parse_secret_id(bundle.id).version,
-                type=bundle.content_type,
+                content_type=bundle.content_type,
                 secret=bundle.value)
 
 
@@ -270,12 +264,15 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
         return self.results
 
     def get_keyvault_client(self):
-        try:
-            self.log("Get KeyVaultClient from MSI")
-            credentials = MSIAuthentication(resource='https://vault.azure.net')
-            return KeyVaultClient(credentials)
-        except Exception:
-            self.log("Get KeyVaultClient from service principal")
+        # Don't use MSI credentials if the auth_source isn't set to MSI.  The below will Always result in credentials when running on an Azure VM.
+        if self.module.params['auth_source'] == 'msi':
+            try:
+                self.log("Get KeyVaultClient from MSI")
+                resource = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
+                credentials = MSIAuthentication(resource="https://{0}".format(resource))
+                return KeyVaultClient(credentials)
+            except Exception:
+                self.log("Get KeyVaultClient from service principal")
 
         # Create KeyVault Client using KeyVault auth class and auth_callback
         def auth_callback(server, resource, scope):

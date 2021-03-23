@@ -7,9 +7,6 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = \
     '''
 ---
@@ -188,20 +185,20 @@ class BackupAzureVM(AzureRMModuleBaseExt):
                    + '/Microsoft.RecoveryServices' + '/vaults' + '/' \
                    + self.recovery_vault_name \
                    + '/backupFabrics/Azure/protectionContainers/' \
-                   + 'iaasvmcontainer;iaasvmcontainerv2;' + self.resource_group \
-                   + ';' + self.resource_id.split('/')[-1] + '/protectedItems/' \
-                   + 'vm;iaasvmcontainerv2;' + self.resource_group + ';' \
-                   + self.resource_id.split('/')[-1]
+                   + 'iaasvmcontainer;iaasvmcontainerv2;' + self.parse_resource_to_dict(self.resource_id)['resource_group']\
+                   + ';' + self.parse_resource_to_dict(self.resource_id)['name'] + '/protectedItems/' \
+                   + 'vm;iaasvmcontainerv2;' + self.parse_resource_to_dict(self.resource_id)['resource_group'] + ';' \
+                   + self.parse_resource_to_dict(self.resource_id)['name']
         if self.state == 'backup':
             return '/subscriptions' + '/' + self.subscription_id \
                    + '/resourceGroups' + '/' + self.resource_group + '/providers' \
                    + '/Microsoft.RecoveryServices' + '/vaults' + '/' \
                    + self.recovery_vault_name \
                    + '/backupFabrics/Azure/protectionContainers/' \
-                   + 'iaasvmcontainer;iaasvmcontainerv2;' + self.resource_group \
-                   + ';' + self.resource_id.split('/')[-1] + '/protectedItems/' \
-                   + 'vm;iaasvmcontainerv2;' + self.resource_group + ';' \
-                   + self.resource_id.split('/')[-1] + '/backup'
+                   + 'iaasvmcontainer;iaasvmcontainerv2;' + self.parse_resource_to_dict(self.resource_id)['resource_group'] \
+                   + ';' + self.parse_resource_to_dict(self.resource_id)['name'] + '/protectedItems/' \
+                   + 'vm;iaasvmcontainerv2;' + self.parse_resource_to_dict(self.resource_id)['resource_group'] + ';' \
+                   + self.parse_resource_to_dict(self.resource_id)['name'] + '/backup'
 
     def get_body(self):
         if self.state == 'create' or self.state == 'update':

@@ -11,17 +11,19 @@ azure-mgmt-compute==10.0.0
 azure-mgmt-containerinstance==1.4.0
 azure-mgmt-containerregistry==2.0.0
 azure-mgmt-containerservice==9.1.0
+azure-mgmt-datalake-store==0.5.0
 azure-mgmt-dns==2.1.0
 azure-mgmt-keyvault==1.1.0
 azure-mgmt-marketplaceordering==0.1.0
 azure-mgmt-monitor==0.5.2
 azure-mgmt-managedservices==1.0.0
+azure-mgmt-managementgroups==0.2.0
 azure-mgmt-network==10.2.0
 azure-mgmt-nspkg==2.0.0
 azure-mgmt-privatedns==0.1.0
 azure-mgmt-redis==5.0.0
 azure-mgmt-resource==10.2.0
-azure-mgmt-rdbms==1.4.1
+azure-mgmt-rdbms==1.9.0
 azure-mgmt-servicebus==0.5.3
 azure-mgmt-sql==0.10.0
 azure-mgmt-storage==11.1.0
@@ -39,3 +41,5 @@ azure-mgmt-devtestlabs==3.0.0
 azure-mgmt-loganalytics==1.0.0
 azure-mgmt-automation==0.1.1
 azure-mgmt-iothub==0.7.0
+azure-mgmt-recoveryservices==0.4.0
+azure-mgmt-recoveryservicesbackup==0.6.0
