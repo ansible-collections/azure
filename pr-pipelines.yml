@@ -2,14 +2,15 @@ parameters:
 - name: PYTHON_VER
   displayName: 'Python Version'
   type: string
-  default: "2.7"
+  default: "3.6"
   values:
     - "2.7"
     - "3.6"
+    - "3.8"
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
-  default: "2.9"
+  default: "2.10"
   values:
     - "2.9"
     - "2.10"
@@ -29,10 +30,12 @@ parameters:
     - "azure_rm_availabilityset"
     - "azure_rm_azurefirewall"
     - "azure_rm_batchaccount"
+    - "azure_rm_backuppolicy"
     - "azure_rm_cdnprofile"
     - "azure_rm_containerinstance"
     - "azure_rm_containerregistry"
     - "azure_rm_cosmosdbaccount"
+    - "azure_rm_datalakestore"
     - "azure_rm_deployment"
     - "azure_rm_dnsrecordset"
     - "azure_rm_dnszone"
@@ -45,24 +48,32 @@ parameters:
     - "azure_rm_keyvaultkey"
     - "azure_rm_keyvaultsecret"
     - "azure_rm_loadbalancer"
+    - "azure_rm_loganalyticsworkspace"
     - "azure_rm_manageddisk"
+    - "azure_rm_managementgroup"
     - "azure_rm_mariadbserver"
     - "azure_rm_monitorlogprofile"
     - "azure_rm_mysqlserver"
     - "azure_rm_networkinterface"
+    - "azure_rm_openshiftmanagedcluster"
     - "azure_rm_postgresqlserver"
+    - "azure_rm_privatednsrecordset"
     - "azure_rm_privatednszone"
     - "azure_rm_publicipaddress"
     - "azure_rm_rediscache"
     - "azure_rm_resource"
     - "azure_rm_resourcegroup"
     - "azure_rm_routetable"
+    - "azure_rm_roleassignment"
+    - "azure_rm_registrationassignment"
+    - "azure_rm_registrationdefinition"
     - "azure_rm_securitygroup"
     - "azure_rm_servicebus"
     - "azure_rm_sqlserver"
     - "azure_rm_storageaccount"
     - "azure_rm_storageblob"
     - "azure_rm_subnet"
+    - "azure_rm_subscription"
     - "azure_rm_trafficmanagerprofile"
     - "azure_rm_virtualmachine"
     - "azure_rm_virtualmachineextension"
@@ -71,6 +82,9 @@ parameters:
     - "azure_rm_virtualnetwork"
     - "azure_rm_virtualnetworkgateway"
     - "azure_rm_virtualnetworkeepring"
+    - "azure_rm_backupazurevm"
+    - "azure_rm_recoveryservicesvault"
+    - "azure_rm_vmbackuppolicy"
     - "azure_rm_webapp"
     - "azure_rm_workspace"
     - "inventory_azure"
@@ -90,9 +104,11 @@ jobs:
       - bash: |
           echo "##vso[task.setvariable variable=resource_group;isOutput=true]ansibletest-$(uuidgen)"
           echo "##vso[task.setvariable variable=resource_group_secondary;isOutput=true]ansibletest2-$(uuidgen)"
+          echo "##vso[task.setvariable variable=resource_group_datalake;isOutput=true]ansibletest-$(uuidgen)"
+
         name: setvar
       - bash: |
-          echo "Generate test resource group $(setvar.resource_group), $(setvar.resource_group_secondary)"
+          echo "Generate test resource group $(setvar.resource_group), $(setvar.resource_group_secondary), $(setvar.resource_group_datalake)"
       - task: AzureCLI@2
         inputs:
           azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
@@ -101,12 +117,14 @@ jobs:
           inlineScript: |
               az group create -l eastus -n $(setvar.resource_group)
               az group create -l eastus -n $(setvar.resource_group_secondary)
+              az group create -l eastus2 -n $(setvar.resource_group_datalake)
 
   - job: RunTests
-    dependsOn: CreateResourceGroups 
+    dependsOn: CreateResourceGroups
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
+      TEST_RESOURCE_GROUP_DATALAKE:  $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_datalake'] ]
     strategy:
       matrix:
         "Python${{ parameters.PYTHON_VER }}_sanity":
@@ -164,19 +182,25 @@ jobs:
         AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
         AZURE_SECRET: $(AZURE_SECRET)
         AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+        AZURE_SUBSCRIPTION_SEC_ID: $(AZURE_SUBSCRIPTION_SEC_ID)
         AZURE_TENANT: $(AZURE_TENANT)
+        AZURE_PRINCIPAL_ID: $(AZURE_PRINCIPAL_ID)
+        AZURE_MANAGED_BY_TENANT_ID: $(AZURE_MANAGED_BY_TENANT_ID)
+        AZURE_ROLE_DEFINITION_ID: $(AZURE_ROLE_DEFINITION_ID)
         RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
         RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
+        RESOURCE_GROUP_DATALAKE: $(TEST_RESOURCE_GROUP_DATALAKE)
       displayName: 'Running Tests'
 
   - job: CleanupResourceGroups
-    dependsOn: 
+    dependsOn:
       - CreateResourceGroups
       - RunTests
     condition: always()
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
+      TEST_RESOURCE_GROUP_DATALAKE: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_datalake'] ]
     steps:
       - task: AzureCLI@2
         inputs:
@@ -186,3 +210,4 @@ jobs:
           inlineScript: |
               az group delete -n $(TEST_RESOURCE_GROUP) --yes --no-wait
               az group delete -n $(TEST_RESOURCE_GROUP_SECONDARY) --yes --no-wait
+              az group delete -n $(TEST_RESOURCE_GROUP_DATALAKE) --yes --no-wait

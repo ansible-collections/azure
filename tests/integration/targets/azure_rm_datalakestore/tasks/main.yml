@@ -1,0 +1,203 @@
+- name: Create data lake store name
+  set_fact:
+    adl_name: "adl{{ resource_group_datalake | hash('md5') | truncate(21, True, '') }}"
+    vnet_name: "vnet{{ resource_group_datalake | hash('md5') | truncate(20, True, '') }}"
+
+- name: Create virtual network
+  azure_rm_virtualnetwork:
+    name: "{{ vnet_name }}"
+    resource_group: "{{ resource_group_datalake }}"
+    address_prefixes_cidr:
+      - 10.1.0.0/16
+  register: vnet_output
+
+- name: Create subnet
+  azure_rm_subnet:
+    name: foobar
+    virtual_network_name: "{{ vnet_name }}"
+    resource_group: "{{ resource_group_datalake }}"
+    address_prefix_cidr: "10.1.1.0/24"
+    service_endpoints:
+      - service: Microsoft.AzureActiveDirectory
+  register: subnet_output
+
+- name: Create minimal data lake store
+  azure_rm_datalakestore:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ adl_name }}"
+  register: output
+
+- name: Assert status succeeded and results
+  assert:
+    that:
+      - output.changed
+      - output.state.id is defined
+      - output.state.account_id is defined
+      - output.state.creation_time is defined
+      - output.state.current_tier == "Consumption"
+      - output.state.encryption_state == "Enabled"
+      - output.state.endpoint == "{{ adl_name }}.azuredatalakestore.net"
+      - output.state.firewall_allow_azure_ips == "Disabled"
+      - output.state.firewall_rules | length == 0
+      - output.state.firewall_state == "Disabled"
+      - output.state.last_modified_time is defined
+      - output.state.new_tier == "Consumption"
+      - output.state.provisioning_state == "Succeeded"
+      - output.state.trusted_id_provider_state == "Disabled"
+
+- name: Create minimal data lake store (Idempotence)
+  azure_rm_datalakestore:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ adl_name }}"
+  register: output
+
+- name: Assert that status has not changed
+  assert:
+    that:
+      - not output.changed
+
+- name: Update data lake store to add virtual_network_rules
+  azure_rm_datalakestore:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ adl_name }}"
+    virtual_network_rules:
+      - name: vnet_rule_1
+        subnet_id: "{{ subnet_output.state.id }}"
+  register: output
+
+- name: Assert status succeeded and results include virtual_network_rules
+  assert:
+    that:
+      - output.changed
+      - output.state.virtual_network_rules | length == 1
+      - output.state.virtual_network_rules[0].name == "vnet_rule_1"
+      - output.state.virtual_network_rules[0].subnet_id == "{{ subnet_output.state.id }}"
+
+- name: Update data lake store to change encryption state that must fail
+  azure_rm_datalakestore:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ adl_name }}"
+    encryption_state: Disabled
+  register: output
+  ignore_errors: yes
+
+- name: Assert that encryption state cannot change
+  assert:
+    that: 
+    - not output.changed
+    - output.msg == 'Encryption type cannot be updated.'
+
+- name: Update data lake store to add new_tier
+  azure_rm_datalakestore:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ adl_name }}"
+    new_tier: Commitment_1TB
+  register: output
+
+- name: Assert status succeeded and results include virtual_network_rules
+  assert:
+    that:
+      - output.changed
+      - output.state.current_tier == "Consumption"
+      - output.state.new_tier == "Commitment_1TB"
+
+- name: Delete minimal data lake store
+  azure_rm_datalakestore:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ adl_name }}"
+    state: absent
+  register: output
+
+- name: Create new data lake store
+  azure_rm_datalakestore:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ adl_name }}"
+    tags:
+      P1: V1
+      P2: V4
+      P3: V3
+    new_tier: Commitment_1TB
+    default_group: default_group_test
+    encryption_state: Enabled
+    firewall_state: Enabled
+    firewall_allow_azure_ips: Enabled
+    firewall_rules:
+      - 
+        name: test_rule_1
+        start_ip_address: 192.168.1.1
+        end_ip_address: 192.168.1.254
+      - 
+        name: test_rule_2
+        start_ip_address: 10.0.0.1
+        end_ip_address: 10.1.0.1
+    virtual_network_rules:
+      - name: vnet_rule_1
+        subnet_id: "{{ subnet_output.state.id }}"
+  register: output
+
+- name: Assert status succeeded and results include an Id value 
+  assert:
+    that:
+      - output.changed
+      - output.state.id is defined
+      - output.state.account_id is defined
+      - output.state.creation_time is defined
+      - output.state.current_tier == "Commitment_1TB"
+      - output.state.default_group == "default_group_test"
+      - output.state.encryption_state == "Enabled"
+      - output.state.endpoint == "{{ adl_name }}.azuredatalakestore.net"
+      - output.state.firewall_allow_azure_ips == "Enabled"
+      - output.state.firewall_rules | length == 2
+      - output.state.firewall_state == "Enabled"
+      - output.state.last_modified_time is defined
+      - output.state.new_tier == "Commitment_1TB"
+      - output.state.provisioning_state == "Succeeded"
+      - output.state.tags | length == 3
+      - output.state.trusted_id_provider_state == "Disabled"
+      - output.state.virtual_network_rules | length == 1
+      - output.state.virtual_network_rules[0].name == "vnet_rule_1"
+      - output.state.virtual_network_rules[0].subnet_id == "{{ subnet_output.state.id }}"
+
+- name: Create new data lake store (Idempotence)
+  azure_rm_datalakestore:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ adl_name }}"
+    tags:
+      P1: V1
+      P2: V4
+      P3: V3
+    new_tier: Commitment_1TB
+    default_group: default_group_test
+    encryption_state: Enabled
+    firewall_state: Enabled
+    firewall_allow_azure_ips: Enabled
+    firewall_rules:
+      - 
+        name: test_rule_1
+        start_ip_address: 192.168.1.1
+        end_ip_address: 192.168.1.254
+      - 
+        name: test_rule_2
+        start_ip_address: 10.0.0.1
+        end_ip_address: 10.1.0.1
+    virtual_network_rules:
+      - name: vnet_rule_1
+        subnet_id: "{{ subnet_output.state.id }}"
+  register: output
+
+- name: Assert that status has not changed
+  assert:
+    that:
+      - not output.changed
+
+- name: Delete virtual network
+  azure_rm_virtualnetwork:
+    name: "{{ vnet_name }}"
+    resource_group: "{{ resource_group_datalake }}"
+    state: absent
+
+- name: Delete Data Lake Store
+  azure_rm_datalakestore:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ adl_name }}"
+    state: absent

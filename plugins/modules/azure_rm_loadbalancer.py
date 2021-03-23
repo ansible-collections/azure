@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_loadbalancer
@@ -898,6 +893,9 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
             if self.tags:
                 changed = True
         self.results['changed'] = changed
+
+        if self.check_mode:
+            return self.results
 
         if self.state == 'present' and changed:
             self.results['state'] = self.create_or_update_load_balancer(self.new_load_balancer).as_dict()

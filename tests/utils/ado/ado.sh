@@ -16,6 +16,15 @@ then
     pip --version
     pip list --disable-pip-version-check
 else
+    if [ "$2" = "3.8" ]
+    then
+        sudo apt update
+        sudo apt install software-properties-common
+        sudo add-apt-repository ppa:deadsnakes/ppa
+        sudo apt install python"$2" -y
+        sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
+    fi
+
     command -v pip3
     pip3 --version
     pip3 list --disable-pip-version-check
@@ -111,9 +120,14 @@ cat <<EOF >> "${TEST_DIR}"/tests/integration/cloud-config-azure.ini
 AZURE_CLIENT_ID:${AZURE_CLIENT_ID}
 AZURE_SECRET:${AZURE_SECRET}
 AZURE_SUBSCRIPTION_ID:${AZURE_SUBSCRIPTION_ID}
+AZURE_SUBSCRIPTION_SEC_ID:${AZURE_SUBSCRIPTION_SEC_ID}
 AZURE_TENANT:${AZURE_TENANT}
 RESOURCE_GROUP:${RESOURCE_GROUP}
 RESOURCE_GROUP_SECONDARY:${RESOURCE_GROUP_SECONDARY}
+RESOURCE_GROUP_DATALAKE:${RESOURCE_GROUP_DATALAKE}
+AZURE_PRINCIPAL_ID:${AZURE_PRINCIPAL_ID}
+AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
+AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
 EOF
 
 if [ "sanity" = "${group}" ]

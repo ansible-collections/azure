@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachineextension
@@ -180,7 +175,7 @@ class AzureRMVMExtension(AzureRMModuleBase):
                 type='dict'
             ),
             protected_settings=dict(
-                type='dict'
+                type='dict', no_log=True
             )
         )
 

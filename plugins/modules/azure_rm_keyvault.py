@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_keyvault
@@ -137,6 +132,7 @@ options:
         description:
             - Property to specify whether the soft delete functionality is enabled for this key vault.
         type: bool
+        default: True
     recover_mode:
         description:
             - Create vault in recovery mode.
@@ -248,7 +244,8 @@ class AzureRMVaults(AzureRMModuleBase):
                 type='bool'
             ),
             enable_soft_delete=dict(
-                type='bool'
+                type='bool',
+                default=True
             ),
             recover_mode=dict(
                 type='bool'
@@ -349,19 +346,24 @@ class AzureRMVaults(AzureRMModuleBase):
                 self.log("Need to check if Key Vault instance has to be deleted or may be updated")
                 if ('location' in self.parameters) and (self.parameters['location'] != old_response['location']):
                     self.to_do = Actions.Update
-                elif ('tenant_id' in self.parameters) and (self.parameters['tenant_id'] != old_response['tenant_id']):
+                elif (('tenant_id' in self.parameters['properties']) and
+                        (self.parameters['properties']['tenant_id'] != old_response['properties']['tenant_id'])):
                     self.to_do = Actions.Update
-                elif ('enabled_for_deployment' in self.parameters) and (self.parameters['enabled_for_deployment'] != old_response['enabled_for_deployment']):
+                elif (('enabled_for_deployment' in self.parameters['properties']) and
+                        (self.parameters['properties']['enabled_for_deployment'] != getattr(old_response['properties'], 'enabled_for_deployment', None))):
                     self.to_do = Actions.Update
-                elif (('enabled_for_disk_encryption' in self.parameters) and
-                        (self.parameters['enabled_for_deployment'] != old_response['enabled_for_deployment'])):
+                elif (('enabled_for_disk_encryption' in self.parameters['properties']) and
+                        (self.parameters['properties']['enabled_for_disk_encryption'] !=
+                         getattr(old_response['properties'], 'enabled_for_disk_encryption', None))):
                     self.to_do = Actions.Update
-                elif (('enabled_for_template_deployment' in self.parameters) and
-                        (self.parameters['enabled_for_template_deployment'] != old_response['enabled_for_template_deployment'])):
+                elif (('enabled_for_template_deployment' in self.parameters['properties']) and
+                        (self.parameters['properties']['enabled_for_template_deployment'] !=
+                         getattr(old_response['properties'], 'enabled_for_template_deployment', None))):
                     self.to_do = Actions.Update
-                elif ('enable_soft_delete' in self.parameters) and (self.parameters['enabled_soft_delete'] != old_response['enable_soft_delete']):
+                elif (('enable_soft_delete' in self.parameters['properties']) and
+                        (self.parameters['properties']['enable_soft_delete'] != getattr(old_response['properties'], 'enable_soft_delete', None))):
                     self.to_do = Actions.Update
-                elif ('create_mode' in self.parameters) and (self.parameters['create_mode'] != old_response['create_mode']):
+                elif ('create_mode' in self.parameters['properties']) and (self.parameters['properties']['create_mode'] == 'recover'):
                     self.to_do = Actions.Update
                 elif 'access_policies' in self.parameters['properties']:
                     if len(self.parameters['properties']['access_policies']) != len(old_response['properties']['access_policies']):

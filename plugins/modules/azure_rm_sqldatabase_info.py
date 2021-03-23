@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_sqldatabase_info
@@ -268,7 +263,7 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
             'location': d.get('location', None),
             'tags': d.get('tags', None),
             'sku': {
-                'name': d.get('sku', {}).get('name', None),
+                'name': d.get('current_service_objective_name', None),
                 'tier': d.get('sku', {}).get('tier', None),
                 'capacity': d.get('sku', {}).get('capacity', None)
             },

@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_loganalyticsworkspace_info
@@ -205,14 +200,14 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
 
     def list_by_resource_group(self):
         try:
-            return self.log_analytics_client.workspaces.list_by_resource_group(self.resource_group)
+            return self.log_analytics_client.resource_group.list(self.resource_group)
         except CloudError:
             pass
         return []
 
     def list_intelligence_packs(self):
         try:
-            response = self.log_analytics_client.workspaces.list_intelligence_packs(self.resource_group, self.name)
+            response = self.log_analytics_client.intelligence_packs.list(self.resource_group, self.name)
             return [x.as_dict() for x in response]
         except CloudError as exc:
             self.fail('Error when listing intelligence packs {0}'.format(exc.message or str(exc)))
@@ -220,7 +215,7 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
     def list_management_groups(self):
         result = []
         try:
-            response = self.log_analytics_client.workspaces.list_management_groups(self.resource_group, self.name)
+            response = self.log_analytics_client.management_groups.list(self.resource_group, self.name)
             while True:
                 result.append(response.next().as_dict())
         except StopIteration:
@@ -232,7 +227,7 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
     def list_usages(self):
         result = []
         try:
-            response = self.log_analytics_client.workspaces.list_usages(self.resource_group, self.name)
+            response = self.log_analytics_client.usages.list(self.resource_group, self.name)
             while True:
                 result.append(response.next().as_dict())
         except StopIteration:
@@ -243,7 +238,7 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
 
     def get_shared_keys(self):
         try:
-            return self.log_analytics_client.workspaces.get_shared_keys(self.resource_group, self.name).as_dict()
+            return self.log_analytics_client.shared_keys.get_shared_keys(self.resource_group, self.name).as_dict()
         except CloudError as exc:
             self.fail('Error when getting shared key {0}'.format(exc.message or str(exc)))
 
