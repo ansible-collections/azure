@@ -70,6 +70,7 @@
           - backup
           - restore
   register: output
+
 - name: Assert the resource instance is well created
   assert:
     that:
