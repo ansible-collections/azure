@@ -256,9 +256,6 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
                 if not CIDR_PATTERN.match(prefix):
                     self.fail("Parameter error: invalid address prefix value {0}".format(prefix))
 
-            if self.dns_servers and len(self.dns_servers) > 2:
-                self.fail("Parameter error: You can provide a maximum of 2 DNS servers.")
-
         changed = False
         results = dict()
 
