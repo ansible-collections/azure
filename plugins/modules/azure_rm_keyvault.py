@@ -132,6 +132,7 @@ options:
         description:
             - Property to specify whether the soft delete functionality is enabled for this key vault.
         type: bool
+        default: True
     recover_mode:
         description:
             - Create vault in recovery mode.
@@ -243,7 +244,8 @@ class AzureRMVaults(AzureRMModuleBase):
                 type='bool'
             ),
             enable_soft_delete=dict(
-                type='bool'
+                type='bool',
+                default=True
             ),
             recover_mode=dict(
                 type='bool'
