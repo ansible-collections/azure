@@ -31,6 +31,7 @@ plugins/modules/azure_rm_containerregistrywebhook.py validate-modules:undocument
 plugins/modules/azure_rm_containerregistrywebhook_info.py validate-modules:doc-default-does-not-match-spec
 plugins/modules/azure_rm_containerregistrywebhook_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_containerregistrywebhook_info.py validate-modules:undocumented-parameter
+plugins/modules/azure_rm_datalakestore.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_deployment.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_deployment_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_dnsrecordset.py validate-modules:doc-missing-type
