@@ -1311,7 +1311,7 @@ class AzureRMModuleBase(object):
                                                            base_url=self._cloud_environment.endpoints.resource_manager,
                                                            api_version='2020-08-01')
         return self._search_client
-      
+
     def datalake_store_client(self):
         self.log('Getting datalake store client...')
         if not self._datalake_store_client:
@@ -1322,7 +1322,7 @@ class AzureRMModuleBase(object):
 
     def datalake_store_models(self):
         return DataLakeStoreAccountModel
-      
+
 
 class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
