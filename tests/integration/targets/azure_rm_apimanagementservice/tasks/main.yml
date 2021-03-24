@@ -23,7 +23,9 @@
     resource_group: "{{ resource_group }}"
     name: "{{ name }}"
     publisher_email: user@example.com
-    publisher_name: user_name
+    publisher_name: NewUsername
+    sku_name: Developer
+    sku_capacity: 1
   register: updatedService
 
 - name: Assert that output has changed

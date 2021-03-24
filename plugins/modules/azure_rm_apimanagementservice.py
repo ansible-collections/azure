@@ -73,7 +73,7 @@ author:
 '''
 
 EXAMPLES = '''
-- name: ApiManagementCreateService
+- name: ApiManagementCreateOrUpdateService
   azure_rm_apimanagementservice:
     resource_group: myResourceGroup
     name: myService
@@ -81,13 +81,6 @@ EXAMPLES = '''
     publisher_name: Publisher Name
     sku_name: Developer
     sku_capacity: 1
-
-- name: ApiManagementUpdateServicePublisherDetails
-  azure_rm_apimanagementservice:
-    resource_group: myResourceGroup
-    name: myService
-    publisher_email: user@example.com
-    publisher_name: Publisher_name
 
 - name: ApiManagementServiceDeleteService
   azure_rm_apimanagementservice:
