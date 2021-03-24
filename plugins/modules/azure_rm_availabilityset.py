@@ -216,6 +216,8 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
                                                      supports_check_mode=True,
                                                      supports_tags=True)
 
+        self.set_compute_client_api_version = '2020-06-01'
+
     def exec_module(self, **kwargs):
         """Main module execution method"""
 

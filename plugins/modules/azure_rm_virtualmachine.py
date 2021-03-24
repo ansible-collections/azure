@@ -887,6 +887,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
         super(AzureRMVirtualMachine, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                     supports_check_mode=True)
+        
+        self.set_compute_client_api_version('2020-06-01')
 
     @property
     def boot_diagnostics_present(self):

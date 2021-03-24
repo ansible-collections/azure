@@ -437,6 +437,8 @@ class AzureRMModuleBase(object):
         self._recovery_services_backup_client = None
         self._datalake_store_client = None
 
+        self._compute_client_api_version = '2019-07-01'
+
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
         self.facts_module = facts_module
@@ -1061,13 +1063,16 @@ class AzureRMModuleBase(object):
         if not self._compute_client:
             self._compute_client = self.get_mgmt_svc_client(ComputeManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2020-06-30')
+                                                            api_version=self._compute_client_api_version)
         return self._compute_client
+
+    def set_compute_client_api_version(self, version):
+        self._compute_client_api_version = version
 
     @property
     def compute_models(self):
         self.log("Getting compute models")
-        return ComputeManagementClient.models("2019-07-01")
+        return ComputeManagementClient.models(self._compute_client_api_version)
 
     @property
     def dns_client(self):

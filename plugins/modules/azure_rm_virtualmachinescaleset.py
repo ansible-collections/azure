@@ -574,6 +574,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             derived_arg_spec=self.module_arg_spec,
             supports_check_mode=True,
             mutually_exclusive=mutually_exclusive)
+        
+        self.set_compute_client_api_version = '2020-06-01'
 
     def exec_module(self, **kwargs):
 
