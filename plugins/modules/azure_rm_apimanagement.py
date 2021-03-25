@@ -105,7 +105,7 @@ options:
     is_current:
         description:
             - Indicates if API revision is current api revision.
-        type: boolean
+        type: bool
     api_revision_description:
         description:
             - Description of the Api Revision.
@@ -121,7 +121,7 @@ options:
     subscription_required:
         description:
             - Specifies whether an API or Product subscription is required for accessing the API.
-        type: boolean
+        type: bool
     source_api_id:
         description:
             - API identifier of the source API.
@@ -233,8 +233,8 @@ extends_documentation_fragment:
     - azure.azcollection.azure_tags
 
 author:
-    - Sakar Mehra (sakar97)
-    - Nikhil Patne (nikhilpatne)
+    - Sakar Mehra (@sakar97)
+    - Nikhil Patne (@nikhilpatne)
 
 '''
 
