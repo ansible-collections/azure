@@ -888,8 +888,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         super(AzureRMVirtualMachine, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                     supports_check_mode=True)
         
-        self.set_compute_client_api_version('2020-06-01')
-
     @property
     def boot_diagnostics_present(self):
         return self.boot_diagnostics is not None and 'enabled' in self.boot_diagnostics
@@ -933,6 +931,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         return bsa
 
     def exec_module(self, **kwargs):
+
+        self.set_compute_client_api_version('2020-06-01')
+
 
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             setattr(self, key, kwargs[key])

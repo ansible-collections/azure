@@ -575,9 +575,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             supports_check_mode=True,
             mutually_exclusive=mutually_exclusive)
         
-        self.set_compute_client_api_version = '2020-06-01'
-
     def exec_module(self, **kwargs):
+
+        self.set_compute_client_api_version = '2020-06-01'
 
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             setattr(self, key, kwargs[key])

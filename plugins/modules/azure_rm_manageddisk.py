@@ -294,6 +294,9 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             supports_tags=True)
 
     def exec_module(self, **kwargs):
+
+        self.set_compute_client_api_version = '2020-06-30'
+
         """Main module execution method"""
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             setattr(self, key, kwargs[key])
