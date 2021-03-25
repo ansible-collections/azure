@@ -8,15 +8,12 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
 
 DOCUMENTATION = '''
 ---
 module: azure_rm_apimanagement
-version_added: '1.1.0'
-short_description: Manage Azure api instances.
+version_added: '1.5.0'
+short_description: Manage Azure api instances
 description:
     - Create azure api instance.
     - Update the existing azure api instance.
@@ -40,8 +37,8 @@ options:
         type: str
     description:
         description:
-        - Description of the API.
-      type: str
+            - Description of the API.
+        type: str
     authentication_settings:
         description:
             - Collection of authentication settings included into this API.
@@ -274,11 +271,11 @@ EXAMPLES = '''
 RETURN = \
     '''
 id:
-  description:
-    - Resource ID.
-  returned: always
-  type: str
-  sample: null
+    description:
+        - Resource ID.
+    returned: always
+    type: str
+    sample: null
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient

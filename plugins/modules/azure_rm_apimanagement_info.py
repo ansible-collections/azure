@@ -8,48 +8,42 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_apimanagement_info
-version_added: '1.1.0'
-short_description: Get the infomation of the API Instance.
+version_added: '1.5.0'
+short_description: Get the infomation of the API Instance
 description:
-  - Get the information of api instance.
+    - Get the information of api instance.
 options:
-  resource_group:
-    description:
-      - The name of the resource group.
-    required: true
-    type: str
-  service_name:
-    description:
-      - The name of the API Management service.
-    required: true
-    type: str
-  expand_api_version_set:
-    description:
-      - Include full ApiVersionSet resource in response
-    type: bool
-  include_not_tagged_apis:
-    description:
-      - Included not tagged APIs in the response.
-    type: bool
-  api_id:
-    description:
-      - API revision identifier. It must be unique in the current API Management
-        service instance.
-    type: str
+    resource_group:
+        description:
+            - The name of the resource group.
+        required: true
+        type: str
+    service_name:
+        description:
+            - The name of the API Management service.
+        required: true
+        type: str
+    expand_api_version_set:
+        description:
+            - Include full ApiVersionSet resource in response
+        type: bool
+    include_not_tagged_apis:
+        description:
+            - Included not tagged APIs in the response.
+        type: bool
+    api_id:
+        description:
+            - API revision identifier. It must be unique in the current API Management service instance.
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 author:
-  - Sakar Mehra (@sakar97)
-  - Nikhil Patne (@nikhilpatne)
+    - Sakar Mehra (@sakar97)
+    - Nikhil Patne (@nikhilpatne)
 
 '''
 
@@ -67,39 +61,40 @@ EXAMPLES = '''
 
 RETURN = '''
 api:
-  description:
-    - A list of dict results where the key is the name of the Api and the values are the facts for that Api.
-  returned: always
-  type: complex
-  contains:
-    api_name:
-      description: The api name provided by the user.
-      type: complex
-      contains:
-        id:
-          description:
-            - Resource ID.
-          returned: always
-          type: str
-          sample: null
-        name:
-          description:
-            - Resource name.
-          returned: always
-          type: str
-          sample: null
-        type:
-          description:
-            - Resource type for API Management resource.
-          returned: always
-          type: str
-          sample: null
-        properties:
-          description:
-            - Api entity contract properties.
-          returned: always
-          type: dict
-          sample: null
+    description:
+        - A list of dict results where the key is the name of the Api and the values are the facts for that Api.
+    returned: always
+    type: complex
+    contains:
+        api_name:
+            description:
+                - The api name provided by the user.
+            type: complex
+            contains:
+                id:
+                    description:
+                        - Resource ID.
+                    returned: always
+                    type: str
+                    sample: null
+                name:
+                    description:
+                        - Resource name.
+                    returned: always
+                    type: str
+                    sample: null
+                type:
+                    description:
+                        - Resource type for API Management resource.
+                    returned: always
+                    type: str
+                    sample: null
+                properties:
+                    description:
+                        - Api entity contract properties.
+                    returned: always
+                    type: dict
+                    sample: null
 
 '''
 
