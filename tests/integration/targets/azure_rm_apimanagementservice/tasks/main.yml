@@ -26,7 +26,7 @@
     publisher_name: Username
     sku_name: Developer
     sku_capacity: 1
-  register: createService
+  register: output
 
 - name: Assert that output has changed
   assert:
@@ -50,9 +50,9 @@
     resource_group: "{{ resource_group }}"
     name: "{{ name }}"
     state: absent
-  register: deleteService
+  register: output
 
 - name: Assert the changes
   assert:
     that:
-      - deleteService.changed == True
+      - output.changed == True

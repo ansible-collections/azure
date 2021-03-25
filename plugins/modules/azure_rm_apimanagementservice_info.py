@@ -270,7 +270,7 @@ class AzureRMApiManagementServiceInfo(AzureRMModuleBaseExt):
                 'location': item['location'],
                 'etag': item['etag'],
                 'properties': item['properties']
-                }
+            }
         else:
             return dict()
         return d
