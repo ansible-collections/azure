@@ -12,7 +12,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_apimanagement
-version_added: '1.5.0'
+version_added: "1.5.0"
 short_description: Manage Azure api instances
 description:
     - Create azure api instance.
@@ -206,17 +206,17 @@ options:
         suboptions:
             wsdl_service_name:
                 description:
-                    - Name of service to import from WSDL
+                    - Name of service to import from WSDL.
                 type: str
             wsdl_endpoint_name:
-              description:
-                  - Name of endpoint(port) to import from WSDL
-              type: str
+                description:
+                    - Name of endpoint(port) to import from WSDL.
+                type: str
     api_type:
         description:
             - Type of Api to create.
-            - 'http' creates a SOAP to REST API.
-            - 'soap' creates a SOAP pass-through API.
+            - C(http) creates a SOAP to REST API.
+            - C(soap) creates a SOAP pass-through API.
         type: str
     state:
         description:
