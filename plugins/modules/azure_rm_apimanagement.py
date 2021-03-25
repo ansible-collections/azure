@@ -215,8 +215,8 @@ options:
     api_type:
         description:
             - Type of Api to create.
-            - `http` creates a SOAP to REST API.
-            - `soap` creates a SOAP pass-through API.
+            - 'http' creates a SOAP to REST API.
+            - 'soap' creates a SOAP pass-through API.
         type: str
     state:
         description:
