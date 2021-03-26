@@ -702,9 +702,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                         item = ev[i]
                         if 'subnet' in item and 'name' in item['subnet'] and 'virtual_network_name' in item['subnet']:
                             id = subnet_id(self.subscription_id,
-                                            kwargs['resource_group'],
-                                            item['subnet']['virtual_network_name'],
-                                            item['subnet']['name'])
+                                           kwargs['resource_group'],
+                                           item['subnet']['virtual_network_name'],
+                                           item['subnet']['name'])
                             item['subnet'] = {'id': id}
                     self.parameters["gateway_ip_configurations"] = kwargs[key]
                 elif key == "authentication_certificates":
@@ -737,9 +737,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             item['public_ip_address'] = {'id': id}
                         if 'subnet' in item and 'name' in item['subnet'] and 'virtual_network_name' in item['subnet']:
                             id = subnet_id(self.subscription_id,
-                                            kwargs['resource_group'],
-                                            item['subnet']['virtual_network_name'],
-                                            item['subnet']['name'])
+                                           kwargs['resource_group'],
+                                           item['subnet']['virtual_network_name'],
+                                           item['subnet']['name'])
                             item['subnet'] = {'id': id}
                     self.parameters["frontend_ip_configurations"] = ev
                 elif key == "frontend_ports":
