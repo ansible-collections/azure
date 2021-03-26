@@ -199,7 +199,7 @@
 - name: Create instance of Application Gateway by looking up virtual network and subnet
   azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
-    name: "appgateway{{ rpfx }}"
+    name: "appgateway-subnet-lookup{{ rpfx }}"
     sku:
       name: standard_small
       tier: standard
