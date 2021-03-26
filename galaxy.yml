@@ -55,3 +55,8 @@ homepage: https://azure.microsoft.com
 
 # The URL to the collection issue tracker
 issues: https://github.com/ansible-collections/azure/issues
+
+build_ignore:
+- '*.tar.gz'
+- 'venv*'
+- '.vscode'
