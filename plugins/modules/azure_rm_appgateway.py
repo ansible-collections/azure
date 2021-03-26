@@ -817,9 +817,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             item['default_backend_address_pool'] = {'id': id}
                         if 'default_backend_http_settings' in item:
                             id = backend_http_settings_id(self.subscription_id,
-                                                  kwargs['resource_group'],
-                                                  kwargs['name'],
-                                                  item['default_backend_http_settings'])
+                                                          kwargs['resource_group'],
+                                                          kwargs['name'],
+                                                          item['default_backend_http_settings'])
                             item['default_backend_http_settings'] = {'id': id}
                         if 'path_rules' in item:
                             ev2 = item['path_rules']
@@ -827,15 +827,15 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                 item2 = ev2[j]
                                 if 'backend_address_pool' in item2:
                                     id = backend_address_pool_id(self.subscription_id,
-                                                         kwargs['resource_group'],
-                                                         kwargs['name'],
-                                                         item2['backend_address_pool'])
+                                                                 kwargs['resource_group'],
+                                                                 kwargs['name'],
+                                                                 item2['backend_address_pool'])
                                     item2['backend_address_pool'] = {'id': id}
                                 if 'backend_http_settings' in item2:
                                     id = backend_http_settings_id(self.subscription_id,
-                                                         kwargs['resource_group'],
-                                                         kwargs['name'],
-                                                         item2['backend_http_settings'])
+                                                                  kwargs['resource_group'],
+                                                                  kwargs['name'],
+                                                                  item2['backend_http_settings'])
                                     item2['backend_http_settings'] = {'id': id}
                                 ev2[j] = item2
                         ev[i] = item
@@ -874,9 +874,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             item['redirect_configuration'] = {'id': id}
                         if 'url_path_map' in item:
                             id = url_path_map_id(self.subscription_id,
-                                                    kwargs['resource_group'],
-                                                    kwargs['name'],
-                                                    item['url_path_map'])
+                                                 kwargs['resource_group'],
+                                                 kwargs['name'],
+                                                 item['url_path_map'])
                             item['url_path_map'] = {'id': id}
                         ev[i] = item
                     self.parameters["request_routing_rules"] = ev
