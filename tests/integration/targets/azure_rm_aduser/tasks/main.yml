@@ -23,6 +23,23 @@
     mail: "{{ user_principal_name }}@contoso.com"
   register: create_user_should_pass
 
+- name: Try to update existing user - idempotent check
+  azure_rm_aduser:
+    user_principal_name: "{{ user_id }}"
+    tenant: "{{ tenant_id }}"
+    state: "present"
+    display_name: "Test_{{ user_principal_name }}_Display_Name"
+    mail_nickname: "Test_{{ user_principal_name }}_mail_nickname"
+    given_name: "First"
+    surname: "Last"
+    mail: "{{ user_principal_name }}@contoso.com"
+  register: attempted_update_with_no_changes_should_pass
+
+- name: Assert Nothing Changed
+  assert:
+    that:
+      - attempted_update_with_no_changes_should_pass["changed"] == False
+
 - name: user_principal_name Should Pass
   azure_rm_aduser_info:
     user_principal_name: "{{ user_id }}"

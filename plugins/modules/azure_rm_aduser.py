@@ -12,10 +12,10 @@ module: azure_rm_aduser
 
 version_added: "1.4.0"
 
-short_description: Modify Azure Active Directory users
+short_description: Modify an Azure Active Directory user
 
 description:
-    - Create, delete, and update Azure Active Directory users.
+    - Create, delete, and update an Azure Active Directory user.
 
 options:
     tenant:
@@ -35,7 +35,7 @@ options:
         description:
             - The object id for the user.
             - Updates or deletes the user who has this object ID.
-            - Mutually exclusive with I(user_principal_name), I(attribute_name), I(odata_filter) and I(all).
+            - Mutually exclusive with I(user_principal_name), I(attribute_name), and I(odata_filter).
         type: str
     account_enabled:
         description:
@@ -80,7 +80,7 @@ options:
     usage_location:
         description:
             - A two letter country code, ISO standard 3166.
-            - Required for users that will be assigned licenses due to legal requirement to check for availability of services in countries.
+            - Required for a user that will be assigned licenses due to legal requirement to check for availability of services in countries.
             - Used when either creating or updating a user account.
         type: str
     user_type:
@@ -92,35 +92,28 @@ options:
         description:
             - The principal name of the user.
             - Creates, updates, or deletes the user who has this principal name.
-            - Mutually exclusive with I(object_id), I(attribute_name), I(odata_filter) and I(all).
+            - Mutually exclusive with I(object_id), I(attribute_name), and I(odata_filter).
         type: str
     attribute_name:
         description:
             - The name of an attribute that you want to match to attribute_value.
-            - If attribute_name is not a collection type it will update or delete users where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will update or delete users where attribute_value is in attribute_name.
-            - Mutually exclusive with I(object_id), I(user_principal_name), I(odata_filter) and I(all).
+            - If attribute_name is not a collection type it will update or delete the user where attribute_name is equal to attribute_value.
+            - If attribute_name is a collection type it will update or delete the user where attribute_value is in attribute_name.
+            - Mutually exclusive with I(object_id), I(user_principal_name), and I(odata_filter).
             - Required together with I(attribute_value).
         type: str
     attribute_value:
         description:
             - The value to match attribute_name to.
-            - If attribute_name is not a collection type it will update or delete users where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will update or delete users where attribute_value is in attribute_name.
+            - If attribute_name is not a collection type it will update or delete the user where attribute_name is equal to attribute_value.
+            - If attribute_name is a collection type it will update or delete the user where attribute_value is in attribute_name.
             - Required together with I(attribute_name).
         type: str
     odata_filter:
         description:
-            - Filter that can be used to specify users to update or delete.
-            - Mutually exclusive with I(object_id), I(attribute_name), I(user_principal_name) and I(all).
+            - Filter that can be used to specify a user to update or delete.
+            - Mutually exclusive with I(object_id), I(attribute_name), and I(user_principal_name).
         type: str
-    all:
-        description:
-            - If True, will operate updates or deletes on all users in a tenant.
-            - If False will not operate updates or deletes on any users.
-            - It is recommended that you instead identify a subset of users and use filter.
-            - Mutually exclusive with I(object_id), I(attribute_name), I(odata_filter) and I(user_principal_name).
-        type: bool
     log_path:
         description:
             - parent argument.
@@ -237,7 +230,6 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             attribute_name=dict(type='str'),
             attribute_value=dict(type='str'),
             odata_filter=dict(type='str'),
-            all=dict(type='bool'),
             account_enabled=dict(type='bool'),
             display_name=dict(type='str'),
             password_profile=dict(type='str'),
@@ -260,7 +252,6 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         self.attribute_name = None
         self.attribute_value = None
         self.odata_filter = None
-        self.all = None
         self.account_enabled = None
         self.display_name = None
         self.password_profile = None
@@ -276,9 +267,9 @@ class AzureRMADUserInfo(AzureRMModuleBase):
 
         self.results = dict(changed=False)
 
-        mutually_exclusive = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name', 'all']]
+        mutually_exclusive = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name']]
         required_together = [['attribute_name', 'attribute_value']]
-        required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name', 'all']]
+        required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name']]
 
         super(AzureRMADUserInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                 supports_check_mode=False,
@@ -296,14 +287,41 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         try:
             client = self.get_graphrbac_client(self.tenant)
 
-            ad_users = self.get_exisiting_users(client)
+            ad_user = self.get_exisiting_user(client)
 
             if self.state == 'present':
 
-                if ad_users:  # Update, changed
-                    password = PasswordProfile(password=self.password_profile)
+                if ad_user:  # Update, changed
 
-                    for user in ad_users:
+                    password = None
+
+                    if self.password_profile:
+                        password = PasswordProfile(password=self.password_profile)
+
+                    should_update = False
+
+                    if self.immutable_id and ad_user.immutable_id != self.immutable_id:
+                        should_update = True
+                    if should_update or self.usage_location and ad_user.usage_location != self.usage_location:
+                        should_update = True
+                    if should_update or self.given_name and ad_user.given_name != self.given_name:
+                        should_update = True
+                    if should_update or self.surname and ad_user.surname != self.surname:
+                        should_update = True
+                    if should_update or self.user_type and ad_user.user_type != self.user_type:
+                        should_update = True
+                    if should_update or self.account_enabled and ad_user.account_enabled != self.account_enabled:
+                        should_update = True
+                    if should_update or self.display_name and ad_user.display_name != self.display_name:
+                        should_update = True
+                    if should_update or password:
+                        should_update = True
+                    if should_update or self.user_principal_name and ad_user.user_principal_name != self.user_principal_name:
+                        should_update = True
+                    if should_update or self.mail_nickname and ad_user.mail_nickname != self.mail_nickname:
+                        should_update = True
+
+                    if should_update:
                         parameters = UserUpdateParameters(immutable_id=self.immutable_id,
                                                           usage_location=self.usage_location,
                                                           given_name=self.given_name,
@@ -314,12 +332,17 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                                                           password_profile=password,
                                                           user_principal_name=self.user_principal_name,
                                                           mail_nickname=self.mail_nickname)
-                        client.users.update(upn_or_object_id=user.object_id, parameters=parameters)
-                    self.results['changed'] = True
 
-                    # Get the updated versions of the users to return
-                    # the update method, has no return value so it needs to be explicitely returned in a call
-                    ad_users = self.get_exisiting_users(client)
+                        client.users.update(upn_or_object_id=ad_user.object_id, parameters=parameters)
+
+                        self.results['changed'] = True
+
+                        # Get the updated versions of the users to return
+                        # the update method, has no return value so it needs to be explicitely returned in a call
+                        ad_user = self.get_exisiting_user(client)
+
+                    else:
+                        self.results['changed'] = False
 
                 else:  # Create, changed
                     password = PasswordProfile(password=self.password_profile)
@@ -334,15 +357,14 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                                                       surname=self.surname,
                                                       user_type=self.user_type,
                                                       mail=self.mail)
-                    ad_users = [client.users.create(parameters=parameters)]
+                    ad_user = client.users.create(parameters=parameters)
                     self.results['changed'] = True
 
-                self.results['ad_users'] = [self.to_dict(user) for user in ad_users]
+                self.results['ad_user'] = self.to_dict(ad_user)
 
             elif self.state == 'absent':
-                if ad_users:  # Delete, changed
-                    for user in ad_users:
-                        client.users.delete(user.object_id)
+                if ad_user:  # Delete, changed
+                    client.users.delete(ad_user.object_id)
                     self.results['changed'] = True
                 else:  # Do nothing unchanged
                     self.results['changed'] = False
@@ -352,34 +374,34 @@ class AzureRMADUserInfo(AzureRMModuleBase):
 
         return self.results
 
-    def get_exisiting_users(self, client):
-        ad_users = []
+    def get_exisiting_user(self, client):
+        ad_user = None
 
         try:
             if self.user_principal_name is not None:
-                ad_users = [client.users.get(self.user_principal_name)]
+                ad_user = client.users.get(self.user_principal_name)
             elif self.object_id is not None:
-                ad_users = [client.users.get(self.object_id)]
+                ad_user = client.users.get(self.object_id)
             elif self.attribute_name is not None and self.attribute_value is not None:
                 try:
-                    ad_users = list(client.users.list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
+                    ad_user = list(client.users.list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))[0]
                 except GraphErrorException as e:
                     # the type doesn't get more specific. Could check the error message but no guarantees that message doesn't change in the future
                     # more stable to try again assuming the first error came from the attribute being a list
                     try:
-                        ad_users = list(client.users.list(filter="{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
+                        ad_user = list(client.users.list(filter="{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))[0]
                     except GraphErrorException as sub_e:
                         raise
             elif self.odata_filter is not None:  # run a filter based on user input to return based on any given attribute/query
-                ad_users = list(client.users.list(filter=self.odata_filter))
+                ad_user = list(client.users.list(filter=self.odata_filter))[0]
         except GraphErrorException as e:
             # User was not found
             err_msg = str(e)
             if err_msg == "Resource '{0}' does not exist or one of its queried reference-property objects are not present.".format(self.user_principal_name):
-                ad_users = []
+                ad_user = None
             else:
                 raise
-        return ad_users
+        return ad_user
 
     def to_dict(self, object):
         return dict(
