@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualwan
-version_added: '1.4.0'
+version_added: '1.5.0'
 short_description: Manage Azure VirtualWan instance
 description:
     - Create, update and delete instance of Azure VirtualWan.
@@ -303,7 +298,6 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
         self.body = {}
 
         self.results = dict(changed=False)
-        self.mgmt_client = None
         self.state = None
         self.to_do = Actions.NoAction
 
@@ -328,10 +322,6 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
 
         old_response = None
         response = None
-
-        self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2020-06-01')
 
         old_response = self.get_resource()
 
@@ -371,7 +361,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
 
     def create_update_resource(self):
         try:
-            response = self.mgmt_client.virtual_wans.create_or_update(resource_group_name=self.resource_group,
+            response = self.network_client.virtual_wans.create_or_update(resource_group_name=self.resource_group,
                                                                       virtual_wan_name=self.name,
                                                                       wan_parameters=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
@@ -383,7 +373,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
 
     def delete_resource(self):
         try:
-            response = self.mgmt_client.virtual_wans.delete(resource_group_name=self.resource_group,
+            response = self.network_client.virtual_wans.delete(resource_group_name=self.resource_group,
                                                             virtual_wan_name=self.name)
         except CloudError as e:
             self.log('Error attempting to delete the VirtualWan instance.')
@@ -393,7 +383,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
 
     def get_resource(self):
         try:
-            response = self.mgmt_client.virtual_wans.get(resource_group_name=self.resource_group,
+            response = self.network_client.virtual_wans.get(resource_group_name=self.resource_group,
                                                          virtual_wan_name=self.name)
         except CloudError as e:
             return False

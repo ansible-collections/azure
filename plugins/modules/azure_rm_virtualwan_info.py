@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualwan_info
-version_added: '1.4.0'
+version_added: '1.5.0'
 short_description: Get VirtualWan info
 description:
     - Get info of VirtualWan.
@@ -181,9 +176,7 @@ class AzureRMVirtualWanInfo(AzureRMModuleBase):
         self.name = None
 
         self.results = dict(changed=False)
-        self.mgmt_client = None
         self.state = None
-        self.url = None
         self.status_code = [200]
 
         super(AzureRMVirtualWanInfo, self).__init__(self.module_arg_spec, supports_tags=True)
@@ -192,10 +185,6 @@ class AzureRMVirtualWanInfo(AzureRMModuleBase):
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
-
-        self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2020-06-01')
 
         if (self.resource_group is not None and self.name is not None):
             self.results['virtual_wans'] = self.format_item(self.get())
@@ -209,7 +198,7 @@ class AzureRMVirtualWanInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.virtual_wans.get(resource_group_name=self.resource_group,
+            response = self.network_client.virtual_wans.get(resource_group_name=self.resource_group,
                                                          virtual_wan_name=self.name)
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
@@ -220,7 +209,7 @@ class AzureRMVirtualWanInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.virtual_wans.list_by_resource_group(resource_group_name=self.resource_group)
+            response = self.network_client.virtual_wans.list_by_resource_group(resource_group_name=self.resource_group)
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
@@ -230,7 +219,7 @@ class AzureRMVirtualWanInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.virtual_wans.list()
+            response = self.network_client.virtual_wans.list()
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
