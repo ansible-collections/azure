@@ -11,7 +11,7 @@
      disable_vpn_encryption: true
      allow_branch_to_branch_traffic: true
      allow_vnet_to_vnet_traffic: true
-     virtual_wan_type: Standard
+     virtual_wan_type: Basic
    register: output
 
  - assert:
@@ -26,12 +26,27 @@
      disable_vpn_encryption: true
      allow_branch_to_branch_traffic: true
      allow_vnet_to_vnet_traffic: true
-     virtual_wan_type: Standard
+     virtual_wan_type: Basic
    register: output
 
  - assert:
      that:
        - not output.changed
+
+ - name: Update the VirtualWan type
+   azure_rm_virtualwan:
+     resource_group: "{{ resource_group }}"
+     office365_local_breakout_category: All
+     name: "virtualwan{{ rpfx }}"
+     disable_vpn_encryption: true
+     allow_branch_to_branch_traffic: true
+     allow_vnet_to_vnet_traffic: true
+     virtual_wan_type: Standard
+   register: output
+
+ - assert:
+     that:
+       - output.changed
 
  - name: Get VirtualWan info
    azure_rm_virtualwan_info:

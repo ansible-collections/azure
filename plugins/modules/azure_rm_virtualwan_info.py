@@ -199,7 +199,7 @@ class AzureRMVirtualWanInfo(AzureRMModuleBase):
 
         try:
             response = self.network_client.virtual_wans.get(resource_group_name=self.resource_group,
-                                                         virtual_wan_name=self.name)
+                                                            virtual_wan_name=self.name)
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 

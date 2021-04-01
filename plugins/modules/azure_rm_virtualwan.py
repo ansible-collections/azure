@@ -74,6 +74,9 @@ options:
         description:
             - The type of the VirtualWAN.
         type: str
+        choices:
+            - Basic
+            - Standard
     state:
         description:
             - Assert the state of the VirtualWan.
@@ -283,7 +286,8 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             ),
             virtual_wan_type=dict(
                 type='str',
-                disposition='/virtual_wan_type'
+                disposition='/virtual_wan_type',
+                choices=['Basic', 'Standard']
             ),
             state=dict(
                 type='str',
@@ -362,8 +366,8 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
     def create_update_resource(self):
         try:
             response = self.network_client.virtual_wans.create_or_update(resource_group_name=self.resource_group,
-                                                                      virtual_wan_name=self.name,
-                                                                      wan_parameters=self.body)
+                                                                         virtual_wan_name=self.name,
+                                                                         wan_parameters=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except CloudError as exc:
@@ -374,7 +378,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
     def delete_resource(self):
         try:
             response = self.network_client.virtual_wans.delete(resource_group_name=self.resource_group,
-                                                            virtual_wan_name=self.name)
+                                                               virtual_wan_name=self.name)
         except CloudError as e:
             self.log('Error attempting to delete the VirtualWan instance.')
             self.fail('Error deleting the VirtualWan instance: {0}'.format(str(e)))
@@ -384,7 +388,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
     def get_resource(self):
         try:
             response = self.network_client.virtual_wans.get(resource_group_name=self.resource_group,
-                                                         virtual_wan_name=self.name)
+                                                            virtual_wan_name=self.name)
         except CloudError as e:
             return False
         return response.as_dict()
