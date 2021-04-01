@@ -282,6 +282,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             ),
             allow_vnet_to_vnet_traffic=dict(
                 type='bool',
+                updatable=False,
                 disposition='/allow_vnet_to_vnet_traffic'
             ),
             virtual_wan_type=dict(
@@ -340,10 +341,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
                 self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
                 self.results['modifiers'] = modifiers
                 self.results['compare'] = []
-                new_body = self.body
-                if 'allow_vnet_to_vnet_traffic' in new_body.keys():
-                    del new_body['allow_vnet_to_vnet_traffic']
-                if not self.default_compare(modifiers, new_body, old_response, '', self.results):
+                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
                     self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
