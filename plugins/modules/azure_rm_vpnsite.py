@@ -186,6 +186,7 @@ options:
             - Assert the state of the VpnSite.
             - Use C(present) to create or update an VpnSite and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
