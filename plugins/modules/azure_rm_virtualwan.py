@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualwan
-version_added: '1.5.0'
+version_added: '1.5.1'
 short_description: Manage Azure VirtualWan instance
 description:
     - Create, update and delete instance of Azure VirtualWan.
