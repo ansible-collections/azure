@@ -140,8 +140,8 @@ options:
                         type: int
             ip_address:
                 description:
-                - The IP address for the vpn site link.
-            type: str
+                    - The IP address for the vpn site link.
+                type: str
             fqdn:
                 description:
                     - FQDN of vpn-site-link.
