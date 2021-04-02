@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_vpnsite
-version_added: '1.4.0'
+version_added: '1.5.1'
 short_description: Manage Azure VpnSite instance
 description:
     - Create, update and delete instance of Azure VpnSite.
@@ -506,8 +501,6 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
         self.body = {}
 
         self.results = dict(changed=False)
-        self.mgmt_client = None
-        self.state = None
         self.to_do = Actions.NoAction
 
         super(AzureRMVpnSite, self).__init__(derived_arg_spec=self.module_arg_spec,
@@ -528,12 +521,9 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
             # Set default location
             self.location = resource_group.location
         self.body['location'] = self.location
+
         old_response = None
         response = None
-
-        self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2020-06-01')
 
         old_response = self.get_resource()
 
@@ -571,9 +561,9 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
 
     def create_update_resource(self):
         try:
-            response = self.mgmt_client.vpn_sites.create_or_update(resource_group_name=self.resource_group,
-                                                                   vpn_site_name=self.name,
-                                                                   vpn_site_parameters=self.body)
+            response = self.network_client.vpn_sites.create_or_update(resource_group_name=self.resource_group,
+                                                                      vpn_site_name=self.name,
+                                                                      vpn_site_parameters=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except CloudError as exc:
@@ -583,8 +573,8 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
 
     def delete_resource(self):
         try:
-            response = self.mgmt_client.vpn_sites.delete(resource_group_name=self.resource_group,
-                                                         vpn_site_name=self.name)
+            response = self.network_client.vpn_sites.delete(resource_group_name=self.resource_group,
+                                                            vpn_site_name=self.name)
         except CloudError as e:
             self.log('Error attempting to delete the VpnSite instance.')
             self.fail('Error deleting the VpnSite instance: {0}'.format(str(e)))
@@ -593,8 +583,8 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
 
     def get_resource(self):
         try:
-            response = self.mgmt_client.vpn_sites.get(resource_group_name=self.resource_group,
-                                                      vpn_site_name=self.name)
+            response = self.network_client.vpn_sites.get(resource_group_name=self.resource_group,
+                                                         vpn_site_name=self.name)
         except CloudError as e:
             return False
         return response.as_dict()
