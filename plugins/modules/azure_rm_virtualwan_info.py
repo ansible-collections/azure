@@ -176,8 +176,6 @@ class AzureRMVirtualWanInfo(AzureRMModuleBase):
         self.name = None
 
         self.results = dict(changed=False)
-        self.state = None
-        self.status_code = [200]
 
         super(AzureRMVirtualWanInfo, self).__init__(self.module_arg_spec, supports_tags=True)
 
