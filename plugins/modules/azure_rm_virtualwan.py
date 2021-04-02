@@ -303,6 +303,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
         self.body = {}
 
         self.results = dict(changed=False)
+        self.state = None
         self.to_do = Actions.NoAction
 
         super(AzureRMVirtualWan, self).__init__(derived_arg_spec=self.module_arg_spec,
