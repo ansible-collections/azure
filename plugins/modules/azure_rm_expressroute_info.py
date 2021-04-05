@@ -21,7 +21,7 @@ options:
         description:
             - The name of the resource group.
         required: True
-    express_route_name:
+    name:
         description:
             - The name of the express route.
         required: True
@@ -43,7 +43,7 @@ EXAMPLES = '''
   - name: Get facts of specific expressroute
     community.azure.azure_rm_expressroute_info:
       resource_group: myResourceGroup
-      express_route_name: myExpressRoute
+      name: myExpressRoute
 
 '''
 
@@ -60,6 +60,8 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
+AZURE_OBJECT_CLASS = 'ExpressRouteCircuit'
+
 class AzureExpressRouteInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
@@ -67,9 +69,8 @@ class AzureExpressRouteInfo(AzureRMModuleBase):
                 type='str',
                 required=True
             ),
-            express_route_name=dict(
-                type='str',
-                required=True
+            name=dict(
+                type='str'
             )
         )
         # store the results of the module operation
@@ -77,41 +78,70 @@ class AzureExpressRouteInfo(AzureRMModuleBase):
             changed=False
         )
         self.resource_group = None
-        self.express_route_name = None
+        self.name = None
+        self.tags = None
 
         super(AzureExpressRouteInfo, self).__init__(self.module_arg_spec, supports_tags=False)
 
 
     def exec_module(self, **kwargs):
-        is_old_facts = self.module._name == 'azure_expressroute_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_expressroute_facts' module has been renamed to 'azure_expressroute_info'",
-                                  version='3.0.0', collection_name='community.azure')  # was 2.13
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.name is not None:
-            self.results['subnets'] = self.get()
-        else:
-            self.results['subnets'] = self.list()
 
+        if self.name is not None:
+            results = self.get()
+        # self.results = None
+        # self.results['ansible_info']['azure_expressroute'] = self.serialize_items(results)
+        # self.results['expressroute'] = self.curated_items(results)
+        self.results = results
         return self.results
 
     def get(self):
         response = None
         results = []
         try:
-            response = self.network_client.express_route_circuits.get(resource_group_name=self.resource_group,
-                                                       circuit_name=self.express_route_name)
+            response = self.network_client.express_route_circuits.get(self.resource_group, self.name)
             self.log("Response : {0}".format(response))
         except CloudError as e:
-            self.fail('Could not get facts for Subnet.')
+            self.fail('Could not get info for express route.')
+        results = self.format_response(response)
 
-        if response is not None:
-            results.append(self.format_response(response))
-
+        # if response and self.has_tags(response.tags, self.tags):
+        #     results = [response]
         return results
+
+    def format_response(self, item):
+        
+        d = item.as_dict()
+        d = {
+            'additional_properties': d.get('additional_properties', {}),
+            'id': d.get('id', None),
+            'name': d.get('name', None),
+            'type': d.get('type', None),
+            'location': d.get('location', '').replace(' ', '').lower(),
+            'tags': d.get('tags', None),
+            # 'sku': <azure.mgmt.network.v2019_06_01.models._models_py3.ExpressRouteCircuitSku object at 0x7feb0dd91c40>,
+            # 'sku': d['sku']['tier'].lower(),
+            'allow_classic_operations': d.get('allow_classic_operations', None),
+            'circuit_provisioning_state': d.get('circuit_provisioning_state', None),
+            'service_provider_provisioning_state': d.get('service_provider_provisioning_state', None),
+            'authorizations': d.get('authorizations', []),
+            'peerings': d.get('peerings', []),
+            'service_key': d.get('service_key', None),
+            'service_provider_notes': d.get('service_provider_notes', None),
+            # 'service_provider_properties': <azure.mgmt.network.v2019_06_01.models._models_py3.ExpressRouteCircuitServiceProviderProperties object at 0x7feb0dd91c70>,
+            'express_route_port': d.get('express_route_port', None),
+            'bandwidth_in_gbps': d.get('bandwidth_in_gbps', None),
+            'stag': d.get('stag', None),
+            'provisioning_state': d.get('provisioning_state', None),
+            'gateway_manager_etag': d.get('gateway_manager_etag', ''),
+            'global_reach_enabled': d.get('global_reach_enabled', '')
+        }
+        return d
+
+
 
 def main():
     AzureExpressRouteInfo()
