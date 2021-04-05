@@ -41,14 +41,14 @@ author:
 
 EXAMPLES = '''
     - name: Get Vpn Site Link info by the name
-      azure_rm_vpnsitelink_info: 
+      azure_rm_vpnsitelink_info:
         resource_group: myResourceGroup
         name: vpnSiteLink1
         vpn_site_name: vpnSite1
 
 
     - name: Get Vpn Site Links by the Vpn Site
-      azure_rm_vpnsitelink_info: 
+      azure_rm_vpnsitelink_info:
         resource_group: myResourceGroup
         vpn_site_name: vpnSite1
 '''
@@ -155,12 +155,9 @@ class AzureRMVpnSiteLinkInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if (self.resource_group is not None and
-            self.vpn_site_name is not None and
-            self.name is not None):
+        if (self.resource_group is not None and self.vpn_site_name is not None and self.name is not None):
             self.results['vpn_site_links'] = self.format_item(self.get())
-        elif (self.resource_group is not None and
-              self.vpn_site_name is not None):
+        elif (self.resource_group is not None and self.vpn_site_name is not None):
             self.results['vpn_site_links'] = self.format_item(self.list_by_vpn_site())
         return self.results
 
