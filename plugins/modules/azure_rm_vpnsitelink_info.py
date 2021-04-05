@@ -8,18 +8,13 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_vpnsitelink_info
-version_added: '2.9'
-short_description: Get VpnSiteLink info.
+version_added: '1.5.1'
+short_description: Get VpnSiteLink info
 description:
-    - Get info of VpnSiteLink.
+    - Get info of Vpn Site Link relate infomation.
 options:
     resource_group:
         description:
@@ -28,7 +23,7 @@ options:
         type: str
     vpn_site_name:
         description:
-            - The name of the VpnSite.
+            - The name of the Vpn Site.
         required: true
         type: str
     name:
@@ -39,23 +34,22 @@ extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 author:
-    - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
     - Haiyuan Zhang (@haiyuazhang)
 
 '''
 
 EXAMPLES = '''
-    - name: VpnSiteGet
+    - name: Get Vpn Site Link info by the name
       azure_rm_vpnsitelink_info: 
-        resource_group_name: myResourceGroup
-        vpn_site_link_name: vpnSiteLink1
+        resource_group: myResourceGroup
+        name: vpnSiteLink1
         vpn_site_name: vpnSite1
 
 
-    - name: VpnSiteLinkListByVpnSite
+    - name: Get Vpn Site Links by the Vpn Site
       azure_rm_vpnsitelink_info: 
-        resource_group_name: myResourceGroup
+        resource_group: myResourceGroup
         vpn_site_name: vpnSite1
 '''
 
@@ -126,9 +120,6 @@ vpn_site_links:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 try:
     from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.network import NetworkManagementClient
-    from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -155,22 +146,14 @@ class AzureRMVpnSiteLinkInfo(AzureRMModuleBase):
         name = None
 
         self.results = dict(changed=False)
-        self.mgmt_client = None
         self.state = None
-        self.url = None
-        self.status_code = [200]
 
-        self.mgmt_client = None
         super(AzureRMVpnSiteLinkInfo, self).__init__(self.module_arg_spec, supports_tags=True)
 
     def exec_module(self, **kwargs):
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
-
-        self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2020-04-01')
 
         if (self.resource_group is not None and
             self.vpn_site_name is not None and
@@ -185,9 +168,9 @@ class AzureRMVpnSiteLinkInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.vpn_site_links.get(resource_group_name=self.resource_group,
-                                                           vpn_site_name=self.vpn_site_name,
-                                                           vpn_site_link_name=self.name)
+            response = self.network_client.vpn_site_links.get(resource_group_name=self.resource_group,
+                                                              vpn_site_name=self.vpn_site_name,
+                                                              vpn_site_link_name=self.name)
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
@@ -197,8 +180,8 @@ class AzureRMVpnSiteLinkInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.vpn_site_links.list_by_vpn_site(resource_group_name=self.resource_group,
-                                                                        vpn_site_name=self.vpn_site_name)
+            response = self.network_client.vpn_site_links.list_by_vpn_site(resource_group_name=self.resource_group,
+                                                                           vpn_site_name=self.vpn_site_name)
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
@@ -207,12 +190,14 @@ class AzureRMVpnSiteLinkInfo(AzureRMModuleBase):
     def format_item(self, item):
         if hasattr(item, 'as_dict'):
             return [item.as_dict()]
-        else:
+        elif item is not None:
             result = []
             items = list(item)
             for tmp in items:
                 result.append(tmp.as_dict())
             return result
+        else:
+            return None
 
 
 def main():

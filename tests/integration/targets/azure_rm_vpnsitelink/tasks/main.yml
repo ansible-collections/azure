@@ -1,0 +1,25 @@
+ - name: Create vpn site name
+   set_fact:
+     vpn_site_name: "vpn{{ resource_group | hash('md5') | truncate(23, True, '') }}"
+     name: "vpn{{ resource_group | hash('md5') | truncate(23, True, '') }}"
+
+ - name: Get vpn site link by name
+   azure_rm_vpnsitelink_info:
+     resource_group: "{{ resource_group }}"
+     vpn_site_name: "{{ vpn_site_name }}"
+     name: "{{ name }}"
+   register: output
+ 
+ - assert:
+     that:
+       - "output.failed == fail"
+
+ - name: Get vpn site link by vpn site
+   azure_rm_vpnsitelink_info:
+     resource_group: "{{ resource_group }}"
+     vpn_site_name: "{{ vpn_site_name }}"
+   register: output
+ 
+ - assert:
+     that:
+       - "output.failed == fail"
