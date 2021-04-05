@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualhub
-version_added: '1.4.0'
+version_added: '1.5.1'
 short_description: Manage Azure VirtualHub instance
 description:
     - Create, update and delete instance of Azure VirtualHub.
@@ -198,7 +193,6 @@ extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 author:
-    - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
     - Haiyuan Zhang (@haiyuazhang)
 
@@ -488,9 +482,6 @@ enable_virtual_router_route_propogation:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
     from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.network import NetworkManagementClient
-    from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -699,7 +690,6 @@ class AzureRMVirtualHub(AzureRMModuleBaseExt):
         self.body = {}
 
         self.results = dict(changed=False)
-        self.mgmt_client = None
         self.state = None
         self.to_do = Actions.NoAction
 
@@ -718,10 +708,6 @@ class AzureRMVirtualHub(AzureRMModuleBaseExt):
 
         old_response = None
         response = None
-
-        self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2020-04-01')
 
         old_response = self.get_resource()
 
@@ -760,9 +746,9 @@ class AzureRMVirtualHub(AzureRMModuleBaseExt):
 
     def create_update_resource(self):
         try:
-            response = self.mgmt_client.virtual_hubs.create_or_update(resource_group_name=self.resource_group,
-                                                                      virtual_hub_name=self.name,
-                                                                      virtual_hub_parameters=self.body)
+            response = self.network_client.virtual_hubs.create_or_update(resource_group_name=self.resource_group,
+                                                                         virtual_hub_name=self.name,
+                                                                         virtual_hub_parameters=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except CloudError as exc:
@@ -772,8 +758,8 @@ class AzureRMVirtualHub(AzureRMModuleBaseExt):
 
     def delete_resource(self):
         try:
-            response = self.mgmt_client.virtual_hubs.delete(resource_group_name=self.resource_group,
-                                                            virtual_hub_name=self.name)
+            response = self.network_client.virtual_hubs.delete(resource_group_name=self.resource_group,
+                                                               virtual_hub_name=self.name)
         except CloudError as e:
             self.log('Error attempting to delete the VirtualHub instance.')
             self.fail('Error deleting the VirtualHub instance: {0}'.format(str(e)))
@@ -782,8 +768,8 @@ class AzureRMVirtualHub(AzureRMModuleBaseExt):
 
     def get_resource(self):
         try:
-            response = self.mgmt_client.virtual_hubs.get(resource_group_name=self.resource_group,
-                                                         virtual_hub_name=self.name)
+            response = self.network_client.virtual_hubs.get(resource_group_name=self.resource_group,
+                                                            virtual_hub_name=self.name)
         except CloudError as e:
             return False
         return response.as_dict()

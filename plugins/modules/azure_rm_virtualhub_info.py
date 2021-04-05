@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualhub_info
-version_added: '1.4.0'
+version_added: '1.5.1'
 short_description: Get VirtualHub info
 description:
     - Get info of VirtualHub.
@@ -33,7 +28,6 @@ extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 author:
-    - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
     - Haiyuan Zhang (@haiyuazhang)
 
@@ -45,11 +39,9 @@ EXAMPLES = '''
         resource_group: myResourceGroup
         name: virtualHub
 
-
     - name: VirtualHubListByResourceGroup
       azure_rm_virtualhub_info:
         resource_group: myResourceGroup
-
 
     - name: VirtualHubList
       azure_rm_virtualhub_info:
@@ -539,9 +531,6 @@ virtual_hubs:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 try:
     from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.network import NetworkManagementClient
-    from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -562,22 +551,15 @@ class AzureRMVirtualHubInfo(AzureRMModuleBase):
         self.name = None
 
         self.results = dict(changed=False)
-        self.mgmt_client = None
         self.state = None
-        self.url = None
         self.status_code = [200]
 
-        self.mgmt_client = None
         super(AzureRMVirtualHubInfo, self).__init__(self.module_arg_spec, supports_tags=True)
 
     def exec_module(self, **kwargs):
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
-
-        self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2020-04-01')
 
         if (self.resource_group is not None and self.name is not None):
             self.results['virtual_hubs'] = self.format_item(self.get())
@@ -591,8 +573,8 @@ class AzureRMVirtualHubInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.virtual_hubs.get(resource_group_name=self.resource_group,
-                                                         virtual_hub_name=self.name)
+            response = self.network_client.virtual_hubs.get(resource_group_name=self.resource_group,
+                                                            virtual_hub_name=self.name)
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
@@ -602,7 +584,7 @@ class AzureRMVirtualHubInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.virtual_hubs.list_by_resource_group(resource_group_name=self.resource_group)
+            response = self.network_client.virtual_hubs.list_by_resource_group(resource_group_name=self.resource_group)
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
@@ -612,7 +594,7 @@ class AzureRMVirtualHubInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.virtual_hubs.list()
+            response = self.network_client.virtual_hubs.list()
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
