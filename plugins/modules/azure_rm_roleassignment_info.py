@@ -294,6 +294,10 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
             response = [self.roleassignment_to_dict(role_assignment) for role_assignment in response]
 
+            # If assignee is set we only want results matching that assignee.
+            if self.assignee:
+                response = [role_assignment for role_assignment in response if role_assignment.get('principal_id').lower() == self.assignee.lower()]
+
             # If strict_scope_match is true we only want results matching exact scope.
             if self.strict_scope_match:
                 response = [role_assignment for role_assignment in response if role_assignment.get('scope').lower() == self.scope.lower()]
