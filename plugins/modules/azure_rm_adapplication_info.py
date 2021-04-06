@@ -10,14 +10,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = '''
 module: azure_rm_adapplication_info
 
-version_added: "2.10"
+version_added: "1.5.1"
 
 short_description: Get Azure Active Directory application info
 
@@ -60,32 +56,36 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-app_display_name:
+ad_application:
     description:
-        - Object's display name or its prefix.
-    type: str
-    returned: always
-    sample: app
-app_id:
-    description:
-        - The application ID.
-    returned: always
-    type: str
-    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-identifier_uris:
-    description:
-        - the identifiers_uri list of app
-    type: list
-    returned: always
-    sample: ["http://ansible-atodorov"]
-object_id:
-    description:
-        - It's application's object ID.
-    returned: always
-    type: str
-    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-
-
+        - The info of the ad application.
+    type: complex
+    returned: aways
+    contains:
+        app_display_name:
+            description:
+                - Object's display name or its prefix.
+            type: str
+            returned: always
+            sample: app
+        app_id:
+            description:
+                - The application ID.
+            returned: always
+            type: str
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        identifier_uris:
+            description:
+                - the identifiers_uri list of app
+            type: list
+            returned: always
+            sample: ["http://ansible-atodorov"]
+        object_id:
+            description:
+                - It's application's object ID.
+            returned: always
+            type: str
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase

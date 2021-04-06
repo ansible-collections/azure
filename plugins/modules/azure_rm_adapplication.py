@@ -7,24 +7,17 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-import datetime
-from dateutil.relativedelta import relativedelta
-import dateutil.parser
-
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
 
 DOCUMENTATION = '''
 ---
 module: azure_rm_adapplication
 
-version_added: "2.10"
+version_added: "1.5.1"
 
 short_description: Manage Azure Active Directory application
 
 description:
-        - Manage Azure Active Directory application
+        - Manage Azure Active Directory application.
 
 options:
     tenant:
@@ -50,14 +43,14 @@ options:
         suboptions:
             allowed_member_types:
                 description:
-                    - Specifies whether this app role can be assigned to users and groups (by setting to ["User"]),
-                    - to other application's (by setting to ["Application"],
-                    -  or both (by setting to ["User", "Application"])
+                    - Specifies whether this app role can be assigned to users and groups I(allowed_member_types=User).
+                    - To other application's I(allowed_member_types=Application).
+                    - Or both C(User) and C(Appplication).
                 type: list
             description:
                 description:
                     - The description for the app role.
-                    - This is displayed when the app role is being assigned and,
+                    - This is displayed when the app role is being assigned.
                     - if the app role functions as an application permission, during consent experiences.
                 type: str
             display_name:
@@ -235,57 +228,66 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-display_name:
+state:
     description:
-        - Object's display name or its prefix.
-    type: str
-    returned: always
-    sample: fredAKSCluster
-app_id:
-    description:
-        - The application ID.
-    returned: always
-    type: str
-    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-object_id:
-    description:
-        - Object ID of the application
-    returned: always
-    type: str
-    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-available_to_other_tenants:
-    description:
-        - The application can be used from any Azure AD tenants.
-    returned: always
-    type: bool
-homepage
-    description:
-        - The url where users can sign in and use your app.
-    returned: always
-    type: str
-identifier_uris
-    description:
-        - Space-separated unique URIs that Azure AD can use for this app.
-    returned: always
-    type: list
-oauth2_allow_implicit_flow
-    description:
-        - Whether to allow implicit grant flow for OAuth2.
-    returned: always
-    type: bool
-optional_claims
-    description:
-        - The optional claims for the application.
-    returned: always
-    type: list
-reply_urls
-    description:
-        - Space-separated URIs to which Azure AD will redirect in response to an OAuth 2.0 request.
-    returned: always
-    type: list
+        - Current state of the adapplication.
+    type: complex
+    returned: awalys
+    contains:
+        display_name:
+            description:
+                - Object's display name or its prefix.
+            type: str
+            returned: always
+            sample: fredAKSCluster
+        app_id:
+            description:
+                - The application ID.
+            returned: always
+            type: str
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        object_id:
+            description:
+                - Object ID of the application
+            returned: always
+            type: str
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        available_to_other_tenants:
+            description:
+                - The application can be used from any Azure AD tenants.
+            returned: always
+            type: bool
+        homepage
+            description:
+                - The url where users can sign in and use your app.
+            returned: always
+            type: str
+        identifier_uris
+            description:
+                - Space-separated unique URIs that Azure AD can use for this app.
+            returned: always
+            type: list
+        oauth2_allow_implicit_flow
+            description:
+                - Whether to allow implicit grant flow for OAuth2.
+            returned: always
+            type: bool
+        optional_claims
+            description:
+                - The optional claims for the application.
+            returned: always
+            type: list
+        reply_urls
+            description:
+                - Space-separated URIs to which Azure AD will redirect in response to an OAuth 2.0 request.
+            returned: always
+            type: list
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+import datetime
+from dateutil.relativedelta import relativedelta
+import dateutil.parser
 
 try:
     from msrestazure.azure_exceptions import CloudError
