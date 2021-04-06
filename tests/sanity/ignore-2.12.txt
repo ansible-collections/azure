@@ -151,10 +151,8 @@ plugins/modules/azure_rm_subnet.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_subnet.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_subnet_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_apimanagementservice.py validate-modules:invalid-ansiblemodule-schema
+plugins/modules/azure_rm_virtualhub.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_virtualwan.py validate-modules:invalid-ansiblemodule-schema
-plugins/modules/azure_rm_virtualwan.py validate-modules:parameter-list-no-elements
-plugins/modules/azure_rm_virtualwan.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_vpnsite.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_vpnsite.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_subscription_info.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_virtualmachine.py validate-modules:parameter-type-not-in-doc

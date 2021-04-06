@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualhub_info
-version_added: '1.5.1'
+version_added: '1.7.0'
 short_description: Get VirtualHub info
 description:
     - Get info of VirtualHub.
@@ -26,7 +26,6 @@ options:
         type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 author:
     - Fred-Sun (@Fred-Sun)
     - Haiyuan Zhang (@haiyuazhang)
@@ -34,16 +33,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: VirtualHubGet
+    - name: Get virtual hub info by name
       azure_rm_virtualhub_info:
         resource_group: myResourceGroup
         name: virtualHub
 
-    - name: VirtualHubListByResourceGroup
+    - name: Get virtual hub info by resource group
       azure_rm_virtualhub_info:
         resource_group: myResourceGroup
 
-    - name: VirtualHubList
+    - name: Get birtual hub info by sub
       azure_rm_virtualhub_info:
 
 '''
@@ -554,7 +553,7 @@ class AzureRMVirtualHubInfo(AzureRMModuleBase):
         self.state = None
         self.status_code = [200]
 
-        super(AzureRMVirtualHubInfo, self).__init__(self.module_arg_spec, supports_tags=True)
+        super(AzureRMVirtualHubInfo, self).__init__(self.module_arg_spec, supports_tags=False)
 
     def exec_module(self, **kwargs):
 
@@ -601,7 +600,9 @@ class AzureRMVirtualHubInfo(AzureRMModuleBase):
         return response
 
     def format_item(self, item):
-        if hasattr(item, 'as_dict'):
+        if item is None:
+            return None
+        elif hasattr(item, 'as_dict'):
             return [item.as_dict()]
         else:
             result = []
