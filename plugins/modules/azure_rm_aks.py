@@ -538,7 +538,7 @@ aad_profile_spec = dict(
 
 
 api_server_access_profile_spec = dict(
-    authorized_ip_ranges=dict(type='list', elements='string'),
+    authorized_ip_ranges=dict(type='list', elements='str'),
     enable_private_cluster=dict(type='bool'),
 )
 
