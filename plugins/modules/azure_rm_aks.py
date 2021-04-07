@@ -1014,7 +1014,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
     def create_aad_profile_instance(self, aad):
         return self.managedcluster_models.ManagedClusterAADProfile(**aad) if aad else None
 
-    def create_api_server_access_profile_spec(self, server_access):
+    def create_api_server_access_profile_instance(self, server_access):
         return self.managedcluster_models.ManagedClusterAPIServerAccessProfile(**server_access) if server_access else None
 
     def create_addon_profile_instance(self, addon):
