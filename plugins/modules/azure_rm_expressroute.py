@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Sakar Mehra (@sakar97), Praveen Ghuge (@praveenghuge), Karl Dasan (@karldas30)
+# Copyright (c) 2021 Praveen Ghuge (@praveenghuge), Karl Dasan (@karldas30), Sakar Mehra (@sakar97)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
@@ -24,15 +24,19 @@ options:
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
-    provider:
+    service_provider_properties:
         description:
-            - The service Provider Name
-    peering_location:
-        description:
-            - The peering location
-    bandwith:
-        description:
-            - The BandwidthInMbps
+            - The service Provider properties
+        suboptions:
+            peering_location:
+                description:
+                    - The peering location
+            bandwidth_in_mbps:
+                description:
+                    - The bandwidth of the circuit when the circuit is provisioned on an ExpressRoutePort resource.
+            service_provider_name:
+                description:
+                    - Name of service provider
     sku:
         description:
             - The name of the SKU.
@@ -41,13 +45,33 @@ options:
         choices:
             - Standard
             - Premium
-    billing model:
-        description:
-            - The tier of the SKU
-        default: Metered
+        suboptions:
+            tier:
+                description:
+                    - The tier of the SKU
+                required: true
+                default: metered
+                choices:
+                    - metered
+                    - unlimited
+            family:
+                description:
+                    - the family of the SKU 
+                required: true
+    global_reach_enabled:
+        description: Flag denoting global reach status.
+        default: true
         choices:
-            - Metered
-            - Unlimited
+            - true
+            - false
+    authorizations:
+        description:
+            - The list of authorizations.
+    allow_classic_operations:
+        description:
+        choices:
+            - true
+            - false     
     state:
       description:
           - Assert the state of the express route.
@@ -58,23 +82,80 @@ options:
           - present
 extends_documentation_fragment:
 - azure.azcollection.azure
+
 author:
     - Praveen Ghuge (@praveenghuge)
     - Karl Dasan (@ikarldas30)
     - Sakar Mehra (@sakar97)
 '''
 EXAMPLES = '''
-    - name: Create a express route
-      azure_rm_expressroute:
-        resource_group: myResourceGroup
-        name: myAppPlan
-        location: eastus
-        provider: Airtel
-        peering_location: Chennai2
-        bandwith: 10
-        sku: Standard
-        billing_model: Metered
+
+- name: "Create Express route"
+  azure_rm_expressroute:
+    resource_group: testgroupans
+    location: eastus
+    name: exp_ckt_name3344
+    allow_classic_operations: true
+    global_reach_enabled: false
+    tags:
+       - a: b
+    authorizations:
+       - name: authorization_test
+    service_provider_properties:
+      service_provider_name: Aryaka Networks
+      peering_location: Seattle
+      bandwidth_in_mbps: '200'
+    sku:
+      tier: premium
+      family: metereddata
+
+- name: Delete Express route
+  azure_rm_expressroute:
+    resource_group: testgroupans
+    name: exp_ckt_name3344
+    state: absent
+
 '''
+
+RETURN = '''
+
+sample: {
+        "additional_properties": {},
+        "allow_classic_operations": true,
+        "authorizations": [
+            {
+                "authorization_key": "d83e18b5-0200-4e0b-9cdb-6fdf95b00267",
+                "authorization_use_status": "Available",
+                "etag": "W/\"09572845-c667-410c-b664-ed8e39242c13\"",
+                "id": "/subscriptions/64caccf3-b508-41e7-92ed-d7ed95b32621/resourceGroups/testgroupans/providers/Microsoft.Network/expressRouteCircuits/exp_ckt_name3344/authorizations/authorization_test",
+                "name": "authorization_test",
+                "provisioning_state": "Succeeded",
+                "type": "Microsoft.Network/expressRouteCircuits/authorizations"
+            }
+        ],
+        "bandwidth_in_gbps": null,
+        "circuit_provisioning_state": "Enabled",
+        "express_route_port": null,
+        "gateway_manager_etag": "",
+        "global_reach_enabled": false,
+        "id": "/subscriptions/64caccf3-b508-41e7-92ed-d7ed95b32621/resourceGroups/testgroupans/providers/Microsoft.Network/expressRouteCircuits/exp_ckt_name3344",
+        "location": "eastus",
+        "name": "exp_ckt_name3344",
+        "peerings": [],
+        "provisioning_state": "Succeeded",
+        "service_key": "e1956383-63b6-4709-8baa-3615bbf5d22b",
+        "service_provider_notes": null,
+        "service_provider_provisioning_state": "NotProvisioned",
+        "stag": 27,
+        "status": "Deleted",
+        "tags": {
+            "a": "b"
+        },
+        "type": "Microsoft.Network/expressRouteCircuits"
+    }
+
+'''
+
 try:
     from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.network import NetworkManagementClient
@@ -84,41 +165,62 @@ except ImportError:
 
 
 class AzureExpressRoute(AzureRMModuleBase):
+
     def __init__(self):
         # define user inputs from playbook
+
+        self.service_provider_properties_spec = dict(
+            service_provider_name=dict(type='str'),
+            peering_location=dict(type='str'),
+            bandwidth_in_mbps=dict(type='str')
+        )
+
+        self.sku_spec = dict(
+            tier=dict(type='str', choices=[
+                      'standard', 'premium'], required=True),
+            family=dict(type='str', choices=[
+                        'unlimiteddata', 'metereddata'], required=True)
+        )
+
+        self.authorizations_spec = dict(
+            name=dict(type='str', required=True)
+        )
+
         self.module_arg_spec = dict(
             resource_group=dict(type='str', required=True),
             name=dict(type='str', required=True),
             location=dict(type='str'),
-            provider=dict(type='str'),
-            peering_location=dict(type='str'),
-            bandwith=dict(type='str'),
-            sku=dict(choices=["Standard", "Premium"],
-                     default='Standard', type='str'),
-            billing_model=dict(
-                choices=['Metered', 'Unlimited'], default='Metered', type='str'),
+            sku=dict(type='dict', options=self.sku_spec),
+            allow_classic_operations=dict(type='bool'),
+            authorizations=dict(type='list', options=self.authorizations_spec),
             state=dict(choices=['present', 'absent'],
-                       default='present', type='str')
+                       default='present', type='str'),
+            service_provider_properties=dict(
+                type='dict', options=self.service_provider_properties_spec),
+            global_reach_enabled=dict(type='bool')
         )
+
         self.resource_group = None
         self.name = None
         self.location = None
-        self.provider = None
-        self.peering_location = None
-        self.bandwith = None
+        self.allow_classic_operations = None
+        self.authorizations = None
+        self.service_provider_properties = None
+        self. global_reach_enabled = None
         self.sku = None
-        self.billing_model = None
         self.tags = None
         self.state = None
         self.results = dict(
             changed=False,
             state=dict()
         )
-        super(AzureExpressRoute, self).__init__(derived_arg_spec=self.module_arg_spec,
+
+        super(AzureExpressRoute, self).__init__(self.module_arg_spec,
                                                 supports_check_mode=True,
                                                 supports_tags=True)
 
     def exec_module(self, **kwargs):
+
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             setattr(self, key, kwargs[key])
 
@@ -129,11 +231,25 @@ class AzureExpressRoute(AzureRMModuleBase):
 
         results = dict()
         changed = False
+
         try:
             self.log('Fetching Express Route Circuits {0}'.format(self.name))
-            express_route_circuit = self.network_client.express_route_circuits.get(self.resource_group, self.name)
-            
+            express_route_circuit = self.network_client.express_route_circuits.get(
+                self.resource_group, self.name)
+
             results = express_route_to_dict(express_route_circuit)
+
+            # don't change anything if creating an existing zone, but change if deleting it
+            if self.state == 'present':
+                changed = False
+
+                update_tags, results['tags'] = self.update_tags(
+                    results['tags'])
+                if update_tags:
+                    changed = True
+
+            elif self.state == 'absent':
+                changed = True
 
         except CloudError:
             # the express route does not exist so create it
@@ -144,24 +260,16 @@ class AzureExpressRoute(AzureRMModuleBase):
                 changed = False
 
         self.results['changed'] = changed
-        self.results['state'] = results      
+        self.results['state'] = results
 
         # return the results if your only gathering information
         if self.check_mode:
             return self.results
 
         if changed:
-
-            params = dict(
-                location=self.location,
-                sku=self.sku,
-                billing_model=self.billing_model,
-                peering_location=self.peering_location,
-                provider=self.provider,
-                bandwith=self.bandwith
-            )
             if self.state == "present":
-                self.create_or_update_express_route(params)
+                self.results['state'] = self.create_or_update_express_route(
+                    self.module.params)
             elif self.state == "absent":
                 # delete express route
                 self.delete_expressroute()
@@ -176,29 +284,17 @@ class AzureExpressRoute(AzureRMModuleBase):
         '''
         self.log("create or update Express Route {0}".format(self.name))
         try:
-            params = {
-            "sku": {
-                "name": "Standard_MeteredData",
-                "tier": "Standard",
-                "family": "MeteredData"
-            },
-            "location": "eastus",
-            # "authorizations": [],
-            # "peerings": [],
-            # "allow_classic_operations": False,
-            "service_provider_properties": {
-                "service_provider_name": "Airtel",
-                "peering_location": "Chennai2",
-                "bandwidth_in_mbps": "50"
-            }
-            }
-            response = self.network_client.express_route_circuits.create_or_update(self.resource_group, self.name, params)
-            print("-----000000---------", response)                                                                                         
-            self.log("Response : {0}".format(response))
+            params["sku"]["name"] = params.get("sku").get("tier") + "_" + params.get("sku").get("family")
+            poller = self.network_client.express_route_circuits.create_or_update(
+                resource_group_name=params.get("resource_group"),
+                circuit_name=params.get("name"),
+                parameters=params)
+            result = self.get_poller_result(poller)
+            self.log("Response : {0}".format(result))
         except CloudError as ex:
             self.fail("Failed to create express route {0} in resource group {1}: {2}".format(
                 self.name, self.resource_group, str(ex)))
-        return True
+        return express_route_to_dict(result)
 
     def delete_expressroute(self):
         '''
@@ -207,7 +303,8 @@ class AzureExpressRoute(AzureRMModuleBase):
         '''
         self.log("Deleting the express route {0}".format(self.name))
         try:
-            poller = self.network_client.express_route_circuits.delete(self.resource_group, self.name)
+            poller = self.network_client.express_route_circuits.delete(
+                self.resource_group, self.name)
             result = self.get_poller_result(poller)
         except CloudError as e:
             self.log('Error attempting to delete express route.')
@@ -218,32 +315,34 @@ class AzureExpressRoute(AzureRMModuleBase):
 
 def express_route_to_dict(item):
     # turn express route object into a dictionary (serialization)
-    d = item.as_dict()
+    express_route = item.as_dict()
     result = dict(
-        additional_properties=d.get('additional_properties', {}),
-        id=d.get('id', None),
-        name=d.get('name', None),
-        type=d.get('type', None),
-        location=d.get('location', '').replace(' ', '').lower(),
-        tags=d.get('tags', None),
-        # 'sku': <azure.mgmt.network.v2019_06_01.models._models_py3.ExpressRouteCircuitSku object at 0x7feb0dd91c40>,
-        # 'sku': d['sku']['tier'].lower(),
-        allow_classic_operations=d.get('allow_classic_operations', None),
-        circuit_provisioning_state=d.get('circuit_provisioning_state', None),
-        service_provider_provisioning_state=d.get('service_provider_provisioning_state', None),
-        authorizations=d.get('authorizations', []),
-        peerings=d.get('peerings', []),
-        service_key=d.get('service_key', None),
-        service_provider_notes=d.get('service_provider_notes', None),
-        # 'service_provider_properties': <azure.mgmt.network.v2019_06_01.models._models_py3.ExpressRouteCircuitServiceProviderProperties object at 0x7feb0dd91c70>,
-        express_route_port=d.get('express_route_port', None),
-        bandwidth_in_gbps=d.get('bandwidth_in_gbps', None),
-        stag=d.get('stag', None),
-        provisioning_state=d.get('provisioning_state', None),
-        gateway_manager_etag=d.get('gateway_manager_etag', ''),
-        global_reach_enabled=d.get('global_reach_enabled', '')
+        additional_properties=express_route.get('additional_properties', {}),
+        id=express_route.get('id', None),
+        name=express_route.get('name', None),
+        type=express_route.get('type', None),
+        location=express_route.get('location', '').replace(' ', '').lower(),
+        tags=express_route.get('tags', None),
+        allow_classic_operations=express_route.get(
+            'allow_classic_operations', None),
+        circuit_provisioning_state=express_route.get(
+            'circuit_provisioning_state', None),
+        service_provider_provisioning_state=express_route.get(
+            'service_provider_provisioning_state', None),
+        authorizations=express_route.get('authorizations', []),
+        peerings=express_route.get('peerings', []),
+        service_key=express_route.get('service_key', None),
+        service_provider_notes=express_route.get(
+            'service_provider_notes', None),
+        express_route_port=express_route.get('express_route_port', None),
+        bandwidth_in_gbps=express_route.get('bandwidth_in_gbps', None),
+        stag=express_route.get('stag', None),
+        provisioning_state=express_route.get('provisioning_state', None),
+        gateway_manager_etag=express_route.get('gateway_manager_etag', ''),
+        global_reach_enabled=express_route.get('global_reach_enabled', '')
     )
     return result
+
 
 def main():
     AzureExpressRoute()
