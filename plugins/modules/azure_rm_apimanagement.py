@@ -647,6 +647,7 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                 30,
             )
             isFound = True
+            response = json.loads(response.text)
             self.log("Response : {0}".format(response))
         except CloudError as e:
             self.log('Could not find the Api instance from the given parameters.')

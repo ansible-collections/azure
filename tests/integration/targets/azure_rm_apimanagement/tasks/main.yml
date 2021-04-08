@@ -1,7 +1,16 @@
 - name: Fix resource prefix
   set_fact:
-    name: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-    service_name: "myService"
+    api_id: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    service_name: "myServuce{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+
+- name: create API management service
+  azure_rm_apimanagementservice:
+    resource_group: "{{ resource_group }}"
+    name: "{{ service_name }}"
+    publisher_email: user@example.com
+    publisher_name: Username
+    sku_name: Developer
+    sku_capacity: 1
 
 - name: Create a new API instance
   azure_rm_apimanagement:
@@ -39,7 +48,7 @@
   assert:
     that:
       - newApi_idempotent.changed == False
-      - newApi_idempotent.failed == True
+      - newApi_idempotent.failed == False
 
 - name: Create different format api
   azure_rm_apimanagement:
@@ -56,24 +65,6 @@
     that:
       - newOpenApi.changed == True
       - newOpenApi.failed == False
-
-- name: Test creating api without the path parameter
-  azure_rm_apimanagement:  
-    resource_group: "{{ resource_group }}"
-    service_name: "{{ service_name }}"
-    api_id: "{{ api_id }}"
-    description: "testDescription"
-    display_name: "TestAPI"
-    service_url: 'http://testapi.example.net/api'
-    protocols:
-      - https
-  register: noPath
-
-- name: Assert that output throws an error
-  assert:
-    that:
-      - noPath.changed == False
-      - noPath.failed == True
 
 - name: Delete an api
   azure_rm_apimanagement:
