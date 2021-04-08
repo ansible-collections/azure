@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Praveen Ghuge (@praveenghuge), Karl Dasan (@karldas30), Sakar Mehra (@sakar97)
+# Copyright (c) 2020 Praveen Ghuge (@praveenghuge), Karl Dasan (@ikarldasan), Sakar Mehra (@sakar97)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -34,7 +34,7 @@ extends_documentation_fragment:
 
 author:
     - Praveen Ghuge (@praveenghuge)
-    - Karl Dasan (@ikarldas30)
+    - Karl Dasan (@ikarldasan)
     - Sakar Mehra (@sakar97)
 
 '''
