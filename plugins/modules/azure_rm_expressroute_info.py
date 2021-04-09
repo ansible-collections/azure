@@ -5,7 +5,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 __metaclass__ = type
 
@@ -22,10 +21,11 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the express route.
-        required: True
+        type: str
 
 
 extends_documentation_fragment:
@@ -52,6 +52,7 @@ RETURN = '''
 
 '''
 
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -60,6 +61,7 @@ try:
 except ImportError:
     # This is handled in azure_rm_common
     pass
+
 
 class AzureExpressRouteInfo(AzureRMModuleBase):
     def __init__(self):

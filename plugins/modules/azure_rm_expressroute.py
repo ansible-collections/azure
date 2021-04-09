@@ -4,7 +4,6 @@
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 __metaclass__ = type
 DOCUMENTATION = '''
 ---
@@ -14,68 +13,78 @@ short_description: Manage Express Route Circuits
 description:
     - Create, update and delete instance of Express Route.
 options:
-    resource_groups:
+    resource_group:
         description:
             - Name of the resource group to which the resource belongs.
+        required: true
+        type: str
     name:
         description:
             - Unique name of the app service plan to create or update.
-        required: True
+        required: true
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     service_provider_properties:
+        type: dict
         description:
             - The service Provider properties
         suboptions:
             peering_location:
                 description:
                     - The peering location
+                type: str
             bandwidth_in_mbps:
                 description:
                     - The bandwidth of the circuit when the circuit is provisioned on an ExpressRoutePort resource.
+                type: str
             service_provider_name:
                 description:
                     - Name of service provider
+                type: str
     sku:
         description:
             - The name of the SKU.
             - Please see (https://azure.microsoft.com/en-in/pricing/details/expressroute/)
-        default: Standard
-        choices:
-            - Standard
-            - Premium
         suboptions:
             tier:
                 description:
                     - The tier of the SKU
                 required: true
-                default: metered
+                default: Standard
                 choices:
-                    - metered
-                    - unlimited
+                    - Standard
+                    - Premium
             family:
                 description:
-                    - the family of the SKU 
+                    - the family of the SKU
                 required: true
+                choices:
+                    - MeteredData
+                    - UnlimitedData
     global_reach_enabled:
         description: Flag denoting global reach status.
         default: true
-        choices:
-            - true
-            - false
+        type: bool
     authorizations:
         description:
             - The list of authorizations.
+        suboptions:
+            name:
+                description: Name of the authorization.
+                required: true
+            type: str
+        type: list
     allow_classic_operations:
-        description:
-        choices:
-            - true
-            - false     
+        description: Support for classic operations.
+        type: bool
     state:
       description:
           - Assert the state of the express route.
           - Use C(present) to create or update an express route and C(absent) to delete it.
+      type: str
       default: present
       choices:
           - absent
@@ -89,12 +98,11 @@ author:
     - Sakar Mehra (@sakar97)
 '''
 EXAMPLES = '''
-
 - name: "Create Express route"
   azure_rm_expressroute:
-    resource_group: testgroupans
+    resource_group: rg
     location: eastus
-    name: exp_ckt_name3344
+    name: exp
     allow_classic_operations: true
     global_reach_enabled: false
     tags:
@@ -111,14 +119,13 @@ EXAMPLES = '''
 
 - name: Delete Express route
   azure_rm_expressroute:
-    resource_group: testgroupans
-    name: exp_ckt_name3344
+    resource_group: rg
+    name: exp
     state: absent
 
 '''
 
 RETURN = '''
-
 sample: {
         "additional_properties": {},
         "allow_classic_operations": true,
@@ -126,8 +133,8 @@ sample: {
             {
                 "authorization_key": "d83e18b5-0200-4e0b-9cdb-6fdf95b00267",
                 "authorization_use_status": "Available",
-                "etag": "W/\"09572845-c667-410c-b664-ed8e39242c13\"",
-                "id": "/subscriptions/64caccf3-b508-41e7-92ed-d7ed95b32621/resourceGroups/testgroupans/providers/Microsoft.Network/expressRouteCircuits/exp_ckt_name3344/authorizations/authorization_test",
+                "etag": "W/'09572845-c667-410c-b664-ed8e39242c13'",
+                "id": "/subscriptions/subs_id/resourceGroups/rg/providers/Microsoft.Network/expressRouteCircuits/exp/authorizations/az",
                 "name": "authorization_test",
                 "provisioning_state": "Succeeded",
                 "type": "Microsoft.Network/expressRouteCircuits/authorizations"
@@ -138,9 +145,9 @@ sample: {
         "express_route_port": null,
         "gateway_manager_etag": "",
         "global_reach_enabled": false,
-        "id": "/subscriptions/64caccf3-b508-41e7-92ed-d7ed95b32621/resourceGroups/testgroupans/providers/Microsoft.Network/expressRouteCircuits/exp_ckt_name3344",
+        "id": "/subscriptions/subs_id/resourceGroups/rg/providers/Microsoft.Network/expressRouteCircuits/exp",
         "location": "eastus",
-        "name": "exp_ckt_name3344",
+        "name": "exp",
         "peerings": [],
         "provisioning_state": "Succeeded",
         "service_key": "e1956383-63b6-4709-8baa-3615bbf5d22b",
@@ -155,6 +162,8 @@ sample: {
     }
 
 '''
+
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -192,7 +201,7 @@ class AzureExpressRoute(AzureRMModuleBase):
             location=dict(type='str'),
             sku=dict(type='dict', options=self.sku_spec),
             allow_classic_operations=dict(type='bool'),
-            authorizations=dict(type='list', options=self.authorizations_spec),
+            authorizations=dict(type='list', options=self.authorizations_spec, elements='dict'),
             state=dict(choices=['present', 'absent'],
                        default='present', type='str'),
             service_provider_properties=dict(

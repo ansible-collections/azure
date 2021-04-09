@@ -109,7 +109,7 @@
       state: absent
 
 - name: Delete Express Route (idempotent)
-  azure_rm_dnszone:
+  azure_rm_expressroute:
     resource_group: "{{ resource_group }}"
     name: "{{ express_route }}"
     state: absent
