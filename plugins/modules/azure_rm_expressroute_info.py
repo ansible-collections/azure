@@ -5,7 +5,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 __metaclass__ = type
 
@@ -22,10 +21,11 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the express route.
-        required: True
+        type: str
 
 
 extends_documentation_fragment:
@@ -57,9 +57,9 @@ sample: {
             {
                 "authorization_key": "d83e18b5-0200-4e0b-9cdb-6fdf95b00267",
                 "authorization_use_status": "Available",
-                "etag": "W/\"09572845-c667-410c-b664-ed8e39242c13\"",
-                "id": "/subscriptions/64caccf3-b508-41e7-92ed-d7ed95b32621/resourceGroups/testgroupans/providers/Microsoft.Network/expressRouteCircuits/exp_ckt_name3344/authorizations/authorization_test",
-                "name": "authorization_test",
+                "etag": "W/'09572845-c667-410c-b664-ed8e39242c13'",
+                "id": "/subscriptions/subs_id/resourceGroups/rg/providers/Microsoft.Network/expressRouteCircuits/exp/authorizations/az",
+                "name": "az",
                 "provisioning_state": "Succeeded",
                 "type": "Microsoft.Network/expressRouteCircuits/authorizations"
             }
@@ -69,9 +69,9 @@ sample: {
         "express_route_port": null,
         "gateway_manager_etag": "",
         "global_reach_enabled": false,
-        "id": "/subscriptions/64caccf3-b508-41e7-92ed-d7ed95b32621/resourceGroups/testgroupans/providers/Microsoft.Network/expressRouteCircuits/exp_ckt_name3344",
+        "id": "/subscriptions/subs_id/resourceGroups/rg/providers/Microsoft.Network/expressRouteCircuits/exp",
         "location": "eastus",
-        "name": "exp_ckt_name3344",
+        "name": "exp",
         "peerings": [],
         "provisioning_state": "Succeeded",
         "service_key": "e1956383-63b6-4709-8baa-3615bbf5d22b",
@@ -87,6 +87,7 @@ sample: {
 
 '''
 
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -95,6 +96,7 @@ try:
 except ImportError:
     # This is handled in azure_rm_common
     pass
+
 
 class AzureExpressRouteInfo(AzureRMModuleBase):
     def __init__(self):
