@@ -50,41 +50,6 @@ EXAMPLES = '''
 
 RETURN = '''
 
-sample: {
-        "additional_properties": {},
-        "allow_classic_operations": true,
-        "authorizations": [
-            {
-                "authorization_key": "d83e18b5-0200-4e0b-9cdb-6fdf95b00267",
-                "authorization_use_status": "Available",
-                "etag": "W/\"09572845-c667-410c-b664-ed8e39242c13\"",
-                "id": "/subscriptions/64caccf3-b508-41e7-92ed-d7ed95b32621/resourceGroups/testgroupans/providers/Microsoft.Network/expressRouteCircuits/exp_ckt_name3344/authorizations/authorization_test",
-                "name": "authorization_test",
-                "provisioning_state": "Succeeded",
-                "type": "Microsoft.Network/expressRouteCircuits/authorizations"
-            }
-        ],
-        "bandwidth_in_gbps": null,
-        "circuit_provisioning_state": "Enabled",
-        "express_route_port": null,
-        "gateway_manager_etag": "",
-        "global_reach_enabled": false,
-        "id": "/subscriptions/64caccf3-b508-41e7-92ed-d7ed95b32621/resourceGroups/testgroupans/providers/Microsoft.Network/expressRouteCircuits/exp_ckt_name3344",
-        "location": "eastus",
-        "name": "exp_ckt_name3344",
-        "peerings": [],
-        "provisioning_state": "Succeeded",
-        "service_key": "e1956383-63b6-4709-8baa-3615bbf5d22b",
-        "service_provider_notes": null,
-        "service_provider_provisioning_state": "NotProvisioned",
-        "stag": 27,
-        "status": "Succeeded",
-        "tags": {
-            "a": "b"
-        },
-        "type": "Microsoft.Network/expressRouteCircuits"
-    }
-
 '''
 
 
