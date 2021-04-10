@@ -195,7 +195,9 @@ options:
             - Profile of API Access configuration.
         suboptions:
             authorized_ip_ranges:
-                description: Authorized IP Ranges to kubernetes API server.
+                description: 
+                    - Authorized IP Ranges to kubernetes API server.
+                    - Cannot be enabled when using private cluster
                 type: list
             enable_private_cluster:
                 description:
@@ -708,15 +710,13 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                         to_be_updated = True
 
                     if response['api_server_access_profile'] != self.api_server_access_profile:
-                        if self.api_server_access_profile['enable_private_cluster'] != response['enable_private_cluster']:
+                        if self.api_server_access_profile['enable_private_cluster'] != response['api_server_access_profile']['enable_private_cluster']:
                             self.log(("Api Server Access Diff - Origin {0} / Update {1}"
                                       .format(str(self.api_server_access_profile), str(response['api_server_access_profile']))))
-
                             self.fail("The enable_private_cluster of the api server access profile cannot be updated")
-                        elif self.api_server_access_profile['authorized_ip_ranges'] != response['authorized_ip_ranges']:
+                        elif self.api_server_access_profile['authorized_ip_ranges'] != response['api_server_access_profile']['authorized_ip_ranges']:
                             self.log(("Api Server Access Diff - Origin {0} / Update {1}"
                                       .format(str(self.api_server_access_profile), str(response['api_server_access_profile']))))
-
                             to_be_updated = True
 
                     if self.network_profile:
