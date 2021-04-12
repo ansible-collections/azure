@@ -124,6 +124,16 @@ options:
             subnet:
                 description:
                     - Reference of the subnet resource. A subnet from where application gateway gets its private address.
+                suboptions:
+                    id:
+                        description:
+                            - Full ID of the subnet resource. Required if name and virtual_network_name are not provided.
+                    name:
+                        description:
+                            - Name of the subnet. Only used if virtual_network_name is also provided.
+                    virtual_network_name:
+                        description:
+                            - Name of the virtual network. Only used if name is also provided.
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
@@ -192,6 +202,16 @@ options:
             subnet:
                 description:
                     - Reference of the subnet resource.
+                suboptions:
+                    id:
+                        description:
+                            - Full ID of the subnet resource. Required if name and virtual_network_name are not provided.
+                    name:
+                        description:
+                            - Name of the subnet. Only used if virtual_network_name is also provided.
+                    virtual_network_name:
+                        description:
+                            - Name of the virtual network. Only used if name is also provided.
             public_ip_address:
                 description:
                     - Reference of the PublicIP resource.
@@ -399,6 +419,47 @@ EXAMPLES = '''
     frontend_ip_configurations:
       - subnet:
           id: "{{ subnet_id }}"
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - port: 90
+        name: ag_frontend_port
+    backend_address_pools:
+      - backend_addresses:
+          - ip_address: 10.0.0.4
+        name: test_backend_address_pool
+    backend_http_settings_collection:
+      - port: 80
+        protocol: http
+        cookie_based_affinity: enabled
+        name: sample_appgateway_http_settings
+    http_listeners:
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: ag_frontend_port
+        name: sample_http_listener
+    request_routing_rules:
+      - rule_type: Basic
+        backend_address_pool: test_backend_address_pool
+        backend_http_settings: sample_appgateway_http_settings
+        http_listener: sample_http_listener
+        name: rule1
+
+- name: Create instance of Application Gateway by looking up virtual network and subnet
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myAppGateway
+    sku:
+      name: standard_small
+      tier: standard
+      capacity: 2
+    gateway_ip_configurations:
+      - subnet:
+          name: default
+          virtual_network_name: my-vnet
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          name: default
+          virtual_network_name: my-vnet
         name: sample_gateway_frontend_ip_config
     frontend_ports:
       - port: 90
@@ -636,6 +697,15 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             for i in range(len(suites)):
                                 suites[i] = suites[i].upper()
                 elif key == "gateway_ip_configurations":
+                    ev = kwargs[key]
+                    for i in range(len(ev)):
+                        item = ev[i]
+                        if 'subnet' in item and 'name' in item['subnet'] and 'virtual_network_name' in item['subnet']:
+                            id = subnet_id(self.subscription_id,
+                                           kwargs['resource_group'],
+                                           item['subnet']['virtual_network_name'],
+                                           item['subnet']['name'])
+                            item['subnet'] = {'id': id}
                     self.parameters["gateway_ip_configurations"] = kwargs[key]
                 elif key == "authentication_certificates":
                     self.parameters["authentication_certificates"] = kwargs[key]
@@ -665,6 +735,12 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                               kwargs['resource_group'],
                                               item['public_ip_address'])
                             item['public_ip_address'] = {'id': id}
+                        if 'subnet' in item and 'name' in item['subnet'] and 'virtual_network_name' in item['subnet']:
+                            id = subnet_id(self.subscription_id,
+                                           kwargs['resource_group'],
+                                           item['subnet']['virtual_network_name'],
+                                           item['subnet']['name'])
+                            item['subnet'] = {'id': id}
                     self.parameters["frontend_ip_configurations"] = ev
                 elif key == "frontend_ports":
                     self.parameters["frontend_ports"] = kwargs[key]
@@ -983,6 +1059,16 @@ def http_listener_id(subscription_id, resource_group_name, appgateway_name, name
         subscription_id,
         resource_group_name,
         appgateway_name,
+        name
+    )
+
+
+def subnet_id(subscription_id, resource_group_name, virtual_network_name, name):
+    """Generate the id for a subnet in a virtual network"""
+    return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/virtualNetworks/{2}/subnets/{3}'.format(
+        subscription_id,
+        resource_group_name,
+        virtual_network_name,
         name
     )
 

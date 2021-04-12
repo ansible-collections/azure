@@ -14,6 +14,7 @@ parameters:
   values:
     - "2.9"
     - "2.10"
+    - "2.11"
     - "devel"
 - name: MODULE_NAME
   displayName: 'Test Module'
@@ -68,6 +69,7 @@ parameters:
     - "azure_rm_roleassignment"
     - "azure_rm_registrationassignment"
     - "azure_rm_registrationdefinition"
+    - "azure_rm_cognitivesearch"
     - "azure_rm_securitygroup"
     - "azure_rm_servicebus"
     - "azure_rm_sqlserver"
