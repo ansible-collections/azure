@@ -90,7 +90,7 @@
       ip_rules:
         - value: '9.9.9.9'
           action: Allow
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group }}"
     tags:
       test: test
       galaxy: galaxy
@@ -139,7 +139,7 @@
       ip_rules:
         - value: '9.9.9.9'
           action: Allow
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group }}"
     tags:
       test: test
       galaxy: galaxy
@@ -169,7 +169,7 @@
 
 - name: Update existing storage account with parameters omitted
   azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_explicit }}"
   register: output
 
@@ -197,7 +197,7 @@
 
 - name: Update existing storage account with parameters defined
   azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}"
     allow_blob_public_access: False
     append_tags: no
@@ -245,13 +245,13 @@
 
 - name: Change existing account type (invalid)
   azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}"
     account_type: Premium_LRS
   register: output
-  ignore_errors: yes 
+  ignore_errors: yes
 
-- name: Assert account type change failed 
+- name: Assert account type change failed
   assert:
     that:
       - output.failed
@@ -259,7 +259,7 @@
 
 - name: Unverified custom domain failure
   azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}"
     custom_domain:
       name: ansible.com
@@ -315,7 +315,7 @@
       - output.storageaccounts[0].account_type == "Premium_LRS"
       - output.storageaccounts[0].primary_endpoints.blob.connectionstring
       - output.storageaccounts[0].blob_cors
-      - output.storageaccounts[0].minimum_tls_version == "TLS1_2" 
+      - output.storageaccounts[0].minimum_tls_version == "TLS1_2"
       - not output.storageaccounts[0].allow_blob_public_access
       - not output.storageaccounts[0].https_only
       - output.storageaccounts[0].network_acls.bypass == "AzureServices"
@@ -333,10 +333,11 @@
 
 - name: Delete storage accounts
   azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group }}"
     name: "{{ item }}"
     state: absent
     force_delete_nonempty: True
   loop:
     - "{{ storage_account_name_default }}"
+    - "{{ storage_account_name_default }}02"
     - "{{ storage_account_name_explicit }}"
