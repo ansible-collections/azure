@@ -1,15 +1,15 @@
 - name: Set Storage Account Names
   set_fact:
-    storage_account_name_default: "sa{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-    storage_account_name_explicit: "sa{{ resource_group | hash('sha1') | truncate(22, True, '') }}"
+    storage_account_name_default: "sa{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+    storage_account_name_explicit: "sa{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
 
 - name: Test invalid account name
   azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group }}"
     name: "invalid_char$"
     account_type: Standard_LRS
   register: output
-  ignore_errors: yes  
+  ignore_errors: yes
 
 - name: Check intentional name failure.
   assert: 
@@ -19,17 +19,18 @@
 
 - name: Delete storage accounts to prepare fresh deployment
   azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group }}"
     name: "{{ item }}"
     state: absent
     force_delete_nonempty: True
   loop:
     - "{{ storage_account_name_default }}"
     - "{{ storage_account_name_explicit }}"
+    - "{{ storage_account_name_default }}02"
 
 - name: Create new storage account with defaults (omitted parameters)
   azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}" 
+    resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}"
     account_type: Standard_LRS
   register: defaults_output
@@ -44,6 +45,20 @@
       - defaults_output.state.access_tier == None
       - defaults_output.state.allow_blob_public_access == None
       - defaults_output.state.minimum_tls_version == None
+
+- name: Create new storage account with I(kind=FileStorage)
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}02"
+    account_type: Premium_ZRS
+    kind: FileStorage
+  register: filestorage_output
+
+- name: Assert status succeeded and results match I(kind=FileStorage)
+  assert:
+    that:
+      - filestorage_output.changed
+      - filestorage_output.state.sku_name == "Premium_ZRS"
 
 - name: Create new storage account with explicit parameters
   azure_rm_storageaccount:
