@@ -751,6 +751,14 @@ plugins/modules/azure_rm_vmbackuppolicy.py validate-modules:required_if-requirem
 plugins/modules/azure_rm_vmbackuppolicy.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_vmbackuppolicy_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_vmbackuppolicy_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_apimanagementservice.py validate-modules:invalid-ansiblemodule-schema
+plugins/modules/azure_rm_apimanagementservice.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_apimanagementservice.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:doc-default-does-not-match-spec
+plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:undocumented-parameter
 plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:required_if-requirements-unknown

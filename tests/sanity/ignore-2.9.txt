@@ -170,6 +170,10 @@ plugins/modules/azure_rm_cdnprofile.py validate-modules:parameter-type-not-in-do
 plugins/modules/azure_rm_cosmosdbaccount.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_cosmosdbaccount_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_devtestlabschedule.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_apimanagementservice.py validate-modules:doc-default-does-not-match-spec
+plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:doc-default-does-not-match-spec
+plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:undocumented-parameter
 plugins/modules/azure_rm_hdinsightcluster_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_loadbalancer_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_loganalyticsworkspace_info.py validate-modules:parameter-type-not-in-doc
