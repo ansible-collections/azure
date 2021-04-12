@@ -23,8 +23,9 @@
      agent_pool_profiles:
          - name: default
            count: 1
-           vm_size: Standard_DS1_v2
+           vm_size: Standard_B2s
            type: VirtualMachineScaleSets
+           mode: System
            max_pods: 42
            availability_zones:
              - 1
@@ -62,8 +63,9 @@
      agent_pool_profiles:
          - name: default
            count: 1
-           vm_size: Standard_DS1_v2
+           vm_size: Standard_B2s
            type: VirtualMachineScaleSets
+           mode: System
            max_pods: 42
            availability_zones:
              - 1
@@ -92,6 +94,7 @@
         - "fact.aks | length == 1"
         - fact.aks[0].id == output.id
         - fact.aks[0].properties.agentPoolProfiles[0].availabilityZones == ["1", "2"]
+        - fact.aks[0].properties.agentPoolProfiles[0].mode == "System"
 
  - name: Get AKS upgrade versions
    azure_rm_aksupgrade_info:
@@ -99,11 +102,9 @@
       resource_group: "{{ resource_group }}"
    register: upgrades
 
- - name: Assert available versions for upgrade
+ - name: Assert available control-plane versions for upgrade
    assert:
       that:
-        - "upgrades.azure_aks_upgrades.agent_pool_profiles[0].kubernetes_version == versions.azure_aks_versions[0]"
-        - "upgrades.azure_aks_upgrades.agent_pool_profiles[0].upgrades | length > 0"
         - "upgrades.azure_aks_upgrades.control_plane_profile.kubernetes_version == versions.azure_aks_versions[0]"
         - "upgrades.azure_aks_upgrades.control_plane_profile.upgrades | length > 0"
 
@@ -122,8 +123,9 @@
      agent_pool_profiles:
          - name: default
            count: 1
-           vm_size: Standard_DS1_v2
+           vm_size: Standard_B2s
            type: VirtualMachineScaleSets
+           mode: System
            max_pods: 42
            availability_zones:
              - 1
@@ -160,8 +162,9 @@
      agent_pool_profiles:
          - name: default
            count: 1
-           vm_size: Standard_DS1_v2
+           vm_size: Standard_B2s
            type: VirtualMachineScaleSets
+           mode: System
            max_pods: 42
            availability_zones:
              - 1
@@ -199,8 +202,9 @@
      agent_pool_profiles:
          - name: default
            count: 1
-           vm_size: Standard_DS1_v2
+           vm_size: Standard_B2s
            type: VirtualMachineScaleSets
+           mode: System
            max_pods: 42
            availability_zones:
              - 1
@@ -234,8 +238,9 @@
      agent_pool_profiles:
          - name: default
            count: 1
-           vm_size: Standard_DS1_v2
+           vm_size: Standard_B2s
            type: VirtualMachineScaleSets
+           mode: System
            enable_auto_scaling: True
            max_count: 6
            min_count: 1
@@ -271,8 +276,9 @@
      agent_pool_profiles:
          - name: default
            count: 1
-           vm_size: Standard_DS1_v2
+           vm_size: Standard_B2s
            type: VirtualMachineScaleSets
+           mode: System
            enable_auto_scaling: True
            max_count: 6
            min_count: 1
@@ -307,8 +313,9 @@
      agent_pool_profiles:
          - name: default
            count: 1
-           vm_size: Standard_DS1_v2
+           vm_size: Standard_B2s
            type: VirtualMachineScaleSets
+           mode: System
            enable_auto_scaling: True
            max_count: 6
            min_count: 1
@@ -320,6 +327,7 @@
            count: 1
            vm_size: Standard_DS1_v2
            type: VirtualMachineScaleSets
+           mode: User
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
      network_profile:
@@ -349,7 +357,7 @@
      agent_pool_profiles:
          - name: default
            count: 1
-           vm_size: Standard_DS1_v2
+           vm_size: Standard_B2s
            type: VirtualMachineScaleSets
            enable_auto_scaling: True
            max_count: 6
@@ -362,6 +370,7 @@
            count: 1
            vm_size: Standard_DS1_v2
            type: VirtualMachineScaleSets
+           mode: User
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
      network_profile:
