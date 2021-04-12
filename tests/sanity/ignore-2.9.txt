@@ -84,6 +84,7 @@ plugins/modules/azure_rm_virtualmachinescalesetextension.py validate-modules:par
 plugins/modules/azure_rm_virtualmachinescalesetextension_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachinescalesetinstance.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachinescalesetinstance_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_virtualwan.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_webapp.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_webapp_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_webappslot.py validate-modules:parameter-type-not-in-doc
