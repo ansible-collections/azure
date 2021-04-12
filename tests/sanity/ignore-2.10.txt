@@ -262,6 +262,12 @@ plugins/modules/azure_rm_registrationassignment.py validate-modules:required_if-
 plugins/modules/azure_rm_registrationassignment.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_registrationassignment_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_registrationassignment_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_cognitivesearch.py validate-modules:parameter-list-no-elements
+plugins/modules/azure_rm_cognitivesearch.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_cognitivesearch.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_cognitivesearch.py validate-modules:nonexistent-parameter-documented
+plugins/modules/azure_rm_cognitivesearch_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_cognitivesearch_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_securitygroup.py validate-modules:doc-choices-do-not-match-spec
 plugins/modules/azure_rm_securitygroup.py validate-modules:doc-default-does-not-match-spec
 plugins/modules/azure_rm_securitygroup.py validate-modules:missing-suboption-docs
