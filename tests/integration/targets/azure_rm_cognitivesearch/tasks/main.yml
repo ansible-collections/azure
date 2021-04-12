@@ -1,0 +1,193 @@
+- name: Create Azure Search name
+  set_fact:
+    search_name: "search{{ resource_group | hash('md5') | truncate(16, True, '') }}"
+
+- name: Create invalid Azure Search - Hosting Name
+  azure_rm_cognitivesearch:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+    hosting_mode: highDensity
+  register: invalid_hosting_name
+  ignore_errors: yes
+
+- name: Assert task failed
+  assert:
+    that: 
+      - invalid_hosting_name.failed == True
+
+- name: Create invalid Azure Search - Partition Count High Density
+  azure_rm_cognitivesearch:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+    sku: standard3
+    hosting_mode: highDensity
+    partition_count: 4
+  register: invalid_partition_count
+  ignore_errors: yes
+
+- name: Assert task failed
+  assert:
+    that: 
+      - invalid_partition_count.failed == True
+
+- name: Create invalid Azure Search - Partition Count
+  azure_rm_cognitivesearch:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+    partition_count: 7
+  register: invalid_partition_count
+  ignore_errors: yes
+
+- name: Assert task failed
+  assert:
+    that: 
+      - invalid_partition_count.failed == True
+
+- name: Create invalid Azure Search - Replica Count
+  azure_rm_cognitivesearch:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+    sku: standard
+    replica_count: 13
+  register: invalid_replica_count
+  ignore_errors: yes
+
+- name: Assert task failed
+  assert:
+    that: 
+      - invalid_replica_count.failed == True
+
+- name: Create invalid Azure Search - Replica Count SKU basic
+  azure_rm_cognitivesearch:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+    replica_count: 4
+    sku: basic
+  register: invalid_replica_count
+  ignore_errors: yes
+
+- name: Assert task failed
+  assert:
+    that: 
+      - invalid_replica_count.failed == True
+
+- name: Create basic Azure Search
+  azure_rm_cognitivesearch:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+  register: search_info
+
+- name: Assert status succeeded and results
+  assert:
+    that:
+      - search_info.changed
+      - search_info.state.id is defined
+      - search_info.state.identity.type == "None"
+      - search_info.state.identity.principal_id is not defined
+      - search_info.state.hosting_mode == "default"
+      - search_info.state.name == search_name
+      - search_info.state.partition_count == 1
+      - search_info.state.replica_count == 1
+      - search_info.state.sku == "basic"
+      - search_info.state.provisioning_state == "succeeded"
+      - search_info.state.public_network_access == "enabled"
+      - search_info.state.status == "running"
+
+- name: Get info for Azure Search
+  azure_rm_cognitivesearch_info:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+  register: search_info_module
+
+- name: Assert status succeeded and results
+  assert:
+    that:
+      - search_info_module.search.id is defined
+      - search_info_module.search.identity.type == "None"
+      - search_info_module.search.identity.principal_id is not defined
+      - search_info_module.search.hosting_mode == "default"
+      - search_info_module.search.name == search_name
+      - search_info_module.search.partition_count == 1
+      - search_info_module.search.replica_count == 1
+      - search_info_module.search.sku == "basic"
+      - search_info_module.search.provisioning_state == "succeeded"
+      - search_info_module.search.public_network_access == "enabled"
+      - search_info_module.search.status == "running"
+
+- name: Update basic Azure Search (Idempotence)
+  azure_rm_cognitivesearch:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+  register: search_info
+
+- name: Assert that idempotence is ok
+  assert:
+    that:
+      - not search_info.changed
+
+- name: Delete Azure Search
+  azure_rm_cognitivesearch:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+
+- name: Create Azure Search '{{ search_name }}' not default parameters
+  azure_rm_cognitivesearch:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+    hosting_mode: default
+    identity: SystemAssigned
+    network_rule_set:
+      - 8.8.8.8/31
+      - 1.1.1.1
+    partition_count: 2
+    public_network_access: disabled
+    replica_count: 2
+    sku: standard
+    tags:
+      foo: bar
+  register: search_info
+
+- name: Assert status succeeded and results
+  assert:
+    that:
+      - search_info.changed
+      - search_info.state.id is defined
+      - search_info.state.identity.type == "SystemAssigned"
+      - search_info.state.identity.principal_id is defined
+      - search_info.state.hosting_mode == "default"
+      - search_info.state.name == search_name
+      - search_info.state.partition_count == 2
+      - search_info.state.replica_count == 2
+      - search_info.state.sku == "standard"
+      - search_info.state.provisioning_state == "succeeded"
+      - search_info.state.status == "running"
+
+- name: Update Azure Search '{{ search_name }}' not default parameters (Idempotence)
+  azure_rm_cognitivesearch:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+    hosting_mode: default
+    identity: SystemAssigned
+    network_rule_set:
+      - 8.8.8.8/31
+      - 1.1.1.1
+    partition_count: 2
+    public_network_access: disabled
+    replica_count: 2
+    sku: standard
+    tags:
+      foo: bar
+  register: search_info
+
+- name: Assert that idempotence is ok
+  assert:
+    that:
+      - not search_info.changed
+
+- name: Delete Azure Search
+  azure_rm_cognitivesearch:
+    name: "{{ search_name }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  
