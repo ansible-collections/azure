@@ -79,12 +79,15 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(type='str', required=True),
             name=dict(type='str', required=True),
-            location=dict(type='str')
+            location=dict(type='str', required=True),
+            state=dict(choices=['present', 'absent'],
+                       default='present', type='str')
         )
 
         self.resource_group = None
         self.name = None
         self.location = None
+        self.state = None
         self.results = dict(
             changed=False,
             state=dict()
@@ -161,8 +164,8 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         try:
             poller = self.network_client.ddos_protection_plans.create_or_update(
                 resource_group_name=params.get("resource_group"),
-                ddos_protection_plan_name=params.get("name"),
-                parameters=params)
+                location=self.location,
+                ddos_protection_plan_name=params.get("name"))
             result = self.get_poller_result(poller)
             self.log("Response : {0}".format(result))
         except CloudError as ex:
