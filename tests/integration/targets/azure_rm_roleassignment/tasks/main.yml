@@ -182,12 +182,12 @@
 
 - name: delete by scope, assignee_object_id and role_definition_id
   azure_rm_roleassignment:
-    scope: "{{ az_role_assignment_create.scope }}"
-    assignee_object_id: "{{ az_role_assignment_create.assignee_object_id }}"
-    role_definition_id: "{{ az_role_assignment_create.role_definition_id }}"
+    scope: "{{ az_role_assignment_create_by_scope.scope }}"
+    assignee_object_id: "{{ az_role_assignment_create_by_scope.assignee_object_id }}"
+    role_definition_id: "{{ az_role_assignment_create_by_scope.role_definition_id }}"
     state: absent
   register: az_role_assignment_delete
-  when: az_role_assignment_create.changed
+  when: az_role_assignment_create_by_scope.changed
 
 - name: absent assignment that doesn't exist - id
   azure.azcollection.azure_rm_roleassignment:

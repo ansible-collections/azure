@@ -331,8 +331,8 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                     response = [self.roleassignment_to_dict(role_assignment) for role_assignment in response]
                     response = [role_assignment for role_assignment in response if role_assignment.get('scope') == self.scope]
                     response = [role_assignment for role_assignment in response if role_assignment.get('assignee_object_id') == self.assignee_object_id]
-                    response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id').split('/')[-1].lower()
-                                                                                    == self.role_definition_id.split('/')[-1].lower()]
+                    response = [role_assignment for role_assignment in response if (role_assignment.get('role_definition_id').split('/')[-1].lower()
+                                                                                    == self.role_definition_id.split('/')[-1].lower())]
                 else:
                     self.fail('If id or name are not supplied, then assignee_object_id and role_definition_id are required.')
                 if response:
