@@ -20,7 +20,7 @@
   loop:
     - name: "{{ az_role_assignments.roleassignments[0].name }}"
       scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-    - assignee: "{{ az_role_assignments.roleassignments[0].assignee_object_id }}"
+    - assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
       scope: "{{ az_role_assignments.roleassignments[0].scope }}"
       role_definition_id: "{{ az_role_assignments.roleassignments[0].role_definition_id }}"
     - id: "{{ az_role_assignments.roleassignments[0].id }}"
@@ -41,8 +41,8 @@
   ignore_errors: True
   loop:
     - name: "{{ az_role_assignments.roleassignments[0].name }}"
-      assignee: "{{ az_role_assignments.roleassignments[0].assignee_object_id }}"
-    - assignee: "{{ az_role_assignments.roleassignments[0].assignee_object_id }}"
+      assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+    - assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
       id: "{{ az_role_assignments.roleassignments[0].id }}"
     - name: "{{ az_role_assignments.roleassignments[0].name }}"
       id: "{{ az_role_assignments.roleassignments[0].id }}"
@@ -72,7 +72,7 @@
       id: "{{ az_role_assignments.roleassignments[0].id }}"
       # missing required role_definition_id
     - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-      assignee_object_id: "{{ az_role_assignments.roleassignments[0].assignee_object_id }}"
+      assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
       state: "present"
       # missing required assignee_object_id
     - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
@@ -80,7 +80,7 @@
       state: "present"
       # missing required role_definition_id
     - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-      assignee_object_id: "{{ az_role_assignments.roleassignments[0].assignee_object_id }}"
+      assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
       state: "absent"
       # missing required assignee_object_id
     - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
@@ -101,14 +101,14 @@
 - name: create role assignment by id
   azure_rm_roleassignment:
     id: "{{ az_resource_group.resourcegroups[0].id }}/providers/Microsoft.Authorization/roleAssignments/{{ uuid }}"
-    assignee_object_id: "{{ az_role_assignments.roleassignments[0].assignee_object_id }}"
+    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
   register: az_role_assignment_create
 
 - name: create role assignment by scope
   azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    assignee_object_id: "{{ az_role_assignments.roleassignments[0].assignee_object_id }}"
+    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
   register: az_role_assignment_idempotent
 
@@ -147,7 +147,7 @@
 
 - name: List Role Assignments by assignee
   azure_rm_roleassignment_info:
-    assignee: "{{ az_role_assignments.roleassignments[0].assignee_object_id }}"
+    assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
   register: az_role_assignment_by_assignee
 
 - name: Delete Role Assignment by id
@@ -160,7 +160,7 @@
 - name: create role assignment with name
   azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    assignee_object_id: "{{ az_role_assignments.roleassignments[0].assignee_object_id }}"
+    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
     name: "{{ uuid }}" 
   register: az_role_assignment_create
@@ -176,22 +176,9 @@
 - name: create role assignment by scope
   azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    assignee_object_id: "{{ az_role_assignments.roleassignments[0].assignee_object_id }}"
+    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
   register: az_role_assignment_create_by_scope
-
-- debug:
-    var: az_resource_group.resourcegroups[0].id
-  when: az_role_assignment_create.changed
-- debug:
-    var: az_role_assignments.roleassignments[0].assignee_object_id
-  when: az_role_assignment_create.changed
-- debug:
-    var: az_resource_group.resourcegroups[0].id.split('/')[2]
-  when: az_role_assignment_create.changed
-- debug:
-    var: az_role_definition_guid
-  when: az_role_assignment_create.changed
 
 - name: delete by scope, assignee_object_id and role_definition_id
   azure_rm_roleassignment:
