@@ -193,11 +193,18 @@
     var: az_role_definition_guid
   when: az_role_assignment_create.changed
 
-- name: delete by scope, assignee_object_id and role_definition_id
+- name: create role assignment with scope, assignee_object_id and role_definition_id
   azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].assignee_object_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
+  register: az_role_assignment_create
+
+- name: delete by scope, assignee_object_id and role_definition_id
+  azure_rm_roleassignment:
+    scope: "{{ az_role_assignment_create.scope }}"
+    assignee_object_id: "{{ az_role_assignment_create.assignee_object_id }}"
+    role_definition_id: "{{ az_role_assignment_create.role_definition_id }}"
     state: absent
   register: az_role_assignment_delete
   when: az_role_assignment_create.changed
