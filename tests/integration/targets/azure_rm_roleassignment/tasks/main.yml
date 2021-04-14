@@ -187,7 +187,6 @@
     role_definition_id: "{{ az_role_assignment_create_by_scope.role_definition_id }}"
     state: absent
   register: az_role_assignment_delete
-  when: az_role_assignment_create_by_scope.changed
 
 - name: absent assignment that doesn't exist - id
   azure.azcollection.azure_rm_roleassignment:
