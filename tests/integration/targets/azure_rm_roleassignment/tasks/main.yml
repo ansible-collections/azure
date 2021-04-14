@@ -226,7 +226,7 @@
 - name: check intended failures info
   assert:
     that:
-      - not item.changed == false
+      - item.changed == false
   loop: 
     - "{{ absent_nochange_properties }}"
     - "{{ absent_nochange_id }}"
