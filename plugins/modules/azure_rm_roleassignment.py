@@ -233,6 +233,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                 if self.check_mode:
                     return self.results
 
+                self.log('Result: {0}'.format(existing_assignment))
                 self.delete_roleassignment(existing_assignment.get('id'))
 
                 self.log('role assignment deleted')
