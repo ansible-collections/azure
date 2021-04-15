@@ -157,21 +157,21 @@
   register: az_role_assignment_delete
   when: az_role_assignment_create.changed
 
-- name: create role assignment with name
-  azure_rm_roleassignment:
-    scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-    role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-    name: "{{ uuid }}" 
-  register: az_role_assignment_create
-
-- name: Delete Role by Name
-  azure_rm_roleassignment:
-    scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    name: "{{ uuid }}"
-    state: absent
-  register: az_role_assignment_delete
-  when: az_role_assignment_create.changed
+#- name: create role assignment with name
+#  azure_rm_roleassignment:
+#    scope: "{{ az_resource_group.resourcegroups[0].id }}"
+#    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+#    role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
+#    name: "{{ uuid }}" 
+#  register: az_role_assignment_create
+#
+#- name: Delete Role by Name
+#  azure_rm_roleassignment:
+#    scope: "{{ az_resource_group.resourcegroups[0].id }}"
+#    name: "{{ uuid }}"
+#    state: absent
+#  register: az_role_assignment_delete
+#  when: az_role_assignment_create.changed
 
 - name: create role assignment by scope
   azure_rm_roleassignment:
