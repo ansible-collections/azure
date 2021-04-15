@@ -339,8 +339,10 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                 else:
                     self.fail('If id or name are not supplied, then assignee_object_id and role_definition_id are required.')
                 if response:
-                    role_assignment = response
-                    #role_assignment = response[0]
+                    if self.state == 'absent':
+                        role_assignment = response
+                    else:
+                        role_assignment = response[0]
             except CloudError as ex:
                 self.log("Didn't find role assignments for subscription {0}".format(self.subscription_id))
 
