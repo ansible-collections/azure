@@ -180,6 +180,8 @@
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
   register: az_role_assignment_create_by_scope
 - debug:
+    var: az_role_assignment_create
+- debug:
     var: az_role_assignment_create_by_scope
 
 - name: delete by scope, assignee_object_id and role_definition_id
