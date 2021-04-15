@@ -670,6 +670,14 @@ plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:doc-elements-
 plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:doc-required-mismatch
+plugins/modules/azure_rm_vpnsite.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_vpnsite.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_vpnsite.py validate-modules:invalid-ansiblemodule-schema
+plugins/modules/azure_rm_vpnsite.py validate-modules:doc-elements-mismatch
+plugins/modules/azure_rm_vpnsite_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_vpnsite_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_vpnsitelink_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_vpnsitelink_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_batchaccount.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_batchaccount.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_batchaccount.py validate-modules:required_if-requirements-unknown
