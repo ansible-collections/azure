@@ -207,7 +207,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         existing_assignment = self.get_roleassignment()
 
         
-        if self.scope and self.assignee_object_id and self.role_definition_id:
+        if self.scope and self.assignee_object_id and self.role_definition_id and self.state == 'absent':
             return existing_assignment
         if existing_assignment:
             self.set_results(existing_assignment)
