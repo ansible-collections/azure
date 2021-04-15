@@ -233,8 +233,10 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                 if self.check_mode:
                     return self.results
 
-                self.log('Result: {0}'.format(existing_assignment))
-                self.delete_roleassignment(existing_assignment.get('id'))
+                if self.scope and self.assignee_object_id and self.role_definition_id:
+                    self.results = existing_assignment
+                else: 
+                    self.delete_roleassignment(existing_assignment.get('id'))
 
                 self.log('role assignment deleted')
 
@@ -337,7 +339,8 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                 else:
                     self.fail('If id or name are not supplied, then assignee_object_id and role_definition_id are required.')
                 if response:
-                    role_assignment = response[0]
+                    role_assignment = response
+                    #role_assignment = response[0]
             except CloudError as ex:
                 self.log("Didn't find role assignments for subscription {0}".format(self.subscription_id))
 

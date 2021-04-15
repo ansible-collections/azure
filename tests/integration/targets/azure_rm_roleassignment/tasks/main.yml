@@ -178,26 +178,7 @@
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-    name: "{{ uuid }}" 
   register: az_role_assignment_create_by_scope
-- debug:
-    var: az_role_assignment_create
-- debug:
-    var: az_role_assignment_create_by_scope
-#- name: delete by scope, assignee_object_id and role_definition_id
-#  azure_rm_roleassignment:
-#    scope: "/subscriptions/f64d4ee8-be94-457d-ba26-3fa6b6506cef/resourceGroups/v-xisuRG03"
-#    assignee_object_id: 29f40236-93d9-4e0c-a549-ce838129e9b6
-#    role_definition_id: "/subscriptions/f64d4ee8-be94-457d-ba26-3fa6b6506cef/providers/Microsoft.Authorization/roleDefinitions/3e5e47e6-65f7-47ef-90b5-e5dd4d455f24"
-#    state: absent
-#- name: create role assignment with name
-#  azure_rm_roleassignment:
-#    scope: "/subscriptions/f64d4ee8-be94-457d-ba26-3fa6b6506cef/resourceGroups/v-xisuRG03"
-#    assignee_object_id: 29f40236-93d9-4e0c-a549-ce838129e9b6
-#    role_definition_id: "/subscriptions/f64d4ee8-be94-457d-ba26-3fa6b6506cef/providers/Microsoft.Authorization/roleDefinitions/3e5e47e6-65f7-47ef-90b5-e5dd4d455f24"
-#    name: "{{ uuid }}"
-#  register: az_role_assignment_create
-
 
 - name: delete by scope, assignee_object_id and role_definition_id
   azure_rm_roleassignment:
@@ -206,13 +187,9 @@
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
     state: absent
   register: az_role_assignment_delete
-- name: delete by scope, assignee_object_id and role_definition_id
-  azure_rm_roleassignment:
-    scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-    role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-    state: absent
-  register: az_role_assignment_delete
+  when: az_role_assignment_create.changed
+- debug:
+    var: az_role_assignment_delete
 
 - name: absent assignment that doesn't exist - id
   azure.azcollection.azure_rm_roleassignment:
