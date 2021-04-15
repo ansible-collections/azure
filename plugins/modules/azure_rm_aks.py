@@ -283,7 +283,7 @@ EXAMPLES = '''
             max_count: 3
             min_count: 1
             enable_rbac: yes
-        - name: user
+         - name: user
             count: 1
             vm_size: Standard_D2_v2
             enable_auto_scaling: True
