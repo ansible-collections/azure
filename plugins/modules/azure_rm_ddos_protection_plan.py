@@ -79,7 +79,7 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(type='str', required=True),
             name=dict(type='str', required=True),
-            location=dict(type='str', required=True),
+            location=dict(type='str'),
             state=dict(choices=['present', 'absent'],
                        default='present', type='str')
         )
@@ -88,6 +88,7 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         self.name = None
         self.location = None
         self.state = None
+        self.tags = None
         self.results = dict(
             changed=False,
             state=dict()
@@ -140,7 +141,7 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         self.results['changed'] = changed
         self.results['state'] = results
 
-        # return the results if your only gathering information
+        # return the results if you are only gathering information
         if self.check_mode:
             return self.results
 
@@ -165,7 +166,8 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
             poller = self.network_client.ddos_protection_plans.create_or_update(
                 resource_group_name=params.get("resource_group"),
                 location=self.location,
-                ddos_protection_plan_name=params.get("name"))
+                ddos_protection_plan_name=params.get("name"),
+                tags=self.tags)
             result = self.get_poller_result(poller)
             self.log("Response : {0}".format(result))
         except CloudError as ex:
@@ -182,7 +184,8 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         try:
             poller = self.network_client.ddos_protection_plans.delete(
                 self.resource_group, self.name)
-            result = self.get_poller_result(poller)
+            poller.wait()
+            result = poller.done()
         except CloudError as e:
             self.log('Error attempting to delete DDoS protection plan.')
             self.fail(

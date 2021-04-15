@@ -58,8 +58,7 @@ class AzureDDoSProtectionPlanInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
             resource_group=dict(
-                type='str',
-                required=True
+                type='str'
             ),
             name=dict(
                 type='str'
@@ -85,6 +84,9 @@ class AzureDDoSProtectionPlanInfo(AzureRMModuleBase):
         elif self.resource_group:
             # all the DDoS protection plan listed in that specific resource group
             results = self.list_resource_group()
+        else:
+            # all the DDoS protection plan listed in the subscription
+            results = self.list_subscription()
 
         self.results['ddos_protection_plan'] = [
             self.ddos_protection_plan_to_dict(x) for x in results]
@@ -98,7 +100,7 @@ class AzureDDoSProtectionPlanInfo(AzureRMModuleBase):
                 self.resource_group, self.name)
             self.log("Response : {0}".format(response))
         except CloudError as e:
-            self.fail('Could not get info for DDoS protection plan. {0}').format(str(e))
+            self.fail('Could not get info for DDoS protection plan. {0}'.format(str(e)))
 
         if response and self.has_tags(response.tags, self.tags):
             results = [response]
@@ -113,6 +115,21 @@ class AzureDDoSProtectionPlanInfo(AzureRMModuleBase):
         except CloudError as exc:
             self.fail(
                 "Failed to list for resource group {0} - {1}".format(self.resource_group, str(exc)))
+
+        results = []
+        for item in response:
+            if self.has_tags(item.tags, self.tags):
+                results.append(item)
+        return results
+
+    def list_subscription(self):
+        self.log('List items for subscription')
+        try:
+            response = self.network_client.ddos_protection_plans.list()
+
+        except CloudError as exc:
+            self.fail(
+                "Failed to list DDoS protection plan in the subscription - {0}".format(str(exc)))
 
         results = []
         for item in response:
