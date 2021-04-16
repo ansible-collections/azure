@@ -235,6 +235,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
                 if self.scope and self.assignee_object_id and self.role_definition_id:
                     self.results = { 'exsiting_assignment_id': existing_assignment.get('id')}
+                    self.results = { 'exsiting_assignment': existing_assignment}
                 else:
                     self.delete_roleassignment(existing_assignment.get('id'))
 
