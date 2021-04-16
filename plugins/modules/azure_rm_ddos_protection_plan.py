@@ -184,8 +184,7 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         try:
             poller = self.network_client.ddos_protection_plans.delete(
                 self.resource_group, self.name)
-            poller.wait()
-            result = poller.done()
+            result = self.get_poller_result(poller)
         except CloudError as e:
             self.log('Error attempting to delete DDoS protection plan.')
             self.fail(
@@ -198,12 +197,7 @@ def ddos_protection_plan_to_dict(item):
     ddos_protection_plan = item.as_dict()
 
     vnet = ddos_protection_plan.get('virtual_networks')
-    virtual_networks = []
-    if vnet and len(vnet)>0:
-        virtual_networks = []
-        for network in vnet:
-            nw_as_dict = network.as_dict()
-            virtual_networks.append(nw_as_dict)
+    virtual_networks = [network for network in (vnet or [])]
 
     result = dict(
         additional_properties=ddos_protection_plan.get('additional_properties', None),

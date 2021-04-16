@@ -142,12 +142,8 @@ class AzureDDoSProtectionPlanInfo(AzureRMModuleBase):
         ddos_protection_plan = item.as_dict()
 
         vnet = ddos_protection_plan.get('virtual_networks')
-        virtual_networks = []
-        if vnet and len(vnet)>0:
-            virtual_networks = []
-            for network in vnet:
-                nw_as_dict = network.as_dict()
-                virtual_networks.append(nw_as_dict)
+        print("vnet:", vnet)
+        virtual_networks = [network for network in (vnet or [])]
 
         result = dict(
             additional_properties=ddos_protection_plan.get('additional_properties', None),
