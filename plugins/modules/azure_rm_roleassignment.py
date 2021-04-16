@@ -206,9 +206,6 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
         existing_assignment = self.get_roleassignment()
 
-        
-        if self.scope and self.assignee_object_id and self.role_definition_id and self.state == 'absent':
-            return {'existing_assignment': existing_assignment, 'scope': self.scope, 'assignee_object_id': self.assignee_object_id, 'role_definition': self.role_definition_id}
         if existing_assignment:
             self.set_results(existing_assignment)
 
@@ -237,8 +234,8 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                     return self.results
 
                 if self.scope and self.assignee_object_id and self.role_definition_id:
-                    self.results = existing_assignment
-                else: 
+                    self.results = { 'exsiting_assignment_id': existing_assignment.get('id')}
+                else:
                     self.delete_roleassignment(existing_assignment.get('id'))
 
                 self.log('role assignment deleted')
@@ -335,9 +332,6 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                 if self.scope and self.assignee_object_id and self.role_definition_id:
                     response = list(self.authorization_client.role_assignments.list())
                     response = [self.roleassignment_to_dict(role_assignment) for role_assignment in response]
-                    import copy
-
-                    ret = copy.deepcopy(response)
                     response = [role_assignment for role_assignment in response if role_assignment.get('scope') == self.scope]
                     response = [role_assignment for role_assignment in response if role_assignment.get('assignee_object_id') == self.assignee_object_id]
                     response = [role_assignment for role_assignment in response if (role_assignment.get('role_definition_id').split('/')[-1].lower()
@@ -345,10 +339,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                 else:
                     self.fail('If id or name are not supplied, then assignee_object_id and role_definition_id are required.')
                 if response:
-                    if self.state == 'absent':
-                        role_assignment = {'response': response, 'ret': ret}
-                    else:
-                        role_assignment = response[0]
+                    role_assignment = response[0]
             except CloudError as ex:
                 self.log("Didn't find role assignments for subscription {0}".format(self.subscription_id))
 
