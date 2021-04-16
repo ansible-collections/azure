@@ -106,7 +106,8 @@ AZURE_API_PROFILES = {
         'MySQLManagementClient': '2017-12-01',
         'MariaDBManagementClient': '2019-03-01',
         'ManagementLockClient': '2016-09-01',
-        'DataLakeStoreAccountManagementClient': '2016-11-01'
+        'DataLakeStoreAccountManagementClient': '2016-11-01',
+        'NotificationHubsManagementClient': '2016-03-01'
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
@@ -275,6 +276,7 @@ try:
     from azure.mgmt.search import SearchManagementClient
     from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
+    from azure.mgmt.notificationhubs import NotificationHubsManagementClient
 
 except ImportError as exc:
     Authentication = object
@@ -439,6 +441,7 @@ class AzureRMModuleBase(object):
         self._recovery_services_backup_client = None
         self._search_client = None
         self._datalake_store_client = None
+        self._notification_hub_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1325,6 +1328,15 @@ class AzureRMModuleBase(object):
     def datalake_store_models(self):
         return DataLakeStoreAccountModel
 
+    @property
+    def notification_hub_client(self):
+        self.log('Getting notification hub client')
+        if not self._notification_hub_client:
+            self._notification_hub_client = self.get_mgmt_svc_client(
+                NotificationHubsManagementClient,
+                base_url=self._cloud_environment.endpoints.resource_manager,
+                api_version='2016-03-01')
+        return self._notification_hub_client
 
 class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
