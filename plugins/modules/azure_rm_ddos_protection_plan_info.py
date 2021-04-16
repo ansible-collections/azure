@@ -19,7 +19,6 @@ options:
     resource_group:
         description:
             - The name of the resource group.
-        required: True
         type: str
     name:
         description:
@@ -141,10 +140,6 @@ class AzureDDoSProtectionPlanInfo(AzureRMModuleBase):
         # turn DDoS protection plan object into a dictionary (serialization)
         ddos_protection_plan = item.as_dict()
 
-        vnet = ddos_protection_plan.get('virtual_networks')
-        print("vnet:", vnet)
-        virtual_networks = [network for network in (vnet or [])]
-
         result = dict(
             additional_properties=ddos_protection_plan.get('additional_properties', None),
             id=ddos_protection_plan.get('id', None),
@@ -155,7 +150,7 @@ class AzureDDoSProtectionPlanInfo(AzureRMModuleBase):
             etag=ddos_protection_plan.get('etag', None),
             resource_guid=ddos_protection_plan.get('resource_guid', None),
             provisioning_state=ddos_protection_plan.get('provisioning_state', None),
-            virtual_networks=virtual_networks
+            virtual_networks=ddos_protection_plan.get('virtual_networks', None)
         )
         return result
 

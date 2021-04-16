@@ -56,9 +56,22 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-sample: {
-
-}
+state:
+    description:
+        - Current state of the DDoS protection plan.
+    returned: always
+    type: dict
+    sample: {
+        "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Network/ddosProtectionPlans/ddosplan",
+        "location": "eastus",
+        "name": "ddosplan",
+        "etag": "W/60ac0480-44dd-4881-a2ed-680d20b3978e",
+        "provisioning_state": "Succeeded",
+        "resource_guid": null,
+        "type": "Microsoft.Network/ddosProtectionPlans",
+        "tags": {"a": "b"},
+        "virtual_networks": []
+    }
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -95,8 +108,8 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         )
 
         super(AzureDDoSProtectionPlan, self).__init__(self.module_arg_spec,
-                                                supports_check_mode=True,
-                                                supports_tags=True)
+                                                      supports_check_mode=True,
+                                                      supports_tags=True)
 
     def exec_module(self, **kwargs):
 
@@ -196,9 +209,6 @@ def ddos_protection_plan_to_dict(item):
     # turn DDoS protection plan object into a dictionary (serialization)
     ddos_protection_plan = item.as_dict()
 
-    vnet = ddos_protection_plan.get('virtual_networks')
-    virtual_networks = [network for network in (vnet or [])]
-
     result = dict(
         additional_properties=ddos_protection_plan.get('additional_properties', None),
         id=ddos_protection_plan.get('id', None),
@@ -209,7 +219,7 @@ def ddos_protection_plan_to_dict(item):
         etag=ddos_protection_plan.get('etag', None),
         resource_guid=ddos_protection_plan.get('resource_guid', None),
         provisioning_state=ddos_protection_plan.get('provisioning_state', None),
-        virtual_networks=virtual_networks
+        virtual_networks=ddos_protection_plan.get('virtual_networks', None)
     )
     return result
 
