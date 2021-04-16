@@ -180,6 +180,17 @@
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
   register: az_role_assignment_create_by_scope
 
+- name: Fetch specific assignments---------get info
+  azure_rm_roleassignment_info:
+    scope: "{{ az_resource_group.resourcegroups[0].id }}"
+    assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+    role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
+    strict_scope_match: True
+  register: az_role_assignment_specific
+
+- debug:
+    var: az_role_assignment_specific
+
 - name: delete by scope, assignee_object_id and role_definition_id
   azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
