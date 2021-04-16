@@ -233,11 +233,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                 if self.check_mode:
                     return self.results
 
-                if self.scope and self.assignee_object_id and self.role_definition_id:
-                    self.results = { 'exsiting_assignment_id': existing_assignment.get('id')}
-                    self.results = { 'exsiting_assignment': existing_assignment}
-                else:
-                    self.delete_roleassignment(existing_assignment.get('id'))
+                self.delete_roleassignment(existing_assignment.get('id'))
 
                 self.log('role assignment deleted')
 
@@ -331,7 +327,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         else:
             try:
                 if self.scope and self.assignee_object_id and self.role_definition_id:
-                    response = list(self.authorization_client.role_assignments.list())
+                    response = list(self.authorization_client.role_assignments.list(filter="scope eq '{0}".format(self.scope)))
                     response = [self.roleassignment_to_dict(role_assignment) for role_assignment in response]
                     response = [role_assignment for role_assignment in response if role_assignment.get('scope') == self.scope]
                     response = [role_assignment for role_assignment in response if role_assignment.get('assignee_object_id') == self.assignee_object_id]
