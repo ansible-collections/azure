@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2021 Praveen Ghuge (@praveenghuge)
+# Copyright (c) 2021 Praveen Ghuge (@praveenghuge), Karl Dasan (@karldas30)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
@@ -50,6 +50,7 @@ extends_documentation_fragment:
 
 author:
     - Praveen Ghuge (@praveenghuge)
+    - Karl Dasan (@karldas30)
 '''
 EXAMPLES = '''
 
