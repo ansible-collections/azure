@@ -11,7 +11,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_privatednszone_vnetlink_info
 
-version_added: "1.1.0"
+version_added: "1.5.0"
 
 short_description: Get Virtual Network link facts for private DNS zone
 

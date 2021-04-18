@@ -11,7 +11,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_privatednszone_vnetlink
 
-version_added: "1.1.0"
+version_added: "1.5.0"
 
 short_description: Create, delete and update Virtual network link for Private DNS zone
 
