@@ -1312,6 +1312,7 @@ class AzureRMModuleBase(object):
                                                            api_version='2020-08-01')
         return self._search_client
 
+    @property
     def datalake_store_client(self):
         self.log('Getting datalake store client...')
         if not self._datalake_store_client:
@@ -1320,6 +1321,7 @@ class AzureRMModuleBase(object):
                                                                    api_version='2016-11-01')
         return self._datalake_store_client
 
+    @property
     def datalake_store_models(self):
         return DataLakeStoreAccountModel
 
