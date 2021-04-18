@@ -117,7 +117,7 @@ class AzureNotificationHub(AzureRMModuleBase):
             resource_group=dict(type='str', required=True),
             namespace_name=dict(type='str', required=True),
             name=dict(type='str'),
-            location=dict(type='str', required=True),
+            location=dict(type='str'),
             sku=dict(type='str', choices=['free', 'basic', 'standard'], default='free'),
             authorizations=dict(type=list, options=self.authorizations_spec),
             state=dict(choices=['present', 'absent'],
@@ -132,6 +132,7 @@ class AzureNotificationHub(AzureRMModuleBase):
         self.authorizations = None
         self.tags = None
         self.state = None
+        self.check_mode = None
         self.results = dict(
             changed=False,
             state=dict()
@@ -156,12 +157,11 @@ class AzureNotificationHub(AzureRMModuleBase):
 
         try:
             self.log('Fetching Notification Hub {0}'.format(self.name))
-            notification_hub = self.notification_hub_client.notification_hubs.get(
-                self.resource_group, self.namespace_name, self.name)
+            namespace = self.notification_hub_client.namespaces.get(
+                self.resource_group, self.namespace_name)
 
-            results = notification_hub_to_dict(notification_hub)
-
-            # don't change anything if creating an existing zone, but change if deleting it
+            results = namespace_to_dict(namespace)
+            # don't change anything if creating an existing namespace, but change if deleting it
             if self.state == 'present':
                 changed = False
 
@@ -191,13 +191,15 @@ class AzureNotificationHub(AzureRMModuleBase):
         if changed:
             if self.state == "present":
                 if self.name is None:
+                    print("fdsafadsf")
+                    print("fdasfasd"+ 3)
                     self.results['state'] = self.create_or_update_namespaces()
                 elif self.namespace_name and self.name:
                     self.results['state'] = self.create_or_update_notification_hub()
             elif self.state == "absent":
                 # delete Notification Hub
                 if self.name is None:
-                    self.results['state'] = self.delete_namespace()
+                    self.delete_namespace()
                 elif self.namespace_name and self.name:
                     self.delete_notification_hub()
                 self.results['state']['status'] = 'Deleted'
@@ -209,22 +211,31 @@ class AzureNotificationHub(AzureRMModuleBase):
         create or update namespaces
         '''
         try:
-            result = self.namespace_name.namespace.get(self.resource_group, self.namespace_name)
-            if not result:
-                namespace_params = NamespaceCreateOrUpdateParameters(
-                        location=self.location,
-                        namespace_type="NotificationHub",
-                        sku=Sku(name=self.sku),
-                        tags=self.tags
-                    )
-                result = self.notification_hub_client.namespaces.create_or_update(
+            namespace_params = NamespaceCreateOrUpdateParameters(
+                    location=self.location,
+                    namespace_type="NotificationHub",
+                    sku=Sku(name=self.sku),
+                    tags=self.tags
+                )
+            result = self.notification_hub_client.namespaces.create_or_update(
+                self.resource_group,
+                self.namespace_name,
+                namespace_params)
+
+            namespace = self.notification_hub_client.namespaces.get(
+                self.resource_group,
+                self.namespace_name)  
+
+            while namespace.status == "Created":
+                time.sleep(30)
+                namespace = self.notification_hub_client.namespaces.get(
                     self.resource_group,
                     self.namespace_name,
-                    namespace_params)
+                )
         except CloudError as ex:
             self.fail("Failed to create namespace {0} in resource group {1}: {2}".format(
                 self.namespace_name, self.resource_group, str(ex)))
-        return result
+        return namespace_to_dict(result)
 
     def create_or_update_notification_hub(self):
         '''
@@ -233,17 +244,10 @@ class AzureNotificationHub(AzureRMModuleBase):
         '''
         self.log("create or update Notification Hub {0}".format(self.name))
         try:
-            
             response = self.create_or_update_namespaces()
             namespace = self.notification_hub_client.namespaces.get(
                 self.resource_group, self.namespace_name)
-
-            while namespace.status == "Created":
-                time.sleep(30)
-                namespace = self.notification_hub_client.namespaces.get(
-                    self.resource_group,
-                    self.namespace_name,
-                )
+            
             params = NotificationHubCreateOrUpdateParameters(
                 location=self.location,
                 sku=Sku(name=self.sku),
@@ -318,7 +322,33 @@ def notification_hub_to_dict(item):
         namespace_type=notification_hub.get('namespace_type', None)
     )
     return result
-        
+
+
+def namespace_to_dict(item):
+    # turn notification hub object into a dictionary (serialization)
+    notification_hub = item.as_dict()
+    result = dict(
+        additional_properties=notification_hub.get(
+            'additional_properties', {}),
+        name=notification_hub.get('name', None),
+        type=notification_hub.get('type', None),
+        location=notification_hub.get(
+            'location', '').replace(' ', '').lower(),
+        sku=notification_hub.get("sku").get("name"),
+        tags=notification_hub.get('tags', None),
+        provisioning_state=notification_hub.get(
+            'provisioning_state', None),
+        region=notification_hub.get('region', None),
+        metric_id=notification_hub.get('metric_id', None),
+        service_bus_endpoint=notification_hub.get(
+            'service_bus_endpoint', None),
+        scale_unit=notification_hub.get('scale_unit', None),
+        enabled=notification_hub.get('enabled', None),
+        critical=notification_hub.get('critical', None),
+        data_center=notification_hub.get('data_center', None),
+        namespace_type=notification_hub.get('namespace_type', None)
+    )
+    return result
 
 
 
