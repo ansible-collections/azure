@@ -4,6 +4,7 @@
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
+import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 __metaclass__ = type
 DOCUMENTATION = '''
@@ -36,9 +37,6 @@ options:
             - free
             - basic
             - premium
-    authorizations:
-        description:
-            - The list of authorizations. 
     state:
       description:
           - Assert the state of the Notification Hub.
@@ -63,8 +61,6 @@ EXAMPLES = '''
     name: myhub
     tags:
        - a: b
-    authorizations:
-       - name: authorization_test
     sku: free
 
 - name: Delete Notification Hub
@@ -93,7 +89,6 @@ EXAMPLES = '''
 RETURN = '''
 
 '''
-import time
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -118,8 +113,8 @@ class AzureNotificationHub(AzureRMModuleBase):
             namespace_name=dict(type='str', required=True),
             name=dict(type='str'),
             location=dict(type='str'),
-            sku=dict(type='str', choices=['free', 'basic', 'standard'], default='free'),
-            authorizations=dict(type=list, options=self.authorizations_spec),
+            sku=dict(type='str', choices=[
+                     'free', 'basic', 'standard'], default='free'),
             state=dict(choices=['present', 'absent'],
                        default='present', type='str'),
         )
@@ -132,15 +127,14 @@ class AzureNotificationHub(AzureRMModuleBase):
         self.authorizations = None
         self.tags = None
         self.state = None
-        self.check_mode = None
         self.results = dict(
             changed=False,
             state=dict()
         )
 
-        super(AzureNotificationHub, self).__init__(self.module_arg_spec,
-                                                supports_check_mode=True,
-                                                supports_tags=True)
+        super(AzureNotificationHub, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                   supports_check_mode=True,
+                                                   supports_tags=True)
 
     def exec_module(self, **kwargs):
 
@@ -156,19 +150,30 @@ class AzureNotificationHub(AzureRMModuleBase):
         changed = False
 
         try:
-            self.log('Fetching Notification Hub {0}'.format(self.name))
+            self.log(
+                'Fetching Notification Hub Namespace {0}'.format(self.name))
             namespace = self.notification_hub_client.namespaces.get(
                 self.resource_group, self.namespace_name)
 
             results = namespace_to_dict(namespace)
+            if self.name:
+                self.log('Fetching Notification Hub {0}'.format(self.name))
+                notification_hub = self.notification_hub_client.notification_hubs.get(
+                    self.resource_group, self.namespace_name, self.name)
+                notification_hub_results = notification_hub_to_dict(
+                    notification_hub)
             # don't change anything if creating an existing namespace, but change if deleting it
             if self.state == 'present':
                 changed = False
 
                 update_tags, results['tags'] = self.update_tags(
                     results['tags'])
+
                 if update_tags:
                     changed = True
+                elif self.namespace_name and not self.name:
+                    if self.sku != results['sku'].lower():
+                        changed = True
 
             elif self.state == 'absent':
                 changed = True
@@ -182,7 +187,10 @@ class AzureNotificationHub(AzureRMModuleBase):
                 changed = False
 
         self.results['changed'] = changed
-        self.results['state'] = results
+        if self.name and not changed:
+            self.results['state'] = notification_hub_results
+        else:
+            self.results['state'] = results
 
         # return the results if your only gathering information
         if self.check_mode:
@@ -191,8 +199,6 @@ class AzureNotificationHub(AzureRMModuleBase):
         if changed:
             if self.state == "present":
                 if self.name is None:
-                    print("fdsafadsf")
-                    print("fdasfasd"+ 3)
                     self.results['state'] = self.create_or_update_namespaces()
                 elif self.namespace_name and self.name:
                     self.results['state'] = self.create_or_update_notification_hub()
@@ -212,11 +218,11 @@ class AzureNotificationHub(AzureRMModuleBase):
         '''
         try:
             namespace_params = NamespaceCreateOrUpdateParameters(
-                    location=self.location,
-                    namespace_type="NotificationHub",
-                    sku=Sku(name=self.sku),
-                    tags=self.tags
-                )
+                location=self.location,
+                namespace_type="NotificationHub",
+                sku=Sku(name=self.sku),
+                tags=self.tags
+            )
             result = self.notification_hub_client.namespaces.create_or_update(
                 self.resource_group,
                 self.namespace_name,
@@ -224,7 +230,7 @@ class AzureNotificationHub(AzureRMModuleBase):
 
             namespace = self.notification_hub_client.namespaces.get(
                 self.resource_group,
-                self.namespace_name)  
+                self.namespace_name)
 
             while namespace.status == "Created":
                 time.sleep(30)
@@ -242,16 +248,11 @@ class AzureNotificationHub(AzureRMModuleBase):
         Create or update Notification Hub.
         :return: create or update Notification Hub instance state dictionary
         '''
-        self.log("create or update Notification Hub {0}".format(self.name))
         try:
             response = self.create_or_update_namespaces()
-            namespace = self.notification_hub_client.namespaces.get(
-                self.resource_group, self.namespace_name)
-            
             params = NotificationHubCreateOrUpdateParameters(
                 location=self.location,
                 sku=Sku(name=self.sku),
-                authorization_rules=self.authorizations,
                 tags=self.tags
             )
             result = self.notification_hub_client.notification_hubs.create_or_update(
@@ -279,7 +280,6 @@ class AzureNotificationHub(AzureRMModuleBase):
             self.fail(
                 "Error deleting the notification hub : {0}".format(str(e)))
         return True
-
 
     def delete_namespace(self):
         '''
@@ -325,31 +325,30 @@ def notification_hub_to_dict(item):
 
 
 def namespace_to_dict(item):
-    # turn notification hub object into a dictionary (serialization)
-    notification_hub = item.as_dict()
+    # turn notification hub namespace object into a dictionary (serialization)
+    namespace = item.as_dict()
     result = dict(
-        additional_properties=notification_hub.get(
+        additional_properties=namespace.get(
             'additional_properties', {}),
-        name=notification_hub.get('name', None),
-        type=notification_hub.get('type', None),
-        location=notification_hub.get(
+        name=namespace.get('name', None),
+        type=namespace.get('type', None),
+        location=namespace.get(
             'location', '').replace(' ', '').lower(),
-        sku=notification_hub.get("sku").get("name"),
-        tags=notification_hub.get('tags', None),
-        provisioning_state=notification_hub.get(
+        sku=namespace.get("sku").get("name"),
+        tags=namespace.get('tags', None),
+        provisioning_state=namespace.get(
             'provisioning_state', None),
-        region=notification_hub.get('region', None),
-        metric_id=notification_hub.get('metric_id', None),
-        service_bus_endpoint=notification_hub.get(
+        region=namespace.get('region', None),
+        metric_id=namespace.get('metric_id', None),
+        service_bus_endpoint=namespace.get(
             'service_bus_endpoint', None),
-        scale_unit=notification_hub.get('scale_unit', None),
-        enabled=notification_hub.get('enabled', None),
-        critical=notification_hub.get('critical', None),
-        data_center=notification_hub.get('data_center', None),
-        namespace_type=notification_hub.get('namespace_type', None)
+        scale_unit=namespace.get('scale_unit', None),
+        enabled=namespace.get('enabled', None),
+        critical=namespace.get('critical', None),
+        data_center=namespace.get('data_center', None),
+        namespace_type=namespace.get('namespace_type', None)
     )
     return result
-
 
 
 def main():

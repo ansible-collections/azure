@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Praveen Ghuge (@praveenghuge), Karl Dasan (@karldas30), Sakar Mehra (@sakar97)
+# Copyright (c) 2020 Praveen Ghuge (@praveenghuge), Karl Dasan (@karldas30)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -34,6 +34,7 @@ extends_documentation_fragment:
 
 author:
     - Praveen Ghuge (@praveenghuge)
+    - Karl Dasan (@karldas30)
 '''
 
 
@@ -57,7 +58,6 @@ except ImportError:
 
 class AzureNotificationHubInfo(AzureRMModuleBase):
     def __init__(self):
-
 
         self.module_arg_spec = dict(
             resource_group=dict(
@@ -86,7 +86,7 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
-        
+
         if self.name is None and self.namespace_name is None:
             results = self.list_all_namespace()
             self.results['namespaces'] = [
@@ -99,7 +99,7 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
             results = self.get_namespace()
             self.results['namespace'] = [
                 self.namespace_to_dict(x) for x in results]
-        
+
         return self.results
 
     def get_namespace(self):
@@ -134,8 +134,6 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
             results = [response]
         return results
 
-
-
     def list_all_namespace(self):
         self.log('List items for resource group')
         try:
@@ -154,27 +152,27 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
 
     def namespace_to_dict(self, item):
         # turn notification hub object into a dictionary (serialization)
-        notification_hub = item.as_dict()
+        namespace = item.as_dict()
         result = dict(
-            additional_properties=notification_hub.get(
+            additional_properties=namespace.get(
                 'additional_properties', {}),
-            name=notification_hub.get('name', None),
-            type=notification_hub.get('type', None),
-            location=notification_hub.get(
+            name=namespace.get('name', None),
+            type=namespace.get('type', None),
+            location=namespace.get(
                 'location', '').replace(' ', '').lower(),
-            sku=notification_hub.get("sku").get("name"),
-            tags=notification_hub.get('tags', None),
-            provisioning_state=notification_hub.get(
+            sku=namespace.get("sku").get("name"),
+            tags=namespace.get('tags', None),
+            provisioning_state=namespace.get(
                 'provisioning_state', None),
-            region=notification_hub.get('region', None),
-            metric_id=notification_hub.get('metric_id', None),
-            service_bus_endpoint=notification_hub.get(
+            region=namespace.get('region', None),
+            metric_id=namespace.get('metric_id', None),
+            service_bus_endpoint=namespace.get(
                 'service_bus_endpoint', None),
-            scale_unit=notification_hub.get('scale_unit', None),
-            enabled=notification_hub.get('enabled', None),
-            critical=notification_hub.get('critical', None),
-            data_center=notification_hub.get('data_center', None),
-            namespace_type=notification_hub.get('namespace_type', None)
+            scale_unit=namespace.get('scale_unit', None),
+            enabled=namespace.get('enabled', None),
+            critical=namespace.get('critical', None),
+            data_center=namespace.get('data_center', None),
+            namespace_type=namespace.get('namespace_type', None)
         )
         return result
 
@@ -192,7 +190,8 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
             name_properties_name=notification_hub.get(
                 'name_properties_name', None),
             registration_ttl=notification_hub.get('registration_ttl', None),
-            authorization_rules=notification_hub.get('authorization_rules', None),
+            authorization_rules=notification_hub.get(
+                'authorization_rules', None),
             apns_credential=notification_hub.get(
                 'apns_credential', None),
             wns_credential=notification_hub.get('wns_credential', None),
