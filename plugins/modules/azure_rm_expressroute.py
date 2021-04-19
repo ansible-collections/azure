@@ -3,8 +3,7 @@
 # Copyright (c) 2021 Praveen Ghuge (@praveenghuge), Karl Dasan (@ikarldasan), Sakar Mehra (@sakar97)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
+
 DOCUMENTATION = '''
 ---
 module: azure_rm_expressroute
@@ -47,7 +46,7 @@ options:
     sku:
         description:
             - The name of the SKU.
-            - Please see (https://azure.microsoft.com/en-in/pricing/details/expressroute/)
+            - Please see L(https://azure.microsoft.com/en-in/pricing/details/expressroute/)
         suboptions:
             tier:
                 description:
@@ -90,7 +89,8 @@ options:
           - absent
           - present
 extends_documentation_fragment:
-- azure.azcollection.azure
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Praveen Ghuge (@praveenghuge)
@@ -163,6 +163,9 @@ sample: {
 
 '''
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
@@ -206,7 +209,9 @@ class AzureExpressRoute(AzureRMModuleBase):
                        default='present', type='str'),
             service_provider_properties=dict(
                 type='dict', options=self.service_provider_properties_spec),
-            global_reach_enabled=dict(type='bool')
+            global_reach_enabled=dict(type='bool'),
+            log_path=dict(type='str'),
+            log_mode=dict(type='str'),
         )
 
         self.resource_group = None
@@ -223,6 +228,8 @@ class AzureExpressRoute(AzureRMModuleBase):
             changed=False,
             state=dict()
         )
+        self.log_path = None
+        self.log_mode = None
 
         super(AzureExpressRoute, self).__init__(self.module_arg_spec,
                                                 supports_check_mode=True,

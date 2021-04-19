@@ -1,5 +1,3 @@
 cloud/azure
-shippable/azure/group2
+shippable/azure/group10
 destructive
-azure_rm_expressroute
-azure_rm_expressroute_info
