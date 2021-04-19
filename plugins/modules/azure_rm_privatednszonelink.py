@@ -9,7 +9,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_privatednszone_vnetlink
+module: azure_rm_privatednszonelink
 
 version_added: "1.5.0"
 
@@ -51,6 +51,14 @@ options:
         choices:
             - absent
             - present
+    log_path:
+        description:
+            - parent argument.
+        type: str
+    log_mode:
+        description:
+            - parent argument.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -62,7 +70,7 @@ author:
 
 EXAMPLES = '''
 - name: Create a virtual network link
-  azure_rm_privatednszone_vnetlink:
+  azure_rm_privatednszonelink:
     resource_group: myResourceGroup
     name: vnetlink1
     zone_name: privatezone.com
@@ -70,7 +78,7 @@ EXAMPLES = '''
     state: present
 
 - name: Update virtual network link
-  azure_rm_privatednszone_vnetlink:
+  azure_rm_privatednszonelink:
     resource_group: myResourceGroup
     name: vnetlink1
     zone_name: privatezone.com
@@ -81,7 +89,7 @@ EXAMPLES = '''
       key1: "value1"
 
 - name: Delete a virtual network link
-  azure_rm_privatednszone_vnetlink:
+  azure_rm_privatednszonelink:
     resource_group: myResourceGroup
     name: vnetlink1
     zone_name: privatezone.com
@@ -179,7 +187,9 @@ class AzureRMVirtualNetworkLink(AzureRMModuleBase):
             zone_name=dict(type='str', required=True),
             virtual_network=dict(type='str'),
             state=dict(choices=['present', 'absent'], default='present', type='str'),
-            registration_enabled=dict(type='bool', default=False)
+            registration_enabled=dict(type='bool', default=False),
+            log_path=dict(type='str'),
+            log_mode=dict(type='str')
         )
 
         required_if = [
@@ -199,6 +209,8 @@ class AzureRMVirtualNetworkLink(AzureRMModuleBase):
         self.state = None
         self.location = None
         self.tags = None
+        self.log_path = None
+        self.log_mode = None
 
         super(AzureRMVirtualNetworkLink, self).__init__(self.module_arg_spec,
                                                         required_if=required_if,

@@ -9,7 +9,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_privatednszone_vnetlink_info
+module: azure_rm_privatednszonelink_info
 
 version_added: "1.5.0"
 
@@ -33,6 +33,18 @@ options:
             - The name of the Private DNS zone.
         required: true
         type: str
+    tags:
+        description:
+            - Limit the results by providing resource tags.
+        type: dict
+    log_path:
+        description:
+            - parent argument.
+        type: str
+    log_mode:
+        description:
+            - parent argument.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -45,13 +57,13 @@ author:
 
 EXAMPLES = '''
 - name: Get facts for one virtual network link in private DNS zone
-  azure_rm_privatednszone_vnetlink_info:
+  azure_rm_privatednszonelink_info:
     resource_group: myResourceGroup
     name: vnetlink1
     zone_name: privatezone.com
 
 - name: Get facts for all virtual network links in private DNS zone
-  azure_rm_privatednszone_vnetlink_info:
+  azure_rm_privatednszonelink_info:
     resource_group: myResourceGroup
     zone_name: privatezone.com
 '''
@@ -62,6 +74,7 @@ virtualnetworklinks:
         - Gets a list of virtual network links dict in a Private DNS zone.
     returned: always
     type: list
+    elements: dict
     sample: [
         {
             "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/
@@ -101,7 +114,10 @@ class AzureRMVirtualNetworkLinkInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str', required=True),
-            zone_name=dict(type='str', required=True)
+            zone_name=dict(type='str', required=True),
+            tags=dict(type='dict'),
+            log_path=dict(type='str'),
+            log_mode=dict(type='str')
         )
 
         # store the results of the module operation
@@ -113,8 +129,10 @@ class AzureRMVirtualNetworkLinkInfo(AzureRMModuleBase):
         self.resource_group = None
         self.zone_name = None
         self.tags = None
+        self.log_path = None
+        self.log_mode = None
 
-        super(AzureRMVirtualNetworkLinkInfo, self).__init__(self.module_arg_spec)
+        super(AzureRMVirtualNetworkLinkInfo, self).__init__(self.module_arg_spec, supports_tags=True)
 
     def exec_module(self, **kwargs):
 

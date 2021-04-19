@@ -738,10 +738,6 @@ plugins/modules/azure_rm_privatednszone.py validate-modules:required_if-unknown-
 plugins/modules/azure_rm_privatednszone_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_privatednszone_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_privatednszone_info.py validate-modules:required_if-unknown-key
-plugins/modules/azure_rm_privatednszone_vnetlink.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_privatednszone_vnetlink.py validate-modules:required_if-unknown-key
-plugins/modules/azure_rm_privatednszone_vnetlink_info.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_privatednszone_vnetlink_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_adpassword.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_adpassword.py validate-modules:import-before-documentation
 plugins/modules/azure_rm_adpassword.py validate-modules:nonexistent-parameter-documented

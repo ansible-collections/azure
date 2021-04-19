@@ -62,7 +62,7 @@ parameters:
     - "azure_rm_postgresqlserver"
     - "azure_rm_privatednsrecordset"
     - "azure_rm_privatednszone"
-    - "azure_rm_privatednszone_vnetlink"
+    - "azure_rm_privatednszonelink"
     - "azure_rm_publicipaddress"
     - "azure_rm_rediscache"
     - "azure_rm_resource"
