@@ -36,8 +36,17 @@ options:
       choices:
           - absent
           - present
+    log_path:
+        description:
+            - parent argument.
+        type: str
+    log_mode:
+        description:
+            - parent argument.
+        type: str
 extends_documentation_fragment:
-- azure.azcollection.azure
+   - azure.azcollection.azure
+   - azure.azcollection.azure_tags
 author:
     - Praveen Ghuge (@praveenghuge)
     - Karl Dasan (@ikarldasan)
@@ -94,7 +103,9 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
             name=dict(type='str', required=True),
             location=dict(type='str'),
             state=dict(choices=['present', 'absent'],
-                       default='present', type='str')
+                       default='present', type='str'),
+            log_path=dict(type='str'),
+            log_mode=dict(type='str')
         )
 
         self.resource_group = None
@@ -102,6 +113,8 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         self.location = None
         self.state = None
         self.tags = None
+        self.log_path = None
+        self.log_mode = None
         self.results = dict(
             changed=False,
             state=dict()
