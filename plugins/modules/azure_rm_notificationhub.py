@@ -19,7 +19,7 @@ options:
         type: str
     namespace_name:
         description:
-            - Name of the namespace in which to create notification hub
+            - Name of the namespace in which to create notification hub.
         required: True
         type: str
     name:
@@ -35,7 +35,7 @@ options:
     sku:
         description:
             - The name of the SKU.
-            - Please see (https://azure.microsoft.com/en-in/pricing/details/notification-hubs/)
+            - Please see L(https://azure.microsoft.com/en-in/pricing/details/notification-hubs/).
         default: free
         choices:
             - free
@@ -51,8 +51,18 @@ options:
           - absent
           - present
       type: str
+    log_path:
+        description:
+            - parent argument.
+        type: str
+    log_mode:
+        description:
+            - parent argument.
+        type: str
+    
 extends_documentation_fragment:
-- azure.azcollection.azure
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Praveen Ghuge (@praveenghuge)
@@ -153,11 +163,10 @@ class AzureNotificationHub(AzureRMModuleBase):
                      'free', 'basic', 'standard'], default='free'),
             state=dict(choices=['present', 'absent'],
                        default='present', type='str'),
+            log_path=dict(type='str'),
+            log_mode=dict(type='str'),
         )
 
-        required_if = [
-            ('state', 'present', ['location'])
-        ]
 
         self.resource_group = None
         self.namespace_name = None
@@ -167,6 +176,8 @@ class AzureNotificationHub(AzureRMModuleBase):
         self.authorizations = None
         self.tags = None
         self.state = None
+        self.log_path = None
+        self.log_mode = None
         self.results = dict(
             changed=False,
             state=dict()
@@ -174,8 +185,7 @@ class AzureNotificationHub(AzureRMModuleBase):
 
         super(AzureNotificationHub, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                    supports_check_mode=True,
-                                                   supports_tags=True,
-                                                   required_if=required_if)
+                                                   supports_tags=True)
 
     def exec_module(self, **kwargs):
 
