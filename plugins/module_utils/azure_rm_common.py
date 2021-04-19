@@ -1338,6 +1338,7 @@ class AzureRMModuleBase(object):
                 api_version='2016-03-01')
         return self._notification_hub_client
 
+
 class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
     An implementation of Authentication in

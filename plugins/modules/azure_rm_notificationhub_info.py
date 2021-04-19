@@ -22,10 +22,15 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
+    namespace_name:
+            - The name of the namspace
+        required: True
+        type: str
     name:
         description:
             - The name of the Notification hub.
-        required: True
+        type: str
 
 
 extends_documentation_fragment:
@@ -47,6 +52,31 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
+state:
+    description:
+        - Current state of the Notification Hub namesapce or Notification Hub.
+    returned: always
+    type: dict
+    sample: {
+        "additional_properties": {},
+        "critical": false,
+        "data_center": null,
+        "enabled": true,
+        "location": "eastus2",
+        "metric_id": null,
+        "name": "testnaedd3d22d3w",
+        "namespace_type": "NotificationHub",
+        "provisioning_state": "Succeeded",
+        "region": null,
+        "scale_unit": null,
+        "service_bus_endpoint": "https://testnaedd3d22d3w.servicebus.windows.net:443/",
+        "sku": "Free",
+        "tags": {
+            "a": "b"
+        },
+        "type": "Microsoft.NotificationHubs/namespaces"
+    }
+
 '''
 
 try:
@@ -66,11 +96,13 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
             ),
             namespace_name=dict(
                 type='str',
+                required=True
             ),
             name=dict(
                 type='str',
             )
         )
+        
         # store the results of the module operation
         self.results = dict(
             changed=False)

@@ -3,31 +3,35 @@
 # Copyright (c) 2021 Praveen Ghuge (@praveenghuge), Karl Dasan (@karldas30)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-from __future__ import absolute_import, division, print_function
-import time
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-__metaclass__ = type
+
 DOCUMENTATION = '''
 ---
 module: azure_rm_notificationhub
-version_added: "0.1.2"
+version_added: "1.5.1"
 short_description: Manage Notification Hub
 description:
     - Create, update and delete instance of Notification Hub.
 options:
-    resource_groups:
+    resource_group:
         description:
             - Name of the resource group to which the resource belongs.
+        required: True
+        type: str
     namespace_name:
         description:
             - Name of the namespace in which to create notification hub
+        required: True
+        type: str
     name:
         description:
-            - Unique name of the app service plan to create or update.
+            - Unique name of the Notification Hub.
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        required: if state is present
+        type: str
     sku:
         description:
             - The name of the SKU.
@@ -36,7 +40,8 @@ options:
         choices:
             - free
             - basic
-            - premium
+            - standard
+        type: str
     state:
       description:
           - Assert the state of the Notification Hub.
@@ -45,6 +50,7 @@ options:
       choices:
           - absent
           - present
+      type: str
 extends_documentation_fragment:
 - azure.azcollection.azure
 
@@ -88,8 +94,37 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-
+state:
+    description:
+        - Current state of the Notification Hub namesapce or Notification Hub.
+    returned: always
+    type: dict
+    sample: {
+        "additional_properties": {},
+        "critical": false,
+        "data_center": null,
+        "enabled": true,
+        "location": "eastus2",
+        "metric_id": null,
+        "name": "testnaedd3d22d3w",
+        "namespace_type": "NotificationHub",
+        "provisioning_state": "Succeeded",
+        "region": null,
+        "scale_unit": null,
+        "service_bus_endpoint": "https://testnaedd3d22d3w.servicebus.windows.net:443/",
+        "sku": "Free",
+        "tags": {
+            "a": "b"
+        },
+        "type": "Microsoft.NotificationHubs/namespaces"
+    }
+    
 '''
+
+from __future__ import absolute_import, division, print_function
+import time
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+__metaclass__ = type
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -120,6 +155,10 @@ class AzureNotificationHub(AzureRMModuleBase):
                        default='present', type='str'),
         )
 
+        required_if = [
+            ('state', 'present', ['location'])
+        ]
+
         self.resource_group = None
         self.namespace_name = None
         self.name = None
@@ -135,7 +174,8 @@ class AzureNotificationHub(AzureRMModuleBase):
 
         super(AzureNotificationHub, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                    supports_check_mode=True,
-                                                   supports_tags=True)
+                                                   supports_tags=True,
+                                                   required_if=required_if)
 
     def exec_module(self, **kwargs):
 
