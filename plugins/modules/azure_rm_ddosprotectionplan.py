@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 DOCUMENTATION = '''
 ---
-module: azure_rm_ddos_protection_plan
+module: azure_rm_ddosprotectionplan
 version_added: "0.1.2"
 short_description: Manage DDoS protection plan
 description:
@@ -53,12 +53,12 @@ author:
 '''
 EXAMPLES = '''
 - name: "Create DDoS protection plan"
-  azure_rm_ddos_protection_plan:
+  azure_rm_ddosprotectionplan:
     resource_group: rg
     location: eastus
     name: ddosplan
 - name: Delete DDoS protection plan
-  azure_rm_ddos_protection_plan:
+  azure_rm_ddosprotectionplan:
     resource_group: rg
     name: ddosplan
     state: absent

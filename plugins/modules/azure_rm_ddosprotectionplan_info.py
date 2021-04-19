@@ -11,7 +11,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_ddos_protection_plan_info
+module: azure_rm_ddosprotectionplan_info
 short_description: Get Azure DDoS protection plan
 description:
     - Get facts of Azure DDoS protection plan.
@@ -34,7 +34,7 @@ author:
 
 EXAMPLES = '''
   - name: Get facts of specific DDoS protection plan
-    community.azure.azure_rm_ddos_protection_plan_info:
+    azure_rm_ddosprotectionplan_info:
       resource_group: myResourceGroup
       name: myDDoSProtectionPlan
 '''
@@ -87,7 +87,7 @@ class AzureDDoSProtectionPlanInfo(AzureRMModuleBase):
             # all the DDoS protection plan listed in the subscription
             results = self.list_subscription()
 
-        self.results['ddos_protection_plan'] = [
+        self.results['ddosprotectionplan'] = [
             self.ddos_protection_plan_to_dict(x) for x in results]
         return self.results
 
