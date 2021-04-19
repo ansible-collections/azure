@@ -42,7 +42,6 @@ options:
     virtual_network:
         description:
             - The reference of the virtual network.
-        required: true
         type: str
     state:
         description:
