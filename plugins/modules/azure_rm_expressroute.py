@@ -8,7 +8,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_expressroute
-version_added: "0.1.2"
+version_added: "1.5.1"
 short_description: Manage Express Route Circuits
 description:
     - Create, update and delete instance of Express Route.
