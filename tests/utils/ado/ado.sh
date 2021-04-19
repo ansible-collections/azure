@@ -112,6 +112,8 @@ fi
 echo '--------------------------------------------'
 ansible --version
 echo '--------------------------------------------'
+export
+echo '--------------------------------------------'
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
 
