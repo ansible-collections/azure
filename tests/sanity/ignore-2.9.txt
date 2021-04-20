@@ -125,10 +125,6 @@ plugins/modules/azure_rm_rediscache_info.py validate-modules:parameter-type-not-
 plugins/modules/azure_rm_rediscachefirewallrule.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_roleassignment.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_roleassignment_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_roledefinition.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_roledefinition.py validate-modules:invalid-argument-spec
-plugins/modules/azure_rm_roledefinition.py validate-modules:missing-suboption-docs
-plugins/modules/azure_rm_roledefinition_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_route.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_routetable.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_routetable_info.py validate-modules:parameter-type-not-in-doc
