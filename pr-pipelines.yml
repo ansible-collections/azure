@@ -68,6 +68,7 @@ parameters:
     - "azure_rm_resourcegroup"
     - "azure_rm_routetable"
     - "azure_rm_roleassignment"
+    - "azure_rm_roledefinition"
     - "azure_rm_registrationassignment"
     - "azure_rm_registrationdefinition"
     - "azure_rm_cognitivesearch"
