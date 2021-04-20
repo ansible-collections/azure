@@ -122,7 +122,7 @@ try:
     from msrestazure import AzureConfiguration
     from msrestazure.polling.arm_polling import ARMPolling
     from msrestazure.tools import parse_resource_id
-except Exception:
+except ImportError:
     pass
 
 from collections import namedtuple
