@@ -37,12 +37,17 @@ export LC_ALL="en_US.utf-8"
 if [ "$2" = "2.7" ]
 then
     pip install virtualenv
+    pip install msrest msrestazure
     virtualenv --python /usr/bin/python2.7 ~/ansible-venv
 else
+    pip3 install msrest msrestazure
     pip3 install virtualenv
     virtualenv --python /usr/bin/python"$2" ~/ansible-venv
 fi
 
+set +ux
+. ~/ansible-venv/bin/activate
+set -ux
 
 if [ "$2" = "2.7" ]
 then
@@ -68,10 +73,6 @@ else
 	pip3 install paramiko PyYAML Jinja2  httplib2 six
     fi
 fi
-
-set +ux
-. ~/ansible-venv/bin/activate
-set -ux
 
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
 mkdir -p "${TEST_DIR}"
