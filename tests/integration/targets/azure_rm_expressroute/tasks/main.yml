@@ -1,6 +1,6 @@
 - name: Create random express route
   set_fact:
-      express_route: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+    express_route: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create Express route (check mode)
   azure_rm_expressroute:
@@ -103,10 +103,10 @@
 # azure_rm_expressroute cleanup
 #
 - name: Delete Express Route
-    azure_rm_expressroute:
-      resource_group: "{{ resource_group }}"
-      name:  "{{ express_route }}"
-      state: absent
+  azure_rm_expressroute:
+    resource_group: "{{ resource_group }}"
+    name:  "{{ express_route }}"
+    state: absent
 
 - name: Delete Express Route (idempotent)
   azure_rm_expressroute:
