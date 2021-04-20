@@ -47,6 +47,7 @@ options:
         description:
             - The name of the SKU.
             - Please see L(https://azure.microsoft.com/en-in/pricing/details/expressroute/)
+        required: if state is present
         suboptions:
             tier:
                 description:
@@ -220,6 +221,10 @@ class AzureExpressRoute(AzureRMModuleBase):
             log_mode=dict(type='str'),
         )
 
+        required_if = [
+            ('state', 'present', ['sku'])
+        ]
+
         self.resource_group = None
         self.name = None
         self.location = None
@@ -239,7 +244,8 @@ class AzureExpressRoute(AzureRMModuleBase):
 
         super(AzureExpressRoute, self).__init__(self.module_arg_spec,
                                                 supports_check_mode=True,
-                                                supports_tags=True)
+                                                supports_tags=True,
+                                                required_if=required_if)
 
     def exec_module(self, **kwargs):
 
