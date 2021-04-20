@@ -119,6 +119,9 @@ except ImportError:
     from Queue import Queue, Empty
 try:
     from msrest import ServiceClient, Serializer, Deserializer
+    from msrestazure import AzureConfiguration
+    from msrestazure.polling.arm_polling import ARMPolling
+    from msrestazure.tools import parse_resource_id
 except Exception:
     pass
 
@@ -131,9 +134,6 @@ from ansible.errors import AnsibleParserError, AnsibleError
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils._text import to_native, to_bytes, to_text
 from itertools import chain
-from msrestazure import AzureConfiguration
-from msrestazure.polling.arm_polling import ARMPolling
-from msrestazure.tools import parse_resource_id
 
 
 class AzureRMRestConfiguration(AzureConfiguration):
