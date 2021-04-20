@@ -43,9 +43,6 @@ else
     virtualenv --python /usr/bin/python"$2" ~/ansible-venv
 fi
 
-set +ux
-. ~/ansible-venv/bin/activate
-set -ux
 
 if [ "$2" = "2.7" ]
 then
@@ -71,6 +68,10 @@ else
 	pip3 install paramiko PyYAML Jinja2  httplib2 six
     fi
 fi
+
+set +ux
+. ~/ansible-venv/bin/activate
+set -ux
 
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
 mkdir -p "${TEST_DIR}"
