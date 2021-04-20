@@ -119,8 +119,8 @@ except ImportError:
     from Queue import Queue, Empty
 try:
     from msrest import ServiceClient, Serializer, Deserializer
-    except Exception:
-        pass
+except Exception:
+    pass
 
 from collections import namedtuple
 from ansible import release
