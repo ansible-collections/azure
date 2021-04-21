@@ -47,6 +47,10 @@ plugins/modules/azure_rm_availabilityset_info.py validate-modules:parameter-type
 plugins/modules/azure_rm_availabilityset_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_availabilityset_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_availabilityset_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_cognitivesearch.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_cognitivesearch.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_cognitivesearch_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_cognitivesearch_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_containerinstance.py validate-modules:doc-type-does-not-match-spec
 plugins/modules/azure_rm_containerinstance.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_containerinstance.py validate-modules:doc-elements-mismatch
@@ -299,11 +303,8 @@ plugins/modules/azure_rm_subnet_info.py validate-modules:required_if-requirement
 plugins/modules/azure_rm_subnet_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_subscription_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_subscription_info.py validate-modules:required_if-unknown-key
-plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:undocumented-parameter
 plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:doc-default-does-not-match-spec
-plugins/modules/azure_rm_apimanagementservice_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_apimanagementservice.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_apimanagementservice.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_apimanagementservice.py validate-modules:invalid-ansiblemodule-schema
