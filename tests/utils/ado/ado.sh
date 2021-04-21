@@ -92,7 +92,7 @@ else
 fi
 echo "-------------------------"
 whereis python3.6
-/usr/bin/python3.6 -m pip3 install msrest msrestazure
+/usr/bin/python3.6 -m pip install msrest msrestazure
 echo "-------------------------"
 
 timeout=60
