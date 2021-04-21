@@ -58,7 +58,6 @@ then
 	git checkout "stable-$3"
 	source hacking/env-setup
 	pip install paramiko PyYAML Jinja2  httplib2 six
-	/usr/bin/python3.6 -m pip install msrest msrestazure
     fi
 else
     if [ "$3" = "devel" ]
@@ -70,13 +69,9 @@ else
 	git checkout "stable-$3"
 	source hacking/env-setup
 	pip3 install paramiko PyYAML Jinja2  httplib2 six
-	/usr/bin/python3.6 -m pip3 install msrest msrestazure
     fi
 fi
 
-echo "-------------------------"
-whereis python3.6
-echo "-------------------------"
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
 mkdir -p "${TEST_DIR}"
 cp -aT "${SHIPPABLE_BUILD_DIR}" "${TEST_DIR}"
@@ -95,6 +90,10 @@ else
     pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
     pip3 list
 fi
+echo "-------------------------"
+whereis python3.6
+/usr/bin/python3.6 -m pip3 install msrest msrestazure
+echo "-------------------------"
 
 timeout=60
 
