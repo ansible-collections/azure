@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 module: azure_rm_aduser
 
-version_added: "1.4.0"
+version_added: "1.5.0"
 
 short_description: Modify an Azure Active Directory user
 
@@ -232,7 +232,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             odata_filter=dict(type='str'),
             account_enabled=dict(type='bool'),
             display_name=dict(type='str'),
-            password_profile=dict(type='str'),
+            password_profile=dict(type='str', no_log=True),
             mail_nickname=dict(type='str'),
             immutable_id=dict(type='str'),
             usage_location=dict(type='str'),
