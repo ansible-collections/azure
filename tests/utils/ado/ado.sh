@@ -72,6 +72,9 @@ else
     fi
 fi
 
+echo "-------------------------"
+whereis python3.6
+echo "-------------------------"
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
 mkdir -p "${TEST_DIR}"
 cp -aT "${SHIPPABLE_BUILD_DIR}" "${TEST_DIR}"
