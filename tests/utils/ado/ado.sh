@@ -37,10 +37,8 @@ export LC_ALL="en_US.utf-8"
 if [ "$2" = "2.7" ]
 then
     pip install virtualenv
-    pip install msrest msrestazure
     virtualenv --python /usr/bin/python2.7 ~/ansible-venv
 else
-    pip3 install msrest msrestazure
     pip3 install virtualenv
     virtualenv --python /usr/bin/python"$2" ~/ansible-venv
 fi
@@ -59,7 +57,7 @@ then
 	cd "ansible"
 	git checkout "stable-$3"
 	source hacking/env-setup
-	pip install paramiko PyYAML Jinja2  httplib2 six
+	pip install paramiko PyYAML Jinja2  httplib2 six msrest msrestazure
     fi
 else
     if [ "$3" = "devel" ]
@@ -70,7 +68,7 @@ else
 	cd "ansible"
 	git checkout "stable-$3"
 	source hacking/env-setup
-	pip3 install paramiko PyYAML Jinja2  httplib2 six
+	pip3 install paramiko PyYAML Jinja2  httplib2 six msrest msrestazure
     fi
 fi
 
