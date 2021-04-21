@@ -57,7 +57,8 @@ then
 	cd "ansible"
 	git checkout "stable-$3"
 	source hacking/env-setup
-	pip install paramiko PyYAML Jinja2  httplib2 six msrest msrestazure
+	pip install paramiko PyYAML Jinja2  httplib2 six
+	/usr/bin/python3.6 -m pip install msrest msrestazure
     fi
 else
     if [ "$3" = "devel" ]
@@ -68,7 +69,8 @@ else
 	cd "ansible"
 	git checkout "stable-$3"
 	source hacking/env-setup
-	pip3 install paramiko PyYAML Jinja2  httplib2 six msrest msrestazure
+	pip3 install paramiko PyYAML Jinja2  httplib2 six
+	/usr/bin/python3.6 -m pip3 install msrest msrestazure
     fi
 fi
 
