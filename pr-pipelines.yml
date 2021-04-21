@@ -2,7 +2,7 @@ parameters:
 - name: PYTHON_VER
   displayName: 'Python Version'
   type: string
-  default: "3.6"
+  default: "3.8"
   values:
     - "2.7"
     - "3.6"
@@ -103,7 +103,7 @@ pr:
 - dev
 
 pool:
-  vmImage: 'ubuntu-18.04'
+  vmImage: 'ubuntu-20.04'
 
 jobs:
   - job: CreateResourceGroups
