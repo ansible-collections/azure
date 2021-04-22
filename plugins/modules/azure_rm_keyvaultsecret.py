@@ -99,7 +99,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         self.module_arg_spec = dict(
             secret_name=dict(type='str', required=True),
             secret_value=dict(type='str', no_log=True),
-            keyvault_uri=dict(type='str', required=True),
+            keyvault_uri=dict(type='str', no_log=True, required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             content_type=dict(type='str')
         )
