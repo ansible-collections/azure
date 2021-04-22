@@ -25,7 +25,6 @@ options:
         type: str
     namespace_name:
             - The name of the namspace
-        required: True
         type: str
     name:
         description:
@@ -95,8 +94,7 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
                 required=True
             ),
             namespace_name=dict(
-                type='str',
-                required=True
+                type='str'
             ),
             name=dict(
                 type='str',
