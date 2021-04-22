@@ -129,22 +129,17 @@ from ansible.module_utils._text import to_native, to_bytes, to_text
 from itertools import chain
 try:
     from msrest import ServiceClient, Serializer, Deserializer
-except ImportError:
-    ServiceClient = object()
-    Serializer = object()
-    Deserializer = object()
-try:
     from msrestazure import AzureConfiguration
-except ImportError:
-    AzureConfiguration = object()
-try:
     from msrestazure.polling.arm_polling import ARMPolling
-except ImportError:
-    ARMPolling = object()
-try:
     from msrestazure.tools import parse_resource_id
 except ImportError:
-    parse_resource_id = object()
+    ServiceClient = object
+    Serializer = object
+    Deserializer = object
+    AzureConfiguration = object
+    ARMPolling = object
+    parse_resource_id = object
+    pass
 
 
 class AzureRMRestConfiguration(AzureConfiguration):
