@@ -9,8 +9,9 @@ group="${args[0]}"
 
 command -v python
 python -V
-pip3 --version
-pip --version
+whereis pip3
+echo "tttttttttttttttttttt"
+whereis pip
 
 if [ "$2" = "2.7" ]
 then
