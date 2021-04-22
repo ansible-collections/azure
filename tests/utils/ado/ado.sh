@@ -12,6 +12,9 @@ python -V
 pip --version
 echo "PPPPPPPPP"
 pip3 --version
+echo "ttt"
+ls /usr/bin
+echo "tttttttttt"
 if [ "$2" = "2.7" ]
 then
     command -v pip
