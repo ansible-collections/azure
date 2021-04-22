@@ -440,6 +440,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                 options=dict(
                     pull_secret=dict(
                         type='str',
+                        no_log=True,
                         updatable=False,
                         disposition='pullSecret',
                         purgeIfNone=True
@@ -476,6 +477,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                     ),
                     client_secret=dict(
                         type='str',
+                        no_log=True,
                         updatable=False,
                         disposition='clientSecret',
                         required=True
