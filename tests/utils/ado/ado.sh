@@ -15,7 +15,19 @@ then
 else
     alias pip='pip3'
 fi
-
+if ["$2" = "3.6"]
+then
+    sudo apt update
+    sudo apt install software-properties-common
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt install python"$2" -y
+    sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python"$2" 1
+else
+    echo "Do nothing"
+fi
+echo "________________"
+whereis python"$2"
+echo "________________"
 command -v pip
 pip --version
 pip list --disable-pip-version-check
