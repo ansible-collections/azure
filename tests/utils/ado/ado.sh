@@ -111,6 +111,7 @@ else
 fi
 echo '--------------------------------------------'
 ansible --version
+python --version
 echo '--------------------------------------------'
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
