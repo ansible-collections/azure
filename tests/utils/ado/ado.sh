@@ -15,7 +15,7 @@ then
 else
     alias pip='pip3'
 fi
-if ["$2" = "3.6"]
+if [ "$2" = "3.6" ]
 then
     sudo apt update
     sudo apt install software-properties-common
