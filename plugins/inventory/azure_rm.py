@@ -134,6 +134,12 @@ try:
     from msrestazure.polling.arm_polling import ARMPolling
     from msrestazure.tools import parse_resource_id
 except ImportError:
+    AzureConfiguration = object
+    ARMPolling = object
+    parse_resource_id = object
+    ServiceClient = object
+    Serializer = object
+    Deserializer = object
     pass
 
 
