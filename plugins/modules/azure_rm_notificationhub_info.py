@@ -5,10 +5,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-
-__metaclass__ = type
-
 
 DOCUMENTATION = '''
 ---
@@ -75,8 +71,9 @@ state:
         },
         "type": "Microsoft.NotificationHubs/namespaces"
     }
-
 '''
+
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -99,8 +96,7 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
             name=dict(
                 type='str',
             )
-        )
-        
+        )        
         # store the results of the module operation
         self.results = dict(
             changed=False)

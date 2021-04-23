@@ -3,6 +3,7 @@
 # Copyright (c) 2021 Praveen Ghuge (@praveenghuge), Karl Dasan (@karldas30)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+from __future__ import absolute_import, division, print_function
 
 DOCUMENTATION = '''
 ---
@@ -30,7 +31,6 @@ options:
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
-        required: if state is present
         type: str
     sku:
         description:
@@ -58,8 +58,7 @@ options:
     log_mode:
         description:
             - parent argument.
-        type: str
-    
+        type: str    
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -127,14 +126,11 @@ state:
             "a": "b"
         },
         "type": "Microsoft.NotificationHubs/namespaces"
-    }
-    
+    }    
 '''
 
-from __future__ import absolute_import, division, print_function
 import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-__metaclass__ = type
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -167,7 +163,6 @@ class AzureNotificationHub(AzureRMModuleBase):
             log_mode=dict(type='str'),
         )
 
-
         self.resource_group = None
         self.namespace_name = None
         self.name = None
@@ -195,7 +190,10 @@ class AzureNotificationHub(AzureRMModuleBase):
         self.results['check_mode'] = self.check_mode
 
         # retrieve resource group to make sure it exists
-        self.get_resource_group(self.resource_group)
+        resource_group = self.get_resource_group(self.resource_group)
+        if not self.location:
+            # Set default location
+            self.location = resource_group.location
 
         results = dict()
         changed = False
