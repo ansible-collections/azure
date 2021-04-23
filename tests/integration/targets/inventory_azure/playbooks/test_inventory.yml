@@ -25,7 +25,8 @@
     register: vm_output
 
   - meta: refresh_inventory
-
+  - debug:
+      var: hostvars
   - name: Test Inventory 
     assert:
       that:
