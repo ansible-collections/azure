@@ -40,12 +40,12 @@ git clone https://github.com/ansible/ansible.git
 cd "ansible"
 if [ "$3" = "devel" ]
 then
-    source hacking/env-setup
+    echo "The branch is devel"
 else
     git checkout "stable-$3"
-    source hacking/env-setup
-    pip install paramiko PyYAML Jinja2  httplib2 six
 fi
+source hacking/env-setup
+pip install paramiko PyYAML Jinja2  httplib2 six
 
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
 mkdir -p "${TEST_DIR}"
