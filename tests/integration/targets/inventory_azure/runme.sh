@@ -20,5 +20,5 @@ ansible-playbook playbooks/create_inventory_config.yml "$@"  --extra-vars "templ
 ansible-playbook playbooks/test_inventory.yml "$@"
 
 
-# teardown fix later
-# ansible-playbook playbooks/teardown.yml "$@"
+# teardown
+ansible-playbook playbooks/teardown.yml "$@"
