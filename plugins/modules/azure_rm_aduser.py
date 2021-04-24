@@ -220,7 +220,7 @@ except ImportError:
     pass
 
 
-class AzureRMADUserInfo(AzureRMModuleBase):
+class AzureRMADUser(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
@@ -271,7 +271,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         required_together = [['attribute_name', 'attribute_value']]
         required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name']]
 
-        super(AzureRMADUserInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
+        super(AzureRMADUser, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                 supports_check_mode=False,
                                                 supports_tags=False,
                                                 mutually_exclusive=mutually_exclusive,
@@ -416,7 +416,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
 
 
 def main():
-    AzureRMADUserInfo()
+    AzureRMADUser()
 
 
 if __name__ == '__main__':
