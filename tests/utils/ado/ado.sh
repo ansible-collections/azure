@@ -14,20 +14,13 @@ then
     echo "The specified environment is Python2.7"
 else
     alias pip='pip3'
-fi
-if [ "$2" = "3.6" ]
-then
     sudo apt update
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa
     sudo apt install python"$2" -y
     sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python"$2" 1
-else
-    echo "Do nothing"
 fi
-echo "________________"
-whereis python"$2"
-echo "________________"
+
 command -v pip
 pip --version
 pip list --disable-pip-version-check
@@ -43,16 +36,16 @@ set +ux
 . ~/ansible-venv/bin/activate
 set -ux
 
+git clone https://github.com/ansible/ansible.git
+cd "ansible"
 if [ "$3" = "devel" ]
 then
-    pip install git+https://github.com/ansible/ansible.git@devel  --disable-pip-version-check
+    echo "The branch is devel"
 else
-    git clone https://github.com/ansible/ansible.git
-    cd "ansible"
     git checkout "stable-$3"
-    source hacking/env-setup
-    pip install paramiko PyYAML Jinja2  httplib2 six
 fi
+source hacking/env-setup
+pip install paramiko PyYAML Jinja2  httplib2 six
 
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
 mkdir -p "${TEST_DIR}"
@@ -61,8 +54,7 @@ cd "${TEST_DIR}"
 mkdir -p shippable/testresults
 
 pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
-pip3 install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
-pip3 list
+pip install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
 
 timeout=60
 
@@ -83,6 +75,7 @@ else
     done
 fi
 echo '--------------------------------------------'
+pip list
 ansible --version
 echo '--------------------------------------------'
 
