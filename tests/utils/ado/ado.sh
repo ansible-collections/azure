@@ -29,12 +29,12 @@ export PATH="${PWD}/bin:${PATH}"
 export PYTHONIOENCODING="UTF-8"
 export LC_ALL="en_US.utf-8"
 
-pip install virtualenv
-virtualenv --python /usr/bin/python"$2" ~/ansible-venv
+#pip install virtualenv
+#virtualenv --python /usr/bin/python"$2" ~/ansible-venv
 
-set +ux
-. ~/ansible-venv/bin/activate
-set -ux
+#set +ux
+#. ~/ansible-venv/bin/activate
+#set -ux
 
 git clone https://github.com/ansible/ansible.git
 cd "ansible"
