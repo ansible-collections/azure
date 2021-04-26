@@ -14,12 +14,12 @@ then
     echo "The specified environment is Python2.7"
 else
     alias pip='pip3'
+    sudo apt update
+    sudo apt install software-properties-common
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt install python"$2" -y
+    sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python"$2" 1
 fi
-sudo apt update
-sudo apt install software-properties-common
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt install python"$2" -y
-sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python"$2" 1
 
 command -v pip
 pip --version
