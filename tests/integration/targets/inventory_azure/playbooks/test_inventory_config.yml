@@ -15,7 +15,7 @@
 
 - meta: refresh_inventory
 
-- name: Test Inventory 
+- name: Test Inventory ----- with shorter name
   assert:
     that:
       - vm_name in hostvars
@@ -32,7 +32,7 @@
 
 - meta: refresh_inventory
 
-- name: Test Inventory 
+- name: Test Inventory ------ with full name
   assert:
     that:
       - vm_name in hostvars
