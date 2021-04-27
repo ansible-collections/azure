@@ -24,3 +24,10 @@
     name: "{{ storage_account }}"
     force_delete_nonempty: yes
     state: absent
+
+- name: Delete VM
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    remove_on_absent: all_autocreated
+    state: absent
