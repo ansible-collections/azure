@@ -24,12 +24,8 @@
         version: latest
     register: vm_output
 
-  - meta: refresh_inventory
+  - include: test_inventory_config.yml
 
-  - name: Test Inventory 
-    assert:
-      that:
-        - vm_name in hostvars
 
   - name: Delete VM
     azure_rm_virtualmachine:

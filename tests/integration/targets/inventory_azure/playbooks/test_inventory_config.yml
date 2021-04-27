@@ -1,0 +1,43 @@
+- name: Set template
+  set_fact:
+    template_name1: "../templates/basic.yml"
+    template_name2: "../templates/basic2.yml"
+
+- name: empty inventory config file 
+  copy:
+    dest: ../test.azure_rm.yml
+    content: ""
+
+- name: write inventory config file with azure_rm shorer name
+  copy:
+    dest: ../test.azure_rm.yml
+    content: "{{ lookup('template', template_name1) }}"
+
+- meta: refresh_inventory
+
+- name: Test Inventory 
+  assert:
+    that:
+      - vm_name in hostvars
+
+- name: empty inventory config file
+  copy:
+    dest: ../test.azure_rm.yml
+    content: ""
+
+- name: write inventory config file with azure_rm full name
+  copy:
+    dest: ../test.azure_rm.yml
+    content: "{{ lookup('template', template_name2) }}"
+
+- meta: refresh_inventory
+
+- name: Test Inventory 
+  assert:
+    that:
+      - vm_name in hostvars
+
+- name: empty inventory config file
+  copy:
+    dest: ../test.azure_rm.yml
+    content: ""
