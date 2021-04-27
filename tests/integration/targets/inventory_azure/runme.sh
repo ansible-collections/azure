@@ -11,19 +11,14 @@ ansible-playbook playbooks/setup.yml "$@"
 export ANSIBLE_INVENTORY=test.azure_rm.yml
 
 # using fully qualified name
-ansible-playbook playbooks/empty_inventory_config.yml "$@"
 ansible-playbook playbooks/create_inventory_config.yml "$@"  
 ansible-playbook playbooks/test_inventory.yml "$@"
 
 # using short name
 ansible-playbook playbooks/empty_inventory_config.yml "$@"
-ansible-playbook playbooks/create_inventory_config.yml "$@"  --extra-vars "template=basic2"
+ansible-playbook playbooks/create_inventory_config.yml "$@"  --extra-vars "template=basic2.yml"
 ansible-playbook playbooks/test_inventory.yml "$@"
 
-#ansible-inventory -i test.azure_rm.yml --list -vvv --playbook-dir=./
 
-# cleanup inventory config
-ansible-playbook playbooks/empty_inventory_config.yml "$@"
-
-# teardown
-ansible-playbook playbooks/teardown.yml "$@"
+# teardown fix later
+# ansible-playbook playbooks/teardown.yml "$@"
