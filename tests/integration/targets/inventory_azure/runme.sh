@@ -9,3 +9,6 @@ ansible-playbook playbooks/create_inventory_config.yml "$@"
 ansible-playbook playbooks/test_inventory.yml "$@"
 
 #ansible-inventory -i test.azure_rm.yml --list -vvv --playbook-dir=./
+
+# teardown fix later
+ ansible-playbook playbooks/teardown.yml "$@"
