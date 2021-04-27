@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_vpnsite
-version_added: '1.5.1'
+version_added: '1.5.0'
 short_description: Manage Azure VpnSite instance
 description:
     - Create, update and delete instance of Azure VpnSite.
@@ -354,6 +354,7 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
             ),
             site_key=dict(
                 type='str',
+                no_log=True,
                 disposition='/site_key'
             ),
             address_space=dict(

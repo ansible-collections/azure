@@ -241,7 +241,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str', required=True),
             hub_policy_name=dict(type='str', required=True),
-            hub_policy_key=dict(type='str', required=True),
+            hub_policy_key=dict(type='str', no_log=True, required=True),
             hub=dict(type='str', required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             status=dict(type='bool'),
