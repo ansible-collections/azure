@@ -1,0 +1,3 @@
+---
+plugin: azure_rm
+plain_host_names: yes
