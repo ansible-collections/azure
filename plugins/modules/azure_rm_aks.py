@@ -43,7 +43,8 @@ options:
             - Version of Kubernetes specified when creating the managed cluster.
     linux_profile:
         description:
-            - The Linux profile suboptions. Optional: provide if you need an ssh access to the cluster nodes.
+            - The Linux profile suboptions. 
+            - Optional, provide if you need an ssh access to the cluster nodes.
         suboptions:
             admin_username:
                 description:
