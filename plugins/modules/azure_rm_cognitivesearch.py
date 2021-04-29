@@ -59,6 +59,7 @@ options:
         description:
             - Network specific rules that determine how the Azure Cognitive Search service may be reached.
         type: list
+        elements: str
     partition_count:
         description:
             - The number of partitions in the search service.
@@ -239,7 +240,7 @@ class AzureRMSearch(AzureRMModuleBase):
             identity=dict(type='str', default='None', choices=['None', 'SystemAssigned']),
             location=dict(type='str'),
             name=dict(type='str', required=True),
-            network_rule_set=dict(type='list'),
+            network_rule_set=dict(type='list', elements='str'),
             partition_count=dict(type='int', default=1),
             public_network_access=dict(type='str', default='enabled', choices=['enabled', 'disabled']),
             replica_count=dict(type='int', default=1),
@@ -268,7 +269,7 @@ class AzureRMSearch(AzureRMModuleBase):
 
         super(AzureRMSearch, self).__init__(derived_arg_spec=self.module_arg_spec,
                                             supports_check_mode=False,
-                                            supports_tags=False)
+                                            supports_tags=True)
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:
