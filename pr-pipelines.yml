@@ -42,6 +42,7 @@ parameters:
     - "azure_rm_deployment"
     - "azure_rm_dnsrecordset"
     - "azure_rm_dnszone"
+    - "azure_rm_eventhub"
     - "azure_rm_functionapp"
     - "azure_rm_gallery"
     - "azure_rm_hdinsightcluster"
