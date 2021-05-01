@@ -20,7 +20,7 @@ options:
             - The name of the diagnostic setting entry.
         required: True
         type: str
-    resourceId:
+    resource_id:
         description:
             - The resource ID of the resource in which to apply the diagnostic setting.
         required: True
@@ -32,23 +32,23 @@ options:
         choices:
             - absent
             - present
-    workspaceId:
+    workspace_id:
         description:
             - The full ARM resource ID of the Log Analytics workspace to which you would like to send Diagnostic Logs.
         type: str
-    storageAccountId:
+    storage_account_id:
         description:
             - The resource ID of the storage account to which you would like to send Diagnostic Logs.
         type: str
-    serviceBusRuleId:
+    service_bus_rule_id:
         description:
             - The service bus rule Id of the diagnostic setting. This is here to maintain backwards compatibility.
         type: str
-    eventHubName:
+    event_hub_name:
         description:
             - The name of the event hub. If none is specified, the default event hub will be selected.
         type: str
-    eventHubAuthorizationRuleId:
+    event_hub_authorization_rule_id:
         description:
             - The resource Id for the event hub authorization rule.
         type: str
@@ -67,7 +67,7 @@ options:
                     - A value indicating whether this log is enabled.
                 type: bool
                 required: true
-            retentionPolicy:
+            retention_policy:
                 description:
                     - The retention policy for this category.
                 type: dict
@@ -87,7 +87,7 @@ options:
             - The list of metric settings.
         type: list
         suboptions:
-            timeGrain:
+            time_grain:
                 description:
                     - The timegrain of the metric in ISO8601 format.
                 type: str
@@ -101,7 +101,7 @@ options:
                     - A value indicating whether this metric is enabled.
                 type: bool
                 required: true
-            retentionPolicy:
+            retention_policy:
                 description:
                     - The retention policy for this category.
                 type: dict
@@ -390,46 +390,79 @@ retention_policy_object = dict(
 )
 
 log_settings_object = dict(
-    category=dict(type='str'),
+    category=dict(type='str', required=True),
     enabled=dict(type='bool', required=True),
-    retentionPolicy=retention_policy_object
+    retention_policy=retention_policy_object
 )
 
 metric_settings_object = dict(
-    timeGrain=dict(type='str'),
-    category=dict(type='str'),
+    time_grain=dict(type='str'),
+    category=dict(type='str', required=True),
     enabled=dict(type='bool', required=True),
-    retentionPolicy=retention_policy_object
+    retention_policy=retention_policy_object
 )
 
 
 class AzureRMDiagnosticSetting(AzureRMModuleBase):
     def __init__(self):
 
+        self.module_arg_spec = dict(
+            name=dict(type='str', required=True),
+            resource_id=dict(type='str', required=True),
+            state=dict(type='str', default='present', choices=['present', 'absent']),
+            workspace_id=dict(type='str'),
+            storage_account_id=dict(type='str'),
+            service_bus_rule_id=dict(type='str'),
+            event_hub_name=dict(type='str'),
+            event_hub_authorization_rule_id=dict(type='str'),
+            logs=dict(
+                type='list',
+                elements='dict',
+                options=log_settings_object
+            ),
+            metrics=dict(
+                type='list',
+                elements='dict',
+                options=metric_settings_object
+            )
+        )
+
+        self.name = None
+        self.resource_id = None
+        self.state = None
+        self.workspace_id = None
+        self.storage_account_id = None
+        self.service_bus_rule_id = None
+        self.event_hub_name = None
+        self.event_hub_authorization_rule_id = None
+        self.logs = dict()
+        self.metrics = dict()
+
+        self.results = dict(changed=False)
+        self.diagnostic_setting_dict = None
+
+        super(AzureRMDiagnosticSetting, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                   supports_check_mode=False,
+                                                   supports_tags=False)
+
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             setattr(self, key, kwargs[key])
 
-    def create_datalake_store(self):
-        self.log("Create diagnostic setting {0}".format(self.name))
+        self.diagnostic_setting_dict = self.get_diagnostic_setting()
 
-    def update_datalake_store(self):
-        self.log('Update diagnostic setting {0}'.format(self.name))
+        self.results['state'] = self.diagnostic_setting_dict if self.diagnostic_setting_dict is not None else dict()
 
+        if self.state == 'present':
+            if not self.diagnostic_setting_dict:
+                self.results['state'] = self.create_diagnostic_setting()
+            else:
+                self.results['state'] = self.update_diagnostic_setting()
+        else:
+            self.delete_diagnostic_setting()
+            self.results['state'] = dict(state='deleted')
 
-    def delete_diagnostic_setting(self):
-        self.log('Delete diagnostic setting {0}'.format(self.name))
-
-        self.results['changed'] = True if self.diagnostic_setting is not None else False
-        if not self.check_mode and self.diagnostic_setting is not None:
-            try:
-                status = self.monitor_client.diagnostic_settings.delete(self.resourceId, self.name)
-                self.log("delete status: ")
-                self.log(str(status))
-            except CloudError as e:
-                self.fail("Failed to delete diagnostic setting: {0}".format(str(e)))
-
-        return True
+        return self.results
 
     def get_diagnostic_setting(self):
         self.log('Get properties for diagnostic setting {0}'.format(self.name))
@@ -445,6 +478,40 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
             diagnostic_setting = self.diagnostic_setting_obj_to_dict(diagnostic_setting_obj)
 
         return diagnostic_setting
+
+    def create_diagnostic_setting(self):
+        self.log("Create diagnostic setting {0}".format(self.name))
+        
+        resource = self.parse_resource_id(self)
+
+        if not self.logs and not self.metrics:
+            self.fail('Parameter error: must provide at least 1 log and/or metric categories when creating a diagnostic setting.')
+        self.check_retention_policy_provided()
+        self.results['changed'] = True
+
+        if self.check_mode:
+            diagnostic_setting_dict = dict(
+                name=self.name,
+                resource_id=self.resource_id
+            )
+
+
+    def update_diagnostic_setting(self):
+        self.log('Update diagnostic setting {0}'.format(self.name))
+
+    def delete_diagnostic_setting(self):
+        self.log('Delete diagnostic setting {0}'.format(self.name))
+
+        self.results['changed'] = True if self.diagnostic_setting is not None else False
+        if not self.check_mode and self.diagnostic_setting is not None:
+            try:
+                status = self.monitor_client.diagnostic_settings.delete(self.resourceId, self.name)
+                self.log("delete status: ")
+                self.log(str(status))
+            except CloudError as e:
+                self.fail("Failed to delete diagnostic setting: {0}".format(str(e)))
+
+        return True
 
     def diagnostic_setting_obj_to_dict(self, diagnostic_setting_obj):
         diagnostic_setting_dict = dict(
@@ -485,11 +552,11 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
 
         return diagnostic_setting_dict
 
-    def parse_resource_id():
-        sects = parentResourceId.split('/')
+    def parse_resource_id(self) -> dict:
+        sects = self.resource_id.split('/')
 
         if len(sects) != 9:
-            raise Exception("Unexpected Azure Resource ID. Expecting format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}")
+            self.fail("Unexpected Azure Resource ID. Expecting format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}")
         else:
             return {
                 "subscription": sects[2],
