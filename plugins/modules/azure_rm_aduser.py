@@ -220,7 +220,7 @@ except ImportError:
     pass
 
 
-class AzureRMADUserInfo(AzureRMModuleBase):
+class AzureRMADUser(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
@@ -271,13 +271,13 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         required_together = [['attribute_name', 'attribute_value']]
         required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name']]
 
-        super(AzureRMADUserInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                supports_check_mode=False,
-                                                supports_tags=False,
-                                                mutually_exclusive=mutually_exclusive,
-                                                required_together=required_together,
-                                                required_one_of=required_one_of,
-                                                is_ad_resource=True)
+        super(AzureRMADUser, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                            supports_check_mode=False,
+                                            supports_tags=False,
+                                            mutually_exclusive=mutually_exclusive,
+                                            required_together=required_together,
+                                            required_one_of=required_one_of,
+                                            is_ad_resource=True)
 
     def exec_module(self, **kwargs):
 
@@ -310,7 +310,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                         should_update = True
                     if should_update or self.user_type and ad_user.user_type != self.user_type:
                         should_update = True
-                    if should_update or self.account_enabled and ad_user.account_enabled != self.account_enabled:
+                    if should_update or self.account_enabled is not None and ad_user.account_enabled != self.account_enabled:
                         should_update = True
                     if should_update or self.display_name and ad_user.display_name != self.display_name:
                         should_update = True
@@ -416,7 +416,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
 
 
 def main():
-    AzureRMADUserInfo()
+    AzureRMADUser()
 
 
 if __name__ == '__main__':
