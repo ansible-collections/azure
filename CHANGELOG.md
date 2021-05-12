@@ -27,6 +27,9 @@
   - azure_rm_*: Fix sanity test related errors ([#506](https://github.com/ansible-collections/azure/pull/506))
   - azure_rm: Fixing sanity test issue for ansible 2.11 ([#511](http://fanyi.youdao.com/?keyfrom=dict2.index))
   - azure_rm: Fixing inventory issue ([#518](https://github.com/ansible-collections/azure/pull/518))
+  - azure_rm_aduser: fixing update account_enabled bug in azure_rm_aduser.py ([#524](https://github.com/ansible-collections/azure/pull/524))
+  - azure_rm_common: fixing ad related auth issue when using service principal. ([#525](https://github.com/ansible-collections/azure/pull/525))
+  - azure_rm_aduser: change class name of azure_rm_aduser ([#526](https://github.com/ansible-collections/azure/pull/526))
 
 
 ## v1.5.0 (2021-03-26)
