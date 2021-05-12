@@ -106,7 +106,8 @@ AZURE_API_PROFILES = {
         'MySQLManagementClient': '2017-12-01',
         'MariaDBManagementClient': '2019-03-01',
         'ManagementLockClient': '2016-09-01',
-        'DataLakeStoreAccountManagementClient': '2016-11-01'
+        'DataLakeStoreAccountManagementClient': '2016-11-01',
+        'MonitorManagementClient': '2019-10-17'
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
@@ -130,7 +131,8 @@ AZURE_API_PROFILES = {
         }),
         'KeyVaultClient': '2016-10-01',
         'azure.multiapi.storage': '2017-11-09',
-        'azure.multiapi.cosmosdb': '2017-04-17'
+        'azure.multiapi.cosmosdb': '2017-04-17',
+        'MonitorManagementClient': '2017-04-01'
     },
     '2018-03-01-hybrid': {
         'StorageManagementClient': '2016-01-01',
@@ -148,7 +150,8 @@ AZURE_API_PROFILES = {
         }),
         'KeyVaultClient': '2016-10-01',
         'azure.multiapi.storage': '2017-04-17',
-        'azure.multiapi.cosmosdb': '2017-04-17'
+        'azure.multiapi.cosmosdb': '2017-04-17',
+        'MonitorManagementClient': '2017-04-01'
     },
     '2017-03-09-profile': {
         'StorageManagementClient': '2016-01-01',
@@ -165,7 +168,8 @@ AZURE_API_PROFILES = {
             'classic_administrators': '2015-06-01'
         }),
         'KeyVaultClient': '2016-10-01',
-        'azure.multiapi.storage': '2015-04-05'
+        'azure.multiapi.storage': '2015-04-05',
+        'MonitorManagementClient': '2017-04-01'
     }
 }
 
@@ -275,6 +279,7 @@ try:
     from azure.mgmt.search import SearchManagementClient
     from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
+    
 
 except ImportError as exc:
     Authentication = object
