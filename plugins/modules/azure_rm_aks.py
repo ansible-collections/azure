@@ -43,7 +43,7 @@ options:
             - Version of Kubernetes specified when creating the managed cluster.
     linux_profile:
         description:
-            - The Linux profile suboptions. 
+            - The Linux profile suboptions.
             - Optional, provide if you need an ssh access to the cluster nodes.
         suboptions:
             admin_username:
@@ -119,6 +119,7 @@ options:
             client_id:
                 description:
                     - The ID for the Service Principal.
+                required: true
             client_secret:
                 description:
                     - The secret password associated with the service principal.
@@ -845,7 +846,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             service_principal_profile=service_principal_profile,
             agent_pool_profiles=agentpools,
             linux_profile=linux_profile,
-            identity = identity,
+            identity=identity,
             enable_rbac=self.enable_rbac,
             network_profile=self.create_network_profile_instance(self.network_profile),
             aad_profile=self.create_aad_profile_instance(self.aad_profile),
