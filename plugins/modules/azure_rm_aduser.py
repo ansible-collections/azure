@@ -310,7 +310,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                         should_update = True
                     if should_update or self.user_type and ad_user.user_type != self.user_type:
                         should_update = True
-                    if should_update or self.account_enabled and ad_user.account_enabled != self.account_enabled:
+                    if should_update or self.account_enabled is not None and ad_user.account_enabled != self.account_enabled:
                         should_update = True
                     if should_update or self.display_name and ad_user.display_name != self.display_name:
                         should_update = True
