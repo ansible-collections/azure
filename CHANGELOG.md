@@ -1,6 +1,6 @@
 # Change Log
 
-## v1.5.1 (2021-04-29)
+## v1.6.0 (2021-04-29)
 
 ### NEW MODULES
   - azure_rm_search: Add new module to deploy Azure Cognitive Search 'azure_rm_cognitivesearch' ([#372](https://github.com/ansible-collections/azure/pull/372))
