@@ -486,10 +486,10 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
         if diagnostic_setting_obj.metrics:
             for entry in diagnostic_setting_obj.metrics:
                 entry_item = dict(
-                    timeGrain = entry.time_grain,
+                    time_grain = entry.time_grain,
                     category = entry.category,
                     enabled = entry.enabled,
-                    retentionPolicy = dict(
+                    retention_policy = dict(
                         days=entry.retention_policy.days,
                         enabled=entry.retention_policy.enabled
                     ))
@@ -501,7 +501,7 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
                 entry_item = dict(
                     category = entry.category,
                     enabled = entry.enabled,
-                    retentionPolicy = dict(
+                    retention_policy = dict(
                         days=entry.retention_policy.days,
                         enabled=entry.retention_policy.enabled
                     ))
