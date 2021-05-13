@@ -17,7 +17,6 @@ if [ "$2" = "2.7" ]
 then
     echo "The specified environment is Python2.7"
     sudo apt install python2 -y
-    python -v
     sudo update-alternatives --install /usr/bin/python2 python2 /usr/bin/python"$2" 1
 else
     alias pip='pip3'
