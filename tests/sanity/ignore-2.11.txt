@@ -767,5 +767,9 @@ plugins/modules/azure_rm_privatednsrecordset.py validate-modules:required_if-req
 plugins/modules/azure_rm_privatednsrecordset.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_privatednsrecordset_info.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_privatednsrecordset_info.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_notificationhub.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_notificationhub.py validate-modules:required_if-unknown-key
+plugins/modules/azure_rm_notificationhub_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_notificationhub_info.py validate-modules:required_if-unknown-key
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang

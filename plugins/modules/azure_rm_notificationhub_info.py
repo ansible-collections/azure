@@ -29,7 +29,7 @@ options:
 
 
 extends_documentation_fragment:
-- azure.azcollection.azure
+    - azure.azcollection.azure
 
 
 author:
@@ -96,7 +96,7 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
             name=dict(
                 type='str',
             )
-        )        
+        )
         # store the results of the module operation
         self.results = dict(
             changed=False)

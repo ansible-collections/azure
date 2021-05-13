@@ -4,6 +4,7 @@
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 DOCUMENTATION = '''
 ---
@@ -58,7 +59,7 @@ options:
     log_mode:
         description:
             - parent argument.
-        type: str    
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -126,7 +127,7 @@ state:
             "a": "b"
         },
         "type": "Microsoft.NotificationHubs/namespaces"
-    }    
+    }
 '''
 
 import time
@@ -145,10 +146,6 @@ class AzureNotificationHub(AzureRMModuleBase):
 
     def __init__(self):
         # define user inputs from playbook
-
-        self.authorizations_spec = dict(
-            name=dict(type='str', required=True)
-        )
 
         self.module_arg_spec = dict(
             resource_group=dict(type='str', required=True),
