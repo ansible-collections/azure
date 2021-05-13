@@ -9,17 +9,14 @@ group="${args[0]}"
 
 command -v python
 python -V
-
-sudo apt update
-sudo apt install software-properties-common
-sudo add-apt-repository ppa:deadsnakes/ppa
 if [ "$2" = "2.7" ]
 then
     echo "The specified environment is Python2.7"
-    sudo apt install python2 -y
-    sudo update-alternatives --install /usr/bin/python2 python2 /usr/bin/python"$2" 1
 else
     alias pip='pip3'
+    sudo apt update
+    sudo apt install software-properties-common
+    sudo add-apt-repository ppa:deadsnakes/ppa
     sudo apt install python"$2" -y
     sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python"$2" 1
 fi
