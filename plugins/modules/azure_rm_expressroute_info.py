@@ -3,7 +3,8 @@
 # Copyright (c) 2020 Praveen Ghuge (@praveenghuge), Karl Dasan (@ikarldasan), Sakar Mehra (@sakar97)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 DOCUMENTATION = '''
 ---
@@ -86,9 +87,6 @@ state:
             "type": "Microsoft.Network/expressRouteCircuits"
         }
 '''
-
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 

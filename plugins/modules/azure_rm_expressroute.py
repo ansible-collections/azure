@@ -3,6 +3,8 @@
 # Copyright (c) 2021 Praveen Ghuge (@praveenghuge), Karl Dasan (@ikarldasan), Sakar Mehra (@sakar97)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 DOCUMENTATION = '''
 ---
@@ -47,7 +49,7 @@ options:
         description:
             - The name of the SKU.
             - Please see L(https://azure.microsoft.com/en-in/pricing/details/expressroute/)
-        required: if state is present
+            - Required sku when I(state=present).
         suboptions:
             tier:
                 description:
@@ -76,9 +78,9 @@ options:
             name:
                 description: Name of the authorization.
                 required: true
-            type: str
+                type: str
     allow_classic_operations:
-        description: 
+        description:
             - Support for classic operations.
         type: bool
     state:
@@ -169,9 +171,6 @@ state:
             "type": "Microsoft.Network/expressRouteCircuits"
         }
 '''
-
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
