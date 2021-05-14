@@ -63,7 +63,7 @@ options:
         description:
             - If True, will return all groups in tenant.
             - If False will return no users.
-            - It is recommended that you instead identify a subset of groups and use filter
+            - It is recommended that you instead identify a subset of groups and use filter.
         default: False
         type: bool
 extends_documentation_fragment:
@@ -142,7 +142,7 @@ mail_nickname:
     sample: groupname
 mail_enabled:
     description:
-        - Whether the group is mail-enabled. Must be false. This is because only pure security groups can be created using the Graph API..
+        - Whether the group is mail-enabled. Must be false. This is because only pure security groups can be created using the Graph API.
     returned: always
     type: bool
     sample: False
