@@ -12,7 +12,7 @@ module: azure_rm_adgroup
 version_added: "1.6.0"
 short_description: Manage Azure Active Directory group
 description:
-    - Get Azure Active Directory group info.
+    - Create, update or delete Azure Active Directory group.
 options:
     tenant:
         description:
