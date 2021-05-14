@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 module: azure_rm_adgroup
 version_added: "1.4.0"
-short_description: Get Azure Active Directory group info
+short_description: Manage Azure Active Directory group
 description:
     - Get Azure Active Directory group info.
 options:
