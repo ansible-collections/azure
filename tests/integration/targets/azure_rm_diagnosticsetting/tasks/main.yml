@@ -75,4 +75,3 @@
     resource_group: "{{ resource_group }}"
     name: "stg{{ rpfx }}"
     state: absent
- 
