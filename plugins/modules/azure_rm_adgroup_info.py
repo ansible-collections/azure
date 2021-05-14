@@ -66,14 +66,6 @@ options:
             - It is recommended that you instead identify a subset of groups and use filter
         default: False
         type: bool
-    log_path:
-        description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
-        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
@@ -199,8 +191,6 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             return_member_groups=dict(type='bool', default=False),
             all=dict(type='bool', default=False),
             tenant=dict(type='str', required=True),
-            log_path=dict(type='str'),
-            log_mode=dict(type='str'),
         )
 
         self.tenant = None
@@ -213,8 +203,6 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         self.return_group_members = False
         self.return_member_groups = False
         self.all = False
-        self.log_path = None
-        self.log_mode = None
 
         self.results = dict(changed=False)
 
