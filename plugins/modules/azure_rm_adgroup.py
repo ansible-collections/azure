@@ -67,14 +67,6 @@ options:
             - The azure ad objects asserted to not be owners of the group
         type: list
         elements: str
-    log_path:
-        description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
-        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
@@ -209,8 +201,6 @@ class AzureRMADGroup(AzureRMModuleBase):
                 default='present',
                 choices=['present', 'absent']
             ),
-            log_path=dict(type='str'),
-            log_mode=dict(type='str'),
         )
 
         self.tenant = None
@@ -222,8 +212,6 @@ class AzureRMADGroup(AzureRMModuleBase):
         self.absent_members = []
         self.absent_owners = []
         self.state = None
-        self.log_path = None
-        self.log_mode = None
         self.results = dict(changed=False)
 
         super(AzureRMADGroup, self).__init__(derived_arg_spec=self.module_arg_spec,
