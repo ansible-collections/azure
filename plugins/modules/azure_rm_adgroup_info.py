@@ -124,46 +124,50 @@ EXAMPLES = '''
 RETURN = '''
 object_id:
     description:
-        - The object_id for the user.
+        - The object_id for the group.
     type: str
     returned: always
     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 display_name:
     description:
-        - The display name of the user.
+        - The display name of the group.
     returned: always
     type: str
-    sample: John Smith
-user_principal_name:
-    description:
-        - The principal name of the user.
-    returned: always
-    type: str
-    sample: jsmith@contoso.com
+    sample: GroupName
 mail_nickname:
     description:
-        - The mail alias for the user.
+        - The mail alias for the group.
     returned: always
     type: str
-    sample: jsmith
-mail:
+    sample: groupname
+mail_enabled:
     description:
-        - The primary email address of the user.
-    returned: always
-    type: str
-    sample: John.Smith@contoso.com
-account_enabled:
-    description:
-        - Whether the account is enabled.
+        - Whether the group is mail-enabled. Must be false. This is because only pure security groups can be created using the Graph API..
     returned: always
     type: bool
     sample: False
-user_type:
+security_enabled:
     description:
-        - A string value that can be used to classify user types in your directory.
+        - Whether the group is security-enable.
+    returned: always
+    type: bool
+    sample: False    
+mail:
+    description:
+        - The primary email address of the group.
     returned: always
     type: str
-    sample: Member
+    sample: group@contoso.com
+group_owners:
+    description:
+        - The owners of the group.
+    returned: always
+    type: list
+group_members:
+    description:
+        - The members of the group.
+    returned: always
+    type: list
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
