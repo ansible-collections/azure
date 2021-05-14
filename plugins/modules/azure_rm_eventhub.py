@@ -5,8 +5,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-
 __metaclass__ = type
 
 DOCUMENTATION = '''
@@ -29,12 +27,27 @@ options:
     name:
         description:
             - Unique name of the Event Hub.
-        required: True
+        required: False
+        type: str
+    message_retention_in_days:
+        description: 
+            - Number of days to retain the events for this Event Hub.
+        required: False
+        type: int
+    partition_count:
+        description:
+            - Number of partitions created for the Event Hub.
+        required: False
+        type: int
+    status:
+        description:
+            - Enumerates the possible values for the status of the Event hub.
+        required: False
         type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
-        required: if state is present
+        required: False
         type: str
     sku:
         description:
@@ -54,7 +67,7 @@ options:
           - absent
           - present
       type: str
-    
+
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -127,12 +140,12 @@ state:
         "created_at": "2021-04-29T10:05:20.377Z",
         "type": "Microsoft.eventHubs/namespaces"
     }
-    
-'''
 
+'''
 
 try:
     from msrestazure.azure_exceptions import CloudError
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.mgmt.eventhub.models import Eventhub, EHNamespace
     from azure.mgmt.eventhub.models.sku import Sku
     import time
@@ -143,7 +156,7 @@ except ImportError:
 partition_count_list = [i for i in range(1, 33)]
 
 
-class AzureEventHub(AzureRMModuleBase):
+class AzureRMEventHub(AzureRMModuleBase):
 
     def __init__(self):
         # define user inputs from playbook
@@ -186,16 +199,19 @@ class AzureEventHub(AzureRMModuleBase):
         )
         self.state = None
 
-        super(AzureEventHub, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                   supports_check_mode=True,
-                                                   supports_tags=True)
+        super(AzureRMEventHub, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                              supports_check_mode=True,
+                                              supports_tags=True)
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             setattr(self, key, kwargs[key])
 
         # retrieve resource group to make sure it exists
-        self.get_resource_group(self.resource_group)
+        resource_group = self.get_resource_group(self.resource_group)
+        if not self.location:
+            # Set default location
+            self.location = resource_group.location
 
         results = dict()
         changed = False
@@ -398,7 +414,7 @@ def namespace_to_dict(item):
 
 
 def main():
-    AzureEventHub()
+    AzureRMEventHub()
 
 
 if __name__ == '__main__':
