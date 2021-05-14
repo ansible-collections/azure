@@ -30,41 +30,41 @@ options:
     object_id:
         description:
             - The object id for the ad group.
-            - Can be used to reference when updating an existing group
-            - Ignored when attempting to create a group
+            - Can be used to reference when updating an existing group.
+            - Ignored when attempting to create a group.
         type: str
     display_name:
         description:
-            - The display name of the ad group
-            - Can be used with I(mail_nickname) instead of I(object_id) to reference existing group
-            - Required when creating a new ad group
+            - The display name of the ad group.
+            - Can be used with I(mail_nickname) instead of I(object_id) to reference existing group.
+            - Required when creating a new ad group.
         type: str
     mail_nickname:
         description:
-            - The mail nickname of the ad group
-            - Can be used with I(display_name) instead of I(object_id) to reference existing group
-            - Required when creating a new ad group
+            - The mail nickname of the ad group.
+            - Can be used with I(display_name) instead of I(object_id) to reference existing group.
+            - Required when creating a new ad group.
         type: str
     present_members:
         description:
-            - The azure ad objects asserted to be members of the group
-            - This list does not need to be all inclusive. Objects that are members and not on this list remain members
+            - The azure ad objects asserted to be members of the group.
+            - This list does not need to be all inclusive. Objects that are members and not on this list remain members.
         type: list
         elements: str
     absent_members:
         description:
-            - The azure ad objects asserted to not be members of the group
+            - The azure ad objects asserted to not be members of the group.
         type: list
         elements: str
     present_owners:
         description:
-            - The azure ad objects asserted to be owners of the group
-            - This list does not need to be all inclusive. Objects that are owners and not on this list remain members
+            - The azure ad objects asserted to be owners of the group.
+            - This list does not need to be all inclusive. Objects that are owners and not on this list remain members.
         type: list
         elements: str
     absent_owners:
         description:
-            - The azure ad objects asserted to not be owners of the group
+            - The azure ad objects asserted to not be owners of the group.
         type: list
         elements: str
 extends_documentation_fragment:
@@ -191,7 +191,7 @@ mail_nickname:
     sample: groupname
 mail_enabled:
     description:
-        - Whether the group is mail-enabled. Must be false. This is because only pure security groups can be created using the Graph API..
+        - Whether the group is mail-enabled. Must be false. This is because only pure security groups can be created using the Graph API.
     returned: always
     type: bool
     sample: False
