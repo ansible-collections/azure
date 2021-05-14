@@ -1,0 +1,78 @@
+- name: Prepare random number
+  set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  run_once: yes
+
+- name: Create storage account as diagnostics destination
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "stg{{ rpfx }}"
+    type: Standard_LRS
+
+- name: Create log analytics workspace as diagnostics destination
+  azure_rm_loganalyticsworkspace:
+    resource_group: "{{ resource_group }}"
+    name: "laws{{ rpfx }}"
+
+- name: Create minimal Key Vault
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    vault_name: "kv{{ rpfx }}"
+    sku:
+      name: standard
+
+- name: Create diagnostic setting to log analytics workspace
+  azure_rm_diagnosticsetting:
+    name: diag2laws{{ rpfx }}
+    resource_id: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}/providers/Microsoft.KeyVault/vaults/kv{{ rpfx }}"
+    workspace_id: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}/providers/Microsoft.OperationalInsights/workspaces/laws{{ rpfx }}"
+    logs: 
+      - category: AuditEvent
+    metrics:
+      - category: AllMetrics
+  register: outputdiag2laws
+
+- name: Create diagnostic setting to storage account
+  azure_rm_diagnosticsetting:
+    name: diag2stg{{ rpfx }}
+    resource_id: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}/providers/Microsoft.KeyVault/vaults/kv{{ rpfx }}"
+    storage_account_id: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}/providers/Microsoft.Storage/storageAccounts/stg{{ rpfx }}"
+    logs: 
+      - category: AuditEvent
+        retention_policy:
+          days: 25
+      - category: AllMetrics
+        retention_policy:
+          days: 37
+  register: outputdiag2stg
+
+- name: Assert status succeeded and results
+  assert:
+    that:
+      - outputdiag2laws.changed
+      - outputdiag2laws.state.workspace_id == "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}/providers/Microsoft.OperationalInsights/workspaces/laws{{ rpfx }}"
+      - outputdiag2laws.state.metrics | length == 1
+      - outputdiag2laws.state.logs | length == 1
+      - outputdiag2stg.changed
+      - outputdiag2stg.state.storage_account_id == "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}/providers/Microsoft.Storage/storageAccounts/stg{{ rpfx }}"
+      - outputdiag2stg.state.metrics | length == 1
+      - outputdiag2stg.state.logs | length == 1
+
+- name: Delete minimal Key Vault
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    name: "kv{{ rpfx }}"
+    state: absent
+
+- name: Delete log analytics workspace diagnostics destination
+  azure_rm_loganalyticsworkspace:
+    resource_group: "{{ resource_group }}"
+    name: "laws{{ rpfx }}"
+    state: absent
+
+- name: Delete storage account diagnostics destination
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "stg{{ rpfx }}"
+    state: absent
+ 
