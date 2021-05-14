@@ -1,4 +1,4 @@
-`- name: Create random event hub and namespace
+- name: Create random event hub and namespace
   set_fact:
       namespace_name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
       name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
@@ -149,4 +149,4 @@
   register: results
 
 - assert:
-    that: not results.changed`
+    that: not results.changed
