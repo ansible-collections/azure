@@ -82,7 +82,7 @@ author:
 
 EXAMPLES = '''
     - name: Return a specific group using object_id
-      azure.azcollection.azure_rm_adgroup_info:
+      azure_rm_adgroup_info:
         object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
