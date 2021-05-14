@@ -1343,6 +1343,7 @@ class AzureRMModuleBase(object):
                 api_version='2018-05-04')
         return self._event_hub_client
 
+
 class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
     An implementation of Authentication in
