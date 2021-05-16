@@ -11,7 +11,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_ipgroup
 
-version_added: "1.5.1"
+version_added: "1.6.0"
 
 short_description: Create, delete and update IP group
 
