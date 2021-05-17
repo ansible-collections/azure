@@ -37,14 +37,6 @@ options:
         choices:
             - system
             - custom
-    log_path:
-        description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
-        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -173,12 +165,6 @@ class AzureRMRoleDefinitionInfo(AzureRMModuleBase):
                 type='str',
                 choices=['custom', 'system']
             ),
-            log_path=dict(
-                type='str'
-            ),
-            log_mode=dict(
-                type='str'
-            )
         )
 
         self.role_name = None
