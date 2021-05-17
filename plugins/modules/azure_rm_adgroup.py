@@ -200,7 +200,7 @@ security_enabled:
         - Whether the group is security-enable.
     returned: always
     type: bool
-    sample: False    
+    sample: False
 mail:
     description:
         - The primary email address of the group.
