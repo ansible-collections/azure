@@ -1,0 +1,86 @@
+- set_fact:
+    tenant_id: e1da732a-8291-4a88-9420-99c61fbb3ad2
+    display_name: fredapp03
+  run_once: yes
+
+- name: Create application
+  azure_rm_adapplication:
+    tenant: "{{ tenant_id }}"
+    display_name: "{{ display_name }}"
+  register: create_output
+
+- assert:
+    that: create_output.changed
+
+- name: Create application again (idempotent test)
+  azure_rm_adapplication:
+    tenant: "{{ tenant_id }}"
+    app_id: "{{ create_output.app_id }}"
+  register: output
+
+- assert:
+    that: not output.changed
+
+- name: Create application with more parameter
+  azure_rm_adapplication:
+    tenant: "{{ tenant_id }}"
+    display_name: "{{ display_name }}-01"
+    available_to_other_tenants: False
+    credential_description: "for test"
+    end_date: 2021-10-01
+    start_date: 2021-05-18
+    identifier_uris: fredtest02.com
+  register: second_output
+
+- assert:
+    that: second_output.changed
+
+- name: get ad app info ---- by object ID
+  azure_rm_adapplication_info:
+    app_id: "{{ create_output.object_id }}"
+    tenant: "{{ tenant_id }}"
+  register: output
+- debug:
+    var: output
+
+
+- name: get ad app info ---- by app ID
+  azure_rm_adapplication_info:
+    app_id: "{{ create_output.app_id }}"
+    tenant: "{{ tenant_id }}"
+  register: output
+
+- assert:
+    that:
+      - output.applications[0].app_display_name == "{{ display_name }}"
+      - output.applications | length == 1
+
+- name: delete ad app  by app id
+  azure_rm_adapplication:
+    app_id: "{{ create_output.app_id }}"
+    tenant: "{{ tenant_id }}"
+    state: absent
+  register: output
+
+- assert:
+    that: output.changed
+
+- name: delete ad app  by app id
+  azure_rm_adapplication:
+    app_id: "{{ second_output.app_id }}"
+    tenant: "{{ tenant_id }}"
+    state: absent
+  register: output
+
+- assert:
+    that: output.changed
+
+- name: get ad app info ---- by app id
+  azure_rm_adapplication_info:
+    app_id: "{{ create_output.app_id }}"
+    tenant: "{{ tenant_id }}"
+  register: output
+
+- assert:
+    that:
+      - output.applications | length == 0

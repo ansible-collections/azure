@@ -12,7 +12,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_adapplication
 
-version_added: "1.5.1"
+version_added: "1.6.0"
 
 short_description: Manage Azure Active Directory application
 
@@ -228,7 +228,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-state:
+output:
     description:
         - Current state of the adapplication.
     type: complex
@@ -369,7 +369,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             native_app=dict(type='bool'),
             oauth2_allow_implicit_flow=dict(type='bool'),
             optional_claims=dict(type='list', element='dict', options=optional_claims_spec),
-            password=dict(type='str'),
+            password=dict(type='str', no_log=True),
             reply_urls=dict(type='list', element='str'),
             start_date=dict(type='str'),
             required_resource_accesses=dict(type='list', element='dict', options=required_resource_accesses_spec),

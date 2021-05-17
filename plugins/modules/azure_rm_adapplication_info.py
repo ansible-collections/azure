@@ -13,7 +13,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 module: azure_rm_adapplication_info
 
-version_added: "1.5.1"
+version_added: "1.6.0"
 
 short_description: Get Azure Active Directory application info
 
@@ -56,7 +56,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-ad_application:
+applications:
     description:
         - The info of the ad application.
     type: complex
