@@ -92,7 +92,7 @@ EXAMPLES = '''
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
     - name: Return a specific group using object_id and return the groups the group is a member of
-      azure.azcollection.azure_rm_adgroup_info:
+      azure_rm_adgroup_info:
         object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         return_member_groups: True
         tenant: "{{ tenant_id }}"
