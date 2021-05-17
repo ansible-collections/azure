@@ -11,7 +11,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_privatednszonelink
 
-version_added: "1.5.0"
+version_added: "1.6.0"
 
 short_description: Create, delete and update Virtual network link for Private DNS zone
 
@@ -255,6 +255,7 @@ class AzureRMVirtualNetworkLink(AzureRMModuleBase):
                 update_tags, results['tags'] = self.update_tags(results['tags'])
                 if update_tags:
                     changed = True
+                self.tags = results['tags']
                 if self.registration_enabled != results['registration_enabled']:
                     changed = True
                     results['registration_enabled'] = self.registration_enabled
