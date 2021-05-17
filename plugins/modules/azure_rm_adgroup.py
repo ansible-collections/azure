@@ -89,7 +89,7 @@ EXAMPLES = '''
         state: 'absent'
 
     - name: Delete Group using object_id
-      azure.azcollection.azure_rm_adgroup:
+      azure_rm_adgroup:
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         state: 'absent'
