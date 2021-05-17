@@ -11,7 +11,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_proximityplacementgroup
 
-version_added: "1.5.0"
+version_added: "1.6.0"
 
 short_description: Create, delete and update proximity placement group
 
@@ -198,6 +198,7 @@ class AzureRMProximityPlacementGroup(AzureRMModuleBase):
                 update_tags, results['tags'] = self.update_tags(results['tags'])
                 if update_tags:
                     changed = True
+                self.tags = results['tags']
             elif self.state == 'absent':
                 changed = True
 
