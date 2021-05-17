@@ -115,7 +115,7 @@ EXAMPLES = '''
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
     - name: Return all groups
-      azure.azcollection.azure_rm_adgroup_info:
+      azure_rm_adgroup_info:
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         all: True
 
