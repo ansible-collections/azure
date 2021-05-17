@@ -75,7 +75,7 @@ author:
 
 EXAMPLES = '''
     - name: Create Group
-      azure.azcollection.azure_rm_adgroup:
+      azure_rm_adgroup:
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         display_name: "Group-Name"
         mail_nickname: "Group-Mail-Nickname"
@@ -95,7 +95,7 @@ EXAMPLES = '''
         state: 'absent'
 
     - name: Ensure Users are Members of a Group using display_name and mail_nickname
-      azure.azcollection.azure_rm_adgroup:
+      azure_rm_adgroup:
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         display_name: "Group-Name"
         mail_nickname: "Group-Mail-Nickname"
@@ -105,7 +105,7 @@ EXAMPLES = '''
           - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
 
     - name: Ensure Users are Members of a Group using object_id
-      azure.azcollection.azure_rm_adgroup:
+      azure_rm_adgroup:
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         state: 'present'
@@ -114,7 +114,7 @@ EXAMPLES = '''
           - "https://graph.windows.net/{{ ad_object_2_tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
 
     - name: Ensure Users are not Members of a Group using display_name and mail_nickname
-      azure.azcollection.azure_rm_adgroup:
+      azure_rm_adgroup:
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         display_name: "Group-Name"
         mail_nickname: "Group-Mail-Nickname"
@@ -123,7 +123,7 @@ EXAMPLES = '''
           - "{{ ad_object_1_object_id }}"
 
     - name: Ensure Users are Members of a Group using object_id
-      azure.azcollection.azure_rm_adgroup:
+      azure_rm_adgroup:
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         state: 'present'
@@ -131,7 +131,7 @@ EXAMPLES = '''
           - "{{ ad_object_1_object_id }}"
 
     - name: Ensure Users are Owners of a Group using display_name and mail_nickname
-      azure.azcollection.azure_rm_adgroup:
+      azure_rm_adgroup:
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         display_name: "Group-Name"
         mail_nickname: "Group-Mail-Nickname"
@@ -141,7 +141,7 @@ EXAMPLES = '''
           - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
 
     - name: Ensure Users are Owners of a Group using object_id
-      azure.azcollection.azure_rm_adgroup:
+      azure_rm_adgroup:
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         state: 'present'
@@ -150,7 +150,7 @@ EXAMPLES = '''
           - "https://graph.windows.net/{{ ad_object_2_tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
 
     - name: Ensure Users are not Owners of a Group using display_name and mail_nickname
-      azure.azcollection.azure_rm_adgroup:
+      azure_rm_adgroup:
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         display_name: "Group-Name"
         mail_nickname: "Group-Mail-Nickname"

@@ -79,13 +79,13 @@ EXAMPLES = '''
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
     - name: Return a specific group using object_id and  return the owners of the group
-      azure.azcollection.azure_rm_adgroup_info:
+      azure_rm_adgroup_info:
         object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         return_owners: True
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
     - name: Return a specific group using object_id and return the owners and members of the group
-      azure.azcollection.azure_rm_adgroup_info:
+      azure_rm_adgroup_info:
         object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         return_owners: True
         return_group_members: True
