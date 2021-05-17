@@ -82,7 +82,7 @@ EXAMPLES = '''
         state: 'present'
 
     - name: Delete Group using display_name and mail_nickname
-      azure.azcollection.azure_rm_adgroup:
+      azure_rm_adgroup:
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         display_name: "Group-Name"
         mail_nickname: "Group-Mail-Nickname"
