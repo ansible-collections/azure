@@ -62,14 +62,6 @@ options:
             - It is recommended that you instead identify a subset of users and use filter.
             - Mutually exclusive with I(object_id), I(attribute_name), I(odata_filter) and I(user_principal_name).
         type: bool
-    log_path:
-        description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
-        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 
@@ -178,8 +170,6 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             odata_filter=dict(type='str'),
             all=dict(type='bool'),
             tenant=dict(type='str', required=True),
-            log_path=dict(type='str'),
-            log_mode=dict(type='str'),
         )
 
         self.tenant = None
