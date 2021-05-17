@@ -238,6 +238,7 @@ vms:
             description:
                 - A list of Availability Zones for your VM.
             type: list
+            sample: [1]
         power_state:
             description:
                 - Power state of the virtual machine.
