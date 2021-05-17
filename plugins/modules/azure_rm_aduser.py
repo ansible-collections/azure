@@ -114,14 +114,6 @@ options:
             - Filter that can be used to specify a user to update or delete.
             - Mutually exclusive with I(object_id), I(attribute_name), and I(user_principal_name).
         type: str
-    log_path:
-        description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
-        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 
@@ -241,8 +233,6 @@ class AzureRMADUser(AzureRMModuleBase):
             user_type=dict(type='str'),
             mail=dict(type='str'),
             tenant=dict(type='str', required=True),
-            log_path=dict(type='str'),
-            log_mode=dict(type='str'),
         )
 
         self.tenant = None
