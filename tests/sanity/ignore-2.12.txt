@@ -100,6 +100,8 @@ plugins/modules/azure_rm_datalakestore.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_datalakestore.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_datalakestore_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_datalakestore_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_ddosprotectionplan_info.py validate-modules:required_if-requirements-unknown
+plugins/modules/azure_rm_ddosprotectionplan_info.py validate-modules:required_if-unknown-key
 plugins/modules/azure_rm_deployment.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_deployment.py validate-modules:required_if-requirements-unknown
 plugins/modules/azure_rm_deployment.py validate-modules:required_if-unknown-key
