@@ -110,7 +110,7 @@ EXAMPLES = '''
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
     - name: Return groups matching odata_filter
-      azure.azcollection.azure_rm_adgroup_info:
+      azure_rm_adgroup_info:
         odata_filter: "mailNickname eq 'Mail-Nickname-Of-AD-Group'"
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
