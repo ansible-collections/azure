@@ -48,7 +48,9 @@ AZURE_COMMON_ARGS = dict(
     cloud_environment=dict(type='str', default='AzureCloud'),
     cert_validation_mode=dict(type='str', choices=['validate', 'ignore']),
     api_profile=dict(type='str', default='latest'),
-    adfs_authority_url=dict(type='str', default=None)
+    adfs_authority_url=dict(type='str', default=None),
+    log_mode=dict(type='str', no_log=True),
+    log_path=dict(type='str', no_log=True),
 )
 
 AZURE_CREDENTIAL_ENV_MAPPING = dict(
@@ -98,6 +100,7 @@ AZURE_API_PROFILES = {
         'ManagementGroupsClient': '2020-05-01',
         'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
+        'SearchManagementClient': '2020-08-01',
         'StorageManagementClient': '2019-06-01',
         'SubscriptionClient': '2019-11-01',
         'WebSiteManagementClient': '2018-02-01',
@@ -271,6 +274,7 @@ try:
     from azure.mgmt.resource.locks import ManagementLockClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
     import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
+    from azure.mgmt.search import SearchManagementClient
     from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
 
@@ -435,6 +439,7 @@ class AzureRMModuleBase(object):
         self._IoThub_client = None
         self._lock_client = None
         self._recovery_services_backup_client = None
+        self._search_client = None
         self._datalake_store_client = None
 
         self.check_mode = self.module.check_mode
@@ -1019,13 +1024,13 @@ class AzureRMModuleBase(object):
         if not self._network_client:
             self._network_client = self.get_mgmt_svc_client(NetworkManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2019-06-01')
+                                                            api_version='2020-06-01')
         return self._network_client
 
     @property
     def network_models(self):
         self.log("Getting network models...")
-        return NetworkManagementClient.models("2019-06-01")
+        return NetworkManagementClient.models("2020-06-01")
 
     @property
     def rm_client(self):
@@ -1301,6 +1306,15 @@ class AzureRMModuleBase(object):
         return RecoveryServicesBackupModels
 
     @property
+    def search_client(self):
+        self.log('Getting search client...')
+        if not self._search_client:
+            self._search_client = self.get_mgmt_svc_client(SearchManagementClient,
+                                                           base_url=self._cloud_environment.endpoints.resource_manager,
+                                                           api_version='2020-08-01')
+        return self._search_client
+
+    @property
     def datalake_store_client(self):
         self.log('Getting datalake store client...')
         if not self._datalake_store_client:
@@ -1415,19 +1429,20 @@ class AzureRMAuth(object):
         else:
             self._adfs_authority_url = self.credentials.get('adfs_authority_url')
 
-        # get resource from cloud environment
-        self._resource = self._cloud_environment.endpoints.active_directory_resource_id
-
         if self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credentials = self.credentials['credentials']
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
+
+            graph_resource = self._cloud_environment.endpoints.active_directory_graph_resource_id
+            rm_resource = self._cloud_environment.endpoints.resource_manager
             self.azure_credentials = ServicePrincipalCredentials(client_id=self.credentials['client_id'],
                                                                  secret=self.credentials['secret'],
                                                                  tenant=self.credentials['tenant'],
                                                                  cloud_environment=self._cloud_environment,
+                                                                 resource=graph_resource if self.is_ad_resource else rm_resource,
                                                                  verify=self._cert_validation_mode == 'validate')
 
         elif self.credentials.get('ad_user') is not None and \
@@ -1437,7 +1452,7 @@ class AzureRMAuth(object):
 
             self.azure_credentials = self.acquire_token_with_username_password(
                 self._adfs_authority_url,
-                self._resource,
+                self._cloud_environment.endpoints.active_directory_resource_id,
                 self.credentials['ad_user'],
                 self.credentials['password'],
                 self.credentials['client_id'],

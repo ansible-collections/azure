@@ -193,7 +193,7 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
             query=dict(type='str'),
             hub=dict(type='str', required=True),
             hub_policy_name=dict(type='str', required=True),
-            hub_policy_key=dict(type='str', required=True),
+            hub_policy_key=dict(type='str', no_log=True, required=True),
             top=dict(type='int')
         )
 

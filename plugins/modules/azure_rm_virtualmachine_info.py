@@ -234,6 +234,11 @@ vms:
             returned: always
             type: str
             sample: Standard_D4
+        zones:
+            description:
+                - A list of Availability Zones for your VM.
+            type: list
+            sample: [1]
         power_state:
             description:
                 - Power state of the virtual machine.
@@ -386,6 +391,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         new_result['state'] = 'present'
         new_result['location'] = vm.location
         new_result['vm_size'] = result['properties']['hardwareProfile']['vmSize']
+        new_result['zones'] = result.get('zones', None)
         os_profile = result['properties'].get('osProfile')
         if os_profile is not None:
             new_result['admin_username'] = os_profile.get('adminUsername')

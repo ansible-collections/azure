@@ -2,7 +2,7 @@ parameters:
 - name: PYTHON_VER
   displayName: 'Python Version'
   type: string
-  default: "3.6"
+  default: "3.8"
   values:
     - "2.7"
     - "3.6"
@@ -14,6 +14,7 @@ parameters:
   values:
     - "2.9"
     - "2.10"
+    - "2.11"
     - "devel"
 - name: MODULE_NAME
   displayName: 'Test Module'
@@ -21,7 +22,9 @@ parameters:
   default: 'all'
   values:
     - 'all'
+    - 'sanity'
     - "azure_rm_acs"
+    - "azure_rm_aduser"
     - "azure_rm_aks"
     - "azure_rm_appgateway"
     - "azure_rm_appserviceplan"
@@ -29,6 +32,7 @@ parameters:
     - "azure_rm_autoscale"
     - "azure_rm_availabilityset"
     - "azure_rm_azurefirewall"
+    - "azure_rm_apimanagementservice"
     - "azure_rm_batchaccount"
     - "azure_rm_backuppolicy"
     - "azure_rm_cdnprofile"
@@ -65,8 +69,10 @@ parameters:
     - "azure_rm_resourcegroup"
     - "azure_rm_routetable"
     - "azure_rm_roleassignment"
+    - "azure_rm_roledefinition"
     - "azure_rm_registrationassignment"
     - "azure_rm_registrationdefinition"
+    - "azure_rm_cognitivesearch"
     - "azure_rm_securitygroup"
     - "azure_rm_servicebus"
     - "azure_rm_sqlserver"
@@ -82,6 +88,8 @@ parameters:
     - "azure_rm_virtualnetwork"
     - "azure_rm_virtualnetworkgateway"
     - "azure_rm_virtualnetworkeepring"
+    - "azure_rm_virtualwan"
+    - "azure_rm_vpnsite"
     - "azure_rm_backupazurevm"
     - "azure_rm_recoveryservicesvault"
     - "azure_rm_vmbackuppolicy"
@@ -96,7 +104,7 @@ pr:
 - dev
 
 pool:
-  vmImage: 'ubuntu-18.04'
+  vmImage: 'ubuntu-20.04'
 
 jobs:
   - job: CreateResourceGroups
