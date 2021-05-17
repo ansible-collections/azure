@@ -160,7 +160,7 @@ EXAMPLES = '''
           - "{{ ad_object_2_object_id }}"
 
     - name: Ensure Users are Owners of a Group using object_id
-      azure.azcollection.azure_rm_adgroup:
+      azure_rm_adgroup:
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         state: 'present'
