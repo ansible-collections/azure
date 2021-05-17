@@ -104,7 +104,7 @@ EXAMPLES = '''
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
     - name: Return a specific group using displayName for attribute_name
-      azure.azcollection.azure_rm_adgroup_info:
+      azure_rm_adgroup_info:
         attribute_name: "displayName"
         attribute_value: "Display-Name-Of-AD-Group"
         tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
