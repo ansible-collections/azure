@@ -48,7 +48,9 @@ AZURE_COMMON_ARGS = dict(
     cloud_environment=dict(type='str', default='AzureCloud'),
     cert_validation_mode=dict(type='str', choices=['validate', 'ignore']),
     api_profile=dict(type='str', default='latest'),
-    adfs_authority_url=dict(type='str', default=None)
+    adfs_authority_url=dict(type='str', default=None),
+    log_mode=dict(type='str', no_log=True),
+    log_path=dict(type='str', no_log=True),
 )
 
 AZURE_CREDENTIAL_ENV_MAPPING = dict(

@@ -97,14 +97,6 @@ options:
             - Timezone to apply schedule_run_time.
         default: UTC
         type: str
-    log_path:
-        description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
-        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 
@@ -209,8 +201,6 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             daily_retention_count=dict(type='int'),
             schedule_weekly_frequency=dict(type='int'),
             time_zone=dict(type='str', default='UTC'),
-            log_path=dict(type='str'),
-            log_mode=dict(type='str')
         )
 
         self.vault_name = None
