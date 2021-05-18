@@ -40,7 +40,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     guopeng_lin (@guopenglin)
@@ -111,10 +110,10 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
 
     def __init__(self):
         self.module_arg_spec = dict(
-                                    app_id=dict(type='str'),
-                                    object_id=dict(type='str'),
-                                    identifier_uri=dict(type='str'),
-                                    tenant=dict(type='str', required=True),
+                                     app_id=dict(type='str'),
+                                     object_id=dict(type='str'),
+                                     identifier_uri=dict(type='str'),
+                                     tenant=dict(type='str', required=True),
                                     )
         self.tenant = None
         self.app_id = None
@@ -124,7 +123,8 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
         super(AzureRMADApplicationInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                        supports_check_mode=False,
                                                        supports_tags=False,
-                                                       is_ad_resource=True )
+                                                       is_ad_resource=True 
+                                                       )
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
@@ -161,6 +161,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
 
 def main():
     AzureRMADApplicationInfo()
+
 
 if __name__ == '__main__':
     main()

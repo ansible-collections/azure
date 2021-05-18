@@ -79,7 +79,7 @@ options:
         description:
             - The description of the password.
         type: str
-    
+
     end_date:
         description:
             - Date or datetime after which credentials expire(e.g. '2017-12-31').
@@ -119,17 +119,17 @@ options:
         description:
             - The value for the key credentials associated with the application.
         type: str
- 
+
     native_app:
         description:
             - An application which can be installed on a user's device or computer.
         type: bool
- 
+
     oauth2_allow_implicit_flow:
         description:
             - Whether to allow implicit grant flow for OAuth2.
         type: bool
-                   
+
     optional_claims:
         description:
             - Declare the optional claims for the application.
@@ -141,17 +141,18 @@ options:
                 type: str
             source:
                 description:
-                    - The source (directory object) of the claim. 
+                    - The source (directory object) of the claim.
                     - There are predefined claims and user-defined claims from extension properties.
                     - If the source value is null, the claim is a predefined optional claim.
                     - If the source value is user, the value in the name property is the extension property from the user object.
-                type: str 
+                type: str
             essential:
                 description:
-                    - If the value is true, the claim specified by the client is necessary to ensure a smooth authorization experience for the specific task requested by the end user.
+                    - If the value is true, the claim specified by the client is necessary to ensure a smooth authorization experience 
+                      for the specific task requested by the end user.
                     - The default value is false.
                 default: false
-                type: bool 
+                type: bool
             additional_properties:
                 description:
                     - Additional properties of the claim.
@@ -160,13 +161,13 @@ options:
     password:
         description:
             - App password, aka 'client secret'.
-        type: str    
+        type: str
 
     reply_urls:
         description:
             - Space-separated URIs to which Azure AD will redirect in response to an OAuth 2.0 request.
             - The value does not need to be a physical endpoint, but must be a valid URI.
-        type: list 
+        type: list
 
     required_resource_accesses:
         description:
@@ -192,11 +193,11 @@ options:
                         description:
                             - Specifies whether the id property references an oauth2PermissionScopes or an appRole.
                             - Possible values are Scope or Role.
-                        type: str    
+                        type: str
 
-    start_date
+    start_date:
         description:
-            - Date or datetime at which credentials become valid(e.g. '2017-01-01').
+            - Date or datetime at which credentials become valid, such as '2017-01-01'.
             - Default value is current time.
         type: str
 
@@ -272,7 +273,7 @@ output:
                 - The application can be used from any Azure AD tenants.
             returned: always
             type: bool
-        homepage
+        homepage:
             description:
                 - The url where users can sign in and use your app.
             returned: always
@@ -569,7 +570,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         )
 
     def build_application_creds(self, password=None, key_value=None, key_type=None, key_usage=None,
-                                 start_date=None, end_date=None, key_description=None):
+                                start_date=None, end_date=None, key_description=None):
         if password and key_value:
             raise self.fail('specify either password or key_value, but not both.')
 
