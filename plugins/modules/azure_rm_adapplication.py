@@ -97,6 +97,7 @@ options:
     identifier_uris:
         description:
             - Space-separated unique URIs that Azure AD can use for this app.
+        elements: str
         type: list
 
     key_type:
@@ -207,7 +208,10 @@ options:
             - Date or datetime at which credentials become valid, such as '2017-01-01'.
             - Default value is current time.
         type: str
-
+    allow_guests_sign_in:
+        description:
+            - A property on the application to indicate if the application accepts other IDPs or not or partially accepts.
+        type: bool
     state:
         description:
             - Assert the state of Active Dirctory service principal.
@@ -289,19 +293,18 @@ output:
             description:
                 - Space-separated unique URIs that Azure AD can use for this app.
             returned: always
-            elements: str
             type: list
-        oauth2_allow_implicit_flow
+        oauth2_allow_implicit_flow:
             description:
                 - Whether to allow implicit grant flow for OAuth2.
             returned: always
             type: bool
-        optional_claims
+        optional_claims:
             description:
                 - The optional claims for the application.
             returned: always
             type: list
-        reply_urls
+        reply_urls:
             description:
                 - Space-separated URIs to which Azure AD will redirect in response to an OAuth 2.0 request.
             returned: always
@@ -388,7 +391,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             tenant=dict(type='str', required=True),
             app_id=dict(type='str'),
             display_name=dict(type='str'),
-            app_roles=dict(type='list', element='dict', options=app_role_spec),
+            app_roles=dict(type='list', elements='dict', options=app_role_spec),
             available_to_other_tenants=dict(type='bool'),
             credential_description=dict(type='str'),
             end_date=dict(type='str'),
@@ -400,11 +403,11 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             key_value=dict(type='str'),
             native_app=dict(type='bool'),
             oauth2_allow_implicit_flow=dict(type='bool'),
-            optional_claims=dict(type='list', element='dict', options=optional_claims_spec),
+            optional_claims=dict(type='list', elements='dict', options=optional_claims_spec),
             password=dict(type='str', no_log=True),
-            reply_urls=dict(type='list', element='str'),
+            reply_urls=dict(type='list', elements='str'),
             start_date=dict(type='str'),
-            required_resource_accesses=dict(type='list', element='dict', options=required_resource_accesses_spec),
+            required_resource_accesses=dict(type='list', elements='dict', options=required_resource_accesses_spec),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
 
