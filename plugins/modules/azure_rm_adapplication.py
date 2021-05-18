@@ -48,6 +48,7 @@ options:
                     - To other application's I(allowed_member_types=Application).
                     - Or both C(User) and C(Appplication).
                 type: list
+                elements: str
                 required: True
             description:
                 description:
@@ -190,8 +191,9 @@ options:
                 type: str
             resource_access:
                 description:
-                    - The description of the app role
+                    - The description of the app role.
                 type: list
+                elements: dict
                 suboptions:
                     id:
                         description:
@@ -333,6 +335,7 @@ except ImportError:
 app_role_spec = dict(
     allowed_member_types=dict(
         type='list',
+        elements='str',
         required=True
     ),
     description=dict(
@@ -371,7 +374,7 @@ required_resource_accesses_spec = dict(
     ),
     resource_access=dict(
         type='list',
-        element='dict',
+        elements='dict',
         options=dict(
             id=dict(
                 type='str'
