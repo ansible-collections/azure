@@ -37,7 +37,7 @@
 
 - name: get ad app info ---- by object ID
   azure_rm_adapplication_info:
-    app_id: "{{ create_output.object_id }}"
+    object_id: "{{ create_output.object_id }}"
     tenant: "{{ tenant_id }}"
   register: output
 - debug:

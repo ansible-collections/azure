@@ -5,7 +5,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 
-
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
@@ -38,7 +37,7 @@ options:
         description:
             - It's identifier_uri's object ID.
         type: str
-    
+
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -48,9 +47,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: get ad app info
+  - name: get ad app info by App ID
     azure_rm_adapplication_info:
       app_id: "{{ app_id }}"
+      tenant: "{{ tenant_id }}"
+
+  - name: get ad app info ---- by object ID
+    azure_rm_adapplication_info:
+      object_id: "{{ object_id }}"
+      tenant: "{{ tenant_id }}"
+
+  - name: get ad app info ---- by identifier uri
+    azure_rm_adapplication_info:
+      identifier_uri: "{{ identifier_uri }}"
       tenant: "{{ tenant_id }}"
 
 '''
@@ -76,7 +85,7 @@ applications:
             sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         identifier_uris:
             description:
-                - the identifiers_uri list of app
+                - The identifiers_uri list of app.
             type: list
             returned: always
             sample: ["http://ansible-atodorov"]
@@ -102,11 +111,11 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
 
     def __init__(self):
         self.module_arg_spec = dict(
-            app_id=dict(type='str'),
-            object_id=dict(type='str'),
-            identifier_uri=dict(type='str'),
-            tenant=dict(type='str', required=True),
-        )
+                                    app_id=dict(type='str'),
+                                    object_id=dict(type='str'),
+                                    identifier_uri=dict(type='str'),
+                                    tenant=dict(type='str', required=True),
+                                    )
         self.tenant = None
         self.app_id = None
         self.object_id = None
@@ -148,6 +157,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             app_display_name=object.display_name,
             identifier_uris=object.identifier_uris
         )
+
 
 def main():
     AzureRMADApplicationInfo()

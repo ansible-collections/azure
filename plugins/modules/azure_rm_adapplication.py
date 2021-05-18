@@ -25,17 +25,17 @@ options:
             - The tenant ID.
         type: str
         required: True
-        
+
     app_id:
         description:
-            - application id
-        type: str    
-        
+            - Application ID.
+        type: str
+
     display_name:
         description:
             - The display name of the application.
         type: str
-        
+
     app_roles:
         description:
             - Declare the roles you want to associate with your application.
@@ -66,51 +66,51 @@ options:
                 description:
                     - Specifies the value to include in the roles claim in ID tokens and access tokens authenticating an assigned user or service principal.
                     - Must not exceed 120 characters in length.
-                    - Allowed characters are : ! # $ % & ' ( ) * + , - . / : ; < = > ? @ [ ] ^ + _ ` { | } ~, as well as characters in the ranges 0-9, A-Z and a-z.
-                    - Any other character, including the space character, are not allowed.     
+                    - Allowed characters include ! # $ % & ' ( ) * + , - . / : ; < = > ? @ [ ] ^ + _ ` { | } ~, and characters in the ranges 0-9, A-Z and a-z.
+                    - Any other character, including the space character, are not allowed.
                 type: str
-            
+
     available_to_other_tenants:
         description:
             - The application can be used from any Azure AD tenants.
-        type: bool       
-    
+        type: bool
+
     credential_description:
         description:
             - The description of the password.
-        type: str     
-                     
-    end_date:
-        description:
-            - Date or datetime after which credentials expire(e.g. '2017-12-31T11:59:59+00:00' or '2017-12-31'). 
-            - Default value is one year after current time.
         type: str
     
+    end_date:
+        description:
+            - Date or datetime after which credentials expire(e.g. '2017-12-31').
+            - Default value is one year after current time.
+        type: str
+
     homepage:
         description:
             - The url where users can sign in and use your app.
         type: str
-        
+
     identifier_uris:
         description:
             - Space-separated unique URIs that Azure AD can use for this app.
-        type: list            
-        
+        type: list
+
     key_type:
         description:
             - The type of the key credentials associated with the application.
-        type: str   
-        default: AsymmetricX509Cert    
+        type: str
+        default: AsymmetricX509Cert
         choices:
             - AsymmetricX509Cert
             - Password
             - Symmetric
-                
+
     key_usage:
         description:
             - The usage of the key credentials associated with the application.
-        type: str   
-        default: Verify    
+        type: str
+        default: Verify
         choices:
             - Sign
             - Verify
@@ -118,18 +118,18 @@ options:
     key_value:
         description:
             - The value for the key credentials associated with the application.
-        type: str   
-        
+        type: str
+ 
     native_app:
         description:
             - An application which can be installed on a user's device or computer.
-        type: bool   
-            
+        type: bool
+ 
     oauth2_allow_implicit_flow:
         description:
             - Whether to allow implicit grant flow for OAuth2.
-        type: bool         
-                                    
+        type: bool
+                   
     optional_claims:
         description:
             - Declare the optional claims for the application.
@@ -138,36 +138,36 @@ options:
             name:
                 description:
                     - The name of the optional claim.
-                type: str           
+                type: str
             source:
                 description:
                     - The source (directory object) of the claim. 
                     - There are predefined claims and user-defined claims from extension properties.
                     - If the source value is null, the claim is a predefined optional claim.
                     - If the source value is user, the value in the name property is the extension property from the user object.
-                type: str                  
+                type: str 
             essential:
                 description:
                     - If the value is true, the claim specified by the client is necessary to ensure a smooth authorization experience for the specific task requested by the end user.
                     - The default value is false.
                 default: false
-                type: bool      
+                type: bool 
             additional_properties:
                 description:
                     - Additional properties of the claim.
                     - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
-                type: str                                  
+                type: str                               
     password:
         description:
             - App password, aka 'client secret'.
-        type: str            
-        
+        type: str    
+
     reply_urls:
         description:
             - Space-separated URIs to which Azure AD will redirect in response to an OAuth 2.0 request.
             - The value does not need to be a physical endpoint, but must be a valid URI.
-        type: list         
-        
+        type: list 
+
     required_resource_accesses:
         description:
             - Resource scopes and roles the application requires access to.
@@ -192,14 +192,14 @@ options:
                         description:
                             - Specifies whether the id property references an oauth2PermissionScopes or an appRole.
                             - Possible values are Scope or Role.
-                        type: str                        
-                            
+                        type: str    
+
     start_date
         description:
-            - Date or datetime at which credentials become valid(e.g. '2017-01-01T01:00:00+00:00' or '2017-01-01').
+            - Date or datetime at which credentials become valid(e.g. '2017-01-01').
             - Default value is current time.
-        type: str     
-         
+        type: str
+
     state:
         description:
             - Assert the state of Active Dirctory service principal.
@@ -220,11 +220,26 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: create ad app
+  - name: Create ad application
     azure_rm_adapplication:
-      state: present
       tenant: "{{ tenant_id }}"
-      display_name: "testapp"
+      display_name: "{{ display_name }}"
+
+  - name: Create application with more parameter
+    azure_rm_adapplication:
+      tenant: "{{ tenant_id }}"
+      display_name: "{{ display_name }}"
+      available_to_other_tenants: False
+      credential_description: "for test"
+      end_date: 2021-10-01
+      start_date: 2021-05-18
+      identifier_uris: fredtest02.com
+
+  - name: delete ad application
+    azure_rm_adapplication:
+      tenant: "{{ tenant_id }}"
+      app_id: "{{ app_id }}"
+      state: absent
 '''
 
 RETURN = '''
@@ -285,13 +300,19 @@ output:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-import datetime
-from dateutil.relativedelta import relativedelta
-import dateutil.parser
 
 try:
     from msrestazure.azure_exceptions import CloudError
     from azure.graphrbac.models import GraphErrorException
+    import datetime
+    from dateutil.relativedelta import relativedelta
+    import dateutil.parser
+    from azure.graphrbac.models import ApplicationCreateParameters
+    import uuid
+    from azure.graphrbac.models import ResourceAccess
+    from azure.graphrbac.models import RequiredResourceAccess
+    from azure.graphrbac.models import AppRole
+    from azure.graphrbac.models import PasswordCredential, KeyCredential
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -400,9 +421,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         self.results = dict(changed=False)
 
         super(AzureRMADApplication, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                        supports_check_mode=False,
-                                                        supports_tags=False,
-                                                        is_ad_resource=True)
+                                                   supports_check_mode=False,
+                                                   supports_tags=False,
+                                                   is_ad_resource=True)
 
     def exec_module(self, **kwargs):
 
@@ -426,7 +447,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         return self.results
 
     def create_resource(self):
-        from azure.graphrbac.models import ApplicationCreateParameters
         try:
             key_creds, password_creds, required_accesses, app_roles, optional_claims = None, None, None, None, None
             if self.native_app:
@@ -434,7 +454,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                     raise self.fail("'identifier_uris' is not required for creating a native application")
             else:
                 password_creds, key_creds = self.build_application_creds(self.password, self.key_value, self.key_type, self.key_usage,
-                                                                     self.start_date, self.end_date, self.credential_description)
+                                                                         self.start_date, self.end_date, self.credential_description)
             if self.required_resource_accesses:
                 required_accesses = self.build_application_accesses(self.required_resource_accesses)
 
@@ -463,7 +483,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
 
     def update_resource(self, old_response):
         try:
-            from azure.graphrbac.models import ApplicationUpdateParameters
             client = self.get_graphrbac_client(self.tenant)
             key_creds, password_creds, required_accesses, app_roles, optional_claims = None, None, None, None, None
             if self.native_app:
@@ -471,7 +490,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                     raise self.fail("'identifier_uris' is not required for creating a native application")
             else:
                 password_creds, key_creds = self.build_application_creds(self.password, self.key_value, self.key_type, self.key_usage,
-                                                                     self.start_date, self.end_date, self.credential_description)
+                                                                         self.start_date, self.end_date, self.credential_description)
             if self.required_resource_accesses:
                 required_accesses = self.build_application_accesses(self.required_resource_accesses)
 
@@ -551,7 +570,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
 
     def build_application_creds(self, password=None, key_value=None, key_type=None, key_usage=None,
                                  start_date=None, end_date=None, key_description=None):
-        from azure.graphrbac.models import PasswordCredential, KeyCredential
         if password and key_value:
             raise self.fail('specify either password or key_value, but not both.')
 
@@ -590,12 +608,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         return key_description.encode('utf-16')
 
     def gen_guid(self):
-        import uuid
         return uuid.uuid4()
 
     def build_application_accesses(self, required_resource_accesses):
-        from azure.graphrbac.models import ResourceAccess
-        from azure.graphrbac.models import RequiredResourceAccess
         if not required_resource_accesses:
             return None
         required_accesses = []
@@ -610,7 +625,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         return required_accesses
 
     def build_app_roles(self, app_roles):
-        from azure.graphrbac.models import AppRole
         if not app_roles:
             return None
         result = []
@@ -624,7 +638,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                            is_enabled=x.get('is_enabled', None), value=x.get('value', None))
             result.append(role)
         return result
-
 
 
 def main():
