@@ -40,6 +40,7 @@ options:
         description:
             - Declare the roles you want to associate with your application.
         type: list
+        elements: dict
         suboptions:
             allowed_member_types:
                 description:
@@ -47,6 +48,7 @@ options:
                     - To other application's I(allowed_member_types=Application).
                     - Or both C(User) and C(Appplication).
                 type: list
+                required: True
             description:
                 description:
                     - The description for the app role.
@@ -56,6 +58,7 @@ options:
             display_name:
                 description:
                     - Display name for the permission that appears in the app role assignment and consent experiences.
+                type: str
             is_enabled:
                 description:
                     - When creating or updating an app role, this must be set to true (which is the default).
@@ -134,11 +137,13 @@ options:
         description:
             - Declare the optional claims for the application.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - The name of the optional claim.
                 type: str
+                required: True
             source:
                 description:
                     - The source (directory object) of the claim.
@@ -148,7 +153,7 @@ options:
                 type: str
             essential:
                 description:
-                    - If the value is true, the claim specified by the client is necessary to ensure a smooth authorization experience 
+                    - If the value is true, the claim specified by the client is necessary to ensure a smooth authorization experience
                       for the specific task requested by the end user.
                     - The default value is false.
                 default: false
@@ -157,7 +162,7 @@ options:
                 description:
                     - Additional properties of the claim.
                     - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
-                type: str                               
+                type: str
     password:
         description:
             - App password, aka 'client secret'.
@@ -168,12 +173,14 @@ options:
             - Space-separated URIs to which Azure AD will redirect in response to an OAuth 2.0 request.
             - The value does not need to be a physical endpoint, but must be a valid URI.
         type: list
+        elements: str
 
     required_resource_accesses:
         description:
             - Resource scopes and roles the application requires access to.
             - Should be in manifest json format.
         type: list
+        elements: dict
         suboptions:
             resource_app_id:
                 description:
@@ -213,7 +220,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     guopeng_lin (@guopenglin)
@@ -279,10 +285,11 @@ output:
                 - The url where users can sign in and use your app.
             returned: always
             type: str
-        identifier_uris
+        identifier_uris:
             description:
                 - Space-separated unique URIs that Azure AD can use for this app.
             returned: always
+            elements: str
             type: list
         oauth2_allow_implicit_flow
             description:
@@ -315,13 +322,14 @@ try:
     from azure.graphrbac.models import RequiredResourceAccess
     from azure.graphrbac.models import AppRole
     from azure.graphrbac.models import PasswordCredential, KeyCredential
+    from azure.graphrbac.models import ApplicationUpdateParameters
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
 app_role_spec = dict(
     allowed_member_types=dict(
-        type='str',
+        type='list',
         required=True
     ),
     description=dict(
@@ -347,7 +355,8 @@ optional_claims_spec = dict(
         type='str'
     ),
     essential=dict(
-        type='bool'
+        type='bool',
+        default=False
     ),
     additional_properties=dict(
         type='str'
@@ -531,7 +540,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             client = self.get_graphrbac_client(self.tenant)
             existing_apps = []
             if self.app_id:
-                existing_apps = list(client.applications.list(filter="appId eq '{}'".format(self.app_id)))
+                existing_apps = list(client.applications.list(filter="appId eq '{0}'".format(self.app_id)))
             if not existing_apps:
                 return False
             result = existing_apps[0]

@@ -111,12 +111,11 @@ except ImportError:
 class AzureRMADApplicationInfo(AzureRMModuleBase):
 
     def __init__(self):
-        self.module_arg_spec = dict(
-                                     app_id=dict(type='str'),
-                                     object_id=dict(type='str'),
-                                     identifier_uri=dict(type='str'),
-                                     tenant=dict(type='str', required=True),
-                                    )
+        self.module_arg_spec = dict(app_id=dict(type='str'),
+                                    object_id=dict(type='str'),
+                                    identifier_uri=dict(type='str'),
+                                    tenant=dict(type='str', required=True),
+                                   )
         self.tenant = None
         self.app_id = None
         self.object_id = None
@@ -125,8 +124,8 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
         super(AzureRMADApplicationInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                        supports_check_mode=False,
                                                        supports_tags=False,
-                                                       is_ad_resource=True 
-                                                       )
+                                                       is_ad_resource=True
+                                                      )
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
@@ -140,9 +139,9 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             else:
                 sub_filters = []
                 if self.identifier_uri:
-                    sub_filters.append("identifierUris/any(s:s eq '{}')".format(self.identifier_uri))
+                    sub_filters.append("identifierUris/any(s:s eq '{0}')".format(self.identifier_uri))
                 if self.app_id:
-                    sub_filters.append("appId eq '{}'".format(self.app_id))
+                    sub_filters.append("appId eq '{0}'".format(self.app_id))
                 # applications = client.applications.list(filter=(' and '.join(sub_filters)))
                 applications = list(client.applications.list(filter=(' and '.join(sub_filters))))
 
