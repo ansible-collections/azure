@@ -1,5 +1,5 @@
 - set_fact:
-    tenant_id: "72f988bf-86f1-41af-91ab-2d7cd011db47"
+    tenant_id: "{{ azure_tenant }}"
     resource_prefix: "{{ 999999999999999999994 | random | to_uuid }}"
   run_once: yes
 
