@@ -17,7 +17,7 @@ version_added: "1.6.0"
 short_description: Manage Azure Active Directory application
 
 description:
-        - Manage Azure Active Directory application.
+    - Manage Azure Active Directory application.
 
 options:
     tenant:
@@ -216,6 +216,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure_tags
 
 author:
+    guopeng_lin (@guopenglin)
     haiyuan_zhang (@haiyuazhang)
     Fred-sun (@Fred-sun)
 '''

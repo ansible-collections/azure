@@ -42,6 +42,8 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
+    haiyuan_zhang (@haiyuazhang)
+    Fred-sun (@Fred-sun)
     guopeng_lin (@guopenglin)
 '''
 
