@@ -6,7 +6,6 @@ plugins/modules/azure_rm_aks_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_aksversion_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_appgateway.py validate-modules:doc-choices-do-not-match-spec
 plugins/modules/azure_rm_appgateway.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_apimanagement.py validate-modules:doc-choices-do-not-match-spec
 plugins/modules/azure_rm_applicationsecuritygroup.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_applicationsecuritygroup_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_appserviceplan.py validate-modules:parameter-type-not-in-doc

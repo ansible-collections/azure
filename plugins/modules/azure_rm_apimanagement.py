@@ -70,6 +70,7 @@ options:
                         description:
                             - How to send token to the server.
                         type: list
+                        elements: str
                         choices:
                             - authorizationHeader
                             - query
@@ -144,6 +145,7 @@ options:
         description:
             - Describes on which protocols the operations in this API can be invoked.
         type: list
+        elements: str
         choices:
             - http
             - https
@@ -218,6 +220,9 @@ options:
             - C(http) creates a SOAP to REST API.
             - C(soap) creates a SOAP pass-through API.
         type: str
+        choices:
+            - soap
+            - http
     state:
         description:
             - State of the Api.
@@ -347,6 +352,7 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                             ),
                             bearer_token_sending_methods=dict(
                                 type='list',
+                                elements='str',
                                 disposition='bearerTokenSendingMethods',
                                 choices=['authorizationHeader', 'query']
                             )
@@ -416,10 +422,10 @@ class AzureApiManagement(AzureRMModuleBaseExt):
             path=dict(
                 type='str',
                 disposition='/properties/*',
-                required=True
             ),
             protocols=dict(
                 type='list',
+                elements='str',
                 disposition='/properties/protocols',
                 choices=['http',
                          'https']
