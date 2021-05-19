@@ -140,7 +140,6 @@ options:
         description:
             - Relative URL uniquely identifying this API.
         type: str
-        required: true
     protocols:
         description:
             - Describes on which protocols the operations in this API can be invoked.
@@ -362,6 +361,7 @@ class AzureApiManagement(AzureRMModuleBaseExt):
             ),
             subscription_key_parameter_names=dict(
                 type='dict',
+                no_log=True,
                 disposition='/properties/subscriptionKeyParameterNames',
                 options=dict(
                     header=dict(
