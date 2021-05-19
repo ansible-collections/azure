@@ -1,6 +1,6 @@
 - set_fact:
-    tenant_id: e1da732a-8291-4a88-9420-99c61fbb3ad2
-    display_name: fredapp03
+    tenant_id: "{{ azure_tenant }}"
+    display_name: "app{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
   run_once: yes
 
 - name: Create application
@@ -29,7 +29,15 @@
     credential_description: "for test"
     end_date: 2021-10-01
     start_date: 2021-05-18
-    identifier_uris: fredtest02.com
+    identifier_uris:
+      - "{{ display_name }}.com"
+    app_roles:
+      - allowed_member_types:
+          - User
+        description: "for app role test"
+        display_name: "{{ display_name }}_approle"
+        is_enabled: True
+        value: Password@0329
   register: second_output
 
 - assert:
@@ -40,9 +48,6 @@
     object_id: "{{ create_output.object_id }}"
     tenant: "{{ tenant_id }}"
   register: output
-- debug:
-    var: output
-
 
 - name: get ad app info ---- by app ID
   azure_rm_adapplication_info:
