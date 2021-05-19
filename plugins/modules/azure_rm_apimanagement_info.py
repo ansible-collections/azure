@@ -215,7 +215,7 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
         try:
             response = json.loads(response.text)
         except Exception:
-            response = {'text': response.text}
+            return None
 
         return response
 
@@ -238,7 +238,7 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
         try:
             response = json.loads(response.text)
         except Exception:
-            response = {'text': response.text}
+            return None
 
         return response
 
@@ -262,7 +262,7 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
         try:
             response = json.loads(response.text)
         except Exception:
-            response = {'text': response.text}
+            return None
 
         return response
 

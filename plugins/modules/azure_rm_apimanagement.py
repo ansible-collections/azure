@@ -621,7 +621,7 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                 'DELETE',
                 self.query_parameters,
                 self.header_parameters,
-                self.body,
+                None,
                 self.status_code,
                 600,
                 30,

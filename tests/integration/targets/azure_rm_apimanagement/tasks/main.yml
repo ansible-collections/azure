@@ -1,7 +1,9 @@
 - name: Fix resource prefix
   set_fact:
-    api_id: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-    service_name: "myServuce{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    api_id: "myPolicy{{ resource_group | hash('md5') | truncate(23, True, '') }}"
+    service_name: "myService{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    display_name: test-api
+    path: myapipath
 
 - name: create API management service
   azure_rm_apimanagementservice:
@@ -18,9 +20,9 @@
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}"
     description: "testDescription"
-    display_name: "TestAPI"
+    display_name: "{{ display_name }}"
     service_url: 'http://testapi.example.net/api'
-    path: "myapiPath"
+    path: "{{ path }}"
     protocols:
       - https
   register: newApi
@@ -37,9 +39,9 @@
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}"
     description: "testDescription"
-    display_name: "TestAPI"
+    display_name: "{{ display_name }}"
     service_url: 'http://testapi.example.net/api'
-    path: "myapiPath"
+    path: "{{ path }}"
     protocols:
       - https
   register: newApi_idempotent
@@ -54,10 +56,12 @@
   azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
-    api_id: "{{ api_id }}"
-    path: "my-new-path"
+    api_id: "{{ api_id }}-secondary"
+    path: "{{ path }}-secondary"
     format: openapi
-    display_name: "New-Test-API"
+    display_name: "{{ display_name }}-secondary"
+    protocols:
+      - https
   register: newOpenApi
 
 - name: Assert that output has changed
@@ -65,6 +69,18 @@
     that:
       - newOpenApi.changed == True
       - newOpenApi.failed == False
+
+- name: Get api information
+  azure_rm_apimanagement_info:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ api_id }}"
+  register: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.api.id != None
 
 - name: Delete an api
   azure_rm_apimanagement:
@@ -92,14 +108,10 @@
     that:
       - deleteApi_idempotent.changed == False
 
-- name: Get api information
-  azure_rm_apimanagement_info:
+- name: Delete an api
+  azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
-    api_id: "{{ api_id }}"
-  register: output
+    api_id: "{{ api_id }}-secondary"
+    state: absent
 
-- name: Assert that output has changed
-  assert:
-    that:
-      - output.api.id != None
