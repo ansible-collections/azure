@@ -12,7 +12,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_apimanagement
-version_added: "1.5.0"
+version_added: "1.6.0"
 short_description: Manage Azure api instances
 description:
     - Create azure api instance.
