@@ -23,6 +23,7 @@ parameters:
   values:
     - 'all'
     - 'sanity'
+    - 'azure_rm_adapplication'
     - "azure_rm_acs"
     - "azure_rm_aduser"
     - "azure_rm_aks"
