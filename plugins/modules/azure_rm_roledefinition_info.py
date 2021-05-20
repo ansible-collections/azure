@@ -21,15 +21,19 @@ options:
         description:
             - The scope of role definition.
         required: True
+        type: str
     id:
         description:
             - Role definition id.
+        type: str
     role_name:
         description:
             - Role name.
+        type: str
     type:
         description:
             - Type of role.
+        type: str
         choices:
             - system
             - custom
@@ -88,6 +92,7 @@ roledefinitions:
             description:
                 - List of Role Definition permissions.
             returned: always
+            type: complex
             contains:
                 actions:
                     description:
@@ -152,13 +157,14 @@ class AzureRMRoleDefinitionInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             scope=dict(
                 type='str',
-                required='true'
+                required=True
             ),
             role_name=dict(type='str'),
             id=dict(type='str'),
             type=dict(
                 type='str',
-                choices=['custom', 'system'])
+                choices=['custom', 'system']
+            ),
         )
 
         self.role_name = None

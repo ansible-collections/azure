@@ -2,7 +2,7 @@ parameters:
 - name: PYTHON_VER
   displayName: 'Python Version'
   type: string
-  default: "3.6"
+  default: "3.8"
   values:
     - "2.7"
     - "3.6"
@@ -22,7 +22,10 @@ parameters:
   default: 'all'
   values:
     - 'all'
+    - 'sanity'
+    - 'azure_rm_adapplication'
     - "azure_rm_acs"
+    - "azure_rm_adgroup"
     - "azure_rm_aduser"
     - "azure_rm_aks"
     - "azure_rm_appgateway"
@@ -68,6 +71,7 @@ parameters:
     - "azure_rm_resourcegroup"
     - "azure_rm_routetable"
     - "azure_rm_roleassignment"
+    - "azure_rm_roledefinition"
     - "azure_rm_registrationassignment"
     - "azure_rm_registrationdefinition"
     - "azure_rm_cognitivesearch"
@@ -102,7 +106,7 @@ pr:
 - dev
 
 pool:
-  vmImage: 'ubuntu-18.04'
+  vmImage: 'ubuntu-20.04'
 
 jobs:
   - job: CreateResourceGroups

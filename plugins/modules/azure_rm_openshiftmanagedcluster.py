@@ -440,6 +440,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                 options=dict(
                     pull_secret=dict(
                         type='str',
+                        no_log=True,
                         updatable=False,
                         disposition='pullSecret',
                         purgeIfNone=True
@@ -476,6 +477,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                     ),
                     client_secret=dict(
                         type='str',
+                        no_log=True,
                         updatable=False,
                         disposition='clientSecret',
                         required=True
@@ -755,8 +757,8 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                                               30)
         except CloudError as exc:
             self.log('Error attempting to create the OpenShiftManagedCluster instance.')
-            self.fail('Error creating the OpenShiftManagedCluster instance: {0}'.format(str(self.body)))
-            self.fail('Error creating the OpenShiftManagedCluster instance: {0}'.format(str(exc)))
+            self.fail('Error creating the OpenShiftManagedCluster instance: {0}'
+                      '\n{1}'.format(str(self.body), str(exc)))
         try:
             response = json.loads(response.text)
         except Exception:
@@ -778,7 +780,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                                               30)
         except CloudError as e:
             self.log('Error attempting to delete the OpenShiftManagedCluster instance.')
-            # self.fail('Error deleting the OpenShiftManagedCluster instance: {0}'.format(str(e)))
+            self.fail('Error deleting the OpenShiftManagedCluster instance: {0}'.format(str(e)))
 
         return True
 

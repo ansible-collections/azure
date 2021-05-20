@@ -95,6 +95,14 @@ options:
         type: str
         default: latest
         version_added: '0.0.1'
+    log_path:
+        description:
+            - Parent argument.
+        type: str
+    log_mode:
+        description:
+            - Parent argument.
+        type: str
 requirements:
     - python >= 2.7
     - The host that executes this module must have the azure.azcollection collection installed via galaxy

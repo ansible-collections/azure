@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 module: azure_rm_aduser
 
-version_added: "1.4.0"
+version_added: "1.5.0"
 
 short_description: Modify an Azure Active Directory user
 
@@ -114,14 +114,6 @@ options:
             - Filter that can be used to specify a user to update or delete.
             - Mutually exclusive with I(object_id), I(attribute_name), and I(user_principal_name).
         type: str
-    log_path:
-        description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
-        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 
@@ -220,7 +212,7 @@ except ImportError:
     pass
 
 
-class AzureRMADUserInfo(AzureRMModuleBase):
+class AzureRMADUser(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
@@ -232,7 +224,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             odata_filter=dict(type='str'),
             account_enabled=dict(type='bool'),
             display_name=dict(type='str'),
-            password_profile=dict(type='str'),
+            password_profile=dict(type='str', no_log=True),
             mail_nickname=dict(type='str'),
             immutable_id=dict(type='str'),
             usage_location=dict(type='str'),
@@ -241,8 +233,6 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             user_type=dict(type='str'),
             mail=dict(type='str'),
             tenant=dict(type='str', required=True),
-            log_path=dict(type='str'),
-            log_mode=dict(type='str'),
         )
 
         self.tenant = None
@@ -271,13 +261,13 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         required_together = [['attribute_name', 'attribute_value']]
         required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name']]
 
-        super(AzureRMADUserInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                supports_check_mode=False,
-                                                supports_tags=False,
-                                                mutually_exclusive=mutually_exclusive,
-                                                required_together=required_together,
-                                                required_one_of=required_one_of,
-                                                is_ad_resource=True)
+        super(AzureRMADUser, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                            supports_check_mode=False,
+                                            supports_tags=False,
+                                            mutually_exclusive=mutually_exclusive,
+                                            required_together=required_together,
+                                            required_one_of=required_one_of,
+                                            is_ad_resource=True)
 
     def exec_module(self, **kwargs):
 
@@ -310,7 +300,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                         should_update = True
                     if should_update or self.user_type and ad_user.user_type != self.user_type:
                         should_update = True
-                    if should_update or self.account_enabled and ad_user.account_enabled != self.account_enabled:
+                    if should_update or self.account_enabled is not None and ad_user.account_enabled != self.account_enabled:
                         should_update = True
                     if should_update or self.display_name and ad_user.display_name != self.display_name:
                         should_update = True
@@ -416,7 +406,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
 
 
 def main():
-    AzureRMADUserInfo()
+    AzureRMADUser()
 
 
 if __name__ == '__main__':

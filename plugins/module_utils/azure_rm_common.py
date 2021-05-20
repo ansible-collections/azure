@@ -48,7 +48,9 @@ AZURE_COMMON_ARGS = dict(
     cloud_environment=dict(type='str', default='AzureCloud'),
     cert_validation_mode=dict(type='str', choices=['validate', 'ignore']),
     api_profile=dict(type='str', default='latest'),
-    adfs_authority_url=dict(type='str', default=None)
+    adfs_authority_url=dict(type='str', default=None),
+    log_mode=dict(type='str', no_log=True),
+    log_path=dict(type='str', no_log=True),
 )
 
 AZURE_CREDENTIAL_ENV_MAPPING = dict(
@@ -1427,19 +1429,20 @@ class AzureRMAuth(object):
         else:
             self._adfs_authority_url = self.credentials.get('adfs_authority_url')
 
-        # get resource from cloud environment
-        self._resource = self._cloud_environment.endpoints.active_directory_resource_id
-
         if self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credentials = self.credentials['credentials']
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
+
+            graph_resource = self._cloud_environment.endpoints.active_directory_graph_resource_id
+            rm_resource = self._cloud_environment.endpoints.resource_manager
             self.azure_credentials = ServicePrincipalCredentials(client_id=self.credentials['client_id'],
                                                                  secret=self.credentials['secret'],
                                                                  tenant=self.credentials['tenant'],
                                                                  cloud_environment=self._cloud_environment,
+                                                                 resource=graph_resource if self.is_ad_resource else rm_resource,
                                                                  verify=self._cert_validation_mode == 'validate')
 
         elif self.credentials.get('ad_user') is not None and \
@@ -1449,7 +1452,7 @@ class AzureRMAuth(object):
 
             self.azure_credentials = self.acquire_token_with_username_password(
                 self._adfs_authority_url,
-                self._resource,
+                self._cloud_environment.endpoints.active_directory_resource_id,
                 self.credentials['ad_user'],
                 self.credentials['password'],
                 self.credentials['client_id'],
