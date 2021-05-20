@@ -22,7 +22,10 @@ parameters:
   default: 'all'
   values:
     - 'all'
+    - 'sanity'
+    - 'azure_rm_adapplication'
     - "azure_rm_acs"
+    - "azure_rm_adgroup"
     - "azure_rm_aduser"
     - "azure_rm_aks"
     - "azure_rm_appgateway"
