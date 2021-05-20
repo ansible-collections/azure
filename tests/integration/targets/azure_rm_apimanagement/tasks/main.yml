@@ -52,6 +52,25 @@
       - newApi_idempotent.changed == False
       - newApi_idempotent.failed == False
 
+- name: Update API's protocols
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ api_id }}"
+    description: "testDescription"
+    display_name: "{{ display_name }}"
+    service_url: 'http://testapi.example.net/api'
+    path: "{{ path }}"
+    protocols:
+      - https
+      - http
+  register: updateApi
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - updateApi.changed == True
+
 - name: Create different format api
   azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
