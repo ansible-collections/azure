@@ -71,14 +71,6 @@ options:
         choices:
             - absent
             - present
-    log_path:
-        description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
-        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -200,12 +192,6 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
                 default='present',
                 choices=['present', 'absent']
             ),
-            log_path=dict(
-                type='str'
-            ),
-            log_mode=dict(
-                type='str'
-            )
         )
 
         self.name = None
