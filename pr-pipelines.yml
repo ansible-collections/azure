@@ -180,6 +180,9 @@ jobs:
         "Python${{ parameters.PYTHON_VER }}_14":
           python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '14'
+        "Python${{ parameters.PYTHON_VER }}_15":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '15'
 
     steps:
     - task: UsePythonVersion@0

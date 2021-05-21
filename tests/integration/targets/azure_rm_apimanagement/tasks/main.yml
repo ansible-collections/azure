@@ -14,6 +14,9 @@
     sku_name: Developer
     sku_capacity: 1
 
+- name: wait for
+  shell: sleep 600
+
 - name: Create a new API instance
   azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
