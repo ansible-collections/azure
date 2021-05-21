@@ -34,6 +34,7 @@
       policy_name: ssl_policy20150501
       disabled_ssl_protocols:
         - tls_v1_0
+        - tls_v1_1
       cipher_suites:
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
@@ -124,6 +125,7 @@
       policy_name: ssl_policy20150501
       disabled_ssl_protocols:
         - tls_v1_0
+        - tls_v1_1
       cipher_suites:
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
@@ -209,6 +211,7 @@
       policy_name: ssl_policy20150501
       disabled_ssl_protocols:
         - tls_v1_0
+        - tls_v1_1
       cipher_suites:
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
@@ -296,6 +299,7 @@
       policy_name: ssl_policy20150501
       disabled_ssl_protocols:
         - tls_v1_0
+        - tls_v1_1
       cipher_suites:
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
@@ -381,6 +385,7 @@
       policy_name: ssl_policy20150501
       disabled_ssl_protocols:
         - tls_v1_0
+        - tls_v1_1
       cipher_suites:
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
