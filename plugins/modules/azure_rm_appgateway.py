@@ -1217,17 +1217,23 @@ def compare_arrays(old_params, new_params, param_name):
     old = old_params.get(param_name) or []
     new = new_params.get(param_name) or []
 
-    oldd = {}
-    for item in old:
-        name = item['name']
-        oldd[name] = item
-    newd = {}
-    for item in new:
-        name = item['name']
-        newd[name] = item
+    oldd = array_to_dict(old)
+    newd = array_to_dict(new)
 
     newd = dict_merge(oldd, newd)
     return newd == oldd
+
+
+def array_to_dict(old):
+    '''Converts list object to dictionary object, including any nested properties on elements.'''
+    new = {}
+    for index, item in enumerate(old):
+        new[index] = item
+        if isinstance(item, dict):
+            for nested in item:
+                if isinstance(item[nested], list):
+                    new[index][nested] = array_to_dict(item[nested])
+    return new
 
 
 def main():
