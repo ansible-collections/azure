@@ -1197,6 +1197,7 @@ def url_path_map_id(subscription_id, resource_group_name, appgateway_name, name)
         subscription_id,
         resource_group_name,
         appgateway_name,
+        name
     )
 
 
