@@ -446,10 +446,11 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                     type=dict(type='str', choices=['UserManaged', 'ServiceManaged'], required=True),
                     key_vault_meta_info=dict(
                         type='dict',
+                        no_log=True,
                         options=dict(
                             key_vault_resource_id=dict(type='str', required=True),
                             encryption_key_name=dict(type='str', required=True),
-                            encryption_key_version=dict(type='str', required=True)
+                            encryption_key_version=dict(type='str', no_log=True, required=True)
                         )
                     ),
                 )

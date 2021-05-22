@@ -16,7 +16,7 @@ options:
     plugin:
         description: marks this as an instance of the 'azure_rm' plugin
         required: true
-        choices: ['azure_rm']
+        choices: ['azure_rm', 'azure.azcollection.azure_rm']
     include_vm_resource_groups:
         description: A list of resource group names to search for virtual machines. '\*' will include all resource
             groups in the subscription.
