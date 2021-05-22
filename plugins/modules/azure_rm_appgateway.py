@@ -550,8 +550,6 @@ EXAMPLES = '''
         name: sample_http_listener
     request_routing_rules:
       - rule_type: path_based_routing
-        backend_address_pool: test_backend_address_pool
-        backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
         url_path_map: path_mappings
