@@ -401,7 +401,7 @@ options:
                     - 'path_based_routing'
             backend_address_pool:
                 description:
-                    - Backend address pool resource of the application gateway.
+                    - Backend address pool resource of the application gateway. Not used if I(rule_type) is C(path_based_routing).
             backend_http_settings:
                 description:
                     - Backend C(http) settings resource of the application gateway.
@@ -920,6 +920,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     ev = kwargs[key]
                     for i in range(len(ev)):
                         item = ev[i]
+                        if 'rule_type' in item and item['rule_type'] == 'path_based_routing' and 'backend_address_pool' in item:
+                            del item['backend_address_pool']
                         if 'backend_address_pool' in item:
                             id = backend_address_pool_id(self.subscription_id,
                                                          kwargs['resource_group'],
