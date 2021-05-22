@@ -756,6 +756,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                         item = ev[i]
                         if 'protocol' in item:
                             item['protocol'] = _snake_to_camel(item['protocol'], True)
+                        if 'pick_host_name_from_backend_http_settings' in item and item['pick_host_name_from_backend_http_settings'] and 'host' in item:
+                            del item['host']
                     self.parameters["probes"] = ev
                 elif key == "backend_http_settings_collection":
                     ev = kwargs[key]
