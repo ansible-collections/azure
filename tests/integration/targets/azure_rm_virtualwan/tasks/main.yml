@@ -1,0 +1,67 @@
+ - name: Prepare random number
+   set_fact:
+     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+   run_once: yes
+
+ - name: Create a VirtualWan
+   azure_rm_virtualwan:
+     resource_group: "{{ resource_group }}"
+     name: "virtualwan{{ rpfx }}"
+     office365_local_breakout_category: All
+     disable_vpn_encryption: true
+     allow_branch_to_branch_traffic: true
+     allow_vnet_to_vnet_traffic: true
+     virtual_wan_type: Basic
+   register: output
+
+ - assert:
+     that:
+       - output.changed
+
+ - name: Create a VirtualWan again (Idempotent test)
+   azure_rm_virtualwan:
+     resource_group: "{{ resource_group }}"
+     office365_local_breakout_category: All
+     name: "virtualwan{{ rpfx }}"
+     disable_vpn_encryption: true
+     allow_branch_to_branch_traffic: true
+     allow_vnet_to_vnet_traffic: true
+     virtual_wan_type: Basic
+   register: output
+
+ - assert:
+     that:
+       - not output.changed
+
+ - name: Update the VirtualWan type
+   azure_rm_virtualwan:
+     resource_group: "{{ resource_group }}"
+     office365_local_breakout_category: All
+     name: "virtualwan{{ rpfx }}"
+     disable_vpn_encryption: true
+     allow_branch_to_branch_traffic: true
+     allow_vnet_to_vnet_traffic: true
+     virtual_wan_type: Standard
+   register: output
+
+ - assert:
+     that:
+       - output.changed
+
+ - name: Get VirtualWan info
+   azure_rm_virtualwan_info:
+     resource_group: "{{ resource_group }}"
+     name: "virtualwan{{ rpfx }}"
+   register: output
+
+ - assert:
+     that:
+       - output.virtual_wans[0]['allow_branch_to_branch_traffic'] == true
+       - output.virtual_wans[0]['virtual_wan_type'] == 'Standard'
+       - output.virtual_wans[0]['disable_vpn_encryption'] == true
+
+ - name: Delete the VirtualWan
+   azure_rm_virtualwan:
+     resource_group: "{{ resource_group }}"
+     name: "virtualwan{{ rpfx }}"
+     state: absent

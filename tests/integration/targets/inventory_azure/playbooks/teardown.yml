@@ -1,26 +1,40 @@
 ---
-- name: Destroy subnet
-  azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
-    virtual_network: "{{ network_name }}"
-    name: "{{ subnet_name }}"
-    state: absent
+- hosts: localhost
+  connection: local
+  gather_facts: no
 
-- name: Destroy virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: "{{ network_name }}"
-    state: absent
+  tasks:
+  - include_vars: vars.yml
 
-- name: Destroy availability set
-  azure_rm_availabilityset:
-    resource_group: "{{ resource_group }}"
-    name: "{{ availability_set }}"
-    state: absent
+  - name: Delete VM
+    azure_rm_virtualmachine:
+      resource_group: "{{ resource_group }}"
+      name: "{{ vm_name }}"
+      remove_on_absent: all_autocreated
+      state: absent
 
-- name: Destroy storage account
-  azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ storage_account }}"
-    force_delete_nonempty: yes
-    state: absent
+  - name: Destroy subnet
+    azure_rm_subnet:
+      resource_group: "{{ resource_group }}"
+      virtual_network: "{{ network_name }}"
+      name: "{{ subnet_name }}"
+      state: absent
+
+  - name: Destroy virtual network
+    azure_rm_virtualnetwork:
+      resource_group: "{{ resource_group }}"
+      name: "{{ network_name }}"
+      state: absent
+
+  - name: Destroy availability set
+    azure_rm_availabilityset:
+      resource_group: "{{ resource_group }}"
+      name: "{{ availability_set }}"
+      state: absent
+
+  - name: Destroy storage account
+    azure_rm_storageaccount:
+      resource_group: "{{ resource_group }}"
+      name: "{{ storage_account }}"
+      force_delete_nonempty: yes
+      state: absent
