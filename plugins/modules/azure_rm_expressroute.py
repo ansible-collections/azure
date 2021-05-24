@@ -216,8 +216,6 @@ class AzureExpressRoute(AzureRMModuleBase):
             service_provider_properties=dict(
                 type='dict', options=self.service_provider_properties_spec),
             global_reach_enabled=dict(type='bool'),
-            log_path=dict(type='str'),
-            log_mode=dict(type='str'),
         )
 
         required_if = [
@@ -238,8 +236,6 @@ class AzureExpressRoute(AzureRMModuleBase):
             changed=False,
             state=dict()
         )
-        self.log_path = None
-        self.log_mode = None
 
         super(AzureExpressRoute, self).__init__(self.module_arg_spec,
                                                 supports_check_mode=True,
