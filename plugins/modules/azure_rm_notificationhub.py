@@ -95,7 +95,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-state:
+return_paramter:
     description:
         - Current state of the Notification Hub namesapce or Notification Hub.
     returned: always
