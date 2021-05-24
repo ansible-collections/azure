@@ -103,7 +103,7 @@ options:
                 description:
                     - AgentPoolMode represents mode of an agent pool.
                     - Possible values include C(System) and C(User).
-                    - System AgentPoolMode requires a minimum VM SKU of at least 2 vCPUs and 4GB memory
+                    - System AgentPoolMode requires a minimum VM SKU of at least 2 vCPUs and 4GB memory.
                 choices:
                     - 'System'
                     - 'User'
