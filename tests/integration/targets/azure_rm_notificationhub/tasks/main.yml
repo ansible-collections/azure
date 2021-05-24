@@ -3,20 +3,17 @@
       namespace_name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
       name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
-
 - name: Create Notification Hub Namespace (check mode)
   azure_rm_notificationhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
     resource_group: "{{ resource_group }}"
     sku: "free"
-    check_mode: yes
+  check_mode: yes
   register: results
 
 - assert:
     that: results.changed
-
-
 
 - name: Create Notification Hub  (check mode)
   azure_rm_notificationhub:
@@ -25,25 +22,11 @@
     name: "{{ name }}"
     resource_group: "{{ resource_group }}"
     sku: "free"
-    check_mode: yes
+  check_mode: yes
   register: results
 
 - assert:
     that: results.changed
-
-
-- name: Create Notification Hub Namespace (check mode)
-  azure_rm_notificationhub:
-    location: eastus2
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    sku: "free"
-  register: results
-
-- assert:
-    that: results.changed
-
-
 
 - name: Create Notification Hub
   azure_rm_notificationhub:

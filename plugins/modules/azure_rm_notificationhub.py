@@ -9,7 +9,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_notificationhub
-version_added: "1.5.1"
+version_added: "1.6.0"
 short_description: Manage Notification Hub
 description:
     - Create, update and delete instance of Notification Hub.
@@ -27,7 +27,6 @@ options:
     name:
         description:
             - Unique name of the Notification Hub.
-        required: True
         type: str
     location:
         description:
@@ -44,21 +43,13 @@ options:
             - standard
         type: str
     state:
-      description:
-          - Assert the state of the Notification Hub.
-          - Use C(present) to create or update an notification hub and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
-      type: str
-    log_path:
         description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
+            - Assert the state of the Notification Hub.
+            - Use C(present) to create or update an notification hub and C(absent) to delete it.
+        default: present
+        choices:
+            - absent
+            - present
         type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -156,8 +147,6 @@ class AzureNotificationHub(AzureRMModuleBase):
                      'free', 'basic', 'standard'], default='free'),
             state=dict(choices=['present', 'absent'],
                        default='present', type='str'),
-            log_path=dict(type='str'),
-            log_mode=dict(type='str'),
         )
 
         self.resource_group = None
@@ -168,8 +157,6 @@ class AzureNotificationHub(AzureRMModuleBase):
         self.authorizations = None
         self.tags = None
         self.state = None
-        self.log_path = None
-        self.log_mode = None
         self.results = dict(
             changed=False,
             state=dict()
@@ -206,7 +193,7 @@ class AzureNotificationHub(AzureRMModuleBase):
                 self.log('Fetching Notification Hub {0}'.format(self.name))
                 notification_hub = self.notification_hub_client.notification_hubs.get(
                     self.resource_group, self.namespace_name, self.name)
-                notification_hub_results = notification_hub_to_dict(
+                results = notification_hub_to_dict(
                     notification_hub)
             # don't change anything if creating an existing namespace, but change if deleting it
             if self.state == 'present':
@@ -234,8 +221,6 @@ class AzureNotificationHub(AzureRMModuleBase):
 
         self.results['changed'] = changed
         if self.name and not changed:
-            self.results['state'] = notification_hub_results
-        else:
             self.results['state'] = results
 
         # return the results if your only gathering information
