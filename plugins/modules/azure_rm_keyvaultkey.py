@@ -100,9 +100,9 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
 
         self.module_arg_spec = dict(
             key_name=dict(type='str', required=True),
-            keyvault_uri=dict(type='str', required=True),
+            keyvault_uri=dict(type='str', no_log=True, required=True),
             pem_file=dict(type='str'),
-            pem_password=dict(type='str'),
+            pem_password=dict(type='str', no_log=True),
             byok_file=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent'])
         )

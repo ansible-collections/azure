@@ -490,7 +490,7 @@ ADDONS = {
 
 linux_profile_spec = dict(
     admin_username=dict(type='str', required=True),
-    ssh_key=dict(type='str', required=True)
+    ssh_key=dict(type='str', no_log=True, required=True)
 )
 
 
