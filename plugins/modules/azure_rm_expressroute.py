@@ -9,7 +9,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_expressroute
-version_added: "1.5.1"
+version_added: "1.6.0"
 short_description: Manage Express Route Circuits
 description:
     - Create, update and delete instance of Express Route.
@@ -84,14 +84,14 @@ options:
             - Support for classic operations.
         type: bool
     state:
-      description:
-          - Assert the state of the express route.
-          - Use C(present) to create or update an express route and C(absent) to delete it.
-      type: str
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the express route.
+            - Use C(present) to create or update an express route and C(absent) to delete it.
+        type: str
+        default: present
+        choices:
+             - absent
+            - present
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -130,7 +130,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-state:
+return_paramter:
     description:
         - Current state of the express route.
     returned: always
