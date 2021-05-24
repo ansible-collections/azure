@@ -28,6 +28,7 @@ parameters:
     - "azure_rm_adgroup"
     - "azure_rm_aduser"
     - "azure_rm_aks"
+    - "azure_rm_apimanagement"
     - "azure_rm_appgateway"
     - "azure_rm_appserviceplan"
     - "azure_rm_automationaccount"
@@ -179,6 +180,9 @@ jobs:
         "Python${{ parameters.PYTHON_VER }}_14":
           python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '14'
+        "Python${{ parameters.PYTHON_VER }}_15":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '15'
 
     steps:
     - task: UsePythonVersion@0
