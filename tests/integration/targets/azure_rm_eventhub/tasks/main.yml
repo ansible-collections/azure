@@ -32,7 +32,7 @@
     that: results.changed
 
 
-- name: Create Event Hub Namespace (check mode)
+- name: Create Event Hub Namespace
   azure_rm_eventhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
