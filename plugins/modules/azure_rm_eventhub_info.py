@@ -11,6 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_eventhub_info
+version_added: "1.6.0"
 short_description: Get Azure Event Hub
 description:
     - Get facts of Azure Event Hub
