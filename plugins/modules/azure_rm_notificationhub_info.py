@@ -8,7 +8,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_notificationhub_info
+module: azure_rm_notificationhub_info
 version_added: "1.6.0"
 short_description: Get Azure Notification Hub
 description:
@@ -49,7 +49,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-return_paramter:
+state:
     description:
         - Current state of the Notification Hub namesapce or Notification Hub.
     returned: always
