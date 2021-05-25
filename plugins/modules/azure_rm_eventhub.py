@@ -10,6 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_eventhub
+version_added: "1.6.0"
 short_description: Manage Event Hub
 description:
     - Create, update and delete instance of Event Hub.
