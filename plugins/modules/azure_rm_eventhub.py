@@ -31,7 +31,7 @@ options:
         required: False
         type: str
     message_retention_in_days:
-        description: 
+        description:
             - Number of days to retain the events for this Event Hub.
         required: False
         type: int
@@ -40,11 +40,23 @@ options:
             - Number of partitions created for the Event Hub.
         required: False
         type: int
+        choices: Choose value between 1 to 32(both included).
     status:
         description:
             - Enumerates the possible values for the status of the Event hub.
+        default: Active
         required: False
         type: str
+        choices:
+            - Active
+            - Disabled
+            - Restoring
+            - SendDisabled
+            - ReceiveDisabled
+            - Creating
+            - Deleting
+            - Renaming
+            - Unknown
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
