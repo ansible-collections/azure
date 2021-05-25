@@ -54,8 +54,8 @@
 - name: Update Express route
   azure_rm_expressroute:
     location: eastus
-    name: {{ express_route }}
-    resource_group: {{ resource_group }}
+    name: "{{ express_route }}"
+    resource_group: "{{ resource_group }}"
     allow_classic_operations: true
     global_reach_enabled: false
     tags: 
@@ -87,12 +87,12 @@
   assert:
     that: 
       - results.expressroute[0].tags.test == 'modified'
-      - zones.expressroute[0].type == 'Microsoft.Network/expressRouteCircuits'
+      - results.expressroute[0].type == 'Microsoft.Network/expressRouteCircuits'
 
 - name: Test idempotent
   azure_rm_expressroute:
     name: "{{ express_route }}"
-    resource_group: {{ resource_group }}
+    resource_group: "{{ resource_group }}"
   register: results
 
 - assert:

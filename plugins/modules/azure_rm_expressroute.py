@@ -50,30 +50,31 @@ options:
             - The name of the SKU.
             - Please see L(https://azure.microsoft.com/en-in/pricing/details/expressroute/)
             - Required sku when I(state=present).
+        type: dict
         suboptions:
             tier:
                 description:
                     - The tier of the SKU
-                required: true
-                default: Standard
+                type: str
                 choices:
                     - Standard
                     - Premium
             family:
                 description:
                     - the family of the SKU
+                type: str
                 required: true
                 choices:
                     - MeteredData
                     - UnlimitedData
     global_reach_enabled:
         description: Flag denoting global reach status.
-        default: true
         type: bool
     authorizations:
         description:
             - The list of authorizations.
         type: list
+        elements: dict
         suboptions:
             name:
                 description: Name of the authorization.
@@ -130,7 +131,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-return_paramter:
+state:
     description:
         - Current state of the express route.
     returned: always
@@ -218,17 +219,13 @@ class AzureExpressRoute(AzureRMModuleBase):
             global_reach_enabled=dict(type='bool'),
         )
 
-        required_if = [
-            ('state', 'present', ['sku'])
-        ]
-
         self.resource_group = None
         self.name = None
         self.location = None
         self.allow_classic_operations = None
         self.authorizations = None
         self.service_provider_properties = None
-        self. global_reach_enabled = None
+        self.global_reach_enabled = None
         self.sku = None
         self.tags = None
         self.state = None
@@ -239,8 +236,7 @@ class AzureExpressRoute(AzureRMModuleBase):
 
         super(AzureExpressRoute, self).__init__(self.module_arg_spec,
                                                 supports_check_mode=True,
-                                                supports_tags=True,
-                                                required_if=required_if)
+                                                supports_tags=True)
 
     def exec_module(self, **kwargs):
 
@@ -250,7 +246,7 @@ class AzureExpressRoute(AzureRMModuleBase):
         self.results['check_mode'] = self.check_mode
 
         # retrieve resource group to make sure it exists
-        self.get_resource_group(self.resource_group)
+        resource_group = self.get_resource_group(self.resource_group)
 
         results = dict()
         changed = False

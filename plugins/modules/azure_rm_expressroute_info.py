@@ -47,7 +47,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-return_paramter:
+state:
     description:
         - Current state of the express route.
     returned: always

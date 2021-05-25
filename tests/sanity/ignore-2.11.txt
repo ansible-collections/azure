@@ -8,7 +8,6 @@ plugins/modules/azure_rm_aks_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_aks_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_aksversion_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_apimanagementservice.py validate-modules:invalid-ansiblemodule-schema
-plugins/modules/azure_rm_apimanagement.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_appgateway.py validate-modules:doc-choices-do-not-match-spec
 plugins/modules/azure_rm_appgateway.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_appgateway.py validate-modules:parameter-list-no-elements
@@ -354,12 +353,5 @@ plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:parameter-l
 plugins/modules/azure_rm_subnet.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_vmbackuppolicy.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_privatednsrecordset.py validate-modules:invalid-ansiblemodule-schema
-plugins/modules/azure_rm_privatednsrecordset.py validate-modules:required_if-unknown-key
-plugins/modules/azure_rm_privatednsrecordset_info.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_privatednsrecordset_info.py validate-modules:required_if-unknown-key
-plugins/modules/azure_rm_expressroute.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_expressroute.py validate-modules:required_if-unknown-key
-plugins/modules/azure_rm_expressroute_info.py validate-modules:required_if-requirements-unknown
-plugins/modules/azure_rm_expressroute_info.py validate-modules:required_if-unknown-key
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang
