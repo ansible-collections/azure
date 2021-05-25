@@ -14,7 +14,7 @@ module: azure_eventhub_info
 version_added: "1.6.0"
 short_description: Get Azure Event Hub
 description:
-    - Get facts of Azure Event Hub
+    - Get facts of Azure Event Hub.
 options:
     resource_group:
         description:
@@ -22,7 +22,8 @@ options:
         required: True
         type: str
     namespace_name:
-            - The name of the namspace
+        description:
+            - The name of the namspace.
         required: True
         type: str
     name:
