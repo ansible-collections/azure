@@ -10,7 +10,7 @@
     namespace_name: "{{ namespace_name }}"
     resource_group: "{{ resource_group }}"
     sku: "Basic"
-    check_mode: yes
+  check_mode: yes
   register: results
 
 - assert:
@@ -25,7 +25,7 @@
     name: "{{ name }}"
     resource_group: "{{ resource_group }}"
     sku: "Basic"
-    check_mode: yes
+  check_mode: yes
   register: results
 
 - assert:
