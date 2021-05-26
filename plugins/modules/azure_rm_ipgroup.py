@@ -46,14 +46,6 @@ options:
         choices:
             - absent
             - present
-    log_path:
-        description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
-        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -192,9 +184,7 @@ class AzureRMIPGroup(AzureRMModuleBase):
             name=dict(type='str', required=True),
             location=dict(type='str'),
             ip_addresses=dict(type='list', elements='str'),
-            state=dict(choices=['present', 'absent'], default='present', type='str'),
-            log_path=dict(type='str'),
-            log_mode=dict(type='str')
+            state=dict(choices=['present', 'absent'], default='present', type='str')
         )
 
         self.results = dict(
