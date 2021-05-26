@@ -38,9 +38,9 @@ options:
     partition_count:
         description:
             - Number of partitions created for the Event Hub.
+            - Range from 1 to 32.
         required: False
         type: int
-        choices: [1,2,3,4,5,6,7,8,......,31,32]
     status:
         description:
             - Enumerates the possible values for the status of the Event hub.
@@ -166,8 +166,6 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
-partition_count_list = [1,2,3,4,5,6,7,8,......,31,32]
-
 
 class AzureRMEventHub(AzureRMModuleBase):
 
@@ -182,7 +180,7 @@ class AzureRMEventHub(AzureRMModuleBase):
             message_retention_in_days=dict(type='int'),
             name=dict(type='str'),
             namespace_name=dict(type='str', required=True),
-            partition_count=dict(type='int', choices=partition_count_list),
+            partition_count=dict(type='int'),
             resource_group=dict(type='str', required=True),
             sku=dict(type='str', choices=[
                 'Basic', 'Standard'], default='Basic'),
