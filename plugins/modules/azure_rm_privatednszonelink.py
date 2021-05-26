@@ -213,6 +213,7 @@ class AzureRMVirtualNetworkLink(AzureRMModuleBase):
 
         super(AzureRMVirtualNetworkLink, self).__init__(self.module_arg_spec,
                                                         required_if=required_if,
+                                                        supports_tags=True,
                                                         supports_check_mode=True)
 
     def exec_module(self, **kwargs):
