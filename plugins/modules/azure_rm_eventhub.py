@@ -324,8 +324,9 @@ class AzureRMEventHub(AzureRMModuleBase):
         :return: create or update Event Hub instance state dictionary
         '''
         try:
+            if self.sku == 'Basic':
+                self.message_retention_in_days = 1
             params = Eventhub(
-                name=self.name,
                 message_retention_in_days=self.message_retention_in_days,
                 partition_count=self.partition_count,
                 status=self.status
@@ -337,7 +338,7 @@ class AzureRMEventHub(AzureRMModuleBase):
                 params)
 
             self.log("Response : {0}".format(result))
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to create event hub {0} in resource group {1}: {2}".format(
                 self.name, self.resource_group, str(ex)))
         return event_hub_to_dict(result)
