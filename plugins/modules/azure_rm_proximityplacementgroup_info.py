@@ -31,14 +31,6 @@ options:
         description:
             - Limit the results by providing resource tags.
         type: dict
-    log_path:
-        description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
-        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -116,9 +108,7 @@ class AzureRMProximityPlacementGroupInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='dict'),
-            log_path=dict(type='str'),
-            log_mode=dict(type='str')
+            tags=dict(type='dict')
         )
 
         # store the results of the module operation
