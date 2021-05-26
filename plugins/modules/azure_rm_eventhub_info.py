@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_eventhub_info
+module: azure_rm_eventhub_info
 version_added: "1.6.0"
 short_description: Get Azure Event Hub
 description:
@@ -24,7 +24,7 @@ options:
     namespace_name:
         description:
             - The name of the namspace.
-        required: True
+        required: False
         type: str
     name:
         description:
@@ -50,7 +50,7 @@ state:
         - Current state of the Event Hub namesapce or Event Hub.
     returned: always
     type: dict
-    sample:{
+    sample: {
             "additional_properties": {},
             "created_at": "2021-04-19T12:49:46.597Z",
             "critical": null,
