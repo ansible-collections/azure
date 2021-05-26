@@ -156,8 +156,11 @@ state:
 
 '''
 
-
-from msrestazure.azure_exceptions import CloudError
+try:
+    from msrestazure.azure_exceptions import CloudError
+except ImportError:
+    # This is handled in azure_rm_common
+    pass
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from azure.mgmt.eventhub.models import Eventhub, EHNamespace
 from azure.mgmt.eventhub.models.sku import Sku
