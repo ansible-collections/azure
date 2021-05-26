@@ -40,7 +40,7 @@ options:
             - Number of partitions created for the Event Hub.
         required: False
         type: int
-        choices: Choose value between 1 to 32(both included).
+        choices: [1,2,3,4,5,6,7,8,......,31,32]
     status:
         description:
             - Enumerates the possible values for the status of the Event hub.
@@ -166,7 +166,7 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
-partition_count_list = [i for i in range(1, 33)]
+partition_count_list = [1,2,3,4,5,6,7,8,......,31,32]
 
 
 class AzureRMEventHub(AzureRMModuleBase):
