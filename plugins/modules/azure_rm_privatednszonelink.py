@@ -207,7 +207,6 @@ class AzureRMVirtualNetworkLink(AzureRMModuleBase):
         self.virtual_network = None
         self.registration_enabled = None
         self.state = None
-        self.location = None
         self.tags = None
         self.log_path = None
         self.log_mode = None
