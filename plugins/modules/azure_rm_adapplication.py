@@ -409,7 +409,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             identifier_uris=dict(type='list', elements='str'),
             key_type=dict(type='str', default='AsymmetricX509Cert', choices=['AsymmetricX509Cert', 'Password', 'Symmetric']),
             key_usage=dict(type='str', default='Verify', choices=['Sign', 'Verify']),
-            key_value=dict(type='str'),
+            key_value=dict(type='str', no_log=True),
             native_app=dict(type='bool'),
             oauth2_allow_implicit_flow=dict(type='bool'),
             optional_claims=dict(type='list', elements='dict', options=optional_claims_spec),
