@@ -51,14 +51,6 @@ options:
         choices:
             - absent
             - present
-    log_path:
-        description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
-        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -187,9 +179,7 @@ class AzureRMVirtualNetworkLink(AzureRMModuleBase):
             zone_name=dict(type='str', required=True),
             virtual_network=dict(type='str'),
             state=dict(choices=['present', 'absent'], default='present', type='str'),
-            registration_enabled=dict(type='bool', default=False),
-            log_path=dict(type='str'),
-            log_mode=dict(type='str')
+            registration_enabled=dict(type='bool', default=False)
         )
 
         required_if = [

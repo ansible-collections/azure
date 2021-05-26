@@ -37,14 +37,6 @@ options:
         description:
             - Limit the results by providing resource tags.
         type: dict
-    log_path:
-        description:
-            - parent argument.
-        type: str
-    log_mode:
-        description:
-            - parent argument.
-        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -115,9 +107,7 @@ class AzureRMVirtualNetworkLinkInfo(AzureRMModuleBase):
             name=dict(type='str'),
             resource_group=dict(type='str', required=True),
             zone_name=dict(type='str', required=True),
-            tags=dict(type='dict'),
-            log_path=dict(type='str'),
-            log_mode=dict(type='str')
+            tags=dict(type='dict')
         )
 
         # store the results of the module operation
