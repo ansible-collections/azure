@@ -244,19 +244,20 @@ class AzureRMEventHub(AzureRMModuleBase):
             # don't change anything if creating an existing namespace, but change if deleting it
             if self.state == 'present':
                 changed = False
-
+                
                 update_tags, results['tags'] = self.update_tags(
                     results['tags'])
 
                 if update_tags:
                     changed = True
                 elif self.namespace_name and not self.name:
-                    if self.sku != results['sku'].lower():
+                    
+                    if self.sku != results['sku']:
                         changed = True
                 elif self.namespace_name and self.name and event_hub_results:
-                    if self.sku != 'Basic' and self.message_retention_in_days != event_hub_results['message_retention_in_days']:
+                    if results['sku'] != 'Basic' and self.message_retention_in_days != event_hub_results['message_retention_in_days']:
+                        self.sku = results['sku']
                         changed = True
-
             elif self.state == 'absent':
                 changed = True
 
@@ -269,6 +270,7 @@ class AzureRMEventHub(AzureRMModuleBase):
                 changed = False
 
         self.results['changed'] = changed
+
         if self.name and not changed:
             self.results['state'] = event_hub_results
         else:
@@ -277,6 +279,7 @@ class AzureRMEventHub(AzureRMModuleBase):
         # return the results if your only gathering information
         if self.check_mode:
             return self.results
+
         if changed:
             if self.state == "present":
                 if self.name is None:
@@ -290,7 +293,6 @@ class AzureRMEventHub(AzureRMModuleBase):
                 elif self.namespace_name and self.name:
                     self.delete_event_hub()
                 self.results['state']['status'] = 'Deleted'
-
         return self.results
 
     def create_or_update_namespaces(self):
