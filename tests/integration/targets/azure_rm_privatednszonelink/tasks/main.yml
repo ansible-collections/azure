@@ -88,7 +88,6 @@
       - results.virtualnetworklinks[0].name == "{{ link_name }}"
       - results.virtualnetworklinks[0].registration_enabled == true
       - results.virtualnetworklinks[0].provisioning_state == "Succeeded"
-      - results.virtualnetworklinks[0].virtual_network_link_state == "Completed"
 
 - name: Delete virtual network link
   azure_rm_privatednszonelink:
