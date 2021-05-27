@@ -252,6 +252,9 @@ class AzureRMEventHub(AzureRMModuleBase):
                 elif self.namespace_name and not self.name:
                     if self.sku != results['sku'].lower():
                         changed = True
+                elif self.namespace_name and self.name and event_hub_results:
+                    if self.sku != 'Basic' and self.message_retention_in_days != event_hub_results['message_retention_in_days']:
+                        changed = True
 
             elif self.state == 'absent':
                 changed = True
