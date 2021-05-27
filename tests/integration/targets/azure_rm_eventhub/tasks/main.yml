@@ -96,7 +96,7 @@
 
 - assert:
     that:
-      - not results.changed
+      - results.changed
 
 #cleanup
 - name: Delete Event Hub
@@ -125,6 +125,10 @@
     namespace_name: "{{ namespace_name }}"
     resource_group: "{{ resource_group }}"
     state: absent
+
+- name: Pause for 1 minutes to check namespace deleted
+  pause:
+    minutes: 1
 
 - name: Delete Namespace (idempotent)
   azure_rm_eventhub:
