@@ -234,6 +234,7 @@ class AzureRMEventHub(AzureRMModuleBase):
                 self.resource_group, self.namespace_name)
 
             results = namespace_to_dict(namespace)
+            event_hub_results = None
             if self.name:
                 self.log('Fetching event Hub {0}'.format(self.name))
                 event_hub = self.event_hub_client.event_hubs.get(
