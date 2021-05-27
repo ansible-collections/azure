@@ -198,8 +198,6 @@ class AzureRMIPGroup(AzureRMModuleBase):
         self.location = None
         self.ip_addresses = None
         self.tags = None
-        self.log_path = None
-        self.log_mode = None
 
         super(AzureRMIPGroup, self).__init__(self.module_arg_spec,
                                              supports_check_mode=True)
