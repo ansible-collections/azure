@@ -3,7 +3,6 @@
       namespace_name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
       name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
-
 - name: Create Event Hub Namespace (check mode)
   azure_rm_eventhub:
     location: eastus2
@@ -15,8 +14,6 @@
 
 - assert:
     that: results.changed
-
-
 
 - name: Create Event Hub  (check mode)
   azure_rm_eventhub:
@@ -31,7 +28,6 @@
 - assert:
     that: results.changed
 
-
 - name: Create Event Hub Namespace
   azure_rm_eventhub:
     location: eastus2
@@ -42,8 +38,6 @@
 
 - assert:
     that: results.changed
-
-
 
 - name: Create Event Hub
   azure_rm_eventhub:
@@ -71,7 +65,6 @@
       - results.changed
       - results.state.tags.test == 'modified'
 
-
 - name: Update Event Hub
   azure_rm_eventhub:
     location: eastus2
@@ -88,8 +81,7 @@
       - results.state.tags.test == 'modified'
 
 - name: Retrieve Namespace
-  azure_rm_eventhub:
-    location: eastus2
+  azure_rm_eventhub_info:
     namespace_name: "{{ namespace_name }}"
     resource_group: "{{ resource_group }}"
   register: results
@@ -97,7 +89,7 @@
 - name: Assert that facts module returned result
   assert:
     that: 
-      - results.ddos_protection_plan[0].tags.test == 'modified'
+      - results.namespace[0].tags.test == 'modified'
 
 - name: Test idempotent
   azure_rm_eventhub:
@@ -111,26 +103,6 @@
       - not results.changed
 
 #cleanup
-
-- name: Delete Namespace
-  azure_rm_eventhub:
-    location: eastus2
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-
-- name: Delete Namespace (idempotent)
-  azure_rm_eventhub:
-    location: eastus2
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: results
-
-- assert:
-    that: not results.changed
-
-
 - name: Delete Event Hub
   azure_rm_eventhub:
     location: eastus2
@@ -144,6 +116,24 @@
     location: eastus2
     namespace_name: "{{ namespace_name }}"
     name: "{{ name }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: results
+
+- assert:
+    that: not results.changed
+
+- name: Delete Namespace
+  azure_rm_eventhub:
+    location: eastus2
+    namespace_name: "{{ namespace_name }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+
+- name: Delete Namespace (idempotent)
+  azure_rm_eventhub:
+    location: eastus2
+    namespace_name: "{{ namespace_name }}"
     resource_group: "{{ resource_group }}"
     state: absent
   register: results
