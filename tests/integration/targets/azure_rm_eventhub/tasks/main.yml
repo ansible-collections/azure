@@ -56,6 +56,7 @@
     location: eastus2
     namespace_name: "{{ namespace_name }}"
     resource_group: "{{ resource_group }}"
+    sku: "Standard"
     tags:
       test: modified
   register: results
@@ -71,25 +72,20 @@
     namespace_name: "{{ namespace_name }}"
     name: "{{ name }}"
     resource_group: "{{ resource_group }}"
+    message_retention_in_days: 2
     tags:
       test: modified
   register: results
 
 - assert:
     that: 
-      - results.changed
-      - results.state.tags.test == 'modified'
+      - not results.changed
 
 - name: Retrieve Namespace
   azure_rm_eventhub_info:
     namespace_name: "{{ namespace_name }}"
     resource_group: "{{ resource_group }}"
   register: results
-
-- name: Assert that facts module returned result
-  assert:
-    that: 
-      - results.namespace[0].tags.test == 'modified'
 
 - name: Test idempotent
   azure_rm_eventhub:
