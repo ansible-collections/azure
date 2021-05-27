@@ -244,14 +244,13 @@ class AzureRMEventHub(AzureRMModuleBase):
             # don't change anything if creating an existing namespace, but change if deleting it
             if self.state == 'present':
                 changed = False
-                
+
                 update_tags, results['tags'] = self.update_tags(
                     results['tags'])
 
                 if update_tags:
                     changed = True
                 elif self.namespace_name and not self.name:
-                    
                     if self.sku != results['sku']:
                         changed = True
                 elif self.namespace_name and self.name and event_hub_results:
