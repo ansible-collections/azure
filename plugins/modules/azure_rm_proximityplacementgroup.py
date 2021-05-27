@@ -155,8 +155,6 @@ class AzureRMProximityPlacementGroup(AzureRMModuleBase):
         self.state = None
         self.location = None
         self.tags = None
-        self.log_path = None
-        self.log_mode = None
 
         super(AzureRMProximityPlacementGroup, self).__init__(self.module_arg_spec,
                                                              supports_check_mode=True)
