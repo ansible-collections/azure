@@ -104,7 +104,6 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
             location=dict(type='str'),
             state=dict(choices=['present', 'absent'],
                        default='present', type='str'),
-            log_path=dict(type='str'),
             log_mode=dict(type='str')
         )
 
