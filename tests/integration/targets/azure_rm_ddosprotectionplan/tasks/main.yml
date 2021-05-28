@@ -7,7 +7,7 @@
     location: eastus2
     name: "{{ ddosprotectionplan }}"
     resource_group: "{{ resource_group }}"
-    check_mode: yes
+  check_mode: yes
   register: results
 
 - assert:
