@@ -51,6 +51,7 @@ parameters:
     - "azure_rm_hdinsightcluster"
     - "azure_rm_image"
     - "azure_rm_iothub"
+    - "azure_rm_ipgroup"
     - "azure_rm_keyvault"
     - "azure_rm_keyvaultkey"
     - "azure_rm_keyvaultsecret"
