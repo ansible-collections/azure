@@ -39,7 +39,6 @@
 
 - name: Retrieve DDoS protection plan
   azure_rm_ddosprotectionplan_info:
-    location: eastus2
     name: "{{ ddosprotectionplan }}"
     resource_group: "{{ resource_group }}"
   register: results
