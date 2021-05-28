@@ -132,7 +132,7 @@ jobs:
 
   - job: RunTests
     dependsOn: CreateResourceGroups
-    timeoutInMinutes: 3
+    timeoutInMinutes: 90
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]

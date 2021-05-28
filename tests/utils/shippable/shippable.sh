@@ -113,9 +113,9 @@ function cleanup
 trap cleanup EXIT
 
 if [[ "${COVERAGE:-}" == "--coverage" ]]; then
-    timeout=70
+    timeout=60
 else
-    timeout=55
+    timeout=45
 fi
 
 ansible-test env --dump --show --timeout "${timeout}" --color -v
