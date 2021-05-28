@@ -132,6 +132,7 @@ jobs:
 
   - job: RunTests
     dependsOn: CreateResourceGroups
+    timeoutInMinutes: 3
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
@@ -183,7 +184,6 @@ jobs:
         "Python${{ parameters.PYTHON_VER }}_15":
           python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '15'
-          TimeOutInMinutes: 10
 
     steps:
     - task: UsePythonVersion@0
