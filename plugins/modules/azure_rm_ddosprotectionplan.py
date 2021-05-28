@@ -114,7 +114,6 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         self.state = None
         self.tags = None
         self.log_path = None
-        self.log_mode = None
         self.results = dict(
             changed=False,
             state=dict()
