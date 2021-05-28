@@ -52,6 +52,7 @@ parameters:
     - "azure_rm_hdinsightcluster"
     - "azure_rm_image"
     - "azure_rm_iothub"
+    - "azure_rm_ipgroup"
     - "azure_rm_keyvault"
     - "azure_rm_keyvaultkey"
     - "azure_rm_keyvaultsecret"
@@ -133,6 +134,7 @@ jobs:
 
   - job: RunTests
     dependsOn: CreateResourceGroups
+    timeoutInMinutes: 90
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
