@@ -1,0 +1,76 @@
+- name: Create proximity placement group name
+  set_fact:
+    group_name: "ppg{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+
+- name: Create a proximity placement group
+  azure_rm_proximityplacementgroup:
+    resource_group: "{{ resource_group }}"
+    location: eastus
+    name: "{{ group_name }}"
+    state: present
+  register: results
+
+- name: Assert that placement group is created
+  assert:
+    that: results.changed
+
+- name: Create a proximity placement group again (Idempotent test)
+  azure_rm_proximityplacementgroup:
+    resource_group: "{{ resource_group }}"
+    location: eastus
+    name: "{{ group_name }}"
+    state: present
+  register: results
+
+- name: Assert that output is not changed
+  assert:
+    that: not results.changed
+
+- name: Update a proximity placement group
+  azure_rm_proximityplacementgroup:
+    resource_group: "{{ resource_group }}"
+    location: eastus
+    name: "{{ group_name }}"
+    tags:
+      key1: "value1"
+    state: present
+  register: results
+
+- name: Assert that placement group is updated
+  assert:
+    that: results.changed
+
+- name: Get proximity placement group facts
+  azure_rm_proximityplacementgroup_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ group_name }}"
+  register: results
+
+- assert:
+    that:
+      - not results.changed
+      - results.proximityplacementgroups[0].name == "{{ group_name }}"
+      - results.proximityplacementgroups[0].location == "eastus"
+      - results.proximityplacementgroups[0].proximity_placement_group_type == "Standard"
+
+- name: Delete proximity placement group
+  azure_rm_proximityplacementgroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ group_name }}"
+    state: absent
+  register: results
+
+- name: Assert that placement group is deleted
+  assert:
+    that: results.changed
+
+- name: Delete proximity placement group again (Idempotent test)
+  azure_rm_proximityplacementgroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ group_name }}"
+    state: absent
+  register: results
+
+- name: Asset that output is not changed
+  assert:
+    that: not results.changed
