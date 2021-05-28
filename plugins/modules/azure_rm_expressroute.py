@@ -56,19 +56,21 @@ options:
                 description:
                     - The tier of the SKU
                 type: str
+                required: true
                 choices:
-                    - Standard
-                    - Premium
+                    - standard
+                    - premium
             family:
                 description:
                     - the family of the SKU
                 type: str
                 required: true
                 choices:
-                    - MeteredData
-                    - UnlimitedData
+                    - metereddata
+                    - unlimiteddata
     global_reach_enabled:
-        description: Flag denoting global reach status.
+        description: 
+            - Flag denoting global reach status.
         type: bool
     authorizations:
         description:
@@ -91,11 +93,10 @@ options:
         type: str
         default: present
         choices:
-             - absent
+            - absent
             - present
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Praveen Ghuge (@praveenghuge)
