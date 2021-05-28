@@ -183,6 +183,7 @@ jobs:
         "Python${{ parameters.PYTHON_VER }}_15":
           python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '15'
+          TimeOutInMinutes: 10
 
     steps:
     - task: UsePythonVersion@0
