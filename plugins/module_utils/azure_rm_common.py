@@ -110,7 +110,7 @@ AZURE_API_PROFILES = {
         'ManagementLockClient': '2016-09-01',
         'DataLakeStoreAccountManagementClient': '2016-11-01',
         'NotificationHubsManagementClient': '2016-03-01'
-    },
+        'EventHubManagementClient': '2018-05-04'
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
         'NetworkManagementClient': '2017-10-01',
@@ -123,6 +123,7 @@ AZURE_API_PROFILES = {
         'ManagementLockClient': '2016-09-01',
         'PolicyClient': '2016-12-01',
         'ResourceManagementClient': '2018-05-01',
+        'EventHubManagementClient': '2018-05-04',
         'SubscriptionClient': '2016-06-01',
         'DnsManagementClient': '2016-04-01',
         'KeyVaultManagementClient': '2016-10-01',
@@ -279,6 +280,7 @@ try:
     from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
     from azure.mgmt.notificationhubs import NotificationHubsManagementClient
+    from azure.mgmt.eventhub import EventHubManagementClient
 
 except ImportError as exc:
     Authentication = object
@@ -366,6 +368,10 @@ AZURE_PKG_VERSIONS = {
         'package_name': 'trafficmanager',
         'expected_version': '0.50.0'
     },
+    'EventHubManagementClient': {
+        'package_name': 'azure-mgmt-eventhub',
+        'expected_version': '2.0.0'
+    },
 } if HAS_AZURE else {}
 
 
@@ -444,6 +450,7 @@ class AzureRMModuleBase(object):
         self._search_client = None
         self._datalake_store_client = None
         self._notification_hub_client = None
+        self._event_hub_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1339,6 +1346,16 @@ class AzureRMModuleBase(object):
                 base_url=self._cloud_environment.endpoints.resource_manager,
                 api_version='2016-03-01')
         return self._notification_hub_client
+    
+    @property
+    def event_hub_client(self):
+        self.log('Getting event hub client')
+        if not self._event_hub_client:
+            self._event_hub_client = self.get_mgmt_svc_client(
+                EventHubManagementClient,
+                base_url=self._cloud_environment.endpoints.resource_manager,
+                api_version='2018-05-04')
+        return self._event_hub_client
 
 
 class AzureSASAuthentication(Authentication):
