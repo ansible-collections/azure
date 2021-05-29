@@ -72,7 +72,6 @@
 
 - name: Retrieve Namespace
   azure_rm_notificationhub_info:
-    location: eastus2
     namespace_name: "{{ namespace_name }}"
     resource_group: "{{ resource_group }}"
   register: results

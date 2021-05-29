@@ -111,7 +111,7 @@ AZURE_API_PROFILES = {
         'DataLakeStoreAccountManagementClient': '2016-11-01',
         'NotificationHubsManagementClient': '2016-03-01',
         'EventHubManagementClient': '2018-05-04'
-        },
+    },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
         'NetworkManagementClient': '2017-10-01',
@@ -1347,7 +1347,7 @@ class AzureRMModuleBase(object):
                 base_url=self._cloud_environment.endpoints.resource_manager,
                 api_version='2016-03-01')
         return self._notification_hub_client
-    
+
     @property
     def event_hub_client(self):
         self.log('Getting event hub client')
