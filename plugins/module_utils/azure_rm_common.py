@@ -109,8 +109,9 @@ AZURE_API_PROFILES = {
         'MariaDBManagementClient': '2019-03-01',
         'ManagementLockClient': '2016-09-01',
         'DataLakeStoreAccountManagementClient': '2016-11-01',
-        'NotificationHubsManagementClient': '2016-03-01'
+        'NotificationHubsManagementClient': '2016-03-01',
         'EventHubManagementClient': '2018-05-04'
+        },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
         'NetworkManagementClient': '2017-10-01',
