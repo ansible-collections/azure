@@ -69,7 +69,7 @@ options:
                     - metereddata
                     - unlimiteddata
     global_reach_enabled:
-        description: 
+        description:
             - Flag denoting global reach status.
         type: bool
     authorizations:
