@@ -44,6 +44,7 @@ parameters:
     - "azure_rm_cosmosdbaccount"
     - "azure_rm_datalakestore"
     - "azure_rm_deployment"
+    - "azure_rm_diskencryptionset"
     - "azure_rm_dnsrecordset"
     - "azure_rm_dnszone"
     - "azure_rm_eventhub"
