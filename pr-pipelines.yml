@@ -64,6 +64,7 @@ parameters:
     - "azure_rm_monitorlogprofile"
     - "azure_rm_mysqlserver"
     - "azure_rm_networkinterface"
+    - "azure_rm_notificationhub"
     - "azure_rm_openshiftmanagedcluster"
     - "azure_rm_postgresqlserver"
     - "azure_rm_privatednsrecordset"
