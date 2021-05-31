@@ -102,6 +102,10 @@
     resource_group: "{{ resource_group }}"
     state: absent
 
+- name: Pause for 3 mimutes to makesure delete successfully
+  pause:
+    minutes: 3
+
 - name: Delete Namespace (idempotent)
   azure_rm_notificationhub:
     location: eastus2
@@ -113,7 +117,6 @@
 - assert:
     that: not results.changed
 
-
 - name: Delete Notification Hub
   azure_rm_notificationhub:
     location: eastus2
@@ -121,6 +124,10 @@
     name: "{{ name }}"
     resource_group: "{{ resource_group }}"
     state: absent
+
+- name: Pause for 3 mimutes to makesure delete successfully
+  pause:
+    minutes: 3
 
 - name: Delete Notification Hub (idempotent)
   azure_rm_notificationhub:
