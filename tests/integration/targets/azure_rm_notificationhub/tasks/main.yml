@@ -122,6 +122,10 @@
     resource_group: "{{ resource_group }}"
     state: absent
 
+- name: Pause for 60 mimutes to create api mangement
+  pause:
+    minutes: 3
+
 - name: Delete Notification Hub (idempotent)
   azure_rm_notificationhub:
     location: eastus2
@@ -130,6 +134,10 @@
     resource_group: "{{ resource_group }}"
     state: absent
   register: results
+
+- name: Pause for 60 mimutes to create api mangement
+  pause:
+    minutes: 3
 
 - assert:
     that: not results.changed
