@@ -63,6 +63,20 @@
         state: absent
         secret_name: testsecret
 
+- name: lookup secret
+  set_fact:
+    set_keyvault_secret: "{{ lookup('azure.azcollection.azure_keyvault_secret',
+                             secret_name='mysecret',
+                             vault_url='https://vault{{ rpfx }}.vault.azure.net',
+                             client_id=azure_client_id,
+                             secret=azure_secret,
+                             tenant_id=tenant_id) }}"
+  register: results
+- debug:
+    var: results
+- debug:
+    var: "{{ set_keyvault_secret }}"
+
 - name: Get secret current version
   azure_rm_keyvaultsecret_info:
     vault_uri: https://vault{{ rpfx }}.vault.azure.net
