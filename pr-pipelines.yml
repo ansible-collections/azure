@@ -2,7 +2,7 @@ parameters:
 - name: PYTHON_VER
   displayName: 'Python Version'
   type: string
-  default: "3.6"
+  default: "3.8"
   values:
     - "2.7"
     - "3.6"
@@ -14,6 +14,7 @@ parameters:
   values:
     - "2.9"
     - "2.10"
+    - "2.11"
     - "devel"
 - name: MODULE_NAME
   displayName: 'Test Module'
@@ -21,14 +22,20 @@ parameters:
   default: 'all'
   values:
     - 'all'
+    - 'sanity'
+    - 'azure_rm_adapplication'
     - "azure_rm_acs"
+    - "azure_rm_adgroup"
+    - "azure_rm_aduser"
     - "azure_rm_aks"
+    - "azure_rm_apimanagement"
     - "azure_rm_appgateway"
     - "azure_rm_appserviceplan"
     - "azure_rm_automationaccount"
     - "azure_rm_autoscale"
     - "azure_rm_availabilityset"
     - "azure_rm_azurefirewall"
+    - "azure_rm_apimanagementservice"
     - "azure_rm_batchaccount"
     - "azure_rm_backuppolicy"
     - "azure_rm_cdnprofile"
@@ -39,11 +46,13 @@ parameters:
     - "azure_rm_deployment"
     - "azure_rm_dnsrecordset"
     - "azure_rm_dnszone"
+    - "azure_rm_eventhub"
     - "azure_rm_functionapp"
     - "azure_rm_gallery"
     - "azure_rm_hdinsightcluster"
     - "azure_rm_image"
     - "azure_rm_iothub"
+    - "azure_rm_ipgroup"
     - "azure_rm_keyvault"
     - "azure_rm_keyvaultkey"
     - "azure_rm_keyvaultsecret"
@@ -59,14 +68,18 @@ parameters:
     - "azure_rm_postgresqlserver"
     - "azure_rm_privatednsrecordset"
     - "azure_rm_privatednszone"
+    - "azure_rm_privatednszonelink"
     - "azure_rm_publicipaddress"
+    - "azure_rm_proximityplacementgroup"
     - "azure_rm_rediscache"
     - "azure_rm_resource"
     - "azure_rm_resourcegroup"
     - "azure_rm_routetable"
     - "azure_rm_roleassignment"
+    - "azure_rm_roledefinition"
     - "azure_rm_registrationassignment"
     - "azure_rm_registrationdefinition"
+    - "azure_rm_cognitivesearch"
     - "azure_rm_securitygroup"
     - "azure_rm_servicebus"
     - "azure_rm_sqlserver"
@@ -82,6 +95,8 @@ parameters:
     - "azure_rm_virtualnetwork"
     - "azure_rm_virtualnetworkgateway"
     - "azure_rm_virtualnetworkeepring"
+    - "azure_rm_virtualwan"
+    - "azure_rm_vpnsite"
     - "azure_rm_backupazurevm"
     - "azure_rm_recoveryservicesvault"
     - "azure_rm_vmbackuppolicy"
@@ -96,7 +111,7 @@ pr:
 - dev
 
 pool:
-  vmImage: 'ubuntu-18.04'
+  vmImage: 'ubuntu-20.04'
 
 jobs:
   - job: CreateResourceGroups
@@ -121,6 +136,7 @@ jobs:
 
   - job: RunTests
     dependsOn: CreateResourceGroups
+    timeoutInMinutes: 90
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
@@ -169,6 +185,9 @@ jobs:
         "Python${{ parameters.PYTHON_VER }}_14":
           python.version: '${{ parameters.PYTHON_VER }}'
           test.key: '14'
+        "Python${{ parameters.PYTHON_VER }}_15":
+          python.version: '${{ parameters.PYTHON_VER }}'
+          test.key: '15'
 
     steps:
     - task: UsePythonVersion@0

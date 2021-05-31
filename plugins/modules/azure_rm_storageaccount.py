@@ -62,7 +62,7 @@ options:
     kind:
         description:
             - The kind of storage.
-            - The C(FileStorage) and (BlockBlobStorage) only used when I(account_type=Premium_LRS).
+            - The C(FileStorage) and (BlockBlobStorage) only used when I(account_type=Premium_LRS) or I(account_type=Premium_ZRS).
         default: 'Storage'
         choices:
             - Storage
@@ -507,8 +507,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 self.fail("Parameter error: expecting custom_domain to have a use_sub_domain "
                           "attribute of type boolean.")
 
-        if self.kind in ['FileStorage', 'BlockBlobStorage', ] and self.account_type != 'Premium_LRS':
-            self.fail("Parameter error: Storage account with {0} kind require account type is Premium_LRS".format(self.kind))
+        if self.kind in ['FileStorage', 'BlockBlobStorage', ] and self.account_type not in ['Premium_LRS', 'Premium_ZRS']:
+            self.fail("Parameter error: Storage account with {0} kind require account type is Premium_LRS or Premium_ZRS".format(self.kind))
         self.account_dict = self.get_account()
 
         if self.state == 'present' and self.account_dict and \

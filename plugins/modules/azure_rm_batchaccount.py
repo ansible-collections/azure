@@ -151,6 +151,7 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
             ),
             key_vault=dict(
                 type='raw',
+                no_log=True,
                 updatable=False,
                 disposition='/'
             ),

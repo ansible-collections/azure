@@ -95,9 +95,19 @@ options:
         type: str
         default: latest
         version_added: '0.0.1'
+    log_path:
+        description:
+            - Parent argument.
+        type: str
+    log_mode:
+        description:
+            - Parent argument.
+        type: str
 requirements:
     - python >= 2.7
-    - azure >= 2.0.0
+    - The host that executes this module must have the azure.azcollection collection installed via galaxy
+    - All python packages listed in collection's requirements-azure.txt must be installed via pip on the host that executes modules from azure.azcollection
+    - Full installation instructions may be found https://galaxy.ansible.com/azure/azcollection
 
 notes:
     - For authentication with Azure you can pass parameters, set environment variables, use a profile stored

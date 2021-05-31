@@ -349,7 +349,8 @@ class AzureRMRedisCaches(AzureRMModuleBase):
                 ]
             ),
             notify_keyspace_events=dict(
-                type='str'
+                type='str',
+                no_log=True
             ),
             shard_count=dict(
                 type='int'
@@ -374,6 +375,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             ),
             regenerate_key=dict(
                 type='dict',
+                no_log=True,
                 options=regenerate_key_spec
             ),
             wait_for_provisioning=dict(
