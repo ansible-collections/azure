@@ -145,7 +145,7 @@ def lookup_secret_non_msi(terms, vault_url, kwargs):
     ret = []
     for term in terms:
         try:
-            secret_val = client.get_secret(vault_url, term, '').value
+            secret_val = client.get_secret(valult_base_url=vault_url, secret_nam=term, secret_version='').value
             ret.append(secret_val)
         except ClientRequestError:
             raise AnsibleError('Error occurred in request')
