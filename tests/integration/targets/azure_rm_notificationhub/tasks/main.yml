@@ -102,7 +102,7 @@
     resource_group: "{{ resource_group }}"
     state: absent
 
-- name: Pause for 3 mimutes to makesure delete successfully
+- name: Pause for 3 minutes to make sure delete successfully
   pause:
     minutes: 3
 
@@ -125,7 +125,7 @@
     resource_group: "{{ resource_group }}"
     state: absent
 
-- name: Pause for 3 mimutes to makesure delete successfully
+- name: Pause for 3 minutes to make sure delete successfully
   pause:
     minutes: 3
 
