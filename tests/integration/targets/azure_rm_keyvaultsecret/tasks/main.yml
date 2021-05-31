@@ -66,7 +66,7 @@
 - name: lookup secret
   set_fact:
     set_keyvault_secret: "{{ lookup('azure.azcollection.azure_keyvault_secret',
-                             secret_name='mysecret',
+                             secret_name='testsecret',
                              vault_url='https://vault{{ rpfx }}.vault.azure.net',
                              client_id=azure_client_id,
                              secret=azure_secret,
