@@ -1,0 +1,139 @@
+- name: Fix resource prefix
+  set_fact:
+    api_id: "myPolicy{{ resource_group | hash('md5') | truncate(23, True, '') }}"
+    service_name: "myService{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    display_name: test-api
+    path: myapipath
+
+- name: create API management service
+  azure_rm_apimanagementservice:
+    resource_group: "{{ resource_group }}"
+    name: "{{ service_name }}"
+    publisher_email: user@example.com
+    publisher_name: Username
+    sku_name: Developer
+    sku_capacity: 1
+
+- name: Pause for 60 mimutes to create api mangement
+  pause:
+    minutes: 60
+
+- name: Create a new API instance
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ api_id }}"
+    description: "testDescription"
+    display_name: "{{ display_name }}"
+    service_url: 'http://testapi.example.net/api'
+    path: "{{ path }}"
+    protocols:
+      - https
+  register: newApi
+  
+- name: Assert that output has changed
+  assert:
+    that:
+      - newApi.changed == True
+      - newApi.failed == False
+
+- name: Create a new API instance(Idempotent)
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ api_id }}"
+    description: "testDescription"
+    display_name: "{{ display_name }}"
+    service_url: 'http://testapi.example.net/api'
+    path: "{{ path }}"
+    protocols:
+      - https
+  register: newApi_idempotent
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - newApi_idempotent.changed == False
+      - newApi_idempotent.failed == False
+
+- name: Update API's protocols
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ api_id }}"
+    description: "testDescription"
+    display_name: "{{ display_name }}"
+    service_url: 'http://testapi.example.net/api'
+    path: "{{ path }}"
+    protocols:
+      - https
+      - http
+  register: updateApi
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - updateApi.changed == True
+
+- name: Create different format api
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ api_id }}-secondary"
+    path: "{{ path }}-secondary"
+    format: openapi
+    display_name: "{{ display_name }}-secondary"
+    protocols:
+      - https
+  register: newOpenApi
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - newOpenApi.changed == True
+      - newOpenApi.failed == False
+
+- name: Get api information
+  azure_rm_apimanagement_info:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ api_id }}"
+  register: output
+
+- name: Assert that output has changed
+  assert:
+    that:
+      - output.api.id != None
+
+- name: Delete an api
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ api_id }}"
+    state: absent
+  register: deleteApi
+
+- name: Assert the changes
+  assert:
+    that:
+      - deleteApi.changed == True
+
+- name: Delete an api(Idempotent)
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ api_id }}"
+    state: absent
+  register: deleteApi_idempotent
+
+- name: Assert the changes
+  assert:
+    that:
+      - deleteApi_idempotent.changed == False
+
+- name: Delete an api
+  azure_rm_apimanagement:
+    resource_group: "{{ resource_group }}"
+    service_name: "{{ service_name }}"
+    api_id: "{{ api_id }}-secondary"
+    state: absent

@@ -56,7 +56,7 @@ mkdir -p shippable/testresults
 pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
 pip install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
 
-timeout=60
+timeout=90
 
 if [ "$4" = "all" ]
 then
