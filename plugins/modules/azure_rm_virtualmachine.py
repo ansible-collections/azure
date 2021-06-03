@@ -86,6 +86,28 @@ options:
             - A valid Azure VM size value. For example, C(Standard_D4).
             - Choices vary depending on the subscription and location. Check your subscription for available choices.
             - Required when creating a VM.
+    priority:
+        description:
+            - Priority of the VM.
+        choices:
+            - Regular
+            - Spot 
+        default: ['Regular']
+    eviction_policy:
+        description:
+            - Specifies the eviction policy for the Azure Spot virtual machine.
+            - Requires priority to be set to Spot.
+        choices:
+            - Deallocate
+            - Delete 
+        default: ['Deallocate']
+    max_price:
+        description:
+            - Specifies the maximum price you are willing to pay for a Azure Spot VM/VMSS. 
+            - This price is in US Dollars.
+            - "-1" indicates default price to be up-to on-demand
+            - Requires priority to be set to Spot.
+        default: -1    
     admin_username:
         description:
             - Admin username used to access the VM after it is created.
@@ -539,6 +561,21 @@ EXAMPLES = '''
       product: f5-big-ip-best
       publisher: f5-networks
 
+- name: Create a VM with Spot Instance
+  azure_rm_virtualmachine:
+    resource_group: myResourceGroup
+    name: testvm10
+    vm_size: Standard_D4
+    priority: Spot
+    eviction_policy: Deallocate
+    admin_username: chouseknecht
+    admin_password: <your password here>
+    image:
+      offer: CentOS
+      publisher: OpenLogic
+      sku: '7.1'
+      version: latest
+
 - name: Power Off
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
@@ -797,6 +834,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             location=dict(type='str'),
             short_hostname=dict(type='str'),
             vm_size=dict(type='str'),
+            priority=dict(type='str', choices=['Regular', 'Spot']),
+            eviction_policy=dict(type='str', choices=['Deallocate', 'Delete']),
+            max_price=dict(type='float', default=-1),
             admin_username=dict(type='str'),
             admin_password=dict(type='str', no_log=True),
             ssh_password_enabled=dict(type='bool', default=True),
@@ -841,6 +881,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.location = None
         self.short_hostname = None
         self.vm_size = None
+        self.priority = None
+        self.eviction_policy = None
         self.admin_username = None
         self.admin_password = None
         self.ssh_password_enabled = None
@@ -1302,6 +1344,13 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         plan=plan,
                         zones=self.zones,
                     )
+
+                    if self.priority == 'Spot':
+                        vm_resource.priority = self.priority
+                        vm_resource.eviction_policy = self.eviction_policy
+                        vm_resource.billing_profile = self.compute_models.BillingProfile(
+                            max_price=self.max_price
+                        )
 
                     if self.license_type is not None:
                         vm_resource.license_type = self.license_type
