@@ -46,11 +46,13 @@ parameters:
     - "azure_rm_deployment"
     - "azure_rm_dnsrecordset"
     - "azure_rm_dnszone"
+    - "azure_rm_eventhub"
     - "azure_rm_functionapp"
     - "azure_rm_gallery"
     - "azure_rm_hdinsightcluster"
     - "azure_rm_image"
     - "azure_rm_iothub"
+    - "azure_rm_ipgroup"
     - "azure_rm_keyvault"
     - "azure_rm_keyvaultkey"
     - "azure_rm_keyvaultsecret"
@@ -66,7 +68,9 @@ parameters:
     - "azure_rm_postgresqlserver"
     - "azure_rm_privatednsrecordset"
     - "azure_rm_privatednszone"
+    - "azure_rm_privatednszonelink"
     - "azure_rm_publicipaddress"
+    - "azure_rm_proximityplacementgroup"
     - "azure_rm_rediscache"
     - "azure_rm_resource"
     - "azure_rm_resourcegroup"
@@ -132,6 +136,7 @@ jobs:
 
   - job: RunTests
     dependsOn: CreateResourceGroups
+    timeoutInMinutes: 90
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
