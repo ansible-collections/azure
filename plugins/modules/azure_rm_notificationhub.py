@@ -9,7 +9,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_notificationhub
-version_added: "1.6.0"
+version_added: "1.7.0"
 short_description: Manage Notification Hub
 description:
     - Create, update and delete instance of Notification Hub.

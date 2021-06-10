@@ -9,7 +9,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_notificationhub_info
-version_added: "1.6.0"
+version_added: "1.7.0"
 short_description: Get Azure Notification Hub
 description:
     - Get facts of Azure Notification Hub
