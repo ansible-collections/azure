@@ -9,7 +9,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_expressroute_info
-version_added: "1.6.0"
+version_added: "1.7.0"
 short_description: Get Azure Express Route
 description:
     - Get facts of Azure Express Route.
