@@ -303,7 +303,7 @@ class AzureRMResource(AzureRMModuleBase):
         self.polling_interval = None
         self.state = None
         self.body = None
-        super(AzureRMResource, self).__init__(self.module_arg_spec, supports_tags=True)
+        super(AzureRMResource, self).__init__(self.module_arg_spec, supports_tags=False, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:

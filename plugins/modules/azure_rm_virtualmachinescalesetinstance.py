@@ -153,7 +153,7 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
         self.state = None
         self.protect_from_scale_in = None
         self.protect_from_scale_set_actions = None
-        super(AzureRMVirtualMachineScaleSetInstance, self).__init__(self.module_arg_spec, supports_tags=True)
+        super(AzureRMVirtualMachineScaleSetInstance, self).__init__(self.module_arg_spec, supports_tags=False, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:

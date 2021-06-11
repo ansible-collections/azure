@@ -177,7 +177,8 @@ class AzureRMVMSSExtension(AzureRMModuleBase):
         self.results = dict(changed=False, state=dict())
 
         super(AzureRMVMSSExtension, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                   supports_tags=True,
+                                                   supports_tags=False,
+                                                   supports_check_mode=True,
                                                    required_if=required_if)
 
     def exec_module(self, **kwargs):
