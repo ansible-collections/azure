@@ -303,7 +303,7 @@ class AzureRMResource(AzureRMModuleBase):
         self.polling_interval = None
         self.state = None
         self.body = None
-        super(AzureRMResource, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMResource, self).__init__(self.module_arg_spec, supports_tags=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
@@ -314,6 +314,9 @@ class AzureRMResource(AzureRMModuleBase):
         if self.state == 'absent':
             self.method = 'DELETE'
             self.status_code.append(204)
+        elif self.check_mode:
+            self.results['changed'] = True
+            return self.results
 
         if self.url is None:
             orphan = None

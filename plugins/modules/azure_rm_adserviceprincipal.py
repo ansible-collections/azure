@@ -122,7 +122,7 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
         self.results = dict(changed=False)
 
         super(AzureRMADServicePrincipal, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                        supports_check_mode=False,
+                                                        supports_check_mode=True,
                                                         supports_tags=False,
                                                         is_ad_resource=True)
 
@@ -133,7 +133,9 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
 
         response = self.get_resource()
 
-        if response:
+        if self.check_mode:
+            self.results['changed'] = True
+        elif response:
             if self.state == 'present':
                 if self.check_update(response):
                     self.update_resource(response)

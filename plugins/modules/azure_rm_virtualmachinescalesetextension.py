@@ -177,7 +177,7 @@ class AzureRMVMSSExtension(AzureRMModuleBase):
         self.results = dict(changed=False, state=dict())
 
         super(AzureRMVMSSExtension, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                   supports_tags=False,
+                                                   supports_tags=True,
                                                    required_if=required_if)
 
     def exec_module(self, **kwargs):
@@ -192,7 +192,10 @@ class AzureRMVMSSExtension(AzureRMModuleBase):
         if not self.location:
             self.location = resource_group.location
 
-        if self.state == 'present':
+        if self.check_mode:
+            self.results['changed'] = True
+            return self.results
+        elif self.state == 'present':
             response = self.get_vmssextension()
             if not response:
                 to_be_updated = True

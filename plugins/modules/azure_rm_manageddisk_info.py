@@ -159,7 +159,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
         self.managed_by = None
 
         super(AzureRMManagedDiskInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                     supports_check_mode=True,
+                                                     supports_check_mode=False,
                                                      facts_module=True,
                                                      supports_tags=True)
 

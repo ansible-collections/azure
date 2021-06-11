@@ -148,7 +148,7 @@ class AzureRMADPassword(AzureRMModuleBase):
         self.client = None
 
         super(AzureRMADPassword, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                supports_check_mode=False,
+                                                supports_check_mode=True,
                                                 supports_tags=False,
                                                 is_ad_resource=True)
 
@@ -160,7 +160,9 @@ class AzureRMADPassword(AzureRMModuleBase):
         self.resolve_app_obj_id()
         passwords = self.get_all_passwords()
 
-        if self.state == 'present':
+        if self.check_mode:
+            self.results['changed'] = True
+        elif self.state == 'present':
             if self.key_id and self.key_exists(passwords):
                 self.update(passwords)
             else:

@@ -464,14 +464,16 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
 
         super(AzureRMDeploymentManager, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                        mutually_exclusive=mutually_exclusive,
-                                                       supports_check_mode=False)
+                                                       supports_check_mode=True)
 
     def exec_module(self, **kwargs):
 
         for key in list(self.module_arg_spec.keys()) + ['append_tags', 'tags']:
             setattr(self, key, kwargs[key])
 
-        if self.state == 'present':
+        if self.check_mode:
+            self.results['changed'] = True
+        elif self.state == 'present':
             deployment = self.deploy_template()
             if deployment is None:
                 self.results['deployment'] = dict(

@@ -268,7 +268,7 @@ class AzureRMSearch(AzureRMModuleBase):
         self.firewall_list = list()
 
         super(AzureRMSearch, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                            supports_check_mode=False,
+                                            supports_check_mode=True,
                                             supports_tags=True)
 
     def exec_module(self, **kwargs):
@@ -286,7 +286,9 @@ class AzureRMSearch(AzureRMModuleBase):
         else:
             self.results['state'] = dict()
 
-        if self.state == 'present':
+        if self.check_mode:
+            self.results['changed'] = True
+        elif self.state == 'present':
             if not self.account_dict:
                 self.results['state'] = self.create_search()
             else:
