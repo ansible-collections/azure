@@ -435,6 +435,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         for disk_index in range(len(disks)):
             new_result['data_disks'].append({
                 'lun': disks[disk_index].get('lun'),
+                'name': disks[disk_index].get('name'),
                 'disk_size_gb': disks[disk_index].get('diskSizeGB'),
                 'managed_disk_type': disks[disk_index].get('managedDisk', {}).get('storageAccountType'),
                 'caching': disks[disk_index].get('caching')
