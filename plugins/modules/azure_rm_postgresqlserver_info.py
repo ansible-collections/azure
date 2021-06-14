@@ -245,6 +245,8 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
             'admin_username': d['administrator_login'],
             'user_visible_state': d['user_visible_state'],
             'fully_qualified_domain_name': d['fully_qualified_domain_name'],
+            'geo_redundant_backup': d['storage_profile']['geo_redundant_backup'],
+            'backup_retention_days': d['storage_profile']['backup_retention_days'],
             'tags': d.get('tags')
         }
 
