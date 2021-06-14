@@ -71,23 +71,23 @@ options:
             - Priority of the VMSS.
         choices:
             - Regular
-            - Spot 
-        default: ['Regular']
+            - Spot
+        default: Regular
     eviction_policy:
         description:
             - Specifies the eviction policy for the Azure Spot virtual machine.
             - Requires priority to be set to Spot.
         choices:
             - Deallocate
-            - Delete 
-        default: ['Deallocate']
+            - Delete
+        default: Deallocate
     max_price:
         description:
-            - Specifies the maximum price you are willing to pay for a Azure Spot VM/VMSS. 
+            - Specifies the maximum price you are willing to pay for a Azure Spot VM/VMSS.
             - This price is in US Dollars.
-            - "-1" indicates default price to be up-to on-demand
+            - C(-1) indicates default price to be up-to on-demand.
             - Requires priority to be set to Spot.
-        default: -1    
+        default: -1
     admin_username:
         description:
             - Admin username used to access the host after it is created. Required when creating a VM.
