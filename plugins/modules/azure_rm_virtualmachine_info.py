@@ -418,8 +418,8 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                            result['properties']['diagnosticsProfile']['bootDiagnostics'].get('storageUri', None)
         }
         if new_result['boot_diagnostics']['enabled']:
-            new_result['boot_diagnostics']['console_screenshot_uri'] = result['properties']['instanceView']['bootDiagnostics']['consoleScreenshotBlobUri']
-            new_result['boot_diagnostics']['serial_console_log_uri'] = result['properties']['instanceView']['bootDiagnostics']['serialConsoleLogBlobUri']
+            new_result['boot_diagnostics']['console_screenshot_uri'] = result['properties']['instanceView']['bootDiagnostics'].get('consoleScreenshotBlobUri')
+            new_result['boot_diagnostics']['serial_console_log_uri'] = result['properties']['instanceView']['bootDiagnostics'].get('serialConsoleLogBlobUri')
 
         vhd = result['properties']['storageProfile']['osDisk'].get('vhd')
         if vhd is not None:
