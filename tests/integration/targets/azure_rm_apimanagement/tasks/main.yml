@@ -16,7 +16,8 @@
 
 - name: Pause for 60 mimutes to create api mangement
   pause:
-    minutes: 60
+    minutes: 1
+  loop: "{{ range(0,60)|list }}"
 
 - name: Create a new API instance
   azure_rm_apimanagement:
