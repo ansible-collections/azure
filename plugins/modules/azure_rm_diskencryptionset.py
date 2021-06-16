@@ -11,7 +11,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_diskencryptionset
 
-version_added: "1.6.0"
+version_added: "1.7.0"
 
 short_description: Create, delete and update Disk encryption set
 
