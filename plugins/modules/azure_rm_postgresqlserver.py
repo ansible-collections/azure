@@ -55,6 +55,7 @@ options:
         description:
             - Choose between locally redundant(default) or geo-redundant backup. This cannot be updated after first deployment
         type: bool
+        default: default
     backup_retention_days:
         description:
             - Backup retention period between 7 and 35 days. 7 days by default if not set
@@ -85,7 +86,7 @@ options:
             - The password of the administrator login.
     create_mode:
         description:
-            - Create mode of SQL Server.
+            - Create mode of SQL Server. Blank (default), or restore from either geo redundant, or point in time.
         default: default
         choices:
             - default
@@ -273,7 +274,7 @@ class AzureRMPostgreSqlServers(AzureRMModuleBase):
                     self.parameters["location"] = kwargs[key]
                 elif key == "storage_mb":
                     self.parameters.setdefault("properties", {}).setdefault("storage_profile", {})["storage_mb"] = \
-                    kwargs[key]
+                        kwargs[key]
                 elif key == "storage_autogrow":
                     self.parameters.setdefault("properties", {}).setdefault("storage_profile", {})[
                         "storage_autogrow"] = ('Enabled' if kwargs[key]

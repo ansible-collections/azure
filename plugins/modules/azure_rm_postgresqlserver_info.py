@@ -142,6 +142,18 @@ servers:
             returned: always
             type: str
             sample: postgreabdud1223.postgres.database.azure.com
+        backup_retention_days:
+            description:
+                - Backup retention period between 7 and 35 days. 7 days by default if not set.
+            returned: always
+            type: int
+            sample: 7
+        geo_redundant_backup:
+            description:
+                - Choose between locally redundant(default) or geo-redundant backup. This cannot be updated after first deployment.
+            returned: always
+            type: str
+            sample: Disabled
         tags:
             description:
                 - Tags assigned to the resource. Dictionary of string:string pairs.
