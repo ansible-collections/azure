@@ -86,7 +86,7 @@ options:
             - The password of the administrator login.
     create_mode:
         description:
-            - Create mode of SQL Server. Blank (default), or restore from either geo redundant, or point in time.
+            - Create mode of SQL Server. Blank (default), restore from geo redundant (geo_restore), or restore from point in time (point_in_time_restore).
         default: default
         choices:
             - default
