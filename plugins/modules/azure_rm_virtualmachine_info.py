@@ -418,8 +418,8 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                            result['properties']['diagnosticsProfile']['bootDiagnostics'].get('storageUri', None)
         }
         if new_result['boot_diagnostics']['enabled']:
-            new_result['boot_diagnostics']['console_screenshot_uri'] = result['properties']['instanceView']['bootDiagnostics']['consoleScreenshotBlobUri']
-            new_result['boot_diagnostics']['serial_console_log_uri'] = result['properties']['instanceView']['bootDiagnostics']['serialConsoleLogBlobUri']
+            new_result['boot_diagnostics']['console_screenshot_uri'] = result['properties']['instanceView']['bootDiagnostics'].get('consoleScreenshotBlobUri')
+            new_result['boot_diagnostics']['serial_console_log_uri'] = result['properties']['instanceView']['bootDiagnostics'].get('serialConsoleLogBlobUri')
 
         vhd = result['properties']['storageProfile']['osDisk'].get('vhd')
         if vhd is not None:
@@ -435,6 +435,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         for disk_index in range(len(disks)):
             new_result['data_disks'].append({
                 'lun': disks[disk_index].get('lun'),
+                'name': disks[disk_index].get('name'),
                 'disk_size_gb': disks[disk_index].get('diskSizeGB'),
                 'managed_disk_type': disks[disk_index].get('managedDisk', {}).get('storageAccountType'),
                 'caching': disks[disk_index].get('caching')
