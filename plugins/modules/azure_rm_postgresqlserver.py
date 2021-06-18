@@ -93,7 +93,7 @@ options:
             - point_in_time_restore
     source_server_id:
         description:
-            - Id if the source server if C(create_mode) is not I(default).
+            - Id if the source server if I(create_mode=default).
     restore_point_in_time:
         description:
             - Restore point creation time (ISO8601 format), specifying the time to restore from.
