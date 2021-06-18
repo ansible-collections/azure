@@ -97,7 +97,7 @@ options:
     restore_point_in_time:
         description:
             - Restore point creation time (ISO8601 format), specifying the time to restore from.
-            - Required if C(create_mode) is set to I(point_in_time_restore).
+            - Required if I(create_mode=point_in_time_restore).
     state:
         description:
             - Assert the state of the PostgreSQL server. Use C(present) to create or update a server and C(absent) to delete it.
