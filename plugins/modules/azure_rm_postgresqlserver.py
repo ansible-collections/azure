@@ -54,7 +54,6 @@ options:
     geo_redundant_backup:
         description:
             - Choose between locally redundant(default) or geo-redundant backup. This cannot be updated after first deployment
-        type: bool
         default: default
     backup_retention_days:
         description:
