@@ -12,6 +12,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_ddosprotectionplan_info
+version_added: "1.7.0"
 short_description: Get Azure DDoS protection plan
 description:
     - Get facts of Azure DDoS protection plan.
