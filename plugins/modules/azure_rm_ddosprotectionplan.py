@@ -8,7 +8,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_ddosprotectionplan
-version_added: "0.1.2"
+version_added: "1.7.0"
 short_description: Manage DDoS protection plan
 description:
     - Create, update and delete instance of DDoS protection plan.
