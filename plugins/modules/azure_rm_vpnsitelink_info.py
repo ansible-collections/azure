@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_vpnsitelink_info
-version_added: '1.5.1'
+version_added: '1.5.0'
 short_description: Get VpnSiteLink info
 description:
     - Get info of Vpn Site Link relate infomation.

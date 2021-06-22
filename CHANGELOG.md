@@ -1,5 +1,68 @@
 # Change Log
 
+## v1.7.0 (2021-06-08)
+
+### NEW MODULES
+  - azure_rm_adapplication: New module: azure_rm_adapplication ([#215](https://github.com/ansible-collections/azure/pull/215))
+  - azure_rm_adapplication_info: New module: azure_rm_adapplication ([#215](https://github.com/ansible-collections/azure/pull/215))
+  - azure_rm_adgroup: New module: azure_rm_adgroup ([#423](https://github.com/ansible-collections/azure/pull/423))
+  - azure_rm_adgroup_info: New module: azure_rm_adgroup ([#423](https://github.com/ansible-collections/azure/pull/423))
+  - azure_rm_apimanagement: New Module [API Management] ([#322](https://github.com/ansible-collections/azure/pull/322))
+  - azure_rm_apimanagement_info: New Module [API Management] ([#322](https://github.com/ansible-collections/azure/pull/322))
+  - azure_rm_ipgroup: New module: azure_rm_ipgroup ([#528](https://github.com/ansible-collections/azure/pull/528))
+  - azure_rm_ipgroup_info: New module: azure_rm_ipgroup ([#528](https://github.com/ansible-collections/azure/pull/528))
+  - azure_rm_eventhub: New module: azure_rm_eventhub ([#519](https://github.com/ansible-collections/azure/pull/519))
+  - azure_rm_eventhub_info: New module: azure_rm_eventhub ([#519](https://github.com/ansible-collections/azure/pull/519))
+  - azure_rm_proximityplacementgroup: New module: azure_rm_proximityplacementgroup ([#501](https://github.com/ansible-collections/azure/pull/501))
+  - azure_rm_proximityplacementgroup_info: New module: azure_rm_proximityplacementgroup ([#501](https://github.com/ansible-collections/azure/pull/501))
+  - azure_rm_privatednszonelink: New module: azure_rm_privatednszonelink ([#495](https://github.com/ansible-collections/azure/pull/495))
+  - azure_rm_privatednszonelink_info: New module: azure_rm_privatednszonelink ([#495](https://github.com/ansible-collections/azure/pull/495))
+
+### FEATURE ENHANCEMENT
+  - azure_rm_virtualmachine_info: Add availability zones to azure_rm_virtualmachine_info module ([#523](https://github.com/ansible-collections/azure/pull/523))
+  - azure: Add log_mode and log_path to azure.py ([#540](https://github.com/ansible-collections/azure/pull/540))
+
+### BUG FIXING
+  - ado: Optimizing ado.sh ([#510](https://github.com/ansible-collections/azure/pull/510))
+  - azure_rm_securitygroup: azure_rm_securitygroup - idempotent when args are lists ([#507](https://github.com/ansible-collections/azure/pull/507))
+  - azure_rm_openshiftmanagedcluster: Fix an issue identifying a creation/deletion error [(#542](https://github.com/ansible-collections/azure/pull/542))
+  - azure_rm_adapplication: disable tlsv1_1 in app gateway test. ([#544](https://github.com/ansible-collections/azure/pull/544))
+  - pr-pipelines: increase integration testing timeout ([#549](https://github.com/ansible-collections/azure/pull/549))
+  - tests/integration/targets/azure_rm_apimanagement/tasks/main.yml: Update sleep relate method ([#550](https://github.com/ansible-collections/azure/pull/550))
+  - tests/integration/targets/azure_rm_appgateway/aliases: Disable azure_rm_appgateway relate test ([#558](https://github.com/ansible-collections/azure/pull/558))
+
+
+## v1.6.0 (2021-04-29)
+
+### NEW MODULES
+  - azure_rm_search: Add new module to deploy Azure Cognitive Search 'azure_rm_cognitivesearch' ([#372](https://github.com/ansible-collections/azure/pull/372))
+  - azure_rm_search_info: Add new module to deploy Azure Cognitive Search 'azure_rm_cognitivesearch' ([#372](https://github.com/ansible-collections/azure/pull/372))
+  - azure_rm_apimanagementservice: Added new module for Azure API management service. ([#333](https://github.com/ansible-collections/azure/pull/333#))
+  - azure_rm_apimanagementservice_info: Added new module for Azure API management service. ([#333](https://github.com/ansible-collections/azure/pull/333#))
+  - azure_rm_virtualwan: Add new module relate with Virtual WAN ([#329](https://github.com/ansible-collections/azure/pull/329))
+  - azure_rm_virtualwan_info: Add new module relate with Virtual WAN ([#329](https://github.com/ansible-collections/azure/pull/329))
+  - azure_rm_vpnsite: Add new module relate with VPN site ([#328](https://github.com/ansible-collections/azure/pull/328))
+  - azure_rm_vpnsite_info: Add new module relate with VPN site ([#328](https://github.com/ansible-collections/azure/pull/328))
+  - azure_rm_vpnsitelink_info: Add new module relate with VPN site ([#328](https://github.com/ansible-collections/azure/pull/328))
+  - azure_rm_aduser: Add new module for AD Users ([#402](https://github.com/ansible-collections/azure/pull/402))
+  - azure_rm_aduser_info: Add new module for AD Users ([#402](https://github.com/ansible-collections/azure/pull/402))
+
+### FEATURE ENHANCEMENT
+  - ignore-2.12: Add 2.11 to test matrix, add ignore-2.12.txt ([#480](https://github.com/ansible-collections/azure/pull/480))
+  - azure_rm_appgateway: Support subnet lookup for app gateway ([#451](https://github.com/ansible-collections/azure/pull/451))
+  - azure_rm_storageaccount: Update azure_rm_storageaccount relate test yml ([#488](https://github.com/ansible-collections/azure/pull/488))
+  - pr-pipeline: use python3.8 as default version,and using ubuntu20. ([#509](https://github.com/ansible-collections/azure/pull/509))
+
+### BUG FIXING
+  - azure: Paultaiton 20210409 requirements doc ([#485](https://github.com/ansible-collections/azure/pull/485))
+  - azure_rm_storageaccount: Allow storage account type Premium_ZRS for FileStorage and BlockBlobStorage ([#482](https://github.com/ansible-collections/azure/pull/482))
+  - azure_rm_*: Fix sanity test related errors ([#506](https://github.com/ansible-collections/azure/pull/506))
+  - azure_rm: Fixing sanity test issue for ansible 2.11 ([#511](http://fanyi.youdao.com/?keyfrom=dict2.index))
+  - azure_rm: Fixing inventory issue ([#518](https://github.com/ansible-collections/azure/pull/518))
+  - azure_rm_aduser: fixing update account_enabled bug in azure_rm_aduser.py ([#536](https://github.com/ansible-collections/azure/pull/536))
+  - azure_rm_common: fixing ad related auth issue when using service principal. ([#537](https://github.com/ansible-collections/azure/pull/537))
+  - azure_rm_aduser: change class name of azure_rm_aduser ([#538](https://github.com/ansible-collections/azure/pull/538))
+
 ## v1.5.0 (2021-03-26)
 
 ### NEW MODULES

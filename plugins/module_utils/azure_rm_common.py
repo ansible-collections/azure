@@ -48,7 +48,9 @@ AZURE_COMMON_ARGS = dict(
     cloud_environment=dict(type='str', default='AzureCloud'),
     cert_validation_mode=dict(type='str', choices=['validate', 'ignore']),
     api_profile=dict(type='str', default='latest'),
-    adfs_authority_url=dict(type='str', default=None)
+    adfs_authority_url=dict(type='str', default=None),
+    log_mode=dict(type='str', no_log=True),
+    log_path=dict(type='str', no_log=True),
 )
 
 AZURE_CREDENTIAL_ENV_MAPPING = dict(
@@ -106,7 +108,8 @@ AZURE_API_PROFILES = {
         'MySQLManagementClient': '2017-12-01',
         'MariaDBManagementClient': '2019-03-01',
         'ManagementLockClient': '2016-09-01',
-        'DataLakeStoreAccountManagementClient': '2016-11-01'
+        'DataLakeStoreAccountManagementClient': '2016-11-01',
+        'EventHubManagementClient': '2018-05-04'
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
@@ -120,6 +123,7 @@ AZURE_API_PROFILES = {
         'ManagementLockClient': '2016-09-01',
         'PolicyClient': '2016-12-01',
         'ResourceManagementClient': '2018-05-01',
+        'EventHubManagementClient': '2018-05-04',
         'SubscriptionClient': '2016-06-01',
         'DnsManagementClient': '2016-04-01',
         'KeyVaultManagementClient': '2016-10-01',
@@ -275,6 +279,7 @@ try:
     from azure.mgmt.search import SearchManagementClient
     from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
+    from azure.mgmt.eventhub import EventHubManagementClient
 
 except ImportError as exc:
     Authentication = object
@@ -362,6 +367,10 @@ AZURE_PKG_VERSIONS = {
         'package_name': 'trafficmanager',
         'expected_version': '0.50.0'
     },
+    'EventHubManagementClient': {
+        'package_name': 'azure-mgmt-eventhub',
+        'expected_version': '2.0.0'
+    },
 } if HAS_AZURE else {}
 
 
@@ -439,6 +448,7 @@ class AzureRMModuleBase(object):
         self._recovery_services_backup_client = None
         self._search_client = None
         self._datalake_store_client = None
+        self._event_hub_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1325,6 +1335,16 @@ class AzureRMModuleBase(object):
     def datalake_store_models(self):
         return DataLakeStoreAccountModel
 
+    @property
+    def event_hub_client(self):
+        self.log('Getting event hub client')
+        if not self._event_hub_client:
+            self._event_hub_client = self.get_mgmt_svc_client(
+                EventHubManagementClient,
+                base_url=self._cloud_environment.endpoints.resource_manager,
+                api_version='2018-05-04')
+        return self._event_hub_client
+
 
 class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
@@ -1427,19 +1447,20 @@ class AzureRMAuth(object):
         else:
             self._adfs_authority_url = self.credentials.get('adfs_authority_url')
 
-        # get resource from cloud environment
-        self._resource = self._cloud_environment.endpoints.active_directory_resource_id
-
         if self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credentials = self.credentials['credentials']
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
+
+            graph_resource = self._cloud_environment.endpoints.active_directory_graph_resource_id
+            rm_resource = self._cloud_environment.endpoints.resource_manager
             self.azure_credentials = ServicePrincipalCredentials(client_id=self.credentials['client_id'],
                                                                  secret=self.credentials['secret'],
                                                                  tenant=self.credentials['tenant'],
                                                                  cloud_environment=self._cloud_environment,
+                                                                 resource=graph_resource if self.is_ad_resource else rm_resource,
                                                                  verify=self._cert_validation_mode == 'validate')
 
         elif self.credentials.get('ad_user') is not None and \
@@ -1449,7 +1470,7 @@ class AzureRMAuth(object):
 
             self.azure_credentials = self.acquire_token_with_username_password(
                 self._adfs_authority_url,
-                self._resource,
+                self._cloud_environment.endpoints.active_directory_resource_id,
                 self.credentials['ad_user'],
                 self.credentials['password'],
                 self.credentials['client_id'],
