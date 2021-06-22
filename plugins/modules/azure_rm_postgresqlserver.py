@@ -203,7 +203,7 @@ class AzureRMPostgreSqlServers(AzureRMModuleBase):
             ),
             geo_redundant_backup=dict(
                 type='str',
-                default=Disabled,
+                default='Disabled',
                 choices=['Disabled', 'Enabled']
             ),
             backup_retention_days=dict(
