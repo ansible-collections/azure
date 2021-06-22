@@ -146,7 +146,7 @@
 - name: Create sample container instance with volume
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
-    name: myContainerInstanceGroup
+    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     os_type: linux
     ip_address: public
     location: eastus
@@ -154,20 +154,20 @@
       - 80
     containers:
       - name: mycontainer1
-        image: httpd
+        image: mcr.microsoft.com/azuredocs/aci-helloworld
         memory: 1.5
         volume_mounts:
-          - name: "my-fileshare"
+          - name: "my-filesharevolume"
             mount_path: "/data/files"
         ports:
           - 80
           - 81
     volumes:
-      - name: "my-fileshare"
+      - name: "my-filesharevolume"
         azure_file:
-          storage_account_name: mystorageaccount
-          share_name: acishare
-          storage_account_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          storage_account_name: "{{ storage_account_name }}"
+          share_name: "{{ file_share_name }}"
+          storage_account_key: "{{ storage_account_key }}"
   register: output
 
 - debug:
@@ -181,8 +181,8 @@
 
 - name: Gather facts for Container Instance
   azure_rm_containerinstance_info:
-    resource_group: myResourceGroup
-    name: myContainerInstanceGroup
+    resource_group: "{{ resource_group }}"
+    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}"
   register: output
 
 - debug:
@@ -207,7 +207,7 @@
 - name: Remove container instance
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
-    name: myContainerInstanceGroup
+    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     os_type: linux
     ip_address: public
     location: eastus
@@ -215,20 +215,20 @@
       - 80
     containers:
       - name: mycontainer1
-        image: httpd
+        image: mcr.microsoft.com/azuredocs/aci-helloworld
         memory: 1.5
         volume_mounts:
-          - name: "my-fileshare"
+          - name: "my-filesharevolume"
             mount_path: "/data/files"
         ports:
           - 80
           - 81
     volumes:
-      - name: "my-fileshare"
+      - name: "my-filesharevolume"
         azure_file:
-          storage_account_name: mystorageaccount
-          share_name: acishare
-          storage_account_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          storage_account_name: "{{ storage_account_name }}"
+          share_name: "{{ file_share_name }}"
+          storage_account_key: "{{ storage_account_key }}"
     state: absent
   register: output
 
