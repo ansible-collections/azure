@@ -54,7 +54,11 @@ options:
     geo_redundant_backup:
         description:
             - Choose between locally redundant(default) or geo-redundant backup. This cannot be updated after first deployment
-        default: default
+        type: str
+        default: Disabled
+        choices:
+            - Disabled
+            - Enabled
     backup_retention_days:
         description:
             - Backup retention period between 7 and 35 days. 7 days by default if not set
