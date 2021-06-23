@@ -339,6 +339,7 @@
         cookie_based_affinity: enabled
         probe: custom_probe
         name: sample_appgateway_http_settings
+        pick_host_name_from_backend_address: true
     http_listeners:
       - frontend_ip_configuration: sample_gateway_frontend_ip_config
         frontend_port: ag_frontend_port
@@ -424,6 +425,7 @@
         cookie_based_affinity: enabled
         probe: custom_probe
         name: sample_appgateway_http_settings
+        pick_host_name_from_backend_address: true
     http_listeners:
       - frontend_ip_configuration: sample_gateway_frontend_ip_config
         frontend_port: ag_frontend_port
