@@ -58,11 +58,8 @@ options:
     geo_redundant_backup:
         description:
             - Choose between locally redundant(default) or geo-redundant backup. This cannot be updated after first deployment
-        type: str
-        default: Disabled
-        choices:
-            - Disabled
-            - Enabled
+        type: bool
+        default: False
     backup_retention_days:
         description:
             - Backup retention period between 7 and 35 days. 7 days by default if not set
@@ -213,9 +210,8 @@ class AzureRMPostgreSqlServers(AzureRMModuleBase):
                 type='int'
             ),
             geo_redundant_backup=dict(
-                type='str',
-                default='Disabled',
-                choices=['Disabled', 'Enabled']
+                type='bool',
+                default=False
             ),
             backup_retention_days=dict(
                 type='int',

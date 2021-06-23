@@ -26,13 +26,10 @@ options:
         description:
             - The name of the server.
         type: str
-    tags:
-        description:
-            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
-        type: list
 
 extends_documentation_fragment:
     - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -184,7 +181,7 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='dict'
             )
         )
         # store the results of the module operation
