@@ -191,7 +191,7 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
         self.resource_group = None
         self.name = None
         self.tags = None
-        super(AzureRMPostgreSqlServersInfo, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMPostgreSqlServersInfo, self).__init__(self.module_arg_spec, supports_tags=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_postgresqlserver_facts'
