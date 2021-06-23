@@ -117,7 +117,6 @@ plugins/modules/azure_rm_mysqlserver.py validate-modules:parameter-type-not-in-d
 plugins/modules/azure_rm_postgresqlconfiguration.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqldatabase.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqlfirewallrule.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_postgresqlserver.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_rediscache.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_rediscache.py validate-modules:doc-default-does-not-match-spec
 plugins/modules/azure_rm_rediscache.py validate-modules:doc-type-does-not-match-spec

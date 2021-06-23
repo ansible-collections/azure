@@ -21,13 +21,16 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     name:
         description:
             - The name of the server.
         required: True
+        type: str
     sku:
         description:
             - The SKU (pricing tier) of the server.
+        type: dict
         suboptions:
             name:
                 description:
@@ -47,6 +50,7 @@ options:
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     storage_mb:
         description:
             - The maximum storage allowed for a server.
@@ -66,6 +70,7 @@ options:
     version:
         description:
             - Server version.
+        type: str
         choices:
             - '9.5'
             - '9.6'
@@ -84,12 +89,15 @@ options:
     admin_username:
         description:
             - The administrator's login name of a server. Can only be specified when the server is being created (and is required for creation).
+        type: str
     admin_password:
         description:
             - The password of the administrator login.
+        type: str
     create_mode:
         description:
             - Create mode of SQL Server. Blank (default), restore from geo redundant (geo_restore), or restore from point in time (point_in_time_restore).
+        type: str
         default: default
         choices:
             - default
@@ -98,14 +106,17 @@ options:
     source_server_id:
         description:
             - Id if the source server if I(create_mode=default).
+        type: str
     restore_point_in_time:
         description:
             - Restore point creation time (ISO8601 format), specifying the time to restore from.
             - Required if I(create_mode=point_in_time_restore).
+        type: str
     state:
         description:
             - Assert the state of the PostgreSQL server. Use C(present) to create or update a server and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - present
             - absent
