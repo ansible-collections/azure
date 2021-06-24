@@ -1222,11 +1222,11 @@ def compare_arrays(old_params, new_params, param_name):
     return newd == oldd
 
 
-def array_to_dict(old):
+def array_to_dict(array):
     '''Converts list object to dictionary object, including any nested properties on elements.'''
     new = {}
-    for index, item in enumerate(old):
-        new[index] = item
+    for index, item in enumerate(array):
+        new[index] = deepcopy(item)
         if isinstance(item, dict):
             for nested in item:
                 if isinstance(item[nested], list):
