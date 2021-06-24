@@ -539,7 +539,7 @@
        include_query_string: true
        name: redirect_site_to_https
   register: output
-- name: Assert the resource instance is well created
+- name: Assert the resource instance is not changed
   assert:
     that:
       - not output.changed
