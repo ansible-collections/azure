@@ -284,6 +284,8 @@ options:
             pick_host_name_from_backend_http_settings:
                 description:
                     - Whether host header should be picked from the host name of the backend HTTP settings. Default value is false.
+                type: bool
+                default: False
     backend_http_settings_collection:
         description:
             - Backend http settings of the application gateway resource.
@@ -536,7 +538,7 @@ probe_spec = dict(
     protocol=dict(type='str', choices=['http', 'https']),
     timeout=dict(type='int'),
     unhealthy_threshold=dict(type='int'),
-    pick_host_name_from_backend_http_settings=dict(type='bool')
+    pick_host_name_from_backend_http_settings=dict(type='bool', default=False)
 )
 
 
