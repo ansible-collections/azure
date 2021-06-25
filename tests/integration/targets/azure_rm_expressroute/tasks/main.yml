@@ -1,0 +1,119 @@
+- name: Create random express route
+  set_fact:
+    express_route: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+
+- name: Create Express route (check mode)
+  azure_rm_expressroute:
+    location: eastus
+    name: "{{ express_route }}"
+    resource_group: "{{ resource_group }}"
+    allow_classic_operations: true
+    global_reach_enabled: false
+    tags:
+      a: b
+    authorizations:
+      - name: authorization_test
+    service_provider_properties:
+      service_provider_name: Aryaka Networks
+      peering_location: Seattle
+      bandwidth_in_mbps: '200'
+    sku:
+      tier: premium
+      family: metereddata
+  register: results
+  check_mode: yes
+
+- assert:
+    that: results.changed
+
+
+- name: Create Express route
+  azure_rm_expressroute:
+    location: eastus
+    name: "{{ express_route }}"
+    resource_group: "{{ resource_group }}"
+    allow_classic_operations: true
+    global_reach_enabled: false
+    tags: 
+      a: b
+    authorizations:
+      - name: authorization_test
+    service_provider_properties:
+      service_provider_name: Aryaka Networks
+      peering_location: Seattle
+      bandwidth_in_mbps: '200'
+    sku:
+      tier: premium
+      family: metereddata
+  register: results
+
+- assert:
+    that: results.changed
+
+
+- name: Update Express route
+  azure_rm_expressroute:
+    location: eastus
+    name: "{{ express_route }}"
+    resource_group: "{{ resource_group }}"
+    allow_classic_operations: true
+    global_reach_enabled: false
+    tags: 
+      test: modified
+    authorizations:
+      - name: authorization_test
+    service_provider_properties:
+      service_provider_name: Aryaka Networks
+      peering_location: Seattle
+      bandwidth_in_mbps: '200'
+    sku:
+      tier: premium
+      family: metereddata
+  register: results
+
+- assert:
+    that: 
+      - results.changed
+      - results.state.tags.test == 'modified'
+
+
+- name: Retrieve Express Route
+  azure_rm_expressroute_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ express_route }}"
+  register: results
+
+- name: Assert that facts module returned result
+  assert:
+    that: 
+      - results.expressroute[0].tags.test == 'modified'
+      - results.expressroute[0].type == 'Microsoft.Network/expressRouteCircuits'
+
+- name: Test idempotent
+  azure_rm_expressroute:
+    name: "{{ express_route }}"
+    resource_group: "{{ resource_group }}"
+  register: results
+
+- assert:
+    that:
+      - not results.changed
+
+#
+# azure_rm_expressroute cleanup
+#
+- name: Delete Express Route
+  azure_rm_expressroute:
+    resource_group: "{{ resource_group }}"
+    name:  "{{ express_route }}"
+    state: absent
+
+- name: Delete Express Route (idempotent)
+  azure_rm_expressroute:
+    resource_group: "{{ resource_group }}"
+    name: "{{ express_route }}"
+    state: absent
+  register: results
+
+- assert:
+    that: not results.changed
