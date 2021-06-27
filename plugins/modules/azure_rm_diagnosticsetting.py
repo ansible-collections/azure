@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 module: azure_rm_diagnosticsetting
-version_added: "0.1.0"
+version_added: "1.7.0"
 short_description: Manage Azure diagnostic settings
 description:
     - Create, update or delete a diagnostic setting.
@@ -32,6 +32,7 @@ options:
         choices:
             - absent
             - present
+        type: str
     workspace_id:
         description:
             - The full ARM resource ID of the Log Analytics workspace to which you would like to send Diagnostic Logs.
@@ -42,6 +43,7 @@ options:
         choices:
             - Dedicated
             - null
+        type: str
     storage_account_id:
         description:
             - The resource ID of the storage account to which you would like to send Diagnostic Logs.
@@ -184,6 +186,7 @@ state:
             choices:
                 - Dedicated
                 - null
+            type: str
             sample: Dedicated
         storage_account_id:
             description:
@@ -273,20 +276,20 @@ except ImportError:
     pass
 
 retention_policy_object = dict(
-    enabled=dict(type='bool', default=True, required=True),
-    days=dict(type='int', default=0, required=True)
+    enabled=dict(type='bool', default=True),
+    days=dict(type='int', default=0)
 )
 
 log_settings_object = dict(
     category=dict(type='str', required=True),
-    enabled=dict(type='bool', default=True, required=True),
+    enabled=dict(type='bool', default=True),
     retention_policy=retention_policy_object
 )
 
 metric_settings_object = dict(
     time_grain=dict(type='str'),
     category=dict(type='str', required=True),
-    enabled=dict(type='bool', default=True, required=True),
+    enabled=dict(type='bool', default=True),
     retention_policy=retention_policy_object
 )
 
@@ -306,12 +309,12 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
             event_hub_authorization_rule_id=dict(type='str'),
             logs=dict(
                 type='list',
-                elements='dict',
+                elements=dict(type='str'),
                 options=log_settings_object
             ),
             metrics=dict(
                 type='list',
-                elements='dict',
+                elements=dict(type='str'),
                 options=metric_settings_object
             )
         )
@@ -333,7 +336,7 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
 
         super(AzureRMDiagnosticSetting, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                        supports_check_mode=False,
-                                                       supports_tags=False)
+                                                       supports_tags=True)
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:

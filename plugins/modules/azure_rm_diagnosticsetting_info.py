@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_diagnosticsetting_info
-version_added: "0.1.0"
+version_added: "1.7.0"
 short_description: Get Azure Diagnostic Setting info
 description:
     - Get Azure Diagnostic Setting info.
@@ -67,6 +67,7 @@ diagnostic_setting:
             choices:
                 - Dedicated
                 - null
+            type: str
             sample: Dedicated
         storage_account_id:
             description:
