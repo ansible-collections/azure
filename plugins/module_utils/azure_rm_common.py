@@ -110,6 +110,7 @@ AZURE_API_PROFILES = {
         'ManagementLockClient': '2016-09-01',
         'DataLakeStoreAccountManagementClient': '2016-11-01',
         'MonitorManagementClient': '2019-10-17',
+        'NotificationHubsManagementClient': '2016-03-01',
         'EventHubManagementClient': '2018-05-04'
     },
     '2019-03-01-hybrid': {
@@ -283,6 +284,7 @@ try:
     from azure.mgmt.search import SearchManagementClient
     from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
+    from azure.mgmt.notificationhubs import NotificationHubsManagementClient
     from azure.mgmt.eventhub import EventHubManagementClient
 
 except ImportError as exc:
@@ -452,6 +454,7 @@ class AzureRMModuleBase(object):
         self._recovery_services_backup_client = None
         self._search_client = None
         self._datalake_store_client = None
+        self._notification_hub_client = None
         self._event_hub_client = None
 
         self.check_mode = self.module.check_mode
@@ -1338,6 +1341,16 @@ class AzureRMModuleBase(object):
     @property
     def datalake_store_models(self):
         return DataLakeStoreAccountModel
+
+    @property
+    def notification_hub_client(self):
+        self.log('Getting notification hub client')
+        if not self._notification_hub_client:
+            self._notification_hub_client = self.get_mgmt_svc_client(
+                NotificationHubsManagementClient,
+                base_url=self._cloud_environment.endpoints.resource_manager,
+                api_version='2016-03-01')
+        return self._notification_hub_client
 
     @property
     def event_hub_client(self):
