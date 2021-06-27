@@ -27,7 +27,7 @@ options:
         type: str
     state:
         description:
-            - Assert the state of the diagnostic setting. Use C(present) to create or update a diagnostic setting and use C(absent) to delete a diagnostic setting.
+            - Assert state of the diagnostic setting. Use C(present) to create or update diagnostic setting and use C(absent) to delete diagnostic setting.
         default: present
         choices:
             - absent
@@ -141,13 +141,11 @@ EXAMPLES = '''
   - name: Create Diagnostic Setting
     azure_rm_diagnosticsetting:
       name: myDiagnosticSetting
-      resource_id: /subscriptions/1234abc0-1234-5678-90ab-cdefghijklmn/resourceGroups/myResourceGroup/providers/Microsoft.Network/applicationGateways/myApplicationGateway
-      storage_account_id: /subscriptions/1234abc0-1234-5678-90ab-cdefghijklmn/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/myStorageAccount
-      logs: 
+      resource_id: /subscriptions/1234abc0/resourceGroups/myResourceGroup/providers/Microsoft.Network/applicationGateways/myApplicationGateway
+      storage_account_id: /subscriptions/1234abc0/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/myStorageAccount
         - category: ApplicationGatewayFirewallLog
           retention_policy:
             days: 0
-          
 '''
 
 RETURN = '''
@@ -168,10 +166,10 @@ state:
                 - The resource ID of the resource in which to apply the diagnostic setting.
             returned: always
             type: str
-            sample: /subscriptions/1234abc0-1234-5678-90ab-cdefghijklmn/resourceGroups/myResourceGroup/providers/Microsoft.Network/applicationGateways/myApplicationGateway
+            sample: /subscriptions/1234abc0/resourceGroups/myResourceGroup/providers/Microsoft.Network/applicationGateways/myApplicationGateway
         state:
             description:
-                - Assert the state of the diagnostic setting. Use C(present) to create or update a diagnostic setting and use C(absent) to delete a diagnostic setting.
+                - Assert state of the diagnostic setting. Use C(present) to create or update diagnostic setting and use C(absent) to delete diagnostic setting.
             returned: always
             type: str
             sample: present
@@ -179,7 +177,7 @@ state:
             description:
                 - The full ARM resource ID of the Log Analytics workspace to which you would like to send Diagnostic Logs.
             type: str
-            sample: /subscriptions/1234abc0-1234-5678-90ab-cdefghijklmn/resourceGroups/myResourceGroup/providers/Microsoft.OperationalInsights/workspaces/myLogAnalyticsWorkspace
+            sample: /subscriptions/1234abc0/resourceGroups/myResourceGroup/providers/Microsoft.OperationalInsights/workspaces/myLogAnalyticsWorkspace
         log_analytics_destination_type:
             description:
                 - whether the export to Log Analytics should use the default destination type, or use a destination type.
@@ -191,7 +189,7 @@ state:
             description:
                 - The resource ID of the storage account to which you would like to send Diagnostic Logs.
             type: str
-            sample: /subscriptions/1234abc0-1234-5678-90ab-cdefghijklmn/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/myStorageAccount
+            sample: /subscriptions/1234abc0/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/myStorageAccount
         service_bus_rule_id:
             description:
                 - The service bus rule Id of the diagnostic setting. This is here to maintain backwards compatibility.
@@ -334,8 +332,8 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
         self.diagnostic_setting_dict = None
 
         super(AzureRMDiagnosticSetting, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                   supports_check_mode=False,
-                                                   supports_tags=False)
+                                                       supports_check_mode=False,
+                                                       supports_tags=False)
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:
@@ -371,9 +369,8 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
 
         return diagnostic_setting
 
-    def create_diagnostic_setting(self, existingDiagnosticSettingsResource = None):
+    def create_diagnostic_setting(self, existingDiagnosticSettingsResource=None):
         self.log("Create diagnostic setting {0}".format(self.name))
-        
         resource = self.parse_resource_id(self)
         parameters = None
 
@@ -391,21 +388,20 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
             self.fail('Parameter error: must provide at least 1 destination.')
         if not (self.event_hub_name ^ self.event_hub_authorization_rule_id):
             self.fail('Parameter error: must provide both event_hub_name and event_hub_authorization_rule_id if using an eventhub destination.')
-        
         self.add_retention_policy_where_missing()
 
         if existingDiagnosticSettingsResource:
             parameters = self.monitor_client.models.DiagnosticSettingsResource(
-                storage_account_id = self.storage_account_id,
-                service_bus_rule_id = self.service_bus_rule_id,
-                event_hub_authorization_rule_id = self.event_hub_authorization_rule_id,
-                event_hub_name = self.event_hub_name,
-                metrics = self.metrics,
-                logs = self.logs,
-                workspace_id = self.workspace_id,
-                log_analytics_destination_type = self.log_analytics_destination_type
+                storage_account_id=self.storage_account_id,
+                service_bus_rule_id=self.service_bus_rule_id,
+                event_hub_authorization_rule_id=self.event_hub_authorization_rule_id,
+                event_hub_name=self.event_hub_name,
+                metrics=self.metrics,
+                logs=self.logs,
+                workspace_id=self.workspace_id,
+                log_analytics_destination_type=self.log_analytics_destination_type
             )
-        else: 
+        else:
             parameters = existingDiagnosticSettingsResource
 
         self.log(str(parameters))
@@ -417,7 +413,6 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
             self.fail("Failed to create diagnostic settings: {0}".format(str(e)))
 
         return self.get_diagnostic_setting()
-
 
     def update_diagnostic_setting(self):
         self.log('Update diagnostic setting {0}'.format(self.name))
@@ -438,14 +433,14 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
                 self.log('Error updating diagnostic setting when creating new.')
                 self.log('Re-creating old diagnostic setting.')
                 existingDiagnosticSettingsResource = self.monitor_client.models.DiagnosticSettingsResource(
-                    storage_account_id = self.diagnostic_setting_dict.get('storage_account_id'),
-                    service_bus_rule_id = self.diagnostic_setting_dict.get('service_bus_rule_id'),
-                    event_hub_authorization_rule_id = self.diagnostic_setting_dict.get('event_hub_authorization_rule_id'),
-                    event_hub_name = self.diagnostic_setting_dict.get('event_hub_name'),
-                    metrics = self.diagnostic_setting_dict.get('metrics'),
-                    logs = self.diagnostic_setting_dict.get('logs'),
-                    workspace_id = self.diagnostic_setting_dict.get('workspace_id'),
-                    log_analytics_destination_type = self.diagnostic_setting_dict.get('log_analytics_destination_type')
+                    storage_account_id=self.diagnostic_setting_dict.get('storage_account_id'),
+                    service_bus_rule_id=self.diagnostic_setting_dict.get('service_bus_rule_id'),
+                    event_hub_authorization_rule_id=self.diagnostic_setting_dict.get('event_hub_authorization_rule_id'),
+                    event_hub_name=self.diagnostic_setting_dict.get('event_hub_name'),
+                    metrics=self.diagnostic_setting_dict.get('metrics'),
+                    logs=self.diagnostic_setting_dict.get('logs'),
+                    workspace_id=self.diagnostic_setting_dict.get('workspace_id'),
+                    log_analytics_destination_type=self.diagnostic_setting_dict.get('log_analytics_destination_type')
                 )
                 self.create_diagnostic_setting(existingDiagnosticSettingsResource)
                 update_error = e
@@ -454,7 +449,6 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
                 self.fail("Failed to update diagnostic setting: {0}".format(str(update_error)))
 
         return self.get_diagnostic_setting()
-
 
     def delete_diagnostic_setting(self):
         self.log('Delete diagnostic setting {0}'.format(self.name))
@@ -486,10 +480,10 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
         if diagnostic_setting_obj.metrics:
             for entry in diagnostic_setting_obj.metrics:
                 entry_item = dict(
-                    time_grain = entry.time_grain,
-                    category = entry.category,
-                    enabled = entry.enabled,
-                    retention_policy = dict(
+                    time_grain=entry.time_grain,
+                    category=entry.category,
+                    enabled=entry.enabled,
+                    retention_policy=dict(
                         days=entry.retention_policy.days,
                         enabled=entry.retention_policy.enabled
                     ))
@@ -499,9 +493,9 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
         if diagnostic_setting_obj.logs:
             for entry in diagnostic_setting_obj.logs:
                 entry_item = dict(
-                    category = entry.category,
-                    enabled = entry.enabled,
-                    retention_policy = dict(
+                    category=entry.category,
+                    enabled=entry.enabled,
+                    retention_policy=dict(
                         days=entry.retention_policy.days,
                         enabled=entry.retention_policy.enabled
                     ))
@@ -509,11 +503,11 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
 
         return diagnostic_setting_dict
 
-    def parse_resource_id(self) -> dict:
+    def parse_resource_id(self):
         sects = self.resource_id.split('/')
 
         if len(sects) != 9:
-            self.fail("Unexpected Azure Resource ID. Expecting format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceType}/{resourceSubType}/{identityName}")
+            self.fail("Invalid format, expecting: /subscriptions/{subscriptionId}/resourceGroups/{resGroup}/providers/{resType}/{resSubType}/{identity}")
         else:
             return {
                 "subscription": sects[2],
@@ -524,8 +518,8 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
 
     def add_retention_policy_where_missing(self):
         infinite_retention_policy = dict(
-            enabled = True,
-            days = 0
+            enabled=True,
+            days=0
         )
 
         for index, log in enumerate(self.logs):
@@ -537,7 +531,6 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
                 self.metrics[index] = infinite_retention_policy
 
     def compare_diagnostic_settings(self):
-        
         changed = False
 
         if self.storage_account_id and self.diagnostic_setting_dict.get('storage_account_id') != self.storage_account_id:
@@ -545,7 +538,7 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
         if self.service_bus_rule_id and self.diagnostic_setting_dict.get('service_bus_rule_id') != self.service_bus_rule_id:
             changed = True
         if self.event_hub_authorization_rule_id and self.diagnostic_setting_dict.get('event_hub_authorization_rule_id') != self.event_hub_authorization_rule_id:
-            changed = True 
+            changed = True
         if self.event_hub_name and self.diagnostic_setting_dict.get('event_hub_name') != self.event_hub_name:
             changed = True
         if self.workspace_id and self.diagnostic_setting_dict.get('workspace_id') != self.workspace_id:
@@ -566,6 +559,7 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
             if element not in list2:
                 return False
         return True
+
 
 def main():
     AzureRMDiagnosticSetting()

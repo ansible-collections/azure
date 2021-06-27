@@ -60,7 +60,7 @@ diagnostic_setting:
             description:
                 - The full ARM resource ID of the Log Analytics workspace to which you would like to send Diagnostic Logs.
             type: str
-            sample: /subscriptions/1234abc0-1234-5678-90ab-cdefghijklmn/resourceGroups/myResourceGroup/providers/Microsoft.OperationalInsights/workspaces/myLogAnalyticsWorkspace
+            sample: /subscriptions/1234abc0/resourceGroups/myResourceGroup/providers/Microsoft.OperationalInsights/workspaces/myLogAnalyticsWorkspace
         log_analytics_destination_type:
             description:
                 - whether the export to Log Analytics should use the default destination type, or use a destination type.
@@ -72,7 +72,7 @@ diagnostic_setting:
             description:
                 - The resource ID of the storage account to which you would like to send Diagnostic Logs.
             type: str
-            sample: /subscriptions/1234abc0-1234-5678-90ab-cdefghijklmn/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/myStorageAccount
+            sample: /subscriptions/1234abc0/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/myStorageAccount
         service_bus_rule_id:
             description:
                 - The service bus rule Id of the diagnostic setting. This is here to maintain backwards compatibility.
@@ -173,7 +173,7 @@ class AzureRMDiagnosticSettingInfo(AzureRMModuleBase):
         self.resource_id = None
 
         super(AzureRMDiagnosticSettingInfo, self).__init__(self.module_arg_spec,
-                                                       supports_tags=False)
+                                                           supports_tags=False)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
@@ -240,10 +240,10 @@ class AzureRMDiagnosticSettingInfo(AzureRMModuleBase):
         if diagnostic_setting_obj.metrics:
             for entry in diagnostic_setting_obj.metrics:
                 entry_item = dict(
-                    time_grain = entry.time_grain,
-                    category = entry.category,
-                    enabled = entry.enabled,
-                    retention_policy = dict(
+                    time_grain=entry.time_grain,
+                    category=entry.category,
+                    enabled=entry.enabled,
+                    retention_policy=dict(
                         days=entry.retention_policy.days,
                         enabled=entry.retention_policy.enabled
                     ))
@@ -253,9 +253,9 @@ class AzureRMDiagnosticSettingInfo(AzureRMModuleBase):
         if diagnostic_setting_obj.logs:
             for entry in diagnostic_setting_obj.logs:
                 entry_item = dict(
-                    category = entry.category,
-                    enabled = entry.enabled,
-                    retention_policy = dict(
+                    category=entry.category,
+                    enabled=entry.enabled,
+                    retention_policy=dict(
                         days=entry.retention_policy.days,
                         enabled=entry.retention_policy.enabled
                     ))
@@ -263,11 +263,11 @@ class AzureRMDiagnosticSettingInfo(AzureRMModuleBase):
 
         return diagnostic_setting_dict
 
-    def parse_resource_id(self) -> dict:
+    def parse_resource_id(self):
         sects = self.resource_id.split('/')
 
         if len(sects) != 9:
-            self.fail("Unexpected Azure Resource ID. Expecting format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceType}/{resourceSubType}/{identityName}")
+            self.fail("Invalid format, expecting: /subscriptions/{subscriptionId}/resourceGroups/{resGroupName}/providers/{resType}/{resSubType}/{identity}")
         else:
             return {
                 "subscription": sects[2],
