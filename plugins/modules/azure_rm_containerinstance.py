@@ -481,7 +481,7 @@ azure_file_volume_spec = dict(
     share_name=dict(type='str', required=True),
     read_only=dict(type='bool'),
     storage_account_name=dict(type='str', required=True),
-    storage_account_key=dict(type='str', required=True)
+    storage_account_key=dict(type='str', required=True, no_log=True)
 )
 
 
@@ -489,7 +489,7 @@ volumes_spec = dict(
     name=dict(type='str', required=True),
     azure_file=dict(type='dict', options=azure_file_volume_spec),
     empty_dir=dict(type='dict'),
-    secret=dict(type='dict'),
+    secret=dict(type='dict', no_log=True),
     git_repo=dict(type='dict', options=git_repo_volume_spec)
 )
 

@@ -26,6 +26,10 @@ options:
         description:
             - The name of the container instance.
         type: str
+    tags:
+        description:
+            - Limit results by providing of tags. Format tags 'key:value'.
+        type: dict
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -212,6 +216,9 @@ class AzureRMContainerInstanceInfo(AzureRMModuleBase):
             ),
             name=dict(
                 type='str'
+            ),
+            tags=dict(
+                type='dict'
             )
         )
         # store the results of the module operation
@@ -220,6 +227,7 @@ class AzureRMContainerInstanceInfo(AzureRMModuleBase):
         )
         self.resource_group = None
         self.name = None
+        self.tags = None
 
         super(AzureRMContainerInstanceInfo, self).__init__(self.module_arg_spec, supports_tags=True)
 
