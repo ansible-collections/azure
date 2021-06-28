@@ -61,6 +61,7 @@ options:
             - List of ports exposed within the container group.
             - This option is deprecated, using I(ports) under I(containers)".
         type: list
+        elements: int
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.
@@ -529,6 +530,7 @@ class AzureRMContainerInstance(AzureRMModuleBase):
             ),
             ports=dict(
                 type='list',
+                elements='int',
                 default=[]
             ),
             registry_login_server=dict(
