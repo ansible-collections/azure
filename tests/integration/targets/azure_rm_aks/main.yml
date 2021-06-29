@@ -4,6 +4,6 @@
   strategy: free
   tasks:
     - name: Include Main Tasks
-      include_tasks: tasks/main.yml
+      include: tasks/main.yml
     - name: Include minimal-cluster Tasks
-      include_tasks: tasks/minimal-cluster.yml
+      include: tasks/minimal-cluster.yml
