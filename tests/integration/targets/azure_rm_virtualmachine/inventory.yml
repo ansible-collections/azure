@@ -1,6 +1,5 @@
 all:
   hosts:
-    azure_test_ephemeral_os:
     azure_test_invalid:
     azure_test_public_ip:
       network: 10.42.0.0/24
