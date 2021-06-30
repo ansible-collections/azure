@@ -13,7 +13,7 @@
     location: eastus
     resource_group: "{{ resource_group }}"
     dns_prefix: "aks{{ rpfx }}"
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+    #kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
     agent_pool_profiles:
       - name: default
         count: 1
@@ -44,7 +44,7 @@
     location: eastus
     resource_group: "{{ resource_group }}"
     dns_prefix: "aks{{ rpfx }}"
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+    #kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
     agent_pool_profiles:
       - name: default
         count: 1
