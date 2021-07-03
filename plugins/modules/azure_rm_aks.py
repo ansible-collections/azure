@@ -99,6 +99,15 @@ options:
                     - 'VirtualMachineScaleSets'
                     - 'AvailabilitySet'
                 type: str
+            mode:
+                description:
+                    - AgentPoolMode represents mode of an agent pool.
+                    - Possible values include C(System) and C(User).
+                    - System AgentPoolMode requires a minimum VM SKU of at least 2 vCPUs and 4GB memory.
+                choices:
+                    - 'System'
+                    - 'User'
+                type: str
             vnet_subnet_id:
                 description:
                     - Specifies the VNet's subnet identifier.
@@ -251,7 +260,7 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create an AKS instance
+    - name: Create an AKS instance With A System Node Pool & A User Node Pool
       azure_rm_aks:
         name: myAKS
         resource_group: myResourceGroup
@@ -267,9 +276,19 @@ EXAMPLES = '''
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_DS1_v2
+            vm_size: Standard_B2s
             enable_auto_scaling: True
             type: VirtualMachineScaleSets
+            mode: System
+            max_count: 3
+            min_count: 1
+            enable_rbac: yes
+          - name: user
+            count: 1
+            vm_size: Standard_D2_v2
+            enable_auto_scaling: True
+            type: VirtualMachineScaleSets
+            mode: User
             max_count: 3
             min_count: 1
             enable_rbac: yes
@@ -290,7 +309,8 @@ EXAMPLES = '''
         agent_pool_profiles:
           - name: default
             count: 5
-            vm_size: Standard_D2_v2
+            mode: System
+            vm_size: Standard_B2s
         tags:
           Environment: Production
 
@@ -312,9 +332,10 @@ state:
            name: default
            os_disk_size_gb: Null
            os_type: Linux
+           moode: System
            ports: Null
            storage_profile: ManagedDisks
-           vm_size: Standard_DS1_v2
+           vm_size: Standard_B2s
            vnet_subnet_id: Null
         changed: false
         dns_prefix: aks9860bdcd89
@@ -438,6 +459,7 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         availability_zones=profile.availability_zones,
         os_type=profile.os_type,
         type=profile.type,
+        mode=profile.mode,
         enable_auto_scaling=profile.enable_auto_scaling,
         max_count=profile.max_count,
         min_count=profile.min_count,
@@ -494,6 +516,7 @@ agent_pool_profile_spec = dict(
     availability_zones=dict(type='list', elements='int', choices=[1, 2, 3]),
     os_type=dict(type='str', choices=['Linux', 'Windows']),
     type=dict(type='str', choice=['VirtualMachineScaleSets', 'AvailabilitySet']),
+    mode=dict(type='str', choice=['System', 'User'], requried=True),
     enable_auto_scaling=dict(type='bool'),
     max_count=dict(type='int'),
     min_count=dict(type='int'),
@@ -715,6 +738,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 vm_size = profile_self['vm_size']
                                 availability_zones = profile_self['availability_zones']
                                 enable_auto_scaling = profile_self['enable_auto_scaling']
+                                mode = profile_self['mode']
                                 max_count = profile_self['max_count']
                                 min_count = profile_self['min_count']
                                 max_pods = profile_self['max_pods']
@@ -746,6 +770,9 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
                                 elif min_count is not None and profile_result['min_count'] != min_count:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    to_be_updated = True
+                                elif mode is not None and profile_result['mode'] != mode:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
                         if not matched:
@@ -857,12 +884,15 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             if (profile['name'] in to_update_name_list):
                 self.log("Creating / Updating the AKS agentpool {0}".format(profile['name']))
                 parameters = self.managedcluster_models.AgentPool(
+                    count=profile["count"],
                     vm_size=profile["vm_size"],
+                    os_disk_size_gb=profile["os_disk_size_gb"],
                     max_count=profile["max_count"],
                     min_count=profile["min_count"],
                     max_pods=profile["max_pods"],
                     enable_auto_scaling=profile["enable_auto_scaling"],
-                    agent_pool_type=profile["type"]
+                    agent_pool_type=profile["type"],
+                    mode=profile["mode"]
                 )
                 try:
                     poller = self.managedcluster_client.agent_pools.create_or_update(self.resource_group, self.name, profile["name"], parameters)
