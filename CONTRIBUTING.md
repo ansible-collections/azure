@@ -2,6 +2,36 @@
 
 When contributing to this repository, please first discuss the change you wish to make via issue, or any other method with the owners of this repository before making a change.
 
+## Environment setup
+
+It is recommended you install Ansible and this repository's dependencies in a virtual environment:
+```bash
+python3 -m venv venv
+. venv/bin/activate
+pip3 install -U pip
+pip3 install ansible
+pip3 install -r requirements-azure.txt
+pip3 install -r sanity-requirements-azure.txt
+```
+
+## Development and running tests
+
+Being able to run tests requires an account or service principal with permission (typically Owner) in your Azure subscription.
+
+1. Prepare the Azure configuration file at `tests/integration/cloud-config-azure.ini`, a template of which is available in [the Ansible repo](https://github.com/ansible/ansible/blob/23a84902cb9599fe958a86e7a95520837964726a/test/lib/ansible_test/config/cloud-config-azure.ini.template). Populate your appropriate credential and resource group name information.
+1. Make the desired change(s) and then build/install the collection:
+    ```bash
+    rm azure-azcollection-*.tar.gz && ansible-galaxy collection build . --force && ansible-galaxy collection install azure-azcollection-*.tar.gz -p tests/staging --force
+    ```
+1. Switch to the directory where the collection installed.
+    ```bash
+    cd tests/staging/ansible_collections/azure/azcollection/
+    ```
+1. Run tests for the desired module(s):
+    ```bash
+    ansible-test integration azure_rm_storageaccount -v
+    ```
+
 ## Pull Request Process
 
 1. Fork this project into your account if you are a first-time contributor.

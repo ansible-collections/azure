@@ -60,3 +60,4 @@ build_ignore:
 - 'azure-azcollection-*.tar.gz'
 - 'venv*'
 - '.vscode'
+- 'tests/staging'
