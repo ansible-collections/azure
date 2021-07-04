@@ -4,9 +4,8 @@ When contributing to this repository, please first discuss the change you wish t
 
 ## Environment setup
 
-Being able to run tests requires an account or service principal with permission (typically Owner) in your Azure subscription.
-
 1. Prepare the Azure configuration file at `tests/integration/cloud-config-azure.ini`, a template of which is available in [the Ansible repo](https://github.com/ansible/ansible/blob/23a84902cb9599fe958a86e7a95520837964726a/test/lib/ansible_test/config/cloud-config-azure.ini.template). Populate your appropriate credential and resource group information.
+    - The account or service principal must have permission (typically Owner) on the resource groups.
 1. Ensure the resource groups defined in your configuration file are already created. Recommended region: **East US** (not all regions support all Azure features).
 1. Prepare testing directory (necessary until [ansible/ansible#68499](https://github.com/ansible/ansible/issues/68499) is resolved):
     ```bash
