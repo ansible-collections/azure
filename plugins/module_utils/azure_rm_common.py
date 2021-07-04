@@ -1134,7 +1134,7 @@ class AzureRMModuleBase(object):
     @property
     def managedcluster_models(self):
         self.log("Getting container service models")
-        return ContainerServiceClient.models('2019-04-01')
+        return ContainerServiceClient.models('2020-04-01')
 
     @property
     def managedcluster_client(self):
@@ -1142,7 +1142,7 @@ class AzureRMModuleBase(object):
         if not self._managedcluster_client:
             self._managedcluster_client = self.get_mgmt_svc_client(ContainerServiceClient,
                                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                   api_version='2019-04-01')
+                                                                   api_version='2020-04-01')
         return self._managedcluster_client
 
     @property
