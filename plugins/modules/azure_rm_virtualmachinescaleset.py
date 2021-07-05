@@ -73,7 +73,6 @@ options:
         choices:
             - None
             - Spot
-        default: None
     eviction_policy:
         description:
             - Specifies the eviction policy for the Azure Spot virtual machine.
@@ -81,14 +80,12 @@ options:
         choices:
             - Deallocate
             - Delete
-        default: Deallocate
     max_price:
         description:
             - Specifies the maximum price you are willing to pay for a Azure Spot VM/VMSS.
             - This price is in US Dollars.
             - C(-1) indicates default price to be up-to on-demand.
             - Requires priority to be set to Spot.
-        default: -1
     admin_username:
         description:
             - Admin username used to access the host after it is created. Required when creating a VM.
@@ -744,14 +741,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                 current_ephemeral = current_osdisk.get('diffDiskSettings', None)
                 current_properties = vmss_dict['properties']['virtualMachineProfile']
 
-                if self.priority != current_properties.get('priority', 'None') :
+                if self.priority != current_properties.get('priority', 'None'):
                     self.fail('VM Priority is not updatable: requested virtual machine priority is {0}'.format(self.priority))
-                if self.eviction_policy  and \
-                   self.eviction_policy != current_properties.get('evictionPolicy', None) :
+                if self.eviction_policy and \
+                   self.eviction_policy != current_properties.get('evictionPolicy', None):
                     self.fail('VM Eviction Policy is not updatable: requested virtual machine eviction policy is {0}'.format(self.eviction_policy))
                 if self.max_price and \
-                   vmss_dict['properties']['virtualMachineProfile'].get('billingProfile',None) and \
-                   self.max_price != vmss_dict['properties']['virtualMachineProfile']['billingProfile'].get('maxPrice', None) :
+                   vmss_dict['properties']['virtualMachineProfile'].get('billingProfile', None) and \
+                   self.max_price != vmss_dict['properties']['virtualMachineProfile']['billingProfile'].get('maxPrice', None):
                     self.fail('VM Maximum Price is not updatable: requested virtual machine maximum price is {0}'.format(self.max_price))
 
                 if self.ephemeral_os_disk and current_ephemeral is None:
