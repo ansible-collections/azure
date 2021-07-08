@@ -169,7 +169,7 @@ class AzureRMContainerRegistryInfo(AzureRMModuleBase):
         self.name = None
         self.retrieve_credentials = False
 
-        super(AzureRMContainerRegistryInfo, self).__init__(self.module_arg_spec, supports_tags=False, facts_module=True)
+        super(AzureRMContainerRegistryInfo, self).__init__(self.module_arg_spec, supports_tags=True, facts_module=True)
 
     def exec_module(self, **kwargs):
 
