@@ -20,7 +20,6 @@ options:
     resource_group:
         description:
             - The name of the resource group to which the container registry belongs.
-        required: True
         type: str
     name:
         description:
@@ -151,7 +150,6 @@ class AzureRMContainerRegistryInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(
                 type='str',
-                required=True
             ),
             name=dict(
                 type='str'
