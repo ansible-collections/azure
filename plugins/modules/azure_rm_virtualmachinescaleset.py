@@ -86,6 +86,7 @@ options:
             - This price is in US Dollars.
             - C(-1) indicates default price to be up-to on-demand.
             - Requires priority to be set to Spot.
+        default: -1
     admin_username:
         description:
             - Admin username used to access the host after it is created. Required when creating a VM.
@@ -741,7 +742,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                 current_ephemeral = current_osdisk.get('diffDiskSettings', None)
                 current_properties = vmss_dict['properties']['virtualMachineProfile']
 
-                if self.priority != current_properties.get('priority', 'None'):
+                if self.priority and self.priority != current_properties.get('priority', 'None'):
                     self.fail('VM Priority is not updatable: requested virtual machine priority is {0}'.format(self.priority))
                 if self.eviction_policy and \
                    self.eviction_policy != current_properties.get('evictionPolicy', None):
