@@ -232,11 +232,11 @@ class AzureRMVMExtension(AzureRMModuleBase):
                     self.settings = response['settings']
 
                 # The API returns None, ignoring the comparison for now ---- 2021-07-13
-                #if self.protected_settings is not None:
+                # if self.protected_settings is not None:
                 #    if response['protected_settings'] != self.protected_settings:
                 #        response['protected_settings'] = self.protected_settings
                 #        to_be_updated = True
-                #else:
+                # else:
                 #    self.protected_settings = response['protected_settings']
 
                 if response['location'] != self.location:
