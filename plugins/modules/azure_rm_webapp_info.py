@@ -23,20 +23,20 @@ options:
     name:
         description:
             - Only show results for a specific web app.
+        type: str
     resource_group:
         description:
             - Limit results by resource group.
+        type: str
     return_publish_profile:
         description:
             - Indicate whether to return publishing profile of the web app.
         default: False
         type: bool
-    tags:
-        description:
-            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
 
 extends_documentation_fragment:
     - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Yunge Zhu (@yungezz)
@@ -241,7 +241,6 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list'),
             return_publish_profile=dict(type='bool', default=False),
         )
 
@@ -258,7 +257,7 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
         self.framework_names = ['net_framework', 'java', 'php', 'node', 'python', 'dotnetcore', 'ruby']
 
         super(AzureRMWebAppInfo, self).__init__(self.module_arg_spec,
-                                                supports_tags=False,
+                                                supports_tags=True,
                                                 facts_module=True)
 
     def exec_module(self, **kwargs):
