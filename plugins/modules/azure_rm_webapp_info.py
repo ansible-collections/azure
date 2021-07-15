@@ -33,10 +33,14 @@ options:
             - Indicate whether to return publishing profile of the web app.
         default: False
         type: bool
+    tags:
+        description:
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str|dict
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Yunge Zhu (@yungezz)
@@ -241,6 +245,7 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
+            tags=dict(type='list', elements=str|dict),
             return_publish_profile=dict(type='bool', default=False),
         )
 
@@ -257,7 +262,7 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
         self.framework_names = ['net_framework', 'java', 'php', 'node', 'python', 'dotnetcore', 'ruby']
 
         super(AzureRMWebAppInfo, self).__init__(self.module_arg_spec,
-                                                supports_tags=True,
+                                                supports_tags=False,
                                                 facts_module=True)
 
     def exec_module(self, **kwargs):

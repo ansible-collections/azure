@@ -64,6 +64,7 @@ options:
                     - Linux web apps support only one framework.
                     - Java framework is mutually exclusive with others.
                 type: str
+                required: True
                 choices:
                     - java
                     - net_framework
@@ -114,14 +115,6 @@ options:
                     - To create a multi-container app, the name should be 'COMPOSE|' or 'KUBE|' followed by base64 encoded configuration.
                 type: str
                 required: True
-                choices:
-                    - net_framework
-                    - java
-                    - php
-                    - node
-                    - python
-                    - dotnetcore
-                    - ruby
             always_on:
                 description:
                     - Ensure web app gets loaded all the time, rather unloaded after been idle.
@@ -213,17 +206,16 @@ options:
             - stopped
             - restarted
         default: started
-        type: str
 
     state:
         description:
             - State of the Web App.
             - Use C(present) to create or update a Web App and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
-        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -365,7 +357,7 @@ except ImportError:
 
 container_settings_spec = dict(
     name=dict(type='str', required=True),
-    always_on=dict(type=bool, default=False),
+    always_on=dict(type='bool', default=False),
     registry_server_url=dict(type='str'),
     registry_server_user=dict(type='str'),
     registry_server_password=dict(type='str', no_log=True)
@@ -905,6 +897,7 @@ class AzureRMWebApps(AzureRMModuleBase):
 
             response = self.web_client.web_apps.create_or_update(resource_group_name=self.resource_group,
                                                                  name=self.name,
+                                                                 site_config=self.site_config,
                                                                  site_envelope=self.site,
                                                                  skip_dns_registration=skip_dns_registration,
                                                                  skip_custom_domain_verification=self.skip_custom_domain_verification,
