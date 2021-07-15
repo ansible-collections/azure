@@ -25,38 +25,48 @@ options:
         description:
             - Name of a resource group where the vm extension exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the vm extension.
         required: true
+        type: str
     state:
         description:
             - State of the vm extension. Use C(present) to create or update a vm extension and C(absent) to delete a vm extension.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     virtual_machine_name:
         description:
             - The name of the virtual machine where the extension should be create or updated.
+        type: str
     publisher:
         description:
             - The name of the extension handler publisher.
+        type: str
     virtual_machine_extension_type:
         description:
             - The type of the extension handler.
+        type: str
     type_handler_version:
         description:
             - The type version of the extension handler.
+        type: str
     settings:
         description:
             - Json formatted public settings for the extension.
+        type: dict
     protected_settings:
         description:
             - Json formatted protected settings for the extension.
+        type: dict
     auto_upgrade_minor_version:
         description:
             - Whether the extension handler should be automatically upgraded across minor versions.

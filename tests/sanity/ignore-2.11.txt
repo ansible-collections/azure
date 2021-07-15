@@ -155,8 +155,6 @@ plugins/modules/azure_rm_virtualmachine.py validate-modules:doc-required-mismatc
 plugins/modules/azure_rm_virtualmachine.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_virtualmachine_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachine_info.py validate-modules:parameter-list-no-elements
-plugins/modules/azure_rm_virtualmachineextension.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_virtualmachineextension_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachineextension_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_virtualmachineimage_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachinescaleset.py validate-modules:parameter-type-not-in-doc
