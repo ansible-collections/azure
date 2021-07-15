@@ -37,7 +37,6 @@ options:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
         type: list
-        elements: str|dict
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -245,7 +244,7 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list', elements=str|dict),
+            tags=dict(type='list'),
             return_publish_profile=dict(type='bool', default=False),
         )
 
