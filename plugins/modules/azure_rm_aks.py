@@ -108,6 +108,10 @@ options:
                     - 'System'
                     - 'User'
                 type: str
+            node_labels:
+                description:
+                    - Agent pool node labels to be persisted across all nodes in agent pool.
+                type: dict
             vnet_subnet_id:
                 description:
                     - Specifies the VNet's subnet identifier.
@@ -333,6 +337,7 @@ state:
            os_disk_size_gb: Null
            os_type: Linux
            moode: System
+           node_labels: { "environment": "dev", "release": "stable" }
            ports: Null
            storage_profile: ManagedDisks
            vm_size: Standard_B2s
@@ -462,6 +467,7 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         mode=profile.mode,
         enable_auto_scaling=profile.enable_auto_scaling,
         max_count=profile.max_count,
+        node_labels=profile.node_labels,
         min_count=profile.min_count,
         max_pods=profile.max_pods
     ) for profile in agentpoolprofiles] if agentpoolprofiles else None
@@ -519,6 +525,7 @@ agent_pool_profile_spec = dict(
     mode=dict(type='str', choice=['System', 'User'], requried=True),
     enable_auto_scaling=dict(type='bool'),
     max_count=dict(type='int'),
+    node_labels=dict(type='dict'),
     min_count=dict(type='int'),
     max_pods=dict(type='int')
 )
@@ -740,6 +747,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 enable_auto_scaling = profile_self['enable_auto_scaling']
                                 mode = profile_self['mode']
                                 max_count = profile_self['max_count']
+                                node_labels = profile_self['node_labels']
                                 min_count = profile_self['min_count']
                                 max_pods = profile_self['max_pods']
 
@@ -773,6 +781,9 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
                                 elif mode is not None and profile_result['mode'] != mode:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    to_be_updated = True
+                                elif node_labels is not None and profile_result['node_labels'] != node_labels:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
                         if not matched:
@@ -888,6 +899,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                     vm_size=profile["vm_size"],
                     os_disk_size_gb=profile["os_disk_size_gb"],
                     max_count=profile["max_count"],
+                    node_labels=profile["node_labels"],
                     min_count=profile["min_count"],
                     max_pods=profile["max_pods"],
                     enable_auto_scaling=profile["enable_auto_scaling"],
