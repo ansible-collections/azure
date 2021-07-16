@@ -26,6 +26,7 @@
            vm_size: Standard_B2s
            type: VirtualMachineScaleSets
            mode: System
+           node_labels: {"release":"stable"}
            max_pods: 42
            availability_zones:
              - 1
@@ -66,6 +67,7 @@
            vm_size: Standard_B2s
            type: VirtualMachineScaleSets
            mode: System
+           node_labels: {"release":"stable"}
            max_pods: 42
            availability_zones:
              - 1
@@ -95,6 +97,55 @@
         - fact.aks[0].id == output.id
         - fact.aks[0].properties.agentPoolProfiles[0].availabilityZones == ["1", "2"]
         - fact.aks[0].properties.agentPoolProfiles[0].mode == "System"
+        - fact.aks[0].properties.agentPoolProfiles[0].nodeLabels | length == 1
+
+ - name: Update an AKS instance node_labels
+   azure_rm_aks:
+     name: "aks{{ rpfx }}"
+     resource_group: "{{ resource_group }}"
+     location: eastus
+     dns_prefix: "aks{{ rpfx }}"
+     kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+     service_principal:
+         client_id: "{{ azure_client_id }}"
+         client_secret: "{{ azure_secret }}"
+     linux_profile:
+         admin_username: azureuser
+         ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDSPmiqkvDH1/+MDAVDZT8381aYqp73Odz8cnD5hegNhqtXajqtiH0umVg7HybX3wt1HjcrwKJovZURcIbbcDvzdH2bnYbF93T4OLXA0bIfuIp6M86x1iutFtXdpN3TTicINrmSXEE2Ydm51iMu77B08ZERjVaToya2F7vC+egfoPvibf7OLxE336a5tPCywavvNihQjL8sjgpDT5AAScjb3YqK/6VLeQ18Ggt8/ufINsYkb+9/Ji/3OcGFeflnDXq80vPUyF3u4iIylob6RSZenC38cXmQB05tRNxS1B6BXCjMRdy0v4pa7oKM2GA4ADKpNrr0RI9ed+peRFwmsclH test@ansible
+     agent_pool_profiles:
+         - name: default
+           count: 1
+           vm_size: Standard_B2s
+           type: VirtualMachineScaleSets
+           mode: System
+           node_labels: {"release":"stable", "environment":"dev"}
+           max_pods: 42
+           availability_zones:
+             - 1
+             - 2
+     node_resource_group: "node{{ noderpfx }}"
+     enable_rbac: yes
+     network_profile:
+         load_balancer_sku: standard
+   register: output
+
+ - name: Assert the AKS instance is well update
+   assert:
+     that:
+       - output.changed
+
+ - name: Get AKS fact
+   azure_rm_aks_info:
+      name: "aks{{ rpfx }}"
+      resource_group: "{{ resource_group }}"
+   register: fact
+
+ - name: Assert fact returns the created one
+   assert:
+      that:
+        - "fact.aks | length == 1"
+        - fact.aks[0].id == output.id
+        - fact.aks[0].properties.agentPoolProfiles[0].nodeLabels | length == 2
 
  - name: Get AKS upgrade versions
    azure_rm_aksupgrade_info:
