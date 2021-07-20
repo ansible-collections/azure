@@ -1493,11 +1493,14 @@ class AzureRMAuth(object):
             tenant = self.credentials.get('tenant')
             if not tenant:
                 tenant = 'common'  # SDK default
-
+            
+            graph_resource = self._cloud_environment.endpoints.active_directory_graph_resource_id
+            rm_resource = self._cloud_environment.endpoints.resource_manager
             self.azure_credentials = UserPassCredentials(self.credentials['ad_user'],
                                                          self.credentials['password'],
                                                          tenant=tenant,
                                                          cloud_environment=self._cloud_environment,
+                                                         resource=graph_resource if self.is_ad_resource else rm_resource,
                                                          verify=self._cert_validation_mode == 'validate')
         else:
             self.fail("Failed to authenticate with provided credentials. Some attributes were missing. "
