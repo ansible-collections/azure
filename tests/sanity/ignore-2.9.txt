@@ -110,7 +110,6 @@ plugins/modules/azure_rm_mariadbserver.py validate-modules:parameter-type-not-in
 plugins/modules/azure_rm_mysqlconfiguration.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mysqldatabase.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mysqlfirewallrule.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_mysqlserver.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqlconfiguration.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqldatabase.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqlfirewallrule.py validate-modules:parameter-type-not-in-doc
