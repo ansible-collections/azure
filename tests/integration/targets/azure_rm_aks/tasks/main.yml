@@ -2,6 +2,8 @@
      rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
      noderpfx: "{{ resource_group | hash('md5') | truncate(4, True, '') }}"
 
+ - include: minimal-cluster.yml
+
  - name: Find available k8s version
    azure_rm_aksversion_info:
      location: eastus

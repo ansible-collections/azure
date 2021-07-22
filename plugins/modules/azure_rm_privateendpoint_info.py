@@ -11,7 +11,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_virtualnetwork_info
+module: azure_rm_privateendpoint_info
 
 version_added: "1.8.0"
 
@@ -23,18 +23,18 @@ description:
 options:
     name:
         description:
-            - Only show results for a specific security group.
+            - Name of resource group.
+        type: str
     resource_group:
         description:
-            - Limit results by resource group. Required when filtering by name.
-
+            - Limit results by resource group.
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
 
 author:
     - Fred-sun (@Fred-sun)
-
 '''
 
 EXAMPLES = '''
@@ -52,74 +52,76 @@ EXAMPLES = '''
         tags:
           key1: value1
 '''
+
 RETURN = '''
-privateendpoints:
+state:
     description:
         - List of private endpoint dict with same format as M(azure_rm_privateendpoint) module paramter.
     returned: always
     type: complex
     contains:
-            id:
-                description:
-                    - Resource ID of the private endpoint.
-                sample: /subscriptions/xxx-xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateEndpoints/testprivateendpoint
-                returned: always
-                type: str
-            etag:
-                description:
-                    -  A unique read-only string that changes whenever the resource is updated.
-                sample: 'W/\"20803842-7d51-46b2-a790-ded8971b4d8a'
-                returned: always
-                type: str
-            network_interfaces:
-                description:
-                    - List ID of the network interfaces.
-                returned: always
-                type: list
-                sample:  ["/subscriptions/xxx-xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/networkInterfaces/fredprivateendpoint002.nic"]
-            location:
-                description:
-                    - Valid Azure location.
-                returned: always
-                type: str
-                sample: eastus
-            tags:
-                description:
-                    - Tags assigned to the resource. Dictionary of string:string pairs.
-                returned: always
-                type: dict
-                sample: { "tag1": "abc" }
-            provisioning_state:
-                description:
-                    - Provisioning state of the resource.
-                returned: always
-                sample: Succeeded
-                type: str
-            name:
-                description:
-                    - Name of the private endpoint.
-                returned: always
-                type: str
-                sample: testprivateendpoint
-            subnets_id:
-                description:
-                    - Subnets associated with the virtual network.
-                returned: always
-                type: str
-                sample: "/subscriptions/xxx-xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/fredtestRG-vnet/subnets/default
-            private_link_service_connections:
-                description:
-                    - The resource id of the private endpoint to connect.
-                returned: always
-                type: list
-                sample: ["/subscriptions/xxx-xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateEndpoints/fredprivateendpoint002/privateLinkServiceConnections/testprivateendpoint"]
-            type:
-                description:
-                    - Resource type.
-                returned: always
-                type: str
-                sample: Microsoft.Network/privateEndpoints
+        id:
+            description:
+                - Resource ID of the private endpoint.
+            sample: /subscriptions/xxx-xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateEndpoints/testprivateendpoint
+            returned: always
+            type: str
+        etag:
+            description:
+                -  A unique read-only string that changes whenever the resource is updated.
+            sample: 'W/\"20803842-7d51-46b2-a790-ded8971b4d8a'
+            returned: always
+            type: str
+        network_interfaces:
+            description:
+                - List ID of the network interfaces.
+            returned: always
+            type: list
+            sample:  ["/subscriptions/xxx-xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/networkInterfaces/fredprivateendpoint002.nic"]
+        location:
+            description:
+                - Valid Azure location.
+            returned: always
+            type: str
+            sample: eastus
+        tags:
+            description:
+                - Tags assigned to the resource. Dictionary of string:string pairs.
+            returned: always
+            type: dict
+            sample: { "tag1": "abc" }
+        provisioning_state:
+            description:
+                - Provisioning state of the resource.
+            returned: always
+            sample: Succeeded
+            type: str
+        name:
+            description:
+                - Name of the private endpoint.
+            returned: always
+            type: str
+            sample: estprivateendpoint
+        subnets_id:
+            description:
+                - Subnets associated with the virtual network.
+            returned: always
+            type: str
+            sample: "/subscriptions/xxx-xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/fredtestRG-vnet/subnets/default"
+        private_link_service_connections:
+            description:
+                - The resource id of the private endpoint to connect.
+            returned: always
+            type: list
+            sample: ["/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/privateEndpoints/point/privateLinkServiceConnections/point",]
+        type:
+            description:
+                - Resource type.
+            returned: always
+            type: str
+            sample: Microsoft.Network/privateEndpoints
 '''
+
 try:
     from msrestazure.azure_exceptions import CloudError
 except Exception:
@@ -151,8 +153,8 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
         )
 
         super(AzureRMPrivateEndpointInfo, self).__init__(self.module_arg_spec,
-                                                          supports_tags=True,
-                                                          facts_module=True)
+                                                         supports_tags=True,
+                                                         facts_module=True)
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:
@@ -174,10 +176,10 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
 
         try:
             item = self.network_client.private_endpoints.get(self.resource_group, self.name)
-        except CloudError:
-            pass
+        except Exception:
+            self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
         format_item = self.privateendpoints_to_dict(item)
- 
+
         if format_item and self.has_tags(format_item['tags'], self.tags):
             results = [format_item]
         return results
@@ -211,6 +213,8 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
         return results
 
     def privateendpoints_to_dict(self, privateendpoint):
+        if privateendpoint is None:
+            return None
         results = dict(
             id=privateendpoint.id,
             name=privateendpoint.name,
@@ -233,10 +237,6 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
             results['manual_private_link_service_connections'] = []
             for connections in privateendpoint.manual_private_link_service_connections:
                 results['manual_private_link_service_connections'].append(connections.id)
-        if privateendpoint.custom_dns_configs and len(privateendpoint.custom_dns_configs) > 0:
-            results['custom_dns_configs'] = []
-            for dns_config in privateendpoint.custom_dns_configs:
-                results['custom_dns_configs'].append(dns_config)
         return results
 
 

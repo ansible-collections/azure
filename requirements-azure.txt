@@ -33,7 +33,7 @@ azure-mgmt-trafficmanager==0.50.0
 azure-mgmt-web==0.41.0
 azure-nspkg==2.0.0
 azure-storage==0.35.1
-msrest==0.6.10
+msrest==0.6.21
 msrestazure==0.6.4
 azure-keyvault==1.0.0a1
 azure-graphrbac==0.61.1

@@ -11,52 +11,76 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_virtualnetwork
-version_added: "0.1.0"
-short_description: Manage Azure virtual networks
+module: azure_rm_privateendpoint
+version_added: "1.8.0"
+short_description: Manage Azure private endpoint
 description:
-    - Create, update or delete a virtual networks. Allows setting and updating the available IPv4 address ranges
-      and setting custom DNS servers. Use the M(azure_rm_subnet) module to associate subnets with a virtual network.
+    - Create, update or delete a private endpoint.
 options:
     resource_group:
         description:
             - Name of resource group.
         required: true
-    address_prefixes_cidr:
-        description:
-            - List of IPv4 address ranges where each is formatted using CIDR notation.
-            - Required when creating a new virtual network or using I(purge_address_prefixes).
-        aliases:
-            - address_prefixes
-    dns_servers:
-        description:
-            - Custom list of DNS servers. Maximum length of two.
-            - The first server in the list will be treated as the Primary server. This is an explicit list.
-            - Existing DNS servers will be replaced with the specified list.
-            - Use the I(purge_dns_servers) option to remove all custom DNS servers and revert to default Azure servers.
+        type: str
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     name:
         description:
-            - Name of the virtual network.
+            - Name of the private endpoint.
         required: true
-    purge_address_prefixes:
+        type: str
+    subnet:
         description:
-            - Use with I(state=present) to remove any existing I(address_prefixes).
-        type: bool
-        default: 'no'
-        aliases:
-          - purge
-    purge_dns_servers:
+            - The ID of the subnet from which the private IP will be allocated.
+            - This parameter is required for create or update.
+        type: dict
+        suboptions:
+            id:
+                description:
+                    - The ID of the subnet from which the private IP will be allocated.
+                type: str
+    private_link_service_connections:
         description:
-            - Use with I(state=present) to remove existing DNS servers, reverting to default Azure servers. Mutually exclusive with DNS servers.
-        type: bool
-        default: 'no'
+            - A grouping of information about the connection to the remote resource.
+            - This parameter is required for create or update.
+        type: list
+        elements: dict
+        suboptions:
+            name:
+                description:
+                    - The name of the resource that is unique within a resource group.
+                type: str
+            private_link_service_id:
+                description:
+                    - The resource id of the private endpoint to connect to.
+                type: str
+            group_ids:
+                description:
+                    - The ID(s) of the group(s) obtained from the remote resource that this private endpoint should connect to.
+                type: list
+                elements: str
+    private_dns_zone_configs:
+        description:
+            - The Private DNS zones configurations.
+        type: list
+        elements: dict
+        suboptions:
+            name:
+                description:
+                    - The name of the private dns zone configs.
+                type: str
+            private_dns_zone_group:
+                description:
+                    - The resource ID of the Private DNS zones.
+                type: list
+                elements: str
     state:
         description:
             - State of the virtual network. Use C(present) to create or update and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -66,139 +90,138 @@ extends_documentation_fragment:
     - azure.azcollection.azure_tags
 
 author:
-    - Chris Houseknecht (@chouseknecht)
-    - Matt Davis (@nitzmahone)
+    - Fred-sun (@Fred-sun)
 
 '''
 
 EXAMPLES = '''
-    - name: Create a virtual network
-      azure_rm_virtualnetwork:
-        resource_group: myResourceGroup
-        name: myVirtualNetwork
-        address_prefixes_cidr:
-            - "10.1.0.0/16"
-            - "172.100.0.0/16"
-        dns_servers:
-            - "127.0.0.1"
-            - "127.0.0.2"
-        tags:
-            testing: testing
-            delete: on-exit
+- name: Create private endpoint
+  azure_rm_privateendpoint:
+    name: testprivateendpoint
+    resource_group: v-xisuRG
+    private_link_service_connections:
+      - name: Test_private_link_service
+        private_link_service_id: /subscriptions/xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateLinkServices/testervice
+    subnet:
+      id: /subscriptions/xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/fredvnet/subnets/default
+    tags:
+      key1: value1
+      key2: value2
 
-    - name: Delete a virtual network
-      azure_rm_virtualnetwork:
-        resource_group: myResourceGroup
-        name: myVirtualNetwork
-        state: absent
+- name: Delete private endpoint
+  azure_rm_privateendpoint:
+    name: testprivateendpoint
+    resource_group: myResourceGroup
+    state: absent
 '''
+
+
 RETURN = '''
 state:
     description:
-        - Current state of the virtual network.
+        - List of private endpoint dict with same format as M(azure_rm_privateendpoint) module paramter.
     returned: always
     type: complex
     contains:
-        address_prefixes:
-            description:
-                - The virtual network IPv4 address ranges.
-            returned: always
-            type: list
-            sample: [
-                     "10.1.0.0/16",
-                     "172.100.0.0/16"
-                    ]
-        dns_servers:
-            description:
-                - DNS servers.
-            returned: always
-            type: list
-            sample: [
-                    "127.0.0.1",
-                    "127.0.0.3"
-                    ]
-        etag:
-            description:
-                - A unique read-only string that changes whenever the resource is update.
-            returned: always
-            type: str
-            sample: 'W/"0712e87c-f02f-4bb3-8b9e-2da0390a3886"'
-        id:
-            description:
-                - Resource ID.
-            returned: always
-            type: str
-            sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/
-                    Microsoft.Network/virtualNetworks/myVirtualNetwork"
-        location:
-            description:
-                - The Geo-location where the resource lives.
-            returned: always
-            type: str
-            sample: eastus
-        name:
-            description:
-                - Resource name.
-            returned: always
-            type: str
-            sample: my_test_network
-        provisioning_state:
-            description:
-                - Provisioning state of the virtual network.
-            returned: always
-            type: str
-            sample: Succeeded
-        tags:
-            description:
-                - Resource tags, such as { 'tags1':'value1' }.
-            returned: always
-            type: dict
-            sample: { 'key1':'value1' }
-        type:
-            description:
-                - Resource type.
-            returned: always
-            type: str
-            sample: Microsoft.Network/virtualNetworks
+            id:
+                description:
+                    - Resource ID of the private endpoint.
+                sample: /subscriptions/xxx-xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateEndpoints/testprivateendpoint
+                returned: always
+                type: str
+            etag:
+                description:
+                    -  A unique read-only string that changes whenever the resource is updated.
+                sample: 'W/\"20803842-7d51-46b2-a790-ded8971b4d8a'
+                returned: always
+                type: str
+            network_interfaces:
+                description:
+                    - List ID of the network interfaces.
+                returned: always
+                type: list
+                sample:  ["/subscriptions/xxx-xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/networkInterfaces/fredprivateendpoint002.nic"]
+            location:
+                description:
+                    - Valid Azure location.
+                returned: always
+                type: str
+                sample: eastus
+            tags:
+                description:
+                    - Tags assigned to the resource. Dictionary of string:string pairs.
+                returned: always
+                type: dict
+                sample: { "tag1": "abc" }
+            provisioning_state:
+                description:
+                    - Provisioning state of the resource.
+                returned: always
+                sample: Succeeded
+                type: str
+            name:
+                description:
+                    - Name of the private endpoint.
+                returned: always
+                type: str
+                sample: estprivateendpoint
+            subnets_id:
+                description:
+                    - Subnets associated with the virtual network.
+                returned: always
+                type: str
+                sample: "/subscriptions/xxx-xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/fredtestRG-vnet/subnets/default"
+            private_link_service_connections:
+                description:
+                    - The resource id of the private endpoint to connect.
+                returned: always
+                type: list
+                sample: ["/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/privateEndpoints/point/privateLinkServiceConnections/point",]
+            type:
+                description:
+                    - Resource type.
+                returned: always
+                type: str
+                sample: Microsoft.Network/privateEndpoints
 '''
-import logging
-logging.basicConfig(filename='log.log', level=logging.INFO)
+
 try:
     from msrestazure.azure_exceptions import CloudError
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 
-def virtual_network_to_dict(vnet):
-    '''
-    Convert a virtual network object to a dict.
-    :param vnet: VirtualNet object
-    :return: dict
-    '''
-    results = dict(
-        id=vnet.id,
-        name=vnet.name,
-        location=vnet.location,
-        type=vnet.type,
-        tags=vnet.tags,
-        provisioning_state=vnet.provisioning_state,
-        etag=vnet.etag
-    )
-    if vnet.dhcp_options and len(vnet.dhcp_options.dns_servers) > 0:
-        results['dns_servers'] = []
-        for server in vnet.dhcp_options.dns_servers:
-            results['dns_servers'].append(server)
-    if vnet.address_space and len(vnet.address_space.address_prefixes) > 0:
-        results['address_prefixes'] = []
-        for space in vnet.address_space.address_prefixes:
-            results['address_prefixes'].append(space)
-    return results
+network_interfaces_spec = dict(
+    id=dict(type='str')
+)
 
 
-class AzureRMPrivateEndpoint(AzureRMModuleBase):
+private_service_connection_spec = dict(
+    name=dict(type='str'),
+    private_link_service_id=dict(type='str'),
+    group_ids=dict(type='list', elements='str')
+)
+
+
+subnet_spec = dict(
+    id=dict(type='str')
+)
+
+
+private_dns_zone_configs_spec = dict(
+    name=dict(type='str'),
+    private_dns_zone_group=dict(type='list', elements='str')
+)
+
+
+class Actions:
+    NoAction, Create, Update, Delete = range(4)
+
+
+class AzureRMPrivateEndpoint(AzureRMModuleBaseExt):
 
     def __init__(self):
 
@@ -207,159 +230,91 @@ class AzureRMPrivateEndpoint(AzureRMModuleBase):
             name=dict(type='str', required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             location=dict(type='str'),
-            subnet_id=dict(type='str'),
-            private_dns_zone_group=dict(type='list', elements='dict'),
-            private_service_connection=dict(type='list', elements='dict'),
-            custom_dns_configs=dict(type='list', elements='dict'),
-            private_dns_zone_configs=dict(type='list',elements='dict'),
-            
+            subnet=dict(type='dict', options=subnet_spec),
+            private_link_service_connections=dict(type='list', elements='dict', options=private_service_connection_spec),
+            private_dns_zone_configs=dict(type='list', elements='dict', options=private_dns_zone_configs_spec)
         )
-
-        mutually_exclusive = [ ]
-
-        required_if = [ ]
 
         self.resource_group = None
         self.name = None
         self.state = None
         self.location = None
-        self.subnet_id = None
-        self.private_dns_zone_group = None
-        self.private_service_connection = None
-        self.custom_dns_configs = None
-        self.private_dns_zone_configs = None
-        
+        self.body = {}
+        self.tags = None
+
         self.results = dict(
             changed=False,
             state=dict()
         )
+        self.to_do = Actions.NoAction
 
         super(AzureRMPrivateEndpoint, self).__init__(self.module_arg_spec,
-                                                    mutually_exclusive=mutually_exclusive,
-                                                    required_if=required_if,
-                                                    supports_check_mode=True)
+                                                     supports_tags=True,
+                                                     supports_check_mode=True)
 
     def exec_module(self, **kwargs):
 
         for key in list(self.module_arg_spec.keys()) + ['tags']:
-            setattr(self, key, kwargs[key])
+            if hasattr(self, key):
+                setattr(self, key, kwargs[key])
+            elif kwargs[key] is not None:
+                self.body[key] = kwargs[key]
 
-        self.results['check_mode'] = self.check_mode
+        self.inflate_parameters(self.module_arg_spec, self.body, 0)
 
         resource_group = self.get_resource_group(self.resource_group)
         if not self.location:
             # Set default location
             self.location = resource_group.location
+        self.body['location'] = self.location
+        self.body['tags'] = self.tags
 
-        changed = False
-        results = dict()
-        try:
-            self.log('Fetching vnet {0}'.format(self.name))
-            private_endpoint = self.network_client.private_endpoints.get(self.resource_group, self.name)
+        self.log('Fetching private endpoint {0}'.format(self.name))
+        old_response = self.get_resource()
 
-            results = self.private_endpoints_to_dict(private_endpoint)
-
-            self.log('Vnet exists {0}'.format(self.name))
-
-            if self.state == 'present':
-                if self.address_prefixes_cidr:
-                    existing_address_prefix_set = set(vnet.address_space.address_prefixes)
-                    requested_address_prefix_set = set(self.address_prefixes_cidr)
-                    missing_prefixes = requested_address_prefix_set - existing_address_prefix_set
-                    extra_prefixes = existing_address_prefix_set - requested_address_prefix_set
-                    if len(missing_prefixes) > 0:
-                        self.log('CHANGED: there are missing address_prefixes')
-                        changed = True
-                        if not self.purge_address_prefixes:
-                            # add the missing prefixes
-                            for prefix in missing_prefixes:
-                                results['address_prefixes'].append(prefix)
-
-                    if len(extra_prefixes) > 0 and self.purge_address_prefixes:
-                        self.log('CHANGED: there are address_prefixes to purge')
-                        changed = True
-                        # replace existing address prefixes with requested set
-                        results['address_prefixes'] = self.address_prefixes_cidr
-
-                update_tags, results['tags'] = self.update_tags(results['tags'])
+        if old_response is None:
+            if self.state == "present":
+                self.to_do = Actions.Create
+        else:
+            if self.state == 'absent':
+                self.to_do = Actions.Delete
+            else:
+                # modifiers = {}
+                # self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
+                # self.results['modifiers'] = modifiers
+                # self.results['compare'] = []
+                # if not self.default_compare(modifiers, self.body, old_response, '', self.results):
+                #    self.to_do = Actions.Update
+                update_tags, newtags = self.update_tags(old_response.get('tags', {}))
                 if update_tags:
-                    changed = True
+                    self.body['tags'] = newtags
+                    self.to_do = Actions.Update
 
-                if self.dns_servers:
-                    existing_dns_set = set(vnet.dhcp_options.dns_servers) if vnet.dhcp_options else set([])
-                    requested_dns_set = set(self.dns_servers)
-                    if existing_dns_set != requested_dns_set:
-                        self.log('CHANGED: replacing DNS servers')
-                        changed = True
-                        results['dns_servers'] = self.dns_servers
-
-                if self.purge_dns_servers and vnet.dhcp_options and len(vnet.dhcp_options.dns_servers) > 0:
-                    self.log('CHANGED: purging existing DNS servers')
-                    changed = True
-                    results['dns_servers'] = []
-            elif self.state == 'absent':
-                self.log("CHANGED: vnet exists but requested state is 'absent'")
-                changed = True
-        except CloudError:
-            self.log('Vnet {0} does not exist'.format(self.name))
-            if self.state == 'present':
-                self.log("CHANGED: vnet {0} does not exist but requested state is 'present'".format(self.name))
-                changed = True
-
-        self.results['changed'] = changed
-        self.results['state'] = results
-
-        if self.check_mode:
-            return self.results
-
-        if changed:
-            if self.state == 'present':
-                if not results:
-                    # create a new virtual network
-                    self.log("Create virtual network {0}".format(self.name))
-                    if not self.address_prefixes_cidr:
-                        self.fail('Parameter error: address_prefixes_cidr required when creating a virtual network')
-                    vnet_param = self.network_models.VirtualNetwork(
-                        location=self.location,
-                        address_space=self.network_models.AddressSpace(
-                            address_prefixes=self.address_prefixes_cidr
-                        )
-                    )
-                    if self.dns_servers:
-                        vnet_param.dhcp_options = self.network_models.DhcpOptions(
-                            dns_servers=self.dns_servers
-                        )
-                    if self.tags:
-                        vnet_param.tags = self.tags
-                    self.results['state'] = self.create_or_update_vnet(vnet_param)
-                else:
-                    # update existing virtual network
-                    self.log("Update virtual network {0}".format(self.name))
-                    vnet_param = self.network_models.VirtualNetwork(
-                        location=results['location'],
-                        address_space=self.network_models.AddressSpace(
-                            address_prefixes=results['address_prefixes']
-                        ),
-                        tags=results['tags'],
-                        subnets=vnet.subnets
-                    )
-                    if results.get('dns_servers'):
-                        vnet_param.dhcp_options = self.network_models.DhcpOptions(
-                            dns_servers=results['dns_servers']
-                        )
-                    self.results['state'] = self.create_or_update_vnet(vnet_param)
-            elif self.state == 'absent':
-                self.delete_virtual_network()
-                self.results['state']['status'] = 'Deleted'
-
+        if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
+            self.results['changed'] = True
+            if self.check_mode:
+                return self.results
+            response = self.create_update_resource_private_endpoint(self.body)
+        elif self.to_do == Actions.Delete:
+            self.results['changed'] = True
+            if self.check_mode:
+                return self.results
+            response = self.delete_private_endpoint()
+        else:
+            self.results['changed'] = False
+            response = old_response
+        if response is not None:
+            self.results['state'] = response
         return self.results
 
-    def create_or_update_private_endpoint(self, privateendpoint):
+    def create_update_resource_private_endpoint(self, privateendpoint):
         try:
-            poller = self.network_client.private_endpoints.create_or_update(self.resource_group, self.name, privateendpoint)
+            poller = self.network_client.private_endpoints.create_or_update(resource_group_name=self.resource_group,
+                                                                            private_endpoint_name=self.name, parameters=privateendpoint)
             new_privateendpoint = self.get_poller_result(poller)
         except Exception as exc:
-            self.fail("Error creating or updating virtual network {0} - {1}".format(self.name, str(exc)))
+            self.fail("Error creating or updating private endpoint {0} - {1}".format(self.name, str(exc)))
+
         return self.private_endpoints_to_dict(new_privateendpoint)
 
     def delete_private_endpoint(self):
@@ -367,14 +322,23 @@ class AzureRMPrivateEndpoint(AzureRMModuleBase):
             poller = self.network_client.private_endpoints.delete(self.resource_group, self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
-            self.fail("Error deleting virtual network {0} - {1}".format(self.name, str(exc)))
+            self.fail("Error deleting private endpoint {0} - {1}".format(self.name, str(exc)))
         return result
 
     def get_resource(self):
+        found = False
         try:
-            response = self.network_client.private_endpoints.get(self.resource_group, self.name)
-
+            private_endpoint = self.network_client.private_endpoints.get(self.resource_group, self.name)
             results = self.private_endpoints_to_dict(private_endpoint)
+            found = True
+            self.log("Response : {0}".format(results))
+        except Exception:
+            self.log("Did not find the private endpoint resource")
+        if found is True:
+            return results
+        else:
+            return None
+
     def private_endpoints_to_dict(self, privateendpoint):
         results = dict(
             id=privateendpoint.id,
@@ -384,7 +348,7 @@ class AzureRMPrivateEndpoint(AzureRMModuleBase):
             provisioning_state=privateendpoint.provisioning_state,
             type=privateendpoint.type,
             etag=privateendpoint.etag,
-            subnet_id=privateendpoint.subnet.id
+            subnet=dict(id=privateendpoint.subnet.id)
         )
         if privateendpoint.network_interfaces and len(privateendpoint.network_interfaces) > 0:
             results['network_interfaces'] = []
@@ -393,15 +357,8 @@ class AzureRMPrivateEndpoint(AzureRMModuleBase):
         if privateendpoint.private_link_service_connections and len(privateendpoint.private_link_service_connections) > 0:
             results['private_link_service_connections'] = []
             for connections in privateendpoint.private_link_service_connections:
-                results['private_link_service_connections'].append(connections.id)
-        if privateendpoint.manual_private_link_service_connections and len(privateendpoint.manual_private_link_service_connections) > 0:
-            results['manual_private_link_service_connections'] = []
-            for connections in privateendpoint.manual_private_link_service_connections:
-                results['manual_private_link_service_connections'].append(connections.id)
-        if privateendpoint.custom_dns_configs and len(privateendpoint.custom_dns_configs) > 0:
-            results['custom_dns_configs'] = []
-            for dns_config in privateendpoint.custom_dns_configs:
-                results['custom_dns_configs'].append(dns_config)
+                results['private_link_service_connections'].append(dict(private_link_service_id=connections.private_link_service_id, name=connections.name))
+
         return results
 
 
