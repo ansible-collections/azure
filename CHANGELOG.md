@@ -1,5 +1,30 @@
 # Change Log
 
+## v1.8.0 (2021-07-22)
+
+### NEW MODULES
+  - azure_rm_notificationhub: New module: azure_rm_notificationhub ([#496](https://github.com/ansible-collections/azure/pull/496/))
+  - azure_rm_notificationhub_info: New module: azure_rm_notificationhub ([#496](https://github.com/ansible-collections/azure/pull/496/))
+  - azure_rm_expressroute: New module: azure_rm_expressroute ([#484](https://github.com/ansible-collections/azure/pull/484))
+  - azure_rm_expressroute_info: New module: azure_rm_expressroute ([#484](https://github.com/ansible-collections/azure/pull/484))
+
+### FEATURE ENHANCEMENT
+  - azure_rm_aks: azure_rm_aks: cluster client & models API version ([#497](https://github.com/ansible-collections/azure/pull/497))
+  - azure_rm_aks: add new paramter node_labels for agent_pool ([#577](https://github.com/ansible-collections/azure/pull/577))
+  - azure_rm_aks: azure_rm_aks: support system-assigned (managed) identity, ([#514](https://github.com/ansible-collections/azure/pull/514))
+  - azure_rm_mysqlserver: Add new feature storage_profile ([#563](https://github.com/ansible-collections/azure/pull/563))
+
+### BUG FIXING
+  - azure_rm_virtualmachine_info: Add name to return data_disks ([#565](https://github.com/ansible-collections/azure/pull/565))
+  - azure_rm_loadbalancer: enable_floating_ip is for SQL AlwaysOn not SNAT ([#560](https://github.com/ansible-collections/azure/pull/560))
+  - azure_rm_containerregistry: Add return value for azure_rm_containerregistry idempotent test ([#578](https://github.com/ansible-collections/azure/pull/578))
+  - azure_rm_containerregistry_info: Add return value for azure_rm_containerregistry idempotent test ([#578](https://github.com/ansible-collections/azure/pull/578))
+  - azure_rm_roleasignment: azure_rm_roleassignment bugfix ([#464](https://github.com/ansible-collections/azure/pull/464))
+  - azure_rm_roleasignment_info: azure_rm_roleassignment bugfix ([#464](https://github.com/ansible-collections/azure/pull/464))
+  - azure_rm_aks: Upddate test case ([#585](https://github.com/ansible-collections/azure/pull/585))
+  - azure_rm_cosmosdbaccount: Upddate test case ([#585](https://github.com/ansible-collections/azure/pull/585))
+
+
 ## v1.7.0 (2021-06-08)
 
 ### NEW MODULES
