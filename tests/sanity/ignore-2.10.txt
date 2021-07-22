@@ -29,9 +29,6 @@ plugins/modules/azure_rm_containerinstance.py validate-modules:doc-required-mism
 plugins/modules/azure_rm_containerinstance.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_containerinstance_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_containerinstance_info.py validate-modules:parameter-list-no-elements
-plugins/modules/azure_rm_containerregistry.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_containerregistry_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_containerregistry_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:doc-choices-do-not-match-spec
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:doc-default-does-not-match-spec
