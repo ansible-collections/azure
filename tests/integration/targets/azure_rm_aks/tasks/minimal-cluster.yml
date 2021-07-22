@@ -1,17 +1,23 @@
 - set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
-    noderpfx: "{{ resource_group | hash('md5') | truncate(4, True, '') }}"
+
+- name: Find available k8s version
+  azure_rm_aksversion_info:
+    location: eastus
+  register: versions
 
 - name: Use minimal parameters and system-assigned identity
   azure_rm_aks:
     name: "minimal{{ rpfx }}"
     location: eastus
     resource_group: "{{ resource_group }}"
+    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
     dns_prefix: "aks{{ rpfx }}"
     agent_pool_profiles:
       - name: default
         count: 1
-        vm_size: Standard_DS1_v2
+        vm_size: Standard_B2s
+        mode: System
   register: output
 
 - name: Assert the AKS instance is well created
@@ -37,11 +43,13 @@
     name: "minimal{{ rpfx }}"
     location: eastus
     resource_group: "{{ resource_group }}"
+    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
     dns_prefix: "aks{{ rpfx }}"
     agent_pool_profiles:
       - name: default
         count: 1
-        vm_size: Standard_DS1_v2
+        vm_size: Standard_B2s
+        mode: System
   register: output
 
 - name: Assert idempotent

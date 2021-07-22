@@ -27,9 +27,9 @@
   azure_rm_cosmosdbaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ dbname }}"
-    location: eastus
+    location: eastasia
     geo_rep_locations:
-      - name: eastus
+      - name: eastasia
         failover_priority: 0
     database_account_offer_type: Standard
   check_mode: yes
@@ -43,10 +43,10 @@
   azure_rm_cosmosdbaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ dbname }}"
-    location: eastus
+    location: eastasia
     kind: global_document_db
     geo_rep_locations:
-      - name: eastus
+      - name: eastasia
         failover_priority: 0
       - name: westus
         failover_priority: 1
@@ -68,10 +68,10 @@
   azure_rm_cosmosdbaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ dbname }}"
-    location: eastus
+    location: eastasia
     kind: global_document_db
     geo_rep_locations:
-      - name: eastus
+      - name: eastasia
         failover_priority: 0
       - name: westus
         failover_priority: 1
@@ -93,10 +93,10 @@
   azure_rm_cosmosdbaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ dbname }}"
-    location: eastus
+    location: eastasia
     kind: global_document_db
     geo_rep_locations:
-      - name: eastus
+      - name: eastasia
         failover_priority: 0
       - name: westus
         failover_priority: 1
