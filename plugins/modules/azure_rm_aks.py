@@ -44,6 +44,7 @@ options:
     linux_profile:
         description:
             - The Linux profile suboptions.
+            - Optional, provide if you need an ssh access to the cluster nodes.
         suboptions:
             admin_username:
                 description:
@@ -108,6 +109,10 @@ options:
                     - 'System'
                     - 'User'
                 type: str
+            node_labels:
+                description:
+                    - Agent pool node labels to be persisted across all nodes in agent pool.
+                type: dict
             vnet_subnet_id:
                 description:
                     - Specifies the VNet's subnet identifier.
@@ -122,7 +127,7 @@ options:
                     - 3
     service_principal:
         description:
-            - The service principal suboptions.
+            - The service principal suboptions. If not provided - use system-assigned managed identity.
         suboptions:
             client_id:
                 description:
@@ -314,6 +319,17 @@ EXAMPLES = '''
         tags:
           Environment: Production
 
+    - name: Use minimal parameters and system-assigned identity
+      azure_rm_aks:
+        name: myMinimalCluster
+        location: eastus
+        resource_group: myExistingResourceGroup
+        dns_prefix: akstest
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_D2_v2
+
     - name: Remove a managed Azure Container Services (AKS) instance
       azure_rm_aks:
         name: myAKS
@@ -333,6 +349,7 @@ state:
            os_disk_size_gb: Null
            os_type: Linux
            moode: System
+           node_labels: { "environment": "dev", "release": "stable" }
            ports: Null
            storage_profile: ManagedDisks
            vm_size: Standard_B2s
@@ -426,10 +443,13 @@ def create_linux_profile_dict(linuxprofile):
     :param: linuxprofile: ContainerServiceLinuxProfile with the Azure callback object
     :return: dict with the state on Azure
     '''
-    return dict(
-        ssh_key=linuxprofile.ssh.public_keys[0].key_data,
-        admin_username=linuxprofile.admin_username
-    )
+    if linuxprofile:
+        return dict(
+            ssh_key=linuxprofile.ssh.public_keys[0].key_data,
+            admin_username=linuxprofile.admin_username
+        )
+    else:
+        return None
 
 
 def create_service_principal_profile_dict(serviceprincipalprofile):
@@ -462,6 +482,7 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         mode=profile.mode,
         enable_auto_scaling=profile.enable_auto_scaling,
         max_count=profile.max_count,
+        node_labels=profile.node_labels,
         min_count=profile.min_count,
         max_pods=profile.max_pods
     ) for profile in agentpoolprofiles] if agentpoolprofiles else None
@@ -519,6 +540,7 @@ agent_pool_profile_spec = dict(
     mode=dict(type='str', choice=['System', 'User'], requried=True),
     enable_auto_scaling=dict(type='bool'),
     max_count=dict(type='int'),
+    node_labels=dict(type='dict'),
     min_count=dict(type='int'),
     max_pods=dict(type='int')
 )
@@ -622,7 +644,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
 
         required_if = [
             ('state', 'present', [
-             'dns_prefix', 'linux_profile', 'agent_pool_profiles', 'service_principal'])
+             'dns_prefix', 'agent_pool_profiles'])
         ]
 
         self.results = dict(changed=False)
@@ -673,7 +695,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                             return base != new
 
                     # Cannot Update the SSH Key for now // Let service to handle it
-                    if is_property_changed('linux_profile', 'ssh_key'):
+                    if self.linux_profile and is_property_changed('linux_profile', 'ssh_key'):
                         self.log(("Linux Profile Diff SSH, Was {0} / Now {1}"
                                   .format(response['linux_profile']['ssh_key'], self.linux_profile.get('ssh_key'))))
                         to_be_updated = True
@@ -682,7 +704,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                     # self.log("linux_profile response : {0}".format(response['linux_profile'].get('admin_username')))
                     # self.log("linux_profile self : {0}".format(self.linux_profile[0].get('admin_username')))
                     # Cannot Update the Username for now // Let service to handle it
-                    if is_property_changed('linux_profile', 'admin_username'):
+                    if self.linux_profile and is_property_changed('linux_profile', 'admin_username'):
                         self.log(("Linux Profile Diff User, Was {0} / Now {1}"
                                   .format(response['linux_profile']['admin_username'], self.linux_profile.get('admin_username'))))
                         to_be_updated = True
@@ -740,6 +762,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 enable_auto_scaling = profile_self['enable_auto_scaling']
                                 mode = profile_self['mode']
                                 max_count = profile_self['max_count']
+                                node_labels = profile_self['node_labels']
                                 min_count = profile_self['min_count']
                                 max_pods = profile_self['max_pods']
 
@@ -773,6 +796,9 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
                                 elif mode is not None and profile_result['mode'] != mode:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    to_be_updated = True
+                                elif node_labels is not None and profile_result['node_labels'] != node_labels:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
                         if not matched:
@@ -838,7 +864,17 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         if self.agent_pool_profiles:
             agentpools = [self.create_agent_pool_profile_instance(profile) for profile in self.agent_pool_profiles]
 
-        service_principal_profile = self.create_service_principal_profile_instance(self.service_principal)
+        if self.service_principal:
+            service_principal_profile = self.create_service_principal_profile_instance(self.service_principal)
+            identity = None
+        else:
+            service_principal_profile = None
+            identity = self.managedcluster_models.ManagedClusterIdentity(type='SystemAssigned')
+
+        if self.linux_profile:
+            linux_profile = self.create_linux_profile_instance(self.linux_profile)
+        else:
+            linux_profile = None
 
         parameters = self.managedcluster_models.ManagedCluster(
             location=self.location,
@@ -847,7 +883,8 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             tags=self.tags,
             service_principal_profile=service_principal_profile,
             agent_pool_profiles=agentpools,
-            linux_profile=self.create_linux_profile_instance(self.linux_profile),
+            linux_profile=linux_profile,
+            identity=identity,
             enable_rbac=self.enable_rbac,
             network_profile=self.create_network_profile_instance(self.network_profile),
             aad_profile=self.create_aad_profile_instance(self.aad_profile),
@@ -888,6 +925,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                     vm_size=profile["vm_size"],
                     os_disk_size_gb=profile["os_disk_size_gb"],
                     max_count=profile["max_count"],
+                    node_labels=profile["node_labels"],
                     min_count=profile["min_count"],
                     max_pods=profile["max_pods"],
                     enable_auto_scaling=profile["enable_auto_scaling"],
