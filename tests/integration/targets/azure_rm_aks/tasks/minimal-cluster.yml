@@ -1,0 +1,81 @@
+- set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+
+- name: Find available k8s version
+  azure_rm_aksversion_info:
+    location: eastus
+  register: versions
+
+- name: Use minimal parameters and system-assigned identity
+  azure_rm_aks:
+    name: "minimal{{ rpfx }}"
+    location: eastus
+    resource_group: "{{ resource_group }}"
+    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+    dns_prefix: "aks{{ rpfx }}"
+    agent_pool_profiles:
+      - name: default
+        count: 1
+        vm_size: Standard_B2s
+        mode: System
+  register: output
+
+- name: Assert the AKS instance is well created
+  assert:
+    that:
+      - output.changed
+      - output.provisioning_state == 'Succeeded'
+
+- name: Get AKS fact
+  azure_rm_aks_info:
+     name: "minimal{{ rpfx }}"
+     resource_group: "{{ resource_group }}"
+  register: fact
+
+- name: Assert fact returns the created one
+  assert:
+    that:
+      - "fact.aks | length == 1"
+      - fact.aks[0].id == output.id
+
+- name: Use minimal parameters and system-assigned identity (idempotent)
+  azure_rm_aks:
+    name: "minimal{{ rpfx }}"
+    location: eastus
+    resource_group: "{{ resource_group }}"
+    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+    dns_prefix: "aks{{ rpfx }}"
+    agent_pool_profiles:
+      - name: default
+        count: 1
+        vm_size: Standard_B2s
+        mode: System
+  register: output
+
+- name: Assert idempotent
+  assert:
+    that:
+      - not output.changed
+
+- name: Delete the AKS instance
+  azure_rm_aks:
+    name: "minimal{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: output
+
+- name: Assert the AKS instance is well deleted
+  assert:
+    that:
+      - output.changed
+
+- name: Get AKS fact
+  azure_rm_aks_info:
+    name: "minimal{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+  register: fact
+
+- name: Assert fact returns empty
+  assert:
+    that:
+      - "fact.aks | length == 0"
