@@ -28,11 +28,12 @@ options:
         type: str
     tags:
         description:
-            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
-        type: list
+            - Limit results by providing of tags. Format tags 'key:value'.
+        type: dict
 
 extends_documentation_fragment:
     - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -217,7 +218,7 @@ class AzureRMContainerInstanceInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='dict'
             )
         )
         # store the results of the module operation
@@ -226,8 +227,9 @@ class AzureRMContainerInstanceInfo(AzureRMModuleBase):
         )
         self.resource_group = None
         self.name = None
+        self.tags = None
 
-        super(AzureRMContainerInstanceInfo, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMContainerInstanceInfo, self).__init__(self.module_arg_spec, supports_tags=True)
 
     def exec_module(self, **kwargs):
 
