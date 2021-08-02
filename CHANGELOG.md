@@ -1,6 +1,6 @@
 # Change Log
 
-## v1.8.0 (2021-07-22)
+## v1.8.0 (2021-08-02)
 
 ### NEW MODULES
   - azure_rm_notificationhub: New module: azure_rm_notificationhub ([#496](https://github.com/ansible-collections/azure/pull/496/))
