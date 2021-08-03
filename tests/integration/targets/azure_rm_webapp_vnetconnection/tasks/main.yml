@@ -76,3 +76,13 @@
 - name: Assert the resource is deleted
   assert:
     that: output.changed
+
+- name: "Delete webapp vnetconnection - idempotent"
+  azure_rm_webapp_vnetconnection:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+- name: Assert the resource is not changed
+  assert:
+    that: not output.changed
