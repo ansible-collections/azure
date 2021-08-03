@@ -5,6 +5,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 __metaclass__ = type
 
 
@@ -88,8 +89,6 @@ connection:
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet
 '''
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-
 
 class AzureRMWebAppVnetConnectionInfo(AzureRMModuleBase):
 
@@ -109,8 +108,8 @@ class AzureRMWebAppVnetConnectionInfo(AzureRMModuleBase):
         self.resource_group = None
 
         super(AzureRMWebAppVnetConnectionInfo, self).__init__(self.module_arg_spec,
-                                                supports_tags=False,
-                                                facts_module=True)
+                                                              supports_tags=False,
+                                                              facts_module=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
@@ -135,7 +134,8 @@ class AzureRMWebAppVnetConnectionInfo(AzureRMModuleBase):
         try:
             return self.web_client.web_apps.list_vnet_connections(resource_group_name=self.resource_group, name=self.name)
         except Exception as exc:
-            self.fail("Error getting webapp vnet connections {0} (rg={1}) - {2}".format(self.name, self.resource_group, str(exc)))
+            self.fail("Error getting webapp vnet connections {0} (rg={1}) - {2}".format(
+                self.name, self.resource_group, str(exc)))
 
     def set_results(self, vnet):
         vnet_dict = vnet.as_dict()
