@@ -10,22 +10,24 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_webapp_vnetintegration_info
+module: azure_rm_webapp_vnetconnection_info
 
 version_added: "1.9.0"
 
-short_description: Get Azure web app virtual network integration facts
+short_description: Get Azure web app virtual network connection facts
 
 description:
-    - Get facts for a web app's virtual network integration.
+    - Get facts for a web app's virtual network connection.
 
 options:
     name:
         description:
             - Name of the web app.
+        required: True
     resource_group:
         description:
             - Resource group of the web app.
+        required: True
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -35,28 +37,28 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get web app virtual network integrations
-      azure_rm_webapp_vnetintegration_info:
+    - name: Get web app virtual network connection
+      azure_rm_webapp_vnetconnection_info:
         name: "MyWebapp"
         resource_group: "MyResourceGroup"
 '''
 
 RETURN = '''
-integrations:
+connection:
     description:
-        - List of the web app's virtual network integrations.
+        - The web app's virtual network connection.
     returned: always
     type: complex
     contains:
         id:
             description:
-                - ID of the web app virtual network integration.
+                - ID of the web app virtual network connection.
             returned: always
             type: str
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Web/sites/myWebApp/virtualNetworkConnections/yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy_subnet
         name:
             description:
-                - Name of the web app virtual network integration.
+                - Name of the web app virtual network connection.
             returned: always
             type: str
             sample: yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy_subnet
@@ -85,24 +87,11 @@ integrations:
             type: str
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet
 '''
-try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
-except Exception:
-    # This is handled in azure_rm_common
-    pass
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-try:
-    import xmltodict
-except Exception:
-    pass
-
-AZURE_OBJECT_CLASS = 'WebApp'
 
 
-class AzureRMWebAppVnetIntegrationInfo(AzureRMModuleBase):
+class AzureRMWebAppVnetConnectionInfo(AzureRMModuleBase):
 
     def __init__(self):
 
@@ -113,13 +102,13 @@ class AzureRMWebAppVnetIntegrationInfo(AzureRMModuleBase):
 
         self.results = dict(
             changed=False,
-            integrations=[],
+            connection=dict(),
         )
 
         self.name = None
         self.resource_group = None
 
-        super(AzureRMWebAppVnetIntegrationInfo, self).__init__(self.module_arg_spec,
+        super(AzureRMWebAppVnetConnectionInfo, self).__init__(self.module_arg_spec,
                                                 supports_tags=False,
                                                 facts_module=True)
 
@@ -127,14 +116,26 @@ class AzureRMWebAppVnetIntegrationInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        try:
-            vnets = self.web_client.web_apps.list_vnet_connections(resource_group_name=self.resource_group, name=self.name)
+        vnet = self.get_vnet_connection()
 
-            self.results['integrations'] = [self.set_results(vnet) for vnet in vnets]
-        except CloudError:
-            pass
+        if vnet:
+            self.results['connection'] = self.set_results(vnet)
 
         return self.results
+
+    def get_vnet_connection(self):
+        connections = self.list_vnet_connections()
+        for connection in connections:
+            if connection.is_swift:
+                return connection
+
+        return None
+
+    def list_vnet_connections(self):
+        try:
+            return self.web_client.web_apps.list_vnet_connections(resource_group_name=self.resource_group, name=self.name)
+        except Exception as exc:
+            self.fail("Error getting webapp vnet connections {0} (rg={1}) - {2}".format(self.name, self.resource_group, str(exc)))
 
     def set_results(self, vnet):
         vnet_dict = vnet.as_dict()
@@ -142,17 +143,18 @@ class AzureRMWebAppVnetIntegrationInfo(AzureRMModuleBase):
         output = dict()
         output['id'] = vnet_dict['id']
         output['name'] = vnet_dict['name']
-        output['vnet_resource_id'] = vnet_dict['vnet_resource_id']
-        output['vnet_resource_group'] = vnet_dict['vnet_resource_id'].split('resourceGroups/')[1].split('/')[0]
-        vnet_detail = vnet_dict['vnet_resource_id'].split('/Microsoft.Network/virtualNetworks/')[1].split('/subnets/')
-        output['vnet_name'] = vnet_detail[0]
-        output['subnet_name'] = vnet_detail[1]
+        subnet_id = vnet_dict['vnet_resource_id']
+        output['vnet_resource_id'] = subnet_id
+        subnet_detail = self.get_subnet_detail(subnet_id)
+        output['vnet_resource_group'] = subnet_detail['resource_group']
+        output['vnet_name'] = subnet_detail['vnet_name']
+        output['subnet_name'] = subnet_detail['subnet_name']
 
         return output
 
 
 def main():
-    AzureRMWebAppVnetIntegrationInfo()
+    AzureRMWebAppVnetConnectionInfo()
 
 
 if __name__ == '__main__':
