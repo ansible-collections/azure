@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 __metaclass__ = type
 
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_webapp_vnetconnection_info
@@ -24,11 +23,13 @@ options:
     name:
         description:
             - Name of the web app.
-        required: True
+        required: true
+        type: str
     resource_group:
         description:
             - Resource group of the web app.
-        required: True
+        required: true
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -89,7 +90,6 @@ connection:
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet
 '''
 
-
 class AzureRMWebAppVnetConnectionInfo(AzureRMModuleBase):
 
     def __init__(self):
@@ -134,8 +134,7 @@ class AzureRMWebAppVnetConnectionInfo(AzureRMModuleBase):
         try:
             return self.web_client.web_apps.list_vnet_connections(resource_group_name=self.resource_group, name=self.name)
         except Exception as exc:
-            self.fail("Error getting webapp vnet connections {0} (rg={1}) - {2}".format(
-                self.name, self.resource_group, str(exc)))
+            self.fail("Error getting webapp vnet connections {0} (rg={1}) - {2}".format(self.name, self.resource_group, str(exc)))
 
     def set_results(self, vnet):
         vnet_dict = vnet.as_dict()

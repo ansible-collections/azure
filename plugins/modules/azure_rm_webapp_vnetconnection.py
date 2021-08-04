@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 __metaclass__ = type
 
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_webapp_vnetconnnection
@@ -20,20 +19,33 @@ options:
     name:
         description:
             - Name of the web app.
-        required: True
+        required: true
+        type: str
     resource_group:
         description:
             - Resource group of the web app.
-        required: True
+        required: true
+        type: str
+    state:
+        description:
+            - State of the virtual network connection. Use C(present) to create or update and C(absent) to delete.
+        type: str
+        default: present
+        choices:
+            - absent
+            - present
     vnet_name:
         description:
             - Name of the virtual network. Required if adding or updating.
+        type: str
     subnet:
         description:
             - Name of the virtual network's subnet. Required if adding or updating.
+        type: str
     vnet_resource_group:
         description:
-            - Name of the resource group for the virtual network. Defaults to main I(resource_group) value.
+            - Name of the resource group for the virtual network. Defaults to main C(resource_group) value.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -109,12 +121,12 @@ connection:
             type: str
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet
 '''
+
 try:
     from azure.mgmt.web.models import SwiftVirtualNetwork
 except Exception:
     # This is handled in azure_rm_common
     pass
-
 
 class AzureRMWebAppVnetConnection(AzureRMModuleBase):
 
@@ -123,8 +135,7 @@ class AzureRMWebAppVnetConnection(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str', required=True),
             resource_group=dict(type='str', required=True),
-            state=dict(type='str', default='present',
-                       choices=['present', 'absent']),
+            state=dict(type='str', default='present', choices=['present', 'absent']),
             vnet_name=dict(type='str'),
             subnet=dict(type='str'),
             vnet_resource_group=dict(type='str'),
@@ -158,28 +169,33 @@ class AzureRMWebAppVnetConnection(AzureRMModuleBase):
         if self.state == 'absent' and vnet:
             changed = True
             if not self.check_mode:
+                self.log('Deleting vnet connection for webapp {0}'.format(self.name))
                 self.delete_vnet_connection()
                 self.results['connection'] = dict()
         elif self.state == 'present':
             self.vnet_resource_group = self.vnet_resource_group or self.resource_group
 
             if not vnet:
-                changed = True  # create new vnet connection
-            else:  # check update
+                self.log('Adding vnet connection for webapp {0}'.format(self.name))
+                changed = True
+            else:
                 subnet_detail = self.get_subnet_detail(vnet.vnet_resource_id)
-                if subnet_detail['resource_group'] != self.vnet_resource_group or subnet_detail['vnet_name'] != self.vnet_name or subnet_detail['subnet_name'] != self.subnet:
+                if (subnet_detail['resource_group'] != self.vnet_resource_group
+                    or subnet_detail['vnet_name'] != self.vnet_name
+                    or subnet_detail['subnet_name'] != self.subnet):
+                    self.log('Detected change in vnet connection for webapp {0}'.format(self.name))
                     changed = True
 
             if changed:
-                subnet = self.get_subnet()
-                param = SwiftVirtualNetwork(subnet_resource_id=subnet.id)
                 if not self.check_mode:
+                    self.log('Updating vnet connection for webapp {0}'.format(self.name))
+                    subnet = self.get_subnet()
+                    param = SwiftVirtualNetwork(subnet_resource_id=subnet.id)
                     self.create_or_update_vnet_connection(param)
                     vnet = self.get_vnet_connection()
                     self.results['connection'] = self.set_results(vnet)
 
         self.results['changed'] = changed
-
         return self.results
 
     def get_vnet_connection(self):
@@ -194,29 +210,25 @@ class AzureRMWebAppVnetConnection(AzureRMModuleBase):
         try:
             return self.web_client.web_apps.list_vnet_connections(resource_group_name=self.resource_group, name=self.name)
         except Exception as exc:
-            self.fail("Error getting webapp vnet connections {0} (rg={1}) - {2}".format(
-                self.name, self.resource_group, str(exc)))
+            self.fail("Error getting webapp vnet connections {0} (rg={1}) - {2}".format(self.name, self.resource_group, str(exc)))
 
     def delete_vnet_connection(self):
         try:
             return self.web_client.web_apps.delete_swift_virtual_network(resource_group_name=self.resource_group, name=self.name)
         except Exception as exc:
-            self.fail("Error deleting webapp vnet connection {0} (rg={1}) - {3}".format(
-                self.name, self.resource_group, str(exc)))
+            self.fail("Error deleting webapp vnet connection {0} (rg={1}) - {3}".format(self.name, self.resource_group, str(exc)))
 
     def create_or_update_vnet_connection(self, vnet):
         try:
             return self.web_client.web_apps.create_or_update_swift_virtual_network_connection(resource_group_name=self.resource_group, name=self.name, connection_envelope=vnet)
         except Exception as exc:
-            self.fail("Error creating/updating webapp vnet connection {0} (vnet={1}, rg={2}) - {3}".format(
-                self.name, self.vnet_name, self.resource_group, str(exc)))
+            self.fail("Error creating/updating webapp vnet connection {0} (vnet={1}, rg={2}) - {3}".format(self.name, self.vnet_name, self.resource_group, str(exc)))
 
     def get_subnet(self):
         try:
             return self.network_client.subnets.get(resource_group_name=self.vnet_resource_group, virtual_network_name=self.vnet_name, subnet_name=self.subnet)
         except Exception as exc:
-            self.fail("Error getting subnet {0} in vnet={1} (rg={2}) - {3}".format(
-                self.subnet, self.vnet_name, self.vnet_resource_group, str(exc)))
+            self.fail("Error getting subnet {0} in vnet={1} (rg={2}) - {3}".format(self.subnet, self.vnet_name, self.vnet_resource_group, str(exc)))
 
     def set_results(self, vnet):
         vnet_dict = vnet.as_dict()
@@ -224,8 +236,7 @@ class AzureRMWebAppVnetConnection(AzureRMModuleBase):
         output = dict()
         output['id'] = vnet_dict['id']
         output['name'] = vnet_dict['name']
-        subnet_id = vnet_dict.get(
-            'subnet_resource_id', vnet_dict.get('vnet_resource_id'))
+        subnet_id = vnet_dict.get('subnet_resource_id', vnet_dict.get('vnet_resource_id'))
         output['vnet_resource_id'] = subnet_id
         subnet_detail = self.get_subnet_detail(subnet_id)
         output['vnet_resource_group'] = subnet_detail['resource_group']
