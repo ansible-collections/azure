@@ -275,7 +275,9 @@ class AzureRMWebAppAccessRestriction(AzureRMModuleBase):
                 site_config.scm_ip_security_restrictions = []
                 site_config.scm_ip_security_restrictions_use_main = False
                 self.update_webapp_config(site_config)
-                self.results.update(self.set_results(site_config))
+                self.results['ip_security_restrictions'] = []
+                self.results['scm_ip_security_restrictions'] = []
+                self.results['scm_ip_security_restrictions_use_main'] = False
         elif self.state == 'present':
             if not self.has_access_restrictions(site_config) and (self.ip_security_restrictions or self.scm_ip_security_restrictions):
                 self.log('Adding new access restrictions for webapp {0}'.format(self.name))
