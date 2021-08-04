@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 __metaclass__ = type
 
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_webapp_accessrestriction_info
@@ -182,10 +181,8 @@ class AzureRMWebAppAccessRestrictionInfo(AzureRMModuleBase):
             ip_address=restriction_obj.ip_address,
         )
 
-
 def main():
     AzureRMWebAppAccessRestrictionInfo()
-
 
 if __name__ == '__main__':
     main()

@@ -9,7 +9,6 @@ from inspect import signature
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 __metaclass__ = type
 
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_webapp_accessrestriction
@@ -221,7 +220,6 @@ except Exception:
     # This is handled in azure_rm_common
     pass
 
-
 ip_restriction_spec = dict(
     name=dict(type='str'),
     description=dict(type='str'),
@@ -229,7 +227,6 @@ ip_restriction_spec = dict(
     priority=dict(type='int', required=True),
     ip_address=dict(type='str', required=True),
 )
-
 
 class AzureRMWebAppAccessRestriction(AzureRMModuleBase):
 
@@ -358,10 +355,8 @@ class AzureRMWebAppAccessRestriction(AzureRMModuleBase):
             ip_address=restriction_obj.ip_address,
         )
 
-
 def main():
     AzureRMWebAppAccessRestriction()
-
 
 if __name__ == '__main__':
     main()
