@@ -1493,7 +1493,6 @@ class AzureRMAuth(object):
             tenant = self.credentials.get('tenant')
             if not tenant:
                 tenant = 'common'  # SDK default
-            
             graph_resource = self._cloud_environment.endpoints.active_directory_graph_resource_id
             rm_resource = self._cloud_environment.endpoints.resource_manager
             self.azure_credentials = UserPassCredentials(self.credentials['ad_user'],
