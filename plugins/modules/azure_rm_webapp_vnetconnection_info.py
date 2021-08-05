@@ -90,6 +90,7 @@ connection:
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet
 '''
 
+
 class AzureRMWebAppVnetConnectionInfo(AzureRMModuleBase):
 
     def __init__(self):

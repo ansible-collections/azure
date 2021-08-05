@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_webapp_vnetconnnection
+module: azure_rm_webapp_vnetconnection
 version_added: "1.9.0"
 short_description: Manage web app virtual network connection
 description:
@@ -127,6 +127,7 @@ try:
 except Exception:
     # This is handled in azure_rm_common
     pass
+
 
 class AzureRMWebAppVnetConnection(AzureRMModuleBase):
 

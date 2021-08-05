@@ -969,9 +969,9 @@ class AzureRMModuleBase(object):
     def get_subnet_detail(self, subnet_id):
         vnet_detail = subnet_id.split('/Microsoft.Network/virtualNetworks/')[1].split('/subnets/')
         return dict(
-            resource_group = subnet_id.split('resourceGroups/')[1].split('/')[0],
-            vnet_name = vnet_detail[0],
-            subnet_name = vnet_detail[1],
+            resource_group=subnet_id.split('resourceGroups/')[1].split('/')[0],
+            vnet_name=vnet_detail[0],
+            subnet_name=vnet_detail[1],
         )
 
     # passthru methods to AzureAuth instance for backcompat
