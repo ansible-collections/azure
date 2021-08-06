@@ -43,6 +43,7 @@ parameters:
     - "azure_rm_containerregistry"
     - "azure_rm_cosmosdbaccount"
     - "azure_rm_datalakestore"
+    - "azure_rm_ddosprotectionplan"
     - "azure_rm_deployment"
     - "azure_rm_dnsrecordset"
     - "azure_rm_dnszone"
