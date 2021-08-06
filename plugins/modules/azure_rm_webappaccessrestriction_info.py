@@ -47,6 +47,7 @@ ip_security_restrictions:
         - The web app's HTTP access restrictions.
     returned: always
     type: list
+    elements: dict
     contains:
         name:
             description:
@@ -83,6 +84,7 @@ scm_ip_security_restrictions:
         - The web app's SCM access restrictions.
     returned: always
     type: list
+    elements: dict
     contains:
         name:
             description:
