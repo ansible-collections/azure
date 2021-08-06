@@ -14,7 +14,7 @@
       sku: S1
 
 - name: "Create webapp access restriction - check mode"
-  azure_rm_webapp_accessrestriction:
+  azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -34,7 +34,7 @@
     that: output.changed
 
 - name: "Create webapp access restriction"
-  azure_rm_webapp_accessrestriction:
+  azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -53,7 +53,7 @@
     that: output.changed
 
 - name: "Create webapp access restriction - idempotent"
-  azure_rm_webapp_accessrestriction:
+  azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -72,7 +72,7 @@
     that: not output.changed
 
 - name: "Delete specific webapp access restriction"
-  azure_rm_webapp_accessrestriction:
+  azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -87,7 +87,7 @@
     that: output.changed
 
 - name: "Update existing webapp access restriction"
-  azure_rm_webapp_accessrestriction:
+  azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -102,7 +102,7 @@
     that: output.changed
 
 - name: "Update existing webapp access restriction"
-  azure_rm_webapp_accessrestriction:
+  azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -117,7 +117,7 @@
     that: output.changed
 
 - name: "Update existing webapp access restriction"
-  azure_rm_webapp_accessrestriction:
+  azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -137,7 +137,7 @@
     that: output.changed
 
 - name: "Update existing webapp access restriction"
-  azure_rm_webapp_accessrestriction:
+  azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -161,7 +161,7 @@
     that: output.changed
 
 - name: "Update existing webapp access restriction - idempotent"
-  azure_rm_webapp_accessrestriction:
+  azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -185,7 +185,7 @@
     that: not output.changed
 
 - name: "Delete webapp access restrictions"
-  azure_rm_webapp_accessrestriction:
+  azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     state: "absent"

@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_webapp_accessrestriction_info
+module: azure_rm_webappaccessrestriction_info
 version_added: "1.9.0"
 short_description: Retrieve web app network access restriction facts
 description:
@@ -36,7 +36,7 @@ author:
 
 EXAMPLES = '''
     - name: View web app access restrictions.
-      azure.azcollection.azure_rm_webapp_accessrestriction_info:
+      azure.azcollection.azure_rm_webappaccessrestriction_info:
         name: "MyWebapp"
         resource_group: "MyResourceGroup"
 '''

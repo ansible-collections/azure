@@ -11,7 +11,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_webapp_accessrestriction
+module: azure_rm_webappaccessrestriction
 version_added: "1.9.0"
 short_description: Manage web app network access restrictions
 description:
@@ -114,7 +114,7 @@ author:
 
 EXAMPLES = '''
     - name: Configure web app access restrictions.
-      azure.azcollection.azure_rm_webapp_accessrestriction:
+      azure.azcollection.azure_rm_webappaccessrestriction:
         name: "MyWebapp"
         resource_group: "MyResourceGroup"
         ip_security_restrictions:
@@ -129,7 +129,7 @@ EXAMPLES = '''
         scm_ip_security_restrictions_use_main: true
 
     - name: Delete web app network access restrictions.
-      azure.azcollection.azure_rm_webapp_accessrestriction:
+      azure.azcollection.azure_rm_webappaccessrestriction:
         name: "MyWebapp"
         resource_group: "MyResourceGroup"
         state: "absent"
