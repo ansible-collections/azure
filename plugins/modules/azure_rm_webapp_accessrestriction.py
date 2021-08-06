@@ -39,6 +39,7 @@ options:
         description:
             - The web app's HTTP access restrictions.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -70,6 +71,7 @@ options:
         description:
             - The web app's SCM access restrictions. If C(scm_ip_security_restrictions_use_main) is set to C(true), the SCM restrictions will be configured but not used.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -228,6 +230,7 @@ ip_restriction_spec = dict(
     ip_address=dict(type='str', required=True),
 )
 
+
 class AzureRMWebAppAccessRestriction(AzureRMModuleBase):
 
     def __init__(self):
@@ -357,8 +360,10 @@ class AzureRMWebAppAccessRestriction(AzureRMModuleBase):
             ip_address=restriction_obj.ip_address,
         )
 
+
 def main():
     AzureRMWebAppAccessRestriction()
+
 
 if __name__ == '__main__':
     main()

@@ -122,6 +122,7 @@ scm_ip_security_restrictions_use_main:
     sample: false
 '''
 
+
 class AzureRMWebAppAccessRestrictionInfo(AzureRMModuleBase):
 
     def __init__(self):
@@ -181,8 +182,10 @@ class AzureRMWebAppAccessRestrictionInfo(AzureRMModuleBase):
             ip_address=restriction_obj.ip_address,
         )
 
+
 def main():
     AzureRMWebAppAccessRestrictionInfo()
+
 
 if __name__ == '__main__':
     main()
