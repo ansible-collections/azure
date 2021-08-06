@@ -45,7 +45,7 @@
   assert:
     that: output.changed
 
-- name: "Check webapp vnetconnection facts"
+- name: "Check webapp vnetconnection facts 1"
   azure_rm_webappvnetconnection_info:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
@@ -71,7 +71,7 @@
       - output.connection.subnet_name == 'subnet{{ rpfx }}'
       - output.connection.vnet_resource_group == '{{ resource_group }}'
 
-- name: "Check webapp vnetconnection facts"
+- name: "Check webapp vnetconnection facts 2"
   azure_rm_webappvnetconnection_info:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
@@ -101,13 +101,13 @@
     resource_group: "{{ resource_group }}"
     state: "absent"
   register: output
-- name: Assert the resource is deleted
+- name: Assert the connection is deleted
   assert:
     that:
       - output.changed
       - output.connection | length == 0
 
-- name: "Check webapp vnetconnection facts"
+- name: "Check webapp vnetconnection facts 3"
   azure_rm_webappvnetconnection_info:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
