@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_webapp_vnetconnection_info
+module: azure_rm_webappvnetconnection_info
 
 version_added: "1.9.0"
 
@@ -40,7 +40,7 @@ author:
 
 EXAMPLES = '''
     - name: Get web app virtual network connection
-      azure_rm_webapp_vnetconnection_info:
+      azure_rm_webappvnetconnection_info:
         name: "MyWebapp"
         resource_group: "MyResourceGroup"
 '''

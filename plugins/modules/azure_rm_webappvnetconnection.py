@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_webapp_vnetconnection
+module: azure_rm_webappvnetconnection
 version_added: "1.9.0"
 short_description: Manage web app virtual network connection
 description:
@@ -56,14 +56,14 @@ author:
 
 EXAMPLES = '''
     - name: Configure web app with virtual network
-      azure.azcollection.azure_rm_webapp_vnetconnnection:
+      azure.azcollection.azure_rm_webappvnetconnection:
         name: "MyWebapp"
         resource_group: "MyResourceGroup"
         vnet_name: "MyVnetName"
         subnet: "MySubnetName"
 
     - name: Configure web app with virtual network in different resource group
-      azure.azcollection.azure_rm_webapp_vnetconnnection:
+      azure.azcollection.azure_rm_webappvnetconnection:
         name: "MyWebapp"
         resource_group: "MyResourceGroup"
         vnet_name: "MyVnetName"
@@ -71,7 +71,7 @@ EXAMPLES = '''
         vnet_resource_group: "MyOtherResourceGroup"
 
     - name: Delete web app virtual network
-      azure.azcollection.azure_rm_webapp_vnetconnnection:
+      azure.azcollection.azure_rm_webappvnetconnection:
         name: "MyWebapp"
         resource_group: "MyResourceGroup"
         state: "absent"

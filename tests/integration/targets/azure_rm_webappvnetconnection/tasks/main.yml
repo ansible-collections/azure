@@ -34,7 +34,7 @@
       sku: S1
 
 - name: "Create webapp vnetconnection - check mode"
-  azure_rm_webapp_vnetconnection:
+  azure_rm_webappvnetconnection:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     vnet_name: vnet{{ rpfx }}
@@ -46,7 +46,7 @@
     that: output.changed
 
 - name: "Create webapp vnetconnection"
-  azure_rm_webapp_vnetconnection:
+  azure_rm_webappvnetconnection:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     vnet_name: vnet{{ rpfx }}
@@ -57,7 +57,7 @@
     that: output.changed
 
 - name: "Create webapp vnetconnection - idempotent"
-  azure_rm_webapp_vnetconnection:
+  azure_rm_webappvnetconnection:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     vnet_name: vnet{{ rpfx }}
@@ -68,7 +68,7 @@
     that: not output.changed
 
 - name: "Delete webapp vnetconnection"
-  azure_rm_webapp_vnetconnection:
+  azure_rm_webappvnetconnection:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     state: "absent"
@@ -78,7 +78,7 @@
     that: output.changed
 
 - name: "Delete webapp vnetconnection - idempotent"
-  azure_rm_webapp_vnetconnection:
+  azure_rm_webappvnetconnection:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     state: "absent"
