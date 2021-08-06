@@ -4,8 +4,6 @@
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import absolute_import, division, print_function
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 __metaclass__ = type
 
 DOCUMENTATION = '''
@@ -57,13 +55,13 @@ connection:
                 - ID of the web app virtual network connection.
             returned: always
             type: str
-            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Web/sites/myWebApp/virtualNetworkConnections/yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy_subnet
+            sample: /subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Web/sites/myWebApp/virtualNetworkConnections/yyy-yyy_subnet
         name:
             description:
                 - Name of the web app virtual network connection.
             returned: always
             type: str
-            sample: yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy_subnet
+            sample: yyy-yyy_subnet
         subnet_name:
             description:
                - Name of the subnet connected to the web app.
@@ -87,8 +85,11 @@ connection:
                - ID of the virtual network/subnet connected to the web app.
             returned: always
             type: str
-            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet
+            sample: /subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet
 '''
+
+from __future__ import absolute_import, division, print_function
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 
 class AzureRMWebAppVnetConnectionInfo(AzureRMModuleBase):
