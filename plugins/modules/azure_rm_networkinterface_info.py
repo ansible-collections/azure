@@ -217,7 +217,7 @@ def nic_to_dict(nic):
             name=config.name,
             private_ip_address=config.private_ip_address,
             private_ip_allocation_method=config.private_ip_allocation_method,
-            primary=config.primary,
+            primary=config.primary if config.primary else False,
             load_balancer_backend_address_pools=([item.id for item in config.load_balancer_backend_address_pools]
                                                  if config.load_balancer_backend_address_pools else None),
             public_ip_address=config.public_ip_address.id if config.public_ip_address else None,
