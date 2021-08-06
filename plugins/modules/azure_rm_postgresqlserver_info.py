@@ -26,13 +26,10 @@ options:
         description:
             - The name of the server.
         type: str
-    tags:
-        description:
-            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
-        type: list
 
 extends_documentation_fragment:
     - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -142,6 +139,18 @@ servers:
             returned: always
             type: str
             sample: postgreabdud1223.postgres.database.azure.com
+        backup_retention_days:
+            description:
+                - Backup retention period between 7 and 35 days. 7 days by default if not set.
+            returned: always
+            type: int
+            sample: 7
+        geo_redundant_backup:
+            description:
+                - Choose between locally redundant(default) or geo-redundant backup. This cannot be updated after first deployment.
+            returned: always
+            type: str
+            sample: Disabled
         tags:
             description:
                 - Tags assigned to the resource. Dictionary of string:string pairs.
@@ -172,7 +181,7 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='dict'
             )
         )
         # store the results of the module operation
@@ -182,7 +191,7 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
         self.resource_group = None
         self.name = None
         self.tags = None
-        super(AzureRMPostgreSqlServersInfo, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMPostgreSqlServersInfo, self).__init__(self.module_arg_spec, supports_tags=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_postgresqlserver_facts'
@@ -245,6 +254,8 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
             'admin_username': d['administrator_login'],
             'user_visible_state': d['user_visible_state'],
             'fully_qualified_domain_name': d['fully_qualified_domain_name'],
+            'geo_redundant_backup': d['storage_profile']['geo_redundant_backup'],
+            'backup_retention_days': d['storage_profile']['backup_retention_days'],
             'tags': d.get('tags')
         }
 

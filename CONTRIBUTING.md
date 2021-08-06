@@ -2,6 +2,45 @@
 
 When contributing to this repository, please first discuss the change you wish to make via issue, or any other method with the owners of this repository before making a change.
 
+## Environment setup
+
+1. Prepare the Azure configuration file at `tests/integration/cloud-config-azure.ini`, a template of which is available in [the Ansible repo](https://github.com/ansible/ansible/blob/23a84902cb9599fe958a86e7a95520837964726a/test/lib/ansible_test/config/cloud-config-azure.ini.template). Populate your appropriate credential and resource group information.
+    - The account or service principal must have permission (typically Owner) on the resource groups.
+1. Ensure the resource groups defined in your configuration file are already created. Recommended region: **East US** (not all regions support all Azure features).
+1. Prepare testing directory (necessary until [ansible/ansible#68499](https://github.com/ansible/ansible/issues/68499) is resolved):
+    ```bash
+    git init tests/staging
+    ```
+1. Unless you are running `ansible-test` inside a container (`--docker` flag), it is recommended you install Ansible and this repository's dependencies in a virtual environment:
+    ```bash
+    python3 -m venv venv
+    . venv/bin/activate
+    pip3 install -U pip
+    pip3 install ansible
+    pip3 install -r requirements-azure.txt
+    pip3 install -r sanity-requirements-azure.txt
+    ```
+
+## Running tests
+
+1. Build/install the collection:
+    ```bash
+    rm azure-azcollection-*.tar.gz && ansible-galaxy collection build . --force && ansible-galaxy collection install azure-azcollection-*.tar.gz -p tests/staging --force
+    ```
+1. Switch to the test environment directory where the collection installed:
+    ```bash
+    cd tests/staging/ansible_collections/azure/azcollection/
+    ```
+1. Run tests for the desired module(s):
+    ```bash
+    ansible-test integration azure_rm_storageaccount --allow-destructive -v
+    ansible-test sanity azure_rm_storageaccount --color --junit -v
+    ```
+
+Additional `ansible-test` resources:
+* [Integration tests](https://docs.ansible.com/ansible/latest/dev_guide/testing_integration.html).
+* [Testing Sanity](https://docs.ansible.com/ansible/latest/dev_guide/testing_sanity.html).
+
 ## Pull Request Process
 
 1. Fork this project into your account if you are a first-time contributor.
