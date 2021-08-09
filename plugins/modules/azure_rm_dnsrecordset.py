@@ -132,6 +132,17 @@ EXAMPLES = '''
     zone_name: testing.com
     state: absent
 
+- name: create A record set with metadata information
+  azure_rm_dnsrecordset:
+    resource_group: myResourceGroup
+    relative_name: www
+    zone_name: zone1.com
+    record_type: A
+    records:
+      - entry: 192.168.100.104
+    metadata:
+      key1: "value1"
+
 - name: create multiple "A" record sets with multiple records
   azure_rm_dnsrecordset:
     resource_group: myResourceGroup
