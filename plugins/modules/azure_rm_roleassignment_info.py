@@ -22,6 +22,8 @@ options:
         description:
             - Object id of a user, group or service principal.
             - Mutually exclusive with I(name) and I(id).
+        aliases:
+          - assignee_object_id
     id:
         description:
             - Fqid of role assignment to look up.
@@ -148,7 +150,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
     def __init__(self):
         self.module_arg_spec = dict(
-            assignee=dict(type='str'),
+            assignee=dict(type='str', aliases=['assignee_object_id']),
             id=dict(type='str'),
             name=dict(type='str'),
             role_definition_id=dict(type='str'),
@@ -184,9 +186,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.assignee:
-            self.results['roleassignments'] = self.list_by_assignee()
-        elif self.id:
+        if self.id:
             self.results['roleassignments'] = self.get_by_id()
         elif self.name and self.scope:
             self.results['roleassignments'] = self.get_by_name()
@@ -194,6 +194,8 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             self.fail("Parameter Error: Name requires a scope to also be set.")
         elif self.scope:
             self.results['roleassignments'] = self.list_by_scope()
+        elif self.assignee:
+            self.results['roleassignments'] = self.list_by_assignee()
         else:
             self.results['roleassignments'] = self.list_assignments()
 
@@ -234,7 +236,8 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
             # If role_definition_id is set, we only want results matching that id.
             if self.role_definition_id:
-                response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id') == self.role_definition_id]
+                response = [role_assignment for role_assignment in response if (role_assignment.get('role_definition_id').split('/')[-1].lower()
+                                                                                == self.role_definition_id.split('/')[-1].lower())]
 
             results = response
 
@@ -261,15 +264,16 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
         results = []
 
         try:
-            response = self.authorization_client.role_assignments.list(filter=filter)
+            response = list(self.authorization_client.role_assignments.list(filter=filter))
             response = [self.roleassignment_to_dict(a) for a in response]
 
             # If role_definition_id is set, we only want results matching that id.
             if self.role_definition_id:
-                response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id') == self.role_definition_id]
+                response = [role_assignment for role_assignment in response if (role_assignment.get('role_definition_id').split('/')[-1].lower()
+                                                                                == self.role_definition_id.split('/')[-1].lower())]
 
-            else:
-                results = response
+            results = response
+
         except CloudError as ex:
             self.log("Didn't find role assignments in subscription {0}.".format(self.subscription_id))
 
@@ -290,13 +294,18 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
             response = [self.roleassignment_to_dict(role_assignment) for role_assignment in response]
 
+            # If assignee is set we only want results matching that assignee.
+            if self.assignee:
+                response = [role_assignment for role_assignment in response if role_assignment.get('principal_id').lower() == self.assignee.lower()]
+
             # If strict_scope_match is true we only want results matching exact scope.
             if self.strict_scope_match:
-                response = [role_assignment for role_assignment in response if role_assignment.get('scope') == self.scope]
+                response = [role_assignment for role_assignment in response if role_assignment.get('scope').lower() == self.scope.lower()]
 
             # If role_definition_id is set, we only want results matching that id.
             if self.role_definition_id:
-                response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id') == self.role_definition_id]
+                response = [role_assignment for role_assignment in response if (role_assignment.get('role_definition_id').split('/')[-1].lower()
+                                                                                == self.role_definition_id.split('/')[-1].lower())]
 
             results = response
 
@@ -307,6 +316,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
     def roleassignment_to_dict(self, assignment):
         return dict(
+            assignee_object_id=assignment.principal_id,
             id=assignment.id,
             name=assignment.name,
             principal_id=assignment.principal_id,
