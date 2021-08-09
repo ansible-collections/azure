@@ -189,7 +189,6 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'user_principal_name', 'all']]
 
         super(AzureRMADUserInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                supports_check_mode=False,
                                                 supports_tags=False,
                                                 mutually_exclusive=mutually_exclusive,
                                                 required_together=required_together,

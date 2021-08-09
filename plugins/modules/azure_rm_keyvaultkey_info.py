@@ -282,7 +282,6 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
         self._client = None
 
         super(AzureRMKeyVaultKeyInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                     supports_check_mode=False,
                                                      supports_tags=False)
 
     def exec_module(self, **kwargs):

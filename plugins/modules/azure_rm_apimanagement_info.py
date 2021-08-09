@@ -152,7 +152,6 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
         super(AzureApiManagementInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                     supports_check_mode=True,
                                                      supports_tags=True)
 
     def exec_module(self, **kwargs):
