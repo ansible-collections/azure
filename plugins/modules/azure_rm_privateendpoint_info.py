@@ -1,7 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2016 Matt Davis, <mdavis@ansible.com>
-#                    Chris Houseknecht, <house@redhat.com>
+# Copyright (c) 2020 Fred-Sun, (@Fred-Sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
