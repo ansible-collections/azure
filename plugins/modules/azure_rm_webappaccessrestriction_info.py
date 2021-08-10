@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_webappaccessrestriction_info
-version_added: "1.9.0"
+version_added: "1.8.0"
 short_description: Retrieve web app network access restriction facts
 description:
     - Get facts for a web app's network access restrictions.
