@@ -144,6 +144,7 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
 
         super(AzureRMADPasswordInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                     supports_tags=False,
+                                                    supports_check_mode=True,
                                                     is_ad_resource=True)
 
     def exec_module(self, **kwargs):

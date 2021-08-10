@@ -136,7 +136,7 @@ class AzureRMSqlServerInfo(AzureRMModuleBase):
         )
         self.resource_group = None
         self.server_name = None
-        super(AzureRMSqlServerInfo, self).__init__(self.module_arg_spec)
+        super(AzureRMSqlServerInfo, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_sqlserver_facts'

@@ -141,7 +141,7 @@ class AzureRMWebhooksFacts(AzureRMModuleBase):
         self.resource_group = None
         self.registry_name = None
         self.webhook_name = None
-        super(AzureRMWebhooksFacts, self).__init__(self.module_arg_spec)
+        super(AzureRMWebhooksFacts, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:

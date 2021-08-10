@@ -160,7 +160,7 @@ class AzureRMDtlPolicyInfo(AzureRMModuleBase):
         self.policy_set_name = None
         self.name = None
         self.tags = None
-        super(AzureRMDtlPolicyInfo, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMDtlPolicyInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_devtestlabpolicy_facts'
