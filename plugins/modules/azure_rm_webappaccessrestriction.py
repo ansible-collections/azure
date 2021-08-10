@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_webappaccessrestriction
-version_added: "1.9.0"
+version_added: "1.8.0"
 short_description: Manage web app network access restrictions
 description:
     - Add, remove, or update network access restrictions for a web app.
