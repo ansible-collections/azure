@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_webappvnetconnection
-version_added: "1.9.0"
+version_added: "1.8.0"
 short_description: Manage web app virtual network connection
 description:
     - Add, remove, or update the virtual network connection for a web app.

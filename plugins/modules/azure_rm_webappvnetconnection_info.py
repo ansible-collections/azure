@@ -12,7 +12,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_webappvnetconnection_info
 
-version_added: "1.9.0"
+version_added: "1.8.0"
 
 short_description: Get Azure web app virtual network connection facts
 
