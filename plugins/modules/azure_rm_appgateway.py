@@ -281,6 +281,11 @@ options:
                     - The I(probe) retry count.
                     - Backend server is marked down after consecutive probe failure count reaches UnhealthyThreshold.
                     - Acceptable values are from 1 second to 20.
+            pick_host_name_from_backend_http_settings:
+                description:
+                    - Whether host header should be picked from the host name of the backend HTTP settings. Default value is false.
+                type: bool
+                default: False
     backend_http_settings_collection:
         description:
             - Backend http settings of the application gateway resource.
@@ -321,7 +326,7 @@ options:
                     - Host header to be sent to the backend servers.
             pick_host_name_from_backend_address:
                 description:
-                    - Whether to pick host header should be picked from the host name of the backend server. Default value is false.
+                    - Whether host header should be picked from the host name of the backend server. Default value is false.
             affinity_cookie_name:
                 description:
                     - Cookie name to use for the affinity cookie.
@@ -613,7 +618,8 @@ probe_spec = dict(
     path=dict(type='str'),
     protocol=dict(type='str', choices=['http', 'https']),
     timeout=dict(type='int'),
-    unhealthy_threshold=dict(type='int')
+    unhealthy_threshold=dict(type='int'),
+    pick_host_name_from_backend_http_settings=dict(type='bool', default=False)
 )
 
 
@@ -836,6 +842,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                         item = ev[i]
                         if 'protocol' in item:
                             item['protocol'] = _snake_to_camel(item['protocol'], True)
+                        if 'pick_host_name_from_backend_http_settings' in item and item['pick_host_name_from_backend_http_settings'] and 'host' in item:
+                            del item['host']
                     self.parameters["probes"] = ev
                 elif key == "backend_http_settings_collection":
                     ev = kwargs[key]
