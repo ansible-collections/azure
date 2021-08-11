@@ -120,7 +120,7 @@ class AzureRMProximityPlacementGroupInfo(AzureRMModuleBase):
         self.resource_group = None
         self.tags = None
 
-        super(AzureRMProximityPlacementGroupInfo, self).__init__(self.module_arg_spec, supports_tags=True)
+        super(AzureRMProximityPlacementGroupInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
 
     def exec_module(self, **kwargs):
 

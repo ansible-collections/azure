@@ -173,7 +173,7 @@ class AzureRMDtlArtifactSourceInfo(AzureRMModuleBase):
         self.lab_name = None
         self.name = None
         self.tags = None
-        super(AzureRMDtlArtifactSourceInfo, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMDtlArtifactSourceInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_devtestlabartifactsource_facts'
