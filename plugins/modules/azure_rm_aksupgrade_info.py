@@ -142,6 +142,7 @@ class AzureRMAKSUpgrade(AzureRMModuleBase):
 
         super(AzureRMAKSUpgrade, self).__init__(
             derived_arg_spec=self.module_args,
+            supports_check_mode=True,
             supports_tags=False,
             facts_module=True
         )
