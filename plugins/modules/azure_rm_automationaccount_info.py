@@ -274,7 +274,7 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
         self.list_usages = None
         self.list_keys = None
 
-        super(AzureRMAutomationAccountInfo, self).__init__(self.module_arg_spec, supports_tags=False, facts_module=True)
+        super(AzureRMAutomationAccountInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 

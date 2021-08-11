@@ -106,7 +106,7 @@ class AzureRMEventHubInfo(AzureRMModuleBase):
         self.tags = None
 
         super(AzureRMEventHubInfo, self).__init__(
-            self.module_arg_spec, supports_tags=False)
+            self.module_arg_spec, supports_check_mode=True, supports_tags=False)
 
     def exec_module(self, **kwargs):
 

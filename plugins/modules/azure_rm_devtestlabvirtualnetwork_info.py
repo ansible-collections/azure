@@ -142,7 +142,7 @@ class AzureRMDevTestLabVirtualNetworkInfo(AzureRMModuleBase):
         self.resource_group = None
         self.lab_name = None
         self.name = None
-        super(AzureRMDevTestLabVirtualNetworkInfo, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMDevTestLabVirtualNetworkInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_devtestlabvirtualnetwork_facts'

@@ -122,7 +122,7 @@ class AzureRMVirtualNetworkLinkInfo(AzureRMModuleBase):
         self.log_path = None
         self.log_mode = None
 
-        super(AzureRMVirtualNetworkLinkInfo, self).__init__(self.module_arg_spec, supports_tags=True)
+        super(AzureRMVirtualNetworkLinkInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
 
     def exec_module(self, **kwargs):
 
