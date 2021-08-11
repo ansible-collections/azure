@@ -436,6 +436,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         self.show_blob_cors = None
 
         super(AzureRMStorageAccountInfo, self).__init__(self.module_arg_spec,
+                                                        supports_check_mode=True,
                                                         supports_tags=False,
                                                         facts_module=True)
 

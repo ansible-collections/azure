@@ -198,7 +198,7 @@ class AzureRMMySqlServerInfo(AzureRMModuleBase):
         self.resource_group = None
         self.name = None
         self.tags = None
-        super(AzureRMMySqlServerInfo, self).__init__(self.module_arg_spec, supports_tags=True)
+        super(AzureRMMySqlServerInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_mysqlserver_facts'
