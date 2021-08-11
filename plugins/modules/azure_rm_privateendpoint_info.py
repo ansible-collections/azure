@@ -152,6 +152,7 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
         )
 
         super(AzureRMPrivateEndpointInfo, self).__init__(self.module_arg_spec,
+                                                         supports_check_mode=True,
                                                          supports_tags=True,
                                                          facts_module=True)
 
