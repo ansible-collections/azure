@@ -218,7 +218,7 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
             'Content-Type': 'application/json; charset=utf-8',
             'accept-language': 'en-US'
         }
-        super(AzureRMIoTDeviceFacts, self).__init__(self.module_arg_spec, supports_check_mode=False)
+        super(AzureRMIoTDeviceFacts, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
 

@@ -198,7 +198,7 @@ class BackupPolicyVMInfo(AzureRMModuleBaseExt):
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
         super(BackupPolicyVMInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                 supports_check_mode=False,
+                                                 supports_check_mode=True,
                                                  supports_tags=True
                                                  )
 
