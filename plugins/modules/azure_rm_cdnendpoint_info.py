@@ -205,6 +205,7 @@ class AzureRMCdnEndpointInfo(AzureRMModuleBase):
         self.tags = None
 
         super(AzureRMCdnEndpointInfo, self).__init__(
+            supports_check_mode=True,
             derived_arg_spec=self.module_args,
             supports_tags=False,
             facts_module=True

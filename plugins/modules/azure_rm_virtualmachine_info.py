@@ -284,6 +284,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         self.tags = None
 
         super(AzureRMVirtualMachineInfo, self).__init__(self.module_arg_spec,
+                                                        supports_check_mode=True,
                                                         supports_tags=False,
                                                         facts_module=True)
 

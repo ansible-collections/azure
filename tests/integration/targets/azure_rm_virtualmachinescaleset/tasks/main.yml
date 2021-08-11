@@ -94,6 +94,95 @@
     name: "vmforimage{{ rpfx }}"
     state: absent
 
+- name: Create VMSS with Spot Instance default value
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    vm_size: Standard_A1_v2
+    admin_username: testuser
+    priority: Spot
+    eviction_policy: Deallocate
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    capacity: 1
+    virtual_network_name: testVnet
+    subnet_name: testSubnet
+    upgrade_policy: Manual
+    tier: Standard
+    managed_disk_type: Standard_LRS
+    os_disk_caching: ReadWrite
+    image:
+      offer: CentOS
+      publisher: OpenLogic
+      sku: '7.1'
+      version: latest
+    data_disks:
+      - lun: 0
+        disk_size_gb: 64
+        caching: ReadWrite
+        managed_disk_type: Standard_LRS
+  register: results
+
+- name: Assert that VMSS was created using Spot Instance default values
+  assert:
+    that:
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.priority == 'Spot'
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.evictionPolicy == 'Deallocate'
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.billingProfile.maxPrice == -1.0
+
+- name: Delete VMSS
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    state: absent
+
+- name: Create VMSS with custom Spot Instance values
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    vm_size: Standard_A1_v2
+    admin_username: testuser
+    priority: Spot
+    eviction_policy: Delete
+    max_price: 1.0
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    capacity: 1
+    virtual_network_name: testVnet
+    subnet_name: testSubnet
+    upgrade_policy: Manual
+    tier: Standard
+    managed_disk_type: Standard_LRS
+    os_disk_caching: ReadWrite
+    image:
+      offer: CentOS
+      publisher: OpenLogic
+      sku: '7.1'
+      version: latest
+    data_disks:
+      - lun: 0
+        disk_size_gb: 64
+        caching: ReadWrite
+        managed_disk_type: Standard_LRS
+  register: results
+
+- name: Assert that VMSS was created using Spot Instance custom values
+  assert:
+    that:
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.priority == 'Spot'
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.evictionPolicy == 'Delete'
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.billingProfile.maxPrice == 1.0
+
+- name: Delete VMSS
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    state: absent      
+
 - name: Create VMSS (check mode)
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
@@ -113,9 +202,9 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: CentOS
+      publisher: OpenLogic
+      sku: '7.1'
       version: latest
     data_disks:
       - lun: 0
@@ -139,7 +228,7 @@
 - name: Assert no VMSS created in check mode
   assert:
     that:
-      - output_scaleset.ansible_facts.azure_vmss | length == 0
+      - output_scaleset.vmss | length == 0
 
 - name: Create VMSS
   azure_rm_virtualmachinescaleset:
@@ -161,9 +250,9 @@
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: CentOS
+      publisher: OpenLogic
+      sku: '7.1'
       version: latest
     data_disks:
       - lun: 0
@@ -197,9 +286,9 @@
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: CentOS
+      publisher: OpenLogic
+      sku: '7.1'
       version: latest
     data_disks:
       - lun: 0
@@ -610,9 +699,9 @@
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: CentOS
+      publisher: OpenLogic
+      sku: '7.1'
       version: latest
     upgrade_policy: Manual
     enable_accelerated_networking: yes

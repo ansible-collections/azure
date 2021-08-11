@@ -215,7 +215,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         required_one_of = [['odata_filter', 'attribute_name', 'object_id', 'all']]
 
         super(AzureRMADGroupInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                 supports_check_mode=False,
+                                                 supports_check_mode=True,
                                                  supports_tags=False,
                                                  mutually_exclusive=mutually_exclusive,
                                                  required_together=required_together,

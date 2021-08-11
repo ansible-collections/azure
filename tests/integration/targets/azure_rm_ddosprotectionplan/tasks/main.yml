@@ -1,0 +1,82 @@
+- name: Create random ddos protection plan
+  set_fact:
+      ddosprotectionplan: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+
+- name: Create DDoS protection plan (check mode)
+  azure_rm_ddosprotectionplan:
+    location: eastus2
+    name: "{{ ddosprotectionplan }}"
+    resource_group: "{{ resource_group }}"
+  check_mode: yes
+  register: results
+
+- assert:
+    that: results.changed
+
+- name: Create DDoS protection plan
+  azure_rm_ddosprotectionplan:
+    location: eastus2
+    name: "{{ ddosprotectionplan }}"
+    resource_group: "{{ resource_group }}"
+  register: results
+
+- assert:
+    that: results.changed
+
+- name: Update DDoS protection plan
+  azure_rm_ddosprotectionplan:
+    location: eastus2
+    name: "{{ ddosprotectionplan }}"
+    resource_group: "{{ resource_group }}"
+    tags:
+      test: modified
+  register: results
+
+- assert:
+    that: 
+      - results.changed
+      - results.state.tags.test == 'modified'
+
+- name: Retrieve DDoS protection plan
+  azure_rm_ddosprotectionplan_info:
+    name: "{{ ddosprotectionplan }}"
+    resource_group: "{{ resource_group }}"
+  register: results
+
+- name: Assert that facts module returned result
+  assert:
+    that: 
+      - results.ddosprotectionplan[0].tags.test == 'modified'
+
+- name: Test idempotent
+  azure_rm_ddosprotectionplan:
+    location: eastus2
+    name: "{{ ddosprotectionplan }}"
+    resource_group: "{{ resource_group }}"
+  register: results
+
+- assert:
+    that:
+      - not results.changed
+
+#
+# azure_rm_ddosprotectionplan cleanup
+#
+
+- name: Delete DDoS protection plan
+  azure_rm_ddosprotectionplan:
+    location: eastus2
+    name: "{{ ddosprotectionplan }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+
+- name: Delete DDoS protection plan
+  azure_rm_ddosprotectionplan:
+    location: eastus2
+    name: "{{ ddosprotectionplan }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: results
+
+- assert:
+    that: not results.changed

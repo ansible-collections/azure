@@ -10,31 +10,47 @@
   azure_rm_virtualnetwork:
       resource_group: "{{ resource_group_secondary }}"
       name: "tn{{ rpfx }}"
-      address_prefixes: "10.10.0.0/16"
+      address_prefixes: ["10.10.0.0/16", "fdae:f296:2787::/48"]
   register: vn
 
 - name: Add subnet
   azure_rm_subnet:
       resource_group: "{{ resource_group_secondary }}"
       name: "tn{{ rpfx }}"
-      address_prefix: "10.10.0.0/24"
+      address_prefixes_cidr: ["10.10.0.0/24", "fdae:f296:2787::/64"]
       virtual_network: "tn{{ rpfx }}"
 
-- name: create public ip
+- name: Create public IP addresses
   azure_rm_publicipaddress:
-    name: "pip{{ rpfx }}"
+    name: '{{ item.name }}'
     resource_group: '{{ resource_group }}'
+    sku: 'standard'
+    allocation_method: 'static'
+    version: '{{ item.version }}'
+  loop:
+    - name: 'pip{{ rpfx }}'
+      version: 'ipv4'
+    - name: 'tn{{ rpfx }}'
+      version: 'ipv4'
+    - name: 'pip{{ rpfx }}v6'
+      version: 'ipv6'
+    - name: 'tn{{ rpfx }}v6'
+      version: 'ipv6'
 
 - name: create load balancer with multiple parameters
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "lb{{ rpfx }}"
+    sku: 'Standard'
     frontend_ip_configurations:
       - name: frontendipconf0
         public_ip_address: "pip{{ rpfx }}"
+      - name: frontendipconf1
+        public_ip_address: "pip{{ rpfx }}v6"
     backend_address_pools:
       - name: backendaddrpool0
       - name: backendaddrpool1
+      - name: backendaddrpool2
     probes:
       - name: prob0
         port: 80
@@ -45,10 +61,22 @@
         frontend_port_range_start: 80
         frontend_port_range_end: 81
         backend_port: 8080
+      - name: inboundnatpool1
+        frontend_ip_configuration_name: frontendipconf1
+        protocol: Tcp
+        frontend_port_range_start: 80
+        frontend_port_range_end: 81
+        backend_port: 8080
     load_balancing_rules:
       - name: lbrbalancingrule0
         frontend_ip_configuration: frontendipconf0
         backend_address_pool: backendaddrpool0
+        frontend_port: 80
+        backend_port: 80
+        probe: prob0
+      - name: lbrbalancingrule1
+        frontend_ip_configuration: frontendipconf1
+        backend_address_pool: backendaddrpool2
         frontend_port: 80
         backend_port: 80
         probe: prob0
@@ -239,6 +267,13 @@
               - "{{ lb.state.backend_address_pools[0].id }}"
               - name: backendaddrpool1
                 load_balancer: "lb{{ rpfx }}"
+          - name: ipconfig2
+            public_ip_name: "tn{{ rpfx }}v6"
+            private_ip_address_version: 'IPv6'
+            load_balancer_backend_address_pools:
+              - "{{ lb.state.backend_address_pools[2].id }}"
+              - name: backendaddrpool2
+                load_balancer: "lb{{ rpfx }}"
   register: output
 
 - assert:
@@ -272,6 +307,13 @@
               - "{{ lb.state.backend_address_pools[0].id }}"
               - name: backendaddrpool1
                 load_balancer: "lb{{ rpfx }}"
+          - name: ipconfig2
+            public_ip_name: "tn{{ rpfx }}v6"
+            private_ip_address_version: 'IPv6'
+            load_balancer_backend_address_pools:
+              - "{{ lb.state.backend_address_pools[2].id }}"
+              - name: backendaddrpool2
+                load_balancer: "lb{{ rpfx }}"
   register: output
 
 - assert:
@@ -288,7 +330,7 @@
     that:
       - "facts.networkinterfaces | length == 1"
       - facts.networkinterfaces[0].id == output.state.id
-      - "facts.networkinterfaces[0].ip_configurations | length == 2"
+      - "facts.networkinterfaces[0].ip_configurations | length == 3"
       - 'facts.networkinterfaces[0].security_group.endswith("tn{{ rpfx }}sg")'
       - facts.networkinterfaces[0].enable_accelerated_networking
       - facts.networkinterfaces[0].enable_ip_forwarding
@@ -513,11 +555,22 @@
     name: "lb{{ rpfx }}"
     state: absent
 
-- name: delete public ip
+- name: delete public ip addresses
   azure_rm_publicipaddress:
-    name: "pip{{ rpfx }}"
+    name: "{{ item }}"
     resource_group: '{{ resource_group }}'
     state: absent
+  register: output
+  loop:
+    - 'pip{{ rpfx }}'
+    - 'pip{{ rpfx }}v6'
+    - 'tn{{ rpfx }}'
+    - 'tn{{ rpfx }}v6'
+
+- assert:
+    that:
+      - output.changed
+      - output.results | length == 4
 
 - name: Delete the NIC
   azure_rm_networkinterface:
@@ -556,3 +609,29 @@
       name: "{{ applicationsecuritygroup_name2 }}"
       state: absent
   register: output
+
+- name: Delete network security groups
+  azure_rm_securitygroup:
+    resource_group: '{{ resource_group }}'
+    name: '{{ item }}'
+    state: 'absent'
+  register: output
+  loop:
+    - '{{ nic_name1 }}'
+    - 'tn{{ rpfx }}sg'
+
+- assert:
+    that:
+      - output.changed
+      - output.results | length == 2
+
+- name: Delete virtual network
+  azure_rm_virtualnetwork:
+    resource_group: '{{ resource_group_secondary }}'
+    name: 'tn{{ rpfx }}'
+    state: 'absent'
+  register: output
+
+- assert:
+    that:
+      - output.changed
