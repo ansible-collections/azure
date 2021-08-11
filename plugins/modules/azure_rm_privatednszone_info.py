@@ -139,7 +139,7 @@ class AzurePrivateRMDNSZoneInfo(AzureRMModuleBase):
         self.resource_group = None
         self.tags = None
 
-        super(AzurePrivateRMDNSZoneInfo, self).__init__(self.module_arg_spec)
+        super(AzurePrivateRMDNSZoneInfo, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
 

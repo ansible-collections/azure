@@ -119,7 +119,7 @@ class AzureExpressRouteInfo(AzureRMModuleBase):
         self.tags = None
 
         super(AzureExpressRouteInfo, self).__init__(
-            self.module_arg_spec, supports_tags=True)
+            self.module_arg_spec, supports_check_mode=True, supports_tags=True)
 
     def exec_module(self, **kwargs):
 
