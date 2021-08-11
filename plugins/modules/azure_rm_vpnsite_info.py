@@ -196,7 +196,7 @@ class AzureRMVpnSiteInfo(AzureRMModuleBase):
 
         self.results = dict(changed=False)
 
-        super(AzureRMVpnSiteInfo, self).__init__(self.module_arg_spec, supports_tags=True)
+        super(AzureRMVpnSiteInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
 
     def exec_module(self, **kwargs):
 

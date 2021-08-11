@@ -141,7 +141,7 @@ class AzureRMReplicationsFacts(AzureRMModuleBase):
         self.resource_group = None
         self.registry_name = None
         self.replication_name = None
-        super(AzureRMReplicationsFacts, self).__init__(self.module_arg_spec)
+        super(AzureRMReplicationsFacts, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
