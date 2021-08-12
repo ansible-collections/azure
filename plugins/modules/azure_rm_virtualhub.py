@@ -521,85 +521,68 @@ class AzureRMVirtualHub(AzureRMModuleBaseExt):
             ),
             virtual_wan=dict(
                 type='dict',
-                # disposition='/virtual_wan',
                 options=dict(
                     id=dict(
                         type='str',
-                        # disposition='id'
                     )
                 )
             ),
             vpn_gateway=dict(
                 type='dict',
-                # disposition='/vpn_gateway',
                 options=dict(
                     id=dict(
                         type='str',
-                        # disposition='id'
                     )
                 )
             ),
             p2_s_vpn_gateway=dict(
                 type='dict',
-                # disposition='/p2_s_vpn_gateway',
                 options=dict(
                     id=dict(
                         type='str',
-                        # disposition='id'
                     )
                 )
             ),
             express_route_gateway=dict(
                 type='dict',
-                # disposition='/express_route_gateway',
                 options=dict(
                     id=dict(
                         type='str',
-                        # disposition='id'
                     )
                 )
             ),
             azure_firewall=dict(
                 type='dict',
-                # disposition='/azure_firewall',
                 options=dict(
                     id=dict(
                         type='str',
-                        # disposition='id'
                     )
                 )
             ),
             security_partner_provider=dict(
                 type='dict',
-                # disposition='/security_partner_provider',
                 options=dict(
                     id=dict(
                         type='str',
-                        # disposition='id'
                     )
                 )
             ),
             address_prefix=dict(
                 type='str',
-                # disposition='/address_prefix'
             ),
             route_table=dict(
                 type='dict',
-                # disposition='/route_table',
                 options=dict(
                     routes=dict(
                         type='list',
-                        # disposition='routes',
                         elements='dict',
                         options=dict(
                             address_prefixes=dict(
                                 type='list',
-                                # disposition='address_prefixes',
                                 elements='str'
                             ),
                             next_hop_ip_address=dict(
                                 type='str',
-                                # disposition='next_hop_ip_address'
                             )
                         )
                     )
@@ -607,89 +590,70 @@ class AzureRMVirtualHub(AzureRMModuleBaseExt):
             ),
             security_provider_name=dict(
                 type='str',
-                # disposition='/security_provider_name'
             ),
             virtual_hub_route_table_v2_s=dict(
                 type='list',
-                # disposition='/virtual_hub_route_table_v2_s',
                 elements='dict',
                 options=dict(
                     name=dict(
                         type='str',
-                        # disposition='name'
                     ),
                     routes=dict(
                         type='list',
-                        # disposition='routes',
                         elements='dict',
                         options=dict(
                             destination_type=dict(
                                 type='str',
-                                # disposition='destination_type'
                             ),
                             destinations=dict(
                                 type='list',
-                                # disposition='destinations',
                                 elements='str'
                             ),
                             next_hop_type=dict(
                                 type='str',
-                                # disposition='next_hop_type'
                             ),
                             next_hops=dict(
                                 type='list',
-                                # disposition='next_hops',
                                 elements='str'
                             )
                         )
                     ),
                     attached_connections=dict(
                         type='list',
-                        # disposition='attached_connections',
                         elements='str'
                     )
                 )
             ),
             sku=dict(
                 type='str',
-                # disposition='/sku'
             ),
             bgp_connections=dict(
                 type='list',
-                updatable=False,
-                # disposition='/bgp_connections',
                 elements='dict',
                 options=dict(
                     id=dict(
                         type='str',
-                        # disposition='id'
                     )
                 )
             ),
             ip_configurations=dict(
                 type='list',
-                updatable=False,
-                # disposition='/ip_configurations',
                 elements='dict',
                 options=dict(
                     id=dict(
                         type='str',
-                        # disposition='id'
                     )
                 )
             ),
             virtual_router_asn=dict(
                 type='int',
-                # disposition='/virtual_router_asn'
             ),
             virtual_router_ips=dict(
                 type='list',
-                # disposition='/virtual_router_ips',
                 elements='str'
             ),
             enable_virtual_router_route_propogation=dict(
                 type='bool',
-                # disposition='/enable_virtual_router_route_propogation'
             ),
             state=dict(
                 type='str',
