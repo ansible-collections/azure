@@ -1,0 +1,286 @@
+- name: Prepare random number
+  set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  run_once: true
+
+- name: Create a web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group }}"
+    name: webapp{{ rpfx }}
+    plan:
+      resource_group: "{{ resource_group }}"
+      name: webappplan{{ rpfx }}
+      is_linux: false
+      sku: S1
+
+- name: "Create webapp access restriction - check mode"
+  azure_rm_webappaccessrestriction:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Allow"
+        ip_address: "1.1.1.1/24"
+        priority: 1
+      - name: "Datacenter 2"
+        action: "Allow"
+        ip_address: "2.2.2.2/24"
+        priority: 2
+    scm_ip_security_restrictions_use_main: true
+  register: output
+  check_mode: true
+- name: Assert the resource is well created
+  assert:
+    that: output.changed
+
+- name: "Check webapp access restriction facts 1"
+  azure_rm_webappaccessrestriction_info:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+  register: output
+- name: Assert no restrictions
+  assert:
+    that:
+      - not output.changed
+      - output.ip_security_restrictions | length == 0
+      - output.scm_ip_security_restrictions | length == 0
+      - output.scm_ip_security_restrictions_use_main == false
+
+- name: "Create webapp access restriction"
+  azure_rm_webappaccessrestriction:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Allow"
+        ip_address: "1.1.1.1/24"
+        priority: 1
+      - name: "Datacenter 2"
+        action: "Allow"
+        ip_address: "2.2.2.2/24"
+        priority: 2
+    scm_ip_security_restrictions_use_main: true
+  register: output
+- name: Assert the resource is well created
+  assert:
+    that:
+      - output.changed
+      - output.ip_security_restrictions | length == 2
+      - output.ip_security_restrictions[0].action == 'Allow'
+      - output.ip_security_restrictions[0].ip_address == '1.1.1.1/24'
+      - output.ip_security_restrictions[1].action == 'Allow'
+      - output.ip_security_restrictions[1].ip_address == '2.2.2.2/24'
+      - output.scm_ip_security_restrictions | length == 0
+      - output.scm_ip_security_restrictions_use_main == true
+
+- name: "Check webapp access restriction facts 2"
+  azure_rm_webappaccessrestriction_info:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+  register: output
+- name: Assert restrictions
+  assert:
+    that:
+      - not output.changed
+      - output.ip_security_restrictions | length == 2
+      - output.ip_security_restrictions[0].action == 'Allow'
+      - output.ip_security_restrictions[0].ip_address == '1.1.1.1/24'
+      - output.ip_security_restrictions[1].action == 'Allow'
+      - output.ip_security_restrictions[1].ip_address == '2.2.2.2/24'
+      - output.scm_ip_security_restrictions | length == 0
+      - output.scm_ip_security_restrictions_use_main == true
+
+- name: "Create webapp access restriction - idempotent"
+  azure_rm_webappaccessrestriction:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Allow"
+        ip_address: "1.1.1.1/24"
+        priority: 1
+      - name: "Datacenter 2"
+        action: "Allow"
+        ip_address: "2.2.2.2/24"
+        priority: 2
+    scm_ip_security_restrictions_use_main: true
+  register: output
+- name: Assert the resource is not changed
+  assert:
+    that: not output.changed
+
+- name: "Delete specific webapp access restriction"
+  azure_rm_webappaccessrestriction:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Allow"
+        ip_address: "1.1.1.1/24"
+        priority: 1
+    scm_ip_security_restrictions_use_main: true
+  register: output
+- name: Assert the resource is updated
+  assert:
+    that:
+      - output.changed
+      - output.ip_security_restrictions | length == 1
+      - output.ip_security_restrictions[0].action == 'Allow'
+      - output.ip_security_restrictions[0].ip_address == '1.1.1.1/24'
+      - output.scm_ip_security_restrictions | length == 0
+      - output.scm_ip_security_restrictions_use_main == true
+
+- name: "Update existing webapp access restriction 1"
+  azure_rm_webappaccessrestriction:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Deny"
+        ip_address: "1.2.3.4/24"
+        priority: 1
+    scm_ip_security_restrictions_use_main: true
+  register: output
+- name: Assert the resource is updated
+  assert:
+    that:
+      - output.changed
+      - output.ip_security_restrictions | length == 1
+      - output.ip_security_restrictions[0].action == 'Deny'
+      - output.ip_security_restrictions[0].ip_address == '1.2.3.4/24'
+      - output.scm_ip_security_restrictions | length == 0
+      - output.scm_ip_security_restrictions_use_main == true
+
+- name: "Update existing webapp access restriction 2"
+  azure_rm_webappaccessrestriction:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Deny"
+        ip_address: "1.2.3.4/24"
+        priority: 1
+    scm_ip_security_restrictions_use_main: false
+  register: output
+- name: Assert the resource is updated
+  assert:
+    that:
+      - output.changed
+      - output.ip_security_restrictions | length == 1
+      - output.ip_security_restrictions[0].action == 'Deny'
+      - output.ip_security_restrictions[0].ip_address == '1.2.3.4/24'
+      - output.scm_ip_security_restrictions | length == 0
+      - output.scm_ip_security_restrictions_use_main == false
+
+- name: "Update existing webapp access restriction 3"
+  azure_rm_webappaccessrestriction:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Deny"
+        ip_address: "1.2.3.4/24"
+        priority: 1
+    scm_ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Deny"
+        ip_address: "1.2.3.4/24"
+        priority: 1
+    scm_ip_security_restrictions_use_main: false
+  register: output
+- name: Assert the resource is updated
+  assert:
+    that:
+      - output.changed
+      - output.ip_security_restrictions | length == 1
+      - output.ip_security_restrictions[0].action == 'Deny'
+      - output.ip_security_restrictions[0].ip_address == '1.2.3.4/24'
+      - output.scm_ip_security_restrictions | length == 1
+      - output.ip_security_restrictions[0].action == 'Deny'
+      - output.ip_security_restrictions[0].ip_address == '1.2.3.4/24'
+      - output.scm_ip_security_restrictions_use_main == false
+
+- name: "Update existing webapp access restriction 4"
+  azure_rm_webappaccessrestriction:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Deny"
+        ip_address: "1.2.3.4/24"
+        priority: 1
+    scm_ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Deny"
+        ip_address: "1.2.3.4/24"
+        priority: 1
+      - name: "Datacenter 2"
+        action: "Allow"
+        ip_address: "2.2.2.2/24"
+        priority: 2
+    scm_ip_security_restrictions_use_main: false
+  register: output
+- name: Assert the resource is updated
+  assert:
+    that:
+      - output.changed
+      - output.ip_security_restrictions | length == 1
+      - output.ip_security_restrictions[0].action == 'Deny'
+      - output.ip_security_restrictions[0].ip_address == '1.2.3.4/24'
+      - output.scm_ip_security_restrictions | length == 2
+      - output.scm_ip_security_restrictions[0].action == 'Deny'
+      - output.scm_ip_security_restrictions[0].ip_address == '1.2.3.4/24'
+      - output.scm_ip_security_restrictions[1].action == 'Allow'
+      - output.scm_ip_security_restrictions[1].ip_address == '2.2.2.2/24'
+      - output.scm_ip_security_restrictions_use_main == false
+
+- name: "Update existing webapp access restriction - idempotent"
+  azure_rm_webappaccessrestriction:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Deny"
+        ip_address: "1.2.3.4/24"
+        priority: 1
+    scm_ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Deny"
+        ip_address: "1.2.3.4/24"
+        priority: 1
+      - name: "Datacenter 2"
+        action: "Allow"
+        ip_address: "2.2.2.2/24"
+        priority: 2
+    scm_ip_security_restrictions_use_main: false
+  register: output
+- name: Assert the resource is not changed
+  assert:
+    that: not output.changed
+
+- name: "Delete webapp access restrictions"
+  azure_rm_webappaccessrestriction:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+- name: Assert the resource is deleted
+  assert:
+    that:
+      - output.changed
+      - output.ip_security_restrictions | length == 0
+      - output.scm_ip_security_restrictions | length == 0
+      - output.scm_ip_security_restrictions_use_main == false
+
+- name: "Check webapp access restriction facts 3"
+  azure_rm_webappaccessrestriction_info:
+    name: webapp{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+  register: output
+- name: Assert no restrictions
+  assert:
+    that:
+      - not output.changed
+      - output.ip_security_restrictions | length == 0
+      - output.scm_ip_security_restrictions | length == 0
+      - output.scm_ip_security_restrictions_use_main == false
