@@ -105,6 +105,7 @@ parameters:
     - "azure_rm_recoveryservicesvault"
     - "azure_rm_vmbackuppolicy"
     - "azure_rm_webapp"
+    - "azure_rm_webappvnetconnection"
     - "azure_rm_webappaccessrestriction"
     - "azure_rm_workspace"
     - "inventory_azure"
