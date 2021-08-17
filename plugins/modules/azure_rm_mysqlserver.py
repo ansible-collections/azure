@@ -108,6 +108,11 @@ options:
             - Create mode of SQL Server.
         default: Default
         type: str
+    restarted:
+        description:
+            - Set to C(true) with I(state=present) to restart a running mysql server.
+        default: False
+        type: bool
     state:
         description:
             - Assert the state of the MySQL Server. Use C(present) to create or update a server and C(absent) to delete it.
@@ -245,6 +250,10 @@ class AzureRMMySqlServers(AzureRMModuleBase):
             admin_username=dict(
                 type='str'
             ),
+            restarted=dict(
+                type='bool',
+                default=False
+            ),
             admin_password=dict(
                 type='str',
                 no_log=True
@@ -260,6 +269,7 @@ class AzureRMMySqlServers(AzureRMModuleBase):
         self.name = None
         self.parameters = dict()
         self.tags = None
+        self.restarted = False
 
         self.results = dict(changed=False)
         self.state = None
@@ -311,11 +321,20 @@ class AzureRMMySqlServers(AzureRMModuleBase):
 
         if not old_response:
             self.log("MySQL Server instance doesn't exist")
+            if self.restarted:
+                self.fail("Mysql server instance doesn't exist, can't be restart")
+
             if self.state == 'absent':
                 self.log("Old instance didn't exist")
             else:
                 self.to_do = Actions.Create
         else:
+            if self.restarted:
+                self.restart_mysqlserver()
+                self.results['changed'] = True
+                self.results['state'] = old_response
+                return self.results
+
             self.log("MySQL Server instance already exists")
             if self.state == 'absent':
                 self.to_do = Actions.Delete
@@ -364,6 +383,18 @@ class AzureRMMySqlServers(AzureRMModuleBase):
             self.results["fully_qualified_domain_name"] = response["fully_qualified_domain_name"]
 
         return self.results
+
+    def restart_mysqlserver(self):
+        '''
+        Restart MySQL Server.
+        '''
+        self.log("Restart MySQL Server instance {0}".format(self.name))
+
+        try:
+            response = self.mysql_client.servers.restart(resource_group_name=self.resource_group, server_name=self.name)
+        except Exception as exc:
+            self.fail("Error restarting mysql server {0} - {1}".format(self.name, str(exc)))
+        return True
 
     def create_update_mysqlserver(self):
         '''
