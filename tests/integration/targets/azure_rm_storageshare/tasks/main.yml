@@ -8,6 +8,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
     account_type: Standard_LRS
+    kind: StorageV2
 
 - name: Set storage share facts
   set_fact:
@@ -33,7 +34,7 @@
     that:
       - create_result.changed
       - create_result.state.name == share_name
-      - create_result.state.quota == quota
+      - create_result.state.share_quota == quota
       - create_result.state.metadata.source == metadata.source
       - create_result.state.metadata.purpose == metadata.purpose
       - create_result.state.access_tier == access_tier
@@ -63,7 +64,7 @@
     that:
       - not share_facts.changed
       - share_facts.storageshares.name == share_name
-      - share_facts.storageshares.quota == quota
+      - share_facts.storageshares.share_quota == quota
       - share_facts.storageshares.metadata.source == metadata.source
       - share_facts.storageshares.metadata.purpose == metadata.purpose
       - share_facts.storageshares.access_tier == access_tier
@@ -72,7 +73,6 @@
 
 - name: Set new storage share facts
   set_fact:
-    share_name: testshare
     quota: 64
     access_tier: Hot
 
@@ -100,8 +100,8 @@
   assert:
     that:
       - share_facts.storageshares.name == share_name
-      - share_facts.storageshares.quota == quota
-      - share_facts.storageshares.metadata.source == metadata.source
+      - share_facts.storageshares.share_quota == quota
+      - share_facts.storageshares.metadata.source== metadata.source
       - share_facts.storageshares.metadata.purpose == metadata.purpose
       - share_facts.storageshares.access_tier == access_tier
       - share_facts.storageshares.id is defined
