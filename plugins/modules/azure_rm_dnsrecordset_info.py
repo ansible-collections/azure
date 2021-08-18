@@ -194,7 +194,7 @@ class AzureRMRecordSetInfo(AzureRMModuleBase):
         self.record_type = None
         self.top = None
 
-        super(AzureRMRecordSetInfo, self).__init__(self.module_arg_spec)
+        super(AzureRMRecordSetInfo, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
 

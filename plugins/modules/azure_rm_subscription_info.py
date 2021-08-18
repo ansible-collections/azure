@@ -146,6 +146,7 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
         mutually_exclusive = [['name', 'id']]
 
         super(AzureRMSubscriptionInfo, self).__init__(self.module_arg_spec,
+                                                      supports_check_mode=True,
                                                       supports_tags=False,
                                                       mutually_exclusive=mutually_exclusive,
                                                       facts_module=True)

@@ -210,7 +210,7 @@ class AzureRMHDInsightclusterInfo(AzureRMModuleBase):
         self.name = None
         self.tags = None
 
-        super(AzureRMHDInsightclusterInfo, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMHDInsightclusterInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
 
     def exec_module(self, **kwargs):
 

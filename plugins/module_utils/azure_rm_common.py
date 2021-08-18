@@ -966,6 +966,14 @@ class AzureRMModuleBase(object):
         config = self.add_user_agent(config)
         return ServiceClient(creds=config.credentials, config=config)
 
+    def get_subnet_detail(self, subnet_id):
+        vnet_detail = subnet_id.split('/Microsoft.Network/virtualNetworks/')[1].split('/subnets/')
+        return dict(
+            resource_group=subnet_id.split('resourceGroups/')[1].split('/')[0],
+            vnet_name=vnet_detail[0],
+            subnet_name=vnet_detail[1],
+        )
+
     # passthru methods to AzureAuth instance for backcompat
     @property
     def credentials(self):
