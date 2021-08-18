@@ -12,9 +12,9 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_storageshare
 version_added: "1.8.0"
-short_description: Manage Azure storage share
+short_description: Manage Azure storage file share
 description:
-    - Create or delete a storage share in existing storage account.
+    - Create, update or delete a storage file share in existing storage account.
 options:
     resource_group:
         description:
@@ -23,12 +23,12 @@ options:
         type: str
     name:
         description:
-            - Name of the storage share to delete or create.
+            - Name of the storage file share to delete or create.
         type: str
         required: true
     account_name:
         description:
-            - Name of the parent storage account for the storage share.
+            - Name of the parent storage account for the storage file share.
         required: true
         type: str
     access_tier:
@@ -46,7 +46,7 @@ options:
         type: dict
     state:
         description:
-            - State of the storage share. Use 'present' to create or update a storage share and use 'absent' to delete a share.
+            - State of the storage file share. Use 'present' to create or update a storage file share and use 'absent' to delete a file share.
         default: present
         type: str
         choices:
@@ -54,8 +54,8 @@ options:
             - present
     quota:
         description:
-            - The maximum size of the share, in gigabytes. Must be greater than 0, and less than or equal to 5TB (5120).
-              For Large File Shares, the maximum size is 102400. By default 102400
+            - The maximum size of the file share, in gigabytes. Must be greater than 0, and less than or equal to 5TB (5120).
+              For large file shares, the maximum size is 102400. By default 102400
         type: int
 
 
@@ -91,13 +91,13 @@ EXAMPLES = '''
 RETURN = '''
 state:
     description:
-        - Facts about the current state of the storage file share.
+        - Facts about the current state of the storage file file share.
     returned: always
     type: complex
     contains:
             id:
                 description:
-                    - Resource ID of the storage share
+                    - Resource ID of the storage file share
                 sample: "/subscriptions/9e700857-1631-4d8a-aed5-908520ede375/resourceGroups/myResourceGroup/providers/Microsoft.Storage/
                          storageAccounts/mystorageaccount/fileServices/default/shares/myshare"
                 returned: always
@@ -122,31 +122,31 @@ state:
                 type: str
             last_modified_time:
                 description:
-                    - Returns the date and time the share was last modified
+                    - Returns the date and time the file share was last modified
                 sample: "2021-08-23T08:17:35+00:00"
                 returned: always
                 type: str
             metadata:
                 description:
-                    - A name-value pair to associate with the share as metadata
+                    - A name-value pair to associate with the file share as metadata
                 sample: '{"key1": "value1"}'
                 returned: always
                 type: dict
             share_quota:
                 description:
-                    - The maximum size of the share, in gigabytes
+                    - The maximum size of the file share, in gigabytes
                 sample: 102400
                 returned: always
                 type: int
             access_tier:
                 description:
-                    - Access tier for specific share
+                    - Access tier for specific file share
                 sample: 'TransactionOptimized'
                 returned: always
                 type: str
             access_tier_change_time:
                 description:
-                    - Indicates the last modification time for share access tier
+                    - Indicates the last modification time for file share access tier
                 sample: "2021-08-23T08:17:35+00:00"
                 returned: always
                 type: str
@@ -163,14 +163,14 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 class Actions:
     '''
-    Action list that can be executed with storage share
+    Action list that can be executed with storage file share
     '''
     NoAction, Create, Update, Delete = range(4)
 
 
 class AzureRMStorageShare(AzureRMModuleBase):
     '''
-    Configuration class for an Azure RM Storage share resource
+    Configuration class for an Azure RM Storage file share resource
     '''
 
     def __init__(self):
@@ -211,7 +211,7 @@ class AzureRMStorageShare(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        self.log('Fetching storage share {0}'.format(self.name))
+        self.log('Fetching storage file share {0}'.format(self.name))
         response = None
         old_response = self.get_share()
 
@@ -253,8 +253,8 @@ class AzureRMStorageShare(AzureRMModuleBase):
 
     def update_needed(self, old_response):
         '''
-        Define if storage share update needed.
-        :param old_response: dict with properties of the storage share
+        Define if storage file share update needed.
+        :param old_response: dict with properties of the storage file share
         :return: True if update needed, else False
         '''
         return ((self.access_tier is not None) and (self.access_tier != old_response.get('access_tier')) or
@@ -263,8 +263,8 @@ class AzureRMStorageShare(AzureRMModuleBase):
 
     def get_share(self):
         '''
-        Get the properties of the specified Azure Storage share.
-        :return: dict with properties of the storage share
+        Get the properties of the specified Azure Storage file share.
+        :return: dict with properties of the storage file share
         '''
         found = False
         try:
@@ -274,13 +274,13 @@ class AzureRMStorageShare(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(storage_share))
         except Exception as e:
-            self.log("Did not find the storage share with name {0} : {1}".format(self.name, str(e)))
+            self.log("Did not find the storage file share with name {0} : {1}".format(self.name, str(e)))
         return self.storage_share_to_dict(storage_share) if found else None
 
     def storage_share_to_dict(self, storage_share):
         '''
         Transform Azure RM Storage share object to dictionary
-        :param storage_share: contains information about storage share
+        :param storage_share: contains information about storage file share
         :type storage_share: FileShare
         :return: dict generated from storage_share
         '''
@@ -298,8 +298,8 @@ class AzureRMStorageShare(AzureRMModuleBase):
 
     def create_storage_share(self):
         '''
-        Method calling the Azure SDK to create storage share.
-        :return: dict with description of the new storage share
+        Method calling the Azure SDK to create storage file share.
+        :return: dict with description of the new storage file share
         '''
         self.log("Creating fileshare {0}".format(self.name))
         try:
@@ -310,16 +310,16 @@ class AzureRMStorageShare(AzureRMModuleBase):
                                                                    share_quota=self.quota,
                                                                    metadata=self.metadata))
         except Exception as e:
-            self.fail("Error creating fileshare {0} : {1}".format(self.name, str(e)))
+            self.fail("Error creating file share {0} : {1}".format(self.name, str(e)))
         return self.get_share()
 
     def update_storage_share(self, old_responce):
         '''
-        Method calling the Azure SDK to update storage share.
-        :param old_response: dict with properties of the storage share
-        :return: dict with description of the new storage share
+        Method calling the Azure SDK to update storage file share.
+        :param old_response: dict with properties of the storage file share
+        :return: dict with description of the new storage file share
         '''
-        self.log("Creating fileshare {0}".format(self.name))
+        self.log("Creating file share {0}".format(self.name))
         file_share_details = dict(
             access_tier=self.access_tier if self.access_tier else old_responce.get('access_tier'),
             share_quota=self.quota if self.quota else old_responce.get('share_quota'),
@@ -331,7 +331,7 @@ class AzureRMStorageShare(AzureRMModuleBase):
                                                    share_name=self.name,
                                                    file_share=file_share_details)
         except Exception as e:
-            self.fail("Error updating fileshare {0} : {1}".format(self.name, str(e)))
+            self.fail("Error updating file share {0} : {1}".format(self.name, str(e)))
         return self.get_share()
 
     def delete_storage_share(self):
@@ -344,7 +344,7 @@ class AzureRMStorageShare(AzureRMModuleBase):
                                                    account_name=self.account_name,
                                                    share_name=self.name)
         except Exception as e:
-            self.fail("Error deleting fileshare {0} : {1}".format(self.name, str(e)))
+            self.fail("Error deleting file share {0} : {1}".format(self.name, str(e)))
         return self.get_share()
 
 

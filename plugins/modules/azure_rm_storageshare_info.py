@@ -12,9 +12,9 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_storageshare_info
 version_added: "1.8.0"
-short_description: Get Azure storage share info
+short_description: Get Azure storage file share info
 description:
-    - Get facts for storage share
+    - Get facts for storage file share
 options:
     resource_group:
         description:
@@ -23,12 +23,12 @@ options:
         type: str
     name:
         description:
-            - Name of the storage share
+            - Name of the storage file share
         type: str
         required: false
     account_name:
         description:
-            - Name of the parent storage account for the storage share
+            - Name of the parent storage account for the storage file share
         required: true
         type: str
 
@@ -48,7 +48,7 @@ EXAMPLES = '''
     account_name: testStorageAccount
 
 
-- name: Get all storage shares in storage account
+- name: Get all storage file shares in storage account
   azure_rm_storageshare:
     resource_group: myResourceGroup
     account_name: testStorageAccount
@@ -63,7 +63,7 @@ state:
     contains:
             id:
                 description:
-                    - Resource ID of the storage share
+                    - Resource ID of the storage file share
                 sample: "/subscriptions/9e700857-1631-4d8a-aed5-908520ede375/resourceGroups/myResourceGroup/providers/Microsoft.Storage/
                          storageAccounts/mystorageaccount/fileServices/default/shares/myshare"
                 returned: always
@@ -88,31 +88,31 @@ state:
                 type: str
             last_modified_time:
                 description:
-                    - Returns the date and time the share was last modified
+                    - Returns the date and time the file share was last modified
                 sample: "2021-08-23T08:17:35+00:00"
                 returned: always
                 type: str
             metadata:
                 description:
-                    - A name-value pair to associate with the share as metadata
+                    - A name-value pair to associate with the file share as metadata
                 sample: '{"key1": "value1"}'
                 returned: always
                 type: dict
             share_quota:
                 description:
-                    - The maximum size of the share, in gigabytes
+                    - The maximum size of the file share, in gigabytes
                 sample: 102400
                 returned: always
                 type: int
             access_tier:
                 description:
-                    - Access tier for specific share
+                    - Access tier for specific file share
                 sample: 'TransactionOptimized'
                 returned: always
                 type: str
             access_tier_change_time:
                 description:
-                    - Indicates the last modification time for share access tier
+                    - Indicates the last modification time for file share access tier
                 sample: "2021-08-23T08:17:35+00:00"
                 returned: always
                 type: str
@@ -130,7 +130,7 @@ state:
                 type: str
             version:
                 description:
-                    - The version of the share
+                    - The version of the file share
                 returned: always
                 type: str
             deleted:
@@ -213,8 +213,8 @@ class AzureRMStorageShareInfo(AzureRMModuleBase):
 
     def get_share(self):
         '''
-        Get the properties of the specified Azure Storage share.
-        :return: dict with properties of the storage share
+        Get the properties of the specified Azure Storage file share.
+        :return: dict with properties of the storage file share
         '''
         storage_share = None
         try:
@@ -229,7 +229,7 @@ class AzureRMStorageShareInfo(AzureRMModuleBase):
     def storage_share_to_dict(self, storage_share):
         '''
         Transform Azure RM Storage share object to dictionary
-        :param storage_share: contains information about storage share
+        :param storage_share: contains information about storage file share
         :type storage_share: FileShare
         :return: dict generated from storage_share
         '''
@@ -255,12 +255,12 @@ class AzureRMStorageShareInfo(AzureRMModuleBase):
 
     def list_all(self):
         '''
-        Method calling the Azure SDK to create storage share.
-        :return: dict with description of the new storage share
+        Method calling the Azure SDK to create storage file share.
+        :return: dict with description of the new storage file share
         '''
         '''
-        Get the properties of the specified Azure Storage share.
-        :return: dict with properties of the storage share
+        Get the properties of the specified Azure Storage file share.
+        :return: dict with properties of the storage file share
         '''
         all_items = None
         try:
@@ -269,7 +269,7 @@ class AzureRMStorageShareInfo(AzureRMModuleBase):
             self.log("Response : {0}".format(storage_shares))
             all_items = [self.storage_share_to_dict(share) for share in storage_shares]
         except Exception as e:
-            self.log("Did not find the storage share : {0}".format(str(e)))
+            self.log("Did not find the storage file share : {0}".format(str(e)))
         return all_items
 
 
