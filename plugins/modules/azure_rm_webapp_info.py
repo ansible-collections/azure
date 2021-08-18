@@ -258,6 +258,7 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
         self.framework_names = ['net_framework', 'java', 'php', 'node', 'python', 'dotnetcore', 'ruby']
 
         super(AzureRMWebAppInfo, self).__init__(self.module_arg_spec,
+                                                supports_check_mode=True,
                                                 supports_tags=False,
                                                 facts_module=True)
 

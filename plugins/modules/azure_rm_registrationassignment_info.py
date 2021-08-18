@@ -121,7 +121,7 @@ class AzureRMRegistrationAssignmentInfo(AzureRMModuleBase):
         self.status_code = [200]
 
         self.mgmt_client = None
-        super(AzureRMRegistrationAssignmentInfo, self).__init__(self.module_arg_spec, supports_tags=True)
+        super(AzureRMRegistrationAssignmentInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
 
     def exec_module(self, **kwargs):
 
