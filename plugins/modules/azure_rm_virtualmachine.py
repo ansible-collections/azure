@@ -1979,12 +1979,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                                                        top=1,
                                                                        orderby='name desc')
         except Exception as exc:
-            self.fail("Error fetching image {0} {1} {2} {3} {4} - {5}".format(self.image['publisher'],
-                                                                              self.image['offer'],
-                                                                              self.image['sku'],
-                                                                              "top=1",
-                                                                              "orderby=name desc",
-                                                                              str(exc)))
+            self.fail("Error fetching image {0} {1} {2} top=1 orderby='name desc' - {3}".format(self.image['publisher'],
+                                                                                                self.image['offer'],
+                                                                                                self.image['sku'],
+                                                                                                str(exc)))
         if versions and len(versions) > 0:
             if self.image['version'] == 'latest':
                 return versions[len(versions) - 1]
