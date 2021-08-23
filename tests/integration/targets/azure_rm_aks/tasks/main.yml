@@ -472,6 +472,7 @@
      network_profile:
           load_balancer_sku: standard
    register: output
+   ignore_errors: yes
 
  - name: Assert the AKS instance is well created
    assert:
@@ -480,6 +481,7 @@
        - "output.agent_pool_profiles | length == 2"
        - output.provisioning_state == 'Succeeded'
        - output.agent_pool_profiles[1].mode == 'System'
+   ignore_errors: yes
 
  - name: Update the default2 agent_pool mode from User to System (idempontent)
    azure_rm_aks:
