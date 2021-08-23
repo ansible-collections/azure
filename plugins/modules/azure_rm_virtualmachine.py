@@ -402,8 +402,8 @@ EXAMPLES = '''
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: testvm10
-    admin_username: chouseknecht
-    admin_password: <your password here>
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image:
       offer: CentOS
       publisher: OpenLogic
@@ -422,7 +422,7 @@ EXAMPLES = '''
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: vm-managed-disk
-    admin_username: adminUser
+    admin_username: "{{ username }}"
     availability_set: avs-managed-disk
     managed_disk_type: Standard_LRS
     image:
@@ -438,7 +438,7 @@ EXAMPLES = '''
     name: testvm002
     vm_size: Standard_D4
     storage_account: testaccount001
-    admin_username: adminUser
+    admin_username: "{{ username }}"
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
         key_data: < insert yor ssh public key here... >
@@ -455,7 +455,7 @@ EXAMPLES = '''
     name: testvm001
     vm_size: Standard_D4
     managed_disk_type: Standard_LRS
-    admin_username: adminUser
+    admin_username: "{{ username }}"
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
         key_data: < insert yor ssh public key here... >
@@ -476,7 +476,7 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: testvm001
     vm_size: Standard_DS1_v2
-    admin_username: adminUser
+    admin_username: "{{ username }}"
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
@@ -506,8 +506,8 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: testvm001
     vm_size: Standard_DS1_v2
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image: customimage001
 
 - name: Create a VM with a custom image from a particular resource group
@@ -515,8 +515,8 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: testvm001
     vm_size: Standard_DS1_v2
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image:
       name: customimage001
       resource_group: myResourceGroup
@@ -526,8 +526,8 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: testvm001
     vm_size: Standard_DS1_v2
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image:
       id: '{{image_id}}'
 
@@ -535,8 +535,8 @@ EXAMPLES = '''
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: big-os-disk
-    admin_username: chouseknecht
-    admin_password: <your password here>
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     os_disk_size_gb: 512
     image:
       offer: CentOS
@@ -548,8 +548,8 @@ EXAMPLES = '''
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: f5-nva
-    admin_username: chouseknecht
-    admin_password: <your password here>
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image:
       publisher: f5-networks
       offer: f5-big-ip-best
@@ -567,8 +567,8 @@ EXAMPLES = '''
     vm_size: Standard_D4
     priority: Spot
     eviction_policy: Deallocate
-    admin_username: chouseknecht
-    admin_password: <your password here>
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image:
       offer: CentOS
       publisher: OpenLogic
@@ -603,8 +603,8 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: testvm001
     vm_size: Standard_DS1_v2
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image: customimage001
     zones: [1]
 
