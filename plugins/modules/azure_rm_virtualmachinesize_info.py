@@ -128,7 +128,7 @@ class AzureRMVirtualMachineSizeInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        self.results['sizes'] = self.list_items_by_location() 
+        self.results['sizes'] = self.list_items_by_location()
         return self.results
 
     def list_items_by_location(self):

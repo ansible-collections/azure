@@ -18,4 +18,3 @@
 
 - assert:
       that: output['sizes'] | length > 0
-
