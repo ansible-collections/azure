@@ -1975,7 +1975,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             versions = self.compute_client.virtual_machine_images.list(self.location,
                                                                        self.image['publisher'],
                                                                        self.image['offer'],
-                                                                       self.image['sku'])
+                                                                       self.image['sku'],
+                                                                       top=1,
+                                                                       orderby='name desc')
         except Exception as exc:
             self.fail("Error fetching image {0} {1} {2} - {3}".format(self.image['publisher'],
                                                                       self.image['offer'],
