@@ -356,7 +356,7 @@ EXAMPLES = '''
     virtual_network_name: testvnet
     upgrade_policy: Manual
     subnet_name: testsubnet
-    admin_username: "{{ username }}”
+    admin_username: "{{ username }}"
     admin_password: "{{ password }}"
     managed_disk_type: Standard_LRS
     image: customimage001
