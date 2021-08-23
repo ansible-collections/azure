@@ -25,9 +25,11 @@ options:
         description:
             - Location for which to list the available virtual machine size profiles
         required: true
+        type: str
     name:
         description:
             - Name of a size to get information about
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
