@@ -1564,7 +1564,11 @@ class AzureRMAuth(object):
         if self.is_ad_resource:
             resource = 'https://graph.windows.net/'
         subscription_id = subscription_id or self._get_env('subscription_id')
-        profile = get_cli_profile()
+        try:
+            profile = get_cli_profile()
+        except Exception as exc:
+            self.fail("Failed to load CLI profile {0}.".format(str(exc)))
+
         credentials, subscription_id, tenant = profile.get_login_credentials(
             subscription_id=subscription_id, resource=resource)
         cloud_environment = get_cli_active_cloud()
