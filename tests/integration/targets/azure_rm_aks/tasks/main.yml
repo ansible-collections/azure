@@ -471,8 +471,8 @@
      enable_rbac: yes
      network_profile:
           load_balancer_sku: standard
-   register: output
    ignore_errors: yes
+   register: output
 
  - name: Assert the AKS instance is well created
    assert:
