@@ -265,7 +265,9 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
                 to_be_updated = True
             else:
                 update_tags, response['tags'] = self.update_tags(response['tags'])
-                response_proximity_placement_group = response['proximity_placement_group'].lower() if response.get('proximity_placement_group') is not None else None
+                response_proximity_placement_group = (
+                    response['proximity_placement_group'].lower() if response.get('proximity_placement_group') is not None else None
+                )
 
                 if update_tags:
                     self.log("Tags has to be updated")
