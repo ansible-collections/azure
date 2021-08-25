@@ -1310,8 +1310,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         if self.proximity_placement_group.get('id') is not None:
                             proximity_placement_group_resource = self.compute_models.SubResource(id=self.proximity_placement_group['id'])
                         elif self.proximity_placement_group.get('name') is not None and self.proximity_placement_group.get('resource_group') is not None:
-                            proximity_placement_group = self.get_proximity_placement_group(
-                                                                                           self.proximity_placement_group.get('resource_group'),
+                            proximity_placement_group = self.get_proximity_placement_group(self.proximity_placement_group.get('resource_group'),
                                                                                            self.proximity_placement_group.get('name'))
                             proximity_placement_group_resource = self.compute_models.SubResource(id=proximity_placement_group.id)
                         else:
