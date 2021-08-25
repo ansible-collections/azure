@@ -138,18 +138,22 @@ options:
         description:
             - Name or ID of an existing availability set to add the VM to. The I(availability_set) should be in the same resource group as VM.
     proximity_placement_group:
-        id:
-            description:
-                - The ID of the proximity placement group the VM should be associated with.
-            type: str
-        name:
-            description:
-                - The Name of the proximity placement group the VM should be associated with.
-            type: str
-        resource_group:
-            description:
-                - The resource group of the proximity placement group the VM should be associated with.
-            type: str
+        description:
+            - The name or ID of the proximity placement group the VM should be associated with.
+        type: dict
+        suboptions:
+            id:
+                description:
+                    - The ID of the proximity placement group the VM should be associated with.
+                type: str
+            name:
+                description:
+                    - The Name of the proximity placement group the VM should be associated with.
+                type: str
+            resource_group:
+                description:
+                    - The resource group of the proximity placement group the VM should be associated with.
+                type: str
     storage_account_name:
         description:
             - Name of a storage account that supports creation of VHD blobs.
@@ -666,7 +670,7 @@ azure_vm:
             },
             "proximityPlacementGroup": {
                     "id": "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/proximityPlacementGroups/testid13"
-            }
+            },
             "hardwareProfile": {
                 "vmSize": "Standard_D1"
             },
