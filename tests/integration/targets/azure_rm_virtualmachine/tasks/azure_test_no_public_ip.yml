@@ -1,4 +1,9 @@
 - include_tasks: setup.yml
+- name: create proximity placement group
+  azure_rm_proximityplacementgroup:
+    resource_group: "{{ resource_group }}"
+    name: testproximityplacement
+  register: output
 
 - name: Create virtual machine without public ip address and with boot diagnostics enabled
   azure_rm_virtualmachine:
@@ -7,6 +12,8 @@
     vm_size: Standard_A0
     admin_username: adminuser
     ssh_password_enabled: false
+    proximity_placement_group:
+      id: "{{ output.state.id }}"
     ssh_public_keys:
       - path: /home/adminuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"

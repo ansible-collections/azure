@@ -137,6 +137,19 @@ options:
     availability_set:
         description:
             - Name or ID of an existing availability set to add the VM to. The I(availability_set) should be in the same resource group as VM.
+    proximity_placement_group:
+        id:
+            description:
+                - The ID of the proximity placement group the VM should be associated with.
+            type: str
+        name:
+            description:
+                - The Name of the proximity placement group the VM should be associated with.
+            type: str
+        resource_group:
+            description:
+                - The resource group of the proximity placement group the VM should be associated with.
+            type: str
     storage_account_name:
         description:
             - Name of a storage account that supports creation of VHD blobs.
@@ -651,6 +664,9 @@ azure_vm:
             "availabilitySet": {
                     "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Compute/availabilitySets/MYAVAILABILITYSET"
             },
+            "proximityPlacementGroup": {
+                    "id": "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/proximityPlacementGroups/testid13"
+            }
             "hardwareProfile": {
                 "vmSize": "Standard_D1"
             },
@@ -821,6 +837,13 @@ def extract_names_from_blob_uri(blob_uri, storage_suffix):
     return extracted_names
 
 
+proximity_placement_group_spec = dict(
+    id=dict(type='str'),
+    name=dict(type='str'),
+    resource_group=dict(type='str')
+)
+
+
 class AzureRMVirtualMachine(AzureRMModuleBase):
 
     def __init__(self):
@@ -849,6 +872,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             os_disk_size_gb=dict(type='int'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'Premium_LRS']),
             os_disk_name=dict(type='str'),
+            proximity_placement_group=dict(type='dict', options=proximity_placement_group_spec),
             os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
             public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static', 'Disabled'], default='Static',
                                              aliases=['public_ip_allocation']),
@@ -896,6 +920,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.os_disk_size_gb = None
         self.managed_disk_type = None
         self.os_disk_name = None
+        self.proximity_placement_group = None
         self.network_interface_names = None
         self.remove_on_absent = set()
         self.tags = None
@@ -1027,6 +1052,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             if self.image and isinstance(self.image, dict):
                 if all(key in self.image for key in ('publisher', 'offer', 'sku', 'version')):
                     marketplace_image = self.get_marketplace_image_version()
+
                     if self.image['version'] == 'latest':
                         self.image['version'] = marketplace_image.name
                         self.log("Using image version {0}".format(self.image['version']))
@@ -1097,6 +1123,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                    vm_dict['properties'].get('billingProfile', None) and \
                    self.max_price != vm_dict['properties']['billingProfile'].get('maxPrice', None):
                     self.fail('VM Maximum Price is not updatable: requested virtual machine maximum price is {0}'.format(self.max_price))
+
 
                 if self.ephemeral_os_disk and current_ephemeral is None:
                     self.fail('Ephemeral OS disk not updatable: virtual machine ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
@@ -1275,6 +1302,19 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         if self.zones:
                             self.fail("Parameter error: you can't use Availability Set and Availability Zones at the same time")
 
+                    proximity_placement_group_resource = None
+                    if self.proximity_placement_group is not None:
+                        if self.proximity_placement_group.get('id') is not None:
+                            proximity_placement_group_resource = self.compute_models.SubResource(id=self.proximity_placement_group['id'])
+                        elif self.proximity_placement_group.get('name') is not None and self.proximity_placement_group.get('resource_group') is not None:
+                            #parsed_proximity_placement_group = parse_resource_id(self.proximity_placement_group)
+                            proximity_placement_group = self.get_proximity_placement_group(
+                                                                                           self.proximity_placement_group.get('resource_group'),
+                                                                                           self.proximity_placement_group.get('name'))
+                            proximity_placement_group_resource = self.compute_models.SubResource(id=proximity_placement_group.id)
+                        else:
+                            self.fail("Parameter error: Please recheck your proximity placement group ")
+
                     # Get defaults
                     if not self.network_interface_names:
                         default_nic = self.create_default_nic()
@@ -1351,6 +1391,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             network_interfaces=nics
                         ),
                         availability_set=availability_set_resource,
+                        proximity_placement_group=proximity_placement_group_resource,
                         plan=plan,
                         zones=self.zones,
                     )
@@ -1522,6 +1563,17 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             storage_account_type=vm_dict['properties']['storageProfile']['osDisk']['managedDisk'].get('storageAccountType')
                         )
 
+                    proximity_placement_group_resource = None
+                    try:
+                        proximity_placement_group_resource = self.compute_models.SubResource(id=vm_dict['properties']['proximityPlacementGroup'].get('id'))
+                    except Exception:
+                        # pass if the proximity Placement Group
+                        pass
+                    #if self.proximity_placement_group is not None:
+                    #    if self.proximity_placement_group.get('id', None) is not None:
+                    #        proximity_placement_group_resource = self.compute_models.SubResource(id=self.proximity_placement_group['id'])
+                    #    elif self.proximity_placement_group.get('name', None) is not None and self.proximity_placement_group.get('resource_group', None) is not None:
+
                     availability_set_resource = None
                     try:
                         availability_set_resource = self.compute_models.SubResource(id=vm_dict['properties']['availabilitySet'].get('id'))
@@ -1575,6 +1627,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             image_reference=image_reference
                         ),
                         availability_set=availability_set_resource,
+                        proximity_placement_group=proximity_placement_group_resource,
                         network_profile=self.compute_models.NetworkProfile(
                             network_interfaces=nics
                         )
@@ -1975,9 +2028,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             versions = self.compute_client.virtual_machine_images.list(self.location,
                                                                        self.image['publisher'],
                                                                        self.image['offer'],
-                                                                       self.image['sku'],
-                                                                       top=1,
-                                                                       orderby='name desc')
+                                                                       self.image['sku'])
         except Exception as exc:
             self.fail("Error fetching image {0} {1} {2} - {3}".format(self.image['publisher'],
                                                                       self.image['offer'],
@@ -2012,6 +2063,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
         self.fail("Error could not find image with name {0}".format(name))
         return None
+
+    def get_proximity_placement_group(self, resource_group, name):
+        try:
+            return self.compute_client.proximity_placement_groups.get(resource_group, name)
+        except Exception as exc:
+            self.fail("Error fetching proximity placement group {0} - {1}".format(name, str(exc)))
 
     def get_availability_set(self, resource_group, name):
         try:
