@@ -1124,7 +1124,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                    self.max_price != vm_dict['properties']['billingProfile'].get('maxPrice', None):
                     self.fail('VM Maximum Price is not updatable: requested virtual machine maximum price is {0}'.format(self.max_price))
 
-
                 if self.ephemeral_os_disk and current_ephemeral is None:
                     self.fail('Ephemeral OS disk not updatable: virtual machine ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
                 elif not self.ephemeral_os_disk and current_ephemeral is not None:
@@ -1307,7 +1306,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         if self.proximity_placement_group.get('id') is not None:
                             proximity_placement_group_resource = self.compute_models.SubResource(id=self.proximity_placement_group['id'])
                         elif self.proximity_placement_group.get('name') is not None and self.proximity_placement_group.get('resource_group') is not None:
-                            #parsed_proximity_placement_group = parse_resource_id(self.proximity_placement_group)
                             proximity_placement_group = self.get_proximity_placement_group(
                                                                                            self.proximity_placement_group.get('resource_group'),
                                                                                            self.proximity_placement_group.get('name'))
@@ -1569,10 +1567,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     except Exception:
                         # pass if the proximity Placement Group
                         pass
-                    #if self.proximity_placement_group is not None:
-                    #    if self.proximity_placement_group.get('id', None) is not None:
-                    #        proximity_placement_group_resource = self.compute_models.SubResource(id=self.proximity_placement_group['id'])
-                    #    elif self.proximity_placement_group.get('name', None) is not None and self.proximity_placement_group.get('resource_group', None) is not None:
 
                     availability_set_resource = None
                     try:
