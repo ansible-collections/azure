@@ -442,7 +442,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             if not found_disk['disk_size_gb'] == new_disk['disk_size_gb']:
                 resp = True
         if new_disk.get('os_type'):
-            if not found_disk['os_type'] == new_disk['os_type']:
+            if not self.compute_models.OperatingSystemTypes(found_disk['os_type'].capitalize()) == new_disk['os_type']:
                 resp = True
         if new_disk.get('sku'):
             if not found_disk['storage_account_type'] == new_disk['sku'].name:
