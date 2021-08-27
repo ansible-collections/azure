@@ -413,11 +413,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             creation_data['create_option'] = self.compute_models.DiskCreateOption.copy
             creation_data['source_resource_id'] = self.source_uri
         if self.os_type:
-            typecon = {
-                'linux': self.compute_models.OperatingSystemTypes.linux,
-                'windows': self.compute_models.OperatingSystemTypes.windows
-            }
-            disk_params['os_type'] = typecon[self.os_type]
+            disk_params['os_type'] = self.compute_models.OperatingSystemTypes(self.os_type.capitalize())
         else:
             disk_params['os_type'] = None
         disk_params['creation_data'] = creation_data
