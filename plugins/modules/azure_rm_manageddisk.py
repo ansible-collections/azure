@@ -199,10 +199,8 @@ state:
         os_type:
             description:
                 - Type of Operating System.
-            choices:
-                - linux
-                - windows
             type: str
+            sample: linux
         disk_size_gb:
             description:
                 - Size in GB of the managed disk to be created.
