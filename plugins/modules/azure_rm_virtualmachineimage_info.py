@@ -181,11 +181,11 @@ class AzureRMVirtualMachineImageInfo(AzureRMModuleBase):
 
         try:
             versions = self.compute_client.virtual_machine_images.list(self.location,
-                                                                  self.publisher,
-                                                                  self.offer,
-                                                                  self.sku,
-                                                                  top=1,
-                                                                  orderby='name desc')
+                                                                       self.publisher,
+                                                                       self.offer,
+                                                                       self.sku,
+                                                                       top=1,
+                                                                       orderby='name desc')
         except CloudError:
             pass
 
