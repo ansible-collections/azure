@@ -838,7 +838,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             max_price=dict(type='float', default=-1),
             admin_username=dict(type='str'),
             admin_password=dict(type='str', no_log=True),
-            ssh_password_enabled=dict(type='bool', default=True),
+            ssh_password_enabled=dict(type='bool', default=True, no_log=False),
             ssh_public_keys=dict(type='list'),
             image=dict(type='raw'),
             availability_set=dict(type='str'),
