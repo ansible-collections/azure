@@ -224,9 +224,9 @@ status:
 
 import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
-import dateutil.parser
 
 try:
+    import dateutil.parser
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
     from azure.mgmt.sql import SqlManagementClient
