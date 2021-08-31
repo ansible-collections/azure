@@ -17,7 +17,6 @@ else
     sudo apt update
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa
-    sudo apt install python-dateutil
     sudo apt install python"$2" -y
     sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python"$2" 1
 fi
@@ -46,7 +45,7 @@ else
     git checkout "stable-$3"
 fi
 source hacking/env-setup
-pip install paramiko PyYAML Jinja2  httplib2 six
+pip install paramiko PyYAML Jinja2  httplib2 six python-dateutil
 
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
 mkdir -p "${TEST_DIR}"
