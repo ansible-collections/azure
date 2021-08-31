@@ -45,6 +45,7 @@ else
     git checkout "stable-$3"
 fi
 source hacking/env-setup
+#pip install paramiko PyYAML Jinja2  httplib2 six
 pip install paramiko PyYAML Jinja2  httplib2 six python-dateutil
 
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
