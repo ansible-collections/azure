@@ -143,6 +143,62 @@
       - output.changed == false
       - output.status == 'Online'
 
+# test database point in time restore
+- debug:
+    var: output
+- name: Gather facts SQL Database and wait for restore point
+  azure_rm_sqldatabase_info:
+    resource_group: "{{ resource_group }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: database{{ random_postfix }}
+  register: output
+  until: output.databases[0].earliest_restore_date != None
+  retries: 10
+  delay: 20
+- debug:
+    var: output
+- name: Assert that it can be restored from
+  assert:
+    that:
+      - output.databases[0].id != None
+      - output.databases[0].earliest_restore_date != None
+
+- name: Create second SQL Database, restoring from the previous Database
+  azure_rm_sqldatabase:
+    resource_group: "{{ resource_group }}"
+    create_mode: point_in_time_restore
+    restore_point_in_time: "{{ output.databases[0].earliest_restore_date }}"
+    source_database_id: "{{ output.databases[0].id }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: database{{ random_postfix }}PITR
+  register: output
+- debug:
+    var: output
+- name: Assert the state has changed
+  assert:
+    that:
+      - output.changed
+- name: Get second SQL Database, restoring from the previous Database
+  azure_rm_sqldatabase_info:
+    resource_group: "{{ resource_group }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: database{{ random_postfix }}PITR
+  register: test001
+- debug:
+    var: test001
+
+- name: Delete instance of SQL Database Point in time recovery
+  azure_rm_sqldatabase:
+    resource_group: "{{ resource_group }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: database{{ random_postfix }}PITR
+    state: absent
+  register: output
+- name: Assert the state has changed
+  assert:
+    that:
+      - output.changed
+
 # test database facter:
 - name: Create second SQL Database
   azure_rm_sqldatabase:
