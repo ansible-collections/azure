@@ -286,6 +286,7 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
                     self.faildeploy('sku')
 
             if self.check_mode:
+                self.results['changed'] = to_be_updated
                 return self.results
 
             if to_be_updated:
