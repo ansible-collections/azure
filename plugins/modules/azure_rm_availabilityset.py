@@ -294,8 +294,11 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
                 self.results['changed'] = True
 
         elif self.state == 'absent':
-            self.delete_availabilityset()
-            self.results['changed'] = True
+            response = self.get_availabilityset()
+            if response:
+                if not self.check_mode:
+                    self.delete_availabilityset()
+                self.results['changed'] = True
 
         return self.results
 
