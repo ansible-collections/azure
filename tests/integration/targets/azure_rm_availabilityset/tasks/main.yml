@@ -1,3 +1,15 @@
+- name: Create an availability set with default options - Check Mode
+  azure_rm_availabilityset:
+    name: myavailabilityset1
+    resource_group: "{{ resource_group }}"
+    tags:
+      tag1: testtag
+  register: results
+  check_mode: yes
+
+- assert:
+    that: results.changed
+
 - name: Create an availability set with default options
   azure_rm_availabilityset:
     name: myavailabilityset1
@@ -113,7 +125,7 @@
 
 - assert:
     that: 
-      - not results.changed
+      - results.changed
       - results.state.tags.checktest1 == 'modified1'
 
 #
