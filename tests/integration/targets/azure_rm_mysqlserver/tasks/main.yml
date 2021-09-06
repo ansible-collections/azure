@@ -16,7 +16,7 @@
       backup_retention_days: 7
       geo_redundant_backup: Disabled
       storage_autogrow: Disabled
-    version: 5.6
+    version: 5.7
     enforce_ssl: True
     admin_username: zimxyz
     admin_password: Password123!
@@ -40,7 +40,7 @@
       backup_retention_days: 7
       geo_redundant_backup: Disabled
       storage_autogrow: Disabled
-    version: 5.6
+    version: 5.7
     enforce_ssl: True
     admin_username: zimxyz
     admin_password: Password123!
@@ -64,7 +64,7 @@
       backup_retention_days: 7
       geo_redundant_backup: Disabled
       storage_autogrow: Disabled
-    version: 5.6
+    version: 5.7
     enforce_ssl: True
     admin_username: zimxyz
     admin_password: Password123!
@@ -88,7 +88,7 @@
       backup_retention_days: 7
       geo_redundant_backup: Disabled
       storage_autogrow: Disabled
-    version: 5.6
+    version: 5.7
     enforce_ssl: True
     admin_username: zimxyz
     admin_password: Password123!
@@ -124,7 +124,7 @@
       backup_retention_days: 7
       geo_redundant_backup: Disabled
       storage_autogrow: Disabled
-    version: 5.6
+    version: 5.7
     enforce_ssl: True
     admin_username: zimxyz
     admin_password: Password123!
@@ -144,7 +144,7 @@
       backup_retention_days: 7
       geo_redundant_backup: Disabled
       storage_autogrow: Disabled
-    version: 5.6
+    version: 5.7
     enforce_ssl: True
     admin_username: zimxyz
     admin_password: Password123!
