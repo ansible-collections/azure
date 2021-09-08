@@ -713,6 +713,12 @@
     that:
       - '"VMSizeIsNotPermittedToEnableAcceleratedNetworkingForVmss" in results.msg'
 
+- name: Delete VMSS
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}4
+    state: absent
+
 - name: Delete network security group
   azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
