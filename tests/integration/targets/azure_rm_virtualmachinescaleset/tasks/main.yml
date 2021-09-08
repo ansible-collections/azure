@@ -71,7 +71,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 18.04-LTS
       version: latest
 - name: Generalize VM
   azure_rm_virtualmachine:
@@ -114,9 +114,9 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     image:
-      offer: CentOS
-      publisher: OpenLogic
-      sku: '7.1'
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -159,9 +159,9 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     image:
-      offer: CentOS
-      publisher: OpenLogic
-      sku: '7.1'
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -202,9 +202,9 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     image:
-      offer: CentOS
-      publisher: OpenLogic
-      sku: '7.1'
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -250,9 +250,9 @@
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
     image:
-      offer: CentOS
-      publisher: OpenLogic
-      sku: '7.1'
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -286,9 +286,9 @@
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
     image:
-      offer: CentOS
-      publisher: OpenLogic
-      sku: '7.1'
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -699,9 +699,9 @@
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     image:
-      offer: CentOS
-      publisher: OpenLogic
-      sku: '7.1'
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
       version: latest
     upgrade_policy: Manual
     enable_accelerated_networking: yes
