@@ -285,7 +285,7 @@ EXAMPLES = '''
     subnet_name: testsubnet
     terminate_event_timeout_minutes: 10
     scale_in_policy: NewestVM
-    admin_username: adminUser
+    admin_username: "{{ username }}"
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
@@ -311,7 +311,7 @@ EXAMPLES = '''
     virtual_network_name: testvnet
     upgrade_policy: Manual
     subnet_name: testsubnet
-    admin_username: adminUser
+    admin_username: "{{ username }}"
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
@@ -341,8 +341,8 @@ EXAMPLES = '''
     virtual_network_name: testvnet
     upgrade_policy: Manual
     subnet_name: testsubnet
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     managed_disk_type: Standard_LRS
     image: customimage001
 
@@ -356,8 +356,8 @@ EXAMPLES = '''
     virtual_network_name: testvnet
     upgrade_policy: Manual
     subnet_name: testsubnet
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     managed_disk_type: Standard_LRS
     image: customimage001
 
@@ -370,8 +370,8 @@ EXAMPLES = '''
     virtual_network_name: testvnet
     upgrade_policy: Manual
     subnet_name: testsubnet
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     managed_disk_type: Standard_LRS
     image:
       name: customimage001
@@ -388,8 +388,8 @@ EXAMPLES = '''
     virtual_network_name: testvnet
     upgrade_policy: Manual
     subnet_name: testsubnet
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     managed_disk_type: Standard_LRS
     image: customimage001
 
