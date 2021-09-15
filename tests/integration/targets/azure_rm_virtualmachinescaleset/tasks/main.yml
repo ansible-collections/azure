@@ -6,15 +6,15 @@
 - name: Create virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
-    name: testVnet
+    name: VMSStestVnet
     address_prefixes: "10.0.0.0/16"
 
 - name: Add subnet
   azure_rm_subnet:
     resource_group: "{{ resource_group }}"
-    name: testSubnet
+    name: VMSStestSubnet
     address_prefix: "10.0.1.0/24"
-    virtual_network: testVnet
+    virtual_network: VMSStestVnet
 
 - name: Create public IP address
   azure_rm_publicipaddress:
@@ -54,8 +54,8 @@
   azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}nic"
-    virtual_network: testVnet
-    subnet: testSubnet
+    virtual_network: VMSStestVnet
+    subnet: VMSStestSubnet
 
 - name: Create VM
   azure_rm_virtualmachine:
@@ -71,7 +71,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 18.04-LTS
       version: latest
 - name: Generalize VM
   azure_rm_virtualmachine:
@@ -94,6 +94,95 @@
     name: "vmforimage{{ rpfx }}"
     state: absent
 
+- name: Create VMSS with Spot Instance default value
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    vm_size: Standard_A1_v2
+    admin_username: testuser
+    priority: Spot
+    eviction_policy: Deallocate
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    capacity: 1
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
+    upgrade_policy: Manual
+    tier: Standard
+    managed_disk_type: Standard_LRS
+    os_disk_caching: ReadWrite
+    image:
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
+      version: latest
+    data_disks:
+      - lun: 0
+        disk_size_gb: 64
+        caching: ReadWrite
+        managed_disk_type: Standard_LRS
+  register: results
+
+- name: Assert that VMSS was created using Spot Instance default values
+  assert:
+    that:
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.priority == 'Spot'
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.evictionPolicy == 'Deallocate'
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.billingProfile.maxPrice == -1.0
+
+- name: Delete VMSS
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    state: absent
+
+- name: Create VMSS with custom Spot Instance values
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    vm_size: Standard_A1_v2
+    admin_username: testuser
+    priority: Spot
+    eviction_policy: Delete
+    max_price: 1.0
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    capacity: 1
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
+    upgrade_policy: Manual
+    tier: Standard
+    managed_disk_type: Standard_LRS
+    os_disk_caching: ReadWrite
+    image:
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
+      version: latest
+    data_disks:
+      - lun: 0
+        disk_size_gb: 64
+        caching: ReadWrite
+        managed_disk_type: Standard_LRS
+  register: results
+
+- name: Assert that VMSS was created using Spot Instance custom values
+  assert:
+    that:
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.priority == 'Spot'
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.evictionPolicy == 'Delete'
+      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.billingProfile.maxPrice == 1.0
+
+- name: Delete VMSS
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    state: absent      
+
 - name: Create VMSS (check mode)
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
@@ -105,17 +194,17 @@
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     capacity: 1
-    virtual_network_name: testVnet
-    subnet_name: testSubnet
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
     load_balancer: testLB
     upgrade_policy: Manual
     tier: Standard
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -139,7 +228,7 @@
 - name: Assert no VMSS created in check mode
   assert:
     that:
-      - output_scaleset.ansible_facts.azure_vmss | length == 0
+      - output_scaleset.vmss | length == 0
 
 - name: Create VMSS
   azure_rm_virtualmachinescaleset:
@@ -152,8 +241,8 @@
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     capacity: 1
-    virtual_network_name: testVnet
-    subnet_name: testSubnet
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
     upgrade_policy: Manual
     load_balancer: testLB
     tier: Standard
@@ -161,9 +250,9 @@
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -188,8 +277,8 @@
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     capacity: 1
-    virtual_network_name: testVnet
-    subnet_name: testSubnet
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
     upgrade_policy: Automatic
     load_balancer: testLB1
     tier: Standard
@@ -197,9 +286,9 @@
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -405,8 +494,8 @@
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_D3_v2
     capacity: 0
-    virtual_network_name: testVnet
-    subnet_name: testSubnet
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -431,8 +520,8 @@
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_D3_v2
     capacity: 0
-    virtual_network_name: testVnet
-    subnet_name: testSubnet
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -459,8 +548,8 @@
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_D3_v2
     capacity: 0
-    virtual_network_name: testVnet
-    subnet_name: testSubnet
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -485,8 +574,8 @@
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_D3_v2
     capacity: 0
-    virtual_network_name: testVnet
-    subnet_name: testSubnet
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -511,8 +600,8 @@
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_B1s
     capacity: 0
-    virtual_network_name: testVnet
-    subnet_name: testSubnet
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -546,8 +635,8 @@
     name: testVMSS{{ rpfx }}3
     vm_size: Standard_DS2_v2
     capacity: 0
-    virtual_network_name: testVnet
-    subnet_name: testSubnet
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -574,8 +663,8 @@
     name: testVMSS{{ rpfx }}3
     vm_size: Standard_DS2_v2
     capacity: 0
-    virtual_network_name: testVnet
-    subnet_name: testSubnet
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -602,17 +691,17 @@
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}4
     vm_size: Standard_B1s
-    virtual_network_name: testVnet
-    subnet_name: testSubnet
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
       version: latest
     upgrade_policy: Manual
     enable_accelerated_networking: yes
@@ -623,6 +712,12 @@
   assert:
     that:
       - '"VMSizeIsNotPermittedToEnableAcceleratedNetworkingForVmss" in results.msg'
+
+- name: Delete VMSS
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}4
+    state: absent
 
 - name: Delete network security group
   azure_rm_securitygroup:
@@ -651,7 +746,7 @@
 - name: Delete virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
-    name: testVnet
+    name: VMSStestVnet
     state: absent
     address_prefixes: "10.0.0.0/16"
 

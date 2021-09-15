@@ -7,8 +7,8 @@
     location: "{{ location }}"
     publisher: OpenLogic
     offer: CentOS
-    sku: '7.3'
-    version: '7.3.20170707'
+    sku: '7.5'
+    version: '7.5.201808150'
   register: output
 
 - assert:
@@ -19,7 +19,7 @@
     location: "{{ location }}"
     publisher: OpenLogic
     offer: CentOS
-    sku: '7.3'
+    sku: '7.5'
   register: output
 
 - assert:
@@ -41,3 +41,15 @@
 
 - assert:
       that: output['vmimages'] | length > 0
+
+- name: Get facts for a specific image's latest version
+  azure_rm_virtualmachineimage_info:
+    location: "{{ location }}"
+    publisher: OpenLogic
+    offer: CentOS
+    sku: '7.5'
+    version: 'latest'
+  register: output
+
+- assert:
+      that: output['vmimages'] | length == 1

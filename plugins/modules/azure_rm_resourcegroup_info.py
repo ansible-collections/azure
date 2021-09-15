@@ -156,6 +156,7 @@ class AzureRMResourceGroupInfo(AzureRMModuleBase):
         self.list_resources = None
 
         super(AzureRMResourceGroupInfo, self).__init__(self.module_arg_spec,
+                                                       supports_check_mode=True,
                                                        supports_tags=False,
                                                        facts_module=True)
 
