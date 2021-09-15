@@ -97,6 +97,7 @@ parameters:
     - "azure_rm_virtualmachineextension"
     - "azure_rm_virtualmachineimage_info"
     - "azure_rm_virtualmachinescaleset"
+    - "azure_rm_virtualmachinesize_info"
     - "azure_rm_virtualnetwork"
     - "azure_rm_virtualnetworkgateway"
     - "azure_rm_virtualnetworkpeering"

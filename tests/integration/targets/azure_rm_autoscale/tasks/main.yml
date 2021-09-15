@@ -35,9 +35,9 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     image:
-      offer: CentOS
-      publisher: OpenLogic
-      sku: "8_2"
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0

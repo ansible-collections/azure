@@ -87,7 +87,6 @@ options:
             - Server version.
         type: str
         choices:
-            - 5.6
             - 5.7
             - 8.0
     enforce_ssl:
@@ -142,7 +141,7 @@ EXAMPLES = '''
         geo_redundant_backup: Disabled
         storage_autogrow: Disabled
       enforce_ssl: True
-      version: 5.6
+      version: 5.7
       admin_username: cloudsa
       admin_password: password
 '''
@@ -159,7 +158,7 @@ version:
         - Server version. Possible values include C(5.6), C(5.7), C(8.0).
     returned: always
     type: str
-    sample: 5.6
+    sample: 5.7
 state:
     description:
         - A state of a server that is visible to user. Possible values include C(Ready), C(Dropping), C(Disabled).
@@ -233,7 +232,7 @@ class AzureRMMySqlServers(AzureRMModuleBase):
             ),
             version=dict(
                 type='str',
-                choices=['5.6', '5.7', '8.0']
+                choices=['5.7', '8.0']
             ),
             enforce_ssl=dict(
                 type='bool',
