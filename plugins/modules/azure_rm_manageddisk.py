@@ -152,6 +152,7 @@ EXAMPLES = '''
         name: mymanageddisk
         location: eastus
         resource_group: myResourceGroup
+        managed_by: ''
         disk_size_gb: 4
 
     - name: Delete managed disk
