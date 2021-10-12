@@ -18,6 +18,9 @@
         count: 1
         vm_size: Standard_B2s
         mode: System
+    network_profile:
+      load_balancer_sku: standard
+      outbound_type: loadBalancer
   register: output
 
 - name: Assert the AKS instance is well created
@@ -50,6 +53,9 @@
         count: 1
         vm_size: Standard_B2s
         mode: System
+    network_profile:
+      load_balancer_sku: standard
+      outbound_type: loadBalancer
   register: output
 
 - name: Assert idempotent
