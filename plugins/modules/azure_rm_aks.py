@@ -190,6 +190,13 @@ options:
                 choices:
                     - standard
                     - basic
+            outbound_type:
+                description:
+                    - How outbound traffic will be configured for a cluster.
+                type: str
+                choices:
+                    - loadBalancer
+                    - userDefinedRouting
     aad_profile:
         description:
             - Profile of Azure Active Directory configuration.
@@ -418,7 +425,8 @@ def create_network_profiles_dict(network):
         service_cidr=network.service_cidr,
         dns_service_ip=network.dns_service_ip,
         docker_bridge_cidr=network.docker_bridge_cidr,
-        load_balancer_sku=network.load_balancer_sku
+        load_balancer_sku=network.load_balancer_sku,
+        outbound_type=network.outbound_type
     ) if network else dict()
 
 
@@ -553,7 +561,8 @@ network_profile_spec = dict(
     service_cidr=dict(type='str'),
     dns_service_ip=dict(type='str'),
     docker_bridge_cidr=dict(type='str'),
-    load_balancer_sku=dict(type='str')
+    load_balancer_sku=dict(type='str'),
+    outbound_type=dict(type='str', default='loadBalancer', choices=['userDefinedRouting', 'loadBalancer'])
 )
 
 
