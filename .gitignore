@@ -1,2 +1,7 @@
 *.pyc
-/tests/output/
+tests/output/
+tests/staging/
+tests/integration/cloud-config-azure.ini
+azure-azcollection-*.tar.gz
+venv*
+.vscode

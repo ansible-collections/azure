@@ -10,12 +10,6 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_privatednszone_info
@@ -145,7 +139,7 @@ class AzurePrivateRMDNSZoneInfo(AzureRMModuleBase):
         self.resource_group = None
         self.tags = None
 
-        super(AzurePrivateRMDNSZoneInfo, self).__init__(self.module_arg_spec)
+        super(AzurePrivateRMDNSZoneInfo, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
 

@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_devtestlabartifact_info
@@ -175,7 +170,7 @@ class AzureRMArtifactInfo(AzureRMModuleBase):
         self.lab_name = None
         self.artifact_source_name = None
         self.name = None
-        super(AzureRMArtifactInfo, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMArtifactInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:

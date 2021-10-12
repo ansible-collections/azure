@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlserver
@@ -26,13 +21,16 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     name:
         description:
             - The name of the server.
         required: True
+        type: str
     sku:
         description:
             - The SKU (pricing tier) of the server.
+        type: dict
         suboptions:
             name:
                 description:
@@ -52,13 +50,24 @@ options:
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     storage_mb:
         description:
             - The maximum storage allowed for a server.
         type: int
+    geo_redundant_backup:
+        description:
+            - Choose between locally redundant(default) or geo-redundant backup. This cannot be updated after first deployment
+        type: bool
+        default: False
+    backup_retention_days:
+        description:
+            - Backup retention period between 7 and 35 days. 7 days by default if not set
+        type: int
     version:
         description:
             - Server version.
+        type: str
         choices:
             - '9.5'
             - '9.6'
@@ -69,20 +78,42 @@ options:
             - Enable SSL enforcement.
         type: bool
         default: False
+    storage_autogrow:
+        description:
+            - Enable storage autogrow.
+        type: bool
+        default: False
     admin_username:
         description:
             - The administrator's login name of a server. Can only be specified when the server is being created (and is required for creation).
+        type: str
     admin_password:
         description:
             - The password of the administrator login.
+        type: str
     create_mode:
         description:
-            - Create mode of SQL Server.
-        default: Default
+            - Create mode of SQL Server. Blank (default), restore from geo redundant (geo_restore), or restore from point in time (point_in_time_restore).
+        type: str
+        default: default
+        choices:
+            - default
+            - geo_restore
+            - point_in_time_restore
+    source_server_id:
+        description:
+            - Id if the source server if I(create_mode=default).
+        type: str
+    restore_point_in_time:
+        description:
+            - Restore point creation time (ISO8601 format), specifying the time to restore from.
+            - Required if I(create_mode=point_in_time_restore).
+        type: str
     state:
         description:
             - Assert the state of the PostgreSQL server. Use C(present) to create or update a server and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - present
             - absent
@@ -107,6 +138,7 @@ EXAMPLES = '''
       location: eastus
       storage_mb: 1024
       enforce_ssl: True
+      storage_autogrow: True
       admin_username: cloudsa
       admin_password: password
 '''
@@ -177,6 +209,13 @@ class AzureRMPostgreSqlServers(AzureRMModuleBase):
             storage_mb=dict(
                 type='int'
             ),
+            geo_redundant_backup=dict(
+                type='bool',
+                default=False
+            ),
+            backup_retention_days=dict(
+                type='int',
+            ),
             version=dict(
                 type='str',
                 choices=['9.5', '9.6', '10', '11']
@@ -185,9 +224,20 @@ class AzureRMPostgreSqlServers(AzureRMModuleBase):
                 type='bool',
                 default=False
             ),
+            storage_autogrow=dict(
+                type='bool',
+                default=False
+            ),
             create_mode=dict(
                 type='str',
-                default='Default'
+                default='default',
+                choices=['default', 'geo_restore', 'point_in_time_restore']
+            ),
+            source_server_id=dict(
+                type='str'
+            ),
+            restore_point_in_time=dict(
+                type='str'
             ),
             admin_username=dict(
                 type='str'
@@ -205,7 +255,7 @@ class AzureRMPostgreSqlServers(AzureRMModuleBase):
 
         self.resource_group = None
         self.name = None
-        self.parameters = dict()
+        self.parameters = {'properties': {'create_mode': 'default'}}
         self.tags = None
 
         self.results = dict(changed=False)
@@ -234,17 +284,39 @@ class AzureRMPostgreSqlServers(AzureRMModuleBase):
                 elif key == "location":
                     self.parameters["location"] = kwargs[key]
                 elif key == "storage_mb":
-                    self.parameters.setdefault("properties", {}).setdefault("storage_profile", {})["storage_mb"] = kwargs[key]
+                    self.parameters.setdefault("properties", {}).setdefault("storage_profile", {})["storage_mb"] = \
+                        kwargs[key]
+                elif key == "storage_autogrow":
+                    self.parameters.setdefault("properties", {}).setdefault("storage_profile", {})[
+                        "storage_autogrow"] = ('Enabled' if kwargs[key]
+                                               else 'Disabled')
+                elif key == "geo_redundant_backup":
+                    self.parameters.setdefault("properties", {}).setdefault("storage_profile", {})[
+                        "geo_redundant_backup"] = \
+                        'Enabled' if kwargs[key] else 'Disabled'
+                elif key == "backup_retention_days":
+                    self.parameters.setdefault("properties", {}).setdefault("storage_profile", {})[
+                        "backup_retention_days"] = kwargs[key]
                 elif key == "version":
                     self.parameters.setdefault("properties", {})["version"] = kwargs[key]
                 elif key == "enforce_ssl":
-                    self.parameters.setdefault("properties", {})["ssl_enforcement"] = 'Enabled' if kwargs[key] else 'Disabled'
+                    self.parameters.setdefault("properties", {})["ssl_enforcement"] = 'Enabled' if kwargs[
+                        key] else 'Disabled'
                 elif key == "create_mode":
-                    self.parameters.setdefault("properties", {})["create_mode"] = kwargs[key]
+                    if kwargs[key] == 'default':
+                        self.parameters["properties"]["create_mode"] = 'Default'
+                    elif kwargs[key] == 'point_in_time_restore':
+                        self.parameters["properties"]["create_mode"] = 'PointInTimeRestore'
+                    elif kwargs[key] == 'geo_restore':
+                        self.parameters["properties"]["create_mode"] = 'GeoRestore'
                 elif key == "admin_username":
                     self.parameters.setdefault("properties", {})["administrator_login"] = kwargs[key]
                 elif key == "admin_password":
                     self.parameters.setdefault("properties", {})["administrator_login_password"] = kwargs[key]
+                elif key == "source_server_id":
+                    self.parameters["properties"]["source_server_id"] = kwargs[key]
+                elif key == "restore_point_in_time":
+                    self.parameters["properties"]["restore_point_in_time"] = kwargs[key]
 
         old_response = None
         response = None

@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_mysqlserver_info
@@ -31,13 +26,10 @@ options:
         description:
             - The name of the server.
         type: str
-    tags:
-        description:
-            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
-        type: list
 
 extends_documentation_fragment:
     - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -110,12 +102,36 @@ servers:
                     returned: always
                     type: int
                     sample: 2
-        storage_mb:
+        storage_profile:
             description:
-                - The maximum storage allowed for a server.
+                - Storage Profile properties of a server.
+            type: complex
             returned: always
-            type: int
-            sample: 128000
+            contains:
+                storage_mb:
+                    description:
+                        - The maximum storage allowed for a server.
+                    returned: always
+                    type: int
+                    sample: 128000
+                backup_retention_days:
+                    description:
+                        - Backup retention days for the server
+                    returned: always
+                    type: int
+                    sample: 7
+                geo_redundant_backup:
+                    description:
+                        - Enable Geo-redundant or not for server backup.
+                    returned: always
+                    type: str
+                    sample: Disabled
+                storage_autogrow:
+                    description:
+                        - Enable Storage Auto Grow.
+                    returned: always
+                    type: str
+                    sample: Disabled
         enforce_ssl:
             description:
                 - Enable SSL enforcement.
@@ -173,9 +189,6 @@ class AzureRMMySqlServerInfo(AzureRMModuleBase):
             ),
             name=dict(
                 type='str'
-            ),
-            tags=dict(
-                type='list'
             )
         )
         # store the results of the module operation
@@ -185,7 +198,7 @@ class AzureRMMySqlServerInfo(AzureRMModuleBase):
         self.resource_group = None
         self.name = None
         self.tags = None
-        super(AzureRMMySqlServerInfo, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMMySqlServerInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_mysqlserver_facts'
@@ -241,7 +254,7 @@ class AzureRMMySqlServerInfo(AzureRMModuleBase):
             'name': d['name'],
             'sku': d['sku'],
             'location': d['location'],
-            'storage_mb': d['storage_profile']['storage_mb'],
+            'storage_profile': d['storage_profile'],
             'version': d['version'],
             'enforce_ssl': (d['ssl_enforcement'] == 'Enabled'),
             'admin_username': d['administrator_login'],

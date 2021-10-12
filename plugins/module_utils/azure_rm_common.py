@@ -48,7 +48,9 @@ AZURE_COMMON_ARGS = dict(
     cloud_environment=dict(type='str', default='AzureCloud'),
     cert_validation_mode=dict(type='str', choices=['validate', 'ignore']),
     api_profile=dict(type='str', default='latest'),
-    adfs_authority_url=dict(type='str', default=None)
+    adfs_authority_url=dict(type='str', default=None),
+    log_mode=dict(type='str', no_log=True),
+    log_path=dict(type='str', no_log=True),
 )
 
 AZURE_CREDENTIAL_ENV_MAPPING = dict(
@@ -95,15 +97,20 @@ AZURE_API_PROFILES = {
             snapshots='2018-10-01',
             virtual_machine_run_commands='2018-10-01'
         ),
+        'ManagementGroupsClient': '2020-05-01',
         'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
+        'SearchManagementClient': '2020-08-01',
         'StorageManagementClient': '2019-06-01',
         'SubscriptionClient': '2019-11-01',
         'WebSiteManagementClient': '2018-02-01',
         'PostgreSQLManagementClient': '2017-12-01',
         'MySQLManagementClient': '2017-12-01',
         'MariaDBManagementClient': '2019-03-01',
-        'ManagementLockClient': '2016-09-01'
+        'ManagementLockClient': '2016-09-01',
+        'DataLakeStoreAccountManagementClient': '2016-11-01',
+        'NotificationHubsManagementClient': '2016-03-01',
+        'EventHubManagementClient': '2018-05-04'
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
@@ -117,6 +124,7 @@ AZURE_API_PROFILES = {
         'ManagementLockClient': '2016-09-01',
         'PolicyClient': '2016-12-01',
         'ResourceManagementClient': '2018-05-01',
+        'EventHubManagementClient': '2018-05-04',
         'SubscriptionClient': '2016-06-01',
         'DnsManagementClient': '2016-04-01',
         'KeyVaultManagementClient': '2016-10-01',
@@ -233,6 +241,7 @@ try:
     from azure.mgmt.web.version import VERSION as web_client_version
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource.resources import ResourceManagementClient
+    from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
     from azure.mgmt.resource.subscriptions import SubscriptionClient
     from azure.mgmt.storage import StorageManagementClient
     from azure.mgmt.compute import ComputeManagementClient
@@ -266,6 +275,14 @@ try:
     from msrestazure import AzureConfiguration
     from msrest.authentication import Authentication
     from azure.mgmt.resource.locks import ManagementLockClient
+    from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
+    import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
+    from azure.mgmt.search import SearchManagementClient
+    from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
+    import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
+    from azure.mgmt.notificationhubs import NotificationHubsManagementClient
+    from azure.mgmt.eventhub import EventHubManagementClient
+
 except ImportError as exc:
     Authentication = object
     HAS_AZURE_EXC = traceback.format_exc()
@@ -352,6 +369,10 @@ AZURE_PKG_VERSIONS = {
         'package_name': 'trafficmanager',
         'expected_version': '0.50.0'
     },
+    'EventHubManagementClient': {
+        'package_name': 'azure-mgmt-eventhub',
+        'expected_version': '2.0.0'
+    },
 } if HAS_AZURE else {}
 
 
@@ -402,8 +423,10 @@ class AzureRMModuleBase(object):
         self._network_client = None
         self._storage_client = None
         self._subscription_client = None
+        self._management_group_client = None
         self._resource_client = None
         self._compute_client = None
+        self._image_client = None
         self._dns_client = None
         self._private_dns_client = None
         self._web_client = None
@@ -424,6 +447,11 @@ class AzureRMModuleBase(object):
         self._automation_client = None
         self._IoThub_client = None
         self._lock_client = None
+        self._recovery_services_backup_client = None
+        self._search_client = None
+        self._datalake_store_client = None
+        self._notification_hub_client = None
+        self._event_hub_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -938,6 +966,14 @@ class AzureRMModuleBase(object):
         config = self.add_user_agent(config)
         return ServiceClient(creds=config.credentials, config=config)
 
+    def get_subnet_detail(self, subnet_id):
+        vnet_detail = subnet_id.split('/Microsoft.Network/virtualNetworks/')[1].split('/subnets/')
+        return dict(
+            resource_group=subnet_id.split('resourceGroups/')[1].split('/')[0],
+            vnet_name=vnet_detail[0],
+            subnet_name=vnet_detail[1],
+        )
+
     # passthru methods to AzureAuth instance for backcompat
     @property
     def credentials(self):
@@ -992,18 +1028,28 @@ class AzureRMModuleBase(object):
         return SubscriptionClient.models("2019-11-01")
 
     @property
+    def management_groups_client(self):
+        self.log('Getting Management Groups client...')
+        if not self._management_group_client:
+            self._management_group_client = self.get_mgmt_svc_client(ManagementGroupsClient,
+                                                                     base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                     suppress_subscription_id=True,
+                                                                     api_version='2020-05-01')
+        return self._management_group_client
+
+    @property
     def network_client(self):
         self.log('Getting network client')
         if not self._network_client:
             self._network_client = self.get_mgmt_svc_client(NetworkManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2019-06-01')
+                                                            api_version='2020-06-01')
         return self._network_client
 
     @property
     def network_models(self):
         self.log("Getting network models...")
-        return NetworkManagementClient.models("2019-06-01")
+        return NetworkManagementClient.models("2020-06-01")
 
     @property
     def rm_client(self):
@@ -1018,6 +1064,20 @@ class AzureRMModuleBase(object):
     def rm_models(self):
         self.log("Getting resource manager models")
         return ResourceManagementClient.models("2017-05-10")
+
+    @property
+    def image_client(self):
+        self.log('Getting compute image client')
+        if not self._image_client:
+            self._image_client = self.get_mgmt_svc_client(ComputeManagementClient,
+                                                          base_url=self._cloud_environment.endpoints.resource_manager,
+                                                          api_version='2018-06-01')
+        return self._image_client
+
+    @property
+    def image_models(self):
+        self.log("Getting compute image models")
+        return ComputeManagementClient.models("2018-06-01")
 
     @property
     def compute_client(self):
@@ -1082,7 +1142,7 @@ class AzureRMModuleBase(object):
     @property
     def managedcluster_models(self):
         self.log("Getting container service models")
-        return ContainerServiceClient.models('2019-04-01')
+        return ContainerServiceClient.models('2020-04-01')
 
     @property
     def managedcluster_client(self):
@@ -1090,7 +1150,7 @@ class AzureRMModuleBase(object):
         if not self._managedcluster_client:
             self._managedcluster_client = self.get_mgmt_svc_client(ContainerServiceClient,
                                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                   api_version='2019-04-01')
+                                                                   api_version='2020-04-01')
         return self._managedcluster_client
 
     @property
@@ -1252,6 +1312,60 @@ class AzureRMModuleBase(object):
         self.log("Getting lock models")
         return ManagementLockClient.models('2016-09-01')
 
+    @property
+    def recovery_services_backup_client(self):
+        self.log('Getting recovery services backup client')
+        if not self._recovery_services_backup_client:
+            self._recovery_services_backup_client = self.get_mgmt_svc_client(RecoveryServicesBackupClient,
+                                                                             base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._recovery_services_backup_client
+
+    @property
+    def recovery_services_backup_models(self):
+        return RecoveryServicesBackupModels
+
+    @property
+    def search_client(self):
+        self.log('Getting search client...')
+        if not self._search_client:
+            self._search_client = self.get_mgmt_svc_client(SearchManagementClient,
+                                                           base_url=self._cloud_environment.endpoints.resource_manager,
+                                                           api_version='2020-08-01')
+        return self._search_client
+
+    @property
+    def datalake_store_client(self):
+        self.log('Getting datalake store client...')
+        if not self._datalake_store_client:
+            self._datalake_store_client = self.get_mgmt_svc_client(DataLakeStoreAccountManagementClient,
+                                                                   base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                   api_version='2016-11-01')
+        return self._datalake_store_client
+
+    @property
+    def datalake_store_models(self):
+        return DataLakeStoreAccountModel
+
+    @property
+    def notification_hub_client(self):
+        self.log('Getting notification hub client')
+        if not self._notification_hub_client:
+            self._notification_hub_client = self.get_mgmt_svc_client(
+                NotificationHubsManagementClient,
+                base_url=self._cloud_environment.endpoints.resource_manager,
+                api_version='2016-03-01')
+        return self._notification_hub_client
+
+    @property
+    def event_hub_client(self):
+        self.log('Getting event hub client')
+        if not self._event_hub_client:
+            self._event_hub_client = self.get_mgmt_svc_client(
+                EventHubManagementClient,
+                base_url=self._cloud_environment.endpoints.resource_manager,
+                api_version='2018-05-04')
+        return self._event_hub_client
+
 
 class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
@@ -1354,19 +1468,20 @@ class AzureRMAuth(object):
         else:
             self._adfs_authority_url = self.credentials.get('adfs_authority_url')
 
-        # get resource from cloud environment
-        self._resource = self._cloud_environment.endpoints.active_directory_resource_id
-
         if self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credentials = self.credentials['credentials']
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
+
+            graph_resource = self._cloud_environment.endpoints.active_directory_graph_resource_id
+            rm_resource = self._cloud_environment.endpoints.resource_manager
             self.azure_credentials = ServicePrincipalCredentials(client_id=self.credentials['client_id'],
                                                                  secret=self.credentials['secret'],
                                                                  tenant=self.credentials['tenant'],
                                                                  cloud_environment=self._cloud_environment,
+                                                                 resource=graph_resource if self.is_ad_resource else rm_resource,
                                                                  verify=self._cert_validation_mode == 'validate')
 
         elif self.credentials.get('ad_user') is not None and \
@@ -1376,7 +1491,7 @@ class AzureRMAuth(object):
 
             self.azure_credentials = self.acquire_token_with_username_password(
                 self._adfs_authority_url,
-                self._resource,
+                self._cloud_environment.endpoints.active_directory_resource_id,
                 self.credentials['ad_user'],
                 self.credentials['password'],
                 self.credentials['client_id'],

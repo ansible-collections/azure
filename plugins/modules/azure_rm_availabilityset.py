@@ -7,11 +7,6 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_availabilityset
@@ -56,6 +51,10 @@ options:
             - Should be between C(1) and C(3).
         type: int
         default: 3
+    proximity_placement_group:
+        description:
+            - The proximity placement group that the availability set should be assigned to.
+        type: str
     sku:
         description:
             - Define if the availability set supports managed disks.
@@ -85,6 +84,7 @@ EXAMPLES = '''
         resource_group: myResourceGroup
         platform_update_domain_count: 5
         platform_fault_domain_count: 3
+        proximity_placement_group: myProximityPlacementGroup
         sku: Aligned
 
     - name: Delete an availability set
@@ -126,6 +126,11 @@ state:
                 - Update domains values.
             type: int
             sample: 5
+        proximity_placement_group:
+            description:
+                - The proximity placement group that the availability is assigned to.
+            type: str
+            sample: myProximityPlacementGroup
         sku:
             description:
                 - The availability set supports managed disks.
@@ -148,6 +153,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from msrestazure.azure_exceptions import CloudError
+    from msrestazure.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -164,6 +170,7 @@ def availability_set_to_dict(avaset):
         location=avaset.location,
         platform_update_domain_count=avaset.platform_update_domain_count,
         platform_fault_domain_count=avaset.platform_fault_domain_count,
+        proximity_placement_group=avaset.proximity_placement_group.id if avaset.proximity_placement_group else None,
         tags=avaset.tags,
         sku=avaset.sku.name
     )
@@ -198,6 +205,10 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
                 type='int',
                 default=3
             ),
+            proximity_placement_group=dict(
+                type='str',
+                required=False
+            ),
             sku=dict(
                 type='str',
                 default='Classic',
@@ -211,6 +222,8 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
         self.tags = None
         self.platform_update_domain_count = None
         self.platform_fault_domain_count = None
+        self.proximity_placement_group = None
+        self.proximity_placement_group_resource = None
         self.sku = None
         self.state = None
         self.warning = False
@@ -230,6 +243,7 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
         resource_group = None
         response = None
         to_be_updated = False
+        proximity_placement_group_id = None
 
         resource_group = self.get_resource_group(self.resource_group)
         if not self.location:
@@ -240,10 +254,20 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
             response = self.get_availabilityset()
             self.results['state'] = response
 
+            if self.proximity_placement_group is not None:
+                parsed_proximity_placement_group = parse_resource_id(self.proximity_placement_group)
+                proximity_placement_group = self.get_proximity_placement_group(parsed_proximity_placement_group.get('resource_group', self.resource_group),
+                                                                               parsed_proximity_placement_group.get('name'))
+                self.proximity_placement_group_resource = self.compute_models.SubResource(id=proximity_placement_group.id)
+                proximity_placement_group_id = proximity_placement_group.id.lower()
+
             if not response:
                 to_be_updated = True
             else:
                 update_tags, response['tags'] = self.update_tags(response['tags'])
+                response_proximity_placement_group = (
+                    response['proximity_placement_group'].lower() if response.get('proximity_placement_group') is not None else None
+                )
 
                 if update_tags:
                     self.log("Tags has to be updated")
@@ -254,6 +278,9 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
 
                 if response['platform_fault_domain_count'] != self.platform_fault_domain_count:
                     self.faildeploy('platform_fault_domain_count')
+
+                if response_proximity_placement_group != proximity_placement_group_id:
+                    self.faildeploy('proximity_placement_group')
 
                 if response['sku'] != self.sku:
                     self.faildeploy('sku')
@@ -296,6 +323,7 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
                 tags=self.tags,
                 platform_update_domain_count=self.platform_update_domain_count,
                 platform_fault_domain_count=self.platform_fault_domain_count,
+                proximity_placement_group=self.proximity_placement_group_resource,
                 sku=params_sku
             )
             response = self.compute_client.availability_sets.create_or_update(self.resource_group, self.name, params)
@@ -335,6 +363,12 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
             return availability_set_to_dict(response)
         else:
             return False
+
+    def get_proximity_placement_group(self, resource_group, name):
+        try:
+            return self.compute_client.proximity_placement_groups.get(resource_group, name)
+        except Exception as exc:
+            self.fail("Error fetching proximity placement group {0} - {1}".format(name, str(exc)))
 
 
 def main():

@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_iotdevice
@@ -246,7 +241,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str', required=True),
             hub_policy_name=dict(type='str', required=True),
-            hub_policy_key=dict(type='str', required=True),
+            hub_policy_key=dict(type='str', no_log=True, required=True),
             hub=dict(type='str', required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             status=dict(type='bool'),
@@ -276,10 +271,6 @@ class AzureRMIoTDevice(AzureRMModuleBase):
         self.primary_key = None
         self.secondary_key = None
 
-        required_if = [
-            ['auth_method', 'self_signed', ['certificate_authority']]
-        ]
-
         self._base_url = None
         self._mgmt_client = None
         self.query_parameters = {
@@ -289,7 +280,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             'Content-Type': 'application/json; charset=utf-8',
             'accept-language': 'en-US'
         }
-        super(AzureRMIoTDevice, self).__init__(self.module_arg_spec, supports_check_mode=True, required_if=required_if)
+        super(AzureRMIoTDevice, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
 

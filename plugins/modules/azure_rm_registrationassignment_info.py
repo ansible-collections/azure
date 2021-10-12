@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_registrationassignment_info
@@ -126,7 +121,7 @@ class AzureRMRegistrationAssignmentInfo(AzureRMModuleBase):
         self.status_code = [200]
 
         self.mgmt_client = None
-        super(AzureRMRegistrationAssignmentInfo, self).__init__(self.module_arg_spec, supports_tags=True)
+        super(AzureRMRegistrationAssignmentInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
 
     def exec_module(self, **kwargs):
 

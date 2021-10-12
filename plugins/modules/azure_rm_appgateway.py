@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_appgateway
@@ -129,6 +124,16 @@ options:
             subnet:
                 description:
                     - Reference of the subnet resource. A subnet from where application gateway gets its private address.
+                suboptions:
+                    id:
+                        description:
+                            - Full ID of the subnet resource. Required if name and virtual_network_name are not provided.
+                    name:
+                        description:
+                            - Name of the subnet. Only used if virtual_network_name is also provided.
+                    virtual_network_name:
+                        description:
+                            - Name of the virtual network. Only used if name is also provided.
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
@@ -197,6 +202,16 @@ options:
             subnet:
                 description:
                     - Reference of the subnet resource.
+                suboptions:
+                    id:
+                        description:
+                            - Full ID of the subnet resource. Required if name and virtual_network_name are not provided.
+                    name:
+                        description:
+                            - Name of the subnet. Only used if virtual_network_name is also provided.
+                    virtual_network_name:
+                        description:
+                            - Name of the virtual network. Only used if name is also provided.
             public_ip_address:
                 description:
                     - Reference of the PublicIP resource.
@@ -266,6 +281,11 @@ options:
                     - The I(probe) retry count.
                     - Backend server is marked down after consecutive probe failure count reaches UnhealthyThreshold.
                     - Acceptable values are from 1 second to 20.
+            pick_host_name_from_backend_http_settings:
+                description:
+                    - Whether host header should be picked from the host name of the backend HTTP settings. Default value is false.
+                type: bool
+                default: False
     backend_http_settings_collection:
         description:
             - Backend http settings of the application gateway resource.
@@ -306,7 +326,7 @@ options:
                     - Host header to be sent to the backend servers.
             pick_host_name_from_backend_address:
                 description:
-                    - Whether to pick host header should be picked from the host name of the backend server. Default value is false.
+                    - Whether host header should be picked from the host name of the backend server. Default value is false.
             affinity_cookie_name:
                 description:
                     - Cookie name to use for the affinity cookie.
@@ -345,6 +365,35 @@ options:
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
+    url_path_maps:
+        description:
+            - List of URL path maps of the application gateway resource.
+        suboptions:
+            name:
+                description:
+                    - Name of the resource that is unique within the application gateway. This name can be used to access the resource.
+            default_backend_address_pool:
+                description:
+                    - Backend address pool resource of the application gateway which will be used if no path matches occur.
+            default_backend_http_settings:
+                description:
+                    - Backend http settings resource of the application gateway; used for the I(default_backend_address_pool).
+            path_rules:
+                description:
+                    - List of URL path rules.
+                suboptions:
+                    name:
+                        description:
+                            - Name of the resource that is unique within the path map.
+                    backend_address_pool:
+                        description:
+                            - Backend address pool resource of the application gateway which will be used if the path is matched.
+                    backend_http_settings:
+                        description:
+                            - Backend http settings resource of the application gateway; used for the path's I(backend_address_pool).
+                    paths:
+                        description:
+                            - List of paths.
     request_routing_rules:
         description:
             - List of request routing rules of the application gateway resource.
@@ -357,7 +406,7 @@ options:
                     - 'path_based_routing'
             backend_address_pool:
                 description:
-                    - Backend address pool resource of the application gateway.
+                    - Backend address pool resource of the application gateway. Not used if I(rule_type) is C(path_based_routing).
             backend_http_settings:
                 description:
                     - Backend C(http) settings resource of the application gateway.
@@ -370,6 +419,9 @@ options:
             redirect_configuration:
                 description:
                     - Redirect configuration resource of the application gateway.
+            url_path_map:
+                description:
+                    - URL path map resource of the application gateway. Required if I(rule_type) is C(path_based_routing).
     state:
         description:
             - Assert the state of the Public IP. Use C(present) to create or update a and
@@ -427,6 +479,96 @@ EXAMPLES = '''
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
+
+- name: Create instance of Application Gateway by looking up virtual network and subnet
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myAppGateway
+    sku:
+      name: standard_small
+      tier: standard
+      capacity: 2
+    gateway_ip_configurations:
+      - subnet:
+          name: default
+          virtual_network_name: my-vnet
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          name: default
+          virtual_network_name: my-vnet
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - port: 90
+        name: ag_frontend_port
+    backend_address_pools:
+      - backend_addresses:
+          - ip_address: 10.0.0.4
+        name: test_backend_address_pool
+    backend_http_settings_collection:
+      - port: 80
+        protocol: http
+        cookie_based_affinity: enabled
+        name: sample_appgateway_http_settings
+    http_listeners:
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: ag_frontend_port
+        name: sample_http_listener
+    request_routing_rules:
+      - rule_type: Basic
+        backend_address_pool: test_backend_address_pool
+        backend_http_settings: sample_appgateway_http_settings
+        http_listener: sample_http_listener
+        name: rule1
+
+- name: Create instance of Application Gateway with path based rules
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myAppGateway
+    sku:
+      name: standard_small
+      tier: standard
+      capacity: 2
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          id: "{{ subnet_id }}"
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - port: 90
+        name: ag_frontend_port
+    backend_address_pools:
+      - backend_addresses:
+          - ip_address: 10.0.0.4
+        name: test_backend_address_pool
+    backend_http_settings_collection:
+      - port: 80
+        protocol: http
+        cookie_based_affinity: enabled
+        name: sample_appgateway_http_settings
+    http_listeners:
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: ag_frontend_port
+        name: sample_http_listener
+    request_routing_rules:
+      - rule_type: path_based_routing
+        http_listener: sample_http_listener
+        name: rule1
+        url_path_map: path_mappings
+    url_path_maps:
+      - name: path_mappings
+        default_backend_address_pool: test_backend_address_pool
+        default_backend_http_settings: sample_appgateway_http_settings
+        path_rules:
+          - name: path_rules
+            backend_address_pool: test_backend_address_pool
+            backend_http_settings: sample_appgateway_http_settings
+            paths:
+              - "/abc"
+              - "/123/*"
 '''
 
 RETURN = '''
@@ -476,7 +618,8 @@ probe_spec = dict(
     path=dict(type='str'),
     protocol=dict(type='str', choices=['http', 'https']),
     timeout=dict(type='int'),
-    unhealthy_threshold=dict(type='int')
+    unhealthy_threshold=dict(type='int'),
+    pick_host_name_from_backend_http_settings=dict(type='bool', default=False)
 )
 
 
@@ -544,6 +687,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 options=probe_spec
             ),
             http_listeners=dict(
+                type='list'
+            ),
+            url_path_maps=dict(
                 type='list'
             ),
             request_routing_rules=dict(
@@ -641,6 +787,15 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             for i in range(len(suites)):
                                 suites[i] = suites[i].upper()
                 elif key == "gateway_ip_configurations":
+                    ev = kwargs[key]
+                    for i in range(len(ev)):
+                        item = ev[i]
+                        if 'subnet' in item and 'name' in item['subnet'] and 'virtual_network_name' in item['subnet']:
+                            id = subnet_id(self.subscription_id,
+                                           kwargs['resource_group'],
+                                           item['subnet']['virtual_network_name'],
+                                           item['subnet']['name'])
+                            item['subnet'] = {'id': id}
                     self.parameters["gateway_ip_configurations"] = kwargs[key]
                 elif key == "authentication_certificates":
                     self.parameters["authentication_certificates"] = kwargs[key]
@@ -670,6 +825,12 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                               kwargs['resource_group'],
                                               item['public_ip_address'])
                             item['public_ip_address'] = {'id': id}
+                        if 'subnet' in item and 'name' in item['subnet'] and 'virtual_network_name' in item['subnet']:
+                            id = subnet_id(self.subscription_id,
+                                           kwargs['resource_group'],
+                                           item['subnet']['virtual_network_name'],
+                                           item['subnet']['name'])
+                            item['subnet'] = {'id': id}
                     self.parameters["frontend_ip_configurations"] = ev
                 elif key == "frontend_ports":
                     self.parameters["frontend_ports"] = kwargs[key]
@@ -681,6 +842,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                         item = ev[i]
                         if 'protocol' in item:
                             item['protocol'] = _snake_to_camel(item['protocol'], True)
+                        if 'pick_host_name_from_backend_http_settings' in item and item['pick_host_name_from_backend_http_settings'] and 'host' in item:
+                            del item['host']
                     self.parameters["probes"] = ev
                 elif key == "backend_http_settings_collection":
                     ev = kwargs[key]
@@ -724,10 +887,47 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             item['protocol'] = _snake_to_camel(item['protocol'], True)
                         ev[i] = item
                     self.parameters["http_listeners"] = ev
+                elif key == "url_path_maps":
+                    ev = kwargs[key]
+                    for i in range(len(ev)):
+                        item = ev[i]
+                        if 'default_backend_address_pool' in item:
+                            id = backend_address_pool_id(self.subscription_id,
+                                                         kwargs['resource_group'],
+                                                         kwargs['name'],
+                                                         item['default_backend_address_pool'])
+                            item['default_backend_address_pool'] = {'id': id}
+                        if 'default_backend_http_settings' in item:
+                            id = backend_http_settings_id(self.subscription_id,
+                                                          kwargs['resource_group'],
+                                                          kwargs['name'],
+                                                          item['default_backend_http_settings'])
+                            item['default_backend_http_settings'] = {'id': id}
+                        if 'path_rules' in item:
+                            ev2 = item['path_rules']
+                            for j in range(len(ev2)):
+                                item2 = ev2[j]
+                                if 'backend_address_pool' in item2:
+                                    id = backend_address_pool_id(self.subscription_id,
+                                                                 kwargs['resource_group'],
+                                                                 kwargs['name'],
+                                                                 item2['backend_address_pool'])
+                                    item2['backend_address_pool'] = {'id': id}
+                                if 'backend_http_settings' in item2:
+                                    id = backend_http_settings_id(self.subscription_id,
+                                                                  kwargs['resource_group'],
+                                                                  kwargs['name'],
+                                                                  item2['backend_http_settings'])
+                                    item2['backend_http_settings'] = {'id': id}
+                                ev2[j] = item2
+                        ev[i] = item
+                    self.parameters["url_path_maps"] = ev
                 elif key == "request_routing_rules":
                     ev = kwargs[key]
                     for i in range(len(ev)):
                         item = ev[i]
+                        if 'rule_type' in item and item['rule_type'] == 'path_based_routing' and 'backend_address_pool' in item:
+                            del item['backend_address_pool']
                         if 'backend_address_pool' in item:
                             id = backend_address_pool_id(self.subscription_id,
                                                          kwargs['resource_group'],
@@ -756,6 +956,12 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                                            kwargs['name'],
                                                            item['redirect_configuration'])
                             item['redirect_configuration'] = {'id': id}
+                        if 'url_path_map' in item:
+                            id = url_path_map_id(self.subscription_id,
+                                                 kwargs['resource_group'],
+                                                 kwargs['name'],
+                                                 item['url_path_map'])
+                            item['url_path_map'] = {'id': id}
                         ev[i] = item
                     self.parameters["request_routing_rules"] = ev
                 elif key == "etag":
@@ -802,7 +1008,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     not compare_arrays(old_response, self.parameters, 'probes') or
                     not compare_arrays(old_response, self.parameters, 'backend_http_settings_collection') or
                     not compare_arrays(old_response, self.parameters, 'request_routing_rules') or
-                    not compare_arrays(old_response, self.parameters, 'http_listeners')):
+                    not compare_arrays(old_response, self.parameters, 'http_listeners') or
+                    not compare_arrays(old_response, self.parameters, 'url_path_maps')):
 
                 self.to_do = Actions.Update
             else:
@@ -992,21 +1199,47 @@ def http_listener_id(subscription_id, resource_group_name, appgateway_name, name
     )
 
 
+def url_path_map_id(subscription_id, resource_group_name, appgateway_name, name):
+    """Generate the id for a url path map"""
+    return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/applicationGateways/{2}/urlPathMaps/{3}'.format(
+        subscription_id,
+        resource_group_name,
+        appgateway_name,
+        name
+    )
+
+
+def subnet_id(subscription_id, resource_group_name, virtual_network_name, name):
+    """Generate the id for a subnet in a virtual network"""
+    return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/virtualNetworks/{2}/subnets/{3}'.format(
+        subscription_id,
+        resource_group_name,
+        virtual_network_name,
+        name
+    )
+
+
 def compare_arrays(old_params, new_params, param_name):
     old = old_params.get(param_name) or []
     new = new_params.get(param_name) or []
 
-    oldd = {}
-    for item in old:
-        name = item['name']
-        oldd[name] = item
-    newd = {}
-    for item in new:
-        name = item['name']
-        newd[name] = item
+    oldd = array_to_dict(old)
+    newd = array_to_dict(new)
 
     newd = dict_merge(oldd, newd)
     return newd == oldd
+
+
+def array_to_dict(array):
+    '''Converts list object to dictionary object, including any nested properties on elements.'''
+    new = {}
+    for index, item in enumerate(array):
+        new[index] = deepcopy(item)
+        if isinstance(item, dict):
+            for nested in item:
+                if isinstance(item[nested], list):
+                    new[index][nested] = array_to_dict(item[nested])
+    return new
 
 
 def main():

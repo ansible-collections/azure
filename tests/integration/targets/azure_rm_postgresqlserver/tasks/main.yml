@@ -101,6 +101,8 @@
     location: westus2
     storage_mb: 51200
     enforce_ssl: True
+    storage_autogrow: True
+    backup_retention_days: 7
     admin_username: zimxyz
     admin_password: Password123!
     tags:
@@ -116,6 +118,8 @@
     location: westus2
     storage_mb: 51200
     enforce_ssl: True
+    storage_autogrow: True
+    backup_retention_days: 7
     admin_username: zimxyz
     admin_password: Password123!
     tags:
@@ -125,7 +129,7 @@
   azure_rm_postgresqlserver_info:
     resource_group: "{{ resource_group }}"
     name: postgresqlsrv{{ rpfx }}second
-  register: output 
+  register: output
 
 - name: Assert that facts are returned
   assert:
@@ -142,6 +146,7 @@
       - output.servers[0]['fully_qualified_domain_name'] != None
       - output.servers[0]['tags']['aaa'] == 'bbb'
       - output.servers[0]['tags']['ccc'] == 'ddd'
+      - output.servers[0]['backup_retention_days'] == 7
 
 - name: Gather facts PostgreSQL Server
   azure_rm_postgresqlserver_info:
@@ -255,7 +260,7 @@
     resource_group: "{{ resource_group }}"
     server_name: postgresqlsrv{{ rpfx }}
     name: testdatabase
-  register: output 
+  register: output
 
 - name: Assert that facts are returned
   assert:

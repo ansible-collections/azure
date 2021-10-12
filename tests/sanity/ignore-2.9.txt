@@ -15,8 +15,6 @@ plugins/modules/azure_rm_availabilityset_info.py validate-modules:parameter-type
 plugins/modules/azure_rm_containerinstance.py validate-modules:doc-type-does-not-match-spec
 plugins/modules/azure_rm_containerinstance.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_containerinstance_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_containerregistry.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_containerregistry_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:doc-choices-do-not-match-spec
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:doc-default-does-not-match-spec
@@ -31,6 +29,7 @@ plugins/modules/azure_rm_containerregistrywebhook.py validate-modules:undocument
 plugins/modules/azure_rm_containerregistrywebhook_info.py validate-modules:doc-default-does-not-match-spec
 plugins/modules/azure_rm_containerregistrywebhook_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_containerregistrywebhook_info.py validate-modules:undocumented-parameter
+plugins/modules/azure_rm_datalakestore.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_deployment.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_deployment_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_dnsrecordset.py validate-modules:doc-missing-type
@@ -83,6 +82,7 @@ plugins/modules/azure_rm_virtualmachinescalesetextension.py validate-modules:par
 plugins/modules/azure_rm_virtualmachinescalesetextension_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachinescalesetinstance.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachinescalesetinstance_info.py validate-modules:parameter-type-not-in-doc
+plugins/modules/azure_rm_virtualwan.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_webapp.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_webapp_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_webappslot.py validate-modules:parameter-type-not-in-doc
@@ -111,11 +111,9 @@ plugins/modules/azure_rm_mariadbserver.py validate-modules:parameter-type-not-in
 plugins/modules/azure_rm_mysqlconfiguration.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mysqldatabase.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mysqlfirewallrule.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_mysqlserver.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqlconfiguration.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqldatabase.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqlfirewallrule.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_postgresqlserver.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_rediscache.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_rediscache.py validate-modules:doc-default-does-not-match-spec
 plugins/modules/azure_rm_rediscache.py validate-modules:doc-type-does-not-match-spec
@@ -123,10 +121,6 @@ plugins/modules/azure_rm_rediscache_info.py validate-modules:parameter-type-not-
 plugins/modules/azure_rm_rediscachefirewallrule.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_roleassignment.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_roleassignment_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_roledefinition.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_roledefinition.py validate-modules:invalid-argument-spec
-plugins/modules/azure_rm_roledefinition.py validate-modules:missing-suboption-docs
-plugins/modules/azure_rm_roledefinition_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_route.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_routetable.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_routetable_info.py validate-modules:parameter-type-not-in-doc

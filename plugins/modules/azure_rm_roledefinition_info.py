@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_roledefinition_info
@@ -26,15 +21,19 @@ options:
         description:
             - The scope of role definition.
         required: True
+        type: str
     id:
         description:
             - Role definition id.
+        type: str
     role_name:
         description:
             - Role name.
+        type: str
     type:
         description:
             - Type of role.
+        type: str
         choices:
             - system
             - custom
@@ -93,6 +92,7 @@ roledefinitions:
             description:
                 - List of Role Definition permissions.
             returned: always
+            type: complex
             contains:
                 actions:
                     description:
@@ -157,13 +157,14 @@ class AzureRMRoleDefinitionInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             scope=dict(
                 type='str',
-                required='true'
+                required=True
             ),
             role_name=dict(type='str'),
             id=dict(type='str'),
             type=dict(
                 type='str',
-                choices=['custom', 'system'])
+                choices=['custom', 'system']
+            ),
         )
 
         self.role_name = None
@@ -178,6 +179,7 @@ class AzureRMRoleDefinitionInfo(AzureRMModuleBase):
         self._client = None
 
         super(AzureRMRoleDefinitionInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                        supports_check_mode=True,
                                                         supports_tags=False)
 
     def exec_module(self, **kwargs):

@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_mysqlserver
@@ -26,42 +21,74 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     name:
         description:
             - The name of the server.
         required: True
+        type: str
     sku:
         description:
             - The SKU (pricing tier) of the server.
+        type: dict
         suboptions:
             name:
                 description:
                     - The name of the sku, typically, tier + family + cores, for example C(B_Gen4_1), C(GP_Gen5_8).
+                type: str
             tier:
                 description:
                     - The tier of the particular SKU, for example C(Basic).
+                type: str
                 choices:
                     - basic
                     - standard
             capacity:
                 description:
                     - The scale up/out capacity, representing server's compute units.
+                type: str
             size:
                 description:
                     - The size code, to be interpreted by resource as appropriate.
+                type: int
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
-    storage_mb:
+        type: str
+    storage_profile:
         description:
-            - The maximum storage allowed for a server.
-        type: int
+            - Storage Profile properties of a server.
+        type: dict
+        suboptions:
+            storage_mb:
+                description:
+                    - The maximum storage allowed for a server.
+                type: int
+            backup_retention_days:
+                description:
+                    - Backup retention days for the server
+                type: int
+            geo_redundant_backup:
+                description:
+                    - Enable Geo-redundant or not for server backup.
+                type: str
+                choices:
+                    - Disabled
+                    - Enabled
+            storage_autogrow:
+                description:
+                    - Enable Storage Auto Grow.
+                type: str
+                choices:
+                    - Disabled
+                    - Enabled
     version:
         description:
             - Server version.
+        type: str
         choices:
-            - 5.6
             - 5.7
+            - 8.0
     enforce_ssl:
         description:
             - Enable SSL enforcement.
@@ -69,18 +96,23 @@ options:
         default: False
     admin_username:
         description:
-            - The administrator's login name of a server. Can only be specified when the server is being created (and is required for creation).
+            - The administrator's login name of a server.
+            - Can only be specified when the server is being created (and is required for creation).
+        type: str
     admin_password:
         description:
             - The password of the administrator login.
+        type: str
     create_mode:
         description:
             - Create mode of SQL Server.
         default: Default
+        type: str
     state:
         description:
             - Assert the state of the MySQL Server. Use C(present) to create or update a server and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -103,9 +135,13 @@ EXAMPLES = '''
         name: B_Gen5_1
         tier: Basic
       location: eastus
-      storage_mb: 1024
+      storage_profile:
+        storage_mb: 51200
+        backup_retention_days: 7
+        geo_redundant_backup: Disabled
+        storage_autogrow: Disabled
       enforce_ssl: True
-      version: 5.6
+      version: 5.7
       admin_username: cloudsa
       admin_password: password
 '''
@@ -119,10 +155,10 @@ id:
     sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.DBforMySQL/servers/mysqlsrv1b6dd89593
 version:
     description:
-        - Server version. Possible values include C(5.6), C(5.7).
+        - Server version. Possible values include C(5.6), C(5.7), C(8.0).
     returned: always
     type: str
-    sample: 5.6
+    sample: 5.7
 state:
     description:
         - A state of a server that is visible to user. Possible values include C(Ready), C(Dropping), C(Disabled).
@@ -149,6 +185,23 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
+storage_profile_spec = dict(
+    storage_mb=dict(
+        type='int'
+    ),
+    backup_retention_days=dict(
+        type='int'
+    ),
+    geo_redundant_backup=dict(
+        type='str',
+        choices=['Disabled', 'Enabled']
+    ),
+    storage_autogrow=dict(
+        type='str',
+        choices=['Disabled', 'Enabled']
+    )
+)
+
 
 class Actions:
     NoAction, Create, Update, Delete = range(4)
@@ -173,12 +226,13 @@ class AzureRMMySqlServers(AzureRMModuleBase):
             location=dict(
                 type='str'
             ),
-            storage_mb=dict(
-                type='int'
+            storage_profile=dict(
+                type='dict',
+                options=storage_profile_spec
             ),
             version=dict(
                 type='str',
-                choices=['5.6', '5.7']
+                choices=['5.7', '8.0']
             ),
             enforce_ssl=dict(
                 type='bool',
@@ -232,8 +286,8 @@ class AzureRMMySqlServers(AzureRMModuleBase):
                     self.parameters["sku"] = ev
                 elif key == "location":
                     self.parameters["location"] = kwargs[key]
-                elif key == "storage_mb":
-                    self.parameters.setdefault("properties", {}).setdefault("storage_profile", {})["storage_mb"] = kwargs[key]
+                elif key == "storage_profile":
+                    self.parameters.setdefault("properties", {})["storage_profile"] = kwargs[key]
                 elif key == "version":
                     self.parameters.setdefault("properties", {})["version"] = kwargs[key]
                 elif key == "enforce_ssl":

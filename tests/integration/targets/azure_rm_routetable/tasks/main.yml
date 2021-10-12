@@ -109,6 +109,18 @@
     that:
       - output.changed
 
+- name: Get facts of the route
+  azure_rm_route_info:
+    name: "{{ route_name }}"
+    resource_group: "{{ resource_group }}"
+    route_table_name: "{{ name }}"
+  register: output
+
+- assert:
+    that:
+      - output.routes[0].address_prefix == "10.1.0.0/24"
+      - output.routes[0].next_hop_type == "VirtualNetworkGateway"
+
 - name: Get facts of the table
   azure_rm_routetable_info:
     name: "{{ name }}"

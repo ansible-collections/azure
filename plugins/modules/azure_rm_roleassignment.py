@@ -9,11 +9,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_roleassignment
@@ -28,6 +23,8 @@ options:
             - The object id of assignee. This maps to the ID inside the Active Directory.
             - It can point to a user, service principal or security group.
             - Required when creating role assignment.
+        aliases:
+          - assignee
     id:
         description:
             - Fully qualified id of assignment to delete or create.
@@ -162,7 +159,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
 
     def __init__(self):
         self.module_arg_spec = dict(
-            assignee_object_id=dict(type='str'),
+            assignee_object_id=dict(type='str', aliases=['assignee']),
             id=dict(type='str'),
             name=dict(type='str'),
             role_definition_id=dict(type='str'),
@@ -306,7 +303,8 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                 if role_assignment and self.assignee_object_id and role_assignment.get('assignee_object_id') != self.assignee_object_id:
                     self.fail('State Mismatch Error: The assignment ID exists, but does not match the provided assignee.')
 
-                if role_assignment and self.role_definition_id and role_assignment.get('role_definition_id') != self.role_definition_id:
+                if role_assignment and self.role_definition_id and (role_assignment.get('role_definition_id').split('/')[-1].lower()
+                                                                    != self.role_definition_id[-1].lower()):
                     self.fail('State Mismatch Error: The assignment ID exists, but does not match the provided role.')
 
             except CloudError as ex:
@@ -319,7 +317,8 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                 if role_assignment and self.assignee_object_id and role_assignment.get('assignee_object_id') != self.assignee_object_id:
                     self.fail('State Mismatch Error: The assignment name exists, but does not match the provided assignee.')
 
-                if role_assignment and self.role_definition_id and role_assignment.get('role_definition_id') != self.role_definition_id:
+                if role_assignment and self.role_definition_id and (role_assignment.get('role_definition_id').split('/')[-1].lower()
+                                                                    != self.role_definition_id[-1].lower()):
                     self.fail('State Mismatch Error: The assignment name exists, but does not match the provided role.')
 
             except CloudError as ex:
@@ -332,7 +331,8 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                     response = [self.roleassignment_to_dict(role_assignment) for role_assignment in response]
                     response = [role_assignment for role_assignment in response if role_assignment.get('scope') == self.scope]
                     response = [role_assignment for role_assignment in response if role_assignment.get('assignee_object_id') == self.assignee_object_id]
-                    response = [role_assignment for role_assignment in response if role_assignment.get('role_definition_id') == self.role_definition_id]
+                    response = [role_assignment for role_assignment in response if (role_assignment.get('role_definition_id').split('/')[-1].lower()
+                                                                                    == self.role_definition_id.split('/')[-1].lower())]
                 else:
                     self.fail('If id or name are not supplied, then assignee_object_id and role_definition_id are required.')
                 if response:
@@ -356,6 +356,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
             assignee_object_id=assignment.principal_id,
             id=assignment.id,
             name=assignment.name,
+            principal_id=assignment.principal_id,
             principal_type=assignment.principal_type,
             role_definition_id=assignment.role_definition_id,
             scope=assignment.scope,

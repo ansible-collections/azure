@@ -1,0 +1,156 @@
+- name: Set Private Endpoint Name
+  set_fact:
+    rpfx: "private{{ resource_group | hash('md5') | truncate(18, True, '') }}"
+
+- name: Create virtual network
+  azure_rm_virtualnetwork:
+    name: vnet{{ rpfx }}
+    address_prefixes_cidr:
+      - 10.1.0.0/16
+    dns_servers:
+      - 127.0.0.1
+      - 127.0.0.3
+    resource_group: "{{ resource_group }}"
+
+- name: Create network security group
+  azure_rm_securitygroup:
+    name: secgroup{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+
+- name: Create the subnet
+  azure_rm_subnet:
+    name: subnet{{ rpfx }}
+    virtual_network_name: vnet{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    address_prefix_cidr: "10.1.0.0/16"
+    security_group: secgroup{{ rpfx }}
+    private_endpoint_network_policies: Disabled
+    private_link_service_network_policies: Disabled
+    service_endpoints:
+      - service: Microsoft.Sql
+        locations:
+          - eastus
+          - westus
+  register: subnet_output
+
+- name: Create instance of PostgreSQL Server
+  azure_rm_postgresqlserver:
+    resource_group: "{{ resource_group }}"
+    name: postgresqlsrv{{ rpfx }}
+    sku:
+      name: GP_Gen5_2
+      tier: GeneralPurpose
+    location: eastus
+    storage_mb: 51200
+    enforce_ssl: True
+    admin_username: zimxyz
+    admin_password: Password123!
+  register: post_output
+
+- name: Delete private endpoint, makesure there is no private endpoint exist
+  azure_rm_privateendpoint:
+    name: privateendpoint{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    state: absent
+
+- name: Create private endpoint
+  azure_rm_privateendpoint:
+    name: privateendpoint{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    private_link_service_connections:
+      - name: privateEndpoints_test_name
+        private_link_service_id: "{{ post_output.id }}"
+        group_ids:
+          - postgresqlServer
+    subnet:
+      id: "{{ subnet_output.state.id }}"
+    tags: 
+      key1: value1
+  register: output
+
+- name: Assert status succeeded and results match expectations
+  assert:
+    that:
+      - output.changed
+      - output.state.id is defined
+      - output.state.provisioning_state == "Succeeded"
+      - output.state.tags | length == 1
+
+- name: Create private endpoint ( Idempotent Test)
+  azure_rm_privateendpoint:
+    name: privateendpoint{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    private_link_service_connections:
+      - name: privateEndpoints_test_name
+        private_link_service_id: "{{ post_output.id }}"
+        group_ids:
+          - postgresqlServer
+    subnet:
+      id: "{{ subnet_output.state.id }}"
+    tags: 
+      key1: value1
+  register: output
+
+- name: Assert status succeeded and results match expectations
+  assert:
+   that:
+      - not output.changed
+  ignore_errors: yes
+
+- name: Update private endpoint with tags
+  azure_rm_privateendpoint:
+    name: privateendpoint{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    private_link_service_connections:
+      - name: privateEndpoints_test_name
+        private_link_service_id: "{{ post_output.id }}"
+        group_ids:
+          - postgresqlServer
+    subnet:
+      id: "{{ subnet_output.state.id }}"
+    tags: 
+      key1: value1
+      key2: value2
+  register: output
+
+- name: Assert status succeeded and results match expectations
+  assert:
+    that:
+      - output.changed
+      - output.state.tags | length == 2
+
+- name: Get private endpoint info
+  azure_rm_privateendpoint_info:
+    name: privateendpoint{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert private endpoint info
+  assert:
+    that:
+      - output.privateendpoints[0].provisioning_state == "Succeeded"
+      - output.privateendpoints[0].tags | length == 2
+
+- name: Delete private endpoint
+  azure_rm_privateendpoint:
+    name: privateendpoint{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: output
+
+- name: Assert status succeeded and results match expectations
+  assert:
+    that:
+      - output.changed
+
+- name: Delete private endpoint ( Idempotent Test)
+  azure_rm_privateendpoint:
+    name: privateendpoint{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: output
+
+- name: Assert status succeeded and results match expectations
+  assert:
+    that:
+      - not output.changed

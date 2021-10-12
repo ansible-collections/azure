@@ -9,11 +9,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualnetwork
@@ -260,9 +255,6 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
             for prefix in self.address_prefixes_cidr:
                 if not CIDR_PATTERN.match(prefix):
                     self.fail("Parameter error: invalid address prefix value {0}".format(prefix))
-
-            if self.dns_servers and len(self.dns_servers) > 2:
-                self.fail("Parameter error: You can provide a maximum of 2 DNS servers.")
 
         changed = False
         results = dict()

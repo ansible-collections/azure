@@ -8,10 +8,6 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_aks
@@ -48,6 +44,7 @@ options:
     linux_profile:
         description:
             - The Linux profile suboptions.
+            - Optional, provide if you need an ssh access to the cluster nodes.
         suboptions:
             admin_username:
                 description:
@@ -91,6 +88,10 @@ options:
                     - Minmum number of nodes for auto-scaling.
                     - Required if I(enable_auto_scaling=True).
                 type: int
+            max_pods:
+                description:
+                    - Maximum number of pods schedulable on nodes.
+                type: int
             type:
                 description:
                     - AgentPoolType represents types of an agent pool.
@@ -99,6 +100,19 @@ options:
                     - 'VirtualMachineScaleSets'
                     - 'AvailabilitySet'
                 type: str
+            mode:
+                description:
+                    - AgentPoolMode represents mode of an agent pool.
+                    - Possible values include C(System) and C(User).
+                    - System AgentPoolMode requires a minimum VM SKU of at least 2 vCPUs and 4GB memory.
+                choices:
+                    - 'System'
+                    - 'User'
+                type: str
+            node_labels:
+                description:
+                    - Agent pool node labels to be persisted across all nodes in agent pool.
+                type: dict
             vnet_subnet_id:
                 description:
                     - Specifies the VNet's subnet identifier.
@@ -113,7 +127,7 @@ options:
                     - 3
     service_principal:
         description:
-            - The service principal suboptions.
+            - The service principal suboptions. If not provided - use system-assigned managed identity.
         suboptions:
             client_id:
                 description:
@@ -251,7 +265,7 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create an AKS instance
+    - name: Create an AKS instance With A System Node Pool & A User Node Pool
       azure_rm_aks:
         name: myAKS
         resource_group: myResourceGroup
@@ -267,9 +281,19 @@ EXAMPLES = '''
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_DS1_v2
+            vm_size: Standard_B2s
             enable_auto_scaling: True
             type: VirtualMachineScaleSets
+            mode: System
+            max_count: 3
+            min_count: 1
+            enable_rbac: yes
+          - name: user
+            count: 1
+            vm_size: Standard_D2_v2
+            enable_auto_scaling: True
+            type: VirtualMachineScaleSets
+            mode: User
             max_count: 3
             min_count: 1
             enable_rbac: yes
@@ -290,9 +314,21 @@ EXAMPLES = '''
         agent_pool_profiles:
           - name: default
             count: 5
-            vm_size: Standard_D2_v2
+            mode: System
+            vm_size: Standard_B2s
         tags:
           Environment: Production
+
+    - name: Use minimal parameters and system-assigned identity
+      azure_rm_aks:
+        name: myMinimalCluster
+        location: eastus
+        resource_group: myExistingResourceGroup
+        dns_prefix: akstest
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_D2_v2
 
     - name: Remove a managed Azure Container Services (AKS) instance
       azure_rm_aks:
@@ -312,9 +348,11 @@ state:
            name: default
            os_disk_size_gb: Null
            os_type: Linux
+           moode: System
+           node_labels: { "environment": "dev", "release": "stable" }
            ports: Null
            storage_profile: ManagedDisks
-           vm_size: Standard_DS1_v2
+           vm_size: Standard_B2s
            vnet_subnet_id: Null
         changed: false
         dns_prefix: aks9860bdcd89
@@ -405,10 +443,13 @@ def create_linux_profile_dict(linuxprofile):
     :param: linuxprofile: ContainerServiceLinuxProfile with the Azure callback object
     :return: dict with the state on Azure
     '''
-    return dict(
-        ssh_key=linuxprofile.ssh.public_keys[0].key_data,
-        admin_username=linuxprofile.admin_username
-    )
+    if linuxprofile:
+        return dict(
+            ssh_key=linuxprofile.ssh.public_keys[0].key_data,
+            admin_username=linuxprofile.admin_username
+        )
+    else:
+        return None
 
 
 def create_service_principal_profile_dict(serviceprincipalprofile):
@@ -438,9 +479,12 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         availability_zones=profile.availability_zones,
         os_type=profile.os_type,
         type=profile.type,
+        mode=profile.mode,
         enable_auto_scaling=profile.enable_auto_scaling,
         max_count=profile.max_count,
-        min_count=profile.min_count
+        node_labels=profile.node_labels,
+        min_count=profile.min_count,
+        max_pods=profile.max_pods
     ) for profile in agentpoolprofiles] if agentpoolprofiles else None
 
 
@@ -470,7 +514,7 @@ ADDONS = {
 
 linux_profile_spec = dict(
     admin_username=dict(type='str', required=True),
-    ssh_key=dict(type='str', required=True)
+    ssh_key=dict(type='str', no_log=True, required=True)
 )
 
 
@@ -493,9 +537,12 @@ agent_pool_profile_spec = dict(
     availability_zones=dict(type='list', elements='int', choices=[1, 2, 3]),
     os_type=dict(type='str', choices=['Linux', 'Windows']),
     type=dict(type='str', choice=['VirtualMachineScaleSets', 'AvailabilitySet']),
+    mode=dict(type='str', choice=['System', 'User'], requried=True),
     enable_auto_scaling=dict(type='bool'),
     max_count=dict(type='int'),
-    min_count=dict(type='int')
+    node_labels=dict(type='dict'),
+    min_count=dict(type='int'),
+    max_pods=dict(type='int')
 )
 
 
@@ -597,7 +644,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
 
         required_if = [
             ('state', 'present', [
-             'dns_prefix', 'linux_profile', 'agent_pool_profiles', 'service_principal'])
+             'dns_prefix', 'agent_pool_profiles'])
         ]
 
         self.results = dict(changed=False)
@@ -616,6 +663,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         resource_group = None
         to_be_updated = False
         update_tags = False
+        update_agentpool = False
 
         resource_group = self.get_resource_group(self.resource_group)
         if not self.location:
@@ -625,11 +673,6 @@ class AzureRMManagedCluster(AzureRMModuleBase):
 
         # Check if the AKS instance already present in the RG
         if self.state == 'present':
-            # For now Agent Pool cannot be more than 1, just remove this part in the future if it change
-            agentpoolcount = len(self.agent_pool_profiles)
-            if agentpoolcount > 1:
-                self.fail('You cannot specify more than one agent_pool_profiles currently')
-
             available_versions = self.get_all_versions()
             if not response:
                 to_be_updated = True
@@ -652,7 +695,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                             return base != new
 
                     # Cannot Update the SSH Key for now // Let service to handle it
-                    if is_property_changed('linux_profile', 'ssh_key'):
+                    if self.linux_profile and is_property_changed('linux_profile', 'ssh_key'):
                         self.log(("Linux Profile Diff SSH, Was {0} / Now {1}"
                                   .format(response['linux_profile']['ssh_key'], self.linux_profile.get('ssh_key'))))
                         to_be_updated = True
@@ -661,7 +704,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                     # self.log("linux_profile response : {0}".format(response['linux_profile'].get('admin_username')))
                     # self.log("linux_profile self : {0}".format(self.linux_profile[0].get('admin_username')))
                     # Cannot Update the Username for now // Let service to handle it
-                    if is_property_changed('linux_profile', 'admin_username'):
+                    if self.linux_profile and is_property_changed('linux_profile', 'admin_username'):
                         self.log(("Linux Profile Diff User, Was {0} / Now {1}"
                                   .format(response['linux_profile']['admin_username'], self.linux_profile.get('admin_username'))))
                         to_be_updated = True
@@ -669,8 +712,8 @@ class AzureRMManagedCluster(AzureRMModuleBase):
 
                     # Cannot have more that one agent pool profile for now
                     if len(response['agent_pool_profiles']) != len(self.agent_pool_profiles):
-                        self.log("Agent Pool count is diff, need to updated")
-                        to_be_updated = True
+                        self.log("Agent Pool count is diff, need to update")
+                        update_agentpool = True
 
                     if response['kubernetes_version'] != self.kubernetes_version:
                         upgrade_versions = available_versions.get(response['kubernetes_version']) or available_versions.keys()
@@ -717,8 +760,23 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 vm_size = profile_self['vm_size']
                                 availability_zones = profile_self['availability_zones']
                                 enable_auto_scaling = profile_self['enable_auto_scaling']
+                                mode = profile_self['mode']
                                 max_count = profile_self['max_count']
+                                node_labels = profile_self['node_labels']
                                 min_count = profile_self['min_count']
+                                max_pods = profile_self['max_pods']
+
+                                if max_pods is not None and profile_result['max_pods'] != max_pods:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    self.fail("The max_pods of the agent pool cannot be updated")
+                                elif vnet_subnet_id is not None and profile_result['vnet_subnet_id'] != vnet_subnet_id:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    self.fail("The vnet_subnet_id of the agent pool cannot be updated")
+                                elif availability_zones is not None and \
+                                        ' '.join(map(str, profile_result['availability_zones'])) != ' '.join(map(str, availability_zones)):
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    self.fail("The availability_zones of the agent pool cannot be updated")
+
                                 if count is not None and profile_result['count'] != count:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
@@ -728,12 +786,6 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 elif os_disk_size_gb is not None and profile_result['os_disk_size_gb'] != os_disk_size_gb:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
-                                elif vnet_subnet_id is not None and profile_result['vnet_subnet_id'] != vnet_subnet_id:
-                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
-                                    self.fail("The vnet_subnet_id of the agent pool cannot be updated")
-                                elif availability_zones is not None and profile_result['availability_zones'] != availability_zones:
-                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
-                                    self.fail("The availability_zones of the agent pool cannot be updated")
                                 elif enable_auto_scaling is not None and profile_result['enable_auto_scaling'] != enable_auto_scaling:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
@@ -743,9 +795,32 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 elif min_count is not None and profile_result['min_count'] != min_count:
                                     self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                     to_be_updated = True
+                                elif mode is not None and profile_result['mode'] != mode:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    to_be_updated = True
+                                elif node_labels is not None and profile_result['node_labels'] != node_labels:
+                                    self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
+                                    to_be_updated = True
                         if not matched:
                             self.log("Agent Pool not found")
                             to_be_updated = True
+
+            if update_agentpool:
+                self.log("Need to update agentpool")
+                if not self.check_mode:
+                    response_profile_name_list = [response_profile['name'] for response_profile in response['agent_pool_profiles']]
+                    self_profile_name_list = [self_profile['name'] for self_profile in self.agent_pool_profiles]
+                    to_update = list(set(self_profile_name_list) - set(response_profile_name_list))
+                    to_delete = list(set(response_profile_name_list) - set(self_profile_name_list))
+                    if len(to_delete) > 0:
+                        self.delete_agentpool(to_delete)
+                        for profile in self.results['agent_pool_profiles']:
+                            if profile['name'] in to_delete:
+                                self.results['agent_pool_profiles'].remove(profile)
+                    if len(to_update) > 0:
+                        self.results['agent_pool_profiles'].extend(self.create_update_agentpool(to_update))
+                    self.log("Creation / Update done")
+                self.results['changed'] = True
 
             if to_be_updated:
                 self.log("Need to Create / Update the AKS instance")
@@ -789,7 +864,17 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         if self.agent_pool_profiles:
             agentpools = [self.create_agent_pool_profile_instance(profile) for profile in self.agent_pool_profiles]
 
-        service_principal_profile = self.create_service_principal_profile_instance(self.service_principal)
+        if self.service_principal:
+            service_principal_profile = self.create_service_principal_profile_instance(self.service_principal)
+            identity = None
+        else:
+            service_principal_profile = None
+            identity = self.managedcluster_models.ManagedClusterIdentity(type='SystemAssigned')
+
+        if self.linux_profile:
+            linux_profile = self.create_linux_profile_instance(self.linux_profile)
+        else:
+            linux_profile = None
 
         parameters = self.managedcluster_models.ManagedCluster(
             location=self.location,
@@ -798,7 +883,8 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             tags=self.tags,
             service_principal_profile=service_principal_profile,
             agent_pool_profiles=agentpools,
-            linux_profile=self.create_linux_profile_instance(self.linux_profile),
+            linux_profile=linux_profile,
+            identity=identity,
             enable_rbac=self.enable_rbac,
             network_profile=self.create_network_profile_instance(self.network_profile),
             aad_profile=self.create_aad_profile_instance(self.aad_profile),
@@ -828,6 +914,40 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             return response.tags
         except CloudError as exc:
             self.fail("Error attempting to update AKS tags: {0}".format(exc.message))
+
+    def create_update_agentpool(self, to_update_name_list):
+        response_all = []
+        for profile in self.agent_pool_profiles:
+            if (profile['name'] in to_update_name_list):
+                self.log("Creating / Updating the AKS agentpool {0}".format(profile['name']))
+                parameters = self.managedcluster_models.AgentPool(
+                    count=profile["count"],
+                    vm_size=profile["vm_size"],
+                    os_disk_size_gb=profile["os_disk_size_gb"],
+                    max_count=profile["max_count"],
+                    node_labels=profile["node_labels"],
+                    min_count=profile["min_count"],
+                    max_pods=profile["max_pods"],
+                    enable_auto_scaling=profile["enable_auto_scaling"],
+                    agent_pool_type=profile["type"],
+                    mode=profile["mode"]
+                )
+                try:
+                    poller = self.managedcluster_client.agent_pools.create_or_update(self.resource_group, self.name, profile["name"], parameters)
+                    response = self.get_poller_result(poller)
+                    response_all.append(response)
+                except CloudError as exc:
+                    self.fail("Error attempting to update AKS agentpool: {0}".format(exc.message))
+        return create_agent_pool_profiles_dict(response_all)
+
+    def delete_agentpool(self, to_delete_name_list):
+        for name in to_delete_name_list:
+            self.log("Deleting the AKS agentpool {0}".format(name))
+            try:
+                poller = self.managedcluster_client.agent_pools.delete(self.resource_group, self.name, name)
+                self.get_poller_result(poller)
+            except CloudError as exc:
+                self.fail("Error attempting to update AKS agentpool: {0}".format(exc.message))
 
     def delete_aks(self):
         '''

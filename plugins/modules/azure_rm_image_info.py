@@ -6,10 +6,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_image_info
@@ -200,6 +196,7 @@ class AzureRMImageInfo(AzureRMModuleBase):
 
         super(AzureRMImageInfo, self).__init__(
             derived_arg_spec=self.module_arg_spec,
+            supports_check_mode=True,
             supports_tags=False,
             facts_module=True
         )
@@ -233,7 +230,7 @@ class AzureRMImageInfo(AzureRMModuleBase):
         result = []
         item = None
         try:
-            item = self.compute_client.images.get(resource_group, image_name)
+            item = self.image_client.images.get(resource_group, image_name)
         except CloudError as exc:
             self.fail('Failed to list images - {0}'.format(str(exc)))
 
@@ -248,7 +245,7 @@ class AzureRMImageInfo(AzureRMModuleBase):
         self.log('List images filtered by resource group')
         response = None
         try:
-            response = self.compute_client.images.list_by_resource_group(resource_group)
+            response = self.image_client.images.list_by_resource_group(resource_group)
         except CloudError as exc:
             self.fail("Failed to list images: {0}".format(str(exc)))
 
@@ -263,7 +260,7 @@ class AzureRMImageInfo(AzureRMModuleBase):
         response = None
         results = []
         try:
-            response = self.compute_client.images.list()
+            response = self.image_client.images.list()
         except CloudError as exc:
             self.fail("Failed to list all images: {0}".format(str(exc)))
 

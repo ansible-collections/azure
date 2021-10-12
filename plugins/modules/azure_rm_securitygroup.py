@@ -9,11 +9,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_securitygroup
@@ -480,6 +475,8 @@ def compare_rules_change(old_list, new_list, purge_list):
 
 
 def compare_rules(old_rule, rule):
+    def compare_list_rule(old_rule, rule, key):
+        return set(map(str, rule.get(key) or [])) != set(map(str, old_rule.get(key) or []))
     changed = False
     if old_rule['name'] != rule['name']:
         changed = True
@@ -501,17 +498,17 @@ def compare_rules(old_rule, rule):
         changed = True
     if str(rule['destination_address_prefix']) != str(old_rule['destination_address_prefix']):
         changed = True
-    if set(rule.get('source_address_prefixes') or []) != set(old_rule.get('source_address_prefixes') or []):
+    if compare_list_rule(old_rule, rule, 'source_address_prefixes'):
         changed = True
-    if set(rule.get('destination_address_prefixes') or []) != set(old_rule.get('destination_address_prefixes') or []):
+    if compare_list_rule(old_rule, rule, 'destination_address_prefixes'):
         changed = True
-    if set(rule.get('source_port_ranges') or []) != set(old_rule.get('source_port_ranges') or []):
+    if compare_list_rule(old_rule, rule, 'source_port_ranges'):
         changed = True
-    if set(rule.get('destination_port_ranges') or []) != set(old_rule.get('destination_port_ranges') or []):
+    if compare_list_rule(old_rule, rule, 'destination_port_ranges'):
         changed = True
-    if set(rule.get('source_application_security_groups') or []) != set(old_rule.get('source_application_security_groups') or []):
+    if compare_list_rule(old_rule, rule, 'source_application_security_groups'):
         changed = True
-    if set(rule.get('destination_application_security_groups') or []) != set(old_rule.get('destination_application_security_groups') or []):
+    if compare_list_rule(old_rule, rule, 'destination_application_security_groups'):
         changed = True
     return changed
 

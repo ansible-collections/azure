@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_iotdevice_info
@@ -198,7 +193,7 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
             query=dict(type='str'),
             hub=dict(type='str', required=True),
             hub_policy_name=dict(type='str', required=True),
-            hub_policy_key=dict(type='str', required=True),
+            hub_policy_key=dict(type='str', no_log=True, required=True),
             top=dict(type='int')
         )
 

@@ -7,10 +7,6 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_containerregistry
@@ -24,20 +20,24 @@ options:
         description:
             - Name of a resource group where the Container Registry exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the Container Registry.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the container registry. Use C(present) to create or update an container registry and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.
+        type: str
     admin_user_enabled:
         description:
             - If enabled, you can use the registry name as username and admin user access key as password to docker login to your container registry.
@@ -47,6 +47,7 @@ options:
         description:
             - Specifies the SKU to use. Currently can be either C(Basic), C(Standard) or C(Premium).
         default: Standard
+        type: str
         choices:
             - Basic
             - Standard
@@ -287,6 +288,7 @@ class AzureRMContainerRegistry(AzureRMModuleBase):
             if to_do != Actions.NoAction:
                 self.results['changed'] = True
             else:
+                self.results.update(response)
                 self.results['changed'] = False
 
             self.log("Container registry instance created or updated")

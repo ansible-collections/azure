@@ -8,10 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_cdnendpoint_info
@@ -209,6 +205,7 @@ class AzureRMCdnEndpointInfo(AzureRMModuleBase):
         self.tags = None
 
         super(AzureRMCdnEndpointInfo, self).__init__(
+            supports_check_mode=True,
             derived_arg_spec=self.module_args,
             supports_tags=False,
             facts_module=True

@@ -10,11 +10,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachine_info
@@ -239,6 +234,11 @@ vms:
             returned: always
             type: str
             sample: Standard_D4
+        zones:
+            description:
+                - A list of Availability Zones for your VM.
+            type: list
+            sample: [1]
         power_state:
             description:
                 - Power state of the virtual machine.
@@ -284,6 +284,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         self.tags = None
 
         super(AzureRMVirtualMachineInfo, self).__init__(self.module_arg_spec,
+                                                        supports_check_mode=True,
                                                         supports_tags=False,
                                                         facts_module=True)
 
@@ -391,6 +392,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         new_result['state'] = 'present'
         new_result['location'] = vm.location
         new_result['vm_size'] = result['properties']['hardwareProfile']['vmSize']
+        new_result['zones'] = result.get('zones', None)
         os_profile = result['properties'].get('osProfile')
         if os_profile is not None:
             new_result['admin_username'] = os_profile.get('adminUsername')
@@ -417,8 +419,8 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                            result['properties']['diagnosticsProfile']['bootDiagnostics'].get('storageUri', None)
         }
         if new_result['boot_diagnostics']['enabled']:
-            new_result['boot_diagnostics']['console_screenshot_uri'] = result['properties']['instanceView']['bootDiagnostics']['consoleScreenshotBlobUri']
-            new_result['boot_diagnostics']['serial_console_log_uri'] = result['properties']['instanceView']['bootDiagnostics']['serialConsoleLogBlobUri']
+            new_result['boot_diagnostics']['console_screenshot_uri'] = result['properties']['instanceView']['bootDiagnostics'].get('consoleScreenshotBlobUri')
+            new_result['boot_diagnostics']['serial_console_log_uri'] = result['properties']['instanceView']['bootDiagnostics'].get('serialConsoleLogBlobUri')
 
         vhd = result['properties']['storageProfile']['osDisk'].get('vhd')
         if vhd is not None:
@@ -434,6 +436,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         for disk_index in range(len(disks)):
             new_result['data_disks'].append({
                 'lun': disks[disk_index].get('lun'),
+                'name': disks[disk_index].get('name'),
                 'disk_size_gb': disks[disk_index].get('diskSizeGB'),
                 'managed_disk_type': disks[disk_index].get('managedDisk', {}).get('storageAccountType'),
                 'caching': disks[disk_index].get('caching')

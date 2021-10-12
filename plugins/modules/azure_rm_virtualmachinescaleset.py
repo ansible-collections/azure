@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachinescaleset
@@ -71,6 +66,27 @@ options:
         choices:
             - Manual
             - Automatic
+    priority:
+        description:
+            - Priority of the VMSS.
+            - C(None) is the equivalent of Regular VM.
+        choices:
+            - None
+            - Spot
+    eviction_policy:
+        description:
+            - Specifies the eviction policy for the Azure Spot virtual machine.
+            - Requires priority to be set to Spot.
+        choices:
+            - Deallocate
+            - Delete
+    max_price:
+        description:
+            - Specifies the maximum price you are willing to pay for a Azure Spot VM/VMSS.
+            - This price is in US Dollars.
+            - C(-1) indicates default price to be up-to on-demand.
+            - Requires priority to be set to Spot.
+        default: -1
     admin_username:
         description:
             - Admin username used to access the host after it is created. Required when creating a VM.
@@ -269,7 +285,7 @@ EXAMPLES = '''
     subnet_name: testsubnet
     terminate_event_timeout_minutes: 10
     scale_in_policy: NewestVM
-    admin_username: adminUser
+    admin_username: "{{ username }}"
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
@@ -295,7 +311,7 @@ EXAMPLES = '''
     virtual_network_name: testvnet
     upgrade_policy: Manual
     subnet_name: testsubnet
-    admin_username: adminUser
+    admin_username: "{{ username }}"
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
@@ -325,8 +341,8 @@ EXAMPLES = '''
     virtual_network_name: testvnet
     upgrade_policy: Manual
     subnet_name: testsubnet
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     managed_disk_type: Standard_LRS
     image: customimage001
 
@@ -340,8 +356,8 @@ EXAMPLES = '''
     virtual_network_name: testvnet
     upgrade_policy: Manual
     subnet_name: testsubnet
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     managed_disk_type: Standard_LRS
     image: customimage001
 
@@ -354,12 +370,29 @@ EXAMPLES = '''
     virtual_network_name: testvnet
     upgrade_policy: Manual
     subnet_name: testsubnet
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     managed_disk_type: Standard_LRS
     image:
       name: customimage001
       resource_group: myResourceGroup
+
+- name: Create a VMSS with Spot Instance
+  azure_rm_virtualmachinescaleset:
+    resource_group: myResourceGroup
+    name: testvmss
+    vm_size: Standard_DS1_v2
+    capacity: 5
+    priority: Spot
+    eviction_policy: Deallocate
+    virtual_network_name: testvnet
+    upgrade_policy: Manual
+    subnet_name: testsubnet
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
+    managed_disk_type: Standard_LRS
+    image: customimage001
+
 '''
 
 RETURN = '''
@@ -500,6 +533,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             tier=dict(type='str', choices=['Basic', 'Standard']),
             capacity=dict(type='int', default=1),
             upgrade_policy=dict(type='str', choices=['Automatic', 'Manual']),
+            priority=dict(type='str', choices=['None', 'Spot']),
+            eviction_policy=dict(type='str', choices=['Deallocate', 'Delete']),
+            max_price=dict(type='float', default=-1),
             admin_username=dict(type='str'),
             admin_password=dict(type='str', no_log=True),
             ssh_password_enabled=dict(type='bool', default=True),
@@ -540,6 +576,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         self.capacity = None
         self.tier = None
         self.upgrade_policy = None
+        self.priority = None
+        self.eviction_policy = None
         self.admin_username = None
         self.admin_password = None
         self.ssh_password_enabled = None
@@ -702,6 +740,17 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                 results = vmss_dict
                 current_osdisk = vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']
                 current_ephemeral = current_osdisk.get('diffDiskSettings', None)
+                current_properties = vmss_dict['properties']['virtualMachineProfile']
+
+                if self.priority and self.priority != current_properties.get('priority', 'None'):
+                    self.fail('VM Priority is not updatable: requested virtual machine priority is {0}'.format(self.priority))
+                if self.eviction_policy and \
+                   self.eviction_policy != current_properties.get('evictionPolicy', None):
+                    self.fail('VM Eviction Policy is not updatable: requested virtual machine eviction policy is {0}'.format(self.eviction_policy))
+                if self.max_price and \
+                   vmss_dict['properties']['virtualMachineProfile'].get('billingProfile', None) and \
+                   self.max_price != vmss_dict['properties']['virtualMachineProfile']['billingProfile'].get('maxPrice', None):
+                    self.fail('VM Maximum Price is not updatable: requested virtual machine maximum price is {0}'.format(self.max_price))
 
                 if self.ephemeral_os_disk and current_ephemeral is None:
                     self.fail('Ephemeral OS disk not updatable: virtual machine scale set ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
@@ -926,6 +975,13 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                         ),
                         zones=self.zones
                     )
+
+                    if self.priority == 'Spot':
+                        vmss_resource.virtual_machine_profile.priority = self.priority
+                        vmss_resource.virtual_machine_profile.eviction_policy = self.eviction_policy
+                        vmss_resource.virtual_machine_profile.billing_profile = self.compute_models.BillingProfile(
+                            max_price=self.max_price
+                        )
 
                     if self.scale_in_policy:
                         vmss_resource.scale_in_policy = self.gen_scale_in_policy()

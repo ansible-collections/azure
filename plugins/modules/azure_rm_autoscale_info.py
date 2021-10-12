@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_autoscale_info
@@ -227,7 +222,7 @@ class AzureRMAutoScaleInfo(AzureRMModuleBase):
         self.name = None
         self.tags = None
 
-        super(AzureRMAutoScaleInfo, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMAutoScaleInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
 
     def exec_module(self, **kwargs):
 

@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_rediscache
@@ -354,7 +349,8 @@ class AzureRMRedisCaches(AzureRMModuleBase):
                 ]
             ),
             notify_keyspace_events=dict(
-                type='str'
+                type='str',
+                no_log=True
             ),
             shard_count=dict(
                 type='int'
@@ -379,6 +375,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             ),
             regenerate_key=dict(
                 type='dict',
+                no_log=True,
                 options=regenerate_key_spec
             ),
             wait_for_provisioning=dict(

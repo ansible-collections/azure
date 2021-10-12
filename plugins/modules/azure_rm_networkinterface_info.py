@@ -9,11 +9,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_networkinterface_info
@@ -222,7 +217,7 @@ def nic_to_dict(nic):
             name=config.name,
             private_ip_address=config.private_ip_address,
             private_ip_allocation_method=config.private_ip_allocation_method,
-            primary=config.primary,
+            primary=config.primary if config.primary else False,
             load_balancer_backend_address_pools=([item.id for item in config.load_balancer_backend_address_pools]
                                                  if config.load_balancer_backend_address_pools else None),
             public_ip_address=config.public_ip_address.id if config.public_ip_address else None,
@@ -280,6 +275,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         self.tags = None
 
         super(AzureRMNetworkInterfaceInfo, self).__init__(self.module_arg_spec,
+                                                          supports_check_mode=True,
                                                           supports_tags=False,
                                                           facts_module=True
                                                           )

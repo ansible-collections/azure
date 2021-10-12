@@ -10,11 +10,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_networkinterface
@@ -126,6 +121,13 @@ options:
             private_ip_address:
                 description:
                     - Private IP address for the IP configuration.
+            private_ip_address_version:
+                description:
+                    - The version of the IP configuration.
+                choices:
+                    - IPv4
+                    - IPv6
+                default: IPv4
             private_ip_allocation_method:
                 description:
                     - Private IP allocation method.
@@ -379,6 +381,11 @@ state:
                         - Private IP address for the IP configuration.
                     type: str
                     sample: "10.1.0.10"
+                private_ip_address_version:
+                    description:
+                        - The version of the IP configuration.
+                    type: str
+                    sample: "IPv4"
                 private_ip_allocation_method:
                     description:
                         - Private IP allocation method.
@@ -479,9 +486,10 @@ def nic_to_dict(nic):
         dict(
             name=config.name,
             private_ip_address=config.private_ip_address,
+            private_ip_address_version=config.private_ip_address_version,
             private_ip_allocation_method=config.private_ip_allocation_method,
             subnet=subnet_to_dict(config.subnet),
-            primary=config.primary,
+            primary=config.primary if config.primary else False,
             load_balancer_backend_address_pools=([item.id for item in config.load_balancer_backend_address_pools]
                                                  if config.load_balancer_backend_address_pools else None),
             public_ip_address=dict(
@@ -523,6 +531,7 @@ def nic_to_dict(nic):
 ip_configuration_spec = dict(
     name=dict(type='str', required=True),
     private_ip_address=dict(type='str'),
+    private_ip_address_version=dict(type='str', choices=['IPv4', 'IPv6'], default='IPv4'),
     private_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
     public_ip_address_name=dict(type='str', aliases=['public_ip_address', 'public_ip_name']),
     public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
@@ -746,6 +755,7 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                     self.network_models.NetworkInterfaceIPConfiguration(
                         private_ip_allocation_method=ip_config.get('private_ip_allocation_method'),
                         private_ip_address=ip_config.get('private_ip_address'),
+                        private_ip_address_version=ip_config.get('private_ip_address_version'),
                         name=ip_config.get('name'),
                         subnet=subnet,
                         public_ip_address=self.get_or_create_public_ip_address(ip_config),

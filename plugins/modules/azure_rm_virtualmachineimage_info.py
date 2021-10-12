@@ -9,11 +9,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualmachineimage_info
@@ -147,7 +142,7 @@ class AzureRMVirtualMachineImageInfo(AzureRMModuleBase):
         self.sku = None
         self.version = None
 
-        super(AzureRMVirtualMachineImageInfo, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMVirtualMachineImageInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_virtualmachineimage_facts'
@@ -182,15 +177,24 @@ class AzureRMVirtualMachineImageInfo(AzureRMModuleBase):
     def get_item(self):
         item = None
         result = []
+        versions = None
 
         try:
-            item = self.compute_client.virtual_machine_images.get(self.location,
-                                                                  self.publisher,
-                                                                  self.offer,
-                                                                  self.sku,
-                                                                  self.version)
+            versions = self.compute_client.virtual_machine_images.list(self.location,
+                                                                       self.publisher,
+                                                                       self.offer,
+                                                                       self.sku,
+                                                                       top=1,
+                                                                       orderby='name desc')
         except CloudError:
             pass
+
+        if self.version == 'latest':
+            item = versions[-1]
+        else:
+            for version in versions:
+                if version.name == self.version:
+                    item = version
 
         if item:
             result = [self.serialize_obj(item, 'VirtualMachineImage', enum_modules=AZURE_ENUM_MODULES)]

@@ -1,0 +1,102 @@
+ - name: Create vpn site name
+   set_fact:
+     vpn_site: "vpn{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+
+ - name: Create a VpnSite
+   azure_rm_vpnsite:
+     resource_group: "{{ resource_group }}"
+     name: "{{ vpn_site }}"
+     ip_address: 10.0.0.0
+     is_security_site: true
+     device_properties:
+       device_vendor: 10.0.0.23
+       device_model: test_model
+       link_speed_in_mbps: 10
+     address_space:
+       address_prefixes:
+         - 10.0.0.0/16
+     bgp_properties:
+       asn: 1234
+       bgp_peering_address: 192.168.0.0
+     o365_policy:
+       break_out_categories:
+         allow: false
+         optimize: false
+         default: false
+   register: output
+ 
+ - assert:
+     that:
+       - output.changed
+
+ - name: Create the VpnSite without change (Idempotent test)
+   azure_rm_vpnsite:
+     resource_group: "{{ resource_group }}"
+     name: "{{ vpn_site }}"
+     ip_address: 10.0.0.0
+     is_security_site: true
+     device_properties:
+       device_vendor: 10.0.0.23
+       device_model: test_model
+       link_speed_in_mbps: 10
+     address_space:
+       address_prefixes:
+         - 10.0.0.0/16
+     bgp_properties:
+       asn: 1234
+       bgp_peering_address: 192.168.0.0
+     o365_policy:
+       break_out_categories:
+         allow: false
+         optimize: false
+         default: false
+   register: output
+ 
+ - assert:
+     that:
+       - not output.changed
+   
+ - name: Update the VpnSite's device properties
+   azure_rm_vpnsite:
+     resource_group: "{{ resource_group }}"
+     name: "{{ vpn_site }}"
+     ip_address: 10.0.0.0
+     is_security_site: true
+     device_properties:
+       device_vendor: 10.0.0.23
+       device_model: test_model
+       link_speed_in_mbps: 100
+     address_space:
+       address_prefixes:
+         - 10.0.0.0/16
+     bgp_properties:
+       asn: 1234
+       bgp_peering_address: 192.168.0.0
+     o365_policy:
+       break_out_categories:
+         allow: false
+         optimize: false
+         default: false
+   register: output
+ 
+ - assert:
+     that:
+       - output.changed
+   
+ - name: Get the VpnSite info
+   azure_rm_vpnsite_info:
+     resource_group: "{{ resource_group }}"
+     name: "{{ vpn_site }}"
+   register: output
+
+ - assert:
+     that:
+       - "output.vpn_sites[0].is_security_site == true"
+       - "output.vpn_sites[0].ip_address == '10.0.0.0'"
+       - "output.vpn_sites[0].device_properties.link_speed_in_mbps == 100"
+
+ - name: Delete the VpnSite
+   azure_rm_vpnsite:
+     resource_group: "{{ resource_group }}"
+     name: "{{ vpn_site }}"
+     state: absent

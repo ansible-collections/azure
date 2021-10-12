@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_roledefinition
@@ -26,40 +21,52 @@ options:
         description:
             - Unique name of role definition.
         required: True
+        type: str
     permissions:
         description:
             - Set of role definition permissions.
             - See U(https://docs.microsoft.com/en-us/azure/app-service/app-service-web-overview) for more info.
+        type: list
+        elements: dict
         suboptions:
             actions:
                 description:
                     - List of allowed actions.
                 type: list
+                elements: str
             not_actions:
                 description:
                     - List of denied actions.
                 type: list
+                elements: str
             data_actions:
                 description:
                     - List of allowed data actions.
                 type: list
+                elements: str
             not_data_actions:
                 description:
                     - List of denied data actions.
                 type: list
+                elements: str
     assignable_scopes:
         description:
             - List of assignable scopes of this definition.
+        elements: str
+        type: list
     scope:
         description:
             - The scope of the role definition.
+        type: str
     description:
         description:
             - The role definition description.
+        type: str
     state:
         description:
             - Assert the state of the role definition.
             - Use C(present) to create or update a role definition; use C(absent) to delete it.
+        type: str
         default: present
         choices:
             - absent
@@ -115,20 +122,20 @@ except ImportError:
 
 permission_spec = dict(
     actions=dict(
-        type='list',
-        options=dict(type='str')
+        elements='str',
+        type='list'
     ),
     not_actions=dict(
         type='list',
-        options=dict(type='str')
+        elements='str'
     ),
     data_actions=dict(
         type='list',
-        options=dict(type='str')
+        elements='str'
     ),
     not_data_actions=dict(
         type='list',
-        options=dict(type='str')
+        elements='str'
     ),
 )
 
@@ -184,7 +191,7 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
                 type='str',
                 default='present',
                 choices=['present', 'absent']
-            )
+            ),
         )
 
         self.name = None

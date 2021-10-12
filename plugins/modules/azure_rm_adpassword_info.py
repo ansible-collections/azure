@@ -10,10 +10,6 @@ import datetime
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
 DOCUMENTATION = '''
 module: azure_rm_adpassword_info
 
@@ -147,8 +143,8 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
         self.client = None
 
         super(AzureRMADPasswordInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                    supports_check_mode=False,
                                                     supports_tags=False,
+                                                    supports_check_mode=True,
                                                     is_ad_resource=True)
 
     def exec_module(self, **kwargs):

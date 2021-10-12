@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_cosmosdbaccount_info
@@ -388,7 +383,7 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
         self.retrieve_keys = None
         self.retrieve_connection_strings = None
 
-        super(AzureRMCosmosDBAccountInfo, self).__init__(self.module_arg_spec, supports_tags=False)
+        super(AzureRMCosmosDBAccountInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
 
     def exec_module(self, **kwargs):
 

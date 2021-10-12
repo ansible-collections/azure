@@ -8,11 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
-
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_lock_info
@@ -150,7 +145,11 @@ class AzureRMLockInfo(AzureRMModuleBase):
         self._query_parameters = {'api-version': '2016-09-01'}
         self._header_parameters = {'Content-Type': 'application/json; charset=utf-8'}
 
-        super(AzureRMLockInfo, self).__init__(self.module_arg_spec, facts_module=True, mutually_exclusive=mutually_exclusive, supports_tags=False)
+        super(AzureRMLockInfo, self).__init__(self.module_arg_spec,
+                                              supports_check_mode=True,
+                                              facts_module=True,
+                                              mutually_exclusive=mutually_exclusive,
+                                              supports_tags=False)
 
     def exec_module(self, **kwargs):
 
