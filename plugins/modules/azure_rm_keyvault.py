@@ -133,6 +133,11 @@ options:
             - Property to specify whether the soft delete functionality is enabled for this key vault.
         type: bool
         default: True
+    enable_purge_protection:
+        description:
+            - Property specifying whether protection against purge is enabled for this vault.
+        type: bool
+        default: False
     recover_mode:
         description:
             - Create vault in recovery mode.
@@ -247,6 +252,10 @@ class AzureRMVaults(AzureRMModuleBase):
                 type='bool',
                 default=True
             ),
+            enable_purge_protection=dict(
+                type='bool',
+                default=False
+            ),
             recover_mode=dict(
                 type='bool'
             ),
@@ -315,6 +324,8 @@ class AzureRMVaults(AzureRMModuleBase):
                     self.parameters.setdefault("properties", {})["enabled_for_template_deployment"] = kwargs[key]
                 elif key == "enable_soft_delete":
                     self.parameters.setdefault("properties", {})["enable_soft_delete"] = kwargs[key]
+                elif key == "enable_purge_protection":
+                    self.parameters.setdefault("properties", {})["enable_purge_protection"] = kwargs[key]
                 elif key == "recover_mode":
                     self.parameters.setdefault("properties", {})["create_mode"] = 'recover' if kwargs[key] else 'default'
 
@@ -338,12 +349,18 @@ class AzureRMVaults(AzureRMModuleBase):
                 self.log("Old instance didn't exist")
             else:
                 self.to_do = Actions.Create
+                if not self.parameters['properties']['enable_purge_protection']:
+                    self.parameters['properties'].pop('enable_purge_protection')
         else:
             self.log("Key Vault instance already exists")
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             elif self.state == 'present':
                 self.log("Need to check if Key Vault instance has to be deleted or may be updated")
+                if not self.parameters['properties']['enable_purge_protection'] and \
+                        ('enable_purge_protection' not in old_response['properties'] or
+                         not old_response['properties']['enable_purge_protection']):
+                    self.parameters['properties'].pop('enable_purge_protection')
                 if ('location' in self.parameters) and (self.parameters['location'] != old_response['location']):
                     self.to_do = Actions.Update
                 elif (('tenant_id' in self.parameters['properties']) and
@@ -362,6 +379,11 @@ class AzureRMVaults(AzureRMModuleBase):
                     self.to_do = Actions.Update
                 elif (('enable_soft_delete' in self.parameters['properties']) and
                         (self.parameters['properties']['enable_soft_delete'] != getattr(old_response['properties'], 'enable_soft_delete', None))):
+                    self.to_do = Actions.Update
+                elif (('enable_purge_protection' in self.parameters['properties']) and
+                      (self.parameters['properties']['enable_purge_protection'] != getattr(old_response['properties'],
+                                                                                           'enable_purge_protection',
+                                                                                           None))):
                     self.to_do = Actions.Update
                 elif ('create_mode' in self.parameters['properties']) and (self.parameters['properties']['create_mode'] == 'recover'):
                     self.to_do = Actions.Update
