@@ -225,6 +225,15 @@ options:
                 description:
                     - The AAD tenant ID to use for authentication.
                     - If not specified, will use the tenant of the deployment subscription.
+            managed:
+                description:
+                    - Whether to enable manged AAD.
+                type: bool
+                default: false
+            admin_group_object_ids:
+                description:
+                    - AAD group object IDs that will have admin role of the cluster.
+                type: str
     addon:
         description:
             - Profile of managed cluster add-on.
@@ -619,7 +628,9 @@ aad_profile_spec = dict(
     client_app_id=dict(type='str'),
     server_app_id=dict(type='str'),
     server_app_secret=dict(type='str', no_log=True),
-    tenant_id=dict(type='str')
+    tenant_id=dict(type='str'),
+    managed=dict(type='bool', default='false'),
+    admin_group_object_ids=dict(type='str')
 )
 
 
