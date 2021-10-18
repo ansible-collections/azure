@@ -394,6 +394,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                 power_state = code[1]
                 display_status = instance['statuses'][index]['displayStatus']
             elif code[0] == 'OSState' and code[1] == 'generalized':
+                display_status = instance['statuses'][index]['displayStatus']
                 power_state = 'generalized'
                 break
 
