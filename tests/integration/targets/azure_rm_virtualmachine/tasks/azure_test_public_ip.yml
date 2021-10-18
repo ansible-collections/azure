@@ -92,8 +92,7 @@
   register: vm_state
 
 - name: Pause for 10 mimutes to VM updating
-  pause:
-    minutes: 10
+  shell: sleep 600
   when: vm_state.vms[0].power_state != 'running'
 
 - name: Enable boot diagnostics on an existing VM for the first time without specifying a storage account

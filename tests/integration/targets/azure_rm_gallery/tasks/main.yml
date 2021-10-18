@@ -54,8 +54,7 @@
   register: output
 
 - name: Pause for 10 mimutes to VM updating
-  pause:
-    minutes: 10
+  shell: sleep 600
   when: output.vms[0].power_state != 'running'
 
 - name: Create a snapshot by importing an unmanaged blob from the same subscription.

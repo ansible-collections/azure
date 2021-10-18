@@ -24,8 +24,7 @@
   register: vm_state
 
 - name: Pause for 10 mimutes to VM updating
-  pause:
-    minutes: 10
+  shell: sleep 600
   when: vm_state.vms[0].power_state != 'running'
 
 - name: Generalize VM
