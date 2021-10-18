@@ -46,3 +46,6 @@
         sku: 16.04-LTS
         version: latest
     register: vm_output
+
+- name: Pause for 10 mimutes to VM updating
+  shell: sleep 600
