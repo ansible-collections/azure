@@ -78,6 +78,8 @@
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
   register: vm_state
+- debug:
+    var: vm_state
 - name: Pause for 10 mimutes to VM updating
   shell: sleep 600
   when: vm_state.vms[0].power_state != 'running'
