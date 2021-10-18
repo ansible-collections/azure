@@ -55,7 +55,7 @@
 
 - name: Pause for 10 mimutes to VM updating
   shell: sleep 600
-  when: output.vms[0].provivisioning_state == 'Updating'
+  when: output.vms[0].provisioning_state == 'Updating'
 
 - name: Create a snapshot by importing an unmanaged blob from the same subscription.
   azure_rm_snapshot:

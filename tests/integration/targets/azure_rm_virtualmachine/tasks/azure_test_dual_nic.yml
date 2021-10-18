@@ -119,7 +119,7 @@
 
 - name: Pause for 10 mimutes to VM updating
   shell: sleep 600
-  when: vm_state.vms[0].provivisioning_state == 'Updating'
+  when: vm_state.vms[0].provisioning_state == 'Updating'
 
 - name: Generalize VM
   azure_rm_virtualmachine:
