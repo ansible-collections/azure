@@ -111,6 +111,17 @@
     that:
       - output.servers[0]['storage_profile']['storage_mb'] == 128000
 
+- name: Restart MySQL Server
+  azure_rm_mysqlserver:
+    resource_group: "{{ resource_group }}"
+    name: mysqlsrv{{ rpfx }}
+    restarted: True
+  register: output
+- name: Assert the state has not changed
+  assert:
+    that:
+      - output.changed
+
 - name: Create second instance of MySQL Server
   azure_rm_mysqlserver:
     resource_group: "{{ resource_group }}"
