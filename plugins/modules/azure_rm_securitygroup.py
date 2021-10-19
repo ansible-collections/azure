@@ -83,6 +83,7 @@ options:
                     - Default tags such as C(VirtualNetwork), C(AzureLoadBalancer) and C(Internet) can also be used.
                     - If this is an ingress rule, specifies where network traffic originates from.
                     - It can accept string type or a list of string type.
+                    - Asterisk C(*) and default tags can only be specified as single string type, not as a list of string.
                 default: "*"
             destination_address_prefix:
                 description:
@@ -91,6 +92,7 @@ options:
                     - Asterisk C(*) can also be used to match all source IPs.
                     - Default tags such as C(VirtualNetwork), C(AzureLoadBalancer) and C(Internet) can also be used.
                     - It can accept string type or a list of string type.
+                    - Asterisk C(*) and default tags can only be specified as single string type, not as a list of string.
                 default: "*"
             source_application_security_groups:
                 description:
