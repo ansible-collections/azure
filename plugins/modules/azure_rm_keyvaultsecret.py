@@ -3,6 +3,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
@@ -31,6 +32,14 @@ options:
     secret_value:
         description:
             - Secret to be secured by keyvault.
+    secret_expiry:
+        description:
+            - Optional expiry datetime for secret
+        type: str
+    secret_valid_from:
+        description:
+            - Optional valid-from datetime for secret
+        type: str
     state:
         description:
             - Assert the state of the subnet. Use C(present) to create or update a secret and C(absent) to delete a secret .
@@ -86,6 +95,8 @@ try:
     from azure.common.credentials import ServicePrincipalCredentials
     from azure.keyvault.models.key_vault_error import KeyVaultErrorException
     from msrestazure.azure_active_directory import MSIAuthentication
+    import dateutil.parser
+    from azure.keyvault.models.secret_attributes import SecretAttributes
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -99,6 +110,8 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         self.module_arg_spec = dict(
             secret_name=dict(type='str', required=True),
             secret_value=dict(type='str', no_log=True),
+            secret_valid_from=dict(type='str', no_log=True),
+            secret_expiry=dict(type='str', no_log=True),
             keyvault_uri=dict(type='str', no_log=True, required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             content_type=dict(type='str')
@@ -115,6 +128,8 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
 
         self.secret_name = None
         self.secret_value = None
+        self.secret_valid_from = None
+        self.secret_expiry = None
         self.keyvault_uri = None
         self.state = None
         self.data_creds = None
@@ -155,10 +170,18 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         self.results['changed'] = changed
         self.results['state'] = results
 
+        valid_from = self.secret_valid_from
+        if isinstance(valid_from, str) and len(valid_from) > 0:
+            valid_from = dateutil.parser.parse(valid_from)
+
+        expiry = self.secret_expiry
+        if isinstance(expiry, str) and len(expiry) > 0:
+            expiry = dateutil.parser.parse(expiry)
+
         if not self.check_mode:
             # Create secret
             if self.state == 'present' and changed:
-                results['secret_id'] = self.create_update_secret(self.secret_name, self.secret_value, self.tags, self.content_type)
+                results['secret_id'] = self.create_update_secret(self.secret_name, self.secret_value, self.tags, self.content_type, valid_from, expiry)
                 self.results['state'] = results
                 self.results['state']['status'] = 'Created'
             # Delete secret
@@ -214,9 +237,10 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             return dict(secret_id=secret_id.id, secret_value=secret_bundle.value)
         return None
 
-    def create_update_secret(self, name, secret, tags, content_type):
+    def create_update_secret(self, name, secret, tags, content_type, valid_from, expiry):
         ''' Creates/Updates a secret '''
-        secret_bundle = self.client.set_secret(self.keyvault_uri, name, secret, tags=tags, content_type=content_type)
+        secret_attributes = SecretAttributes(expires=expiry, not_before=valid_from)
+        secret_bundle = self.client.set_secret(self.keyvault_uri, name, secret, tags=tags, content_type=content_type, secret_attributes=secret_attributes)
         secret_id = KeyVaultId.parse_secret_id(secret_bundle.id)
         return secret_id.id
 
