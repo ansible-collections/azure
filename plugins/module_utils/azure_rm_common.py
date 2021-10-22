@@ -1056,13 +1056,14 @@ class AzureRMModuleBase(object):
         if not self._network_client:
             self._network_client = self.get_mgmt_svc_client(NetworkManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2020-06-01')
+                                                            is_track2=True,
+                                                            api_version='2021-03-01')
         return self._network_client
 
     @property
     def network_models(self):
         self.log("Getting network models...")
-        return NetworkManagementClient.models("2020-06-01")
+        return NetworkManagementClient.models("2021-03-01")
 
     @property
     def rm_client(self):
