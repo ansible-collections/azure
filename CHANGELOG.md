@@ -1,5 +1,33 @@
 # Change Log
 
+## v1.20.0 (2021-10-22)
+
+### NEW MODULES
+  - azure_rm_virtualmachinesize_info: VirtualMachineSize facts module ([#605](https://github.com/ansible-collections/azure/pull/605))
+  - azure_rm_diskencryptionset: New module: azure_rm_diskencryptionset ([#552](https://github.com/ansible-collections/azure/pull/552))
+  - azure_rm_diskencryptionset_info: New module: azure_rm_diskencryptionset ([#552](https://github.com/ansible-collections/azure/pull/552))
+
+### FEATURE ENHANCEMENT
+  - azure_rm_availabilityset: Add ProximityPlacementGroup to azure_rm_availabilityset ([#612](https://github.com/ansible-collections/azure/pull/612))
+  - main.yml: Update vmss test case ([#633](https://github.com/ansible-collections/azure/pull/633))
+  - main.yml: Enable VMSS TEST ([#634](https://github.com/ansible-collections/azure/pull/634))
+  - azure_rm_keyvault: Add new parameter enable_purge_protection to azure_rm_keyvault ([#643](https://github.com/ansible-collections/azure/pull/643))
+  - azure_rm_keyvault_info: Add new parameter enable_purge_protection to azure_rm_keyvault ([#643](https://github.com/ansible-collections/azure/pull/643))
+  - azure_rm_containerinstance: Fixed issue #232 Added Volume mount support for container instances ([#338](https://github.com/ansible-collections/azure/pull/338))
+  - azure_rm_containerinstance_info: Fixed issue #232 Added Volume mount support for container instances ([#338](https://github.com/ansible-collections/azure/pull/338))
+  - ignore-2.13.txt: Copy ignore-2.12.txt to ignore-2.13.txt ([#642](https://github.com/ansible-collections/azure/pull/642))
+  - azure_rm_mysqlserver: Add new parameter (azure_rm_mysqlserver.py)--- restarted ([#600](https://github.com/ansible-collections/azure/pull/600))
+
+### BUG FIXING
+  - azure_rm_virtualmachineimage_info: Azure rm virtualmachineimage info latest ([#617](https://github.com/ansible-collections/azure/pull/617))
+  - azure_rm_virtualmachine: azure_rm_virtualmachine: suppress no_log warning on ssh_password_enabled parameter ([#622](https://github.com/ansible-collections/azure/pull/622))
+  - azure_rm_mysqlserver: Remove version 5.6, Update to version 5.7 ([#626](https://github.com/ansible-collections/azure/pull/626))
+  - azure_rm_manageddisk: Update azure_rm_manageddisk Doc to reflect return value ([#616]( https://github.com/ansible-collections/azure/pull/616))
+  - azure_rm_managementgroup_info: bugfix for azure_rm_managementgroup_info module, subscriptions not detected as correct type ([#630](https://github.com/ansible-collections/azure/pull/630))
+  - azure_rm_manageddisk: Fix manageddisk unmount documentation ([#649](https://github.com/ansible-collections/azure/pull/649))
+  - azure_rm_securitygroup: Fix azure_rm_securitygroup doc ([#640](https://github.com/ansible-collections/azure/pull/640))
+
+
 ## v1.9.0 (2021-08-23)
 
 ### NEW MODULES
