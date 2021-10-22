@@ -1,6 +1,6 @@
 # Change Log
 
-## v1.20.0 (2021-10-22)
+## v1.10.0 (2021-10-22)
 
 ### NEW MODULES
   - azure_rm_virtualmachinesize_info: VirtualMachineSize facts module ([#605](https://github.com/ansible-collections/azure/pull/605))
