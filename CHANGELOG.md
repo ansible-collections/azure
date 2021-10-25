@@ -19,9 +19,9 @@
   - azure_rm_mysqlserver: Add new parameter (azure_rm_mysqlserver.py)--- restarted ([#600](https://github.com/ansible-collections/azure/pull/600))
 
 ### BUG FIXING
-  - azure_rm_virtualmachineimage_info: Azure rm virtualmachineimage info latest ([#617](https://github.com/ansible-collections/azure/pull/617))
+  - azure_rm_virtualmachineimage_info: Support to get the latest version of a virtual machine image ([#617](https://github.com/ansible-collections/azure/pull/617))
   - azure_rm_virtualmachine: azure_rm_virtualmachine: suppress no_log warning on ssh_password_enabled parameter ([#622](https://github.com/ansible-collections/azure/pull/622))
-  - azure_rm_mysqlserver: Remove version 5.6, Update to version 5.7 ([#626](https://github.com/ansible-collections/azure/pull/626))
+  - azure_rm_mysqlserver: Remove version 5.6, bump minimum version from 5.6 to 5.7 ([#626](https://github.com/ansible-collections/azure/pull/626))
   - azure_rm_manageddisk: Update azure_rm_manageddisk Doc to reflect return value ([#616]( https://github.com/ansible-collections/azure/pull/616))
   - azure_rm_managementgroup_info: bugfix for azure_rm_managementgroup_info module, subscriptions not detected as correct type ([#630](https://github.com/ansible-collections/azure/pull/630))
   - azure_rm_manageddisk: Fix manageddisk unmount documentation ([#649](https://github.com/ansible-collections/azure/pull/649))
