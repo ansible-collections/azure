@@ -171,30 +171,30 @@ except ImportError:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN
 
 
-def virtual_network_to_dict(vnet):
-    '''
-    Convert a virtual network object to a dict.
-    :param vnet: VirtualNet object
-    :return: dict
-    '''
-    results = dict(
-        id=vnet.id,
-        name=vnet.name,
-        location=vnet.location,
-        type=vnet.type,
-        tags=vnet.tags,
-        provisioning_state=vnet.provisioning_state,
-        etag=vnet.etag
-    )
-    if vnet.dhcp_options and len(vnet.dhcp_options.dns_servers) > 0:
-        results['dns_servers'] = []
-        for server in vnet.dhcp_options.dns_servers:
-            results['dns_servers'].append(server)
-    if vnet.address_space and len(vnet.address_space.address_prefixes) > 0:
-        results['address_prefixes'] = []
-        for space in vnet.address_space.address_prefixes:
-            results['address_prefixes'].append(space)
-    return results
+#def virtual_network_to_dict(vnet):
+#    '''
+#    Convert a virtual network object to a dict.
+#    :param vnet: VirtualNet object
+#    :return: dict
+#    '''
+#    results = dict(
+#        id=vnet.id,
+#        name=vnet.name,
+#        location=vnet.location,
+#        type=vnet.type,
+#        tags=vnet.tags,
+#        provisioning_state=vnet.provisioning_state,
+#        etag=vnet.etag
+#    )
+#    if vnet.dhcp_options and len(vnet.dhcp_options.dns_servers) > 0:
+#        results['dns_servers'] = []
+#        for server in vnet.dhcp_options.dns_servers:
+#            results['dns_servers'].append(server)
+#    if vnet.address_space and len(vnet.address_space.address_prefixes) > 0:
+#        results['address_prefixes'] = []
+#        for space in vnet.address_space.address_prefixes:
+#            results['address_prefixes'].append(space)
+#    return results
 
 
 class AzureRMVirtualNetwork(AzureRMModuleBase):
@@ -259,111 +259,43 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
         changed = False
         results = dict()
 
-        try:
-            self.log('Fetching vnet {0}'.format(self.name))
-            vnet = self.network_client.virtual_networks.get(self.resource_group, self.name)
-
-            results = virtual_network_to_dict(vnet)
-            self.log('Vnet exists {0}'.format(self.name))
-            self.log(results, pretty_print=True)
-            self.check_provisioning_state(vnet, self.state)
-
-            if self.state == 'present':
-                if self.address_prefixes_cidr:
-                    existing_address_prefix_set = set(vnet.address_space.address_prefixes)
-                    requested_address_prefix_set = set(self.address_prefixes_cidr)
-                    missing_prefixes = requested_address_prefix_set - existing_address_prefix_set
-                    extra_prefixes = existing_address_prefix_set - requested_address_prefix_set
-                    if len(missing_prefixes) > 0:
-                        self.log('CHANGED: there are missing address_prefixes')
-                        changed = True
-                        if not self.purge_address_prefixes:
-                            # add the missing prefixes
-                            for prefix in missing_prefixes:
-                                results['address_prefixes'].append(prefix)
-
-                    if len(extra_prefixes) > 0 and self.purge_address_prefixes:
-                        self.log('CHANGED: there are address_prefixes to purge')
-                        changed = True
-                        # replace existing address prefixes with requested set
-                        results['address_prefixes'] = self.address_prefixes_cidr
-
-                update_tags, results['tags'] = self.update_tags(results['tags'])
-                if update_tags:
-                    changed = True
-
-                if self.dns_servers:
-                    existing_dns_set = set(vnet.dhcp_options.dns_servers) if vnet.dhcp_options else set([])
-                    requested_dns_set = set(self.dns_servers)
-                    if existing_dns_set != requested_dns_set:
-                        self.log('CHANGED: replacing DNS servers')
-                        changed = True
-                        results['dns_servers'] = self.dns_servers
-
-                if self.purge_dns_servers and vnet.dhcp_options and len(vnet.dhcp_options.dns_servers) > 0:
-                    self.log('CHANGED: purging existing DNS servers')
-                    changed = True
-                    results['dns_servers'] = []
-            elif self.state == 'absent':
-                self.log("CHANGED: vnet exists but requested state is 'absent'")
-                changed = True
-        except CloudError:
-            self.log('Vnet {0} does not exist'.format(self.name))
-            if self.state == 'present':
-                self.log("CHANGED: vnet {0} does not exist but requested state is 'present'".format(self.name))
-                changed = True
-
-        self.results['changed'] = changed
-        self.results['state'] = results
-
+        vnet_param = self.network_models.VirtualNetwork(
+                location=self.location,
+                address_space=self.network_models.AddressSpace(
+                    address_prefixes=self.address_prefixes_cidr
+                )
+            )
+        if self.tags:
+            results['tags'] = self.tags
+            vnet_param.tags = self.tags
+        if self.dns_servers:
+            results['dns_servers'] = self.dns_servers
+            vnet_param.dhcp_options = self.network_models.DhcpOptions(
+                dns_servers=self.dns_servers
+            )
         if self.check_mode:
             return self.results
-
-        if changed:
+        else:
             if self.state == 'present':
-                if not results:
-                    # create a new virtual network
-                    self.log("Create virtual network {0}".format(self.name))
-                    if not self.address_prefixes_cidr:
-                        self.fail('Parameter error: address_prefixes_cidr required when creating a virtual network')
-                    vnet_param = self.network_models.VirtualNetwork(
-                        location=self.location,
-                        address_space=self.network_models.AddressSpace(
-                            address_prefixes=self.address_prefixes_cidr
-                        )
-                    )
-                    if self.dns_servers:
-                        vnet_param.dhcp_options = self.network_models.DhcpOptions(
-                            dns_servers=self.dns_servers
-                        )
-                    if self.tags:
-                        vnet_param.tags = self.tags
-                    self.results['state'] = self.create_or_update_vnet(vnet_param)
-                else:
-                    # update existing virtual network
-                    self.log("Update virtual network {0}".format(self.name))
-                    vnet_param = self.network_models.VirtualNetwork(
-                        location=results['location'],
-                        address_space=self.network_models.AddressSpace(
-                            address_prefixes=results['address_prefixes']
-                        ),
-                        tags=results['tags'],
-                        subnets=vnet.subnets
-                    )
-                    if results.get('dns_servers'):
-                        vnet_param.dhcp_options = self.network_models.DhcpOptions(
-                            dns_servers=results['dns_servers']
-                        )
-                    self.results['state'] = self.create_or_update_vnet(vnet_param)
-            elif self.state == 'absent':
+                if not self.address_prefixes_cidr :
+                    self.fail('Parameter error: address_prefixes_cidr required when creating a virtual network')
+
+                self.results['state'] = self.create_or_update_vnet(vnet_param)
+            else:
                 self.delete_virtual_network()
                 self.results['state']['status'] = 'Deleted'
 
         return self.results
 
+
+        #self.results['changed'] = changed
+        #self.results['state'] = results
+
+        return self.results
+
     def create_or_update_vnet(self, vnet):
         try:
-            poller = self.network_client.virtual_networks.create_or_update(self.resource_group, self.name, vnet)
+            poller = self.network_client.virtual_networks.begin_create_or_update(self.resource_group, self.name, vnet)
             new_vnet = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating or updating virtual network {0} - {1}".format(self.name, str(exc)))
@@ -371,7 +303,7 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
 
     def delete_virtual_network(self):
         try:
-            poller = self.network_client.virtual_networks.delete(self.resource_group, self.name)
+            poller = self.network_client.virtual_networks.begin_delete(self.resource_group, self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting virtual network {0} - {1}".format(self.name, str(exc)))
