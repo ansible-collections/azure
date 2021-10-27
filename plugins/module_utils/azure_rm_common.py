@@ -740,7 +740,7 @@ class AzureRMModuleBase(object):
         )
         self.log('Creating default public IP {0}'.format(public_ip_name))
         try:
-            poller = self.network_client.public_ip_addresses.create_or_update(resource_group, public_ip_name, params)
+            poller = self.network_client.public_ip_addresses.begin_create_or_update(resource_group, public_ip_name, params)
         except Exception as exc:
             self.fail("Error creating {0} - {1}".format(public_ip_name, str(exc)))
 
@@ -839,8 +839,8 @@ class AzureRMModuleBase(object):
         self.log('Creating default security group {0}'.format(security_group_name))
         try:
             poller = self.network_client.network_security_groups.begin_create_or_update(resource_group,
-                                                                                  security_group_name,
-                                                                                  parameters)
+                                                                                        security_group_name,
+                                                                                        parameters)
         except Exception as exc:
             self.fail("Error creating default security rule {0} - {1}".format(security_group_name, str(exc)))
 
