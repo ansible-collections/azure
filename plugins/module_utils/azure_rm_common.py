@@ -838,7 +838,7 @@ class AzureRMModuleBase(object):
 
         self.log('Creating default security group {0}'.format(security_group_name))
         try:
-            poller = self.network_client.network_security_groups.create_or_update(resource_group,
+            poller = self.network_client.network_security_groups.begin_create_or_update(resource_group,
                                                                                   security_group_name,
                                                                                   parameters)
         except Exception as exc:

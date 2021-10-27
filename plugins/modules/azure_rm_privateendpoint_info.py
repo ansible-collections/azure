@@ -188,7 +188,7 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
         self.log('List items for resource group')
         try:
             response = self.network_client.private_endpoints.list(self.resource_group)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list for resource group {0} - {1}".format(self.resource_group, str(exc)))
 
         results = []
@@ -202,7 +202,7 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
         self.log('List all for items')
         try:
             response = self.network_client.private_endpoints.list_by_subscription()
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []

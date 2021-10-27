@@ -172,14 +172,12 @@ class AzureRMRouteTable(AzureRMModuleBase):
     def get_table(self):
         try:
             return self.network_client.route_tables.get(self.resource_group, self.name)
-        except CloudError as cloud_err:
+        except Exception as cloud_err:
             # Return None iff the resource is not found
             if cloud_err.status_code == 404:
                 self.log('{0}'.format(str(cloud_err)))
                 return None
             self.fail('Error: failed to get resource {0} - {1}'.format(self.name, str(cloud_err)))
-        except Exception as exc:
-            self.fail('Error: failed to get resource {0} - {1}'.format(self.name, str(exc)))
 
 
 def main():

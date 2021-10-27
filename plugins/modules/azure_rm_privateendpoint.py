@@ -280,8 +280,8 @@ class AzureRMPrivateEndpoint(AzureRMModuleBaseExt):
 
     def create_update_resource_private_endpoint(self, privateendpoint):
         try:
-            poller = self.network_client.private_endpoints.create_or_update(resource_group_name=self.resource_group,
-                                                                            private_endpoint_name=self.name, parameters=privateendpoint)
+            poller = self.network_client.private_endpoints.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                  private_endpoint_name=self.name, parameters=privateendpoint)
             new_privateendpoint = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating or updating private endpoint {0} - {1}".format(self.name, str(exc)))
@@ -290,7 +290,7 @@ class AzureRMPrivateEndpoint(AzureRMModuleBaseExt):
 
     def delete_private_endpoint(self):
         try:
-            poller = self.network_client.private_endpoints.delete(self.resource_group, self.name)
+            poller = self.network_client.private_endpoints.begin_delete(self.resource_group, self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting private endpoint {0} - {1}".format(self.name, str(exc)))
