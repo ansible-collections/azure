@@ -153,7 +153,7 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
             elif self.state == 'absent':
                 changed = True
 
-        except CloudError:
+        except Exception:
             # the DDoS protection plan does not exist so create it
             if self.state == 'present':
                 changed = True
