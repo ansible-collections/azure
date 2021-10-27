@@ -357,9 +357,9 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
 
         try:
             response = self.network_client.virtual_network_peerings.begin_create_or_update(self.resource_group,
-                                                                                     self.virtual_network['name'],
-                                                                                     self.name,
-                                                                                     peering)
+                                                                                           self.virtual_network['name'],
+                                                                                           self.name,
+                                                                                           peering)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
             return vnetpeering_to_dict(response)

@@ -789,8 +789,8 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
 
         try:
             poller = self.network_client.network_security_groups.begin_create_or_update(resource_group_name=self.resource_group,
-                                                                                  network_security_group_name=self.name,
-                                                                                  parameters=parameters)
+                                                                                        network_security_group_name=self.name,
+                                                                                        parameters=parameters)
             result = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating/updating security group {0} - {1}".format(self.name, str(exc)))

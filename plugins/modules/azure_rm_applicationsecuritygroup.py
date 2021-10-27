@@ -191,8 +191,8 @@ class AzureRMApplicationSecurityGroup(AzureRMModuleBase):
                      location=self.location)
         try:
             response = self.network_client.application_security_groups.begin_create_or_update(resource_group_name=self.resource_group,
-                                                                                        application_security_group_name=self.name,
-                                                                                        parameters=param)
+                                                                                              application_security_group_name=self.name,
+                                                                                              parameters=param)
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
 
@@ -210,7 +210,7 @@ class AzureRMApplicationSecurityGroup(AzureRMModuleBase):
         self.log("Deleting the Application Security Group instance {0}".format(self.name))
         try:
             response = self.network_client.application_security_groups.begin_delete(resource_group_name=self.resource_group,
-                                                                              application_security_group_name=self.name)
+                                                                                    application_security_group_name=self.name)
         except Exception as e:
             self.log('Error deleting the Application Security Group instance.')
             self.fail("Error deleting the Application Security Group instance: {0}".format(str(e)))

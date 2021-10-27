@@ -270,8 +270,8 @@ class AzureRMIPGroup(AzureRMModuleBase):
         try:
             # create ip group
             response = self.network_client.ip_groups.begin_create_or_update(resource_group_name=self.resource_group,
-                                                                      ip_groups_name=self.name,
-                                                                      parameters=ip_group)
+                                                                            ip_groups_name=self.name,
+                                                                            parameters=ip_group)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
@@ -282,7 +282,7 @@ class AzureRMIPGroup(AzureRMModuleBase):
         try:
             # delete ip group
             response = self.network_client.ip_groups.begin_delete(resource_group_name=self.resource_group,
-                                                            ip_groups_name=self.name)
+                                                                  ip_groups_name=self.name)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:

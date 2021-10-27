@@ -564,8 +564,8 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
     def create_update_resource(self):
         try:
             response = self.network_client.vpn_sites.begin_create_or_update(resource_group_name=self.resource_group,
-                                                                      vpn_site_name=self.name,
-                                                                      vpn_site_parameters=self.body)
+                                                                            vpn_site_name=self.name,
+                                                                            vpn_site_parameters=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
@@ -576,7 +576,7 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
     def delete_resource(self):
         try:
             response = self.network_client.vpn_sites.begin_delete(resource_group_name=self.resource_group,
-                                                            vpn_site_name=self.name)
+                                                                  vpn_site_name=self.name)
         except Exception as e:
             self.log('Error attempting to delete the VpnSite instance.')
             self.fail('Error deleting the VpnSite instance: {0}'.format(str(e)))

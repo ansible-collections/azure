@@ -363,8 +363,8 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
     def create_update_resource(self):
         try:
             response = self.network_client.virtual_wans.begin_create_or_update(resource_group_name=self.resource_group,
-                                                                         virtual_wan_name=self.name,
-                                                                         wan_parameters=self.body)
+                                                                               virtual_wan_name=self.name,
+                                                                               wan_parameters=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
@@ -375,7 +375,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
     def delete_resource(self):
         try:
             response = self.network_client.virtual_wans.begin_delete(resource_group_name=self.resource_group,
-                                                               virtual_wan_name=self.name)
+                                                                     virtual_wan_name=self.name)
         except Exception as e:
             self.log('Error attempting to delete the VirtualWan instance.')
             self.fail('Error deleting the VirtualWan instance: {0}'.format(str(e)))

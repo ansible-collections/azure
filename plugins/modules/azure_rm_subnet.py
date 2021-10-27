@@ -589,9 +589,9 @@ class AzureRMSubnet(AzureRMModuleBase):
     def create_or_update_subnet(self, subnet):
         try:
             poller = self.network_client.subnets.begin_create_or_update(self.resource_group,
-                                                                  self.virtual_network_name,
-                                                                  self.name,
-                                                                  subnet)
+                                                                        self.virtual_network_name,
+                                                                        self.name,
+                                                                        subnet)
             new_subnet = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating or updating subnet {0} - {1}".format(self.name, str(exc)))
@@ -602,8 +602,8 @@ class AzureRMSubnet(AzureRMModuleBase):
         self.log('Deleting subnet {0}'.format(self.name))
         try:
             poller = self.network_client.subnets.begin_delete(self.resource_group,
-                                                        self.virtual_network_name,
-                                                        self.name)
+                                                              self.virtual_network_name,
+                                                              self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting subnet {0} - {1}".format(self.name, str(exc)))

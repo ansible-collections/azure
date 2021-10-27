@@ -2300,8 +2300,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.results['actions'].append("Created NIC {0}".format(network_interface_name))
         try:
             poller = self.network_client.network_interfaces.begin_create_or_update(self.resource_group,
-                                                                             network_interface_name,
-                                                                             parameters)
+                                                                                   network_interface_name,
+                                                                                   parameters)
             new_nic = self.get_poller_result(poller)
             self.tags['_own_nic_'] = network_interface_name
         except Exception as exc:
