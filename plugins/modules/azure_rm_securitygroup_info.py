@@ -282,7 +282,7 @@ class AzureRMSecurityGroupInfo(AzureRMModuleBase):
 
         try:
             item = self.network_client.network_security_groups.get(self.resource_group, self.name)
-        except CloudError:
+        except Exception:
             pass
 
         if item and self.has_tags(item.tags, self.tags):

@@ -241,7 +241,7 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
                                                        virtual_network_name=self.virtual_network_name,
                                                        subnet_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.fail('Could not get facts for Subnet.')
 
         if response is not None:
@@ -256,7 +256,7 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             response = self.network_client.subnets.get(resource_group_name=self.resource_group,
                                                        virtual_network_name=self.virtual_network_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.fail('Could not get facts for Subnet.')
 
         if response is not None:

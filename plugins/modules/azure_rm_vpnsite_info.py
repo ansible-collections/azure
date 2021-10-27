@@ -227,7 +227,7 @@ class AzureRMVpnSiteInfo(AzureRMModuleBase):
 
         try:
             response = self.network_client.vpn_sites.list_by_resource_group(resource_group_name=self.resource_group)
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response
@@ -237,7 +237,7 @@ class AzureRMVpnSiteInfo(AzureRMModuleBase):
 
         try:
             response = self.network_client.vpn_sites.list()
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response

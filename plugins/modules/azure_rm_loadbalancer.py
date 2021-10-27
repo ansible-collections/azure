@@ -916,24 +916,24 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
         self.log('Fetching loadbalancer {0}'.format(self.name))
         try:
             return self.network_client.load_balancers.get(self.resource_group, self.name)
-        except CloudError:
+        except Exception:
             return None
 
     def delete_load_balancer(self):
         """Delete a load balancer"""
         self.log('Deleting loadbalancer {0}'.format(self.name))
         try:
-            poller = self.network_client.load_balancers.delete(self.resource_group, self.name)
+            poller = self.network_client.load_balancers.begin_delete(self.resource_group, self.name)
             return self.get_poller_result(poller)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error deleting loadbalancer {0} - {1}".format(self.name, str(exc)))
 
     def create_or_update_load_balancer(self, param):
         try:
-            poller = self.network_client.load_balancers.create_or_update(self.resource_group, self.name, param)
+            poller = self.network_client.load_balancers.begin_create_or_update(self.resource_group, self.name, param)
             new_lb = self.get_poller_result(poller)
             return new_lb
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error creating or updating load balancer {0} - {1}".format(self.name, str(exc)))
 
     def object_assign(self, patch, origin):

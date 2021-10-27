@@ -172,7 +172,7 @@ class AzureRMRouteInfo(AzureRMModuleBase):
             response = self.mgmt_client.routes.get(resource_group_name=self.resource_group,
                                                    route_table_name=self.route_table_name,
                                                    route_name=self.name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response
@@ -183,7 +183,7 @@ class AzureRMRouteInfo(AzureRMModuleBase):
         try:
             response = self.mgmt_client.routes.list(resource_group_name=self.resource_group,
                                                     route_table_name=self.route_table_name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response

@@ -343,7 +343,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
             elif self.state == 'absent':
                 self.log("CHANGED: public ip {0} exists but requested state is 'absent'".format(self.name))
                 changed = True
-        except CloudError:
+        except Exception:
             self.log('Public ip {0} does not exist'.format(self.name))
             if self.state == 'present':
                 self.log("CHANGED: pip {0} does not exist but requested state is 'present'".format(self.name))
@@ -394,7 +394,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
 
     def create_or_update_pip(self, pip):
         try:
-            poller = self.network_client.public_ip_addresses.create_or_update(self.resource_group, self.name, pip)
+            poller = self.network_client.public_ip_addresses.begin_create_or_update(self.resource_group, self.name, pip)
             pip = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating or updating {0} - {1}".format(self.name, str(exc)))
@@ -402,7 +402,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
 
     def delete_pip(self):
         try:
-            poller = self.network_client.public_ip_addresses.delete(self.resource_group, self.name)
+            poller = self.network_client.public_ip_addresses.begin_delete(self.resource_group, self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting {0} - {1}".format(self.name, str(exc)))

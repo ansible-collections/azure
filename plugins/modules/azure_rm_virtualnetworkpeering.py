@@ -323,7 +323,10 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
         :return: deserialized Azure Virtual Network
         '''
         self.log("Get the Azure Virtual Network {0}".format(vnet_name))
-        vnet = self.network_client.virtual_networks.get(resource_group, vnet_name)
+        try:
+            vnet = self.network_client.virtual_networks.get(resource_group, vnet_name)
+        except Exception:
+            self.log("The Azure Virtual Network Peering {0} not exist".format(self.name))
 
         if vnet:
             results = virtual_network_to_dict(vnet)
@@ -353,14 +356,14 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
             use_remote_gateways=self.use_remote_gateways)
 
         try:
-            response = self.network_client.virtual_network_peerings.create_or_update(self.resource_group,
+            response = self.network_client.virtual_network_peerings.begin_create_or_update(self.resource_group,
                                                                                      self.virtual_network['name'],
                                                                                      self.name,
                                                                                      peering)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
             return vnetpeering_to_dict(response)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error creating Azure Virtual Network Peering: {0}.".format(exc.message))
 
     def delete_vnet_peering(self):
@@ -371,11 +374,11 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
         '''
         self.log("Deleting Azure Virtual Network Peering {0}".format(self.name))
         try:
-            poller = self.network_client.virtual_network_peerings.delete(
+            poller = self.network_client.virtual_network_peerings.begin_delete(
                 self.resource_group, self.virtual_network['name'], self.name)
             self.get_poller_result(poller)
             return True
-        except CloudError as e:
+        except Exception as e:
             self.fail("Error deleting the Azure Virtual Network Peering: {0}".format(e.message))
             return False
 
@@ -393,7 +396,7 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
                                                                         self.name)
             self.log("Response : {0}".format(response))
             return vnetpeering_to_dict(response)
-        except CloudError:
+        except Exception:
             self.log('Did not find the Virtual Network Peering.')
             return False
 

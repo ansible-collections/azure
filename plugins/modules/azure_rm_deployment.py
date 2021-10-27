@@ -498,7 +498,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                     self.destroy_resource_group()
                     self.results['changed'] = True
                     self.results['msg'] = "deployment deleted"
-            except CloudError:
+            except Exception:
                 # resource group does not exist
                 pass
 
@@ -533,7 +533,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                 rg = self.rm_client.resource_groups.get(self.resource_group)
                 if rg.tags:
                     self.tags = dict(self.tags, **rg.tags)
-            except CloudError:
+            except Exception:
                 # resource group does not exist
                 pass
 
@@ -541,7 +541,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
 
         try:
             self.rm_client.resource_groups.create_or_update(self.resource_group, params)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Resource group create_or_update failed with status code: %s and message: %s" %
                       (exc.status_code, exc.message))
         try:
@@ -556,7 +556,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                                                                                                                       'Succeeded']:
                     time.sleep(self.wait_for_deployment_polling_period)
                     deployment_result = self.rm_client.deployments.get(self.resource_group, self.name)
-        except CloudError as exc:
+        except Exception as exc:
             failed_deployment_operations = self._get_failed_deployment_operations(self.name)
             self.log("Deployment failed %s: %s" % (exc.status_code, exc.message))
             error_msg = self._error_msg_from_cloud_error(exc)
@@ -577,7 +577,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
         try:
             result = self.rm_client.resource_groups.delete(self.resource_group)
             result.wait()  # Blocking wait till the delete is finished
-        except CloudError as e:
+        except Exception as e:
             if e.status_code == 404 or e.status_code == 204:
                 return
             else:
@@ -595,7 +595,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                     try:
                         nested_operations = self.rm_client.deployment_operations.list(self.resource_group,
                                                                                       nested_deployment)
-                    except CloudError as exc:
+                    except Exception as exc:
                         self.fail("List nested deployment operations failed with status code: %s and message: %s" %
                                   (exc.status_code, exc.message))
                     new_nested_operations = self._get_failed_nested_operations(nested_operations)
@@ -609,7 +609,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
 
         try:
             operations = self.rm_client.deployment_operations.list(self.resource_group, name)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Get deployment failed with status code: %s and message: %s" %
                       (exc.status_code, exc.message))
         try:

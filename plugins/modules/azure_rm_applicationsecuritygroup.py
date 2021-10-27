@@ -190,13 +190,13 @@ class AzureRMApplicationSecurityGroup(AzureRMModuleBase):
                      tags=self.tags,
                      location=self.location)
         try:
-            response = self.network_client.application_security_groups.create_or_update(resource_group_name=self.resource_group,
+            response = self.network_client.application_security_groups.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                         application_security_group_name=self.name,
                                                                                         parameters=param)
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error creating/updating Application Security Group instance.')
             self.fail("Error creating/updating Application Security Group instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -209,9 +209,9 @@ class AzureRMApplicationSecurityGroup(AzureRMModuleBase):
         '''
         self.log("Deleting the Application Security Group instance {0}".format(self.name))
         try:
-            response = self.network_client.application_security_groups.delete(resource_group_name=self.resource_group,
+            response = self.network_client.application_security_groups.begin_delete(resource_group_name=self.resource_group,
                                                                               application_security_group_name=self.name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error deleting the Application Security Group instance.')
             self.fail("Error deleting the Application Security Group instance: {0}".format(str(e)))
 
@@ -231,7 +231,7 @@ class AzureRMApplicationSecurityGroup(AzureRMModuleBase):
             self.log("Response : {0}".format(response))
             self.log("Application Security Group instance : {0} found".format(response.name))
             return response.as_dict()
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the Application Security Group instance.')
         return False
 

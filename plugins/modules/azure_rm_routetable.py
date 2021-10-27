@@ -156,14 +156,14 @@ class AzureRMRouteTable(AzureRMModuleBase):
 
     def create_or_update_table(self, param):
         try:
-            poller = self.network_client.route_tables.create_or_update(self.resource_group, self.name, param)
+            poller = self.network_client.route_tables.begin_create_or_update(self.resource_group, self.name, param)
             return self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating or updating route table {0} - {1}".format(self.name, str(exc)))
 
     def delete_table(self):
         try:
-            poller = self.network_client.route_tables.delete(self.resource_group, self.name)
+            poller = self.network_client.route_tables.begin_delete(self.resource_group, self.name)
             result = self.get_poller_result(poller)
             return result
         except Exception as exc:

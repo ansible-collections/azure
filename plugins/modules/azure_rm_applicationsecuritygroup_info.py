@@ -168,7 +168,7 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
 
             if response and self.has_tags(response.tags, self.tags):
                 results.append(applicationsecuritygroup_to_dict(response))
-        except CloudError as e:
+        except Exception as e:
             self.fail('Did not find the Application Security Group instance.')
         return results
 
@@ -189,7 +189,7 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
                         results.append(applicationsecuritygroup_to_dict(item))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the Application Security Group instance.')
         return results
 
@@ -210,7 +210,7 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
                         results.append(applicationsecuritygroup_to_dict(item))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the Application Security Group instance.')
         return results
 

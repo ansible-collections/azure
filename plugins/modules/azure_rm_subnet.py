@@ -523,7 +523,7 @@ class AzureRMSubnet(AzureRMModuleBase):
 
             elif self.state == 'absent':
                 changed = True
-        except CloudError:
+        except Exception:
             # the subnet does not exist
             if self.state == 'present':
                 changed = True
@@ -588,7 +588,7 @@ class AzureRMSubnet(AzureRMModuleBase):
 
     def create_or_update_subnet(self, subnet):
         try:
-            poller = self.network_client.subnets.create_or_update(self.resource_group,
+            poller = self.network_client.subnets.begin_create_or_update(self.resource_group,
                                                                   self.virtual_network_name,
                                                                   self.name,
                                                                   subnet)
@@ -601,7 +601,7 @@ class AzureRMSubnet(AzureRMModuleBase):
     def delete_subnet(self):
         self.log('Deleting subnet {0}'.format(self.name))
         try:
-            poller = self.network_client.subnets.delete(self.resource_group,
+            poller = self.network_client.subnets.begin_delete(self.resource_group,
                                                         self.virtual_network_name,
                                                         self.name)
             result = self.get_poller_result(poller)
