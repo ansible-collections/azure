@@ -365,8 +365,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             response = self.network_client.virtual_wans.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                virtual_wan_name=self.name,
                                                                                wan_parameters=self.body)
-            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
-                response = self.get_poller_result(response)
+            response = self.get_poller_result(response)
         except Exception as exc:
             self.log('Error attempting to create the VirtualWan instance.')
             self.fail('Error creating the VirtualWan instance: {0}'.format(str(exc)))

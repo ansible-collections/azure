@@ -566,8 +566,7 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
             response = self.network_client.vpn_sites.begin_create_or_update(resource_group_name=self.resource_group,
                                                                             vpn_site_name=self.name,
                                                                             vpn_site_parameters=self.body)
-            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
-                response = self.get_poller_result(response)
+            response = self.get_poller_result(response)
         except Exception as exc:
             self.log('Error attempting to create the VpnSite instance.')
             self.fail('Error creating the VpnSite instance: {0}'.format(str(exc)))
