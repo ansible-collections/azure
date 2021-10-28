@@ -272,8 +272,7 @@ class AzureRMIPGroup(AzureRMModuleBase):
             response = self.network_client.ip_groups.begin_create_or_update(resource_group_name=self.resource_group,
                                                                             ip_groups_name=self.name,
                                                                             parameters=ip_group)
-            if isinstance(response, LROPoller):
-                response = self.get_poller_result(response)
+            response = self.get_poller_result(response)
         except Exception as exc:
             self.fail("Error creating or updating IP group {0} - {1}".format(self.name, str(exc)))
         return self.ipgroup_to_dict(response)
