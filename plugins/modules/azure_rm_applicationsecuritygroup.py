@@ -195,11 +195,11 @@ class AzureRMApplicationSecurityGroup(AzureRMModuleBase):
                                                                                               parameters=param)
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
+                return response.as_dict()
 
         except Exception as exc:
             self.log('Error creating/updating Application Security Group instance.')
             self.fail("Error creating/updating Application Security Group instance: {0}".format(str(exc)))
-        return response.as_dict()
 
     def delete_applicationsecuritygroup(self):
         '''

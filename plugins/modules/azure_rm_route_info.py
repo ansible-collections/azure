@@ -154,10 +154,6 @@ class AzureRMRouteInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2020-04-01')
-
         if (self.resource_group is not None and self.route_table_name is not None and self.name is not None):
             self.results['routes'] = self.format_item(self.get())
         elif (self.resource_group is not None and
@@ -169,7 +165,7 @@ class AzureRMRouteInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.routes.get(resource_group_name=self.resource_group,
+            response = self.network_client.routes.get(resource_group_name=self.resource_group,
                                                    route_table_name=self.route_table_name,
                                                    route_name=self.name)
         except Exception as e:
@@ -181,7 +177,7 @@ class AzureRMRouteInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.routes.list(resource_group_name=self.resource_group,
+            response = self.network_client.routes.list(resource_group_name=self.resource_group,
                                                     route_table_name=self.route_table_name)
         except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
