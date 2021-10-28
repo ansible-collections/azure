@@ -193,9 +193,8 @@ class AzureRMApplicationSecurityGroup(AzureRMModuleBase):
             response = self.network_client.application_security_groups.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                               application_security_group_name=self.name,
                                                                                               parameters=param)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
-                response = self.get_poller_result(response)
-                return response.as_dict()
+            response = self.get_poller_result(response)
+            return response.as_dict()
 
         except Exception as exc:
             self.log('Error creating/updating Application Security Group instance.')

@@ -188,9 +188,8 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         try:
             poller = self.network_client.ddos_protection_plans.begin_create_or_update(
                 resource_group_name=params.get("resource_group"),
-                location=self.location,
                 ddos_protection_plan_name=params.get("name"),
-                tags=self.tags)
+                parameters=params)
             result = self.get_poller_result(poller)
             self.log("Response : {0}".format(result))
         except Exception as ex:
