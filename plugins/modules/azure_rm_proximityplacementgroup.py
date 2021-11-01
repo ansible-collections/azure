@@ -222,9 +222,9 @@ class AzureRMProximityPlacementGroup(AzureRMModuleBase):
     def create_or_update_placementgroup(self, proximity_placement_group):
         try:
             # create the placement group
-            response = self.compute_client.proximity_placement_groups.begin_create_or_update(resource_group_name=self.resource_group,
-                                                                                             proximity_placement_group_name=self.name,
-                                                                                             parameters=proximity_placement_group)
+            response = self.compute_client.proximity_placement_groups.create_or_update(resource_group_name=self.resource_group,
+                                                                                       proximity_placement_group_name=self.name,
+                                                                                       parameters=proximity_placement_group)
         except Exception as exc:
             self.fail("Error creating or updating proximity placement group {0} - {1}".format(self.name, str(exc)))
         return self.ppg_to_dict(response)
@@ -232,8 +232,8 @@ class AzureRMProximityPlacementGroup(AzureRMModuleBase):
     def delete_placementgroup(self):
         try:
             # delete the placement group
-            response = self.compute_client.proximity_placement_groups.begin_delete(resource_group_name=self.resource_group,
-                                                                                   proximity_placement_group_name=self.name)
+            response = self.compute_client.proximity_placement_groups.delete(resource_group_name=self.resource_group,
+                                                                             proximity_placement_group_name=self.name)
         except Exception as exc:
             self.fail("Error deleting proximity placement group {0} - {1}".format(self.name, str(exc)))
         return response
