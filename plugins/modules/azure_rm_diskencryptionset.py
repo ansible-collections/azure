@@ -304,7 +304,7 @@ class AzureRMDiskEncryptionSet(AzureRMModuleBase):
         return response
 
     def diskencryptionset_to_dict(self, diskencryptionset):
-        result = diskencryptionset.as_dict()
+        # result = diskencryptionset.as_dict()
         result['tags'] = diskencryptionset.tags
         return result
 
