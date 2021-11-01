@@ -1264,7 +1264,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 results = dict()
                 changed = True
 
-        except CloudError:
+        except Exception:
             self.log('Virtual machine {0} does not exist'.format(self.name))
             if self.state == 'present':
                 self.log("CHANGED: virtual machine {0} does not exist but state is 'present'.".format(self.name))
