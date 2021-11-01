@@ -347,7 +347,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         self.log('List all items')
         try:
             items = self.compute_client.virtual_machines.list(self.resource_group)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []
@@ -360,7 +360,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         self.log('List all items')
         try:
             items = self.compute_client.virtual_machines.list_all()
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []

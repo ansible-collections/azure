@@ -186,7 +186,7 @@ class AzureRMVirtualMachineImageInfo(AzureRMModuleBase):
                                                                        self.sku,
                                                                        top=1,
                                                                        orderby='name desc')
-        except CloudError:
+        except Exception:
             pass
 
         if self.version == 'latest':
@@ -209,8 +209,6 @@ class AzureRMVirtualMachineImageInfo(AzureRMModuleBase):
                                                                        self.publisher,
                                                                        self.offer,
                                                                        self.sku,)
-        except CloudError:
-            pass
         except Exception as exc:
             self.fail("Failed to list images: {0}".format(str(exc)))
 
@@ -226,8 +224,6 @@ class AzureRMVirtualMachineImageInfo(AzureRMModuleBase):
         try:
             response = self.compute_client.virtual_machine_images.list_offers(self.location,
                                                                               self.publisher)
-        except CloudError:
-            pass
         except Exception as exc:
             self.fail("Failed to list offers: {0}".format(str(exc)))
 
@@ -242,8 +238,6 @@ class AzureRMVirtualMachineImageInfo(AzureRMModuleBase):
         results = []
         try:
             response = self.compute_client.virtual_machine_images.list_publishers(self.location)
-        except CloudError:
-            pass
         except Exception as exc:
             self.fail("Failed to list publishers: {0}".format(str(exc)))
 

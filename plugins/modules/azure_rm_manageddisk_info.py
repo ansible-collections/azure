@@ -191,7 +191,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             if self.tags:
                 results = [disk for disk in results if self.has_tags(disk.tags, self.tags)]
             results = [self.managed_disk_to_dict(disk) for disk in results]
-        except CloudError:
+        except Exception:
             self.log('Could not find disk {0} in resource group {1}'.format(self.name, self.resource_group))
 
         return results
@@ -207,7 +207,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             if self.tags:
                 results = [disk for disk in results if self.has_tags(disk.tags, self.tags)]
             results = [self.managed_disk_to_dict(disk) for disk in results]
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         return results
@@ -223,7 +223,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             if self.tags:
                 results = [disk for disk in results if self.has_tags(disk.tags, self.tags)]
             results = [self.managed_disk_to_dict(disk) for disk in results]
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Failed to list items by resource group - {0}'.format(str(exc)))
 
         return results

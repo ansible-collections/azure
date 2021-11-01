@@ -148,7 +148,7 @@ class AzureRMDiskEncryptionSetInfo(AzureRMModuleBase):
         # get specific disk encryption set
         try:
             item = self.compute_client.disk_encryption_sets.get(self.resource_group, self.name)
-        except CloudError:
+        except Exception:
             pass
 
         # serialize result
@@ -160,7 +160,7 @@ class AzureRMDiskEncryptionSetInfo(AzureRMModuleBase):
         self.log('List all disk encryption sets for resource group - {0}'.format(self.resource_group))
         try:
             response = self.compute_client.disk_encryption_sets.list_by_resource_group(self.resource_group)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail("Failed to list for resource group {0} - {1}".format(self.resource_group, str(exc)))
 
         results = []
@@ -173,7 +173,7 @@ class AzureRMDiskEncryptionSetInfo(AzureRMModuleBase):
         self.log('List all disk encryption sets for a subscription ')
         try:
             response = self.compute_client.disk_encryption_sets.list()
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []

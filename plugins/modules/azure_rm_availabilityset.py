@@ -326,8 +326,8 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
                 proximity_placement_group=self.proximity_placement_group_resource,
                 sku=params_sku
             )
-            response = self.compute_client.availability_sets.create_or_update(self.resource_group, self.name, params)
-        except CloudError as e:
+            response = self.compute_client.availability_sets.begin_create_or_update(self.resource_group, self.name, params)
+        except Exception as e:
             self.log('Error attempting to create the availability set.')
             self.fail("Error creating the availability set: {0}".format(str(e)))
 
@@ -340,8 +340,8 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
         '''
         self.log("Deleting availabilityset {0}".format(self.name))
         try:
-            response = self.compute_client.availability_sets.delete(self.resource_group, self.name)
-        except CloudError as e:
+            response = self.compute_client.availability_sets.begin_delete(self.resource_group, self.name)
+        except Exception as e:
             self.log('Error attempting to delete the availability set.')
             self.fail("Error deleting the availability set: {0}".format(str(e)))
 
@@ -357,7 +357,7 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
         try:
             response = self.compute_client.availability_sets.get(self.resource_group, self.name)
             found = True
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the Availability set.')
         if found is True:
             return availability_set_to_dict(response)

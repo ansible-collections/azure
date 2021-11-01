@@ -192,7 +192,7 @@ class AzureRMVirtualMachineExtensionInfo(AzureRMModuleBase):
                                                                           vm_name=self.virtual_machine_name,
                                                                           vm_extension_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Virtual Machine Extension.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -207,7 +207,7 @@ class AzureRMVirtualMachineExtensionInfo(AzureRMModuleBase):
             response = self.compute_client.virtual_machine_extensions.list(resource_group_name=self.resource_group,
                                                                            vm_name=self.virtual_machine_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Virtual Machine Extension.')
 
         if response is not None and response.value is not None:

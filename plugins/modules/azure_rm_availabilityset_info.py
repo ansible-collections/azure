@@ -169,7 +169,7 @@ class AzureRMAvailabilitySetInfo(AzureRMModuleBase):
 
         try:
             item = self.compute_client.availability_sets.get(self.resource_group, self.name)
-        except CloudError:
+        except Exception:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -188,7 +188,7 @@ class AzureRMAvailabilitySetInfo(AzureRMModuleBase):
 
         try:
             response = self.compute_client.availability_sets.list(self.resource_group)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []

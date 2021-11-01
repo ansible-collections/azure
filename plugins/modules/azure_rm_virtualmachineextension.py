@@ -286,11 +286,11 @@ class AzureRMVMExtension(AzureRMModuleBase):
                 settings=self.settings,
                 protected_settings=self.protected_settings
             )
-            poller = self.compute_client.virtual_machine_extensions.create_or_update(self.resource_group, self.virtual_machine_name, self.name, params)
+            poller = self.compute_client.virtual_machine_extensions.begin_create_or_update(self.resource_group, self.virtual_machine_name, self.name, params)
             response = self.get_poller_result(poller)
             return vmextension_to_dict(response)
 
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to create the VM extension.')
             self.fail("Error creating the VM extension: {0}".format(str(e)))
 
@@ -301,9 +301,9 @@ class AzureRMVMExtension(AzureRMModuleBase):
         '''
         self.log("Deleting vmextension {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machine_extensions.delete(self.resource_group, self.virtual_machine_name, self.name)
+            poller = self.compute_client.virtual_machine_extensions.begin_delete(self.resource_group, self.virtual_machine_name, self.name)
             self.get_poller_result(poller)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the vmextension.')
             self.fail("Error deleting the vmextension: {0}".format(str(e)))
 
@@ -317,7 +317,7 @@ class AzureRMVMExtension(AzureRMModuleBase):
         try:
             response = self.compute_client.virtual_machine_extensions.get(self.resource_group, self.virtual_machine_name, self.name)
             found = True
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find vm extension')
         if found:
             return vmextension_to_dict(response)
