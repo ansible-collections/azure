@@ -334,8 +334,6 @@ class AzureRMImage(AzureRMModuleBase):
                 self.log('{0}'.format(str(cloud_err)))
                 return None
             self.fail('Error: failed to get resource {0} - {1}'.format(name, str(cloud_err)))
-        except Exception as exc:
-            self.fail('Error: failed to get resource {0} - {1}'.format(name, str(exc)))
 
     def create_image(self, image):
         try:
