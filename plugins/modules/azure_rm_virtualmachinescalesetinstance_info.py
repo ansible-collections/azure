@@ -163,7 +163,9 @@ class AzureRMVirtualMachineScaleSetVMInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(ComputeManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager)
+                                                    base_url=self._cloud_environment.endpoints.resource_manager
+                                                    is_track2=True,
+                                                    api_version='2021-04-01')
 
         if (self.instance_id is None):
             self.results['instances'] = self.list()
