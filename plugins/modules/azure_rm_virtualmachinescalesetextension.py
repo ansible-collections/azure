@@ -250,7 +250,7 @@ class AzureRMVMSSExtension(AzureRMModuleBase):
             params = self.compute_models.VirtualMachineScaleSetExtension(
                 location=self.location,
                 publisher=self.publisher,
-                type=self.type,
+                type_properties_type=self.type,
                 type_handler_version=self.type_handler_version,
                 auto_upgrade_minor_version=self.auto_upgrade_minor_version,
                 settings=self.settings,

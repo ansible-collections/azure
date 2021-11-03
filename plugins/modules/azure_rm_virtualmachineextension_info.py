@@ -226,7 +226,7 @@ class AzureRMVirtualMachineExtensionInfo(AzureRMModuleBase):
             'location': d.get('location'),
             'name': d.get('name'),
             'publisher': d.get('publisher'),
-            'type': d.get('virtual_machine_extension_type'),
+            'type': d.get('type_properties_type'),
             'settings': d.get('settings'),
             'auto_upgrade_minor_version': d.get('auto_upgrade_minor_version'),
             'tags': d.get('tags', None),

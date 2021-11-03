@@ -127,7 +127,7 @@ def vmextension_to_dict(extension):
         name=extension.name,
         location=extension.location,
         publisher=extension.publisher,
-        virtual_machine_extension_type=extension.virtual_machine_extension_type,
+        virtual_machine_extension_type=extension.type_properties_type,
         type_handler_version=extension.type_handler_version,
         auto_upgrade_minor_version=extension.auto_upgrade_minor_version,
         settings=extension.settings,
@@ -280,7 +280,7 @@ class AzureRMVMExtension(AzureRMModuleBase):
             params = self.compute_models.VirtualMachineExtension(
                 location=self.location,
                 publisher=self.publisher,
-                virtual_machine_extension_type=self.virtual_machine_extension_type,
+                type_properties_type=self.virtual_machine_extension_type,
                 type_handler_version=self.type_handler_version,
                 auto_upgrade_minor_version=self.auto_upgrade_minor_version,
                 settings=self.settings,
