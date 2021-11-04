@@ -226,7 +226,7 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
         try:
             poller = self.compute_client.virtual_machine_scale_sets.begin_update_instances(resource_group_name=self.resource_group,
                                                                                            vm_scale_set_name=self.vmss_name,
-                                                                                           instance_ids=[instance_id])
+                                                                                           vm_instance_i_ds=[instance_id])
             self.get_poller_result(poller)
         except Exception as exc:
             self.log("Error applying latest model {0} - {1}".format(self.vmss_name, str(exc)))
@@ -280,7 +280,7 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
                                                                           vm_scale_set_name=self.vmss_name,
                                                                           instance_id=instance_id)
             instance.protection_policy = protection_policy
-            poller = self.mgmt_client.virtual_machine_scale_set_vms.update(resource_group_name=self.resource_group,
+            poller = self.mgmt_client.virtual_machine_scale_set_vms.begin_update(resource_group_name=self.resource_group,
                                                                            vm_scale_set_name=self.vmss_name,
                                                                            instance_id=instance_id,
                                                                            parameters=instance)
