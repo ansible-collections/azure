@@ -198,6 +198,78 @@
     that:
       - output.changed
 
+- name: Stop instance of Application Gateway -- check mode
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway{{ rpfx }}"
+    gateway_state: stopped
+  check_mode: true
+  register: output
+- name: Assert the resource instance is stopped
+  assert:
+    that:
+      - output.changed
+
+- name: Stop instance of Application Gateway
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway{{ rpfx }}"
+    gateway_state: stopped
+  register: output
+- name: Assert the resource instance is stopped
+  assert:
+    that:
+      - output.changed
+      - output.operational_state == 'Stopped'
+
+- name: Stop already stopped instance of Application Gateway
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway{{ rpfx }}"
+    gateway_state: stopped
+  register: output
+- name: Assert the resource instance did not change
+  assert:
+    that:
+      - not output.changed
+      - output.operational_state == 'Stopped'
+
+- name: Start instance of Application Gateway -- check mode
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway{{ rpfx }}"
+    gateway_state: started
+  check_mode: true
+  register: output
+- name: Assert the resource instance is started
+  assert:
+    that:
+      - output.changed
+
+- name: Start instance of Application Gateway
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway{{ rpfx }}"
+    gateway_state: started
+  register: output
+- name: Assert the resource instance is started
+  assert:
+    that:
+      - output.changed
+      - output.operational_state == 'Running'
+
+- name: Start already started instance of Application Gateway
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway{{ rpfx }}"
+    gateway_state: started
+  register: output
+- name: Assert the resource instance did not change
+  assert:
+    that:
+      - not output.changed
+      - output.operational_state == 'Running'
+
 - name: Create instance of Application Gateway by looking up virtual network and subnet
   azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
