@@ -360,8 +360,7 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
                                                                                            self.virtual_network['name'],
                                                                                            self.name,
                                                                                            peering)
-            if isinstance(response, LROPoller):
-                response = self.get_poller_result(response)
+            response = self.get_poller_result(response)
             return vnetpeering_to_dict(response)
         except Exception as exc:
             self.fail("Error creating Azure Virtual Network Peering: {0}.".format(exc.message))
