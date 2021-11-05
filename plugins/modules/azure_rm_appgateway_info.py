@@ -79,13 +79,13 @@ gateways:
             sample: centralus
         operational_state:
             description:
-                - Location of application gateway.
+                - Operating state of application gateway.
             returned: always
             type: str
             sample: Running
         provisioning_state:
             description:
-                - Location of application gateway.
+                - Provisioning state of application gateway.
             returned: always
             type: str
             sample: Succeeded
