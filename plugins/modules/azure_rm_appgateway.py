@@ -424,8 +424,7 @@ options:
                     - URL path map resource of the application gateway. Required if I(rule_type) is C(path_based_routing).
     state:
         description:
-            - Assert the state of the Public IP. Use C(present) to create or update a and
-              C(absent) to delete.
+            - Assert the state of the application gateway. Use C(present) to create or update and C(absent) to delete.
         default: present
         choices:
             - absent
