@@ -222,10 +222,18 @@ accounts:
             sample: Standard
         ip_range_filter:
             description:
-                - Enable IP range filter.
+                - (deprecated) Enabled IP range filter.
+                - This value has been deprecated, and will be removed in a later version. Use I(ip_rules) instead.
             returned: always
             type: str
             sample: 10.10.10.10
+        ip_rules:
+            description:
+                - The IP addresses or IP address ranges in CIDR form included as the allowed list of client IPs.
+            returned: always
+            type: list
+            sample: ["10.10.10.10", "20.20.20.20/28"]
+            version_added: "1.10.0"
         is_virtual_network_filter_enabled:
             description:
                 - Enable virtual network filter.
@@ -344,8 +352,7 @@ from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
     from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.cosmosdb import CosmosDB
-    from msrest.serialization import Model
+    from azure.mgmt.cosmosdb import CosmosDBManagementClient
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -393,7 +400,7 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
-        self.mgmt_client = self.get_mgmt_svc_client(CosmosDB,
+        self.mgmt_client = self.get_mgmt_svc_client(CosmosDBManagementClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name is not None:
@@ -474,7 +481,8 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
                                  'document_endpoint': wl['document_endpoint'],
                                  'provisioning_state': wl['provisioning_state']} for wl in d['write_locations']],
             'database_account_offer_type': d.get('database_account_offer_type'),
-            'ip_range_filter': d['ip_range_filter'],
+            'ip_rules': [ip['ip_address_or_range'] for ip in d.get('ip_rules', [])],
+            'ip_range_filter': ",".join([ip['ip_address_or_range'] for ip in d.get('ip_rules', [])]),
             'is_virtual_network_filter_enabled': d.get('is_virtual_network_filter_enabled'),
             'enable_automatic_failover': d.get('enable_automatic_failover'),
             'enable_cassandra': 'EnableCassandra' in d.get('capabilities', []),

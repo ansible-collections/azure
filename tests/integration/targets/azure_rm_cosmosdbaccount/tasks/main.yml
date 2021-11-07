@@ -136,6 +136,7 @@
       - output.accounts[0]['write_locations'] != None
       - output.accounts[0]['database_account_offer_type'] != None
       - output.accounts[0]['ip_range_filter'] != None
+      - output.accounts[0]['ip_rules'] != None
       - output.accounts[0]['is_virtual_network_filter_enabled'] != None
       - output.accounts[0]['enable_automatic_failover'] != None
       - output.accounts[0]['enable_cassandra'] != None
@@ -202,6 +203,7 @@
       - output.accounts[0]['write_locations'] != None
       - output.accounts[0]['database_account_offer_type'] != None
       - output.accounts[0]['ip_range_filter'] != None
+      - output.accounts[0]['ip_rules'] != None
       - output.accounts[0]['is_virtual_network_filter_enabled'] != None
       - output.accounts[0]['enable_automatic_failover'] != None
       - output.accounts[0]['enable_cassandra'] != None

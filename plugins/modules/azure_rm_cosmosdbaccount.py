@@ -81,9 +81,15 @@ options:
             - Required when I(state=present).
     ip_range_filter:
         description:
-            - Cosmos DB Firewall support. This value specifies the set of IP addresses or IP address ranges.
+            - (deprecated) Cosmos DB Firewall support. This value specifies the set of IP addresses or IP address ranges.
             - In CIDR form to be included as the allowed list of client IPs for a given database account.
             - IP addresses/ranges must be comma separated and must not contain any spaces.
+            - This value has been deprecated, and will be removed in a later version. Use I(ip_rules) instead.
+    ip_rules:
+        description:
+            - The IP addresses or IP address ranges in CIDR form to be included as the allowed list of client IPs.
+        type: list
+        version_added: "1.10.0"
     is_virtual_network_filter_enabled:
         description:
             - Flag to indicate whether to enable/disable Virtual Network ACL rules.
@@ -162,7 +168,8 @@ EXAMPLES = '''
         - name: southcentralus
           failover_priority: 0
       database_account_offer_type: Standard
-      ip_range_filter: 10.10.10.10
+      ip_rules:
+        - 10.10.10.10
       enable_multiple_write_locations: yes
       virtual_network_rules:
         - subnet: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVi
@@ -183,7 +190,6 @@ id:
              baseAccount"
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
@@ -191,8 +197,7 @@ try:
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
     from msrestazure.azure_operation import AzureOperationPoller
-    from azure.mgmt.cosmosdb import CosmosDB
-    from msrest.serialization import Model
+    from azure.mgmt.cosmosdb import CosmosDBManagementClient
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -262,6 +267,10 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             ip_range_filter=dict(
                 type='str'
             ),
+            ip_rules=dict(
+                type='list',
+                elements='str',
+            ),
             is_virtual_network_filter_enabled=dict(
                 type='bool'
             ),
@@ -329,6 +338,14 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
         elif kind == 'parse':
             self.parameters['kind'] = 'Parse'
 
+        ip_range_filter = self.parameters.pop('ip_range_filter', None)
+        ip_rules = self.parameters.pop('ip_rules', [])
+        if ip_range_filter:
+            self.parameters['ip_rules'] = [{ "ip_address_or_range": ip } for ip in ip_range_filter.split(",")]
+        if ip_rules:
+            # overrides deprecated 'ip_range_filter' parameter
+            self.parameters['ip_rules'] = [{ "ip_address_or_range": ip } for ip in ip_rules]
+
         dict_camelize(self.parameters, ['consistency_policy', 'default_consistency_level'], True)
         dict_rename(self.parameters, ['geo_rep_locations', 'name'], 'location_name')
         dict_rename(self.parameters, ['geo_rep_locations'], 'locations')
@@ -352,7 +369,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
 
         response = None
 
-        self.mgmt_client = self.get_mgmt_svc_client(CosmosDB,
+        self.mgmt_client = self.get_mgmt_svc_client(CosmosDBManagementClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
