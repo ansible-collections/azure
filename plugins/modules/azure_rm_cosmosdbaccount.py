@@ -111,6 +111,11 @@ options:
         description:
             - Enable Gremlin.
         type: bool
+    server_version:
+        description:
+            - Server version for the DB account, such as c(3.2) or c(4.0).
+        type: str
+        version_added: "1.10.0"
     virtual_network_rules:
         description:
             - List of Virtual Network ACL rules configured for the Cosmos DB account.
@@ -286,6 +291,9 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             enable_gremlin=dict(
                 type='bool'
             ),
+            server_version=dict(
+                type='str'
+            ),
             virtual_network_rules=dict(
                 type='list',
                 options=dict(
@@ -356,6 +364,11 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             self.parameters['capabilities'].append({'name': 'EnableTable'})
         if self.parameters.pop('enable_gremlin', False):
             self.parameters['capabilities'].append({'name': 'EnableGremlin'})
+
+        server_version = self.parameters.pop('server_version', None)
+        self.parameters['api_properties'] = dict()
+        if server_version is not None:
+            self.parameters['api_properties']['server_version'] = server_version
 
         for rule in self.parameters.get('virtual_network_rules', []):
             subnet = rule.pop('subnet')
@@ -473,6 +486,9 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
         try:
             response = self.mgmt_client.database_accounts.get(resource_group_name=self.resource_group,
                                                               account_name=self.name)
+            if not response:
+                return False
+
             found = True
             self.log("Response : {0}".format(response))
             self.log("Database Account instance : {0} found".format(response.name))

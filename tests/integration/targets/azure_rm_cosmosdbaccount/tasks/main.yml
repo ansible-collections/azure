@@ -147,6 +147,7 @@
       - output.accounts[0]['document_endpoint'] != None
       - output.accounts[0]['provisioning_state'] != None
       - output.accounts[0]['tags'] != None
+      - output.accounts[0]['server_version'] != None
 
 - name: Get facts with keys
   azure_rm_cosmosdbaccount_info:
@@ -214,6 +215,7 @@
       - output.accounts[0]['document_endpoint'] != None
       - output.accounts[0]['provisioning_state'] != None
       - output.accounts[0]['tags'] != None
+      - output.accounts[0]['server_version'] != None
 
 - name: Delete instance of Database Account -- check mode
   azure_rm_cosmosdbaccount:

@@ -264,6 +264,13 @@ accounts:
             returned: always
             type: bool
             sample: true
+        server_version:
+            description:
+                - Server version for the DB account.
+            returned: always
+            type: str
+            sample: "4.0"
+            version_added: "1.10.0"
         virtual_network_rules:
             description:
                 - List of Virtual Network ACL rules configured for the Cosmos DB account.
@@ -488,6 +495,7 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
             'enable_cassandra': 'EnableCassandra' in d.get('capabilities', []),
             'enable_table': 'EnableTable' in d.get('capabilities', []),
             'enable_gremlin': 'EnableGremlin' in d.get('capabilities', []),
+            'server_version': d.get('api_properties', {}).get('server_version'),
             'virtual_network_rules': d.get('virtual_network_rules'),
             'enable_multiple_write_locations': d.get('enable_multiple_write_locations'),
             'document_endpoint': d.get('document_endpoint'),
