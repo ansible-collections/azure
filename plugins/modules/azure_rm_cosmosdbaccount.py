@@ -79,6 +79,12 @@ options:
         description:
             - Database account offer type, for example I(Standard)
             - Required when I(state=present).
+    enable_free_tier:
+        description:
+            - If enabled the account is free-tier.
+        type: bool
+        default: false
+        version_added: "1.10.0"
     ip_range_filter:
         description:
             - (deprecated) Cosmos DB Firewall support. This value specifies the set of IP addresses or IP address ranges.
@@ -116,6 +122,15 @@ options:
             - Server version for the DB account, such as c(3.2) or c(4.0).
         type: str
         version_added: "1.10.0"
+    public_network_access:
+        description:
+            - Enables or disables public network access to server.
+        type: str
+        default: Enabled
+        choices:
+            - Enabled
+            - Disabled
+        version_added: "1.10.0"
     virtual_network_rules:
         description:
             - List of Virtual Network ACL rules configured for the Cosmos DB account.
@@ -129,7 +144,6 @@ options:
                 description:
                     - Create Cosmos DB account without existing virtual network service endpoint.
                 type: bool
-
     enable_multiple_write_locations:
         description:
             - Enables the account to write in multiple locations
@@ -269,6 +283,10 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             database_account_offer_type=dict(
                 type='str'
             ),
+            enable_free_tier=dict(
+                type='bool',
+                default=False,
+            ),
             ip_range_filter=dict(
                 type='str'
             ),
@@ -293,6 +311,11 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             ),
             server_version=dict(
                 type='str'
+            ),
+            public_network_access=dict(
+                type='str',
+                default='Enabled',
+                choices=['Enabled', 'Disabled']
             ),
             virtual_network_rules=dict(
                 type='list',

@@ -220,6 +220,13 @@ accounts:
             returned: always
             type: str
             sample: Standard
+        enable_free_tier:
+            description:
+                - If enabled the account is free-tier.
+            returned: always
+            type: bool
+            sample: true
+            version_added: "1.10.0"
         ip_range_filter:
             description:
                 - (deprecated) Enabled IP range filter.
@@ -270,6 +277,13 @@ accounts:
             returned: always
             type: str
             sample: "4.0"
+            version_added: "1.10.0"
+        public_network_access:
+            description:
+                - If public network access is allowed to the server.
+            returned: always
+            type: str
+            sample: Enabled
             version_added: "1.10.0"
         virtual_network_rules:
             description:
@@ -488,6 +502,7 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
                                  'document_endpoint': wl['document_endpoint'],
                                  'provisioning_state': wl['provisioning_state']} for wl in d['write_locations']],
             'database_account_offer_type': d.get('database_account_offer_type'),
+            'enable_free_tier': d.get('enable_free_tier'),
             'ip_rules': [ip['ip_address_or_range'] for ip in d.get('ip_rules', [])],
             'ip_range_filter': ",".join([ip['ip_address_or_range'] for ip in d.get('ip_rules', [])]),
             'is_virtual_network_filter_enabled': d.get('is_virtual_network_filter_enabled'),
@@ -496,6 +511,7 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
             'enable_table': 'EnableTable' in d.get('capabilities', []),
             'enable_gremlin': 'EnableGremlin' in d.get('capabilities', []),
             'server_version': d.get('api_properties', {}).get('server_version'),
+            'public_network_access': d.get('public_network_access'),
             'virtual_network_rules': d.get('virtual_network_rules'),
             'enable_multiple_write_locations': d.get('enable_multiple_write_locations'),
             'document_endpoint': d.get('document_endpoint'),
