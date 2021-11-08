@@ -117,9 +117,10 @@ options:
         description:
             - Enable Gremlin.
         type: bool
-    server_version:
+    mongo_version:
         description:
-            - Server version for the DB account, such as c(3.2) or c(4.0).
+            - Server version for the MongoDB account, such as c(3.2) or c(4.0).
+            - Only used when c(kind) = i(mongo_db).
         type: str
         version_added: "1.10.0"
     public_network_access:
@@ -309,7 +310,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             enable_gremlin=dict(
                 type='bool'
             ),
-            server_version=dict(
+            mongo_version=dict(
                 type='str'
             ),
             public_network_access=dict(
@@ -388,10 +389,10 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
         if self.parameters.pop('enable_gremlin', False):
             self.parameters['capabilities'].append({'name': 'EnableGremlin'})
 
-        server_version = self.parameters.pop('server_version', None)
-        self.parameters['api_properties'] = dict()
-        if server_version is not None:
-            self.parameters['api_properties']['server_version'] = server_version
+        mongo_version = self.parameters.pop('mongo_version', None)
+        if kind == 'mongo_db' and mongo_version is not None:
+            self.parameters['api_properties'] = dict()
+            self.parameters['api_properties']['server_version'] = mongo_version
 
         for rule in self.parameters.get('virtual_network_rules', []):
             subnet = rule.pop('subnet')
@@ -489,9 +490,8 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             response = self.mgmt_client.database_accounts.delete(resource_group_name=self.resource_group,
                                                                  account_name=self.name)
 
-            # This currently doesn't work as there is a bug in SDK / Service
-            # if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
-            #     response = self.get_poller_result(response)
+            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+                response = self.get_poller_result(response)
         except CloudError as e:
             self.log('Error attempting to delete the Database Account instance.')
             self.fail("Error deleting the Database Account instance: {0}".format(str(e)))
@@ -524,6 +524,9 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
 
 
 def default_compare(new, old, path, result):
+    '''
+    :return: false if differences are found between old and new.
+    '''
     if new is None:
         return True
     elif isinstance(new, dict):

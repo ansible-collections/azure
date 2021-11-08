@@ -230,7 +230,7 @@ accounts:
         ip_range_filter:
             description:
                 - (deprecated) Enabled IP range filter.
-                - This value has been deprecated, and will be removed in a later version. Use I(ip_rules) instead.
+                - This value has been deprecated, and will be removed in a later version. Use c(ip_rules) instead.
             returned: always
             type: str
             sample: 10.10.10.10
@@ -271,9 +271,10 @@ accounts:
             returned: always
             type: bool
             sample: true
-        server_version:
+        mongo_version:
             description:
-                - Server version for the DB account.
+                - Server version for the MongoDB account.
+                - Only used for c(kind) = i(mongo_db); otherwise value is null/none.
             returned: always
             type: str
             sample: "4.0"
@@ -510,7 +511,7 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
             'enable_cassandra': 'EnableCassandra' in d.get('capabilities', []),
             'enable_table': 'EnableTable' in d.get('capabilities', []),
             'enable_gremlin': 'EnableGremlin' in d.get('capabilities', []),
-            'server_version': d.get('api_properties', {}).get('server_version'),
+            'mongo_version': d.get('api_properties', {}).get('server_version'),
             'public_network_access': d.get('public_network_access'),
             'virtual_network_rules': d.get('virtual_network_rules'),
             'enable_multiple_write_locations': d.get('enable_multiple_write_locations'),
