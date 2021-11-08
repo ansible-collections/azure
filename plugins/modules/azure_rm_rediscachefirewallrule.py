@@ -171,7 +171,8 @@ class AzureRMRedisCacheFirewallRule(AzureRMModuleBase):
         # get management client
         self._client = self.get_mgmt_svc_client(RedisManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
-                                                api_version='2018-03-01')
+                                                api_version='2018-03-01',
+                                                is_track2=True)
 
         # check if the firewall rule exists
         old_response = self.get()
