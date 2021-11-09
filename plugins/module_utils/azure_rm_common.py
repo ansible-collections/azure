@@ -1506,6 +1506,7 @@ class AzureRMAuth(object):
         if self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credentials = self.credentials['credentials']
+            self.azure_credential_track2 = self.credentials['credential']
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
@@ -1613,6 +1614,7 @@ class AzureRMAuth(object):
 
         cli_credentials = {
             'credentials': credentials,
+            'credential': credentials,
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment
         }
