@@ -637,7 +637,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
 
             if self.wait_for_provisioning:
                 self.wait_for_redis_running()
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Azure Cache for Redis instance.')
             self.fail(
                 "Error creating the Azure Cache for Redis instance: {0}".format(str(exc)))
@@ -679,7 +679,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             if self.wait_for_provisioning:
                 self.wait_for_redis_running()
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to update the Azure Cache for Redis instance.')
             self.fail(
                 "Error updating the Azure Cache for Redis instance: {0}".format(str(exc)))
@@ -695,7 +695,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         try:
             self._client.redis.begin_delete(resource_group_name=self.resource_group,
                                             name=self.name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Azure Cache for Redis instance.')
             self.fail(
                 "Error deleting the Azure Cache for Redis instance: {0}".format(str(e)))
@@ -741,7 +741,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
 
             if self.wait_for_provisioning:
                 self.wait_for_redis_running()
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to force reboot the redis cache instance.')
             self.fail(
                 "Error force rebooting the redis cache instance: {0}".format(str(e)))
@@ -759,7 +759,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
                                                          name=self.name,
                                                          key_type=self.regenerate_key['key_type'].title())
             return response.to_dict()
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to regenerate key of redis cache instance.')
             self.fail(
                 "Error regenerate key of redis cache instance: {0}".format(str(e)))
@@ -782,7 +782,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             self.log("Subnet found : {0}".format(response))
             return response.id
 
-        except CloudError as ex:
+        except CloudError:
             self.log("Didn't find subnet {0} in resource group {1}".format(
                 self.subnet['name'], self.subnet['resource_group']))
 
@@ -815,7 +815,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
                 else:
                     return True
             self.fail("Azure Cache for Redis is not running after 60 mins.")
-        except CloudError as e:
+        except Exception as e:
             self.fail("Failed to get Azure Cache for Redis: {0}".format(str(e)))
 
 

@@ -209,7 +209,6 @@ rediscaches:
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.mgmt.redis import RedisManagementClient
-    from msrestazure.azure_exceptions import CloudError
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # handled in azure_rm_common
@@ -301,7 +300,7 @@ class AzureRMRedisCacheInfo(AzureRMModuleBase):
 
         try:
             response = self._client.redis.list_by_resource_group(self.resource_group)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []
@@ -320,7 +319,7 @@ class AzureRMRedisCacheInfo(AzureRMModuleBase):
 
         try:
             item = self._client.redis.list_keys(resource_group_name=self.resource_group, name=self.name)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list redis keys of {0} - {1}".format(self.name, str(exc)))
 
         return item

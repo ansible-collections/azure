@@ -84,7 +84,6 @@ import time
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
     from msrestazure.azure_operation import AzureOperationPoller
     from azure.core.exceptions import ResourceNotFoundError
@@ -258,7 +257,7 @@ class AzureRMRedisCacheFirewallRule(AzureRMModuleBase):
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create/update Firewall rule of Azure Cache for Redis.')
             self.fail(
                 "Error creating/updating Firewall rule of Azure Cache for Redis: {0}".format(str(exc)))
@@ -275,7 +274,7 @@ class AzureRMRedisCacheFirewallRule(AzureRMModuleBase):
             response = self._client.firewall_rules.delete(resource_group_name=self.resource_group,
                                                           rule_name=self.name,
                                                           cache_name=self.cache_name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Firewall rule of Azure Cache for Redis.')
             self.fail(
                 "Error deleting the Firewall rule of Azure Cache for Redis: {0}".format(str(e)))
