@@ -275,7 +275,7 @@
       - output.changed
 
 
-- name: long-running rediscachefirewallrule tests [run with `--tags long_run,untagged` to enable]
+- name: long-running key/firewallrule tests [run with `--tags long_run,untagged` to enable]
 # Creating firewall rule need Redis status is running, while creating redis Cache costs about 20 mins async operation,
 # need to poll status from Creating to Running, then able to perform firewall rule creating,
 # otherwise, will met error:

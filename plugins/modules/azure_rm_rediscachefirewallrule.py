@@ -87,6 +87,9 @@ try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.redis import RedisManagementClient
+    from azure.mgmt.redis.models import (
+        RedisFirewallRule
+    )
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -248,11 +251,15 @@ class AzureRMRedisCacheFirewallRule(AzureRMModuleBase):
             "Creating Firewall rule of Azure Cache for Redis {0}".format(self.name))
 
         try:
+            params = RedisFirewallRule(
+                name=self.name,
+                start_ip=self.start_ip_address,
+                end_ip=self.end_ip_address,
+            )
             response = self._client.firewall_rules.create_or_update(resource_group_name=self.resource_group,
                                                                     cache_name=self.cache_name,
                                                                     rule_name=self.name,
-                                                                    start_ip=self.start_ip_address,
-                                                                    end_ip=self.end_ip_address)
+                                                                    parameters=params)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -270,9 +277,9 @@ class AzureRMRedisCacheFirewallRule(AzureRMModuleBase):
         '''
         self.log("Deleting the Firewall rule of Azure Cache for Redis {0}".format(self.name))
         try:
-            response = self._client.firewall_rules.delete(resource_group_name=self.resource_group,
-                                                          rule_name=self.name,
-                                                          cache_name=self.cache_name)
+            self._client.firewall_rules.delete(resource_group_name=self.resource_group,
+                                               rule_name=self.name,
+                                               cache_name=self.cache_name)
         except Exception as e:
             self.log('Error attempting to delete the Firewall rule of Azure Cache for Redis.')
             self.fail(
