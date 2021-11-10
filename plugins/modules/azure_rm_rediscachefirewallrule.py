@@ -87,7 +87,7 @@ try:
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
     from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.redis import RedisManagementClient
 except ImportError:
     # This is handled in azure_rm_common
@@ -300,7 +300,7 @@ class AzureRMRedisCacheFirewallRule(AzureRMModuleBase):
             self.log("Redis Firewall Rule : {0} found".format(response.name))
             return firewall_rule_to_dict(response)
 
-        except CloudError as ex:
+        except ResourceNotFoundError:
             self.log("Didn't find Azure Redis Firewall rule {0} in resource group {1}".format(
                 self.name, self.resource_group))
 
