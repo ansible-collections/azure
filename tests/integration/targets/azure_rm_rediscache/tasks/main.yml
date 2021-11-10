@@ -257,7 +257,6 @@
       - facts.rediscaches | length == 1
       - facts.rediscaches[0].subnet != None
       - facts.rediscaches[0].access_keys.primary != None
-      - facts.rediscaches[0].access_keys.secondary != None
 
 - name: Create firewall rule (Check mode)
   azure_rm_rediscachefirewallrule:
@@ -334,6 +333,13 @@
       that:
         - output.changed
 
+  - name: Get key facts
+    azure_rm_rediscache_info:
+      resource_group: "{{ resource_group }}"
+      name: "{{ redis_name }}2"
+      return_access_keys: True
+    register: key_facts
+
   - name: regenerate primary redis key
     azure_rm_rediscache:
       resource_group: "{{ resource_group }}"
@@ -351,14 +357,14 @@
     azure_rm_rediscache_info:
       resource_group: "{{ resource_group }}"
       name: "{{ redis_name }}2"
-      return_access_keys: True
-    register: facts2
+      return_access_keys: true
+    register: key_facts2
 
   - name: Assert key change
     assert:
       that:
-        - facts.rediscaches[0].access_keys.primary != facts2.rediscaches[0].access_keys.primary
-        - facts.rediscaches[0].access_keys.secondary == facts2.rediscaches[0].access_keys.secondary
+        - key_facts.rediscaches[0].access_keys.primary != key_facts2.rediscaches[0].access_keys.primary
+        - key_facts.rediscaches[0].access_keys.secondary == key_facts2.rediscaches[0].access_keys.secondary
 
   - name: Delete firewall rule
     azure_rm_rediscachefirewallrule:
