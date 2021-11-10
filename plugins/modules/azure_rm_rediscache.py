@@ -188,41 +188,47 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create an Azure Cache for Redis
-    azure_rm_rediscache:
-        resource_group: myResourceGroup
-        name: myRedis
-        sku:
-          name: basic
-          size: C1
+- name: Create an Azure Cache for Redis
+  azure_rm_rediscache:
+    resource_group: myResourceGroup
+    name: myRedis
+    sku:
+        name: basic
+        size: C1
 
-  - name: Scale up the Azure Cache for Redis
-    azure_rm_rediscache:
-        resource_group: myResourceGroup
-        name: myRedis
-        sku:
-          name: standard
-          size: C1
-        tags:
-          testing: foo
+- name: Scale up the Azure Cache for Redis
+  azure_rm_rediscache:
+    resource_group: myResourceGroup
+    name: myRedis
+    sku:
+      name: standard
+      size: C1
+    tags:
+      testing: foo
 
-  - name: Force reboot the redis cache
-    azure_rm_rediscache:
-        resource_group: myResourceGroup
-        name: myRedisCache
-        reboot:
-          reboot_type: all
+- name: Force reboot the redis cache
+  azure_rm_rediscache:
+    resource_group: myResourceGroup
+    name: myRedisCache
+    reboot:
+      reboot_type: all
 
-  - name: Create Azure Cache for Redis with subnet
-    azure_rm_rediscache:
-        resource_group: myResourceGroup
-        name: myRedis
-        sku:
-          name: premium
-          size: P1
-        subnet: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVirt
-                 ualNetwork/subnets/mySubnet"
+- name: Create Azure Cache for Redis with subnet
+  azure_rm_rediscache:
+    resource_group: myResourceGroup
+    name: myRedis
+    sku:
+      name: premium
+      size: P1
+    subnet: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVirt
+                ualNetwork/subnets/mySubnet"
 
+- name: Regenerate primary Redis key
+  azure_rm_rediscache:
+    resource_group: myResourceGroup
+    name: myRedis
+    regenerate_key:
+      key_type: primary
 '''
 
 RETURN = '''
@@ -248,7 +254,9 @@ try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
     from azure.mgmt.redis import RedisManagementClient
-    from azure.mgmt.redis.models import (RedisCreateParameters, RedisUpdateParameters, Sku)
+    from azure.mgmt.redis.models import (
+        RedisCreateParameters, RedisUpdateParameters, Sku, RedisRebootParameters, RedisRegenerateKeyParameters
+    )
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -562,9 +570,11 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         if self.reboot:
             self.reboot['reboot_type'] = get_reboot_type(self.reboot['reboot_type'])
             self.force_reboot_rediscache()
+            self.results['changed'] = True
 
         if self.regenerate_key:
-            response = self.rergenerate_rediscache_key()
+            response = self.regenerate_rediscache_key()
+            self.results['changed'] = True
             self.results['keys'] = response
 
         return self.results
@@ -732,10 +742,13 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         '''
         self.log("Force reboot the redis cache instance {0}".format(self.name))
         try:
+            params = RedisRebootParameters(
+                reboot_type=self.reboot['reboot_type'],
+                shard_id=self.reboot.get('shard_id'),
+            )
             response = self._client.redis.force_reboot(resource_group_name=self.resource_group,
                                                        name=self.name,
-                                                       reboot_type=self.reboot['reboot_type'],
-                                                       shard_id=self.reboot.get('shard_id'))
+                                                       parameters=params)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -747,7 +760,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
                 "Error force rebooting the redis cache instance: {0}".format(str(e)))
         return True
 
-    def rergenerate_rediscache_key(self):
+    def regenerate_rediscache_key(self):
         '''
         Regenerate key of redis cache instance in the specified subscription and resource group.
 
@@ -755,10 +768,13 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         '''
         self.log("Regenerate key of redis cache instance {0}".format(self.name))
         try:
+            params = RedisRegenerateKeyParameters(
+                key_type=self.regenerate_key['key_type'].title(),
+            )
             response = self._client.redis.regenerate_key(resource_group_name=self.resource_group,
                                                          name=self.name,
-                                                         key_type=self.regenerate_key['key_type'].title())
-            return response.to_dict()
+                                                         parameters=params)
+            return response.as_dict()
         except Exception as e:
             self.log('Error attempting to regenerate key of redis cache instance.')
             self.fail(

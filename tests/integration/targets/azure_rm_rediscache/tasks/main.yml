@@ -182,7 +182,8 @@
         reboot_type: all
     register: output
 
-  - assert:
+  - name: assert redis rebooted
+    assert:
       that:
         - output.changed
 
@@ -256,6 +257,7 @@
       - facts.rediscaches | length == 1
       - facts.rediscaches[0].subnet != None
       - facts.rediscaches[0].access_keys.primary != None
+      - facts.rediscaches[0].access_keys.secondary != None
 
 - name: Create firewall rule (Check mode)
   azure_rm_rediscachefirewallrule:
@@ -331,6 +333,32 @@
     assert:
       that:
         - output.changed
+
+  - name: regenerate primary redis key
+    azure_rm_rediscache:
+      resource_group: "{{ resource_group }}"
+      name: "{{ redis_name }}2"
+      regenerate_key:
+        key_type: "primary"
+    register: output
+
+  - name: Assert output
+    assert:
+      that:
+        - output.changed
+
+  - name: Get facts after key regeneration
+    azure_rm_rediscache_info:
+      resource_group: "{{ resource_group }}"
+      name: "{{ redis_name }}2"
+      return_access_keys: True
+    register: facts2
+
+  - name: Assert key change
+    assert:
+      that:
+        - facts.rediscaches[0].access_keys.primary != facts2.rediscaches[0].access_keys.primary
+        - facts.rediscaches[0].access_keys.secondary == facts2.rediscaches[0].access_keys.secondary
 
   - name: Delete firewall rule
     azure_rm_rediscachefirewallrule:
