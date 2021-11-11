@@ -173,7 +173,7 @@ class AzureRMModuleBaseExt(AzureRMModuleBase):
             if not isinstance(old, list) or len(new) != len(old):
                 result['compare'].append('changed [' + path + '] length is different or old value is null')
                 comparison_result = False
-            else:
+            elif len(old) > 0:
                 if isinstance(old[0], dict):
                     key = None
                     if 'id' in old[0] and 'id' in new[0]:
