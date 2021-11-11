@@ -1166,7 +1166,8 @@ class AzureRMModuleBase(object):
         self.log('Getting SQL client')
         if not self._sql_client:
             self._sql_client = self.get_mgmt_svc_client(SqlManagementClient,
-                                                        base_url=self._cloud_environment.endpoints.resource_manager)
+                                                        base_url=self._cloud_environment.endpoints.resource_manager,
+                                                        is_track2=True)
         return self._sql_client
 
     @property
@@ -1192,14 +1193,6 @@ class AzureRMModuleBase(object):
             self._mariadb_client = self.get_mgmt_svc_client(MariaDBManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager)
         return self._mariadb_client
-
-    @property
-    def sql_client(self):
-        self.log('Getting SQL client')
-        if not self._sql_client:
-            self._sql_client = self.get_mgmt_svc_client(SqlManagementClient,
-                                                        base_url=self._cloud_environment.endpoints.resource_manager)
-        return self._sql_client
 
     @property
     def containerregistry_client(self):

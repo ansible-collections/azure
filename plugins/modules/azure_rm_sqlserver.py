@@ -41,6 +41,37 @@ options:
         description:
             - The identity type. Set this to C(SystemAssigned) in order to automatically create and assign an Azure Active Directory principal for the resource.
             - Possible values include C(SystemAssigned).
+    minimal_tls_version:
+        description:
+            - Require clients to use a specified TLS version.
+        type: str
+        choices:
+            - 1.0
+            - 1.1
+            - 1.2
+        version_added: "1.10.0"
+    public_network_access:
+        description:
+            - Whether or not public endpoint access is allowed for the server.
+        type: str
+        choices:
+            - Enabled
+            - Disabled
+        version_added: "1.10.0"
+    restrict_outbound_network_access:
+        description:
+            - Whether or not to restrict outbound network access for this server.
+        type: str
+        choices:
+            - Enabled
+            - Disabled
+        version_added: "1.10.0"
+    change_admin_password:
+        description:
+            - Whether or not the c(admin_password) should be updated for an existing server. If true, the password is the only value which will be updated.
+        type: bool
+        default: false
+        version_added: "1.10.0"
     state:
         description:
             - State of the SQL server. Use C(present) to create or update a server and use C(absent) to delete a server.
@@ -59,13 +90,21 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) SQL Server
-    azure_rm_sqlserver:
-      resource_group: myResourceGroup
-      name: server_name
-      location: westus
-      admin_username: mylogin
-      admin_password: Testpasswordxyz12!
+- name: Create (or update) SQL Server
+  azure_rm_sqlserver:
+    resource_group: myResourceGroup
+    name: server_name
+    location: westus
+    admin_username: mylogin
+    admin_password: Testpasswordxyz12!
+
+- name: Change SQL Server admin password
+  azure_rm_sqlserver:
+    resource_group: myResourceGroup
+    name: server_name
+    location: westus
+    admin_password: NewPasswordx123!
+    change_admin_password: true
 '''
 
 RETURN = '''
@@ -96,13 +135,11 @@ fully_qualified_domain_name:
 '''
 
 import time
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from azure.mgmt.sql import SqlManagementClient
-    from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -112,7 +149,7 @@ class Actions:
     NoAction, Create, Update, Delete = range(4)
 
 
-class AzureRMSqlServer(AzureRMModuleBase):
+class AzureRMSqlServer(AzureRMModuleBaseExt):
     """Configuration class for an Azure RM SQL Server resource"""
 
     def __init__(self):
@@ -141,6 +178,22 @@ class AzureRMSqlServer(AzureRMModuleBase):
             identity=dict(
                 type='str'
             ),
+            minimal_tls_version=dict(
+                type="str",
+                choices=["1.0", "1.1", "1.2"]
+            ),
+            public_network_access=dict(
+                type="str",
+                choices=["Enabled", "Disabled"]
+            ),
+            restrict_outbound_network_access=dict(
+                type="str",
+                choices=["Enabled", "Disabled"]
+            ),
+            change_admin_password=dict(
+                type="bool",
+                default=False
+            ),
             state=dict(
                 type='str',
                 default='present',
@@ -156,6 +209,7 @@ class AzureRMSqlServer(AzureRMModuleBase):
         self.results = dict(changed=False)
         self.state = None
         self.to_do = Actions.NoAction
+        self.change_admin_password = False
 
         super(AzureRMSqlServer, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                supports_check_mode=True,
@@ -168,20 +222,17 @@ class AzureRMSqlServer(AzureRMModuleBase):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                if key == "location":
-                    self.parameters.update({"location": kwargs[key]})
-                elif key == "admin_username":
+                if key == "admin_username":
                     self.parameters.update({"administrator_login": kwargs[key]})
                 elif key == "admin_password":
                     self.parameters.update({"administrator_login_password": kwargs[key]})
-                elif key == "version":
-                    self.parameters.update({"version": kwargs[key]})
                 elif key == "identity":
                     self.parameters.update({"identity": {"type": kwargs[key]}})
+                else:
+                    self.parameters[key] = kwargs[key]
 
         old_response = None
         response = None
-        results = dict()
 
         resource_group = self.get_resource_group(self.resource_group)
 
@@ -205,7 +256,13 @@ class AzureRMSqlServer(AzureRMModuleBase):
                 update_tags, newtags = self.update_tags(old_response.get('tags', dict()))
                 if update_tags:
                     self.tags = newtags
-                self.to_do = Actions.Update
+                admin_pass = self.parameters.pop('administrator_login_password', None) # remove for comparison as value not returned in old_response
+                if self.change_admin_password:
+                    self.parameters.update(old_response) # use all existing config
+                    self.parameters.update({"administrator_login_password": admin_pass})
+                self.results['compare'] = []
+                if not self.idempotency_check(old_response, self.parameters):
+                    self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.log("Need to Create / Update the SQL Server instance")
@@ -221,7 +278,7 @@ class AzureRMSqlServer(AzureRMModuleBase):
             if not old_response:
                 self.results['changed'] = True
             else:
-                self.results['changed'] = old_response.__ne__(response)
+                self.results['changed'] = True if self.change_admin_password else old_response.__ne__(response)
             self.log("Creation / Update done")
         elif self.to_do == Actions.Delete:
             self.log("SQL Server instance deleted")
@@ -257,13 +314,13 @@ class AzureRMSqlServer(AzureRMModuleBase):
         self.log("Creating / Updating the SQL Server instance {0}".format(self.name))
 
         try:
-            response = self.sql_client.servers.create_or_update(self.resource_group,
-                                                                self.name,
-                                                                self.parameters)
+            response = self.sql_client.servers.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                      server_name=self.name,
+                                                                      parameters=self.parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the SQL Server instance.')
             self.fail("Error creating the SQL Server instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -276,9 +333,11 @@ class AzureRMSqlServer(AzureRMModuleBase):
         '''
         self.log("Deleting the SQL Server instance {0}".format(self.name))
         try:
-            response = self.sql_client.servers.delete(self.resource_group,
-                                                      self.name)
-        except CloudError as e:
+            response = self.sql_client.servers.begin_delete(resource_group_name=self.resource_group,
+                                                            server_name=self.name)
+            if isinstance(response, LROPoller):
+                response = self.get_poller_result(response)
+        except Exception as e:
             self.log('Error attempting to delete the SQL Server instance.')
             self.fail("Error deleting the SQL Server instance: {0}".format(str(e)))
 
@@ -293,12 +352,12 @@ class AzureRMSqlServer(AzureRMModuleBase):
         self.log("Checking if the SQL Server instance {0} is present".format(self.name))
         found = False
         try:
-            response = self.sql_client.servers.get(self.resource_group,
-                                                   self.name)
+            response = self.sql_client.servers.get(resource_group_name=self.resource_group,
+                                                   server_name=self.name)
             found = True
             self.log("Response : {0}".format(response))
             self.log("SQL Server instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError:
             self.log('Did not find the SQL Server instance.')
         if found is True:
             return response.as_dict()

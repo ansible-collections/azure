@@ -146,9 +146,7 @@ databases:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.sql import SqlManagementClient
-    from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -211,7 +209,7 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
                                                      server_name=self.server_name,
                                                      database_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError:
             self.log('Could not get facts for Databases.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -227,7 +225,7 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
                                                                       server_name=self.server_name,
                                                                       elastic_pool_name=self.elastic_pool_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception:
             self.fail('Could not get facts for Databases.')
 
         if response is not None:
@@ -244,7 +242,7 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
             response = self.sql_client.databases.list_by_server(resource_group_name=self.resource_group,
                                                                 server_name=self.server_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception:
             self.fail('Could not get facts for Databases.')
 
         if response is not None:

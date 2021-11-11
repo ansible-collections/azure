@@ -105,14 +105,33 @@ servers:
                     returned: always
                     type: str
                     sample: fully_qualified_domain_name
+                minimal_tls_version:
+                    description:
+                        - The version TLS clients at which must connect.
+                    returned: always
+                    type: str
+                    sample: 1.2
+                    version_added: "1.10.0"
+                public_network_access:
+                    description:
+                        - Whether or not public endpoint access is allowed for the server.
+                    returned: always
+                    type: str
+                    sample: Enabled
+                    version_added: "1.10.0"
+                restrict_outbound_network_access:
+                    description:
+                        - Whether or not outbound network access is allowed for this server.
+                    returned: always
+                    type: str
+                    sample: Enabled
+                    version_added: "1.10.0"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.sql import SqlManagementClient
-    from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -165,7 +184,7 @@ class AzureRMSqlServerInfo(AzureRMModuleBase):
             response = self.sql_client.servers.get(resource_group_name=self.resource_group,
                                                    server_name=self.server_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError:
             self.log('Could not get facts for Servers.')
 
         if response is not None:
@@ -184,7 +203,7 @@ class AzureRMSqlServerInfo(AzureRMModuleBase):
         try:
             response = self.sql_client.servers.list_by_resource_group(resource_group_name=self.resource_group)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError:
             self.log('Could not get facts for Servers.')
 
         if response is not None:
