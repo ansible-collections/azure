@@ -153,6 +153,12 @@ options:
                     - List of existing load-balancer backend address pools to associate with the network interface.
                     - Can be written as a resource ID.
                     - Also can be a dict of I(name) and I(load_balancer).
+            application_gateway_backend_address_pools:
+                description:
+                    - List of existing application gateway backend address pools to associate with the network interface.
+                    - Can be written as a resource ID.
+                    - Also can be a dict of I(name) and I(application_gateway).
+                version_added: "1.10.0"
             primary:
                 description:
                     - Whether the IP configuration is the primary one in the list.
@@ -374,8 +380,13 @@ state:
                     sample: default
                 load_balancer_backend_address_pools:
                     description:
-                        - List of existing load-balancer backend address pools to associate with the network interface.
+                        - List of existing load-balancer backend address pools associated with the network interface.
                     type: list
+                application_gateway_backend_address_pools:
+                    description:
+                        - List of existing application gateway backend address pools associated with the network interface.
+                    type: list
+                    version_added: "1.10.0"
                 private_ip_address:
                     description:
                         - Private IP address for the IP configuration.
@@ -492,6 +503,8 @@ def nic_to_dict(nic):
             primary=config.primary if config.primary else False,
             load_balancer_backend_address_pools=([item.id for item in config.load_balancer_backend_address_pools]
                                                  if config.load_balancer_backend_address_pools else None),
+            application_gateway_backend_address_pools=([item.id for item in config.application_gateway_backend_address_pools]
+                                                       if config.application_gateway_backend_address_pools else None),
             public_ip_address=dict(
                 id=config.public_ip_address.id,
                 name=azure_id_to_dict(config.public_ip_address.id).get('publicIPAddresses'),
@@ -536,6 +549,7 @@ ip_configuration_spec = dict(
     public_ip_address_name=dict(type='str', aliases=['public_ip_address', 'public_ip_name']),
     public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
     load_balancer_backend_address_pools=dict(type='list'),
+    application_gateway_backend_address_pools=dict(type='list'),
     primary=dict(type='bool', default=False),
     application_security_groups=dict(type='list', elements='raw')
 )
@@ -762,6 +776,10 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                         load_balancer_backend_address_pools=([self.network_models.BackendAddressPool(id=self.backend_addr_pool_id(bap_id))
                                                               for bap_id in ip_config.get('load_balancer_backend_address_pools')]
                                                              if ip_config.get('load_balancer_backend_address_pools') else None),
+                        application_gateway_backend_address_pools=([self.network_models.ApplicationGatewayBackendAddressPool(
+                                                                      id=self.gateway_backend_addr_pool_id(bap_id)
+                                                                  ) for bap_id in ip_config.get('application_gateway_backend_address_pools')]
+                                                                  if ip_config.get('application_gateway_backend_address_pools') else None),
                         primary=ip_config.get('primary'),
                         application_security_groups=([self.network_models.ApplicationSecurityGroup(id=asg_id)
                                                       for asg_id in ip_config.get('application_security_groups')]
@@ -861,6 +879,20 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                                    child_name_1=name)
         return val
 
+    def gateway_backend_addr_pool_id(self, val):
+        if isinstance(val, dict):
+            appgw = val.get('application_gateway', None)
+            name = val.get('name', None)
+            if appgw and name:
+                return resource_id(subscription=self.subscription_id,
+                                   resource_group=self.resource_group,
+                                   namespace='Microsoft.Network',
+                                   type='applicationGateways',
+                                   name=appgw,
+                                   child_type_1='backendAddressPools',
+                                   child_name_1=name)
+        return val
+
     def construct_ip_configuration_set(self, raw):
         configurations = [str(dict(
             private_ip_allocation_method=to_native(item.get('private_ip_allocation_method')),
@@ -870,6 +902,9 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
             load_balancer_backend_address_pools=(set([to_native(self.backend_addr_pool_id(id))
                                                       for id in item.get('load_balancer_backend_address_pools')])
                                                  if item.get('load_balancer_backend_address_pools') else None),
+            application_gateway_backend_address_pools=(set([to_native(self.gateway_backend_addr_pool_id(id))
+                                                      for id in item.get('application_gateway_backend_address_pools')])
+                                                 if item.get('application_gateway_backend_address_pools') else None),
             application_security_groups=(set([to_native(asg_id) for asg_id in item.get('application_security_groups')])
                                          if item.get('application_security_groups') else None),
             name=to_native(item.get('name'))
