@@ -519,13 +519,13 @@
   azure_rm_subnet:
     name: appgw-subnet{{ rpfx }}
     virtual_network_name: tn{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     address_prefix_cidr: 10.10.1.0/24
   register: appgw_subnet_output
 
 - name: Create application gateway to connect NIC to
   azure_rm_appgateway:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "appgateway{{ rpfx }}"
     sku:
       name: standard_small
@@ -566,13 +566,13 @@
   azure_rm_subnet:
     name: nic-appgw-subnet{{ rpfx }}
     virtual_network_name: tn{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     address_prefix_cidr: 10.10.2.0/24
 
 - name: "Create NIC attached to application gateway"
   azure_rm_networkinterface:
     name: "appgw-nic{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     virtual_network: "tn{{ rpfx }}"
     subnet_name: "nic-appgw-subnet{{ rpfx }}"
     create_with_security_group: false
@@ -594,7 +594,7 @@
 - name: "Create NIC attached to application gateway - idempotent"
   azure_rm_networkinterface:
     name: "appgw-nic{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     virtual_network: "tn{{ rpfx }}"
     subnet_name: "nic-appgw-subnet{{ rpfx }}"
     create_with_security_group: false
@@ -613,7 +613,7 @@
 - name: Get facts for appgw nic
   azure_rm_networkinterface_info:
     name: "appgw-nic{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
   register: facts
 - assert:
     that:
