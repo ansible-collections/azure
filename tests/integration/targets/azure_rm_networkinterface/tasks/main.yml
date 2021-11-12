@@ -623,6 +623,26 @@
       - facts.networkinterfaces[0].ip_configurations[0].application_gateway_backend_address_pools | length == 1
       - facts.networkinterfaces[0].ip_configurations[0].application_gateway_backend_address_pools[0] == appgw_output.id + '/backendAddressPools/test_backend_address_pool'
 
+- name: "Delete NIC attached to application gateway"
+  azure_rm_networkinterface:
+    name: "appgw-nic{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+    state: absent
+  register: output
+- assert:
+    that:
+      - output.changed
+
+- name: Delete application gateway
+  azure_rm_appgateway:
+    name: "appgateway{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+    state: absent
+  register: output
+- assert:
+    that:
+      - output.changed
+
 - name: Delete the NIC (check mode)
   azure_rm_networkinterface:
       resource_group: "{{ resource_group }}"
