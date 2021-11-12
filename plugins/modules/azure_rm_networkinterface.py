@@ -286,6 +286,21 @@ EXAMPLES = '''
               - name: backendaddrpool1
                 load_balancer: loadbalancer001
 
+    - name: Create network interface attached to application gateway backend address pool
+      azure_rm_networkinterface:
+        name: nic-appgw
+        resource_group: myResourceGroup
+        virtual_network: vnet001
+        subnet_name: subnet001
+        create_with_security_group: false
+        public_ip: false
+        ip_configurations:
+          - name: default
+            primary: true
+            application_gateway_backend_address_pools:
+              - name: myApplicationGatewayBackendAddressPool
+                application_gateway: myApplicationGateway
+
     - name: Create a network interface in accelerated networking mode
       azure_rm_networkinterface:
         name: nic005
