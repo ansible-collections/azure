@@ -127,13 +127,13 @@ options:
                 suboptions:
                     id:
                         description:
-                            - Full ID of the subnet resource. Required if c(name) and c(virtual_network_name) are not provided.
+                            - Full ID of the subnet resource. Required if I(name) and I(virtual_network_name) are not provided.
                     name:
                         description:
-                            - Name of the subnet. Only used if c(virtual_network_name) is also provided.
+                            - Name of the subnet. Only used if I(virtual_network_name) is also provided.
                     virtual_network_name:
                         description:
-                            - Name of the virtual network. Only used if c(name) is also provided.
+                            - Name of the virtual network. Only used if I(name) is also provided.
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
