@@ -127,13 +127,13 @@ options:
                 suboptions:
                     id:
                         description:
-                            - Full ID of the subnet resource. Required if name and virtual_network_name are not provided.
+                            - Full ID of the subnet resource. Required if c(name) and c(virtual_network_name) are not provided.
                     name:
                         description:
-                            - Name of the subnet. Only used if virtual_network_name is also provided.
+                            - Name of the subnet. Only used if c(virtual_network_name) is also provided.
                     virtual_network_name:
                         description:
-                            - Name of the virtual network. Only used if name is also provided.
+                            - Name of the virtual network. Only used if c(name) is also provided.
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
@@ -162,6 +162,25 @@ options:
             target_listener:
                 description:
                     - Reference to a listener to redirect the request to.
+            request_routing_rules:
+                description:
+                    - List of c(basic) request routing rule names within the application gateway to which the redirect is bound.
+                version_added: "1.10.0"
+            url_path_maps:
+                description:
+                    - List of URL path map names (c(path_based_routing) rules) within the application gateway to which the redirect is bound.
+                version_added: "1.10.0"
+            path_rules:
+                description:
+                    - List of URL path rules within a c(path_based_routing) rule to which the redirect is bound.
+                suboptions:
+                    name:
+                        description:
+                            - Name of the URL rule.
+                    path_map_name:
+                        description:
+                            - Name of URL path map.
+                version_added: "1.10.0"
             include_path:
                 description:
                     - Include path in the redirected url.
@@ -205,13 +224,13 @@ options:
                 suboptions:
                     id:
                         description:
-                            - Full ID of the subnet resource. Required if name and virtual_network_name are not provided.
+                            - Full ID of the subnet resource. Required if I(name) and I(virtual_network_name) are not provided.
                     name:
                         description:
-                            - Name of the subnet. Only used if virtual_network_name is also provided.
+                            - Name of the subnet. Only used if I(virtual_network_name) is also provided.
                     virtual_network_name:
                         description:
-                            - Name of the virtual network. Only used if name is also provided.
+                            - Name of the virtual network. Only used if I(name) is also provided.
             public_ip_address:
                 description:
                     - Reference of the PublicIP resource.
@@ -375,9 +394,10 @@ options:
             default_backend_address_pool:
                 description:
                     - Backend address pool resource of the application gateway which will be used if no path matches occur.
+                    - Mutually exclusive with I(default_redirect_configuration).
             default_backend_http_settings:
                 description:
-                    - Backend http settings resource of the application gateway; used for the I(default_backend_address_pool).
+                    - Backend http settings resource of the application gateway; used with I(default_backend_address_pool).
             path_rules:
                 description:
                     - List of URL path rules.
@@ -388,12 +408,23 @@ options:
                     backend_address_pool:
                         description:
                             - Backend address pool resource of the application gateway which will be used if the path is matched.
+                            - Mutually exclusive with I(redirect_configuration).
                     backend_http_settings:
                         description:
                             - Backend http settings resource of the application gateway; used for the path's I(backend_address_pool).
+                    redirect_configuration:
+                        description:
+                            - Name of redirect configuration resource of the application gateway which will be used if the path is matched.
+                            - Mutually exclusive with I(backend_address_pool).
+                        version_added: "1.10.0"
                     paths:
                         description:
                             - List of paths.
+            default_redirect_configuration:
+                description:
+                    - Name of redirect configuration resource of the application gateway which will be used if no path matches occur.
+                    - Mutually exclusive with I(default_backend_address_pool).
+                version_added: "1.10.0"
     request_routing_rules:
         description:
             - List of request routing rules of the application gateway resource.
@@ -623,12 +654,46 @@ probe_spec = dict(
 )
 
 
+redirect_path_rules_spec = dict(
+    name=dict(type='str'),
+    path_map_name=dict(type='str'),
+)
+
+
 redirect_configuration_spec = dict(
     include_path=dict(type='bool'),
     include_query_string=dict(type='bool'),
     name=dict(type='str'),
     redirect_type=dict(type='str', choices=['permanent', 'found', 'see_other', 'temporary']),
-    target_listener=dict(type='str')
+    target_listener=dict(type='str'),
+    request_routing_rules=dict(type='list', elements='str'),
+    url_path_maps=dict(type='list', elements='str'),
+    path_rules=dict(type='list', elements='dict', options=redirect_path_rules_spec),
+)
+
+
+path_rules_spec = dict(
+    name=dict(type='str'),
+    backend_address_pool=dict(type='str'),
+    backend_http_settings=dict(type='str'),
+    redirect_configuration=dict(type='str'),
+    paths=dict(type='list', elements='str'),
+)
+
+
+url_path_maps_spec = dict(
+    name=dict(type='str'),
+    default_backend_address_pool=dict(type='str'),
+    default_backend_http_settings=dict(type='str'),
+    path_rules=dict(
+        type='list',
+        elements='dict',
+        options=path_rules_spec,
+        mutually_exclusive=[('backend_address_pool', 'redirect_configuration')],
+        required_one_of=[('backend_address_pool', 'redirect_configuration')],
+        required_together=[('backend_address_pool', 'backend_http_settings')],
+    ),
+    default_redirect_configuration=dict(type='str'),
 )
 
 
@@ -690,7 +755,12 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 type='list'
             ),
             url_path_maps=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=url_path_maps_spec,
+                mutually_exclusive=[('default_backend_address_pool', 'default_redirect_configuration')],
+                required_one_of=[('default_backend_address_pool', 'default_redirect_configuration')],
+                required_together=[('default_backend_address_pool', 'default_backend_http_settings')],
             ),
             request_routing_rules=dict(
                 type='list'
@@ -813,6 +883,38 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                                   kwargs['name'],
                                                   item['target_listener'])
                             item['target_listener'] = {'id': id}
+                        if item['request_routing_rules']:
+                            for j in range(len(item['request_routing_rules'])):
+                                rule_name = item['request_routing_rules'][j]
+                                id = request_routing_rule_id(self.subscription_id,
+                                                             kwargs['resource_group'],
+                                                             kwargs['name'],
+                                                             rule_name)
+                                item['request_routing_rules'][j] = {'id': id}
+                        else:
+                            del item['request_routing_rules']
+                        if item['url_path_maps']:
+                            for j in range(len(item['url_path_maps'])):
+                                pathmap_name = item['url_path_maps'][j]
+                                id = url_path_map_id(self.subscription_id,
+                                                     kwargs['resource_group'],
+                                                     kwargs['name'],
+                                                     pathmap_name)
+                                item['url_path_maps'][j] = {'id': id}
+                        else:
+                            del item['url_path_maps']
+                        if item['path_rules']:
+                            for j in range(len(item['path_rules'])):
+                                pathrule = item['path_rules'][j]
+                                if 'name' in pathrule and 'path_map_name' in pathrule:
+                                    id = url_path_rule_id(self.subscription_id,
+                                                          kwargs['resource_group'],
+                                                          kwargs['name'],
+                                                          pathrule['path_map_name'],
+                                                          pathrule['name'])
+                                    item['path_rules'][j] = {'id': id}
+                        else:
+                            del item['path_rules']
                     self.parameters["redirect_configurations"] = ev
                 elif key == "frontend_ip_configurations":
                     ev = kwargs[key]
@@ -891,35 +993,59 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     ev = kwargs[key]
                     for i in range(len(ev)):
                         item = ev[i]
-                        if 'default_backend_address_pool' in item:
+                        if item['default_backend_address_pool']:
                             id = backend_address_pool_id(self.subscription_id,
                                                          kwargs['resource_group'],
                                                          kwargs['name'],
                                                          item['default_backend_address_pool'])
                             item['default_backend_address_pool'] = {'id': id}
-                        if 'default_backend_http_settings' in item:
+                        else:
+                            del item['default_backend_address_pool']
+                        if item['default_backend_http_settings']:
                             id = backend_http_settings_id(self.subscription_id,
                                                           kwargs['resource_group'],
                                                           kwargs['name'],
                                                           item['default_backend_http_settings'])
                             item['default_backend_http_settings'] = {'id': id}
+                        else:
+                            del item['default_backend_http_settings']
                         if 'path_rules' in item:
                             ev2 = item['path_rules']
                             for j in range(len(ev2)):
                                 item2 = ev2[j]
-                                if 'backend_address_pool' in item2:
+                                if item2['backend_address_pool']:
                                     id = backend_address_pool_id(self.subscription_id,
                                                                  kwargs['resource_group'],
                                                                  kwargs['name'],
                                                                  item2['backend_address_pool'])
                                     item2['backend_address_pool'] = {'id': id}
-                                if 'backend_http_settings' in item2:
+                                else:
+                                    del item2['backend_address_pool']
+                                if item2['backend_http_settings']:
                                     id = backend_http_settings_id(self.subscription_id,
                                                                   kwargs['resource_group'],
                                                                   kwargs['name'],
                                                                   item2['backend_http_settings'])
                                     item2['backend_http_settings'] = {'id': id}
+                                else:
+                                    del item2['backend_http_settings']
+                                if item2['redirect_configuration']:
+                                    id = redirect_configuration_id(self.subscription_id,
+                                                                   kwargs['resource_group'],
+                                                                   kwargs['name'],
+                                                                   item2['redirect_configuration'])
+                                    item2['redirect_configuration'] = {'id': id}
+                                else:
+                                    del item2['redirect_configuration']
                                 ev2[j] = item2
+                        if item['default_redirect_configuration']:
+                            id = redirect_configuration_id(self.subscription_id,
+                                                           kwargs['resource_group'],
+                                                           kwargs['name'],
+                                                           item['default_redirect_configuration'])
+                            item['default_redirect_configuration'] = {'id': id}
+                        else:
+                            del item['default_redirect_configuration']
                         ev[i] = item
                     self.parameters["url_path_maps"] = ev
                 elif key == "request_routing_rules":
@@ -1209,12 +1335,43 @@ def url_path_map_id(subscription_id, resource_group_name, appgateway_name, name)
     )
 
 
+def url_path_rule_id(subscription_id, resource_group_name, appgateway_name, url_path_map_name, name):
+    """Generate the id for a url path map"""
+    return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/applicationGateways/{2}/urlPathMaps/{3}/pathRules/{4}'.format(
+        subscription_id,
+        resource_group_name,
+        appgateway_name,
+        url_path_map_name,
+        name
+    )
+
+
 def subnet_id(subscription_id, resource_group_name, virtual_network_name, name):
     """Generate the id for a subnet in a virtual network"""
     return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/virtualNetworks/{2}/subnets/{3}'.format(
         subscription_id,
         resource_group_name,
         virtual_network_name,
+        name
+    )
+
+
+def ip_configuration_id(subscription_id, resource_group_name, network_interface_name, name):
+    """Generate the id for a request routing rule in an application gateway"""
+    return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/networkInterfaces/{2}/ipConfigurations/{3}'.format(
+        subscription_id,
+        resource_group_name,
+        network_interface_name,
+        name
+    )
+
+
+def request_routing_rule_id(subscription_id, resource_group_name, appgateway_name, name):
+    """Generate the id for a request routing rule in an application gateway"""
+    return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/applicationGateways/{2}/requestRoutingRules/{3}'.format(
+        subscription_id,
+        resource_group_name,
+        appgateway_name,
         name
     )
 
