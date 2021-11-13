@@ -1,6 +1,8 @@
 - name: Prepare random number
   set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    cert1_file: "cert1.txt"
+    cert2_file: "cert2.txt"
   run_once: yes
 
 - name: Create a virtual network
@@ -39,11 +41,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -130,11 +132,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -216,11 +218,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           name: subnet{{ rpfx }}
@@ -303,11 +305,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -389,11 +391,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -476,11 +478,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -562,11 +564,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -647,11 +649,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -742,11 +744,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -814,6 +816,260 @@
        include_path: true
        include_query_string: true
        name: redirect_site_to_https
+  register: output
+- name: Assert the resource instance is not changed
+  assert:
+    that:
+      - not output.changed
+
+- name: Create instance of Application Gateway with complex routing and redirect rules
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway-complex{{ rpfx }}"
+    sku:
+      name: standard_small
+      tier: standard
+      capacity: 2
+    ssl_policy:
+      policy_type: "predefined"
+      policy_name: "ssl_policy20170401_s"
+    ssl_certificates:
+      - name: cert2
+        password: your-password
+        data: "{{ lookup('file', cert2_file) }}"
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - name: "inbound-http"
+        port: 80
+      - name: "inbound-https"
+        port: 443
+    backend_address_pools:
+      - name: test_backend_address_pool1
+        backend_addresses:
+          - ip_address: 10.0.0.1
+      - name: test_backend_address_pool2
+        backend_addresses:
+          - ip_address: 10.0.0.2
+    backend_http_settings_collection:
+      - name: "http-profile1"
+        port: 443
+        protocol: https
+        pick_host_name_from_backend_address: true
+        probe: "http-probe1"
+        cookie_based_affinity: "Disabled"
+      - name: "http-profile2"
+        port: 8080
+        protocol: http
+        pick_host_name_from_backend_address: true
+        probe: "http-probe2"
+        cookie_based_affinity: "Disabled"
+    http_listeners:
+      - name: "inbound-http"
+        protocol: "http"
+        frontend_ip_configuration: "sample_gateway_frontend_ip_config"
+        frontend_port: "inbound-http"
+      - name: "inbound-traffic1"
+        protocol: "https"
+        frontend_ip_configuration: "sample_gateway_frontend_ip_config"
+        frontend_port: "inbound-https"
+        host_name: "traffic1.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "cert2"
+      - name: "inbound-traffic2"
+        protocol: "https"
+        frontend_ip_configuration: "sample_gateway_frontend_ip_config"
+        frontend_port: "inbound-https"
+        host_name: "traffic2.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "cert2"
+    url_path_maps:
+      - name: "path_mappings"
+        default_redirect_configuration: "redirect-traffic1"
+        path_rules:
+          - name: "path_rules"
+            backend_address_pool: "test_backend_address_pool1"
+            backend_http_settings: "http-profile1"
+            paths:
+              - "/abc"
+              - "/123/*"
+    request_routing_rules:
+      - name: "app-routing1"
+        rule_type: "basic"
+        http_listener: "inbound-traffic1"
+        backend_address_pool: "test_backend_address_pool2"
+        backend_http_settings: "http-profile1"
+      - name: "app-routing2"
+        rule_type: "path_based_routing"
+        http_listener: "inbound-traffic2"
+        url_path_map: "path_mappings"
+      - name: "redirect-routing"
+        rule_type: "basic"
+        http_listener: "inbound-http"
+        redirect_configuration: "redirect-http"
+    probes:
+        - name: "http-probe1"
+          interval: 30
+          path: "/abc"
+          protocol: "https"
+          pick_host_name_from_backend_http_settings: true
+          timeout: 30
+          unhealthy_threshold: 2
+        - name: "http-probe2"
+          interval: 30
+          path: "/xyz"
+          protocol: "http"
+          pick_host_name_from_backend_http_settings: true
+          timeout: 30
+          unhealthy_threshold: 2
+    redirect_configurations:
+      - name: "redirect-http"
+        redirect_type: "permanent"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        request_routing_rules:
+          - "redirect-routing"
+      - name: "redirect-traffic1"
+        redirect_type: "found"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        url_path_maps:
+          - "path_mappings"
+  register: output
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+
+- name: Try to update instance of Application Gateway with complex routing and redirect rules - no change
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway-complex{{ rpfx }}"
+    sku:
+      name: standard_small
+      tier: standard
+      capacity: 2
+    ssl_policy:
+      policy_type: "predefined"
+      policy_name: "ssl_policy20170401_s"
+    ssl_certificates:
+      - name: cert2
+        password: your-password
+        data: "{{ lookup('file', cert2_file) }}"
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - name: "inbound-http"
+        port: 80
+      - name: "inbound-https"
+        port: 443
+    backend_address_pools:
+      - name: test_backend_address_pool1
+        backend_addresses:
+          - ip_address: 10.0.0.1
+      - name: test_backend_address_pool2
+        backend_addresses:
+          - ip_address: 10.0.0.2
+    backend_http_settings_collection:
+      - name: "http-profile1"
+        port: 443
+        protocol: https
+        pick_host_name_from_backend_address: true
+        probe: "http-probe1"
+        cookie_based_affinity: "Disabled"
+      - name: "http-profile2"
+        port: 8080
+        protocol: http
+        pick_host_name_from_backend_address: true
+        probe: "http-probe2"
+        cookie_based_affinity: "Disabled"
+    http_listeners:
+      - name: "inbound-http"
+        protocol: "http"
+        frontend_ip_configuration: "sample_gateway_frontend_ip_config"
+        frontend_port: "inbound-http"
+      - name: "inbound-traffic1"
+        protocol: "https"
+        frontend_ip_configuration: "sample_gateway_frontend_ip_config"
+        frontend_port: "inbound-https"
+        host_name: "traffic1.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "cert2"
+      - name: "inbound-traffic2"
+        protocol: "https"
+        frontend_ip_configuration: "sample_gateway_frontend_ip_config"
+        frontend_port: "inbound-https"
+        host_name: "traffic2.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "cert2"
+    url_path_maps:
+      - name: "path_mappings"
+        default_redirect_configuration: "redirect-traffic1"
+        path_rules:
+          - name: "path_rules"
+            backend_address_pool: "test_backend_address_pool1"
+            backend_http_settings: "http-profile1"
+            paths:
+              - "/abc"
+              - "/123/*"
+    request_routing_rules:
+      - name: "app-routing1"
+        rule_type: "basic"
+        http_listener: "inbound-traffic1"
+        backend_address_pool: "test_backend_address_pool2"
+        backend_http_settings: "http-profile1"
+      - name: "app-routing2"
+        rule_type: "path_based_routing"
+        http_listener: "inbound-traffic2"
+        url_path_map: "path_mappings"
+      - name: "redirect-routing"
+        rule_type: "basic"
+        http_listener: "inbound-http"
+        redirect_configuration: "redirect-http"
+    probes:
+        - name: "http-probe1"
+          interval: 30
+          path: "/abc"
+          protocol: "https"
+          pick_host_name_from_backend_http_settings: true
+          timeout: 30
+          unhealthy_threshold: 2
+        - name: "http-probe2"
+          interval: 30
+          path: "/xyz"
+          protocol: "http"
+          pick_host_name_from_backend_http_settings: true
+          timeout: 30
+          unhealthy_threshold: 2
+    redirect_configurations:
+      - name: "redirect-http"
+        redirect_type: "permanent"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        request_routing_rules:
+          - "redirect-routing"
+      - name: "redirect-traffic1"
+        redirect_type: "found"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        url_path_maps:
+          - "path_mappings"
   register: output
 - name: Assert the resource instance is not changed
   assert:
