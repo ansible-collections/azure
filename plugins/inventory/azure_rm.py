@@ -576,6 +576,7 @@ class AzureHost(object):
         # set image and os_disk
         new_hostvars['image'] = {}
         new_hostvars['os_disk'] = {}
+        new_hostvars['data_disks'] = []
         storageProfile = self._vm_model['properties'].get('storageProfile')
         if storageProfile:
             imageReference = storageProfile.get('imageReference')
