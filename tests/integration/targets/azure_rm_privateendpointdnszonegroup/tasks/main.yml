@@ -34,11 +34,6 @@
     admin_password: "Password123!"
   register: post_output
 
-- name: Create private DNS zone for postgres
-  azure_rm_privatednszone:
-    name: "privatelink.postgres.database.azure.com"
-    resource_group: "{{ resource_group }}"
-
 - name: Create zone group for non-existant private endpoint
   azure_rm_privateendpointdnszonegroup:
     name: "zone-group-{{ rpfx }}"
@@ -63,10 +58,15 @@
     subnet:
       id: "{{ subnet_output.state.id }}"
 
+- name: Create private DNS zone for postgres
+  azure_rm_privatednszone:
+    name: "privatelink.postgres.database.azure.com"
+    resource_group: "{{ resource_group }}"
+
 - name: Create virtual network link
   azure_rm_privatednszonelink:
-    resource_group: "{{ resource_group }}"
     name: "private-link-{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
     zone_name: "privatelink.postgres.database.azure.com"
     virtual_network: "vnet-{{ rpfx }}"
 
