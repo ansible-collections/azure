@@ -755,6 +755,13 @@ class Actions:
     NoAction, Create, Update, Delete = range(4)
 
 
+sku_spec = dict(
+    capacity=dict(type='int'),
+    name=dict(type='str', choices=['standard_small', 'standard_medium', 'standard_large', 'standard_v2', 'waf_medium', 'waf_large', 'waf_v2']),
+    tier=dict(type='str', choices=['standard', 'standard_v2', 'waf', 'waf_v2']),
+)
+
+
 ssl_policy_spec = dict(
     disabled_ssl_protocols=dict(type='list'),
     policy_type=dict(type='str', choices=['predefined', 'custom']),
@@ -836,7 +843,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 type='str'
             ),
             sku=dict(
-                type='dict'
+                type='dict',
+                options=sku_spec,
             ),
             ssl_policy=dict(
                 type='dict',
