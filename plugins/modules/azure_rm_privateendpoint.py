@@ -60,21 +60,6 @@ options:
                     - The ID(s) of the group(s) obtained from the remote resource that this private endpoint should connect to.
                 type: list
                 elements: str
-    private_dns_zone_configs:
-        description:
-            - The Private DNS zones configurations.
-        type: list
-        elements: dict
-        suboptions:
-            name:
-                description:
-                    - The name of the private dns zone configs.
-                type: str
-            private_dns_zone_group:
-                description:
-                    - The resource ID of the Private DNS zones.
-                type: list
-                elements: str
     state:
         description:
             - State of the virtual network. Use C(present) to create or update and C(absent) to delete.
@@ -210,12 +195,6 @@ subnet_spec = dict(
 )
 
 
-private_dns_zone_configs_spec = dict(
-    name=dict(type='str'),
-    private_dns_zone_group=dict(type='list', elements='str')
-)
-
-
 class Actions:
     NoAction, Create, Update, Delete = range(4)
 
@@ -231,7 +210,6 @@ class AzureRMPrivateEndpoint(AzureRMModuleBaseExt):
             location=dict(type='str'),
             subnet=dict(type='dict', options=subnet_spec),
             private_link_service_connections=dict(type='list', elements='dict', options=private_service_connection_spec),
-            private_dns_zone_configs=dict(type='list', elements='dict', options=private_dns_zone_configs_spec)
         )
 
         self.resource_group = None
@@ -278,12 +256,6 @@ class AzureRMPrivateEndpoint(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                # modifiers = {}
-                # self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                # self.results['modifiers'] = modifiers
-                # self.results['compare'] = []
-                # if not self.default_compare(modifiers, self.body, old_response, '', self.results):
-                #    self.to_do = Actions.Update
                 update_tags, newtags = self.update_tags(old_response.get('tags', {}))
                 if update_tags:
                     self.body['tags'] = newtags
