@@ -63,6 +63,13 @@
     subnet:
       id: "{{ subnet_output.state.id }}"
 
+- name: Create virtual network link
+  azure_rm_privatednszonelink:
+    resource_group: "{{ resource_group }}"
+    name: "private-link-{{ rpfx }}"
+    zone_name: "privatelink.postgres.database.azure.com"
+    virtual_network: "vnet-{{ rpfx }}"
+
 - name: Get zone groups for private endpoint
   azure_rm_privateendpointdnszonegroup_info:
     private_endpoint: "privateendpoint-{{ rpfx }}"
