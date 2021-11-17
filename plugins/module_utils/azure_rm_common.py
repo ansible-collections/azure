@@ -1546,10 +1546,9 @@ class AzureRMAuth(object):
                                                          tenant=tenant,
                                                          cloud_environment=self._cloud_environment,
                                                          verify=self._cert_validation_mode == 'validate')
-        if self.credentials.get('client_id') is not None:
             self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
                                                                                     password=self.credentials['password']
-                                                                                    client_id=self.credentials['client_id'])
+                                                                                    client_id=self.credentials.get('client_id', None)
         else:
             self.fail("Failed to authenticate with provided credentials. Some attributes were missing. "
                       "Credentials must include client_id, secret and tenant or ad_user and password, or "
