@@ -1523,19 +1523,6 @@ class AzureRMAuth(object):
                                                                                 client_secret=self.credentials['secret'],
                                                                                 tenant_id=self.credentials['tenant'])
 
-        elif self.credentials.get('ad_user') is not None and \
-                self.credentials.get('password') is not None and \
-                self.credentials.get('client_id') is not None and \
-                self.credentials.get('tenant') is not None:
-
-            self.azure_credentials = self.acquire_token_with_username_password(
-                self._adfs_authority_url,
-                self._cloud_environment.endpoints.active_directory_resource_id,
-                self.credentials['ad_user'],
-                self.credentials['password'],
-                self.credentials['client_id'],
-                self.credentials['tenant'])
-
         elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
             tenant = self.credentials.get('tenant')
             if not tenant:
@@ -1552,6 +1539,20 @@ class AzureRMAuth(object):
             self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
                                                                                     password=self.credentials['password']
                                                                                     client_id=client_id)
+
+        elif self.credentials.get('ad_user') is not None and \
+                self.credentials.get('password') is not None and \
+                self.credentials.get('client_id') is not None and \
+                self.credentials.get('tenant') is not None:
+
+            self.azure_credentials = self.acquire_token_with_username_password(
+                self._adfs_authority_url,
+                self._cloud_environment.endpoints.active_directory_resource_id,
+                self.credentials['ad_user'],
+                self.credentials['password'],
+                self.credentials['client_id'],
+                self.credentials['tenant'])
+
         else:
             self.fail("Failed to authenticate with provided credentials. Some attributes were missing. "
                       "Credentials must include client_id, secret and tenant or ad_user and password, or "
