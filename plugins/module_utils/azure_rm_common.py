@@ -1527,6 +1527,9 @@ class AzureRMAuth(object):
             tenant = self.credentials.get('tenant')
             if not tenant:
                 tenant = 'common'  # SDK default
+                tenant_track2 = 'organizations'  # SDK default
+            else:
+                tenant_track2 = self.credentials.get('tenant')
 
             self.azure_credentials = UserPassCredentials(self.credentials['ad_user'],
                                                          self.credentials['password'],
@@ -1538,7 +1541,7 @@ class AzureRMAuth(object):
 
             self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
                                                                                     password=self.credentials['password'],
-                                                                                    tenant_id=tenant,
+                                                                                    tenant_id=tenant_track2,
                                                                                     client_id=client_id)
 
         elif self.credentials.get('ad_user') is not None and \
