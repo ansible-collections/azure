@@ -1537,7 +1537,8 @@ class AzureRMAuth(object):
             client_id  = self.credentials.get('client_id', '04b07795-8ddb-461a-bbee-02f9e1bf7b46')
 
             self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
-                                                                                    password=self.credentials['password']
+                                                                                    password=self.credentials['password'],
+                                                                                    tenant_id=tenant,
                                                                                     client_id=client_id)
 
         elif self.credentials.get('ad_user') is not None and \
