@@ -89,7 +89,7 @@ azure_dnsrecordset:
     }]
 dnsrecordsets:
     description:
-        - List of record set dicts, which shares the same hierarchy as M(azure_rm_dnsrecordset.py) module's parameter.
+        - List of record set dicts, which shares the same hierarchy as M(azure.azcollection.azure_rm_dnsrecordset) module's parameter.
     returned: always
     type: complex
     contains:
