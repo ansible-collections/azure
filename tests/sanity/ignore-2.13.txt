@@ -37,7 +37,6 @@ plugins/modules/azure_rm_containerregistrywebhook.py validate-modules:undocument
 plugins/modules/azure_rm_containerregistrywebhook.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_containerregistrywebhook_info.py validate-modules:doc-default-does-not-match-spec
 plugins/modules/azure_rm_containerregistrywebhook_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_containerregistrywebhook_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_containerregistrywebhook_info.py validate-modules:undocumented-parameter
 plugins/modules/azure_rm_datalakestore.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_datalakestore.py validate-modules:nonexistent-parameter-documented
@@ -93,7 +92,6 @@ plugins/modules/azure_rm_keyvaultkey_info.py validate-modules:return-syntax-erro
 plugins/modules/azure_rm_keyvaultsecret.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_manageddisk.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_manageddisk_info.py validate-modules:parameter-list-no-elements
-plugins/modules/azure_rm_manageddisk_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_managementgroup.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_networkinterface.py validate-modules:doc-missing-type
 plugins/modules/azure_rm_networkinterface.py validate-modules:parameter-type-not-in-doc

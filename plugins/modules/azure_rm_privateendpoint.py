@@ -118,7 +118,7 @@ EXAMPLES = '''
 RETURN = '''
 state:
     description:
-        - List of private endpoint dict with same format as M(azure_rm_privateendpoint) module paramter.
+        - List of private endpoint dict with same format as M(azure_rm_privateendpoint.py) module paramter.
     returned: always
     type: complex
     contains:

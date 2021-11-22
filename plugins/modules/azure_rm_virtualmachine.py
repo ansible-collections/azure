@@ -21,7 +21,7 @@ short_description: Manage Azure virtual machines
 description:
     - Manage and configure virtual machines (VMs) and associated resources on Azure.
     - Requires a resource group containing at least one virtual network with at least one subnet.
-    - Supports images from the Azure Marketplace, which can be discovered with M(azure_rm_virtualmachineimage_info).
+    - Supports images from the Azure Marketplace, which can be discovered with M(azure_rm_virtualmachineimage_info.py).
     - Supports custom images since Ansible 2.5.
     - To use I(custom_data) on a Linux image, the image must have cloud-init enabled. If cloud-init is not enabled, I(custom_data) is ignored.
 
@@ -195,7 +195,7 @@ options:
     data_disks:
         description:
             - Describes list of data disks.
-            - Use M(azure_rm_mangeddisk) to manage the specific disk.
+            - Use M(azure_rm_mangeddisk.py) to manage the specific disk.
         suboptions:
             lun:
                 description:
