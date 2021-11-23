@@ -48,7 +48,7 @@ options:
     sku:
         description:
             - The name of the SKU.
-            - Please see L(https://azure.microsoft.com/en-in/pricing/details/expressroute/)
+            - Please see L(https://azure.microsoft.com/en-in/pricing/details/expressroute/,)
             - Required sku when I(state=present).
         type: dict
         suboptions:
