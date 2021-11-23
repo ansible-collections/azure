@@ -35,7 +35,7 @@ options:
     allocation_method:
         description:
             - Control whether the assigned Public IP remains permanently assigned to the object.
-            - If not set to C(Static), the IP address my changed anytime an associated virtual machine is power cycled.
+            - If not set to C(Static), the IP address may changed anytime an associated virtual machine is power cycled.
         choices:
             - dynamic
             - static
