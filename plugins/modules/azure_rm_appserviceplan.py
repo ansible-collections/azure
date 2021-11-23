@@ -265,7 +265,7 @@ class AzureRMAppServicePlans(AzureRMModuleBase):
                     self.tags = newtags
 
                 # check if sku changed
-                if self.sku and _normalize_sku(self.sku) != old_response['sku']['size']:
+                if self.sku and _normalize_sku(self.sku) != _normalize_sku(old_response['sku']['size']):
                     to_be_updated = True
 
                 # check if number_of_workers changed

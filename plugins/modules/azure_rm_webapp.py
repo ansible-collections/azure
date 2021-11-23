@@ -112,6 +112,29 @@ options:
             - Repository type of deployment source, for example C(LocalGit), C(GitHub).
             - List of supported values maintained at U(https://docs.microsoft.com/en-us/rest/api/appservice/webapps/createorupdate#scmtype).
 
+    always_on:
+        description:
+            - Keeps the app loaded even when there's no traffic.
+        type: bool
+
+    min_tls_version:
+        description:
+            - The minimum TLS encryption version required for the app.
+        type: str
+        choices:
+            - 1.0
+            - 1.1
+            - 1.2
+
+    ftps_state:
+        description:
+            - The state of the FTP/FTPS service.
+        type: str
+        choices:
+            - AllAllowed
+            - FtpsOnly
+            - Disabled
+
     deployment_source:
         description:
             - Deployment source for git.
@@ -446,6 +469,17 @@ class AzureRMWebApps(AzureRMModuleBase):
             scm_type=dict(
                 type='str',
             ),
+            always_on=dict(
+                type='bool',
+            ),
+            min_tls_version=dict(
+                type='str',
+                choices=['1.0', '1.1', '1.2'],
+            ),
+            ftps_state=dict(
+                type='str',
+                choices=['AllAllowed', 'FtpsOnly', 'Disabled'],
+            ),
             deployment_source=dict(
                 type='dict',
                 options=deployment_source_spec
@@ -537,7 +571,10 @@ class AzureRMWebApps(AzureRMModuleBase):
                                                  "java_version",
                                                  "php_version",
                                                  "python_version",
-                                                 "scm_type"]
+                                                 "scm_type",
+                                                 "always_on",
+                                                 "min_tls_version",
+                                                 "ftps_state"]
 
         # updatable_properties
         self.updatable_properties = ["client_affinity_enabled",
@@ -561,7 +598,7 @@ class AzureRMWebApps(AzureRMModuleBase):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                if key == "scm_type":
+                if key in ["scm_type", "always_on", "min_tls_version", "ftps_state"]:
                     self.site_config[key] = kwargs[key]
 
         old_response = None
@@ -662,8 +699,7 @@ class AzureRMWebApps(AzureRMModuleBase):
             if self.https_only is not None:
                 self.site.https_only = self.https_only
 
-            if self.client_affinity_enabled:
-                self.site.client_affinity_enabled = self.client_affinity_enabled
+            self.site.client_affinity_enabled = self.client_affinity_enabled
 
             # check if the web app already present in the resource group
             if not old_response:
@@ -808,10 +844,10 @@ class AzureRMWebApps(AzureRMModuleBase):
 
     # compare xxx_version
     def is_site_config_changed(self, existing_config):
-        for fx_version in self.site_config_updatable_properties:
-            if self.site_config.get(fx_version):
-                if not getattr(existing_config, fx_version) or \
-                        getattr(existing_config, fx_version).upper() != self.site_config.get(fx_version).upper():
+        for updatable_property in self.site_config_updatable_properties:
+            if self.site_config.get(updatable_property):
+                if not getattr(existing_config, updatable_property) or \
+                        str(getattr(existing_config, updatable_property)).upper() != str(self.site_config.get(updatable_property)).upper():
                     return True
 
         return False
