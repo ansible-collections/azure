@@ -66,7 +66,9 @@ groups:
         id:
             description:
                 - Resource ID of the private endpoint zone group.
-            sample: /subscriptions/xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateEndpoints/myPrivateEndpoint/privateDnsZoneGroups/myZoneGroup
+            sample: >-
+                /subscriptions/xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateEndpoints/myPrivateEndpoint/
+                privateDnsZoneGroups/myZoneGroup
             returned: always
             type: str
         name:
@@ -92,7 +94,9 @@ groups:
                         - ID of the private DNS zone.
                     returned: always
                     type: str
-                    sample: /subscriptions/xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateDnsZones/privatelink.postgres.database.azure.com
+                    sample: >-
+                        /subscriptions/xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/
+                        privateDnsZones/privatelink.postgres.database.azure.com
                 record_sets:
                     description:
                         - List of DNS records for zone.
