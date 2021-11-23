@@ -256,9 +256,9 @@ class AzureRMSqlServer(AzureRMModuleBaseExt):
                 update_tags, newtags = self.update_tags(old_response.get('tags', dict()))
                 if update_tags:
                     self.tags = newtags
-                admin_pass = self.parameters.pop('administrator_login_password', None) # remove for comparison as value not returned in old_response
+                admin_pass = self.parameters.pop('administrator_login_password', None)  # remove for comparison as value not returned in old_response
                 if self.change_admin_password:
-                    self.parameters.update(old_response) # use all existing config
+                    self.parameters.update(old_response)  # use all existing config
                     self.parameters.update({"administrator_login_password": admin_pass})
                 self.results['compare'] = []
                 if not self.idempotency_check(old_response, self.parameters):
