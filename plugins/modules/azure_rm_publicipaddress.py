@@ -20,7 +20,7 @@ short_description: Manage Azure Public IP Addresses
 description:
     - Create, update and delete a Public IP address.
     - Allows setting and updating the address allocation method and domain name label.
-    - Use the M(azure_rm_networkinterface) module to associate a Public IP with a network interface.
+    - Use the M(azure.azcollection.azure_rm_networkinterface) module to associate a Public IP with a network interface.
 
 options:
     resource_group:
