@@ -110,7 +110,8 @@ AZURE_API_PROFILES = {
         'ManagementLockClient': '2016-09-01',
         'DataLakeStoreAccountManagementClient': '2016-11-01',
         'NotificationHubsManagementClient': '2016-03-01',
-        'EventHubManagementClient': '2018-05-04'
+        'EventHubManagementClient': '2018-05-04',
+        'MonitorManagementClient': '2016-03-01',
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
@@ -135,7 +136,8 @@ AZURE_API_PROFILES = {
         }),
         'KeyVaultClient': '2016-10-01',
         'azure.multiapi.storage': '2017-11-09',
-        'azure.multiapi.cosmosdb': '2017-04-17'
+        'azure.multiapi.cosmosdb': '2017-04-17',
+        'MonitorManagementClient': '2016-03-01',
     },
     '2018-03-01-hybrid': {
         'StorageManagementClient': '2016-01-01',
@@ -153,7 +155,8 @@ AZURE_API_PROFILES = {
         }),
         'KeyVaultClient': '2016-10-01',
         'azure.multiapi.storage': '2017-04-17',
-        'azure.multiapi.cosmosdb': '2017-04-17'
+        'azure.multiapi.cosmosdb': '2017-04-17',
+        'MonitorManagementClient': '2016-03-01',
     },
     '2017-03-09-profile': {
         'StorageManagementClient': '2016-01-01',
@@ -170,7 +173,8 @@ AZURE_API_PROFILES = {
             'classic_administrators': '2015-06-01'
         }),
         'KeyVaultClient': '2016-10-01',
-        'azure.multiapi.storage': '2015-04-05'
+        'azure.multiapi.storage': '2015-04-05',
+        'MonitorManagementClient': '2016-03-01',
     }
 }
 
@@ -232,7 +236,6 @@ try:
     from msrestazure.tools import parse_resource_id, resource_id, is_valid_resource_id
     from msrestazure import azure_cloud
     from azure.common.credentials import ServicePrincipalCredentials, UserPassCredentials
-    from azure.mgmt.monitor.version import VERSION as monitor_client_version
     from azure.mgmt.network.version import VERSION as network_client_version
     from azure.mgmt.storage.version import VERSION as storage_client_version
     from azure.mgmt.compute.version import VERSION as compute_client_version
@@ -1246,7 +1249,8 @@ class AzureRMModuleBase(object):
         self.log('Getting monitor client')
         if not self._monitor_client:
             self._monitor_client = self.get_mgmt_svc_client(MonitorManagementClient,
-                                                            base_url=self._cloud_environment.endpoints.resource_manager)
+                                                            base_url=self._cloud_environment.endpoints.resource_manager,
+                                                            is_track2=True)
         return self._monitor_client
 
     @property
