@@ -46,13 +46,13 @@ author:
 
 EXAMPLES = '''
 - name: Get specific DNS zone groups for a private endpoing
-    azure_rm_privateendpointdnszonegroup_info:
+  azure_rm_privateendpointdnszonegroup_info:
     name: "my-zone-group"
     private_endpoint: "my-private-endpoint"
     resource_group: "my-resource-group"
 
 - name: Get all DNS zone groups for a private endpoint
-    azure_rm_privateendpointdnszonegroup_info:
+  azure_rm_privateendpointdnszonegroup_info:
     private_endpoint: "my-private-endpoint"
     resource_group: "my-resource-group"
 '''
@@ -62,7 +62,7 @@ groups:
     description:
         - List of private endpoint zone groups.
     returned: always
-    type: list
+    type: complex
     contains:
         id:
             description:
@@ -80,7 +80,7 @@ groups:
             description:
                 - List of zone configuration within the zone group.
             returned: always
-            type: list
+            type: complex
             contains:
                 name:
                     description:
@@ -98,7 +98,7 @@ groups:
                     description:
                         - List of DNS records for zone.
                     returned: always
-                    type: list
+                    type: complex
                     contains:
                         fqdn:
                             description:
@@ -208,7 +208,6 @@ class AzureRMPrivateEndpointDnsZoneGroupInfo(AzureRMModuleBase):
         self.log("List all in {0}".format(self.private_endpoint))
         try:
             items = self.network_client.private_dns_zone_groups.list(private_endpoint_name=self.private_endpoint, resource_group_name=self.resource_group)
-            
             return [self.zone_to_dict(item) for item in items]
         except CloudError as exc:
             self.fail("Failed to list all items in {0}: {1}".format(self.private_endpoint, str(exc)))
