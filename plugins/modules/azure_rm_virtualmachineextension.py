@@ -18,7 +18,7 @@ short_description: Managed Azure Virtual Machine extension
 
 description:
     - Create, update and delete Azure Virtual Machine Extension.
-    - Note that this module was called M(azure_rm_virtualmachine_extension) before Ansible 2.8. The usage did not change.
+    - Note that this module was called M(azure.azcollection.azure_rm_virtualmachine_extension) before Ansible 2.8. The usage did not change.
 
 options:
     resource_group:
