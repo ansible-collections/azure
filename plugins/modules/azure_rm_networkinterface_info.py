@@ -102,7 +102,7 @@ azure_networkinterfaces:
     }]
 networkinterfaces:
     description:
-        - List of network interface dicts. Each dict contains parameters can be passed to M(azure_rm_networkinterface) module.
+        - List of network interface dicts. Each dict contains parameters can be passed to M(azure.azcollection.azure_rm_networkinterface) module.
     type: list
     returned: always
     contains:

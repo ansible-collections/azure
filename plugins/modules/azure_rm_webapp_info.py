@@ -128,6 +128,24 @@ webapps:
                         "version": "5.6"
                     }
                     ]
+        always_on:
+            description:
+                - If the app is kept loaded even when there's no traffic.
+            returned: always
+            type: bool
+            sample: true
+        min_tls_version:
+            description:
+                - The minimum TLS encryption version required for the app.
+            returned: always
+            type: str
+            sample: 1.2
+        ftps_state:
+            description:
+                - The state of the FTP/FTPS service.
+            returned: always
+            type: str
+            sample: FtpsOnly
         availability_state:
             description:
                 - Availability of this web app.
@@ -457,6 +475,10 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
                 tmp = configuration.get('linux_fx_version').split("|")
                 if len(tmp) == 2:
                     curated_output['frameworks'].append({'name': tmp[0].lower(), 'version': tmp[1]})
+
+            curated_output['always_on'] = configuration.get('always_on')
+            curated_output['ftps_state'] = configuration.get('ftps_state')
+            curated_output['min_tls_version'] = configuration.get('min_tls_version')
 
         # curated app_settings
         if app_settings and app_settings.get('properties', None):

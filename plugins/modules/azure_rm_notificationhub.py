@@ -35,7 +35,7 @@ options:
     sku:
         description:
             - The name of the SKU.
-            - Please see L(https://azure.microsoft.com/en-in/pricing/details/notification-hubs/).
+            - Please see L(https://azure.microsoft.com/en-in/pricing/details/notification-hubs/,).
         default: free
         choices:
             - free
