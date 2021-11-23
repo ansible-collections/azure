@@ -791,10 +791,10 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                         load_balancer_backend_address_pools=([self.network_models.BackendAddressPool(id=self.backend_addr_pool_id(bap_id))
                                                               for bap_id in ip_config.get('load_balancer_backend_address_pools')]
                                                              if ip_config.get('load_balancer_backend_address_pools') else None),
-                        application_gateway_backend_address_pools=([self.network_models.ApplicationGatewayBackendAddressPool(
-                                                                      id=self.gateway_backend_addr_pool_id(bap_id)
-                                                                  ) for bap_id in ip_config.get('application_gateway_backend_address_pools')]
-                                                                  if ip_config.get('application_gateway_backend_address_pools') else None),
+                        application_gateway_backend_address_pools=([self.network_models.ApplicationGatewayBackendAddressPool
+                                                                    (id=self.gateway_backend_addr_pool_id(bap_id))
+                                                                    for bap_id in ip_config.get('application_gateway_backend_address_pools')]
+                                                                   if ip_config.get('application_gateway_backend_address_pools') else None),
                         primary=ip_config.get('primary'),
                         application_security_groups=([self.network_models.ApplicationSecurityGroup(id=asg_id)
                                                       for asg_id in ip_config.get('application_security_groups')]
@@ -918,8 +918,8 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                                                       for id in item.get('load_balancer_backend_address_pools')])
                                                  if item.get('load_balancer_backend_address_pools') else None),
             application_gateway_backend_address_pools=(set([to_native(self.gateway_backend_addr_pool_id(id))
-                                                      for id in item.get('application_gateway_backend_address_pools')])
-                                                 if item.get('application_gateway_backend_address_pools') else None),
+                                                           for id in item.get('application_gateway_backend_address_pools')])
+                                                       if item.get('application_gateway_backend_address_pools') else None),
             application_security_groups=(set([to_native(asg_id) for asg_id in item.get('application_security_groups')])
                                          if item.get('application_security_groups') else None),
             name=to_native(item.get('name'))

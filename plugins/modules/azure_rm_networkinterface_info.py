@@ -225,7 +225,7 @@ def nic_to_dict(nic):
             load_balancer_backend_address_pools=([item.id for item in config.load_balancer_backend_address_pools]
                                                  if config.load_balancer_backend_address_pools else None),
             application_gateway_backend_address_pools=([item.id for item in config.application_gateway_backend_address_pools]
-                                                        if config.application_gateway_backend_address_pools else None),
+                                                       if config.application_gateway_backend_address_pools else None),
             public_ip_address=config.public_ip_address.id if config.public_ip_address else None,
             public_ip_allocation_method=config.public_ip_address.public_ip_allocation_method if config.public_ip_address else None,
             application_security_groups=([asg.id for asg in config.application_security_groups]
