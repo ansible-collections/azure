@@ -1,8 +1,14 @@
 - name: Prepare facts
   set_fact:
+    resource_prefix: "{{ resource_group_secondary | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  run_once: yes
+
+- name: Prepare facts
+  set_fact:
     linux_plan_resource_group: "{{ resource_group_secondary }}"
     win_plan_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}winplan"
     linux_plan_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}linplan"
+  run_once: yes
 
 - name: create a windows plan
   azure_rm_appserviceplan:
@@ -13,7 +19,7 @@
 
 - name: assert app service was created
   assert:
-    that: 
+    that:
       - output.changed
       - output.id
 
@@ -28,7 +34,7 @@
 
 - name: assert app service was created
   assert:
-    that: 
+    that:
       - output.changed
       - output.id
 
@@ -53,7 +59,7 @@
     number_of_workers: 1
   register: output
 
-- name: assert app service was created
+- name: assert app service is not updated
   assert:
     that: not output.changed
 
@@ -82,3 +88,29 @@
   assert:
     that:
       - output.changed
+
+- name: create premium linux plan
+  azure_rm_appserviceplan:
+    resource_group: "{{ linux_plan_resource_group }}"
+    name: "{{ linux_plan_name }}-premium"
+    sku: P1v2
+    is_linux: true
+  register: output
+
+- name: assert app service was created
+  assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: create premium linux plan idempotent
+  azure_rm_appserviceplan:
+    resource_group: "{{ linux_plan_resource_group }}"
+    name: "{{ linux_plan_name }}-premium"
+    sku: P1v2
+    is_linux: true
+  register: output
+
+- name: assert app service is not updated
+  assert:
+    that: not output.changed
