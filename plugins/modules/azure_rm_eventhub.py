@@ -65,7 +65,7 @@ options:
     sku:
         description:
             - The name of the SKU.
-            - Please see L(https://azure.microsoft.com/en-in/pricing/details/event-hubs/).
+            - Please see L(https://azure.microsoft.com/en-in/pricing/details/event-hubs/,).
         default: Basic
         choices:
             - Basic

@@ -1,7 +1,13 @@
+- name: Prepare facts
+  set_fact:
+    resource_prefix: "{{ resource_group_secondary | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  run_once: yes
+
 - name: Fix resource prefix
   set_fact:
     linux_app_plan_resource_group: "{{ resource_group_secondary }}"
     win_app_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}{{ 1000 | random}}winapp"
+    linux_app_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}{{ 1000 | random}}linuxapp"
     win_plan_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}winplan"
     linux_plan_name: "{{ (resource_group_secondary | replace('-','x'))[-8:] }}linplan"
     slot1_name: "stage1"
@@ -343,6 +349,105 @@
   assert:
     that:
       - facts.webapps[0].ftp_publish_url != ''
+
+- name: Create a web app with various site config params
+  azure_rm_webapp:
+    resource_group: "{{ resource_group }}"
+    name: "{{ linux_app_name }}-siteconfig"
+    plan:
+      resource_group: "{{ linux_app_plan_resource_group }}"
+      name: "{{ linux_app_name }}-siteconfig-plan"
+      is_linux: true
+      sku: S1
+    frameworks:
+      - name: java
+        version: "8"
+        settings:
+          java_container: "tomcat"
+          java_container_version: "8.5"
+    client_affinity_enabled: false
+    https_only: true
+    always_on: true
+    min_tls_version: "1.2"
+    ftps_state: "Disabled"
+  register: output
+- name: Assert the web app was created
+  assert:
+    that: output.changed
+
+- name: Create a web app with various site config params - idempotent
+  azure_rm_webapp:
+    resource_group: "{{ resource_group }}"
+    name: "{{ linux_app_name }}-siteconfig"
+    plan:
+      resource_group: "{{ linux_app_plan_resource_group }}"
+      name: "{{ linux_app_name }}-siteconfig-plan"
+      is_linux: true
+      sku: S1
+    frameworks:
+      - name: java
+        version: "8"
+        settings:
+          java_container: "tomcat"
+          java_container_version: "8.5"
+    client_affinity_enabled: false
+    https_only: true
+    always_on: true
+    min_tls_version: "1.2"
+    ftps_state: "Disabled"
+  register: output
+- name: Assert the web app not changed
+  assert:
+    that: not output.changed
+
+- name: Get facts for site config params
+  azure_rm_webapp_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ linux_app_name }}-siteconfig"
+  register: facts
+- name: Assert site config params meet expectations
+  assert:
+    that:
+      - facts.webapps[0].always_on
+      - facts.webapps[0].min_tls_version == '1.2'
+      - facts.webapps[0].ftps_state == 'Disabled'
+
+- name: Update web app with various site config params - single change
+  azure_rm_webapp:
+    resource_group: "{{ resource_group }}"
+    name: "{{ linux_app_name }}-siteconfig"
+    plan:
+      resource_group: "{{ linux_app_plan_resource_group }}"
+      name: "{{ linux_app_name }}-siteconfig-plan"
+      is_linux: true
+      sku: S1
+    frameworks:
+      - name: java
+        version: "8"
+        settings:
+          java_container: "tomcat"
+          java_container_version: "8.5"
+    client_affinity_enabled: false
+    https_only: true
+    always_on: true
+    min_tls_version: "1.2"
+    ftps_state: "FtpsOnly"
+  register: output
+- name: Assert the web app was updated
+  assert:
+    that: output.changed
+
+- name: Get facts for site config params
+  azure_rm_webapp_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ linux_app_name }}-siteconfig"
+  register: facts
+- name: Assert site config params meet expectations
+  assert:
+    that:
+      - facts.webapps[0].always_on
+      - facts.webapps[0].min_tls_version == '1.2'
+      - facts.webapps[0].ftps_state == 'FtpsOnly'
 
 - name: Create a webapp slot (Check mode)
   azure_rm_webappslot:
