@@ -273,7 +273,6 @@ class AzureRMPrivateEndpointDnsZoneGroup(AzureRMModuleBaseExt):
             return self.zone_to_dict(item)
         except Exception:
             self.log("Did not find the private endpoint resource")
-        
         return None
 
     def create_update_zone(self):
