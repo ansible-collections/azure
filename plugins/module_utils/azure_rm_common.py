@@ -110,8 +110,7 @@ AZURE_API_PROFILES = {
         'ManagementLockClient': '2016-09-01',
         'DataLakeStoreAccountManagementClient': '2016-11-01',
         'NotificationHubsManagementClient': '2016-03-01',
-        'EventHubManagementClient': '2018-05-04',
-        'MonitorManagementClient': '2016-03-01',
+        'EventHubManagementClient': '2018-05-04'
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
@@ -136,8 +135,7 @@ AZURE_API_PROFILES = {
         }),
         'KeyVaultClient': '2016-10-01',
         'azure.multiapi.storage': '2017-11-09',
-        'azure.multiapi.cosmosdb': '2017-04-17',
-        'MonitorManagementClient': '2016-03-01',
+        'azure.multiapi.cosmosdb': '2017-04-17'
     },
     '2018-03-01-hybrid': {
         'StorageManagementClient': '2016-01-01',
@@ -155,8 +153,7 @@ AZURE_API_PROFILES = {
         }),
         'KeyVaultClient': '2016-10-01',
         'azure.multiapi.storage': '2017-04-17',
-        'azure.multiapi.cosmosdb': '2017-04-17',
-        'MonitorManagementClient': '2016-03-01',
+        'azure.multiapi.cosmosdb': '2017-04-17'
     },
     '2017-03-09-profile': {
         'StorageManagementClient': '2016-01-01',
@@ -173,8 +170,7 @@ AZURE_API_PROFILES = {
             'classic_administrators': '2015-06-01'
         }),
         'KeyVaultClient': '2016-10-01',
-        'azure.multiapi.storage': '2015-04-05',
-        'MonitorManagementClient': '2016-03-01',
+        'azure.multiapi.storage': '2015-04-05'
     }
 }
 
@@ -444,7 +440,8 @@ class AzureRMModuleBase(object):
         self._containerservice_client = None
         self._managedcluster_client = None
         self._traffic_manager_management_client = None
-        self._monitor_client = None
+        self._monitor_log_profiles_client = None
+        self._monitor_autoscale_settings_client = None
         self._resource = None
         self._log_analytics_client = None
         self._servicebus_client = None
@@ -1245,13 +1242,24 @@ class AzureRMModuleBase(object):
         return self._traffic_manager_management_client
 
     @property
-    def monitor_client(self):
-        self.log('Getting monitor client')
-        if not self._monitor_client:
-            self._monitor_client = self.get_mgmt_svc_client(MonitorManagementClient,
-                                                            base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            is_track2=True)
-        return self._monitor_client
+    def monitor_autoscale_settings_client(self):
+        self.log('Getting monitor client for autoscale_settings')
+        if not self._monitor_autoscale_settings_client:
+            self._monitor_autoscale_settings_client = self.get_mgmt_svc_client(MonitorManagementClient,
+                                                                               base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                               api_version="2015-04-01",
+                                                                               is_track2=True)
+        return self._monitor_autoscale_settings_client
+
+    @property
+    def monitor_log_profiles_client(self):
+        self.log('Getting monitor client for log_profiles')
+        if not self._monitor_log_profiles_client:
+            self._monitor_log_profiles_client = self.get_mgmt_svc_client(MonitorManagementClient,
+                                                                         base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                         api_version="2016-03-01",
+                                                                         is_track2=True)
+        return self._monitor_log_profiles_client
 
     @property
     def log_analytics_client(self):

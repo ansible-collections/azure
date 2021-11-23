@@ -242,7 +242,7 @@ class AzureRMAutoScaleInfo(AzureRMModuleBase):
     def get(self):
         result = []
         try:
-            instance = self.monitor_client.autoscale_settings.get(self.resource_group, self.name)
+            instance = self.monitor_autoscale_settings_client.autoscale_settings.get(self.resource_group, self.name)
             result = [auto_scale_to_dict(instance)]
         except Exception as ex:
             self.log('Could not get facts for autoscale {0} - {1}.'.format(self.name, str(ex)))
@@ -251,7 +251,7 @@ class AzureRMAutoScaleInfo(AzureRMModuleBase):
     def list_by_resource_group(self):
         results = []
         try:
-            response = self.monitor_client.autoscale_settings.list_by_resource_group(self.resource_group)
+            response = self.monitor_autoscale_settings_client.autoscale_settings.list_by_resource_group(self.resource_group)
             results = [auto_scale_to_dict(item) for item in response if self.has_tags(item.tags, self.tags)]
         except Exception as ex:
             self.log('Could not get facts for autoscale {0} - {1}.'.format(self.name, str(ex)))

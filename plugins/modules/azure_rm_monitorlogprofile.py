@@ -329,8 +329,8 @@ class AzureRMMonitorLogprofile(AzureRMModuleBase):
                 tags=self.tags
             )
 
-            response = self.monitor_client.log_profiles.create_or_update(log_profile_name=self.name,
-                                                                         parameters=params)
+            response = self.monitor_log_profiles_client.log_profiles.create_or_update(log_profile_name=self.name,
+                                                                                      parameters=params)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -347,7 +347,7 @@ class AzureRMMonitorLogprofile(AzureRMModuleBase):
         '''
         self.log("Deleting the log profile instance {0}".format(self.name))
         try:
-            response = self.monitor_client.log_profiles.delete(log_profile_name=self.name)
+            response = self.monitor_log_profiles_client.log_profiles.delete(log_profile_name=self.name)
         except HttpResponseError as e:
             self.log('Error attempting to delete the log profile.')
             self.fail(
@@ -365,7 +365,7 @@ class AzureRMMonitorLogprofile(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.monitor_client.log_profiles.get(log_profile_name=self.name)
+            response = self.monitor_log_profiles_client.log_profiles.get(log_profile_name=self.name)
 
             self.log("Response : {0}".format(response))
             self.log("log profile : {0} found".format(response.name))
