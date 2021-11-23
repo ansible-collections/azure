@@ -699,7 +699,6 @@ class AzureRMWebApps(AzureRMModuleBase):
             if self.https_only is not None:
                 self.site.https_only = self.https_only
 
-            if self.client_affinity_enabled is not None:
                 self.site.client_affinity_enabled = self.client_affinity_enabled
 
             # check if the web app already present in the resource group
