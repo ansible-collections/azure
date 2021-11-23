@@ -399,9 +399,11 @@ state:
                     type: list
                 application_gateway_backend_address_pools:
                     description:
-                        - List of existing application gateway backend address pools associated with the network interface.
+                        - List of existing application gateway backend address pool resource IDs associated with the network interface.
                     type: list
                     version_added: "1.10.0"
+                    sample: ["/subscriptions/xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/applicationGateways/myGateway/
+                        backendAddressPools/myBackendAddressPool"]
                 private_ip_address:
                     description:
                         - Private IP address for the IP configuration.
