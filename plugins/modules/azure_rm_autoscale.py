@@ -353,8 +353,6 @@ from ansible.module_utils._text import to_native
 from datetime import timedelta
 
 try:
-    from msrestazure.tools import parse_resource_id
-    from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.monitor.models import WebhookNotification, EmailNotification, AutoscaleNotification, RecurrentSchedule, MetricTrigger, \
         ScaleAction, AutoscaleSettingResource, AutoscaleProfile, ScaleCapacity, TimeWindow, Recurrence, ScaleRule
 except ImportError:
