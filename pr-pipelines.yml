@@ -64,6 +64,7 @@ parameters:
     - "azure_rm_manageddisk"
     - "azure_rm_managementgroup"
     - "azure_rm_mariadbserver"
+    - "azure_rm_monitordiagnosticsetting"
     - "azure_rm_monitorlogprofile"
     - "azure_rm_mysqlserver"
     - "azure_rm_networkinterface"

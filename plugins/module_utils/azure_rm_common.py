@@ -440,8 +440,9 @@ class AzureRMModuleBase(object):
         self._containerservice_client = None
         self._managedcluster_client = None
         self._traffic_manager_management_client = None
-        self._monitor_log_profiles_client = None
         self._monitor_autoscale_settings_client = None
+        self._monitor_log_profiles_client = None
+        self._monitor_diagnostic_settings_client = None
         self._resource = None
         self._log_analytics_client = None
         self._servicebus_client = None
@@ -1260,6 +1261,16 @@ class AzureRMModuleBase(object):
                                                                          api_version="2016-03-01",
                                                                          is_track2=True)
         return self._monitor_log_profiles_client
+
+    @property
+    def monitor_diagnostic_settings_client(self):
+        self.log('Getting monitor client for diagnostic_settings')
+        if not self._monitor_diagnostic_settings_client:
+            self._monitor_diagnostic_settings_client = self.get_mgmt_svc_client(MonitorManagementClient,
+                                                                                base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                                api_version="2021-05-01-preview",
+                                                                                is_track2=True)
+        return self._monitor_diagnostic_settings_client
 
     @property
     def log_analytics_client(self):
