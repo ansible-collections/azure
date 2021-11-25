@@ -39,19 +39,19 @@ options:
             - A storage account which will receive the diagnostic logs.
             - It can be a string containing the storage account resource ID.
             - It can be a dictionary containing I(name) and optionally I(subscription_id) and I(resource_group).
-            - At least one of I(storage_account), I(log_analytics), or I(event_hub) must be specific for the diagnostic setting.
+            - At least one of I(storage_account), I(log_analytics), or I(event_hub) must be specified for the diagnostic setting.
         type: raw
     log_analytics:
         description:
             - A log analytics workspace which will receive the diagnostic logs.
             - It can be a string containing the log analytics workspace resource ID.
             - It can be a dictionary containing I(name) and optionally I(subscription_id) and I(resource_group).
-            - At least one of I(storage_account), I(log_analytics), or I(event_hub) must be specific for the diagnostic setting.
+            - At least one of I(storage_account), I(log_analytics), or I(event_hub) must be specified for the diagnostic setting.
         type: raw
     event_hub:
         description:
             - An event hub which will receive the diagnostic logs.
-            - At least one of I(storage_account), I(log_analytics), or I(event_hub) must be specific for the diagnostic setting.
+            - At least one of I(storage_account), I(log_analytics), or I(event_hub) must be specified for the diagnostic setting.
         type: dict
         suboptions:
             namespace:
@@ -79,7 +79,7 @@ options:
     logs:
         description:
             - The list of log setttings.
-            - At least one of I(metrics) or I(logs) must be specific for the diagnostic setting.
+            - At least one of I(metrics) or I(logs) must be specified for the diagnostic setting.
         type: list
         elements: dict
         suboptions:
@@ -111,7 +111,7 @@ options:
     metrics:
         description:
             - The list of metric setttings.
-            - At least one of I(metrics) or I(logs) must be specific for the diagnostic setting.
+            - At least one of I(metrics) or I(logs) must be specified for the diagnostic setting.
         type: list
         elements: dict
         suboptions:
