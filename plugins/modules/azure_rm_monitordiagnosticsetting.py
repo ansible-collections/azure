@@ -15,7 +15,7 @@ version_added: "1.10.0"
 short_description: Create, update, or manage Azure Monitor diagnostic settings.
 
 description:
-    - Create, update, or manage Azure Monitor diagnostic settings.
+    - Create, update, or manage Azure Monitor diagnostic settings for any type of resource.
 
 options:
     name:
@@ -25,8 +25,15 @@ options:
         required: true
     resource:
         description:
-            - The ID of the resource which will be monitored.
-        type: str
+            - The resource which will be monitored with the diagnostic setting.
+            - It can be a string containing the resource ID.
+            - It can be a dictionary containing I(name), I(namespace), I(type), I(resource_group), and optionally I(subscription_id).
+            - I(name). The resource name.
+            - I(namespace). The resource namespace, such as 'Microsoft.Network'.
+            - I(type). The resource type, such as 'virtualNetworks'.
+            - I(resource_group). The resource group containing the resource.
+            - I(subscription_id). The subscription ID containing the resource. If none is specified, the credential's subscription ID will be used.
+        type: raw
         required: true
     storage_account:
         description:
@@ -159,7 +166,7 @@ EXAMPLES = '''
 
 - name: Create a diagnostic setting for an app service using storage and an event hub
   azure_rm_monitordiagnosticsetting:
-    resource: /subscriptions/xxx/resourceGroups/my-resource-group/providers/Microsoft.Web/sites/my-web-app
+    resource: /subscriptions/my-resource-group/resourceGroups/my-resource-group/providers/Microsoft.Web/sites/my-web-app
 '''
 
 RETURN = '''
@@ -314,7 +321,7 @@ state:
 '''
 
 try:
-    from msrestazure.tools import (parse_resource_id, resource_id, is_valid_resource_id)
+    from msrestazure.tools import (parse_resource_id, resource_id)
     from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
@@ -360,7 +367,7 @@ class AzureRMMonitorDiagnosticSetting(AzureRMModuleBaseExt):
 
         self.module_arg_spec = dict(
             name=dict(type="str", required=True),
-            resource=dict(type="str", required=True),
+            resource=dict(type="raw", required=True),
             storage_account=dict(type="raw"),
             log_analytics=dict(type="raw"),
             event_hub=dict(type="dict", options=event_hub_spec),
@@ -393,9 +400,6 @@ class AzureRMMonitorDiagnosticSetting(AzureRMModuleBaseExt):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
                 self.parameters[key] = kwargs[key]
-
-        if not is_valid_resource_id(self.resource):
-            self.fail("{0} is not a valid resource ID".format(self.resource))
 
         self.process_parameters()
 
@@ -432,6 +436,13 @@ class AzureRMMonitorDiagnosticSetting(AzureRMModuleBaseExt):
         return self.results
 
     def process_parameters(self):
+        if isinstance(self.resource, dict):
+            self.resource = resource_id(subscription=self.resource.get("subscription_id", self.subscription_id),
+                                        resource_group=self.resource.get("resource_group"),
+                                        namespace=self.resource.get("namespace"),
+                                        type=self.resource.get("type"),
+                                        name=self.resource.get("name"))
+
         parsed_resource = parse_resource_id(self.resource)
 
         storage_account = self.parameters.pop("storage_account", None)

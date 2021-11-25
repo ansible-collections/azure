@@ -15,7 +15,7 @@ version_added: "1.10.0"
 short_description: Get Azure Monitor diagnostic setting facts.
 
 description:
-    - Get facts for Azure Monitor diagnostic settings.
+    - Get facts for Azure Monitor diagnostic settings for any type of resource.
 
 options:
     name:
@@ -24,8 +24,15 @@ options:
         type: str
     resource:
         description:
-            - Resource ID for which to retrieve diagnostic settings.
-        type: str
+            - The resource which will be monitored with the diagnostic setting.
+            - It can be a string containing the resource ID.
+            - It can be a dictionary containing I(name), I(namespace), I(type), I(resource_group), and optionally I(subscription_id).
+            - I(name). The resource name.
+            - I(namespace). The resource namespace, such as 'Microsoft.Network'.
+            - I(type). The resource type, such as 'virtualNetworks'.
+            - I(resource_group). The resource group containing the resource.
+            - I(subscription_id). The subscription ID containing the resource. If none is specified, the credential's subscription ID will be used.
+        type: raw
         required: true
 
 extends_documentation_fragment:
@@ -38,12 +45,20 @@ author:
 EXAMPLES = '''
 - name: Get all diagnostic settings for an app service
   azure_rm_monitordiagnosticsetting_info:
-    resource: /subscriptions/xxx/resourceGroups/my-resource-group/providers/Microsoft.Web/sites/my-web-app
+    resource: /subscriptions/my-resource-group/resourceGroups/my-resource-group/providers/Microsoft.Web/sites/my-web-app
+
+- name: Get all diagnostic settings for an app service (resource dictionary)
+  azure_rm_monitordiagnosticsetting_info:
+    resource:
+      name: my-web-app
+      namespace: Microsoft.Web
+      type: sites
+      resource_group: my-resource-group
 
 - name: Get specific diagnostic setting for a vnet
   azure_rm_monitordiagnosticsetting_info:
     name: my-diagnostic-setting
-    resource: /subscriptions/xxx/resourceGroups/my-resource-group/providers/Microsoft.Network/virtualNetworks/my-vnet
+    resource: /subscriptions/my-resource-group/resourceGroups/my-resource-group/providers/Microsoft.Network/virtualNetworks/my-vnet
 '''
 
 RETURN = '''
@@ -213,7 +228,7 @@ class AzureRMMonitorDiagnosticSettingInfo(AzureRMModuleBaseExt):
 
         self.module_arg_spec = dict(
             name=dict(type="str"),
-            resource=dict(type="str", required=True),
+            resource=dict(type="raw", required=True),
         )
 
         self.results = dict(
@@ -233,12 +248,22 @@ class AzureRMMonitorDiagnosticSettingInfo(AzureRMModuleBaseExt):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
+        self.process_parameters()
+
         if self.name is not None:
             self.results["settings"] = self.get_item()
         else:
             self.results["settings"] = self.list_items()
 
         return self.results
+
+    def process_parameters(self):
+        if isinstance(self.resource, dict):
+            self.resource = resource_id(subscription=self.resource.get("subscription_id", self.subscription_id),
+                                        resource_group=self.resource.get("resource_group"),
+                                        namespace=self.resource.get("namespace"),
+                                        type=self.resource.get("type"),
+                                        name=self.resource.get("name"))
 
     def get_item(self):
         self.log("Get diagnostic setting for {0} in {1}".format(self.name, self.resource))

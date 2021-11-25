@@ -42,17 +42,6 @@
       - not output.changed
       - output.settings | length == 0
 
-- name: get non-existant diagnostic setting for virtual network
-  azure_rm_monitordiagnosticsetting_info:
-    name: "debug-setting"
-    resource: "{{ vnet_output.state.id }}"
-  register: output
-- name: assert no settings
-  assert:
-    that:
-      - not output.changed
-      - output.settings | length == 0
-
 - name: create storage-based diagnostic setting for vnet (check mode)
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage"
@@ -104,6 +93,25 @@
     metrics:
       - category: "AllMetrics"
   check_mode: true
+  register: output
+- name: assert resource not changed
+  assert:
+    that:
+      - not output.changed
+
+- name: create storage-based diagnostic setting for vnet by resource dict (idempotent)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage"
+    resource:
+      name: "vnet-{{ rpfx }}"
+      namespace: "Microsoft.Network"
+      type: "virtualNetworks"
+      resource_group: "{{ resource_group }}"
+    storage_account: "{{ storage_output.state.id }}"
+    logs:
+      - category_group: "allLogs"
+    metrics:
+      - category: "AllMetrics"
   register: output
 - name: assert resource not changed
   assert:
