@@ -247,6 +247,51 @@
     that:
       - output.settings | length == 0
 
+- name: delete diagnostic setting (check mode)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage"
+    resource: "{{ vnet_output.state.id }}"
+    state: "absent"
+  check_mode: true
+  register: output
+- name: assert resource deleted
+  assert:
+    that:
+      - output.changed
+
+- name: delete diagnostic setting (actually delete)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage"
+    resource: "{{ vnet_output.state.id }}"
+    state: "absent"
+  register: output
+- name: assert resource deleted
+  assert:
+    that:
+      - output.changed
+
+- name: delete diagnostic setting (idempotent)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage"
+    resource: "{{ vnet_output.state.id }}"
+    state: "absent"
+  register: output
+- name: assert resource already deleted
+  assert:
+    that:
+      - not output.changed
+
+- name: delete second diagnostic setting
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage2"
+    resource: "{{ vnet_output.state.id }}"
+    state: "absent"
+  register: output
+- name: assert resource deleted
+  assert:
+    that:
+      - output.changed
+
 - name: delete virtual network
   azure_rm_virtualnetwork:
     name: "vnet-{{ rpfx }}"

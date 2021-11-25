@@ -380,9 +380,9 @@ class AzureRMMonitorDiagnosticSetting(AzureRMModuleBaseExt):
         self.to_do = Actions.NoAction
 
         super(AzureRMMonitorDiagnosticSetting, self).__init__(self.module_arg_spec,
-                                                              required_one_of=[
-                                                                  ("storage_account", "log_analytics", "event_hub"),
-                                                                  ("logs", "metrics"),
+                                                              required_if=[
+                                                                  ("state", "present", ("storage_account", "log_analytics", "event_hub"), True),
+                                                                  ("state", "present", ("logs", "metrics"), True),
                                                               ],
                                                               supports_tags=False,
                                                               supports_check_mode=True)
