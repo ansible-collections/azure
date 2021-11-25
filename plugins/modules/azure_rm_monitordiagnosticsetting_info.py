@@ -42,21 +42,21 @@ author:
 '''
 
 EXAMPLES = '''
-- name: Get all diagnostic settings for an app service
+- name: Get all diagnostic settings for a resource
   azure_rm_monitordiagnosticsetting_info:
-    resource: /subscriptions/my-resource-group/resourceGroups/my-resource-group/providers/Microsoft.Web/sites/my-web-app
+    resource: "/subscriptions/my-resource-group/resourceGroups/my-resource-group/providers/Microsoft.Web/sites/my-web-app"
 
-- name: Get all diagnostic settings for an app service (resource dictionary)
+- name: Get all diagnostic settings for a resource using a dictionary
   azure_rm_monitordiagnosticsetting_info:
     resource:
-      name: my-web-app
-      type: Microsoft.Web/sites
-      resource_group: my-resource-group
+      name: "my-web-app"
+      type: "Microsoft.Web/sites"
+      resource_group: "my-resource-group"
 
-- name: Get specific diagnostic setting for a vnet
+- name: Get a specific diagnostic setting
   azure_rm_monitordiagnosticsetting_info:
-    name: my-diagnostic-setting
-    resource: /subscriptions/my-resource-group/resourceGroups/my-resource-group/providers/Microsoft.Network/virtualNetworks/my-vnet
+    name: "my-diagnostic-setting"
+    resource: "/subscriptions/my-resource-group/resourceGroups/my-resource-group/providers/Microsoft.Network/virtualNetworks/my-vnet"
 '''
 
 RETURN = '''

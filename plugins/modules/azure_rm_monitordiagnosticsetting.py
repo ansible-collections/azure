@@ -163,9 +163,37 @@ EXAMPLES = '''
     metrics:
       - category: "AllMetrics"
 
-- name: Create a diagnostic setting for an app service using storage and an event hub
+- name: Create diagnostic setting for webapp with log analytics, event hub, and storage
   azure_rm_monitordiagnosticsetting:
-    resource: /subscriptions/my-resource-group/resourceGroups/my-resource-group/providers/Microsoft.Web/sites/my-web-app
+    name: "webapp-logs"
+    resource:
+      name: "my-webapp"
+      type: "Microsoft.Web/sites"
+      resource_group: "my-webapp-resource-group"
+    event_hub:
+      namespace: "my-event-hub"
+      policy: "RootManageSharedAccessKey"
+    log_analytics:
+      name: "my-log-analytics-workspace"
+      resource_group: "my-log-analytics-workspace-resource-group"
+    storage_account:
+      name: "mystorageaccount"
+    logs:
+      - category: "AppServiceHTTPLogs"
+      - category: "AppServiceConsoleLogs"
+      - category: "AppServiceAppLogs"
+      - category: "AppServiceAuditLogs"
+      - category: "AppServiceIPSecAuditLogs"
+      - category: "AppServicePlatformLogs"
+
+- name: Delete diagnostic setting
+  azure_rm_monitordiagnosticsetting:
+    name: "webapp-logs"
+    resource:
+      name: "my-webapp"
+      type: "Microsoft.Web/sites"
+      resource_group: "my-webapp-resource-group"
+    state: "absent"
 '''
 
 RETURN = '''
