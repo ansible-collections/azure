@@ -95,7 +95,7 @@ options:
                 description:
                     - Whether the log is enabled.
                 type: bool
-            retention_policy
+            retention_policy:
                 description:
                     - The retention policy for this log.
                 type: dict
@@ -123,7 +123,7 @@ options:
                 description:
                     - Whether the metric category is enabled.
                 type: bool
-            retention_policy
+            retention_policy:
                 description:
                     - The retention policy for this metric.
                 type: dict
