@@ -104,8 +104,7 @@
     name: "logs-storage"
     resource:
       name: "vnet-{{ rpfx }}"
-      namespace: "Microsoft.Network"
-      type: "virtualNetworks"
+      type: "Microsoft.Network/virtualNetworks"
       resource_group: "{{ resource_group }}"
     storage_account: "{{ storage_output.state.id }}"
     logs:

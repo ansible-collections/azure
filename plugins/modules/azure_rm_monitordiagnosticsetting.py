@@ -27,10 +27,9 @@ options:
         description:
             - The resource which will be monitored with the diagnostic setting.
             - It can be a string containing the resource ID.
-            - It can be a dictionary containing I(name), I(namespace), I(type), I(resource_group), and optionally I(subscription_id).
+            - It can be a dictionary containing I(name), I(type), I(resource_group), and optionally I(subscription_id).
             - I(name). The resource name.
-            - I(namespace). The resource namespace, such as 'Microsoft.Network'.
-            - I(type). The resource type, such as 'virtualNetworks'.
+            - I(type). The resource type including namespace, such as 'Microsoft.Network/virtualNetworks'.
             - I(resource_group). The resource group containing the resource.
             - I(subscription_id). The subscription ID containing the resource. If none is specified, the credential's subscription ID will be used.
         type: raw
@@ -437,10 +436,12 @@ class AzureRMMonitorDiagnosticSetting(AzureRMModuleBaseExt):
 
     def process_parameters(self):
         if isinstance(self.resource, dict):
+            if "/" not in self.resource.get("type"):
+                self.fail("resource type parameter must include namespace, such as 'Microsoft.Network/virtualNetworks'")
             self.resource = resource_id(subscription=self.resource.get("subscription_id", self.subscription_id),
                                         resource_group=self.resource.get("resource_group"),
-                                        namespace=self.resource.get("namespace"),
-                                        type=self.resource.get("type"),
+                                        namespace=self.resource.get("type").split("/")[0],
+                                        type=self.resource.get("type").split("/")[1],
                                         name=self.resource.get("name"))
 
         parsed_resource = parse_resource_id(self.resource)
