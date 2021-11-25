@@ -480,8 +480,10 @@ class AzureRMMonitorDiagnosticSetting(AzureRMModuleBaseExt):
 
         event_hub = self.parameters.pop("event_hub", None)
         if event_hub:
-            auth_rule_id = resource_id(subscription=event_hub.get("subscription_id", parsed_resource.get("subscription")),
-                                       resource_group=event_hub.get("resource_group", parsed_resource.get("resource_group")),
+            hub_subscription_id = event_hub.get("subscription_id") if event_hub.get("subscription_id") else parsed_resource.get("subscription")
+            hub_resource_group = event_hub.get("resource_group") if event_hub.get("resource_group") else parsed_resource.get("resource_group")
+            auth_rule_id = resource_id(subscription=hub_subscription_id,
+                                       resource_group=hub_resource_group,
                                        namespace="Microsoft.EventHub",
                                        type="namespaces",
                                        name=event_hub.get("namespace"),
