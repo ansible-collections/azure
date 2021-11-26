@@ -64,7 +64,7 @@ options:
                     - The shared access policy.
                 type: str
                 required: true
-            namespace:
+            hub:
                 description:
                     - An event hub name to receive logs. If none is specified, the default event hub will be selected.
                 type: str
@@ -95,6 +95,7 @@ options:
                 description:
                     - Whether the log is enabled.
                 type: bool
+                default: true
             retention_policy:
                 description:
                     - The retention policy for this log.
@@ -104,10 +105,12 @@ options:
                         description:
                             - The number of days for the retention policy.
                         type: int
+                        default: 0
                     enabled:
                         description:
                             - Whether the retention policy is enabled.
                         type: bool
+                        default: true
     metrics:
         description:
             - The list of metric setttings.
@@ -123,6 +126,7 @@ options:
                 description:
                     - Whether the metric category is enabled.
                 type: bool
+                default: true
             retention_policy:
                 description:
                     - The retention policy for this metric.
@@ -132,10 +136,12 @@ options:
                         description:
                             - The number of days for the retention policy.
                         type: int
+                        default: 0
                     enabled:
                         description:
                             - Whether the retention policy is enabled.
                         type: bool
+                        default: true
     state:
         description:
             - State of the private endpoint DNS zone group. Use C(present) to create or update and C(absent) to delete.
