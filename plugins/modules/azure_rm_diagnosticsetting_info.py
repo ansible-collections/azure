@@ -162,7 +162,7 @@ class AzureRMDiagnosticSettingInfo(AzureRMModuleBase):
 
         self.module_arg_spec = dict(
             name=dict(type='str'),
-            resource_id=dict(type='str', aliases=['resource', 'id'])
+            resource_id=dict(type='str', required=True, aliases=['resource', 'id'])
         )
 
         self.results = dict(
@@ -174,6 +174,7 @@ class AzureRMDiagnosticSettingInfo(AzureRMModuleBase):
         self.resource_id = None
 
         super(AzureRMDiagnosticSettingInfo, self).__init__(self.module_arg_spec,
+                                                           suports_check_mode=True,
                                                            supports_tags=False)
 
     def exec_module(self, **kwargs):

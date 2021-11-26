@@ -64,6 +64,7 @@ options:
         description:
             - The list of logs settings.
         type: list
+        elements: dict
         suboptions:
             category:
                 description:
@@ -75,7 +76,6 @@ options:
                     - A value indicating whether this log is enabled.
                 type: bool
                 default: true
-                required: true
             retention_policy:
                 description:
                     - The retention policy for this category.
@@ -86,7 +86,6 @@ options:
                             - A value indicating whether the retention policy is enabled.
                         type: bool
                         default: true
-                        required: true
                     days:
                         description:
                             - The number of days for the retention in days. A value of 0 will retain indefinitely.
@@ -97,6 +96,7 @@ options:
         description:
             - The list of metric settings.
         type: list
+        elements: dict
         suboptions:
             time_grain:
                 description:
@@ -145,6 +145,7 @@ EXAMPLES = '''
       name: myDiagnosticSetting
       resource_id: /subscriptions/1234abc0/resourceGroups/myResourceGroup/providers/Microsoft.Network/applicationGateways/myApplicationGateway
       storage_account_id: /subscriptions/1234abc0/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/myStorageAccount
+      logs:
         - category: ApplicationGatewayFirewallLog
           retention_policy:
             days: 0
@@ -309,12 +310,12 @@ class AzureRMDiagnosticSetting(AzureRMModuleBase):
             event_hub_authorization_rule_id=dict(type='str'),
             logs=dict(
                 type='list',
-                elements=dict(type='str'),
+                elements='dict',
                 options=log_settings_object
             ),
             metrics=dict(
                 type='list',
-                elements=dict(type='str'),
+                elements='dict',
                 options=metric_settings_object
             )
         )
