@@ -91,9 +91,9 @@ replications:
                         message:
                             description:
                                 - The detailed message for the status, including alerts and error messages.
-                            returned:
+                            returned: always
                             type: str
-                            sample: The replication is ready.
+                            sample: "The replication is ready."
                         timestamp:
                             description:
                                 - The timestamp when the status was changed to the current value.
@@ -141,7 +141,7 @@ class AzureRMReplicationsFacts(AzureRMModuleBase):
         self.resource_group = None
         self.registry_name = None
         self.replication_name = None
-        super(AzureRMReplicationsFacts, self).__init__(self.module_arg_spec)
+        super(AzureRMReplicationsFacts, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:

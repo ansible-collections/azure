@@ -20,7 +20,7 @@ description:
     - Create, update and delete an Azure Managed Disk.
 
 notes:
-    - This module was called M(azure_rm_managed_disk) before Ansible 2.8. The usage did not change.
+    - This module was called M(azure.azcollection.azure_rm_managed_disk) before Ansible 2.8. The usage did not change.
 
 options:
     resource_group:
@@ -152,6 +152,7 @@ EXAMPLES = '''
         name: mymanageddisk
         location: eastus
         resource_group: myResourceGroup
+        managed_by: ''
         disk_size_gb: 4
 
     - name: Delete managed disk
@@ -163,16 +164,57 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-id:
-    description:
-        - The managed disk resource ID.
-    returned: always
-    type: dict
 state:
     description:
         - Current state of the managed disk.
     returned: always
     type: dict
+    contains:
+        id:
+            description:
+                - Resource id.
+            type: str
+        name:
+            description:
+                - Name of the managed disk.
+            type: str
+        location:
+            description:
+                - Valid Azure location.
+            type: str
+        storage_account_type:
+            description:
+                - Type of storage for the managed disk.
+                - See U(https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-types) for more information about this type.
+            type: str
+            sample: Standard_LRS
+        create_option:
+            description:
+                - Create option of the disk.
+            type: str
+            sample: copy
+        source_uri:
+            description:
+                - URI to a valid VHD file to be used or the resource ID of the managed disk to copy.
+            type: str
+        os_type:
+            description:
+                - Type of Operating System.
+            type: str
+            sample: linux
+        disk_size_gb:
+            description:
+                - Size in GB of the managed disk to be created.
+            type: str
+        managed_by:
+            description:
+                - Name of an existing virtual machine with which the disk is or will be associated, this VM should be in the same resource group.
+            type: str
+        tags:
+            description:
+                - Tags to assign to the managed disk.
+            type: dict
+            sample: { "tag": "value" }
 changed:
     description:
         - Whether or not the resource has changed.

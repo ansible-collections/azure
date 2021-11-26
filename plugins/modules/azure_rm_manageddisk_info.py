@@ -21,7 +21,7 @@ description:
     - Get facts for a specific managed disk or all managed disks.
 
 notes:
-    - This module was called M(azure_rm_managed_disk_facts) before Ansible 2.8. The usage did not change.
+    - This module was called M(azure.azcollection.azure_rm_managed_disk_facts) before Ansible 2.8. The usage did not change.
 
 options:
     name:

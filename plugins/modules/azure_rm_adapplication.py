@@ -474,7 +474,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             key_creds, password_creds, required_accesses, app_roles, optional_claims = None, None, None, None, None
             if self.native_app:
                 if self.identifier_uris:
-                    raise self.fail("'identifier_uris' is not required for creating a native application")
+                    self.fail("'identifier_uris' is not required for creating a native application")
             else:
                 password_creds, key_creds = self.build_application_creds(self.password, self.key_value, self.key_type, self.key_usage,
                                                                          self.start_date, self.end_date, self.credential_description)
@@ -510,7 +510,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             key_creds, password_creds, required_accesses, app_roles, optional_claims = None, None, None, None, None
             if self.native_app:
                 if self.identifier_uris:
-                    raise self.fail("'identifier_uris' is not required for creating a native application")
+                    self.fail("'identifier_uris' is not required for creating a native application")
             else:
                 password_creds, key_creds = self.build_application_creds(self.password, self.key_value, self.key_type, self.key_usage,
                                                                          self.start_date, self.end_date, self.credential_description)
@@ -594,7 +594,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     def build_application_creds(self, password=None, key_value=None, key_type=None, key_usage=None,
                                 start_date=None, end_date=None, key_description=None):
         if password and key_value:
-            raise self.fail('specify either password or key_value, but not both.')
+            self.fail('specify either password or key_value, but not both.')
 
         if not start_date:
             start_date = datetime.datetime.utcnow()

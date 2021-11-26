@@ -20,21 +20,20 @@ options:
     resource_group:
         description:
             - The name of the resource group to which the container registry belongs.
-        required: True
+        type: str
     name:
         description:
             - The name of the container registry.
+        type: str
     retrieve_credentials:
         description:
             - Retrieve credentials for container registry.
         type: bool
         default: no
-    tags:
-        description:
-            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
 
 extends_documentation_fragment:
     - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -151,13 +150,9 @@ class AzureRMContainerRegistryInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(
                 type='str',
-                required=True
             ),
             name=dict(
                 type='str'
-            ),
-            tags=dict(
-                type='list'
             ),
             retrieve_credentials=dict(
                 type='bool',
@@ -172,7 +167,7 @@ class AzureRMContainerRegistryInfo(AzureRMModuleBase):
         self.name = None
         self.retrieve_credentials = False
 
-        super(AzureRMContainerRegistryInfo, self).__init__(self.module_arg_spec, supports_tags=False, facts_module=True)
+        super(AzureRMContainerRegistryInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True, facts_module=True)
 
     def exec_module(self, **kwargs):
 

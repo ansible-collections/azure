@@ -1,0 +1,20 @@
+- name: set location
+  set_fact:
+    location: eastus
+
+- name: Get specific size information for a specific location
+  azure_rm_virtualmachinesize_info:
+    location: "{{ location }}"
+    name: Standard_A1_v2
+  register: output
+
+- assert:
+      that: output['sizes'] | length == 1
+
+- name: Get available sizes for a specific location
+  azure_rm_virtualmachinesize_info:
+    location: "{{ location }}"
+  register: output
+
+- assert:
+      that: output['sizes'] | length > 0

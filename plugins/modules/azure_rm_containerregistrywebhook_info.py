@@ -91,7 +91,7 @@ webhooks:
                     description:
                         - "The scope of repositories where the event can be triggered. For example, 'foo:*' means events for all tags under repository 'foo'.
                            'foo:bar' means events for 'foo:bar' only. 'foo' is equivalent to 'foo:latest'. Empty means all events."
-                    returned:
+                    returned: always
                     type: str
                     sample: myRepository
                 actions:
@@ -141,7 +141,7 @@ class AzureRMWebhooksFacts(AzureRMModuleBase):
         self.resource_group = None
         self.registry_name = None
         self.webhook_name = None
-        super(AzureRMWebhooksFacts, self).__init__(self.module_arg_spec)
+        super(AzureRMWebhooksFacts, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:

@@ -308,6 +308,7 @@ class AzureRMDatalakeStoreInfo(AzureRMModuleBase):
         self.resource_group = None
 
         super(AzureRMDatalakeStoreInfo, self).__init__(self.module_arg_spec,
+                                                       supports_check_mode=True,
                                                        supports_tags=False)
 
     def exec_module(self, **kwargs):

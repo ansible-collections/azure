@@ -8,6 +8,7 @@
     recurse: True
     flatten: True
     children: True
+  register: az_recursive_managementgroups
 
 - name: Get a managementgroup by name
   azure_rm_managementgroup_info:
@@ -22,7 +23,13 @@
   register: invalid_name
   ignore_errors: yes
 
-- name: Assert task failed
+- name: Validate expected states
   assert:
     that:
       - invalid_name['failed']
+
+- name: Validate expected attributes
+  assert:
+    that:
+      - "{{ item.id is defined }}"
+  loop: "{{ az_recursive_managementgroups.management_groups + az_recursive_managementgroups.subscriptions }}"

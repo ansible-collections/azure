@@ -89,9 +89,9 @@ azure_dnsrecordset:
     }]
 dnsrecordsets:
     description:
-        - List of record set dicts, which shares the same hierarchy as M(azure_rm_dnsrecordset) module's parameter.
+        - List of record set dicts, which shares the same hierarchy as M(azure.azcollection.azure_rm_dnsrecordset) module's parameter.
     returned: always
-    type: list
+    type: complex
     contains:
         id:
             description:
@@ -183,7 +183,7 @@ class AzureRMRecordSetInfo(AzureRMModuleBase):
         self.record_type = None
         self.top = None
 
-        super(AzureRMRecordSetInfo, self).__init__(self.module_arg_spec)
+        super(AzureRMRecordSetInfo, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
 
