@@ -87,7 +87,7 @@ settings:
             returned: always
             type: list
             elements: dict
-            suboptions:
+            contains:
                 category:
                     description:
                         - Name of a Management Group Diagnostic Log category for a resource type this setting is applied to.
@@ -108,7 +108,7 @@ settings:
                         - The retention policy for this log.
                     type: dict
                     returned: always
-                    suboptions:
+                    contains:
                         enabled:
                             description:
                                 - Whether the retention policy is enabled.
@@ -125,7 +125,7 @@ settings:
             returned: always
             type: list
             elements: dict
-            suboptions:
+            contains:
                 category:
                     description:
                         - Name of a Diagnostic Metric category for a resource type this setting is applied to.
@@ -141,7 +141,7 @@ settings:
                         - The retention policy for the metric category.
                     type: dict
                     returned: always
-                    suboptions:
+                    contains:
                         enabled:
                             description:
                                 - Whether the retention policy is enabled.
