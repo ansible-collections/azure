@@ -2,6 +2,18 @@
   set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
+- name: Set json query to only retrieve gateways from this test
+  set_fact:
+    query: "[?ends_with(name, `{{ rpfx }}`)]"
+  run_once: yes
+
+- name: Load app gateways
+  azure_rm_appgateway_info:
+  register: appgw_output
+- name: Assert there are no gateways
+  assert:
+    that:
+      - appgw_output.gateways | community.general.json_query(query) | length == 0
 
 - name: Create a virtual network
   azure_rm_virtualnetwork:
@@ -107,10 +119,6 @@
   assert:
     that:
       - output.changed
-
-- name: dump
-  debug:
-    var: output
 
 - name: Create instance of Application Gateway
   azure_rm_appgateway:
@@ -358,9 +366,30 @@
     that:
       - output.changed
 
+- name: Load app gateways
+  azure_rm_appgateway_info:
+  register: appgw_output
+- name: Assert there are the correct number of gateways
+  assert:
+    that:
+      - appgw_output.gateways | community.general.json_query(query) | length == 2
+
+- name: Load app gateway by name
+  azure_rm_appgateway_info:
+    name: "appgateway-subnet-lookup{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+  register: appgw_output
+- name: Assert there are the correct number of gateways
+  assert:
+    that:
+      - appgw_output.gateways | community.general.json_query(query) | length == 1
+      - (appgw_output.gateways | community.general.json_query(query))[0].name == 'appgateway-subnet-lookup{{ rpfx }}'
+      - (appgw_output.gateways | community.general.json_query(query))[0].provisioning_state == 'Succeeded'
+      - (appgw_output.gateways | community.general.json_query(query))[0].operational_state == 'Running'
+
 - name: Create instance of Application Gateway with probe using hostname from backend http settings
   azure_rm_appgateway:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "appgateway-probe-{{ rpfx }}"
     sku:
       name: standard_small
@@ -446,7 +475,7 @@
 
 - name: Test no update instance of Application Gateway with probe using hostname from backend http settings
   azure_rm_appgateway:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "appgateway-probe-{{ rpfx }}"
     sku:
       name: standard_small
@@ -529,6 +558,26 @@
   assert:
     that:
       - not output.changed
+
+- name: Load app gateway by resource group
+  azure_rm_appgateway_info:
+    resource_group: "{{ resource_group_secondary }}"
+  register: appgw_output
+- name: Assert there are the correct number of gateways and they are the right ones
+  assert:
+    that:
+      - appgw_output.gateways | community.general.json_query(query) | length == 1
+      - (appgw_output.gateways | community.general.json_query(query))[0].name == 'appgateway-probe-{{ rpfx }}'
+
+- name: Load app gateway not found in resource group
+  azure_rm_appgateway_info:
+    name: "appgateway{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+  register: appgw_output
+- name: Assert there are no results
+  assert:
+    that:
+      - appgw_output.gateways | community.general.json_query(query) | length == 0
 
 - name: Try to update instance of Application Gateway - no change
   azure_rm_appgateway:
