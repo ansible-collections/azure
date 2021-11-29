@@ -1,6 +1,8 @@
 - name: Prepare random number
   set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    cert1_file: "cert1.txt"
+    cert2_file: "cert2.txt"
   run_once: yes
 - name: Set json query to only retrieve gateways from this test
   set_fact:
@@ -51,11 +53,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -63,7 +65,7 @@
     frontend_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
-          name: sample_gateway_frontend_ip_config
+        name: sample_gateway_frontend_ip_config
     frontend_ports:
       - port: 90
         name: ag_frontend_port
@@ -98,12 +100,12 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: basic
+      - rule_type: Basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: basic
+      - rule_type: Basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -113,8 +115,8 @@
        include_path: true
        include_query_string: true
        name: redirect_site_to_https
-  check_mode: yes
   register: output
+  check_mode: yes
 - name: Assert the resource instance is well created
   assert:
     that:
@@ -138,11 +140,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -278,6 +280,178 @@
       - not output.changed
       - output.operational_state == 'Running'
 
+- name: Try to update instance of Application Gateway - no change
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway{{ rpfx }}"
+    sku:
+      name: standard_small
+      tier: standard
+      capacity: 2
+    ssl_policy:
+      policy_type: predefined
+      policy_name: ssl_policy20150501
+      disabled_ssl_protocols:
+        - tls_v1_0
+        - tls_v1_1
+      cipher_suites:
+        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
+    authentication_certificates:
+      - name: cert1
+        data: "{{ lookup('file', cert1_file) }}"
+    ssl_certificates:
+      - name: cert2
+        password: your-password
+        data: "{{ lookup('file', cert2_file) }}"
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - port: 90
+        name: ag_frontend_port
+      - port: 80
+        name: http_frontend_port
+    backend_address_pools:
+      - backend_addresses:
+          - ip_address: 10.0.0.4
+        name: test_backend_address_pool
+    probes:
+     - name: custom_probe
+       protocol: http
+       host: 10.0.0.4
+       path: /healthz
+       interval: 30
+       timeout: 30
+       unhealthy_threshold: 3
+    backend_http_settings_collection:
+      - port: 80
+        protocol: http
+        cookie_based_affinity: enabled
+        probe: custom_probe
+        name: sample_appgateway_http_settings
+    http_listeners:
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: ag_frontend_port
+        protocol: https
+        ssl_certificate: cert2
+        name: sample_http_listener
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: http_frontend_port
+        protocol: http
+        name: http_listener
+    request_routing_rules:
+      - rule_type: Basic
+        backend_address_pool: test_backend_address_pool
+        backend_http_settings: sample_appgateway_http_settings
+        http_listener: sample_http_listener
+        name: rule1
+      - rule_type: Basic
+        http_listener: http_listener
+        redirect_configuration: redirect_site_to_https
+        name: http_redirect_rule
+    redirect_configurations:
+     - redirect_type: permanent
+       target_listener: sample_http_listener
+       include_path: true
+       include_query_string: true
+       name: redirect_site_to_https
+  register: output
+- name: Assert the resource instance is not changed
+  assert:
+    that:
+      - not output.changed
+
+- name: Try to update instance of Application Gateway - single change
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway{{ rpfx }}"
+    sku:
+      name: standard_small
+      tier: standard
+      capacity: 2
+    ssl_policy:
+      policy_type: predefined
+      policy_name: ssl_policy20150501
+      disabled_ssl_protocols:
+        - tls_v1_0
+        - tls_v1_1
+      cipher_suites:
+        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
+    authentication_certificates:
+      - name: cert1
+        data: "{{ lookup('file', cert1_file) }}"
+    ssl_certificates:
+      - name: cert2
+        password: your-password
+        data: "{{ lookup('file', cert2_file) }}"
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - port: 90
+        name: ag_frontend_port
+      - port: 80
+        name: http_frontend_port
+    backend_address_pools:
+      - backend_addresses:
+          - ip_address: 10.0.0.4
+        name: test_backend_address_pool
+    probes:
+     - name: custom_probe
+       protocol: http
+       host: 10.0.0.4
+       path: /healthz
+       interval: 30
+       timeout: 30
+       unhealthy_threshold: 3
+    backend_http_settings_collection:
+      - port: 81
+        protocol: http
+        cookie_based_affinity: enabled
+        probe: custom_probe
+        name: sample_appgateway_http_settings
+    http_listeners:
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: ag_frontend_port
+        protocol: https
+        ssl_certificate: cert2
+        name: sample_http_listener
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: http_frontend_port
+        protocol: http
+        name: http_listener
+    request_routing_rules:
+      - rule_type: Basic
+        backend_address_pool: test_backend_address_pool
+        backend_http_settings: sample_appgateway_http_settings
+        http_listener: sample_http_listener
+        name: rule1
+      - rule_type: Basic
+        http_listener: http_listener
+        redirect_configuration: redirect_site_to_https
+        name: http_redirect_rule
+    redirect_configurations:
+     - redirect_type: permanent
+       target_listener: sample_http_listener
+       include_path: true
+       include_query_string: true
+       name: redirect_site_to_https
+  register: output
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+
 - name: Create instance of Application Gateway by looking up virtual network and subnet
   azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
@@ -296,11 +470,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           name: subnet{{ rpfx }}
@@ -404,11 +578,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -490,11 +664,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -579,178 +753,6 @@
     that:
       - appgw_output.gateways | community.general.json_query(query) | length == 0
 
-- name: Try to update instance of Application Gateway - no change
-  azure_rm_appgateway:
-    resource_group: "{{ resource_group }}"
-    name: "appgateway{{ rpfx }}"
-    sku:
-      name: standard_small
-      tier: standard
-      capacity: 2
-    ssl_policy:
-      policy_type: predefined
-      policy_name: ssl_policy20150501
-      disabled_ssl_protocols:
-        - tls_v1_0
-        - tls_v1_1
-      cipher_suites:
-        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
-    authentication_certificates:
-      - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
-    ssl_certificates:
-      - name: cert2
-        password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
-    gateway_ip_configurations:
-      - subnet:
-          id: "{{ subnet_output.state.id }}"
-        name: app_gateway_ip_config
-    frontend_ip_configurations:
-      - subnet:
-          id: "{{ subnet_output.state.id }}"
-        name: sample_gateway_frontend_ip_config
-    frontend_ports:
-      - port: 90
-        name: ag_frontend_port
-      - port: 80
-        name: http_frontend_port
-    backend_address_pools:
-      - backend_addresses:
-          - ip_address: 10.0.0.4
-        name: test_backend_address_pool
-    probes:
-     - name: custom_probe
-       protocol: http
-       host: 10.0.0.4
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
-    backend_http_settings_collection:
-      - port: 80
-        protocol: http
-        cookie_based_affinity: enabled
-        probe: custom_probe
-        name: sample_appgateway_http_settings
-    http_listeners:
-      - frontend_ip_configuration: sample_gateway_frontend_ip_config
-        frontend_port: ag_frontend_port
-        protocol: https
-        ssl_certificate: cert2
-        name: sample_http_listener
-      - frontend_ip_configuration: sample_gateway_frontend_ip_config
-        frontend_port: http_frontend_port
-        protocol: http
-        name: http_listener
-    request_routing_rules:
-      - rule_type: Basic
-        backend_address_pool: test_backend_address_pool
-        backend_http_settings: sample_appgateway_http_settings
-        http_listener: sample_http_listener
-        name: rule1
-      - rule_type: Basic
-        http_listener: http_listener
-        redirect_configuration: redirect_site_to_https
-        name: http_redirect_rule
-    redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
-  register: output
-- name: Assert the resource instance is not changed
-  assert:
-    that:
-      - not output.changed
-
-- name: Try to update instance of Application Gateway - single change
-  azure_rm_appgateway:
-    resource_group: "{{ resource_group }}"
-    name: "appgateway{{ rpfx }}"
-    sku:
-      name: standard_small
-      tier: standard
-      capacity: 2
-    ssl_policy:
-      policy_type: predefined
-      policy_name: ssl_policy20150501
-      disabled_ssl_protocols:
-        - tls_v1_0
-        - tls_v1_1
-      cipher_suites:
-        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
-    authentication_certificates:
-      - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
-    ssl_certificates:
-      - name: cert2
-        password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
-    gateway_ip_configurations:
-      - subnet:
-          id: "{{ subnet_output.state.id }}"
-        name: app_gateway_ip_config
-    frontend_ip_configurations:
-      - subnet:
-          id: "{{ subnet_output.state.id }}"
-        name: sample_gateway_frontend_ip_config
-    frontend_ports:
-      - port: 90
-        name: ag_frontend_port
-      - port: 80
-        name: http_frontend_port
-    backend_address_pools:
-      - backend_addresses:
-          - ip_address: 10.0.0.4
-        name: test_backend_address_pool
-    probes:
-     - name: custom_probe
-       protocol: http
-       host: 10.0.0.4
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
-    backend_http_settings_collection:
-      - port: 81
-        protocol: http
-        cookie_based_affinity: enabled
-        probe: custom_probe
-        name: sample_appgateway_http_settings
-    http_listeners:
-      - frontend_ip_configuration: sample_gateway_frontend_ip_config
-        frontend_port: ag_frontend_port
-        protocol: https
-        ssl_certificate: cert2
-        name: sample_http_listener
-      - frontend_ip_configuration: sample_gateway_frontend_ip_config
-        frontend_port: http_frontend_port
-        protocol: http
-        name: http_listener
-    request_routing_rules:
-      - rule_type: Basic
-        backend_address_pool: test_backend_address_pool
-        backend_http_settings: sample_appgateway_http_settings
-        http_listener: sample_http_listener
-        name: rule1
-      - rule_type: Basic
-        http_listener: http_listener
-        redirect_configuration: redirect_site_to_https
-        name: http_redirect_rule
-    redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
-  register: output
-- name: Assert the resource instance is well created
-  assert:
-    that:
-      - output.changed
-
 - name: Create instance of Application Gateway with path based rules
   azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
@@ -768,11 +770,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -863,11 +865,11 @@
         - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
-        data: "{{ lookup('file', 'cert1.txt') }}"
+        data: "{{ lookup('file', cert1_file) }}"
     ssl_certificates:
       - name: cert2
         password: your-password
-        data: "{{ lookup('file', 'cert2.txt') }}"
+        data: "{{ lookup('file', cert2_file) }}"
     gateway_ip_configurations:
       - subnet:
           id: "{{ subnet_output.state.id }}"
@@ -974,3 +976,42 @@
   assert:
     that:
       - output.changed == false
+
+- name: Delete path-based rules instance of Application Gateway
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway-path-rules{{ rpfx }}"
+    state: absent
+  register: output
+- name: Assert the state has changed
+  assert:
+    that:
+      - output.changed
+
+- name: Delete custom probe instance of Application Gateway
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group_secondary }}"
+    name: "appgateway-probe-{{ rpfx }}"
+    state: absent
+  register: output
+- name: Assert the state has changed
+  assert:
+    that:
+      - output.changed
+
+- name: Delete subnet-lookup instance of Application Gateway
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway-subnet-lookup{{ rpfx }}"
+    state: absent
+  register: output
+- name: Assert the state has changed
+  assert:
+    that:
+      - output.changed
+
+- name: Delete virtual network
+  azure_rm_virtualnetwork:
+    name: vnet{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+    state: absent
