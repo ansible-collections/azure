@@ -69,15 +69,15 @@ options:
             - JSON formatted protected settings for the extension.
             - >-
                 Previously configured settings are not available, so the parameter is not used for idempotency checks.
-                If changes to this parameter need to be applied, use in conjunction with I(force_update).
+                If changes to this parameter need to be applied, use in conjunction with I(force_update_tag).
         type: dict
     auto_upgrade_minor_version:
         description:
             - Whether the extension handler should be automatically upgraded across minor versions.
         type: bool
-    force_update:
+    force_update_tag:
         description:
-            - Whether the extension should be updated even if no changes can be detected from what is currently configured.
+            - Whether the extension should be updated or re-run even if no changes can be detected from what is currently configured.
             - Helpful when applying changes to I(protected_settings).
         type: bool
         default: false
@@ -198,7 +198,7 @@ class AzureRMVMExtension(AzureRMModuleBase):
             protected_settings=dict(
                 type='dict', no_log=True
             ),
-            force_update=dict(
+            force_update_tag=dict(
                 type='bool',
                 default=False
             ),
@@ -215,7 +215,7 @@ class AzureRMVMExtension(AzureRMModuleBase):
         self.settings = None
         self.protected_settings = None
         self.state = None
-        self.force_update = False
+        self.force_update_tag = False
 
         required_if = [
             ('state', 'present', ['publisher', 'virtual_machine_extension_type', 'type_handler_version']),
@@ -250,7 +250,7 @@ class AzureRMVMExtension(AzureRMModuleBase):
             if not response:
                 to_be_updated = True
             else:
-                if self.force_update:
+                if self.force_update_tag:
                     to_be_updated = True
 
                 if self.settings is not None:
@@ -307,7 +307,8 @@ class AzureRMVMExtension(AzureRMModuleBase):
                 type_handler_version=self.type_handler_version,
                 auto_upgrade_minor_version=self.auto_upgrade_minor_version,
                 settings=self.settings,
-                protected_settings=self.protected_settings
+                protected_settings=self.protected_settings,
+                force_update_tag=self.force_update_tag,
             )
             poller = self.compute_client.virtual_machine_extensions.create_or_update(self.resource_group, self.virtual_machine_name, self.name, params)
             response = self.get_poller_result(poller)
