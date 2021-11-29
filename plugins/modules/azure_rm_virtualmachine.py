@@ -441,7 +441,7 @@ EXAMPLES = '''
     admin_username: "{{ username }}"
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
-        key_data: < insert yor ssh public key here... >
+        key_data: < insert your ssh public key here... >
     network_interfaces: testvm001
     image:
       offer: CentOS
@@ -458,7 +458,7 @@ EXAMPLES = '''
     admin_username: "{{ username }}"
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
-        key_data: < insert yor ssh public key here... >
+        key_data: < insert your ssh public key here... >
     image:
       offer: CoreOS
       publisher: CoreOS
@@ -480,7 +480,7 @@ EXAMPLES = '''
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
-        key_data: < insert yor ssh public key here... >
+        key_data: < insert your ssh public key here... >
     network_interfaces: testvm001
     storage_container: osdisk
     storage_blob: osdisk.vhd
@@ -531,7 +531,7 @@ EXAMPLES = '''
     image:
       id: '{{image_id}}'
 
-- name: Create VM with spcified OS disk size
+- name: Create a VM with spcified OS disk size
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: big-os-disk
@@ -544,7 +544,7 @@ EXAMPLES = '''
       sku: '7.1'
       version: latest
 
-- name: Create VM with OS and Plan, accepting the terms
+- name: Create a VM with OS and Plan, accepting the terms
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: f5-nva
