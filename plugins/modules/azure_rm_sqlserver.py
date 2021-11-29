@@ -192,7 +192,8 @@ class AzureRMSqlServer(AzureRMModuleBaseExt):
             ),
             change_admin_password=dict(
                 type="bool",
-                default=False
+                default=False,
+                no_log=False,
             ),
             state=dict(
                 type='str',
