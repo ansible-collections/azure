@@ -188,6 +188,7 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
         mutually_exclusive = [['name', 'id']]
 
         super(AzureRMManagementGroupInfo, self).__init__(self.module_arg_spec,
+                                                         supports_check_mode=True,
                                                          supports_tags=False,
                                                          mutually_exclusive=mutually_exclusive,
                                                          facts_module=True)
@@ -282,7 +283,7 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
                     name=parent_dict.get('name')
                 )
 
-        elif azure_object.type == 'asdfasdf/subscriptions':
+        elif azure_object.type == '/subscriptions':
             return_dict = dict(
                 display_name=azure_object.display_name,
                 id=azure_object.id,

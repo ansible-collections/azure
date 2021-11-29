@@ -11,8 +11,12 @@
       name: B_Gen5_1
       tier: Basic
     location: westus2
-    storage_mb: 51200
-    version: 5.6
+    storage_profile:
+      storage_mb: 51200
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+      storage_autogrow: Disabled
+    version: 5.7
     enforce_ssl: True
     admin_username: zimxyz
     admin_password: Password123!
@@ -31,8 +35,12 @@
       name: B_Gen5_1
       tier: Basic
     location: westus2
-    storage_mb: 51200
-    version: 5.6
+    storage_profile:
+      storage_mb: 51200
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+      storage_autogrow: Disabled
+    version: 5.7
     enforce_ssl: True
     admin_username: zimxyz
     admin_password: Password123!
@@ -51,8 +59,12 @@
       name: B_Gen5_1
       tier: Basic
     location: westus2
-    storage_mb: 51200
-    version: 5.6
+    storage_profile:
+      storage_mb: 51200
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+      storage_autogrow: Disabled
+    version: 5.7
     enforce_ssl: True
     admin_username: zimxyz
     admin_password: Password123!
@@ -71,8 +83,12 @@
       name: B_Gen5_1
       tier: Basic
     location: westus2
-    storage_mb: 128000
-    version: 5.6
+    storage_profile:
+      storage_mb: 128000
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+      storage_autogrow: Disabled
+    version: 5.7
     enforce_ssl: True
     admin_username: zimxyz
     admin_password: Password123!
@@ -93,7 +109,18 @@
 - name: Assert that storage size is correct
   assert:
     that:
-      - output.servers[0]['storage_mb'] == 128000
+      - output.servers[0]['storage_profile']['storage_mb'] == 128000
+
+- name: Restart MySQL Server
+  azure_rm_mysqlserver:
+    resource_group: "{{ resource_group }}"
+    name: mysqlsrv{{ rpfx }}
+    restarted: True
+  register: output
+- name: Assert the state has not changed
+  assert:
+    that:
+      - output.changed
 
 - name: Create second instance of MySQL Server
   azure_rm_mysqlserver:
@@ -103,8 +130,12 @@
       name: B_Gen5_1
       tier: Basic
     location: westus2
-    storage_mb: 51200
-    version: 5.6
+    storage_profile:
+      storage_mb: 51200
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+      storage_autogrow: Disabled
+    version: 5.7
     enforce_ssl: True
     admin_username: zimxyz
     admin_password: Password123!
@@ -119,8 +150,12 @@
       name: B_Gen5_1
       tier: Basic
     location: westus2
-    storage_mb: 51200
-    version: 5.6
+    storage_profile:
+      storage_mb: 51200
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+      storage_autogrow: Disabled
+    version: 5.7
     enforce_ssl: True
     admin_username: zimxyz
     admin_password: Password123!

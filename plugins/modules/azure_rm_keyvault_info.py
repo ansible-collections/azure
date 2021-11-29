@@ -106,6 +106,12 @@ keyvaults:
             type: bool
             returned: always
             sample: True
+        enable_purge_protection:
+            description:
+                - Property specifying whether protection against purge is enabled for this vault.
+            type: bool
+            returned: always
+            sample: False
         tags:
             description:
                 - List of tags.
@@ -197,6 +203,8 @@ def keyvault_to_dict(vault):
         enabled_for_disk_encryption=vault.properties.enabled_for_disk_encryption,
         enabled_for_template_deployment=vault.properties.enabled_for_template_deployment,
         enable_soft_delete=vault.properties.enable_soft_delete,
+        enable_purge_protection=vault.properties.enable_purge_protection
+        if vault.properties.enable_purge_protection else False,
         access_policies=[dict(
             tenant_id=policy.tenant_id,
             object_id=policy.object_id,
@@ -231,7 +239,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
         self._client = None
 
         super(AzureRMKeyVaultInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                  supports_check_mode=False,
+                                                  supports_check_mode=True,
                                                   supports_tags=False)
 
     def exec_module(self, **kwargs):

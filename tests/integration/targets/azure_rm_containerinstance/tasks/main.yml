@@ -143,6 +143,102 @@
       - output.containerinstances[1]['ports'] != None
       - output.containerinstances[1]['containers'] != None
 
+- name: Create sample container instance with volume
+  azure_rm_containerinstance:
+    resource_group: "{{ resource_group }}"
+    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}thi"
+    os_type: linux
+    ip_address: public
+    location: eastus
+    ports:
+      - 80
+    containers:
+      - name: mycontainer1
+        image: mcr.microsoft.com/azuredocs/aci-helloworld
+        memory: 1.5
+        volume_mounts:
+          - name: "my-filesharevolume"
+            mount_path: "/data/files"
+        ports:
+          - 80
+          - 81
+    volumes:
+      - name: "my-filesharevolume"
+        azure_file:
+          storage_account_name: "{{ storage_account_name }}"
+          share_name: "{{ file_share_name }}"
+          storage_account_key: "{{ storage_account_key }}"
+  register: output
+  ignore_errors: True
+
+- debug:
+    var: output
+  ignore_errors: True
+
+- name: Assert the container instance is well created
+  assert:
+    that:
+      - output.changed
+      - output.provisioning_state == 'Succeeded'
+  ignore_errors: True
+
+- name: Gather facts for Container Instance
+  azure_rm_containerinstance_info:
+    resource_group: "{{ resource_group }}"
+    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}thi"
+  register: output
+  ignore_errors: True
+
+- debug:
+    var: output
+  ignore_errors: True
+
+- name: Assert that facts are returned
+  assert:
+    that:
+      - output.changed == False
+      - output.containerinstances[0]['resource_group'] != None
+      - output.containerinstances[0]['name'] != None
+      - output.containerinstances[0]['os_type'] != None
+      - output.containerinstances[0]['location'] != None
+      - output.containerinstances[0]['ip_address'] != None
+      - output.containerinstances[0]['volumes'] != None
+      - output.containerinstances[0]['ports'] != None
+      - output.containerinstances[0]['containers'] != None
+      - output.containerinstances[0]['containers'][0]['volume_mounts'] | length == 1
+      - output.containerinstances[0]['containers'][0]['volume_mounts'][0]['name'] != None
+      - output.containerinstances[0]['containers'][0]['volume_mounts'][0]['mount_path'] != None
+  ignore_errors: True
+
+- name: Remove container instance
+  azure_rm_containerinstance:
+    resource_group: "{{ resource_group }}"
+    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}thi"
+    os_type: linux
+    ip_address: public
+    location: eastus
+    ports:
+      - 80
+    containers:
+      - name: mycontainer1
+        image: mcr.microsoft.com/azuredocs/aci-helloworld
+        memory: 1.5
+        volume_mounts:
+          - name: "my-filesharevolume"
+            mount_path: "/data/files"
+        ports:
+          - 80
+          - 81
+    volumes:
+      - name: "my-filesharevolume"
+        azure_file:
+          storage_account_name: "{{ storage_account_name }}"
+          share_name: "{{ file_share_name }}"
+          storage_account_key: "{{ storage_account_key }}"
+    state: absent
+  register: output
+  ignore_errors: True
+
 - name: Remove container instance
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"

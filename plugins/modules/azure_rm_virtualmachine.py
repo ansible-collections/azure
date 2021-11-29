@@ -21,7 +21,7 @@ short_description: Manage Azure virtual machines
 description:
     - Manage and configure virtual machines (VMs) and associated resources on Azure.
     - Requires a resource group containing at least one virtual network with at least one subnet.
-    - Supports images from the Azure Marketplace, which can be discovered with M(azure_rm_virtualmachineimage_info).
+    - Supports images from the Azure Marketplace, which can be discovered with M(azure.azcollection.azure_rm_virtualmachineimage_info).
     - Supports custom images since Ansible 2.5.
     - To use I(custom_data) on a Linux image, the image must have cloud-init enabled. If cloud-init is not enabled, I(custom_data) is ignored.
 
@@ -86,6 +86,27 @@ options:
             - A valid Azure VM size value. For example, C(Standard_D4).
             - Choices vary depending on the subscription and location. Check your subscription for available choices.
             - Required when creating a VM.
+    priority:
+        description:
+            - Priority of the VM.
+            - C(None) is the equivalent of Regular VM.
+        choices:
+            - None
+            - Spot
+    eviction_policy:
+        description:
+            - Specifies the eviction policy for the Azure Spot virtual machine.
+            - Requires priority to be set to Spot.
+        choices:
+            - Deallocate
+            - Delete
+    max_price:
+        description:
+            - Specifies the maximum price you are willing to pay for a Azure Spot VM/VMSS.
+            - This price is in US Dollars.
+            - C(-1) indicates default price to be up-to on-demand.
+            - Requires priority to be set to Spot.
+        default: -1
     admin_username:
         description:
             - Admin username used to access the VM after it is created.
@@ -174,7 +195,7 @@ options:
     data_disks:
         description:
             - Describes list of data disks.
-            - Use M(azure_rm_mangeddisk) to manage the specific disk.
+            - Use M(azure.azcollection.azure_rm_mangeddisk) to manage the specific disk.
         suboptions:
             lun:
                 description:
@@ -381,8 +402,8 @@ EXAMPLES = '''
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: testvm10
-    admin_username: chouseknecht
-    admin_password: <your password here>
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image:
       offer: CentOS
       publisher: OpenLogic
@@ -401,7 +422,7 @@ EXAMPLES = '''
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: vm-managed-disk
-    admin_username: adminUser
+    admin_username: "{{ username }}"
     availability_set: avs-managed-disk
     managed_disk_type: Standard_LRS
     image:
@@ -417,10 +438,10 @@ EXAMPLES = '''
     name: testvm002
     vm_size: Standard_D4
     storage_account: testaccount001
-    admin_username: adminUser
+    admin_username: "{{ username }}"
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
-        key_data: < insert yor ssh public key here... >
+        key_data: < insert your ssh public key here... >
     network_interfaces: testvm001
     image:
       offer: CentOS
@@ -434,10 +455,10 @@ EXAMPLES = '''
     name: testvm001
     vm_size: Standard_D4
     managed_disk_type: Standard_LRS
-    admin_username: adminUser
+    admin_username: "{{ username }}"
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
-        key_data: < insert yor ssh public key here... >
+        key_data: < insert your ssh public key here... >
     image:
       offer: CoreOS
       publisher: CoreOS
@@ -455,11 +476,11 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: testvm001
     vm_size: Standard_DS1_v2
-    admin_username: adminUser
+    admin_username: "{{ username }}"
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
-        key_data: < insert yor ssh public key here... >
+        key_data: < insert your ssh public key here... >
     network_interfaces: testvm001
     storage_container: osdisk
     storage_blob: osdisk.vhd
@@ -485,8 +506,8 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: testvm001
     vm_size: Standard_DS1_v2
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image: customimage001
 
 - name: Create a VM with a custom image from a particular resource group
@@ -494,8 +515,8 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: testvm001
     vm_size: Standard_DS1_v2
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image:
       name: customimage001
       resource_group: myResourceGroup
@@ -505,17 +526,17 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: testvm001
     vm_size: Standard_DS1_v2
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image:
       id: '{{image_id}}'
 
-- name: Create VM with spcified OS disk size
+- name: Create a VM with spcified OS disk size
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: big-os-disk
-    admin_username: chouseknecht
-    admin_password: <your password here>
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     os_disk_size_gb: 512
     image:
       offer: CentOS
@@ -523,12 +544,12 @@ EXAMPLES = '''
       sku: '7.1'
       version: latest
 
-- name: Create VM with OS and Plan, accepting the terms
+- name: Create a VM with OS and Plan, accepting the terms
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: f5-nva
-    admin_username: chouseknecht
-    admin_password: <your password here>
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image:
       publisher: f5-networks
       offer: f5-big-ip-best
@@ -538,6 +559,21 @@ EXAMPLES = '''
       name: f5-bigip-virtual-edition-200m-best-hourly
       product: f5-big-ip-best
       publisher: f5-networks
+
+- name: Create a VM with Spot Instance
+  azure_rm_virtualmachine:
+    resource_group: myResourceGroup
+    name: testvm10
+    vm_size: Standard_D4
+    priority: Spot
+    eviction_policy: Deallocate
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
+    image:
+      offer: CentOS
+      publisher: OpenLogic
+      sku: '7.1'
+      version: latest
 
 - name: Power Off
   azure_rm_virtualmachine:
@@ -567,8 +603,8 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: testvm001
     vm_size: Standard_DS1_v2
-    admin_username: adminUser
-    admin_password: password01
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
     image: customimage001
     zones: [1]
 
@@ -797,9 +833,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             location=dict(type='str'),
             short_hostname=dict(type='str'),
             vm_size=dict(type='str'),
+            priority=dict(type='str', choices=['None', 'Spot']),
+            eviction_policy=dict(type='str', choices=['Deallocate', 'Delete']),
+            max_price=dict(type='float', default=-1),
             admin_username=dict(type='str'),
             admin_password=dict(type='str', no_log=True),
-            ssh_password_enabled=dict(type='bool', default=True),
+            ssh_password_enabled=dict(type='bool', default=True, no_log=False),
             ssh_public_keys=dict(type='list'),
             image=dict(type='raw'),
             availability_set=dict(type='str'),
@@ -841,6 +880,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.location = None
         self.short_hostname = None
         self.vm_size = None
+        self.priority = None
+        self.eviction_policy = None
         self.admin_username = None
         self.admin_password = None
         self.ssh_password_enabled = None
@@ -1045,6 +1086,17 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 results = vm_dict
                 current_osdisk = vm_dict['properties']['storageProfile']['osDisk']
                 current_ephemeral = current_osdisk.get('diffDiskSettings', None)
+                current_properties = vm_dict['properties']
+
+                if self.priority and self.priority != current_properties.get('priority', 'None'):
+                    self.fail('VM Priority is not updatable: requested virtual machine priority is {0}'.format(self.priority))
+                if self.eviction_policy and \
+                   self.eviction_policy != current_properties.get('evictionPolicy', None):
+                    self.fail('VM Eviction Policy is not updatable: requested virtual machine eviction policy is {0}'.format(self.eviction_policy))
+                if self.max_price and \
+                   vm_dict['properties'].get('billingProfile', None) and \
+                   self.max_price != vm_dict['properties']['billingProfile'].get('maxPrice', None):
+                    self.fail('VM Maximum Price is not updatable: requested virtual machine maximum price is {0}'.format(self.max_price))
 
                 if self.ephemeral_os_disk and current_ephemeral is None:
                     self.fail('Ephemeral OS disk not updatable: virtual machine ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
@@ -1302,6 +1354,13 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         plan=plan,
                         zones=self.zones,
                     )
+
+                    if self.priority == 'Spot':
+                        vm_resource.priority = self.priority
+                        vm_resource.eviction_policy = self.eviction_policy
+                        vm_resource.billing_profile = self.compute_models.BillingProfile(
+                            max_price=self.max_price
+                        )
 
                     if self.license_type is not None:
                         vm_resource.license_type = self.license_type
@@ -1916,7 +1975,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             versions = self.compute_client.virtual_machine_images.list(self.location,
                                                                        self.image['publisher'],
                                                                        self.image['offer'],
-                                                                       self.image['sku'])
+                                                                       self.image['sku'],
+                                                                       top=1,
+                                                                       orderby='name desc')
         except Exception as exc:
             self.fail("Error fetching image {0} {1} {2} - {3}".format(self.image['publisher'],
                                                                       self.image['offer'],

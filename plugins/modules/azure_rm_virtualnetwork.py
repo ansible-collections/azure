@@ -16,7 +16,7 @@ version_added: "0.1.0"
 short_description: Manage Azure virtual networks
 description:
     - Create, update or delete a virtual networks. Allows setting and updating the available IPv4 address ranges
-      and setting custom DNS servers. Use the M(azure_rm_subnet) module to associate subnets with a virtual network.
+      and setting custom DNS servers. Use the M(azure.azcollection.azure_rm_subnet) module to associate subnets with a virtual network.
 options:
     resource_group:
         description:

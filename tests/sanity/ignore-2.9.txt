@@ -12,9 +12,6 @@ plugins/modules/azure_rm_appserviceplan.py validate-modules:parameter-type-not-i
 plugins/modules/azure_rm_appserviceplan_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_availabilityset.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_availabilityset_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_containerinstance.py validate-modules:doc-type-does-not-match-spec
-plugins/modules/azure_rm_containerinstance.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_containerinstance_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:doc-choices-do-not-match-spec
 plugins/modules/azure_rm_containerregistryreplication.py validate-modules:doc-default-does-not-match-spec
@@ -109,11 +106,9 @@ plugins/modules/azure_rm_mariadbserver.py validate-modules:parameter-type-not-in
 plugins/modules/azure_rm_mysqlconfiguration.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mysqldatabase.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mysqlfirewallrule.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_mysqlserver.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqlconfiguration.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqldatabase.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqlfirewallrule.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_postgresqlserver.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_rediscache.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_rediscache.py validate-modules:doc-default-does-not-match-spec
 plugins/modules/azure_rm_rediscache.py validate-modules:doc-type-does-not-match-spec
@@ -162,7 +157,6 @@ plugins/modules/azure_rm_cdnprofile.py validate-modules:parameter-type-not-in-do
 plugins/modules/azure_rm_cosmosdbaccount.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_cosmosdbaccount_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_devtestlabschedule.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_apimanagementservice.py validate-modules:doc-default-does-not-match-spec
 plugins/modules/azure_rm_hdinsightcluster_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_loadbalancer_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_loganalyticsworkspace_info.py validate-modules:parameter-type-not-in-doc

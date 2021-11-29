@@ -80,7 +80,7 @@ azure_virtualnetworks:
     }]
 virtualnetworks:
     description:
-        - List of virtual network dicts with same format as M(azure_rm_virtualnetwork) module parameters.
+        - List of virtual network dicts with same format as M(azure.azcollection.azure_rm_virtualnetwork) module parameters.
     returned: always
     type: complex
     contains:
@@ -223,6 +223,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         self.tags = None
 
         super(AzureRMNetworkInterfaceInfo, self).__init__(self.module_arg_spec,
+                                                          supports_check_mode=True,
                                                           supports_tags=False,
                                                           facts_module=True)
 

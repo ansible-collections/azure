@@ -282,6 +282,7 @@ try:
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
     from azure.mgmt.notificationhubs import NotificationHubsManagementClient
     from azure.mgmt.eventhub import EventHubManagementClient
+    from azure.identity._credentials import client_secret
 
 except ImportError as exc:
     Authentication = object
@@ -724,7 +725,7 @@ class AzureRMModuleBase(object):
         self.log("Check to see if public IP {0} exists".format(public_ip_name))
         try:
             pip = self.network_client.public_ip_addresses.get(resource_group, public_ip_name)
-        except CloudError:
+        except Exception:
             pass
 
         if pip:
@@ -764,7 +765,7 @@ class AzureRMModuleBase(object):
         self.log("Check to see if security group {0} exists".format(security_group_name))
         try:
             group = self.network_client.network_security_groups.get(resource_group, security_group_name)
-        except CloudError:
+        except Exception:
             pass
 
         if group:
@@ -875,7 +876,7 @@ class AzureRMModuleBase(object):
 
         return client
 
-    def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False):
+    def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False, is_track2=False):
         self.log('Getting management service client {0}'.format(client_type.__name__))
         self.check_client_version(client_type)
 
@@ -885,11 +886,21 @@ class AzureRMModuleBase(object):
             # most things are resource_manager, don't make everyone specify
             base_url = self.azure_auth._cloud_environment.endpoints.resource_manager
 
+        mgmt_subscription_id = self.azure_auth.subscription_id
+        if self.module.params.get('subscription_id'):
+            mgmt_subscription_id = self.module.params.get('subscription_id')
+
         # Some management clients do not take a subscription ID as parameters.
         if suppress_subscription_id:
-            client_kwargs = dict(credentials=self.azure_auth.azure_credentials, base_url=base_url)
+            if is_track2:
+                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, base_url=base_url)
+            else:
+                client_kwargs = dict(credentials=self.azure_auth.azure_credentials, base_url=base_url)
         else:
-            client_kwargs = dict(credentials=self.azure_auth.azure_credentials, subscription_id=self.azure_auth.subscription_id, base_url=base_url)
+            if is_track2:
+                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, subscription_id=mgmt_subscription_id, base_url=base_url)
+            else:
+                client_kwargs = dict(credentials=self.azure_auth.azure_credentials, subscription_id=mgmt_subscription_id, base_url=base_url)
 
         api_profile_dict = {}
 
@@ -923,7 +934,8 @@ class AzureRMModuleBase(object):
             setattr(client, '_ansible_models', importlib.import_module(client_type.__module__).models)
             client.models = types.MethodType(_ansible_get_models, client)
 
-        client.config = self.add_user_agent(client.config)
+        if not is_track2:
+            client.config = self.add_user_agent(client.config)
 
         if self.azure_auth._cert_validation_mode == 'ignore':
             client.config.session_configuration_callback = self._validation_ignore_callback
@@ -965,6 +977,14 @@ class AzureRMModuleBase(object):
         config.credentials = AzureSASAuthentication(token=self.generate_sas_token(**kwags))
         config = self.add_user_agent(config)
         return ServiceClient(creds=config.credentials, config=config)
+
+    def get_subnet_detail(self, subnet_id):
+        vnet_detail = subnet_id.split('/Microsoft.Network/virtualNetworks/')[1].split('/subnets/')
+        return dict(
+            resource_group=subnet_id.split('resourceGroups/')[1].split('/')[0],
+            vnet_name=vnet_detail[0],
+            subnet_name=vnet_detail[1],
+        )
 
     # passthru methods to AzureAuth instance for backcompat
     @property
@@ -1475,6 +1495,9 @@ class AzureRMAuth(object):
                                                                  cloud_environment=self._cloud_environment,
                                                                  resource=graph_resource if self.is_ad_resource else rm_resource,
                                                                  verify=self._cert_validation_mode == 'validate')
+            self.azure_credential_track2 = client_secret.ClientSecretCredential(client_id=self.credentials['client_id'],
+                                                                                client_secret=self.credentials['secret'],
+                                                                                tenant_id=self.credentials['tenant'])
 
         elif self.credentials.get('ad_user') is not None and \
                 self.credentials.get('password') is not None and \
