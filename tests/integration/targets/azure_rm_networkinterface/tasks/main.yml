@@ -515,6 +515,134 @@
     that:
       - "facts.networkinterfaces[0].ip_configurations[0].application_security_groups | length == 1"
 
+- name: Create subnet for appgw
+  azure_rm_subnet:
+    name: appgw-subnet{{ rpfx }}
+    virtual_network_name: tn{{ rpfx }}
+    resource_group: "{{ resource_group_secondary }}"
+    address_prefix_cidr: 10.10.1.0/24
+  register: appgw_subnet_output
+
+- name: Create application gateway to connect NIC to
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group_secondary }}"
+    name: "appgateway{{ rpfx }}"
+    sku:
+      name: standard_small
+      tier: standard
+      capacity: 2
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ appgw_subnet_output.state.id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          id: "{{ appgw_subnet_output.state.id }}"
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - port: 80
+        name: http_frontend_port
+    backend_address_pools:
+      - name: test_backend_address_pool  # empty pool which will receive attachment to NIC.
+    backend_http_settings_collection:
+      - port: 80
+        protocol: http
+        cookie_based_affinity: enabled
+        name: sample_appgateway_http_settings
+    http_listeners:
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: http_frontend_port
+        protocol: http
+        name: http_listener
+    request_routing_rules:
+      - rule_type: Basic
+        backend_address_pool: test_backend_address_pool
+        backend_http_settings: sample_appgateway_http_settings
+        http_listener: http_listener
+        name: rule1
+  register: appgw_output
+
+- name: Create subnet for appgw connected NIC
+  azure_rm_subnet:
+    name: nic-appgw-subnet{{ rpfx }}
+    virtual_network_name: tn{{ rpfx }}
+    resource_group: "{{ resource_group_secondary }}"
+    address_prefix_cidr: 10.10.2.0/24
+
+- name: "Create NIC attached to application gateway"
+  azure_rm_networkinterface:
+    name: "appgw-nic{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+    virtual_network: "tn{{ rpfx }}"
+    subnet_name: "nic-appgw-subnet{{ rpfx }}"
+    create_with_security_group: false
+    public_ip: false
+    ip_configurations:
+      - name: "default"
+        primary: true
+        application_gateway_backend_address_pools:
+          - name: "test_backend_address_pool"
+            application_gateway: "appgateway{{ rpfx }}"
+  register: output
+- assert:
+    that:
+      - output.changed
+      - output.state.ip_configurations | length == 1
+      - output.state.ip_configurations[0].application_gateway_backend_address_pools | length == 1
+      - output.state.ip_configurations[0].application_gateway_backend_address_pools[0] == appgw_output.id + '/backendAddressPools/test_backend_address_pool'
+
+- name: "Create NIC attached to application gateway - idempotent"
+  azure_rm_networkinterface:
+    name: "appgw-nic{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+    virtual_network: "tn{{ rpfx }}"
+    subnet_name: "nic-appgw-subnet{{ rpfx }}"
+    create_with_security_group: false
+    public_ip: false
+    ip_configurations:
+      - name: "default"
+        primary: true
+        application_gateway_backend_address_pools:
+          - name: "test_backend_address_pool"
+            application_gateway: "appgateway{{ rpfx }}"
+  register: output
+- assert:
+    that:
+      - not output.changed
+
+- name: Get facts for appgw nic
+  azure_rm_networkinterface_info:
+    name: "appgw-nic{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+  register: facts
+- assert:
+    that:
+      - facts.networkinterfaces | length == 1
+      - facts.networkinterfaces[0].id == output.state.id
+      - facts.networkinterfaces[0].ip_configurations | length == 1
+      - facts.networkinterfaces[0].ip_configurations[0].application_gateway_backend_address_pools | length == 1
+      - facts.networkinterfaces[0].ip_configurations[0].application_gateway_backend_address_pools[0] == appgw_output.id + '/backendAddressPools/test_backend_address_pool'
+
+- name: "Delete NIC attached to application gateway"
+  azure_rm_networkinterface:
+    name: "appgw-nic{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+    state: absent
+  register: output
+- assert:
+    that:
+      - output.changed
+
+- name: Delete application gateway
+  azure_rm_appgateway:
+    name: "appgateway{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+    state: absent
+  register: output
+- assert:
+    that:
+      - output.changed
+
 - name: Delete the NIC (check mode)
   azure_rm_networkinterface:
       resource_group: "{{ resource_group }}"
