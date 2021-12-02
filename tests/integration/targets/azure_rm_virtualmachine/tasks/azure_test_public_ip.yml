@@ -90,10 +90,10 @@
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
   register: vm_state
-
+- debug:
+    var: vm_state
 - name: Pause for 10 mimutes to VM updating
   shell: sleep 600
-  when: vm_state.vms[0].provisioning_state == 'Updating'
 
 - name: Enable boot diagnostics on an existing VM for the first time without specifying a storage account
   azure_rm_virtualmachine:
