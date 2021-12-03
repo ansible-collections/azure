@@ -53,6 +53,7 @@ parameters:
     - "azure_rm_functionapp"
     - "azure_rm_gallery"
     - "azure_rm_hdinsightcluster"
+    - "azure_rm_hostgroup"
     - "azure_rm_image"
     - "azure_rm_iothub"
     - "azure_rm_ipgroup"
