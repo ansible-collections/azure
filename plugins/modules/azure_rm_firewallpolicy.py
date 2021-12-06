@@ -45,7 +45,7 @@ options:
         choices:
             - alert
             - deny
-            - off
+            - 'off'
     threat_intel_whitelist:
         description:
             - ThreatIntel Whitelist for Firewall Policy.
