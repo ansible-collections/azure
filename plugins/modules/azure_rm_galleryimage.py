@@ -69,12 +69,12 @@ options:
             - specialized
         required: true
         type: str
-    hyperveneration:
+    hypervgeneration:
         description:
             - This property allows you to specify the Hyper V Version of the Virtual Machines.
         choices:
             - V1
-            - v2
+            - V2
     end_of_life_date:
         description:
             - The end of life date of the gallery Image Definition.
