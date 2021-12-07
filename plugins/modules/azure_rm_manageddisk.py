@@ -20,7 +20,7 @@ description:
     - Create, update and delete an Azure Managed Disk.
 
 notes:
-    - This module was called M(azure_rm_managed_disk) before Ansible 2.8. The usage did not change.
+    - This module was called M(azure.azcollection.azure_rm_managed_disk) before Ansible 2.8. The usage did not change.
 
 options:
     resource_group:
@@ -152,6 +152,7 @@ EXAMPLES = '''
         name: mymanageddisk
         location: eastus
         resource_group: myResourceGroup
+        managed_by: ''
         disk_size_gb: 4
 
     - name: Delete managed disk

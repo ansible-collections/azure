@@ -85,6 +85,15 @@
       - not vm_facts_no_boot_diag_result.vms[0].boot_diagnostics.enabled
       - not vm_facts_no_boot_diag_result.vms[0].boot_diagnostics.storage_uri
 
+- name: Get VM facts
+  azure_rm_virtualmachine_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+  register: vm_state
+
+- name: Pause for 10 mimutes to VM updating
+  shell: sleep 600
+
 - name: Enable boot diagnostics on an existing VM for the first time without specifying a storage account
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"

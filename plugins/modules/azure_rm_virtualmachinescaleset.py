@@ -18,7 +18,7 @@ short_description: Manage Azure virtual machine scale sets
 
 description:
     - Create and update a virtual machine scale set.
-    - Note that this module was called M(azure_rm_virtualmachine_scaleset) before Ansible 2.8. The usage did not change.
+    - Note that this module was called M(azure.azcollection.azure_rm_virtualmachine_scaleset) before Ansible 2.8. The usage did not change.
 
 options:
     resource_group:
@@ -289,7 +289,7 @@ EXAMPLES = '''
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
-        key_data: < insert yor ssh public key here... >
+        key_data: < insert your ssh public key here... >
     managed_disk_type: Standard_LRS
     image:
       offer: CoreOS
@@ -315,7 +315,7 @@ EXAMPLES = '''
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
-        key_data: < insert yor ssh public key here... >
+        key_data: < insert your ssh public key here... >
     managed_disk_type: Standard_LRS
     image:
       offer: cis-ubuntu-linux-1804-l1

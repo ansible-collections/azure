@@ -73,6 +73,13 @@
       publisher: Canonical
       sku: 18.04-LTS
       version: latest
+- name: Get VM facts
+  azure_rm_virtualmachine_info:
+    resource_group: "{{ resource_group }}"
+    name: "vmforimage{{ rpfx }}"
+  register: vm_state
+- name: Pause for 10 mimutes to VM updating
+  shell: sleep 600
 - name: Generalize VM
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"

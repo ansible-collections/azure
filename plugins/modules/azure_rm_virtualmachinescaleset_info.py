@@ -17,7 +17,7 @@ short_description: Get Virtual Machine Scale Set facts
 
 description:
     - Get facts for a virtual machine scale set.
-    - Note that this module was called M(azure_rm_virtualmachine_scaleset_facts) before Ansible 2.8. The usage did not change.
+    - Note that this module was called M(azure.azcollection.azure_rm_virtualmachine_scaleset_facts) before Ansible 2.8. The usage did not change.
 
 options:
     name:
@@ -33,7 +33,7 @@ options:
         description:
             - Format of the data returned.
             - If C(raw) is selected information will be returned in raw format from Azure Python SDK.
-            - If C(curated) is selected the structure will be identical to input parameters of M(azure_rm_virtualmachinescaleset) module.
+            - If C(curated) is selected the structure will be identical to input parameters of M(azure.azcollection.azure_rm_virtualmachinescaleset) module.
             - In Ansible 2.5 and lower facts are always returned in raw format.
             - Please note that this option will be deprecated in 2.10 when curated format will become the only supported format.
         default: 'raw'

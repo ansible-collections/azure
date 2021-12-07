@@ -576,6 +576,7 @@ class AzureHost(object):
         # set image and os_disk
         new_hostvars['image'] = {}
         new_hostvars['os_disk'] = {}
+        new_hostvars['data_disks'] = []
         storageProfile = self._vm_model['properties'].get('storageProfile')
         if storageProfile:
             imageReference = storageProfile.get('imageReference')
@@ -595,11 +596,18 @@ class AzureHost(object):
             osDisk = storageProfile.get('osDisk')
             new_hostvars['os_disk'] = dict(
                 name=osDisk.get('name'),
-                operating_system_type=osDisk.get('osType').lower() if osDisk.get('osType') else None
+                operating_system_type=osDisk.get('osType').lower() if osDisk.get('osType') else None,
+                id=osDisk.get('managedDisk', {}).get('id')
             )
+            new_hostvars['data_disks'] = [
+                dict(
+                    name=dataDisk.get('name'),
+                    lun=dataDisk.get('lun'),
+                    id=dataDisk.get('managedDisk', {}).get('id')
+                ) for dataDisk in storageProfile.get('dataDisks', [])
+            ]
 
         self._hostvars = new_hostvars
-
         return self._hostvars
 
     def _on_instanceview_response(self, vm_instanceview_model):

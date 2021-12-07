@@ -245,6 +245,18 @@ vms:
             returned: always
             type: str
             sample: running
+        display_status:
+            description:
+                - The short localizable label for the status.
+            returned: always
+            type: str
+            sample: "VM running"
+        provisioning_state:
+            description:
+                - The provisioning state, which only appears in the response.
+            returned: always
+            type: str
+            sample: running
 '''
 
 try:
@@ -380,12 +392,16 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
             code = instance['statuses'][index]['code'].split('/')
             if code[0] == 'PowerState':
                 power_state = code[1]
+                display_status = instance['statuses'][index]['displayStatus']
             elif code[0] == 'OSState' and code[1] == 'generalized':
+                display_status = instance['statuses'][index]['displayStatus']
                 power_state = 'generalized'
                 break
 
         new_result = {}
         new_result['power_state'] = power_state
+        new_result['display_status'] = display_status
+        new_result['provisioning_state'] = vm.provisioning_state
         new_result['id'] = vm.id
         new_result['resource_group'] = resource_group
         new_result['name'] = vm.name
