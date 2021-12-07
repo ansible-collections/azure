@@ -1,11 +1,12 @@
 - include_tasks: setup.yml
+
 - name: create proximity placement group
   azure_rm_proximityplacementgroup:
     resource_group: "{{ resource_group }}"
     name: testproximityplacement
   register: output
 
-- name: Create virtual machine without public ip address and with boot diagnostics enabled
+- name: Create virtual machine with proximityplacement group
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
@@ -14,6 +15,39 @@
     ssh_password_enabled: false
     proximity_placement_group:
       id: "{{ output.state.id }}"
+    ssh_public_keys:
+      - path: /home/adminuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    short_hostname: testvm
+    os_type: Linux
+    public_ip_allocation_method: Disabled
+    boot_diagnostics:
+      enabled: yes
+    image:
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 16.04-LTS
+      version: latest
+  register: output
+
+- name: Get virtual machine with proximityplacement group
+  azure_rm_virtualmachine_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+  register: output
+
+- name: Ensure VM was created properly
+  assert:
+    that:
+      - output.vms[0].proximityPlacementGroup is defined
+
+- name: Create virtual machine without public ip address and with boot diagnostics enabled
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}_secondary"
+    vm_size: Standard_A0
+    admin_username: adminuser
+    ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/adminuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
@@ -41,10 +75,19 @@
       - azure_vm.properties.instanceView.bootDiagnostics.serialConsoleLogBlobUri is defined
       - not 'publicIPAddress' in create_vm_public_result.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[0].properties.ipConfigurations[0].properties
 
-- name: Delete VM with no public ip
+- name: Delete VM with proximiplacement group
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
+    state: absent
+    remove_on_absent: all_autocreated
+  async: 5000
+  poll: 0
+
+- name: Delete VM with no public ip
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}_secondary"
     state: absent
     remove_on_absent: all_autocreated
   async: 5000
