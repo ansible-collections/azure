@@ -198,6 +198,12 @@ vms:
             sample: [
                 "myNetworkInterface"
             ]
+        proximityPlacementGroup:
+            description:
+                - The name or ID of the proximity placement group the VM should be associated with.
+            type: dict
+            returned: always
+            sample: { "id": "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/proximityPlacementGroups/testid13"}
         os_disk_caching:
             description:
                 - Type of OS disk caching.
@@ -408,6 +414,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         new_result['state'] = 'present'
         new_result['location'] = vm.location
         new_result['vm_size'] = result['properties']['hardwareProfile']['vmSize']
+        new_result['proximityPlacementGroup'] = result['properties'].get('proximityPlacementGroup')
         new_result['zones'] = result.get('zones', None)
         os_profile = result['properties'].get('osProfile')
         if os_profile is not None:
