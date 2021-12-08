@@ -237,7 +237,7 @@
   assert:
     that:
       - results.changed == False
-      - results.extensions | length == 2
+      - results.extensions | length >= 2
       - "'python-install' in results.extensions | map(attribute='name')"
       - "'linux-diagnostics' in results.extensions | map(attribute='name')"
 
