@@ -136,6 +136,12 @@ vms:
                     returned: always
                     type: str
                     sample: Standard_LRS
+                managed_disk_id:
+                    description:
+                        - Managed data disk ID.
+                    returned: always
+                    type: str
+                    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/Microsoft.Compute/disks/diskName
         id:
             description:
                 - Resource ID.
@@ -462,6 +468,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                 'name': disks[disk_index].get('name'),
                 'disk_size_gb': disks[disk_index].get('diskSizeGB'),
                 'managed_disk_type': disks[disk_index].get('managedDisk', {}).get('storageAccountType'),
+                'managed_disk_id': disks[disk_index].get('managedDisk', {}).get('id'),
                 'caching': disks[disk_index].get('caching')
             })
 
