@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 GuopengLin, (@t-glin)
+# Copyright (c) 2020 XiuxiSun, (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_virtualhub_info
-version_added: '1.7.0'
+version_added: '1.10.0'
 short_description: Get VirtualHub info
 description:
     - Get info of VirtualHub.
