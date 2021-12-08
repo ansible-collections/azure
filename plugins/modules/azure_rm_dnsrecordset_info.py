@@ -242,9 +242,10 @@ class AzureRMRecordSetInfo(AzureRMModuleBase):
         try:
             item = self.dns_client.record_sets.get(self.resource_group, self.zone_name, self.relative_name, self.record_type)
         except CloudError:
+            results = []
             pass
-
-        results = [item]
+        else:
+            results = [item]
         return results
 
     def list_type(self):
