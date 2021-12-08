@@ -24,14 +24,17 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     zone_name:
         description:
             - Name of the existing DNS zone in which to manage the record set.
         required: true
+        type: str
     relative_name:
         description:
             - Relative name of the record set.
         required: true
+        type: str
     record_type:
         description:
             - The type of record set to create or delete.
@@ -47,10 +50,12 @@ options:
             - CAA
             - SOA
         required: true
+        type: str
     record_mode:
         description:
             - Whether existing record values not sent to the module should be purged.
         default: purge
+        type: str
         choices:
             - append
             - purge
@@ -58,16 +63,28 @@ options:
         description:
             - Assert the state of the record set. Use C(present) to create or update and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
+    metadata:
+        description:
+            - The metadata tags for the record sets.
+        type: dict
+    append_metadata:
+        description: Whether metadata should be appended or not
+        type: bool
+        default: True
     time_to_live:
         description:
             - Time to live of the record set in seconds.
         default: 3600
+        type: int
     records:
         description:
             - List of records to be created depending on the type of record (set).
+        type: list
+        elements: dict
         suboptions:
             preference:
                 description:
@@ -114,6 +131,17 @@ EXAMPLES = '''
     relative_name: www
     zone_name: testing.com
     state: absent
+
+- name: create A record set with metadata information
+  azure_rm_dnsrecordset:
+    resource_group: myResourceGroup
+    relative_name: www
+    zone_name: zone1.com
+    record_type: A
+    records:
+      - entry: 192.168.100.104
+    metadata:
+      key1: "value1"
 
 - name: create multiple "A" record sets with multiple records
   azure_rm_dnsrecordset:
@@ -183,43 +211,43 @@ state:
         fqdn:
             description:
                 - Fully qualified domain name of the record set.
-            return: always
+            returned: always
             type: str
             sample: www.b57dc95985712e4523282.com
         etag:
             description:
                 - The etag of the record set.
-            return: always
+            returned: always
             type: str
             sample: 692c3e92-a618-46fc-aecd-8f888807cd6c
         provisioning_state:
             description:
                 - The DNS record set state.
-            return: always
+            returned: always
             type: str
             sample: Succeeded
         target_resource:
             description:
                 - The target resource of the record set.
-            return: always
+            returned: always
             type: dict
             sample: {}
         ttl:
             description:
                 - The TTL(time-to-live) of the records in the records set.
-            return: always
+            returned: always
             type: int
             sample: 3600
         type:
             description:
                 - The type of DNS record in this record set.
-            return: always
+            returned: always
             type: str
             sample: A
         arecords:
             description:
                 - A list of records in the record set.
-            return: always
+            returned: always
             type: list
             sample: [
             {
@@ -236,6 +264,7 @@ state:
 
 import inspect
 import sys
+import copy
 
 from ansible.module_utils.basic import _load_params
 from ansible.module_utils.six import iteritems
@@ -324,7 +353,9 @@ class AzureRMRecordSet(AzureRMModuleBase):
             record_mode=dict(choices=['append', 'purge'], default='purge'),
             state=dict(choices=['present', 'absent'], default='present', type='str'),
             time_to_live=dict(type='int', default=3600),
-            records=dict(type='list', elements='dict')
+            records=dict(type='list', elements='dict'),
+            metadata=dict(type='dict'),
+            append_metadata=dict(type='bool', default=True)
         )
 
         required_if = [
@@ -352,6 +383,7 @@ class AzureRMRecordSet(AzureRMModuleBase):
         self.state = None
         self.time_to_live = None
         self.records = None
+        self.metadata = None
 
         # rerun validation and actually run the module this time
         super(AzureRMRecordSet, self).__init__(self.module_arg_spec, required_if=required_if, supports_check_mode=True)
@@ -392,7 +424,11 @@ class AzureRMRecordSet(AzureRMModuleBase):
                 # also check top-level recordset properties
                 changed |= record_set.ttl != self.time_to_live
 
-                # FUTURE: add metadata/tag check on recordset
+                old_metadata = self.results['state']['metadata'] if 'metadata' in self.results['state'] else dict()
+                update_metadata, self.results['state']['metadata'] = self.update_metadata(old_metadata)
+                if update_metadata:
+                    changed = True
+                self.metadata = self.results['state']['metadata']
 
             self.results['changed'] |= changed
 
@@ -412,6 +448,8 @@ class AzureRMRecordSet(AzureRMModuleBase):
                 record_set_args[record_type_metadata['attrname']] = self.input_sdk_records if record_type_metadata['is_list'] else self.input_sdk_records[0]
 
                 record_set = self.dns_models.RecordSet(**record_set_args)
+                if self.metadata:
+                    record_set.metadata = self.metadata
 
                 self.results['state'] = self.create_or_update(record_set)
 
@@ -471,6 +509,25 @@ class AzureRMRecordSet(AzureRMModuleBase):
         result = recordset.as_dict()
         result['type'] = result['type'].strip('Microsoft.Network/dnszones/')
         return result
+
+    def update_metadata(self, metadata):
+        metadata = metadata or dict()
+        new_metadata = copy.copy(metadata) if isinstance(metadata, dict) else dict()
+        param_metadata = self.metadata if isinstance(self.metadata, dict) else dict()
+        append_metadata = self.append_metadata if self.metadata is not None else True
+        changed = False
+        # check add or update metadata
+        for key, value in param_metadata.items():
+            if not new_metadata.get(key) or new_metadata[key] != value:
+                changed = True
+                new_metadata[key] = value
+        # check remove
+        if not append_metadata:
+            for key, value in metadata.items():
+                if not param_metadata.get(key):
+                    new_metadata.pop(key)
+                    changed = True
+        return changed, new_metadata
 
 
 def main():
