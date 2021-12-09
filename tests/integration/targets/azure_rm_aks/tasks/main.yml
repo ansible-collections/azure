@@ -35,12 +35,6 @@
              - 2
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
-     api_server_access_profile:
-         authorized_ip_ranges:
-             - "192.0.2.0"
-             - "198.51.100.0"
-             - "203.0.113.0"
-         enable_private_cluster: yes
      network_profile:
          load_balancer_sku: standard
    check_mode: yes
@@ -82,12 +76,6 @@
              - 2
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
-     api_server_access_profile:
-         authorized_ip_ranges:
-             - "192.0.2.0"
-             - "198.51.100.0"
-             - "203.0.113.0"
-         enable_private_cluster: yes
      network_profile:
          load_balancer_sku: standard
    register: output
@@ -139,12 +127,6 @@
              - 2
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
-     api_server_access_profile:
-         authorized_ip_ranges:
-             - "192.0.2.0"
-             - "198.51.100.0"
-             - "203.0.113.0"
-         enable_private_cluster: yes
      network_profile:
          load_balancer_sku: standard
    register: output
@@ -203,12 +185,6 @@
              - 2
      node_resource_group: "node{{ noderpfx }}"
      enable_rbac: yes
-     api_server_access_profile:
-         authorized_ip_ranges:
-             - "192.0.2.0"
-             - "198.51.100.0"
-             - "203.0.113.0"
-         enable_private_cluster: yes
      network_profile:
          load_balancer_sku: standard
    register: output
