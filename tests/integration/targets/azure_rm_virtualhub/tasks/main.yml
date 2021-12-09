@@ -1,0 +1,94 @@
+- set_fact:
+    name: "{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+
+- name: Create a VirtualHub (check mode)
+  azure_rm_virtualhub:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    sku: Standard
+  check_mode: yes
+
+- name: Create a VirtualHub
+  azure_rm_virtualhub:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    sku: Standard
+  register: output
+
+- name: Assert the virtual hub is well created
+  assert:
+    that:
+      - output.changed
+      - output.state.provisioning_state == 'Succeeded'
+   
+- name: Create a VirtualHub (idempotent)
+  azure_rm_virtualhub:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    sku: Standard
+  register: output
+
+- name: Assert idempotent
+  assert:
+    that:
+      - not output.changed
+
+- name: Get Virtual Hub Info
+  azure_rm_virtualhub_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+  register: output
+
+- name: Assert fact returns
+  assert:
+    that:
+      - output.virtual_hubs[0].provisioning_state == "Succeeded" 
+      - output.virtual_hubs[0].sku == "Standard"
+
+- name: Create a VirtualWan
+  azure_rm_virtualwan:
+    resource_group: "{{ resource_group }}"
+    name: "wan-{{ name }}"
+    disable_vpn_encryption: true
+    allow_branch_to_branch_traffic: true
+    allow_vnet_to_vnet_traffic: true
+    virtual_wan_type: Standard
+  register: output
+
+- name: Create Second VirtualHub
+  azure_rm_virtualhub:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}-seondary"
+    sku: Standard
+    address_prefix: 12.0.0.0/16
+    virtual_wan:
+      id: "{{ output.state.id }}"
+    virtual_router_asn: 65515
+    virtual_router_ips:
+      - 12.0.32.4
+      - 12.0.32.5
+  register: output
+
+- name: Assert the virtual hub is well created
+  assert:
+    that:
+      - output.changed
+      - output.state.provisioning_state == 'Succeeded'
+
+- name: Delete Second VirtualHub
+  azure_rm_virtualhub:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}-seondary"
+    state: absent
+
+- name: Delete  virtual hub
+  azure_rm_virtualhub:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    state: absent
+  register: output
+
+- name: Assert the AKS instance is upgraded
+  assert:
+    that:
+      - output.changed

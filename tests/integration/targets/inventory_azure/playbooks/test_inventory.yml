@@ -5,6 +5,9 @@
   tasks:
   - include_vars: vars.yml
 
+  - name: Pause for 10 mimutes for updating
+    shell: sleep 600
+
   - meta: refresh_inventory
 
   - name: Test Inventory 
