@@ -453,6 +453,13 @@ options:
             url_path_map:
                 description:
                     - URL path map resource of the application gateway. Required if I(rule_type) is C(path_based_routing).
+    gateway_state:
+        description:
+            - Start or Stop the application gateway. When specified, no updates will occur to the gateway.
+        type: str
+        choices:
+            - started
+            - stopped
     state:
         description:
             - Assert the state of the application gateway. Use C(present) to create or update and C(absent) to delete.
@@ -721,37 +728,78 @@ EXAMPLES = '''
         include_query_string: true
         url_path_maps:
           - "path_mappings"
+
+- name: Stop an Application Gateway instance
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myAppGateway
+    gateway_state: stopped
+
+- name: Start an Application Gateway instance
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myAppGateway
+    gateway_state: started
 '''
 
 RETURN = '''
 id:
     description:
-        - Resource ID.
+        - Application gateway resource ID.
     returned: always
     type: str
-    sample: id
+    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/applicationGateways/myAppGw
+name:
+    description:
+        - Name of application gateway.
+    returned: always
+    type: str
+    sample: myAppGw
+resource_group:
+    description:
+        - Name of resource group.
+    returned: always
+    type: str
+    sample: myResourceGroup
+location:
+    description:
+        - Location of application gateway.
+    returned: always
+    type: str
+    sample: centralus
+operational_state:
+    description:
+        - Operating state of application gateway.
+    returned: always
+    type: str
+    sample: Running
+provisioning_state:
+    description:
+        - Provisioning state of application gateway.
+    returned: always
+    type: str
+    sample: Succeeded
 '''
 
 import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from copy import deepcopy
 from ansible.module_utils.common.dict_transformations import (
-    camel_dict_to_snake_dict, snake_dict_to_camel_dict,
-    _camel_to_snake, _snake_to_camel, dict_merge,
+    _snake_to_camel, dict_merge,
 )
 
 try:
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
     from azure.mgmt.network import NetworkManagementClient
-    from msrest.serialization import Model
+    from msrestazure.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
 
 class Actions:
-    NoAction, Create, Update, Delete = range(4)
+    NoAction, Create, Update, Delete, Start, Stop = range(6)
 
 
 sku_spec = dict(
@@ -894,6 +942,10 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             request_routing_rules=dict(
                 type='list'
             ),
+            gateway_state=dict(
+                type='str',
+                choices=['started', 'stopped'],
+            ),
             state=dict(
                 type='str',
                 default='present',
@@ -908,6 +960,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
         self.results = dict(changed=False)
         self.mgmt_client = None
         self.state = None
+        self.gateway_state = None
         self.to_do = Actions.NoAction
 
         super(AzureRMApplicationGateways, self).__init__(derived_arg_spec=self.module_arg_spec,
@@ -1250,7 +1303,14 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 self.to_do = Actions.Update
 
         if (self.to_do == Actions.Update):
-            if (self.parameters['location'] != old_response['location'] or
+            if (old_response['operational_state'] == 'Stopped' and self.gateway_state == 'started'):
+                self.to_do = Actions.Start
+            elif (old_response['operational_state'] == 'Running' and self.gateway_state == 'stopped'):
+                self.to_do = Actions.Stop
+            elif ((old_response['operational_state'] == 'Stopped' and self.gateway_state == 'stopped') or
+                  (old_response['operational_state'] == 'Running' and self.gateway_state == 'started')):
+                self.to_do = Actions.NoAction
+            elif (self.parameters['location'] != old_response['location'] or
                     self.parameters['sku']['name'] != old_response['sku']['name'] or
                     self.parameters['sku']['tier'] != old_response['sku']['tier'] or
                     self.parameters['sku']['capacity'] != old_response['sku']['capacity'] or
@@ -1285,6 +1345,20 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             else:
                 self.results['changed'] = old_response.__ne__(response)
             self.log("Creation / Update done")
+        elif (self.to_do == Actions.Start) or (self.to_do == Actions.Stop):
+            self.log("Need to Start / Stop the Application Gateway instance")
+            self.results['changed'] = True
+            response = old_response
+
+            if self.check_mode:
+                return self.results
+            elif self.to_do == Actions.Start:
+                self.start_applicationgateway()
+                response["operational_state"] = "Running"
+            else:
+                self.stop_applicationgateway()
+                response["operational_state"] = "Stopped"
+
         elif self.to_do == Actions.Delete:
             self.log("Application Gateway instance deleted")
             self.results['changed'] = True
@@ -1303,7 +1377,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             response = old_response
 
         if response:
-            self.results["id"] = response["id"]
+            self.results.update(self.format_response(response))
 
         return self.results
 
@@ -1363,6 +1437,41 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             return response.as_dict()
 
         return False
+
+    def start_applicationgateway(self):
+        self.log("Starting the Application Gateway instance {0}".format(self.name))
+        try:
+            response = self.mgmt_client.application_gateways.start(resource_group_name=self.resource_group,
+                                                                   application_gateway_name=self.name)
+            if isinstance(response, LROPoller):
+                self.get_poller_result(response)
+        except CloudError as e:
+            self.log('Error attempting to start the Application Gateway instance.')
+            self.fail("Error starting the Application Gateway instance: {0}".format(str(e)))
+
+    def stop_applicationgateway(self):
+        self.log("Stopping the Application Gateway instance {0}".format(self.name))
+        try:
+            response = self.mgmt_client.application_gateways.stop(resource_group_name=self.resource_group,
+                                                                  application_gateway_name=self.name)
+            if isinstance(response, LROPoller):
+                self.get_poller_result(response)
+        except CloudError as e:
+            self.log('Error attempting to stop the Application Gateway instance.')
+            self.fail("Error stopping the Application Gateway instance: {0}".format(str(e)))
+
+    def format_response(self, appgw_dict):
+        id = appgw_dict.get("id")
+        id_dict = parse_resource_id(id)
+        d = {
+            "id": id,
+            "name": appgw_dict.get("name"),
+            "resource_group": id_dict.get('resource_group', self.resource_group),
+            "location": appgw_dict.get("location"),
+            "operational_state": appgw_dict.get("operational_state"),
+            "provisioning_state": appgw_dict.get("provisioning_state"),
+        }
+        return d
 
 
 def public_ip_id(subscription_id, resource_group_name, name):
