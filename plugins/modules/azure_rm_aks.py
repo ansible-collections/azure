@@ -768,7 +768,8 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                             self.log(("Api Server Access Diff - Origin {0} / Update {1}"
                                      .format(str(self.api_server_access_profile), str(response['api_server_access_profile']))))
                             self.fail("The enable_private_cluster of the api server access profile cannot be updated")
-                        elif len(self.api_server_access_profile.get('authorized_ip_ranges')) != len(response['api_server_access_profile'].get('authorized_ip_ranges')):
+                        elif len(self.api_server_access_profile.get('authorized_ip_ranges')) != \
+                                len(response['api_server_access_profile'].get('authorized_ip_ranges')):
                             self.log(("Api Server Access Diff - Origin {0} / Update {1}"
                                      .format(str(self.api_server_access_profile), str(response['api_server_access_profile']))))
                             to_be_updated = True
