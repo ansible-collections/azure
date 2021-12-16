@@ -351,6 +351,36 @@ EXAMPLES = '''
             count: 1
             vm_size: Standard_D2_v2
 
+    - name: Create AKS with userDefinedRouting "Link:https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall"
+      azure_rm_aks:
+        name: "minimal{{ rpfx }}"
+        location: eastus
+        resource_group: "{{ resource_group }}"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        service_principal:
+          client_id: "{{ client_id }}"
+          client_secret: "{{ client_secret }}"
+        network_profile:
+          network_plugin: azure
+          load_balancer_sku: standard
+          outbound_type: userDefinedRouting
+          service_cidr: "10.41.0.0/16"
+          dns_service_ip: "10.41.0.10"
+          docker_bridge_cidr: "172.17.0.1/16"
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "20.106.246.252/32"
+          enable_private_cluster: no
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            mode: System
+            vnet_subnet_id: "{{ output.subnets[0].id }}"
+            type: VirtualMachineScaleSets
+            enable_auto_scaling: false
+
     - name: Remove a managed Azure Container Services (AKS) instance
       azure_rm_aks:
         name: myAKS
