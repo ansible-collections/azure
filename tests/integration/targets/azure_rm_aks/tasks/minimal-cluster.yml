@@ -18,6 +18,15 @@
         count: 1
         vm_size: Standard_B2s
         mode: System
+    api_server_access_profile:
+      authorized_ip_ranges:
+        - "192.0.2.0"
+        - "198.51.100.0"
+        - "203.0.113.0"
+      enable_private_cluster: no
+    network_profile:
+      load_balancer_sku: standard
+      outbound_type: loadBalancer
   register: output
 
 - name: Assert the AKS instance is well created
@@ -50,12 +59,50 @@
         count: 1
         vm_size: Standard_B2s
         mode: System
+    api_server_access_profile:
+      authorized_ip_ranges:
+        - "192.0.2.0"
+        - "198.51.100.0"
+        - "203.0.113.0"
+      enable_private_cluster: no
+    network_profile:
+      load_balancer_sku: standard
+      outbound_type: loadBalancer
   register: output
 
 - name: Assert idempotent
   assert:
     that:
       - not output.changed
+
+- name: Update api_server_access_profile config
+  azure_rm_aks:
+    name: "minimal{{ rpfx }}"
+    location: eastus
+    resource_group: "{{ resource_group }}"
+    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+    dns_prefix: "aks{{ rpfx }}"
+    agent_pool_profiles:
+      - name: default
+        count: 1
+        vm_size: Standard_B2s
+        mode: System
+    api_server_access_profile:
+      authorized_ip_ranges:
+        - "173.0.113.0"
+        - "192.0.2.0"
+        - "198.51.100.0"
+        - "203.0.113.0"
+      enable_private_cluster: no
+    network_profile:
+      load_balancer_sku: standard
+      outbound_type: loadBalancer
+  register: output
+
+- name: Assert idempotent
+  assert:
+    that:
+      - output.changed
 
 - name: Delete the AKS instance
   azure_rm_aks:
