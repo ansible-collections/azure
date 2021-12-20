@@ -399,6 +399,8 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
         if self.name is not None:
             self.results['accounts'] = self.get()
         elif self.resource_group is not None:
+            self.results['accounts'] = self.list_by_resource_group()
+        else:
             self.results['accounts'] = self.list_all()
         return self.results
 
