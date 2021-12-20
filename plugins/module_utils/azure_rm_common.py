@@ -1610,9 +1610,6 @@ class AzureRMAuth(object):
         # Get authentication credentials.
         self.log('Getting credentials')
 
-        # Attempt to get auth_source from environment if not passed in.
-        auth_source = auth_source or self._get_env('auth_source')
-
         arg_credentials = dict()
         for attribute, env_variable in AZURE_CREDENTIAL_ENV_MAPPING.items():
             arg_credentials[attribute] = params.get(attribute, None)

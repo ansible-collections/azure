@@ -118,6 +118,7 @@ try:
 except ImportError:
     from Queue import Queue, Empty
 
+from os import environ
 from collections import namedtuple
 from ansible import release
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable
@@ -222,8 +223,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             raise
 
     def _credential_setup(self):
+        auth_source = environ.get('ANSIBLE_AZURE_AUTH_SOURCE', None) or self.get_option('auth_source')
         auth_options = dict(
-            auth_source=self.get_option('auth_source'),
+            auth_source=auth_source,
             profile=self.get_option('profile'),
             subscription_id=self.get_option('subscription_id'),
             client_id=self.get_option('client_id'),
