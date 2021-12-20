@@ -1559,6 +1559,7 @@ class AzureRMAuth(object):
         return None
 
     def _get_msi_credentials(self, subscription_id=None, client_id=None, **kwargs):
+        client_id = client_id or self._get_env('client_id')
         credentials = MSIAuthentication(client_id=client_id)
         subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
@@ -1608,6 +1609,9 @@ class AzureRMAuth(object):
     def _get_credentials(self, auth_source=None, **params):
         # Get authentication credentials.
         self.log('Getting credentials')
+
+        # Attempt to get auth_source from environment if not passed in.
+        auth_source = auth_source or self._get_env('auth_source')
 
         arg_credentials = dict()
         for attribute, env_variable in AZURE_CREDENTIAL_ENV_MAPPING.items():
