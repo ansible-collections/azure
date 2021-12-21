@@ -74,6 +74,7 @@ parameters:
     - "azure_rm_privatednsrecordset"
     - "azure_rm_privatednszone"
     - "azure_rm_privateendpoint"
+    - "azure_rm_privateendpointdnszonegroup"
     - "azure_rm_privatednszonelink"
     - "azure_rm_publicipaddress"
     - "azure_rm_proximityplacementgroup"
