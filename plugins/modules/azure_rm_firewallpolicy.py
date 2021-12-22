@@ -56,11 +56,21 @@ options:
                     - List of IP addresses for the ThreatIntel Whitelist.
                 type: list
                 elements: str
+            append_ip_addresses:
+                description:
+                    - Flag to indicate if the ip_addresses to be appended or not.
+                type: bool
+                default: true
             fqdns:
                 description:
                     - List of FQDNs for the ThreatIntel Whitelist
                 type: list
                 elements: str
+            append_fqdns:
+                description:
+                    - Flag to indicate if the fqdns to be appended or not.
+                type: bool
+                default: true
     state:
         description:
             - Assert the state of the firewall policy. Use C(present) to create or update and C(absent) to delete.
@@ -238,6 +248,7 @@ state:
 from ansible.module_utils.basic import _load_params
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, HAS_AZURE, \
     format_resource_id, normalize_location_name
+import copy
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -248,7 +259,9 @@ except ImportError:
 
 threat_intel_whitelist_spec = dict(
     ip_addresses=dict(type='list', elements='str'),
-    fqdns=dict(type='list', elements='str')
+    append_ip_addresses=dict(type='bool', default=True),
+    fqdns=dict(type='list', elements='str'),
+    append_fqdns=dict(type='bool', default=True)
 )
 
 
@@ -332,24 +345,29 @@ class AzureRMFirewallPolicy(AzureRMModuleBase):
                         self.threat_intel_mode.lower() != results['threat_intel_mode'].lower():
                     changed = True
                     results['threat_intel_mode'] = self.threat_intel_mode
-                if self.threat_intel_whitelist:
+                if self.threat_intel_whitelist is not None:
                     if 'threat_intel_whitelist' not in results:
-                        results['threat_intel_whitelist'] = dict()
-                    if self.threat_intel_whitelist['ip_addresses'] is not None:
-                        update_ip_address = \
-                            self.parameters_changed(self.threat_intel_whitelist['ip_addresses'],
-                                                    results['threat_intel_whitelist']['ip_addresses']
-                                                    if 'ip_addresses' in results['threat_intel_whitelist'] else [])
-                    if self.threat_intel_whitelist['fqdns'] is not None:
-                        update_fqdns = self.parameters_changed(self.threat_intel_whitelist['fqdns'],
-                                                               results['threat_intel_whitelist']['fqdns']
-                                                               if 'fqdns' in results['threat_intel_whitelist'] else [])
-                    if update_ip_address:
                         changed = True
-                        results['threat_intel_whitelist']['ip_addresses'] = self.threat_intel_whitelist['ip_addresses']
-                    if update_fqdns:
-                        changed = True
-                        results['threat_intel_whitelist']['fqdns'] = self.threat_intel_whitelist['fqdns']
+                        results['threat_intel_whitelist'] = self.threat_intel_whitelist
+                    else:
+                        update_ip_addresses, results['threat_intel_whitelist']['ip_addresses'] = \
+                            self.update_values(results['threat_intel_whitelist']['ip_addresses']
+                                               if 'ip_addresses' in results['threat_intel_whitelist'] else [],
+                                               self.threat_intel_whitelist['ip_addresses']
+                                               if self.threat_intel_whitelist['ip_addresses'] is not None else [],
+                                               self.threat_intel_whitelist['append_ip_addresses'])
+                        update_fqdns, results['threat_intel_whitelist']['fqdns'] = \
+                            self.update_values(results['threat_intel_whitelist']['fqdns']
+                                               if 'fqdns' in results['threat_intel_whitelist'] else [],
+                                               self.threat_intel_whitelist['fqdns']
+                                               if self.threat_intel_whitelist['fqdns'] is not None else [],
+                                               self.threat_intel_whitelist['append_fqdns'])
+                        if update_ip_addresses:
+                            changed = True
+                        self.threat_intel_whitelist['ip_addresses'] = results['threat_intel_whitelist']['ip_addresses']
+                        if update_fqdns:
+                            changed = True
+                        self.threat_intel_whitelist['fqdns'] = results['threat_intel_whitelist']['fqdns']
             elif self.state == 'absent':
                 changed = True
 
@@ -413,15 +431,24 @@ class AzureRMFirewallPolicy(AzureRMModuleBase):
             self.fail("Error deleting Firewall policy {0} - {1}".format(self.name, str(exc)))
         return response
 
-    def parameters_changed(self, input_records, existing_records):
-        # comparing input records with existing records
+    def update_values(self, existing_values, param_values, append):
+        # comparing input values with existing values for given parameter
 
-        input_set = set(input_records)
-        existing_set = set(existing_records)
+        new_values = copy.copy(existing_values)
+        changed = False
 
-        changed = input_set != existing_set
-
-        return changed
+        # check add or update
+        for item in param_values:
+            if item not in new_values:
+                changed = True
+                new_values.append(item)
+        # check remove
+        if not append:
+            for item in existing_values:
+                if item not in param_values:
+                    new_values.remove(item)
+                    changed = True
+        return changed, new_values
 
     def firewallpolicy_to_dict(self, firewallpolicy):
         result = firewallpolicy.as_dict()

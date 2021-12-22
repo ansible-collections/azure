@@ -48,8 +48,10 @@
     threat_intel_whitelist:
       ip_addresses:
         - 10.0.0.1
+      append_ip_addresses: false
       fqdns:
         - "*.microsoft.com"
+      append_fqdns: false
     state: present
     tags:
       key1: "value1"
