@@ -127,13 +127,13 @@ options:
                 suboptions:
                     id:
                         description:
-                            - Full ID of the subnet resource. Required if name and virtual_network_name are not provided.
+                            - Full ID of the subnet resource. Required if I(name) and I(virtual_network_name) are not provided.
                     name:
                         description:
-                            - Name of the subnet. Only used if virtual_network_name is also provided.
+                            - Name of the subnet. Only used if I(virtual_network_name) is also provided.
                     virtual_network_name:
                         description:
-                            - Name of the virtual network. Only used if name is also provided.
+                            - Name of the virtual network. Only used if I(name) is also provided.
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
@@ -162,6 +162,25 @@ options:
             target_listener:
                 description:
                     - Reference to a listener to redirect the request to.
+            request_routing_rules:
+                description:
+                    - List of c(basic) request routing rule names within the application gateway to which the redirect is bound.
+                version_added: "1.10.0"
+            url_path_maps:
+                description:
+                    - List of URL path map names (c(path_based_routing) rules) within the application gateway to which the redirect is bound.
+                version_added: "1.10.0"
+            path_rules:
+                description:
+                    - List of URL path rules within a c(path_based_routing) rule to which the redirect is bound.
+                suboptions:
+                    name:
+                        description:
+                            - Name of the URL rule.
+                    path_map_name:
+                        description:
+                            - Name of URL path map.
+                version_added: "1.10.0"
             include_path:
                 description:
                     - Include path in the redirected url.
@@ -205,13 +224,13 @@ options:
                 suboptions:
                     id:
                         description:
-                            - Full ID of the subnet resource. Required if name and virtual_network_name are not provided.
+                            - Full ID of the subnet resource. Required if I(name) and I(virtual_network_name) are not provided.
                     name:
                         description:
-                            - Name of the subnet. Only used if virtual_network_name is also provided.
+                            - Name of the subnet. Only used if I(virtual_network_name) is also provided.
                     virtual_network_name:
                         description:
-                            - Name of the virtual network. Only used if name is also provided.
+                            - Name of the virtual network. Only used if I(name) is also provided.
             public_ip_address:
                 description:
                     - Reference of the PublicIP resource.
@@ -375,9 +394,10 @@ options:
             default_backend_address_pool:
                 description:
                     - Backend address pool resource of the application gateway which will be used if no path matches occur.
+                    - Mutually exclusive with I(default_redirect_configuration).
             default_backend_http_settings:
                 description:
-                    - Backend http settings resource of the application gateway; used for the I(default_backend_address_pool).
+                    - Backend http settings resource of the application gateway; used with I(default_backend_address_pool).
             path_rules:
                 description:
                     - List of URL path rules.
@@ -388,12 +408,23 @@ options:
                     backend_address_pool:
                         description:
                             - Backend address pool resource of the application gateway which will be used if the path is matched.
+                            - Mutually exclusive with I(redirect_configuration).
                     backend_http_settings:
                         description:
                             - Backend http settings resource of the application gateway; used for the path's I(backend_address_pool).
+                    redirect_configuration:
+                        description:
+                            - Name of redirect configuration resource of the application gateway which will be used if the path is matched.
+                            - Mutually exclusive with I(backend_address_pool).
+                        version_added: "1.10.0"
                     paths:
                         description:
                             - List of paths.
+            default_redirect_configuration:
+                description:
+                    - Name of redirect configuration resource of the application gateway which will be used if no path matches occur.
+                    - Mutually exclusive with I(default_backend_address_pool).
+                version_added: "1.10.0"
     request_routing_rules:
         description:
             - List of request routing rules of the application gateway resource.
@@ -422,10 +453,16 @@ options:
             url_path_map:
                 description:
                     - URL path map resource of the application gateway. Required if I(rule_type) is C(path_based_routing).
+    gateway_state:
+        description:
+            - Start or Stop the application gateway. When specified, no updates will occur to the gateway.
+        type: str
+        choices:
+            - started
+            - stopped
     state:
         description:
-            - Assert the state of the Public IP. Use C(present) to create or update a and
-              C(absent) to delete.
+            - Assert the state of the application gateway. Use C(present) to create or update and C(absent) to delete.
         default: present
         choices:
             - absent
@@ -569,37 +606,207 @@ EXAMPLES = '''
             paths:
               - "/abc"
               - "/123/*"
+
+- name: Create instance of Application Gateway with complex routing and redirect rules
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myComplexAppGateway
+    sku:
+      name: standard_small
+      tier: standard
+      capacity: 2
+    ssl_policy:
+      policy_type: "predefined"
+      policy_name: "ssl_policy20170401_s"
+    ssl_certificates:
+      - name: ssl_cert
+        password: your-password
+        data: "{{ lookup('file', 'certfile') }}"
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+          name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+          name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - name: "inbound-http"
+        port: 80
+      - name: "inbound-https"
+        port: 443
+    backend_address_pools:
+      - name: test_backend_address_pool1
+        backend_addresses:
+          - ip_address: 10.0.0.1
+      - name: test_backend_address_pool2
+        backend_addresses:
+          - ip_address: 10.0.0.2
+    backend_http_settings_collection:
+      - name: "http-profile1"
+        port: 443
+        protocol: https
+        pick_host_name_from_backend_address: true
+        probe: "http-probe1"
+        cookie_based_affinity: "Disabled"
+      - name: "http-profile2"
+        port: 8080
+        protocol: http
+        pick_host_name_from_backend_address: true
+        probe: "http-probe2"
+        cookie_based_affinity: "Disabled"
+    http_listeners:
+      - name: "inbound-http"
+        protocol: "http"
+        frontend_ip_configuration: "sample_gateway_frontend_ip_config"
+        frontend_port: "inbound-http"
+      - name: "inbound-traffic1"
+        protocol: "https"
+        frontend_ip_configuration: "sample_gateway_frontend_ip_config"
+        frontend_port: "inbound-https"
+        host_name: "traffic1.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "ssl_cert"
+      - name: "inbound-traffic2"
+        protocol: "https"
+        frontend_ip_configuration: "sample_gateway_frontend_ip_config"
+        frontend_port: "inbound-https"
+        host_name: "traffic2.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "ssl_cert"
+    url_path_maps:
+      - name: "path_mappings"
+        default_redirect_configuration: "redirect-traffic1"
+        path_rules:
+          - name: "path_rules"
+            backend_address_pool: "test_backend_address_pool1"
+            backend_http_settings: "http-profile1"
+            paths:
+              - "/abc"
+              - "/123/*"
+    request_routing_rules:
+      - name: "app-routing1"
+        rule_type: "basic"
+        http_listener: "inbound-traffic1"
+        backend_address_pool: "test_backend_address_pool2"
+        backend_http_settings: "http-profile1"
+      - name: "app-routing2"
+        rule_type: "path_based_routing"
+        http_listener: "inbound-traffic2"
+        url_path_map: "path_mappings"
+      - name: "redirect-routing"
+        rule_type: "basic"
+        http_listener: "inbound-http"
+        redirect_configuration: "redirect-http"
+    probes:
+      - name: "http-probe1"
+        interval: 30
+        path: "/abc"
+        protocol: "https"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+      - name: "http-probe2"
+        interval: 30
+        path: "/xyz"
+        protocol: "http"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+    redirect_configurations:
+      - name: "redirect-http"
+        redirect_type: "permanent"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        request_routing_rules:
+          - "redirect-routing"
+      - name: "redirect-traffic1"
+        redirect_type: "found"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        url_path_maps:
+          - "path_mappings"
+
+- name: Stop an Application Gateway instance
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myAppGateway
+    gateway_state: stopped
+
+- name: Start an Application Gateway instance
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myAppGateway
+    gateway_state: started
 '''
 
 RETURN = '''
 id:
     description:
-        - Resource ID.
+        - Application gateway resource ID.
     returned: always
     type: str
-    sample: id
+    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/applicationGateways/myAppGw
+name:
+    description:
+        - Name of application gateway.
+    returned: always
+    type: str
+    sample: myAppGw
+resource_group:
+    description:
+        - Name of resource group.
+    returned: always
+    type: str
+    sample: myResourceGroup
+location:
+    description:
+        - Location of application gateway.
+    returned: always
+    type: str
+    sample: centralus
+operational_state:
+    description:
+        - Operating state of application gateway.
+    returned: always
+    type: str
+    sample: Running
+provisioning_state:
+    description:
+        - Provisioning state of application gateway.
+    returned: always
+    type: str
+    sample: Succeeded
 '''
 
 import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from copy import deepcopy
 from ansible.module_utils.common.dict_transformations import (
-    camel_dict_to_snake_dict, snake_dict_to_camel_dict,
-    _camel_to_snake, _snake_to_camel, dict_merge,
+    _snake_to_camel, dict_merge,
 )
 
 try:
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
     from azure.mgmt.network import NetworkManagementClient
-    from msrest.serialization import Model
+    from msrestazure.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
 
 class Actions:
-    NoAction, Create, Update, Delete = range(4)
+    NoAction, Create, Update, Delete, Start, Stop = range(6)
+
+
+sku_spec = dict(
+    capacity=dict(type='int'),
+    name=dict(type='str', choices=['standard_small', 'standard_medium', 'standard_large', 'standard_v2', 'waf_medium', 'waf_large', 'waf_v2']),
+    tier=dict(type='str', choices=['standard', 'standard_v2', 'waf', 'waf_v2']),
+)
 
 
 ssl_policy_spec = dict(
@@ -623,12 +830,46 @@ probe_spec = dict(
 )
 
 
+redirect_path_rules_spec = dict(
+    name=dict(type='str'),
+    path_map_name=dict(type='str'),
+)
+
+
 redirect_configuration_spec = dict(
     include_path=dict(type='bool'),
     include_query_string=dict(type='bool'),
     name=dict(type='str'),
     redirect_type=dict(type='str', choices=['permanent', 'found', 'see_other', 'temporary']),
-    target_listener=dict(type='str')
+    target_listener=dict(type='str'),
+    request_routing_rules=dict(type='list', elements='str'),
+    url_path_maps=dict(type='list', elements='str'),
+    path_rules=dict(type='list', elements='dict', options=redirect_path_rules_spec),
+)
+
+
+path_rules_spec = dict(
+    name=dict(type='str'),
+    backend_address_pool=dict(type='str'),
+    backend_http_settings=dict(type='str'),
+    redirect_configuration=dict(type='str'),
+    paths=dict(type='list', elements='str'),
+)
+
+
+url_path_maps_spec = dict(
+    name=dict(type='str'),
+    default_backend_address_pool=dict(type='str'),
+    default_backend_http_settings=dict(type='str'),
+    path_rules=dict(
+        type='list',
+        elements='dict',
+        options=path_rules_spec,
+        mutually_exclusive=[('backend_address_pool', 'redirect_configuration')],
+        required_one_of=[('backend_address_pool', 'redirect_configuration')],
+        required_together=[('backend_address_pool', 'backend_http_settings')],
+    ),
+    default_redirect_configuration=dict(type='str'),
 )
 
 
@@ -649,7 +890,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 type='str'
             ),
             sku=dict(
-                type='dict'
+                type='dict',
+                options=sku_spec,
             ),
             ssl_policy=dict(
                 type='dict',
@@ -690,10 +932,19 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 type='list'
             ),
             url_path_maps=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=url_path_maps_spec,
+                mutually_exclusive=[('default_backend_address_pool', 'default_redirect_configuration')],
+                required_one_of=[('default_backend_address_pool', 'default_redirect_configuration')],
+                required_together=[('default_backend_address_pool', 'default_backend_http_settings')],
             ),
             request_routing_rules=dict(
                 type='list'
+            ),
+            gateway_state=dict(
+                type='str',
+                choices=['started', 'stopped'],
             ),
             state=dict(
                 type='str',
@@ -709,6 +960,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
         self.results = dict(changed=False)
         self.mgmt_client = None
         self.state = None
+        self.gateway_state = None
         self.to_do = Actions.NoAction
 
         super(AzureRMApplicationGateways, self).__init__(derived_arg_spec=self.module_arg_spec,
@@ -813,6 +1065,38 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                                   kwargs['name'],
                                                   item['target_listener'])
                             item['target_listener'] = {'id': id}
+                        if item['request_routing_rules']:
+                            for j in range(len(item['request_routing_rules'])):
+                                rule_name = item['request_routing_rules'][j]
+                                id = request_routing_rule_id(self.subscription_id,
+                                                             kwargs['resource_group'],
+                                                             kwargs['name'],
+                                                             rule_name)
+                                item['request_routing_rules'][j] = {'id': id}
+                        else:
+                            del item['request_routing_rules']
+                        if item['url_path_maps']:
+                            for j in range(len(item['url_path_maps'])):
+                                pathmap_name = item['url_path_maps'][j]
+                                id = url_path_map_id(self.subscription_id,
+                                                     kwargs['resource_group'],
+                                                     kwargs['name'],
+                                                     pathmap_name)
+                                item['url_path_maps'][j] = {'id': id}
+                        else:
+                            del item['url_path_maps']
+                        if item['path_rules']:
+                            for j in range(len(item['path_rules'])):
+                                pathrule = item['path_rules'][j]
+                                if 'name' in pathrule and 'path_map_name' in pathrule:
+                                    id = url_path_rule_id(self.subscription_id,
+                                                          kwargs['resource_group'],
+                                                          kwargs['name'],
+                                                          pathrule['path_map_name'],
+                                                          pathrule['name'])
+                                    item['path_rules'][j] = {'id': id}
+                        else:
+                            del item['path_rules']
                     self.parameters["redirect_configurations"] = ev
                 elif key == "frontend_ip_configurations":
                     ev = kwargs[key]
@@ -891,35 +1175,59 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     ev = kwargs[key]
                     for i in range(len(ev)):
                         item = ev[i]
-                        if 'default_backend_address_pool' in item:
+                        if item['default_backend_address_pool']:
                             id = backend_address_pool_id(self.subscription_id,
                                                          kwargs['resource_group'],
                                                          kwargs['name'],
                                                          item['default_backend_address_pool'])
                             item['default_backend_address_pool'] = {'id': id}
-                        if 'default_backend_http_settings' in item:
+                        else:
+                            del item['default_backend_address_pool']
+                        if item['default_backend_http_settings']:
                             id = backend_http_settings_id(self.subscription_id,
                                                           kwargs['resource_group'],
                                                           kwargs['name'],
                                                           item['default_backend_http_settings'])
                             item['default_backend_http_settings'] = {'id': id}
+                        else:
+                            del item['default_backend_http_settings']
                         if 'path_rules' in item:
                             ev2 = item['path_rules']
                             for j in range(len(ev2)):
                                 item2 = ev2[j]
-                                if 'backend_address_pool' in item2:
+                                if item2['backend_address_pool']:
                                     id = backend_address_pool_id(self.subscription_id,
                                                                  kwargs['resource_group'],
                                                                  kwargs['name'],
                                                                  item2['backend_address_pool'])
                                     item2['backend_address_pool'] = {'id': id}
-                                if 'backend_http_settings' in item2:
+                                else:
+                                    del item2['backend_address_pool']
+                                if item2['backend_http_settings']:
                                     id = backend_http_settings_id(self.subscription_id,
                                                                   kwargs['resource_group'],
                                                                   kwargs['name'],
                                                                   item2['backend_http_settings'])
                                     item2['backend_http_settings'] = {'id': id}
+                                else:
+                                    del item2['backend_http_settings']
+                                if item2['redirect_configuration']:
+                                    id = redirect_configuration_id(self.subscription_id,
+                                                                   kwargs['resource_group'],
+                                                                   kwargs['name'],
+                                                                   item2['redirect_configuration'])
+                                    item2['redirect_configuration'] = {'id': id}
+                                else:
+                                    del item2['redirect_configuration']
                                 ev2[j] = item2
+                        if item['default_redirect_configuration']:
+                            id = redirect_configuration_id(self.subscription_id,
+                                                           kwargs['resource_group'],
+                                                           kwargs['name'],
+                                                           item['default_redirect_configuration'])
+                            item['default_redirect_configuration'] = {'id': id}
+                        else:
+                            del item['default_redirect_configuration']
                         ev[i] = item
                     self.parameters["url_path_maps"] = ev
                 elif key == "request_routing_rules":
@@ -995,7 +1303,14 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 self.to_do = Actions.Update
 
         if (self.to_do == Actions.Update):
-            if (self.parameters['location'] != old_response['location'] or
+            if (old_response['operational_state'] == 'Stopped' and self.gateway_state == 'started'):
+                self.to_do = Actions.Start
+            elif (old_response['operational_state'] == 'Running' and self.gateway_state == 'stopped'):
+                self.to_do = Actions.Stop
+            elif ((old_response['operational_state'] == 'Stopped' and self.gateway_state == 'stopped') or
+                  (old_response['operational_state'] == 'Running' and self.gateway_state == 'started')):
+                self.to_do = Actions.NoAction
+            elif (self.parameters['location'] != old_response['location'] or
                     self.parameters['sku']['name'] != old_response['sku']['name'] or
                     self.parameters['sku']['tier'] != old_response['sku']['tier'] or
                     self.parameters['sku']['capacity'] != old_response['sku']['capacity'] or
@@ -1030,6 +1345,20 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             else:
                 self.results['changed'] = old_response.__ne__(response)
             self.log("Creation / Update done")
+        elif (self.to_do == Actions.Start) or (self.to_do == Actions.Stop):
+            self.log("Need to Start / Stop the Application Gateway instance")
+            self.results['changed'] = True
+            response = old_response
+
+            if self.check_mode:
+                return self.results
+            elif self.to_do == Actions.Start:
+                self.start_applicationgateway()
+                response["operational_state"] = "Running"
+            else:
+                self.stop_applicationgateway()
+                response["operational_state"] = "Stopped"
+
         elif self.to_do == Actions.Delete:
             self.log("Application Gateway instance deleted")
             self.results['changed'] = True
@@ -1048,7 +1377,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             response = old_response
 
         if response:
-            self.results["id"] = response["id"]
+            self.results.update(self.format_response(response))
 
         return self.results
 
@@ -1108,6 +1437,41 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             return response.as_dict()
 
         return False
+
+    def start_applicationgateway(self):
+        self.log("Starting the Application Gateway instance {0}".format(self.name))
+        try:
+            response = self.mgmt_client.application_gateways.start(resource_group_name=self.resource_group,
+                                                                   application_gateway_name=self.name)
+            if isinstance(response, LROPoller):
+                self.get_poller_result(response)
+        except CloudError as e:
+            self.log('Error attempting to start the Application Gateway instance.')
+            self.fail("Error starting the Application Gateway instance: {0}".format(str(e)))
+
+    def stop_applicationgateway(self):
+        self.log("Stopping the Application Gateway instance {0}".format(self.name))
+        try:
+            response = self.mgmt_client.application_gateways.stop(resource_group_name=self.resource_group,
+                                                                  application_gateway_name=self.name)
+            if isinstance(response, LROPoller):
+                self.get_poller_result(response)
+        except CloudError as e:
+            self.log('Error attempting to stop the Application Gateway instance.')
+            self.fail("Error stopping the Application Gateway instance: {0}".format(str(e)))
+
+    def format_response(self, appgw_dict):
+        id = appgw_dict.get("id")
+        id_dict = parse_resource_id(id)
+        d = {
+            "id": id,
+            "name": appgw_dict.get("name"),
+            "resource_group": id_dict.get('resource_group', self.resource_group),
+            "location": appgw_dict.get("location"),
+            "operational_state": appgw_dict.get("operational_state"),
+            "provisioning_state": appgw_dict.get("provisioning_state"),
+        }
+        return d
 
 
 def public_ip_id(subscription_id, resource_group_name, name):
@@ -1209,12 +1573,43 @@ def url_path_map_id(subscription_id, resource_group_name, appgateway_name, name)
     )
 
 
+def url_path_rule_id(subscription_id, resource_group_name, appgateway_name, url_path_map_name, name):
+    """Generate the id for a url path map"""
+    return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/applicationGateways/{2}/urlPathMaps/{3}/pathRules/{4}'.format(
+        subscription_id,
+        resource_group_name,
+        appgateway_name,
+        url_path_map_name,
+        name
+    )
+
+
 def subnet_id(subscription_id, resource_group_name, virtual_network_name, name):
     """Generate the id for a subnet in a virtual network"""
     return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/virtualNetworks/{2}/subnets/{3}'.format(
         subscription_id,
         resource_group_name,
         virtual_network_name,
+        name
+    )
+
+
+def ip_configuration_id(subscription_id, resource_group_name, network_interface_name, name):
+    """Generate the id for a request routing rule in an application gateway"""
+    return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/networkInterfaces/{2}/ipConfigurations/{3}'.format(
+        subscription_id,
+        resource_group_name,
+        network_interface_name,
+        name
+    )
+
+
+def request_routing_rule_id(subscription_id, resource_group_name, appgateway_name, name):
+    """Generate the id for a request routing rule in an application gateway"""
+    return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/applicationGateways/{2}/requestRoutingRules/{3}'.format(
+        subscription_id,
+        resource_group_name,
+        appgateway_name,
         name
     )
 

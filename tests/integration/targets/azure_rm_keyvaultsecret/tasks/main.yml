@@ -51,6 +51,8 @@
         secret_name: testsecret
         secret_value: 'mysecret'
         content_type: 'Content Type Secret'
+        secret_valid_from: 2000-01-02T010203Z 
+        secret_expiry: 2030-03-04T040506Z 
         tags:
           testing: test
           delete: on-exit
@@ -77,7 +79,11 @@
       - facts['secrets'][0]['secret']
       - facts['secrets'][0]['tags']
       - facts['secrets'][0]['version']
+      - facts['secrets'][0]['attributes']['expires']
+      - facts['secrets'][0]['attributes']['not_before']
       - facts['secrets'][0]['content_type'] == 'Content Type Secret'
+      - facts['secrets'][0]['attributes']['expires'] == "2030-03-04T04:05:06+00:00"
+      - facts['secrets'][0]['attributes']['not_before'] == "2000-01-02T01:02:03+00:00"
 
 - name: delete a kevyault secret
   azure_rm_keyvaultsecret:

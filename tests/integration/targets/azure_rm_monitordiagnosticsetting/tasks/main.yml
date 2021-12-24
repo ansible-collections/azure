@@ -1,0 +1,504 @@
+- name: Prepare random number
+  set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  run_once: yes
+
+# ------ setup ------
+
+- name: create virtual network
+  azure_rm_virtualnetwork:
+    name: "vnet-{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    address_prefixes: "10.0.0.0/16"
+  register: vnet_output
+
+- name: create web app
+  azure_rm_webapp:
+    name: "webapp-{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    plan:
+      name: "webapp-{{ rpfx }}-plan"
+      resource_group: "{{ resource_group }}"
+      is_linux: false
+      sku: S1
+  register: webapp_output
+
+- name: create storage account
+  azure_rm_storageaccount:
+    name: "storage{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    account_type: Standard_LRS
+    kind: StorageV2
+  register: storage_output
+
+- name: create second storage account
+  azure_rm_storageaccount:
+    name: "storagesecond{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+    account_type: Standard_LRS
+    kind: StorageV2
+  register: storage2_output
+
+- name: create event hub namespace
+  azure_rm_eventhub:
+    namespace_name: "hub-{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    sku: "Basic"
+
+- name: create log analytics workspace
+  azure_rm_loganalyticsworkspace:
+    name: "analytics-{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+    retention_in_days: 30
+  register: analytics_output
+
+# ------ tests ------
+
+- name: get diagnostic settings for non-existant resource
+  azure_rm_monitordiagnosticsetting_info:
+    resource: "123abc"
+  register: output
+  failed_when: '"failed" not in output.msg | lower'
+
+- name: get diagnostic settings for virtual network
+  azure_rm_monitordiagnosticsetting_info:
+    resource: "{{ vnet_output.state.id }}"
+  register: output
+- name: assert no settings
+  assert:
+    that:
+      - not output.changed
+      - output.settings | length == 0
+
+- name: create storage-based diagnostic setting for vnet (check mode)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage"
+    resource: "{{ vnet_output.state.id }}"
+    storage_account: "{{ storage_output.state.id }}"
+    logs:
+      - category_group: "allLogs"
+    metrics:
+      - category: "AllMetrics"
+  check_mode: true
+  register: output
+- name: assert resource created
+  assert:
+    that:
+      - output.changed
+
+- name: create storage-based diagnostic setting for vnet (actually create)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage"
+    resource: "{{ vnet_output.state.id }}"
+    storage_account: "{{ storage_output.state.id }}"
+    logs:
+      - category_group: "allLogs"
+    metrics:
+      - category: "AllMetrics"
+  register: output
+- name: assert resource created
+  assert:
+    that:
+      - output.changed
+      - output.state.name == 'logs-storage'
+      - output.state.storage_account.id == storage_output.state.id
+      - output.state.logs | length == 1
+      - output.state.logs[0].category_group == 'allLogs'
+      - output.state.logs[0].enabled
+      - output.state.metrics | length == 1
+      - output.state.metrics[0].category == 'AllMetrics'
+      - output.state.metrics[0].enabled
+      - not output.state.event_hub
+      - not output.state.log_analytics
+
+- name: create storage-based diagnostic setting for vnet (idempotent)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage"
+    resource: "{{ vnet_output.state.id }}"
+    storage_account: "{{ storage_output.state.id }}"
+    logs:
+      - category_group: "allLogs"
+    metrics:
+      - category: "AllMetrics"
+  check_mode: true
+  register: output
+- name: assert resource not changed
+  assert:
+    that:
+      - not output.changed
+
+- name: create storage-based diagnostic setting for vnet by resource dict (idempotent)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage"
+    resource:
+      name: "vnet-{{ rpfx }}"
+      type: "Microsoft.Network/virtualNetworks"
+      resource_group: "{{ resource_group }}"
+    storage_account: "{{ storage_output.state.id }}"
+    logs:
+      - category_group: "allLogs"
+    metrics:
+      - category: "AllMetrics"
+  register: output
+- name: assert resource not changed
+  assert:
+    that:
+      - not output.changed
+
+- name: update storage-based diagnostic setting for vnet
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage"
+    resource: "{{ vnet_output.state.id }}"
+    storage_account: "{{ storage_output.state.id }}"
+    logs:
+      - category_group: "allLogs"
+  register: output
+- name: assert resource updated
+  assert:
+    that:
+      - output.changed
+      - output.state.name == 'logs-storage'
+      - output.state.storage_account.id == storage_output.state.id
+      - output.state.logs | length == 1
+      - output.state.logs[0].category_group == 'allLogs'
+      - output.state.logs[0].enabled
+      - output.state.metrics | length == 0
+      - not output.state.event_hub
+      - not output.state.log_analytics
+
+- name: create second storage-based diagnostic setting for vnet
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage2"
+    resource: "{{ vnet_output.state.id }}"
+    storage_account:
+      name: "storagesecond{{ rpfx }}"
+      resource_group: "{{ resource_group_secondary }}"
+    logs:
+      - category: "VMProtectionAlerts"
+        retention_policy:
+          days: 15
+  register: output
+- name: assert resource created
+  assert:
+    that:
+      - output.changed
+      - output.state.name == 'logs-storage2'
+      - output.state.storage_account.id == storage2_output.state.id
+      - output.state.logs | length == 1
+      - output.state.logs[0].category == 'VMProtectionAlerts'
+      - output.state.logs[0].enabled
+      - output.state.logs[0].retention_policy.days == 15
+      - output.state.logs[0].retention_policy.enabled
+      - output.state.metrics | length == 0
+      - not output.state.event_hub
+      - not output.state.log_analytics
+
+- name: update second storage-based diagnostic setting for vnet
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage2"
+    resource: "{{ vnet_output.state.id }}"
+    storage_account:
+      name: "storagesecond{{ rpfx }}"
+      resource_group: "{{ resource_group_secondary }}"
+    logs:
+      - category: "VMProtectionAlerts"
+        retention_policy:
+          days: 30
+  register: output
+- name: assert resource created
+  assert:
+    that:
+      - output.changed
+      - output.state.logs[0].retention_policy.days == 30
+
+- name: update second storage-based diagnostic setting for vnet (idempotent)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage2"
+    resource: "{{ vnet_output.state.id }}"
+    storage_account:
+      name: "storagesecond{{ rpfx }}"
+      resource_group: "{{ resource_group_secondary }}"
+    logs:
+      - category: "VMProtectionAlerts"
+        retention_policy:
+          days: 30
+  register: output
+- name: assert resource not changed
+  assert:
+    that:
+      - not output.changed
+
+- name: get diagnostic settings for virtual network
+  azure_rm_monitordiagnosticsetting_info:
+    resource: "{{ vnet_output.state.id }}"
+  register: output
+- name: assert output maches expectations
+  assert:
+    that:
+      - output.settings | length == 2
+      - output.settings[0].name == 'logs-storage'
+      - output.settings[0].storage_account.id == storage_output.state.id
+      - output.settings[0].logs | length == 1
+      - output.settings[0].logs[0].category_group == 'allLogs'
+      - output.settings[0].logs[0].enabled
+      - output.settings[0].metrics | length == 0
+      - not output.settings[0].event_hub
+      - not output.settings[0].log_analytics
+      - output.settings[1].name == 'logs-storage2'
+      - output.settings[1].storage_account.id == storage2_output.state.id
+      - output.settings[1].logs | length == 1
+      - output.settings[1].logs[0].category == 'VMProtectionAlerts'
+      - output.settings[1].logs[0].enabled
+      - output.settings[1].logs[0].retention_policy.days == 30
+      - output.settings[1].logs[0].retention_policy.enabled
+      - output.settings[1].metrics | length == 0
+      - not output.settings[1].event_hub
+      - not output.settings[1].log_analytics
+
+- name: get specific diagnostic settings for virtual network
+  azure_rm_monitordiagnosticsetting_info:
+    name: "logs-storage2"
+    resource: "{{ vnet_output.state.id }}"
+  register: output
+- name: assert output maches expectations
+  assert:
+    that:
+      - output.settings | length == 1
+      - output.settings[0].name == 'logs-storage2'
+      - output.settings[0].storage_account.id == storage2_output.state.id
+      - output.settings[0].logs | length == 1
+      - output.settings[0].logs[0].category == 'VMProtectionAlerts'
+      - output.settings[0].logs[0].enabled
+      - output.settings[0].logs[0].retention_policy.days == 30
+      - output.settings[0].logs[0].retention_policy.enabled
+      - output.settings[0].metrics | length == 0
+      - not output.settings[0].event_hub
+      - not output.settings[0].log_analytics
+
+- name: get non-existant diagnostic setting for virtual network
+  azure_rm_monitordiagnosticsetting_info:
+    name: "does-not-exist"
+    resource: "{{ vnet_output.state.id }}"
+  register: output
+- name: assert no settings
+  assert:
+    that:
+      - output.settings | length == 0
+
+- name: create diagnostic setting for webapp with log analytics, event hub, and storage
+  azure_rm_monitordiagnosticsetting:
+    name: "logs"
+    resource:
+      name: "webapp-{{ rpfx }}"
+      type: "Microsoft.Web/sites"
+      resource_group: "{{ resource_group }}"
+    event_hub:
+      namespace: "hub-{{ rpfx }}"
+      policy: "RootManageSharedAccessKey"
+    log_analytics:
+      name: "analytics-{{ rpfx }}"
+      resource_group: "{{ resource_group_secondary }}"
+    storage_account:
+      name: "storage{{ rpfx }}"
+    logs:
+      - category: "AppServiceHTTPLogs"
+      - category: "AppServiceConsoleLogs"
+      - category: "AppServiceAppLogs"
+      - category: "AppServiceAuditLogs"
+      - category: "AppServiceIPSecAuditLogs"
+      - category: "AppServicePlatformLogs"
+  register: output
+- name: assert resource created
+  assert:
+    that:
+      - output.changed
+      - output.state.name == 'logs'
+      - output.state.storage_account.id == storage_output.state.id
+      - output.state.event_hub.namespace == 'hub-{{ rpfx }}'
+      - output.state.event_hub.policy == 'RootManageSharedAccessKey'
+      - output.state.log_analytics.id | lower == analytics_output.id | lower
+      - output.state.logs | length == 6
+      - output.state.logs[0].category == 'AppServiceHTTPLogs'
+      - output.state.logs[1].category == 'AppServiceConsoleLogs'
+      - output.state.logs[2].category == 'AppServiceAppLogs'
+      - output.state.logs[3].category == 'AppServiceAuditLogs'
+      - output.state.logs[4].category == 'AppServiceIPSecAuditLogs'
+      - output.state.logs[5].category == 'AppServicePlatformLogs'
+      - output.state.metrics | length == 0
+
+- name: create diagnostic setting for webapp with log analytics, event hub, and storage (idempotent)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs"
+    resource:
+      name: "webapp-{{ rpfx }}"
+      type: "Microsoft.Web/sites"
+      resource_group: "{{ resource_group }}"
+    event_hub:
+      namespace: "hub-{{ rpfx }}"
+      policy: "RootManageSharedAccessKey"
+    log_analytics:
+      name: "analytics-{{ rpfx }}"
+      resource_group: "{{ resource_group_secondary }}"
+    storage_account:
+      name: "storage{{ rpfx }}"
+    logs:
+      - category: "AppServiceHTTPLogs"
+      - category: "AppServiceConsoleLogs"
+      - category: "AppServiceAppLogs"
+      - category: "AppServiceAuditLogs"
+      - category: "AppServiceIPSecAuditLogs"
+      - category: "AppServicePlatformLogs"
+  register: output
+- name: assert resource created
+  assert:
+    that:
+      - not output.changed
+
+- name: update diagnostic setting to remove storage and log category
+  azure_rm_monitordiagnosticsetting:
+    name: "logs"
+    resource:
+      name: "webapp-{{ rpfx }}"
+      type: "Microsoft.Web/sites"
+      resource_group: "{{ resource_group }}"
+    event_hub:
+      namespace: "hub-{{ rpfx }}"
+      policy: "RootManageSharedAccessKey"
+    log_analytics:
+      name: "analytics-{{ rpfx }}"
+      resource_group: "{{ resource_group_secondary }}"
+    logs:
+      - category: "AppServiceHTTPLogs"
+      - category: "AppServiceAppLogs"
+      - category: "AppServiceAuditLogs"
+      - category: "AppServiceIPSecAuditLogs"
+      - category: "AppServicePlatformLogs"
+  register: output
+- name: assert resource updated
+  assert:
+    that:
+      - output.changed
+      - not output.state.storage_account
+      - output.state.logs | length == 5
+      - output.state.logs[0].category == 'AppServiceHTTPLogs'
+      - output.state.logs[1].category == 'AppServiceAppLogs'
+      - output.state.logs[2].category == 'AppServiceAuditLogs'
+      - output.state.logs[3].category == 'AppServiceIPSecAuditLogs'
+      - output.state.logs[4].category == 'AppServicePlatformLogs'
+
+- name: delete diagnostic setting via resource dict
+  azure_rm_monitordiagnosticsetting:
+    name: "logs"
+    resource:
+      name: "webapp-{{ rpfx }}"
+      type: "Microsoft.Web/sites"
+      resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+- name: assert resource delete
+  assert:
+    that:
+      - output.changed
+
+- name: delete diagnostic setting via resource dict (idempotent)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs"
+    resource:
+      name: "webapp-{{ rpfx }}"
+      type: "Microsoft.Web/sites"
+      resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+- name: assert resource delete
+  assert:
+    that:
+      - not output.changed
+
+- name: delete diagnostic setting (check mode)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage"
+    resource: "{{ vnet_output.state.id }}"
+    state: "absent"
+  check_mode: true
+  register: output
+- name: assert resource deleted
+  assert:
+    that:
+      - output.changed
+
+- name: delete diagnostic setting (actually delete)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage"
+    resource: "{{ vnet_output.state.id }}"
+    state: "absent"
+  register: output
+- name: assert resource deleted
+  assert:
+    that:
+      - output.changed
+
+- name: delete diagnostic setting (idempotent)
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage"
+    resource: "{{ vnet_output.state.id }}"
+    state: "absent"
+  register: output
+- name: assert resource already deleted
+  assert:
+    that:
+      - not output.changed
+
+- name: delete second diagnostic setting
+  azure_rm_monitordiagnosticsetting:
+    name: "logs-storage2"
+    resource: "{{ vnet_output.state.id }}"
+    state: "absent"
+  register: output
+- name: assert resource deleted
+  assert:
+    that:
+      - output.changed
+
+# ------ teardown ------
+
+- name: delete log analytics workspace
+  azure_rm_loganalyticsworkspace:
+    name: "analytics-{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+    state: "absent"
+
+- name: delete event hub namespace
+  azure_rm_eventhub:
+    namespace_name: "hub-{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+
+- name: delete second storage account
+  azure_rm_storageaccount:
+    name: "storagesecond{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+    state: "absent"
+
+- name: delete storage account
+  azure_rm_storageaccount:
+    name: "storage{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+
+- name: delete web app
+  azure_rm_webapp:
+    name: "webapp-{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+
+- name: delete web app plan
+  azure_rm_appserviceplan:
+    name: "webapp-{{ rpfx }}-plan"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+
+- name: delete virtual network
+  azure_rm_virtualnetwork:
+    name: "vnet-{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
