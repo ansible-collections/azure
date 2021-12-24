@@ -232,7 +232,6 @@ try:
     from msrestazure.tools import parse_resource_id, resource_id, is_valid_resource_id
     from msrestazure import azure_cloud
     from azure.common.credentials import ServicePrincipalCredentials, UserPassCredentials
-    from azure.mgmt.monitor.version import VERSION as monitor_client_version
     from azure.mgmt.network.version import VERSION as network_client_version
     from azure.mgmt.storage.version import VERSION as storage_client_version
     from azure.mgmt.compute.version import VERSION as compute_client_version
@@ -441,7 +440,9 @@ class AzureRMModuleBase(object):
         self._containerservice_client = None
         self._managedcluster_client = None
         self._traffic_manager_management_client = None
-        self._monitor_client = None
+        self._monitor_autoscale_settings_client = None
+        self._monitor_log_profiles_client = None
+        self._monitor_diagnostic_settings_client = None
         self._resource = None
         self._log_analytics_client = None
         self._servicebus_client = None
@@ -1242,12 +1243,34 @@ class AzureRMModuleBase(object):
         return self._traffic_manager_management_client
 
     @property
-    def monitor_client(self):
-        self.log('Getting monitor client')
-        if not self._monitor_client:
-            self._monitor_client = self.get_mgmt_svc_client(MonitorManagementClient,
-                                                            base_url=self._cloud_environment.endpoints.resource_manager)
-        return self._monitor_client
+    def monitor_autoscale_settings_client(self):
+        self.log('Getting monitor client for autoscale_settings')
+        if not self._monitor_autoscale_settings_client:
+            self._monitor_autoscale_settings_client = self.get_mgmt_svc_client(MonitorManagementClient,
+                                                                               base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                               api_version="2015-04-01",
+                                                                               is_track2=True)
+        return self._monitor_autoscale_settings_client
+
+    @property
+    def monitor_log_profiles_client(self):
+        self.log('Getting monitor client for log_profiles')
+        if not self._monitor_log_profiles_client:
+            self._monitor_log_profiles_client = self.get_mgmt_svc_client(MonitorManagementClient,
+                                                                         base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                         api_version="2016-03-01",
+                                                                         is_track2=True)
+        return self._monitor_log_profiles_client
+
+    @property
+    def monitor_diagnostic_settings_client(self):
+        self.log('Getting monitor client for diagnostic_settings')
+        if not self._monitor_diagnostic_settings_client:
+            self._monitor_diagnostic_settings_client = self.get_mgmt_svc_client(MonitorManagementClient,
+                                                                                base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                                api_version="2021-05-01-preview",
+                                                                                is_track2=True)
+        return self._monitor_diagnostic_settings_client
 
     @property
     def log_analytics_client(self):
