@@ -373,10 +373,10 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
         ip_range_filter = self.parameters.pop('ip_range_filter', None)
         ip_rules = self.parameters.pop('ip_rules', [])
         if ip_range_filter:
-            self.parameters['ip_rules'] = [{ "ip_address_or_range": ip } for ip in ip_range_filter.split(",")]
+            self.parameters['ip_rules'] = [{"ip_address_or_range": ip} for ip in ip_range_filter.split(",")]
         if ip_rules:
             # overrides deprecated 'ip_range_filter' parameter
-            self.parameters['ip_rules'] = [{ "ip_address_or_range": ip } for ip in ip_rules]
+            self.parameters['ip_rules'] = [{"ip_address_or_range": ip} for ip in ip_rules]
 
         dict_camelize(self.parameters, ['consistency_policy', 'default_consistency_level'], True)
         dict_rename(self.parameters, ['geo_rep_locations', 'name'], 'location_name')
