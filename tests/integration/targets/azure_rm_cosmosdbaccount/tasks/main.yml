@@ -356,3 +356,9 @@
   assert:
     that:
       - output.changed
+
+- name: Clean up virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vnname }}"
+    state: absent
