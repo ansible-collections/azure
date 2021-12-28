@@ -13,16 +13,16 @@ Documentation of individual modules is [available in the Ansible docs site](http
 
 ## Installation
 
-To install Azure dependencies:
-
-```bash
-pip install -r requirements-azure.txt
-```
-
 To install Azure collection hosted in Galaxy:
 
 ```bash
 ansible-galaxy collection install azure.azcollection
+```
+
+Install dependencies required by the collection (adjust path to collection if necessary):
+
+```bash
+pip install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt
 ```
 
 To upgrade to the latest version of Azure collection:
