@@ -226,7 +226,7 @@ class AzureRMHostGroup(AzureRMModuleBase):
             elif self.state == 'absent':
                 changed = True
 
-        except CloudError:
+        except Exception:
             if self.state == 'present':
                 changed = True
             else:
