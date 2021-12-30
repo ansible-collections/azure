@@ -2162,7 +2162,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
         try:
             account = self.storage_client.storage_accounts.get_properties(self.resource_group, storage_account_name)
-        except CloudError:
+        except Exception:
             pass
 
         if account:
@@ -2177,7 +2177,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Creating storage account {0} in location {1}".format(storage_account_name, self.location))
         self.results['actions'].append("Created storage account {0}".format(storage_account_name))
         try:
-            poller = self.storage_client.storage_accounts.create(self.resource_group, storage_account_name, parameters)
+            poller = self.storage_client.storage_accounts.begin_create(self.resource_group, storage_account_name, parameters)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Failed to create storage account: {0} - {1}".format(storage_account_name, str(exc)))

@@ -475,7 +475,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         try:
             account = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name)
             return [account]
-        except CloudError:
+        except Exception:
             pass
         return []
 
