@@ -75,6 +75,7 @@ options:
         choices:
             - V1
             - V2
+        type: str
     end_of_life_date:
         description:
             - The end of life date of the gallery Image Definition.
