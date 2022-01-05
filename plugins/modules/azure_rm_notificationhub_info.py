@@ -67,7 +67,7 @@ state:
         "region": null,
         "scale_unit": null,
         "service_bus_endpoint": "https://testnaedd3d22d3w.servicebus.windows.net:443/",
-        "sku": "Free",
+        "sku": {"name":"Free"},
         "tags": {
             "a": "b"
         },
@@ -188,7 +188,7 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
             type=namespace.get('type', None),
             location=namespace.get(
                 'location', '').replace(' ', '').lower(),
-            sku=namespace.get("sku").get("name"),
+            sku=namespace.get("sku"),
             tags=namespace.get('tags', None),
             provisioning_state=namespace.get(
                 'provisioning_state', None),
