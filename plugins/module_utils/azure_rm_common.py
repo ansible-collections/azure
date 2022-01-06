@@ -1539,7 +1539,7 @@ class AzureRMAuth(object):
             client_id = self.credentials.get('client_id', '04b07795-8ddb-461a-bbee-02f9e1bf7b46')
             self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
                                                                                     password=self.credentials['password'],
-                                                                                    tenant_id=tenant_track2,
+                                                                                    tenant_id=self.credentials.get('tenant', 'organizations'),
                                                                                     client_id=client_id)
 
 
