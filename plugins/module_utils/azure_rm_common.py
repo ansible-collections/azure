@@ -1536,11 +1536,6 @@ class AzureRMAuth(object):
                                                          cloud_environment=self._cloud_environment,
                                                          verify=self._cert_validation_mode == 'validate')
 
-            self.azure_credential_track2 = user_password.UsernamePasswordCredential(self.credentials['ad_user'],
-                                                                                    self.credentials['password'],
-                                                                                    tenant_id=tenant_track2,
-                                                                                    client_id=self.credentials.get('client_id'))
-
         elif self.credentials.get('ad_user') is not None and \
                 self.credentials.get('password') is not None and \
                 self.credentials.get('client_id') is not None and \
