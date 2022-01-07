@@ -294,6 +294,7 @@ state:
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
+
 try:
     from msrestazure.azure_exceptions import CloudError
 except ImportError:
