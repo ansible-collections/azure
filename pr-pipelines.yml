@@ -93,6 +93,7 @@ parameters:
     - "azure_rm_sqlserver"
     - "azure_rm_storageaccount"
     - "azure_rm_storageblob"
+    - "azure_rm_storageshare"
     - "azure_rm_subnet"
     - "azure_rm_subscription"
     - "azure_rm_trafficmanagerprofile"
