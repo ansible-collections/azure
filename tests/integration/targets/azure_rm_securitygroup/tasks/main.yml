@@ -44,7 +44,13 @@
   register: output
 - name: assert resource retrieved
   assert:
-    that: output.securitygroups | length == 1
+    that:
+      - output.securitygroups | length == 1
+      - output.securitygroups[0].default_rules | length > 0
+      - output.securitygroups[0].name == '{{ secgroupname }}'
+      - output.securitygroups[0].network_interfaces | length == 0
+      - output.securitygroups[0].rules | length == 2
+      - output.securitygroups[0].subnets | length == 0
 
 - name: Add/Update rules on existing security group
   azure_rm_securitygroup:
@@ -75,6 +81,16 @@
     that:
       - "{{ output.state.rules | length }} == 4"
       - output.state.rules[0].source_address_prefix == '174.108.158.0/24'
+
+- name: Gather facts after update
+  azure_rm_securitygroup_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ secgroupname }}"
+  register: output
+- name: assert rules updated
+  assert:
+    that:
+      - output.securitygroups[0].rules | length == 4
 
 - name: Test idempotence
   azure_rm_securitygroup:

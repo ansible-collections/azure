@@ -388,7 +388,7 @@ state:
                     "source_address_prefix": "174.109.158.0/24",
                     "source_port_range": "*"
                 }
-                ]
+            ]
         subnets:
             description:
                 - A collection of references to subnets.
