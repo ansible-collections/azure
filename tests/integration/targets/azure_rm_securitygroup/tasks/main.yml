@@ -319,3 +319,15 @@
   assert:
     that:
       - output.securitygroups | length == 0
+
+- name: Clean up Application security group 2
+  azure_rm_applicationsecuritygroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ asg_name1 }}"
+    state: absent
+
+- name: Clean up Application security group 2
+  azure_rm_applicationsecuritygroup:
+    resource_group: "{{ resource_group_secondary }}"
+    name: "{{ asg_name2 }}"
+    state: absent
