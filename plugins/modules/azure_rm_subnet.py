@@ -66,7 +66,7 @@ options:
             - The reference of the RouteTable resource.
             - Can be the name or resource ID of the route table.
             - Can be a dict containing the I(name) and I(resource_group) of the route table.
-            - If this option is not configured, the existing route table is disconnected from the subnet.
+            - Without this configuration, the associated route table will be dissociate. If there is no associated route table, it has no impact.
     service_endpoints:
         description:
             - An array of service endpoints.
