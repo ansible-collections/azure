@@ -104,7 +104,7 @@ routes:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -186,7 +186,7 @@ class AzureRMRouteTableInfo(AzureRMModuleBase):
         try:
             item = self.network_client.route_tables.get(self.resource_group, self.name)
             return [item]
-        except CloudError:
+        except ResourceNotFoundError:
             pass
         return []
 
@@ -194,7 +194,7 @@ class AzureRMRouteTableInfo(AzureRMModuleBase):
         self.log('List all items in resource group')
         try:
             return self.network_client.route_tables.list(self.resource_group)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list items - {0}".format(str(exc)))
         return []
 
@@ -202,7 +202,7 @@ class AzureRMRouteTableInfo(AzureRMModuleBase):
         self.log("List all items in subscription")
         try:
             return self.network_client.route_tables.list_all()
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
         return []
 

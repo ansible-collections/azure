@@ -529,7 +529,7 @@ virtual_hubs:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -574,7 +574,7 @@ class AzureRMVirtualHubInfo(AzureRMModuleBase):
         try:
             response = self.network_client.virtual_hubs.get(resource_group_name=self.resource_group,
                                                             virtual_hub_name=self.name)
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response
@@ -584,7 +584,7 @@ class AzureRMVirtualHubInfo(AzureRMModuleBase):
 
         try:
             response = self.network_client.virtual_hubs.list_by_resource_group(resource_group_name=self.resource_group)
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response
@@ -594,7 +594,7 @@ class AzureRMVirtualHubInfo(AzureRMModuleBase):
 
         try:
             response = self.network_client.virtual_hubs.list()
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response

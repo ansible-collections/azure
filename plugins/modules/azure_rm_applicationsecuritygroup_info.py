@@ -87,8 +87,7 @@ applicationsecuritygroups:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.azure_operation import AzureOperationPoller
 except ImportError:
     # This is handled in azure_rm_common
@@ -168,7 +167,7 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
 
             if response and self.has_tags(response.tags, self.tags):
                 results.append(applicationsecuritygroup_to_dict(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Did not find the Application Security Group instance.')
         return results
 
@@ -189,7 +188,7 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
                         results.append(applicationsecuritygroup_to_dict(item))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Application Security Group instance.')
         return results
 
@@ -210,7 +209,7 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
                         results.append(applicationsecuritygroup_to_dict(item))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Application Security Group instance.')
         return results
 

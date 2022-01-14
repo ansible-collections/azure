@@ -297,7 +297,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -530,7 +530,7 @@ class AzureRMSubnet(AzureRMModuleBase):
 
             elif self.state == 'absent':
                 changed = True
-        except CloudError:
+        except ResourceNotFoundError:
             # the subnet does not exist
             if self.state == 'present':
                 changed = True
@@ -595,10 +595,10 @@ class AzureRMSubnet(AzureRMModuleBase):
 
     def create_or_update_subnet(self, subnet):
         try:
-            poller = self.network_client.subnets.create_or_update(self.resource_group,
-                                                                  self.virtual_network_name,
-                                                                  self.name,
-                                                                  subnet)
+            poller = self.network_client.subnets.begin_create_or_update(self.resource_group,
+                                                                        self.virtual_network_name,
+                                                                        self.name,
+                                                                        subnet)
             new_subnet = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating or updating subnet {0} - {1}".format(self.name, str(exc)))
@@ -608,9 +608,9 @@ class AzureRMSubnet(AzureRMModuleBase):
     def delete_subnet(self):
         self.log('Deleting subnet {0}'.format(self.name))
         try:
-            poller = self.network_client.subnets.delete(self.resource_group,
-                                                        self.virtual_network_name,
-                                                        self.name)
+            poller = self.network_client.subnets.begin_delete(self.resource_group,
+                                                              self.virtual_network_name,
+                                                              self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting subnet {0} - {1}".format(self.name, str(exc)))

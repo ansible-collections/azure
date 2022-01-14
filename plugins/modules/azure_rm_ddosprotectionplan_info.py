@@ -46,8 +46,7 @@ RETURN = '''
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.network import NetworkManagementClient
+    from azure.core.exceptions import ResourceNotFoundError
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -99,7 +98,7 @@ class AzureDDoSProtectionPlanInfo(AzureRMModuleBase):
             response = self.network_client.ddos_protection_plans.get(
                 self.resource_group, self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get info for DDoS protection plan. {0}'.format(str(e)))
 
         if response and self.has_tags(response.tags, self.tags):
@@ -112,7 +111,7 @@ class AzureDDoSProtectionPlanInfo(AzureRMModuleBase):
             response = self.network_client.ddos_protection_plans.list_by_resource_group(
                 self.resource_group)
 
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail(
                 "Failed to list for resource group {0} - {1}".format(self.resource_group, str(exc)))
 
@@ -127,7 +126,7 @@ class AzureDDoSProtectionPlanInfo(AzureRMModuleBase):
         try:
             response = self.network_client.ddos_protection_plans.list()
 
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail(
                 "Failed to list DDoS protection plan in the subscription - {0}".format(str(exc)))
 
