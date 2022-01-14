@@ -111,7 +111,7 @@ changed:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -317,7 +317,7 @@ class AzureRMVMExtension(AzureRMModuleBase):
         try:
             response = self.compute_client.virtual_machine_extensions.get(self.resource_group, self.virtual_machine_name, self.name)
             found = True
-        except Exception as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find vm extension')
         if found:
             return vmextension_to_dict(response)

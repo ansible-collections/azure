@@ -505,6 +505,7 @@ import base64
 try:
     from msrestazure.azure_exceptions import CloudError
     from msrestazure.tools import parse_resource_id
+    from azure.core.exceptions import ResourceNotFoundError
 
 except ImportError:
     # This is handled in azure_rm_common
@@ -864,7 +865,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                 results = dict()
                 changed = True
 
-        except Exception:
+        except ResourceNotFoundError:
             self.log('Virtual machine scale set {0} does not exist'.format(self.name))
             if self.state == 'present':
                 self.log("CHANGED: virtual machine scale set {0} does not exist but state is 'present'.".format(self.name))
@@ -1117,21 +1118,21 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         try:
             vmss = self.compute_client.virtual_machine_scale_sets.get(self.resource_group, self.name)
             return vmss
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error getting virtual machine scale set {0} - {1}".format(self.name, str(exc)))
 
     def get_virtual_network(self, name):
         try:
             vnet = self.network_client.virtual_networks.get(self.virtual_network_resource_group, name)
             return vnet
-        except Exception as exc:
+        except CloudError as exc:
             self.fail("Error fetching virtual network {0} - {1}".format(name, str(exc)))
 
     def get_subnet(self, vnet_name, subnet_name):
         self.log("Fetching subnet {0} in virtual network {1}".format(subnet_name, vnet_name))
         try:
             subnet = self.network_client.subnets.get(self.virtual_network_resource_group, vnet_name, subnet_name)
-        except Exception as exc:
+        except CloudError as exc:
             self.fail("Error: fetching subnet {0} in virtual network {1} - {2}".format(
                 subnet_name,
                 vnet_name,
@@ -1142,14 +1143,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         id_dict = parse_resource_id(id)
         try:
             return self.network_client.load_balancers.get(id_dict.get('resource_group', self.resource_group), id_dict.get('name'))
-        except Exception as exc:
+        except CloudError as exc:
             self.fail("Error fetching load balancer {0} - {1}".format(id, str(exc)))
 
     def get_application_gateway(self, id):
         id_dict = parse_resource_id(id)
         try:
             return self.network_client.application_gateways.get(id_dict.get('resource_group', self.resource_group), id_dict.get('name'))
-        except Exception as exc:
+        except CloudError as exc:
             self.fail("Error fetching application_gateway {0} - {1}".format(id, str(exc)))
 
     def serialize_vmss(self, vmss):
@@ -1187,7 +1188,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                                                                        self.image['publisher'],
                                                                        self.image['offer'],
                                                                        self.image['sku'])
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching image {0} {1} {2} - {3}".format(self.image['publisher'],
                                                                       self.image['offer'],
                                                                       self.image['sku'],
@@ -1210,7 +1211,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                 vm_images = self.compute_client.images.list_by_resource_group(resource_group)
             else:
                 vm_images = self.compute_client.images.list()
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching custom images from subscription - {0}".format(str(exc)))
 
         for vm_image in vm_images:
@@ -1235,7 +1236,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         '''
         try:
             sizes = self.compute_client.virtual_machine_sizes.list(self.location)
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error retrieving available machine sizes - {0}".format(str(exc)))
         for size in sizes:
             if size.name == self.vm_size:

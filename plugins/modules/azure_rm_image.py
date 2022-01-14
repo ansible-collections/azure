@@ -113,7 +113,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from msrestazure.tools import parse_resource_id
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -328,7 +328,7 @@ class AzureRMImage(AzureRMModuleBase):
                 return get_method(resource_group, name, expand=expand)
             else:
                 return get_method(resource_group, name)
-        except Exception as cloud_err:
+        except ResourceNotFoundError as cloud_err:
             # Return None iff the resource is not found
             if cloud_err.status_code == 404:
                 self.log('{0}'.format(str(cloud_err)))

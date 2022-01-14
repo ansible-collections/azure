@@ -98,7 +98,7 @@ instances:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.compute import ComputeManagementClient
     from msrest.serialization import Model
 except ImportError:
@@ -214,7 +214,7 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
                                                                           vm_scale_set_name=self.vmss_name,
                                                                           instance_id=self.instance_id)
             self.log("Response : {0}".format(response))
-        except Exception as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Virtual Machine Scale Set VM.')
 
         if response:

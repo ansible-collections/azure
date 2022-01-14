@@ -125,8 +125,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
     format_resource_id, normalize_location_name
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -190,7 +189,7 @@ class AzureRMProximityPlacementGroup(AzureRMModuleBase):
             elif self.state == 'absent':
                 changed = True
 
-        except Exception:
+        except ResourceNotFoundError:
             if self.state == 'present':
                 changed = True
             else:

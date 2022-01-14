@@ -152,8 +152,8 @@ changed:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from msrestazure.tools import parse_resource_id
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -357,7 +357,7 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
         try:
             response = self.compute_client.availability_sets.get(self.resource_group, self.name)
             found = True
-        except Exception as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Availability set.')
         if found is True:
             return availability_set_to_dict(response)
@@ -367,7 +367,7 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
     def get_proximity_placement_group(self, resource_group, name):
         try:
             return self.compute_client.proximity_placement_groups.get(resource_group, name)
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching proximity placement group {0} - {1}".format(name, str(exc)))
 
 

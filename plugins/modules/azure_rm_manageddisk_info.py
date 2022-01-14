@@ -130,7 +130,7 @@ azure_managed_disk:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # handled in azure_rm_common
     pass
@@ -191,7 +191,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             if self.tags:
                 results = [disk for disk in results if self.has_tags(disk.tags, self.tags)]
             results = [self.managed_disk_to_dict(disk) for disk in results]
-        except Exception:
+        except ResourceNotFoundError:
             self.log('Could not find disk {0} in resource group {1}'.format(self.name, self.resource_group))
 
         return results
@@ -207,7 +207,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             if self.tags:
                 results = [disk for disk in results if self.has_tags(disk.tags, self.tags)]
             results = [self.managed_disk_to_dict(disk) for disk in results]
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         return results
@@ -223,7 +223,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             if self.tags:
                 results = [disk for disk in results if self.has_tags(disk.tags, self.tags)]
             results = [self.managed_disk_to_dict(disk) for disk in results]
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail('Failed to list items by resource group - {0}'.format(str(exc)))
 
         return results

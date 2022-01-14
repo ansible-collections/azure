@@ -228,7 +228,7 @@ import re
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 try:
     from msrestazure.tools import parse_resource_id
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -511,7 +511,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 self.resource_group,
                 self.name)
             return managed_disk_to_dict(resp)
-        except Exception as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find managed disk')
 
     def is_attach_caching_option_different(self, vm_name, disk):
