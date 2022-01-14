@@ -13,7 +13,6 @@
   - azure_rm_monitordiagnosticsetting_info: Add new monitor diagnostic setting modules ([#701](https://github.com/ansible-collections/azure/pull/701))
   - azure_rm_storageshare: Azure storage file share module ([#603](https://github.com/ansible-collections/azure/pull/603))
   - azure_rm_storageshare_info: Azure storage file share module ([#603](https://github.com/ansible-collections/azure/pull/603))
-  
 
 ### FEATURE ENHANCEMENT
   - azure_rm_webapp: Add additional parameters for webapp site config ([#695](https://github.com/ansible-collections/azure/pull/695))
@@ -35,7 +34,6 @@
   - azure_rm_securitygroup: Align azure_rm_securitygroup_info return to match azure_rm_securitygroup ([#726](https://github.com/ansible-collections/azure/pull/726))
   - azure_rm_securitygroup_info: Align azure_rm_securitygroup_info return to match azure_rm_securitygroup ([#726](https://github.com/ansible-collections/azure/pull/726))
 
-
 ### BUG FIXING
   - azure_rm_common: update azure_rm_common, upgrade to track2 ([#670](https://github.com/ansible-collections/azure/pull/670))
   - azure_rm_common: Allow module-level subscription id to be used for cross-subscription resource management ([#694](https://github.com/ansible-collections/azure/pull/694))
@@ -52,6 +50,7 @@
   - README.md: Clarify doc for installing collection and dependencies ([#716](https://github.com/ansible-collections/azure/pull/716))
   - azure_rm_deployment: azure_rm_deployment : fixed tags related bug ([#641](https://github.com/ansible-collections/azure/pull/641))
   - azure_rm_subnet: Dissociate routetable from subnet ([#727](https://github.com/ansible-collections/azure/pull/727))
+  - azure_rm_common: Update CLI authorization mode in SDK Track2 ([#676](https://github.com/ansible-collections/azure/pull/676))
 
 
 ## v1.10.0 (2021-10-22)
