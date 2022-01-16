@@ -215,7 +215,7 @@ class AzureRMVirtualWanInfo(AzureRMModuleBase):
 
         try:
             response = self.network_client.virtual_wans.list()
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response
