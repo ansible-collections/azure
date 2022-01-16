@@ -313,7 +313,10 @@ class AzureRMPrivateEndpointDnsZoneGroup(AzureRMModuleBaseExt):
             self.fail("Error deleting private endpoint {0}: {1}".format(self.name, str(exc)))
 
     def zone_to_dict(self, zone):
-        zone_dict = zone.as_dict()
+        if zone is not None:
+            zone_dict = zone.as_dict()
+        else:
+            zone_dict = {}
         return dict(
             id=zone_dict.get("id"),
             name=zone_dict.get("name"),
