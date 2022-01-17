@@ -316,7 +316,7 @@ class AzureRMPrivateEndpointDnsZoneGroup(AzureRMModuleBaseExt):
         if zone is not None:
             zone_dict = zone.as_dict()
         else:
-            zone_dict = {}
+            return None
         return dict(
             id=zone_dict.get("id"),
             name=zone_dict.get("name"),
