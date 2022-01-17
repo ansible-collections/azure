@@ -399,7 +399,7 @@ state:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.storage.cloudstorageaccount import CloudStorageAccount
     from azure.common import AzureMissingResourceHttpError
 except ImportError:
@@ -536,7 +536,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.log('Checking name availability for {0}'.format(self.name))
         try:
             response = self.storage_client.storage_accounts.check_name_availability(self.name)
-        except Exception as e:
+        except ResourceNotFoundError as e:
             self.log('Error attempting to validate name.')
             self.fail("Error checking name availability: {0}".format(str(e)))
         if not response.name_available:
@@ -552,7 +552,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         try:
             account_obj = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name)
             blob_service_props = self.storage_client.blob_services.get_service_properties(self.resource_group, self.name)
-        except Exception:
+        except ResourceNotFoundError:
             pass
 
         if account_obj:

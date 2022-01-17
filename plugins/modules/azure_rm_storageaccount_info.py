@@ -401,7 +401,7 @@ storageaccounts:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -475,7 +475,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         try:
             account = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name)
             return [account]
-        except Exception:
+        except ResourceNotFoundError:
             pass
         return []
 
