@@ -536,12 +536,9 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.log('Checking name availability for {0}'.format(self.name))
         try:
             response = self.storage_client.storage_accounts.check_name_availability(self.name)
-        except ResourceNotFoundError as e:
+        except Exception as e:
             self.log('Error attempting to validate name.')
             self.fail("Error checking name availability: {0}".format(str(e)))
-        if not response.name_available:
-            self.log('Error name not available.')
-            self.fail("{0} - {1}".format(response.message, response.reason))
 
     def get_account(self):
         self.log('Get properties for account {0}'.format(self.name))
@@ -567,16 +564,13 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             location=account_obj.location,
             resource_group=self.resource_group,
             type=account_obj.type,
-            access_tier=(account_obj.access_tier.value
-                         if account_obj.access_tier is not None else None),
+            access_tier=account_obj.access_tier,
             sku_tier=account_obj.sku.tier,
             sku_name=account_obj.sku.name,
-            provisioning_state=account_obj.provisioning_state.value,
+            provisioning_state=account_obj.provisioning_state,
             secondary_location=account_obj.secondary_location,
-            status_of_primary=(account_obj.status_of_primary.value
-                               if account_obj.status_of_primary is not None else None),
-            status_of_secondary=(account_obj.status_of_secondary.value
-                                 if account_obj.status_of_secondary is not None else None),
+            status_of_primary=account_obj.status_of_primary,
+            status_of_secondary=account_obj.status_of_secondary,
             primary_location=account_obj.primary_location,
             https_only=account_obj.enable_https_traffic_only,
             minimum_tls_version=account_obj.minimum_tls_version,
