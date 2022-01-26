@@ -1038,6 +1038,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                         if suites is not None:
                             for i in range(len(suites)):
                                 suites[i] = suites[i].upper()
+                    self.parameters["ssl_policy"] = ev
                 elif key == "gateway_ip_configurations":
                     ev = kwargs[key]
                     for i in range(len(ev)):
