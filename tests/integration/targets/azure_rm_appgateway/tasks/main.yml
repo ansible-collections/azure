@@ -1237,6 +1237,17 @@
     that:
       - output.changed
 
+- name: Delete complex instance of Application Gateway
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway-complex{{ rpfx }}"
+    state: absent
+  register: output
+- name: Assert the state has changed
+  assert:
+    that:
+      - output.changed
+
 - name: Delete virtual network
   azure_rm_virtualnetwork:
     name: vnet{{ rpfx }}
