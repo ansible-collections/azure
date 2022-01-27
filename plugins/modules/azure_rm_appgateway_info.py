@@ -89,6 +89,23 @@ gateways:
             returned: always
             type: str
             sample: Succeeded
+        ssl_policy:
+            returned: always
+            type: complex
+            version_added: "1.10.0"
+            contains:
+                policy_type:
+                    description:
+                        - The type of SSL policy.
+                    returned: always
+                    type: str
+                    sample: predefined
+                policy_name:
+                    description:
+                        - The name of the SSL policy.
+                    returned: always
+                    type: str
+                    sample: ssl_policy20170401_s
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
