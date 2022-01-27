@@ -48,10 +48,12 @@ options:
             private_dns_zone:
                 description:
                     - The name of the Private DNS zone.
+                    - If set, the Private DNS Zone under the current resource group is obtained.
                 type: str
             private_dns_zone_id:
                 description:
                     - The ID of the private dns zone.
+                    - If set, gets the value of the specified connection Private DNS Zone.
                 type: str
     state:
         description:
