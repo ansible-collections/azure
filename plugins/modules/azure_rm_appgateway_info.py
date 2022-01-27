@@ -92,6 +92,7 @@ gateways:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -192,8 +193,21 @@ class AzureRMApplicationGatewayInfo(AzureRMModuleBase):
             "location": d.get("location"),
             "operational_state": d.get("operational_state"),
             "provisioning_state": d.get("provisioning_state"),
+            "ssl_policy": None if d.get("ssl_policy") is None else {
+                "policy_type": _camel_to_snake(d.get("ssl_policy").get("policy_type", None)),
+                "policy_name": self.ssl_policy_name(d.get("ssl_policy").get("policy_name", None)),
+            },
         }
         return d
+
+    def ssl_policy_name(self, policy_name):
+        if policy_name == "AppGwSslPolicy20150501":
+            return "ssl_policy20150501"
+        elif policy_name == "AppGwSslPolicy20170401":
+            return "ssl_policy20170401"
+        elif policy_name == "AppGwSslPolicy20170401S":
+            return "ssl_policy20170401_s"
+        return None
 
 
 def main():

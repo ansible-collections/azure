@@ -46,11 +46,6 @@
     ssl_policy:
       policy_type: predefined
       policy_name: ssl_policy20150501
-      disabled_ssl_protocols:
-        - tls_v1_0
-        - tls_v1_1
-      cipher_suites:
-        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
         data: "{{ lookup('file', cert1_file) }}"
@@ -133,11 +128,6 @@
     ssl_policy:
       policy_type: predefined
       policy_name: ssl_policy20150501
-      disabled_ssl_protocols:
-        - tls_v1_0
-        - tls_v1_1
-      cipher_suites:
-        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
         data: "{{ lookup('file', cert1_file) }}"
@@ -207,6 +197,20 @@
   assert:
     that:
       - output.changed
+
+- name: Load app gateway
+  azure_rm_appgateway_info:
+    name: "appgateway{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+- name: Assert properties
+  assert:
+    that:
+      - output.gateways | length == 1
+      - output.gateways[0].name == 'appgateway{{ rpfx }}'
+      - output.gateways[0].ssl_policy
+      - output.gateways[0].ssl_policy.policy_type == 'predefined'
+      - output.gateways[0].ssl_policy.policy_name == 'ssl_policy20150501'
 
 - name: Stop instance of Application Gateway -- check mode
   azure_rm_appgateway:
@@ -291,11 +295,6 @@
     ssl_policy:
       policy_type: predefined
       policy_name: ssl_policy20150501
-      disabled_ssl_protocols:
-        - tls_v1_0
-        - tls_v1_1
-      cipher_suites:
-        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
         data: "{{ lookup('file', cert1_file) }}"
@@ -377,11 +376,6 @@
     ssl_policy:
       policy_type: predefined
       policy_name: ssl_policy20150501
-      disabled_ssl_protocols:
-        - tls_v1_0
-        - tls_v1_1
-      cipher_suites:
-        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
         data: "{{ lookup('file', cert1_file) }}"
@@ -463,11 +457,6 @@
     ssl_policy:
       policy_type: predefined
       policy_name: ssl_policy20150501
-      disabled_ssl_protocols:
-        - tls_v1_0
-        - tls_v1_1
-      cipher_suites:
-        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
         data: "{{ lookup('file', cert1_file) }}"
@@ -572,10 +561,6 @@
     ssl_policy:
       policy_type: predefined
       policy_name: ssl_policy20150501
-      disabled_ssl_protocols:
-        - tls_v1_0
-      cipher_suites:
-        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
         data: "{{ lookup('file', cert1_file) }}"
@@ -658,10 +643,6 @@
     ssl_policy:
       policy_type: predefined
       policy_name: ssl_policy20150501
-      disabled_ssl_protocols:
-        - tls_v1_0
-      cipher_suites:
-        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
         data: "{{ lookup('file', cert1_file) }}"
@@ -764,10 +745,6 @@
     ssl_policy:
       policy_type: predefined
       policy_name: ssl_policy20150501
-      disabled_ssl_protocols:
-        - tls_v1_0
-      cipher_suites:
-        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
         data: "{{ lookup('file', cert1_file) }}"
@@ -859,10 +836,6 @@
     ssl_policy:
       policy_type: predefined
       policy_name: ssl_policy20150501
-      disabled_ssl_protocols:
-        - tls_v1_0
-      cipher_suites:
-        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
     authentication_certificates:
       - name: cert1
         data: "{{ lookup('file', cert1_file) }}"
