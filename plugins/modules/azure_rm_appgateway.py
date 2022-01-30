@@ -791,7 +791,6 @@ from ansible.module_utils.common.dict_transformations import (
 try:
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
-    from azure.mgmt.network import NetworkManagementClient
     from msrestazure.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
@@ -845,6 +844,48 @@ redirect_configuration_spec = dict(
     request_routing_rules=dict(type='list', elements='str'),
     url_path_maps=dict(type='list', elements='str'),
     path_rules=dict(type='list', elements='dict', options=redirect_path_rules_spec),
+)
+
+
+rewrite_condition_spec = dict(
+    variable=dict(type='str'),
+    pattern=dict(type='str'),
+    ignore_case=dict(type='bool'),
+    negate=dict(type='bool'),
+)
+
+
+rewrite_header_configuration_spec = dict(
+    header_name=dict(type='str'),
+    header_value=dict(type='str'),
+)
+
+
+rewrite_url_configuration_spec = dict(
+    modified_path=dict(type='str'),
+    modified_query_string=dict(type='str'),
+    reroute=dict(type='bool'),
+)
+
+
+rewrite_action_set_spec = dict(
+    request_header_configurations=dict(type='list', elements='dict', options=rewrite_header_configuration_spec),
+    response_header_configurations=dict(type='list', elements='dict', options=rewrite_header_configuration_spec),
+    url_configuration=dict(type='list', elements='dict', options=rewrite_url_configuration_spec),
+)
+
+
+rewrite_rule_spec = dict(
+    name=dict(type='str'),
+    rule_sequence=dict(type='int'),
+    conditions=dict(type='list', elements='dict', options=rewrite_condition_spec),
+    action_set=dict(type='dict', options=rewrite_action_set_spec),
+)
+
+
+rewrite_rule_set_spec = dict(
+    name=dict(type='str'),
+    rewrite_rules=dict(type='list', elements='dict', options=rewrite_rule_spec),
 )
 
 
@@ -911,6 +952,11 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 elements='dict',
                 options=redirect_configuration_spec
             ),
+            rewrite_rule_sets=dict(
+                type='list',
+                elements='dict',
+                options=rewrite_rule_set_spec
+            ),
             frontend_ip_configurations=dict(
                 type='list'
             ),
@@ -958,7 +1004,6 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
         self.parameters = dict()
 
         self.results = dict(changed=False)
-        self.mgmt_client = None
         self.state = None
         self.gateway_state = None
         self.to_do = Actions.NoAction
@@ -1098,6 +1143,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                         else:
                             del item['path_rules']
                     self.parameters["redirect_configurations"] = ev
+                elif key == "rewrite_rule_sets":
+                    self.parameters["rewrite_rule_sets"] = kwargs[key]
                 elif key == "frontend_ip_configurations":
                     ev = kwargs[key]
                     for i in range(len(ev)):
@@ -1278,9 +1325,6 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
         old_response = None
         response = None
 
-        self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager)
-
         resource_group = self.get_resource_group(self.resource_group)
 
         if "location" not in self.parameters:
@@ -1317,6 +1361,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     not compare_arrays(old_response, self.parameters, 'authentication_certificates') or
                     not compare_arrays(old_response, self.parameters, 'gateway_ip_configurations') or
                     not compare_arrays(old_response, self.parameters, 'redirect_configurations') or
+                    not compare_arrays(old_response, self.parameters, 'rewrite_rule_sets') or
                     not compare_arrays(old_response, self.parameters, 'frontend_ip_configurations') or
                     not compare_arrays(old_response, self.parameters, 'frontend_ports') or
                     not compare_arrays(old_response, self.parameters, 'backend_address_pools') or
@@ -1390,9 +1435,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
         self.log("Creating / Updating the Application Gateway instance {0}".format(self.name))
 
         try:
-            response = self.mgmt_client.application_gateways.create_or_update(resource_group_name=self.resource_group,
-                                                                              application_gateway_name=self.name,
-                                                                              parameters=self.parameters)
+            response = self.network_client.application_gateways.create_or_update(resource_group_name=self.resource_group,
+                                                                                 application_gateway_name=self.name,
+                                                                                 parameters=self.parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -1409,8 +1454,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
         '''
         self.log("Deleting the Application Gateway instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.application_gateways.delete(resource_group_name=self.resource_group,
-                                                                    application_gateway_name=self.name)
+            response = self.network_client.application_gateways.delete(resource_group_name=self.resource_group,
+                                                                       application_gateway_name=self.name)
         except CloudError as e:
             self.log('Error attempting to delete the Application Gateway instance.')
             self.fail("Error deleting the Application Gateway instance: {0}".format(str(e)))
@@ -1426,8 +1471,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
         self.log("Checking if the Application Gateway instance {0} is present".format(self.name))
         found = False
         try:
-            response = self.mgmt_client.application_gateways.get(resource_group_name=self.resource_group,
-                                                                 application_gateway_name=self.name)
+            response = self.network_client.application_gateways.get(resource_group_name=self.resource_group,
+                                                                    application_gateway_name=self.name)
             found = True
             self.log("Response : {0}".format(response))
             self.log("Application Gateway instance : {0} found".format(response.name))
@@ -1441,8 +1486,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
     def start_applicationgateway(self):
         self.log("Starting the Application Gateway instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.application_gateways.start(resource_group_name=self.resource_group,
-                                                                   application_gateway_name=self.name)
+            response = self.network_client.application_gateways.start(resource_group_name=self.resource_group,
+                                                                      application_gateway_name=self.name)
             if isinstance(response, LROPoller):
                 self.get_poller_result(response)
         except CloudError as e:
@@ -1452,8 +1497,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
     def stop_applicationgateway(self):
         self.log("Stopping the Application Gateway instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.application_gateways.stop(resource_group_name=self.resource_group,
-                                                                  application_gateway_name=self.name)
+            response = self.network_client.application_gateways.stop(resource_group_name=self.resource_group,
+                                                                     application_gateway_name=self.name)
             if isinstance(response, LROPoller):
                 self.get_poller_result(response)
         except CloudError as e:
