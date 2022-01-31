@@ -92,7 +92,7 @@ gateways:
         ssl_policy:
             returned: always
             type: complex
-            version_added: "1.10.0"
+            version_added: "1.11.0"
             contains:
                 policy_type:
                     description:
