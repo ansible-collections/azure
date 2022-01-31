@@ -201,6 +201,100 @@ options:
             name:
                 description:
                     - Name of the resource that is unique within a resource group.
+    rewrite_rule_sets:
+        description:
+            - List of rewrite configurations for the application gateway resource.
+        type: list
+        elements: dict
+        version_added: "1.11.0"
+        suboptions:
+            name:
+                description:
+                    - Name of the rewrite rule set.
+            rewrite_rules:
+                description:
+                    - List of rewrite rules.
+                type: list
+                elements: dict
+                suboptions:
+                    name:
+                        description:
+                            - Name of the rewrite rule.
+                    path_map_name:
+                        description:
+                            - Name of URL path map.
+                    rule_sequence:
+                        description:
+                            - Sequence of the rule that determines the order of execution within the set.
+                    conditions:
+                        description:
+                            - Conditions based on which the action set execution will be evaluated.
+                        type: list
+                        elements: dict
+                        suboptions:
+                            variable:
+                                description:
+                                    - The parameter for the condition.
+                            pattern:
+                                description:
+                                    - The pattern, either fixed string or regular expression, that evaluates the truthfulness of the condition.
+                            ignore_case:
+                                description:
+                                    - Setting this value to true will force the pattern to do a case in-sensitive comparison.
+                                type: bool
+                            negate:
+                                description:
+                                    - Setting this value to true will force to check the negation of the condition given by the user.
+                                type: bool
+                    action_set:
+                        description:
+                            - Set of actions to be done as part of the rewrite rule.
+                        type: dict
+                        suboptions:
+                            request_header_configurations:
+                                description:
+                                    - List of actions to be taken on request headers.
+                                type: list
+                                elements: dict
+                                suboptions:
+                                    header_name:
+                                        description:
+                                            - Name of the header.
+                                    header_value:
+                                        description:
+                                            - Value of the header.
+                                            - Leave the parameter unset to remove the header.
+                            response_header_configurations:
+                                description:
+                                    - List of actions to be taken on response headers.
+                                type: list
+                                elements: dict
+                                suboptions:
+                                    header_name:
+                                        description:
+                                            - Name of the header.
+                                    header_value:
+                                        description:
+                                            - Value of the header.
+                                            - Leave the parameter unset to remove the header.
+                            url_configuration:
+                                description:
+                                    - Action to be taken on the URL.
+                                type: dict
+                                suboptions:
+                                    modified_path:
+                                        description:
+                                            - Value to which the URL path will be rewriten.
+                                            - Leave parameter unset to keep the original URL path.
+                                    modified_query_string:
+                                        description:
+                                            - Value to which the URL query string will be rewriten.
+                                            - Leave parameter unset to keep the original URL query string.
+                                    reroute:
+                                        description:
+                                            - If set to true, will re-evaluate the path map provided in path-based request routing rules using modified path.
+                                        type: bool
+                                        default: False
     ssl_certificates:
         description:
             - SSL certificates of the application gateway resource.
