@@ -27,6 +27,7 @@
     dns_servers:
         - 127.0.0.1
         - 127.0.0.2
+  register: vnet_output
 - name: Create a subnet
   azure_rm_subnet:
     name: subnet{{ rpfx }}
@@ -541,6 +542,91 @@
     that:
       - output.gateways[0].ssl_policy.policy_type == 'custom'
 
+- name: Try to update SSL config for Application Gateway - no change
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway{{ rpfx }}"
+    sku:
+      name: standard_small
+      tier: standard
+      capacity: 2
+    ssl_policy:
+      policy_type: custom
+      cipher_suites:
+        - tls_ecdhe_rsa_with_aes_128_gcm_sha256
+        - tls_ecdhe_ecdsa_with_aes_128_gcm_sha256
+        - tls_ecdhe_ecdsa_with_aes_256_gcm_sha384
+      min_protocol_version: tls_v1_2
+    authentication_certificates:
+      - name: cert1
+        data: "{{ lookup('file', cert1_file) }}"
+    ssl_certificates:
+      - name: cert2
+        password: your-password
+        data: "{{ lookup('file', cert2_file) }}"
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - port: 90
+        name: ag_frontend_port
+      - port: 80
+        name: http_frontend_port
+    backend_address_pools:
+      - backend_addresses:
+          - ip_address: 10.0.0.4
+        name: test_backend_address_pool
+    probes:
+     - name: custom_probe
+       protocol: http
+       host: 10.0.0.4
+       path: /healthz
+       interval: 30
+       timeout: 30
+       unhealthy_threshold: 3
+    backend_http_settings_collection:
+      - port: 81
+        protocol: http
+        cookie_based_affinity: enabled
+        probe: custom_probe
+        name: sample_appgateway_http_settings
+    http_listeners:
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: ag_frontend_port
+        protocol: https
+        ssl_certificate: cert2
+        name: sample_http_listener
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: http_frontend_port
+        protocol: http
+        name: http_listener
+    request_routing_rules:
+      - rule_type: Basic
+        backend_address_pool: test_backend_address_pool
+        backend_http_settings: sample_appgateway_http_settings
+        http_listener: sample_http_listener
+        name: rule1
+      - rule_type: Basic
+        http_listener: http_listener
+        redirect_configuration: redirect_site_to_https
+        name: http_redirect_rule
+    redirect_configurations:
+     - redirect_type: permanent
+       target_listener: sample_http_listener
+       include_path: true
+       include_query_string: true
+       name: redirect_site_to_https
+  register: output
+- name: Assert the resource instance is not changed
+  assert:
+    that:
+      - not output.changed
+
 - name: Create instance of Application Gateway by looking up virtual network and subnet
   azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
@@ -649,6 +735,7 @@
   azure_rm_appgateway:
     resource_group: "{{ resource_group_secondary }}"
     name: "appgateway-probe-{{ rpfx }}"
+    location: "{{ vnet_output.state.location }}"
     sku:
       name: standard_small
       tier: standard
@@ -731,6 +818,7 @@
   azure_rm_appgateway:
     resource_group: "{{ resource_group_secondary }}"
     name: "appgateway-probe-{{ rpfx }}"
+    location: "{{ vnet_output.state.location }}"
     sku:
       name: standard_small
       tier: standard
