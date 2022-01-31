@@ -31,6 +31,7 @@ options:
     sku:
         description:
             - SKU of the application gateway resource.
+        type: dict
         suboptions:
             name:
                 description:
@@ -57,6 +58,7 @@ options:
     ssl_policy:
         description:
             - SSL policy of the application gateway resource.
+        type: dict
         suboptions:
             disabled_ssl_protocols:
                 description:
@@ -120,10 +122,13 @@ options:
     gateway_ip_configurations:
         description:
             - List of subnets used by the application gateway.
+        type: list
+        elements: dict
         suboptions:
             subnet:
                 description:
                     - Reference of the subnet resource. A subnet from where application gateway gets its private address.
+                type: dict
                 suboptions:
                     id:
                         description:
@@ -140,6 +145,8 @@ options:
     authentication_certificates:
         description:
             - Authentication certificates of the application gateway resource.
+        type: list
+        elements: dict
         suboptions:
             data:
                 description:
@@ -150,6 +157,8 @@ options:
     redirect_configurations:
         description:
             - Redirect configurations of the application gateway resource.
+        type: list
+        elements: dict
         suboptions:
             redirect_type:
                 description:
@@ -173,6 +182,8 @@ options:
             path_rules:
                 description:
                     - List of URL path rules within a c(path_based_routing) rule to which the redirect is bound.
+                type: list
+                elements: dict
                 suboptions:
                     name:
                         description:
@@ -193,6 +204,8 @@ options:
     ssl_certificates:
         description:
             - SSL certificates of the application gateway resource.
+        type: list
+        elements: dict
         suboptions:
             data:
                 description:
@@ -208,6 +221,8 @@ options:
     frontend_ip_configurations:
         description:
             - Frontend IP addresses of the application gateway resource.
+        type: list
+        elements: dict
         suboptions:
             private_ip_address:
                 description:
@@ -221,6 +236,7 @@ options:
             subnet:
                 description:
                     - Reference of the subnet resource.
+                type: dict
                 suboptions:
                     id:
                         description:
@@ -240,6 +256,8 @@ options:
     frontend_ports:
         description:
             - List of frontend ports of the application gateway resource.
+        type: list
+        elements: dict
         suboptions:
             port:
                 description:
@@ -250,10 +268,14 @@ options:
     backend_address_pools:
         description:
             - List of backend address pool of the application gateway resource.
+        type: list
+        elements: dict
         suboptions:
             backend_addresses:
                 description:
                     - List of backend addresses.
+                type: list
+                elements: dict
                 suboptions:
                     fqdn:
                         description:
@@ -267,6 +289,8 @@ options:
     probes:
         description:
             - Probes available to the application gateway resource.
+        type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -308,6 +332,8 @@ options:
     backend_http_settings_collection:
         description:
             - Backend http settings of the application gateway resource.
+        type: list
+        elements: dict
         suboptions:
             probe:
                 description:
@@ -336,6 +362,8 @@ options:
                 description:
                     - List of references to application gateway authentication certificates.
                     - Applicable only when C(cookie_based_affinity) is enabled, otherwise quietly ignored.
+                type: list
+                elements: dict
                 suboptions:
                     id:
                         description:
@@ -359,6 +387,8 @@ options:
     http_listeners:
         description:
             - List of HTTP listeners of the application gateway resource.
+        type: list
+        elements: dict
         suboptions:
             frontend_ip_configuration:
                 description:
@@ -387,6 +417,8 @@ options:
     url_path_maps:
         description:
             - List of URL path maps of the application gateway resource.
+        type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -428,6 +460,8 @@ options:
     request_routing_rules:
         description:
             - List of request routing rules of the application gateway resource.
+        type: list
+        elements: dict
         suboptions:
             rule_type:
                 description:

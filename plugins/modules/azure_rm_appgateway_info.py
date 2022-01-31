@@ -51,7 +51,8 @@ gateways:
     description:
         - A list of dictionaries containing facts for an application gateway.
     returned: always
-    type: complex
+    type: list
+    elements: dict
     contains:
         id:
             description:
