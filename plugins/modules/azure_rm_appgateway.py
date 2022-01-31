@@ -211,21 +211,22 @@ options:
             name:
                 description:
                     - Name of the rewrite rule set.
+                required: True
             rewrite_rules:
                 description:
                     - List of rewrite rules.
+                required: True
                 type: list
                 elements: dict
                 suboptions:
                     name:
                         description:
                             - Name of the rewrite rule.
-                    path_map_name:
-                        description:
-                            - Name of URL path map.
+                        required: True
                     rule_sequence:
                         description:
                             - Sequence of the rule that determines the order of execution within the set.
+                        required: True
                     conditions:
                         description:
                             - Conditions based on which the action set execution will be evaluated.
@@ -242,13 +243,16 @@ options:
                                 description:
                                     - Setting this value to true will force the pattern to do a case in-sensitive comparison.
                                 type: bool
+                                default: True
                             negate:
                                 description:
                                     - Setting this value to true will force to check the negation of the condition given by the user.
                                 type: bool
+                                default: False
                     action_set:
                         description:
                             - Set of actions to be done as part of the rewrite rule.
+                        required: True
                         type: dict
                         suboptions:
                             request_header_configurations:
@@ -260,6 +264,7 @@ options:
                                     header_name:
                                         description:
                                             - Name of the header.
+                                        required: True
                                     header_value:
                                         description:
                                             - Value of the header.
@@ -273,6 +278,7 @@ options:
                                     header_name:
                                         description:
                                             - Name of the header.
+                                        required: True
                                     header_value:
                                         description:
                                             - Value of the header.
@@ -524,9 +530,16 @@ options:
             default_backend_http_settings:
                 description:
                     - Backend http settings resource of the application gateway; used with I(default_backend_address_pool).
+            default_rewrite_rule_set:
+                description:
+                    - Default rewrite rule set for the path map.
+                    - Can be the name of the rewrite rule set or full resource ID.
+                version_added: "1.11.0"
             path_rules:
                 description:
                     - List of URL path rules.
+                type: list
+                elements: dict
                 suboptions:
                     name:
                         description:
@@ -538,6 +551,11 @@ options:
                     backend_http_settings:
                         description:
                             - Backend http settings resource of the application gateway; used for the path's I(backend_address_pool).
+                    rewrite_rule_set:
+                        description:
+                            - Rewrite rule set for the path map.
+                            - Can be the name of the rewrite rule set or full resource ID.
+                        version_added: "1.11.0"
                     redirect_configuration:
                         description:
                             - Name of redirect configuration resource of the application gateway which will be used if the path is matched.
@@ -546,6 +564,7 @@ options:
                     paths:
                         description:
                             - List of paths.
+                        type: list
             default_redirect_configuration:
                 description:
                     - Name of redirect configuration resource of the application gateway which will be used if no path matches occur.
@@ -581,6 +600,11 @@ options:
             url_path_map:
                 description:
                     - URL path map resource of the application gateway. Required if I(rule_type) is C(path_based_routing).
+            rewrite_rule_set:
+                description:
+                    - Rewrite rule set for the path map.
+                    - Can be the name of the rewrite rule set or full resource ID.
+                version_added: "1.11.0"
     gateway_state:
         description:
             - Start or Stop the application gateway. When specified, no updates will occur to the gateway.
@@ -857,6 +881,156 @@ EXAMPLES = '''
         url_path_maps:
           - "path_mappings"
 
+- name: Create v2 instance of Application Gateway with rewrite rules
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myV2AppGateway
+    sku:
+      name: standard_v2
+      tier: standard_v2
+      capacity: 2
+    ssl_policy:
+      policy_type: predefined
+      policy_name: ssl_policy20170401_s
+    ssl_certificates:
+      - name: ssl_cert
+        password: your-password
+        data: "{{ lookup('file', ssl_cert) }}"
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - name: "public-inbound-ip"
+        public_ip_address: my-appgw-pip
+    frontend_ports:
+      - name: "inbound-http"
+        port: 80
+      - name: "inbound-https"
+        port: 443
+    backend_address_pools:
+      - name: test_backend_address_pool1
+        backend_addresses:
+          - ip_address: 10.0.0.1
+      - name: test_backend_address_pool2
+        backend_addresses:
+          - ip_address: 10.0.0.2
+    backend_http_settings_collection:
+      - name: "http-profile1"
+        port: 443
+        protocol: https
+        pick_host_name_from_backend_address: true
+        probe: "http-probe1"
+        cookie_based_affinity: "Disabled"
+      - name: "http-profile2"
+        port: 8080
+        protocol: http
+        pick_host_name_from_backend_address: true
+        probe: "http-probe2"
+        cookie_based_affinity: "Disabled"
+    http_listeners:
+      - name: "inbound-http"
+        protocol: "http"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-http"
+      - name: "inbound-traffic1"
+        protocol: "https"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-https"
+        host_name: "traffic1.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "ssl_cert"
+      - name: "inbound-traffic2"
+        protocol: "https"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-https"
+        host_name: "traffic2.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "ssl_cert"
+    url_path_maps:
+      - name: "path_mappings"
+        default_redirect_configuration: "redirect-traffic1"
+        default_rewrite_rule_set: "configure-headers"
+        path_rules:
+          - name: "path_rules"
+            backend_address_pool: "test_backend_address_pool1"
+            backend_http_settings: "http-profile1"
+            paths:
+              - "/abc"
+              - "/123/*"
+    request_routing_rules:
+      - name: "app-routing1"
+        rule_type: "basic"
+        http_listener: "inbound-traffic1"
+        backend_address_pool: "test_backend_address_pool2"
+        backend_http_settings: "http-profile1"
+        rewrite_rule_set: "configure-headers"
+      - name: "app-routing2"
+        rule_type: "path_based_routing"
+        http_listener: "inbound-traffic2"
+        url_path_map: "path_mappings"
+      - name: "redirect-routing"
+        rule_type: "basic"
+        http_listener: "inbound-http"
+        redirect_configuration: "redirect-http"
+    rewrite_rule_sets:
+      - name: "configure-headers"
+        rewrite_rules:
+          - name: "add-security-response-header"
+            rule_sequence: 1
+            action_set:
+              response_header_configurations:
+                - header_name: "Strict-Transport-Security"
+                  header_value: "max-age=31536000"
+          - name: "remove-backend-response-headers"
+            rule_sequence: 2
+            action_set:
+              response_header_configurations:
+                - header_name: "Server"
+                - header_name: "X-Powered-By"
+          - name: "set-custom-header-condition"
+            rule_sequence: 3
+            conditions:
+              - variable: "var_client_ip"
+                pattern: "1.1.1.1"
+              - variable: "http_req_Authorization"
+                pattern: "12345"
+                ignore_case: false
+            action_set:
+              request_header_configurations:
+                - header_name: "Foo"
+                  header_value: "Bar"
+    probes:
+        - name: "http-probe1"
+          interval: 30
+          path: "/abc"
+          protocol: "https"
+          pick_host_name_from_backend_http_settings: true
+          timeout: 30
+          unhealthy_threshold: 2
+        - name: "http-probe2"
+          interval: 30
+          path: "/xyz"
+          protocol: "http"
+          pick_host_name_from_backend_http_settings: true
+          timeout: 30
+          unhealthy_threshold: 2
+    redirect_configurations:
+      - name: "redirect-http"
+        redirect_type: "permanent"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        request_routing_rules:
+          - "redirect-routing"
+      - name: "redirect-traffic1"
+        redirect_type: "found"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        url_path_maps:
+          - "path_mappings"
+
 - name: Stop an Application Gateway instance
   azure_rm_appgateway:
     resource_group: myResourceGroup
@@ -910,7 +1084,7 @@ provisioning_state:
 '''
 
 import time
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, is_valid_resource_id
 from copy import deepcopy
 from ansible.module_utils.common.dict_transformations import (
     _snake_to_camel, dict_merge,
@@ -976,44 +1150,44 @@ redirect_configuration_spec = dict(
 
 
 rewrite_condition_spec = dict(
-    variable=dict(type='str'),
-    pattern=dict(type='str'),
-    ignore_case=dict(type='bool'),
-    negate=dict(type='bool'),
+    variable=dict(type='str', required=True),
+    pattern=dict(type='str', required=True),
+    ignore_case=dict(type='bool', default=True),
+    negate=dict(type='bool', default=False),
 )
 
 
 rewrite_header_configuration_spec = dict(
-    header_name=dict(type='str'),
-    header_value=dict(type='str'),
+    header_name=dict(type='str', required=True),
+    header_value=dict(type='str', default=''),
 )
 
 
 rewrite_url_configuration_spec = dict(
     modified_path=dict(type='str'),
     modified_query_string=dict(type='str'),
-    reroute=dict(type='bool'),
+    reroute=dict(type='bool', default=False),
 )
 
 
 rewrite_action_set_spec = dict(
-    request_header_configurations=dict(type='list', elements='dict', options=rewrite_header_configuration_spec),
-    response_header_configurations=dict(type='list', elements='dict', options=rewrite_header_configuration_spec),
+    request_header_configurations=dict(type='list', elements='dict', options=rewrite_header_configuration_spec, default=[]),
+    response_header_configurations=dict(type='list', elements='dict', options=rewrite_header_configuration_spec, default=[]),
     url_configuration=dict(type='list', elements='dict', options=rewrite_url_configuration_spec),
 )
 
 
 rewrite_rule_spec = dict(
-    name=dict(type='str'),
-    rule_sequence=dict(type='int'),
-    conditions=dict(type='list', elements='dict', options=rewrite_condition_spec),
-    action_set=dict(type='dict', options=rewrite_action_set_spec),
+    name=dict(type='str', required=True),
+    rule_sequence=dict(type='int', required=True),
+    conditions=dict(type='list', elements='dict', options=rewrite_condition_spec, default=[]),
+    action_set=dict(type='dict', required=True, options=rewrite_action_set_spec),
 )
 
 
 rewrite_rule_set_spec = dict(
-    name=dict(type='str'),
-    rewrite_rules=dict(type='list', elements='dict', options=rewrite_rule_spec),
+    name=dict(type='str', required=True),
+    rewrite_rules=dict(type='list', elements='dict', required=True, options=rewrite_rule_spec),
 )
 
 
@@ -1023,6 +1197,7 @@ path_rules_spec = dict(
     backend_http_settings=dict(type='str'),
     redirect_configuration=dict(type='str'),
     paths=dict(type='list', elements='str'),
+    rewrite_rule_set=dict(type='str'),
 )
 
 
@@ -1039,6 +1214,7 @@ url_path_maps_spec = dict(
         required_together=[('backend_address_pool', 'backend_http_settings')],
     ),
     default_redirect_configuration=dict(type='str'),
+    default_rewrite_rule_set=dict(type='str'),
 )
 
 
@@ -1272,7 +1448,19 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             del item['path_rules']
                     self.parameters["redirect_configurations"] = ev
                 elif key == "rewrite_rule_sets":
-                    self.parameters["rewrite_rule_sets"] = kwargs[key]
+                    ev = kwargs[key]
+                    for i in range(len(ev)):
+                        ev2 = ev[i]['rewrite_rules']
+                        for j in range(len(ev2)):
+                            item2 = ev2[j]
+                            if item2['action_set'].get('url_configuration'):
+                                if not item2['action_set']['url_configuration'].get('modified_path'):
+                                    del item2['action_set']['url_configuration']['modified_path']
+                                if not item2['action_set']['url_configuration'].get('modified_query_string'):
+                                    del item2['action_set']['url_configuration']['modified_query_string']
+                            else:
+                                del item2['action_set']['url_configuration']
+                    self.parameters["rewrite_rule_sets"] = ev
                 elif key == "frontend_ip_configurations":
                     ev = kwargs[key]
                     for i in range(len(ev)):
@@ -1394,6 +1582,15 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                     item2['redirect_configuration'] = {'id': id}
                                 else:
                                     del item2['redirect_configuration']
+                                if item2['rewrite_rule_set']:
+                                    id = item2['rewrite_rule_set']
+                                    id = id if is_valid_resource_id(id) else rerite_rule_set_id(self.subscription_id,
+                                                                                                kwargs['resource_group'],
+                                                                                                kwargs['name'],
+                                                                                                id)
+                                    item2['rewrite_rule_set'] = {'id': id}
+                                else:
+                                    del item2['rewrite_rule_set']
                                 ev2[j] = item2
                         if item['default_redirect_configuration']:
                             id = redirect_configuration_id(self.subscription_id,
@@ -1403,6 +1600,15 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             item['default_redirect_configuration'] = {'id': id}
                         else:
                             del item['default_redirect_configuration']
+                        if item['default_rewrite_rule_set']:
+                            id = item['default_rewrite_rule_set']
+                            id = id if is_valid_resource_id(id) else rerite_rule_set_id(self.subscription_id,
+                                                                                        kwargs['resource_group'],
+                                                                                        kwargs['name'],
+                                                                                        id)
+                            item['default_rewrite_rule_set'] = {'id': id}
+                        else:
+                            del item['default_rewrite_rule_set']
                         ev[i] = item
                     self.parameters["url_path_maps"] = ev
                 elif key == "request_routing_rules":
@@ -1445,6 +1651,13 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                                  kwargs['name'],
                                                  item['url_path_map'])
                             item['url_path_map'] = {'id': id}
+                        if item.get('rewrite_rule_set'):
+                            id = item.get('rewrite_rule_set')
+                            id = id if is_valid_resource_id(id) else rerite_rule_set_id(self.subscription_id,
+                                                                                        kwargs['resource_group'],
+                                                                                        kwargs['name'],
+                                                                                        id)
+                            item['rewrite_rule_set'] = {'id': id}
                         ev[i] = item
                     self.parameters["request_routing_rules"] = ev
                 elif key == "etag":
@@ -1780,6 +1993,16 @@ def ip_configuration_id(subscription_id, resource_group_name, network_interface_
 def request_routing_rule_id(subscription_id, resource_group_name, appgateway_name, name):
     """Generate the id for a request routing rule in an application gateway"""
     return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/applicationGateways/{2}/requestRoutingRules/{3}'.format(
+        subscription_id,
+        resource_group_name,
+        appgateway_name,
+        name
+    )
+
+
+def rerite_rule_set_id(subscription_id, resource_group_name, appgateway_name, name):
+    """Generate the id for a rewrite rule set in an application gateway"""
+    return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/applicationGateways/{2}/rewriteRuleSets/{3}'.format(
         subscription_id,
         resource_group_name,
         appgateway_name,
