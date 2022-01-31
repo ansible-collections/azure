@@ -565,6 +565,7 @@ options:
                         description:
                             - List of paths.
                         type: list
+                        elements: str
             default_redirect_configuration:
                 description:
                     - Name of redirect configuration resource of the application gateway which will be used if no path matches occur.
