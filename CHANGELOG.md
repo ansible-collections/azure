@@ -31,6 +31,7 @@
   - azure_rm_virtualmachine_info: Add managed disk ID to returned facts for data disks ([#682](https://github.com/ansible-collections/azure/pull/682))
   - azure_rm_appgateway: Application gateway start/stop ability ([#673](https://github.com/ansible-collections/azure/pull/673))
   - azure_rm_aks: Add new feature - `outbound_type` ([#651](https://github.com/ansible-collections/azure/pull/651))
+  - azure_rm_common: Support track2 SDK CLI authorization ([#676](https://github.com/ansible-collections/azure/pull/676))
 
 ### BUG FIXING
   - azure_rm_common: Supprot track2 SDK ([#670](https://github.com/ansible-collections/azure/pull/670))
