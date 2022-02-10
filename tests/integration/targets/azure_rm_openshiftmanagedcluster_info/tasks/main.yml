@@ -1,16 +1,4 @@
-- name: set location
-  set_fact:
-    location: eastus
-
-- name: Get specific cluster information for a specific resource group
-  azure_rm_openshiftmanagedcluster_info:
-    resource_group: "{{ resource_group }}"
-    name: "openshift"
-  register: output
-
-- assert:
-      that: output['clusters'] | length == 1
-
+---
 - name: Get available clusters for a specific resource_group
   azure_rm_openshiftmanagedcluster_info:
     resource_group: "{{ resource_group }}"
