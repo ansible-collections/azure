@@ -89,6 +89,7 @@
     resource_group: "{{ resource_group }}"
     kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
     dns_prefix: "aks{{ rpfx }}"
+    enable_rbac: true
     agent_pool_profiles:
       - name: default
         count: 1
