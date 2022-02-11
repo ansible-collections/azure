@@ -6,6 +6,30 @@
     name: "{{ resource_group_secondary }}"
   register: rg_output
 
+- name: Get available clusters for a specific resource_group
+  azure_rm_openshiftmanagedcluster_info:
+    resource_group: "{{ resource_group_secondary }}"
+  register: output
+
+- assert:
+      that: output['clusters'] | length == 0
+
+- name: Get specific cluster information for a specific cluster
+  azure_rm_openshiftmanagedcluster_info:
+    resource_group: "{{ resource_group_secondary }}"
+    name: "{{ cluster_name }}"
+  register: output
+
+- assert:
+    that: output['clusters'] | length == 0
+
+- name: Get all clusters
+  azure_rm_openshiftmanagedcluster_info:
+  register: output
+
+- assert:
+      that: output['clusters'] | length == 0
+
 - name: Create virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group_secondary }}"
@@ -57,7 +81,16 @@
 - assert:
   that: output.changed
 
-- name: Get specific cluster information for a specific resource group
+
+- name: Get available clusters for a specific resource_group
+  azure_rm_openshiftmanagedcluster_info:
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- assert:
+      that: output['clusters'] | length == 1
+
+- name: Get specific cluster information for a specific cluster
   azure_rm_openshiftmanagedcluster_info:
     resource_group: "{{ resource_group }}"
     name: "{{ cluster_name }}"
@@ -65,6 +98,13 @@
 
 - assert:
     that: output['clusters'] | length == 1
+
+- name: Get all clusters
+  azure_rm_openshiftmanagedcluster_info:
+  register: output
+
+- assert:
+      that: output['clusters'] | length == 1
 
 - name: Delete openshift cluster
   azure_rm_openshiftmanagedcluster:
