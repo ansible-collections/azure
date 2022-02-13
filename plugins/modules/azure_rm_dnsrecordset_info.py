@@ -22,15 +22,19 @@ options:
     relative_name:
         description:
             - Only show results for a Record Set.
+        type: str
     resource_group:
         description:
             - Limit results by resource group. Required when filtering by name or type.
+        type: str
     zone_name:
         description:
             - Limit results by zones. Required when filtering by name or type.
+        type: str
     record_type:
         description:
             - Limit record sets by record type.
+        type: str
     top:
         description:
             - Limit the maximum number of record sets to return.
@@ -96,24 +100,29 @@ dnsrecordsets:
         id:
             description:
                 - ID of the dns recordset.
+            type: str
             sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/dnszones/newzone.
                      com/A/servera"
         relative_name:
             description:
                 - Name of the dns recordset.
+            type: str
             sample: servera
         record_type:
             description:
                 - The type of the record set.
                 - Can be C(A), C(AAAA), C(CNAME), C(MX), C(NS), C(SRV), C(TXT), C(PTR).
+            type: str
             sample: A
         time_to_live:
             description:
                 - Time to live of the record set in seconds.
+            type: int
             sample: 12900
         records:
             description:
                 - List of records depending on the type of recordset.
+            type: dict
             sample: [
                         {
                             "ipv4Address": "10.4.5.7"
@@ -125,10 +134,12 @@ dnsrecordsets:
         provisioning_state:
             description:
                 - Provision state of the resource.
+            type: str
             sample: Successed
         fqdn:
             description:
                 - Fully qualified domain name of the record set.
+            type: str
             sample: www.newzone.com
 '''
 
@@ -231,9 +242,10 @@ class AzureRMRecordSetInfo(AzureRMModuleBase):
         try:
             item = self.dns_client.record_sets.get(self.resource_group, self.zone_name, self.relative_name, self.record_type)
         except CloudError:
+            results = []
             pass
-
-        results = [item]
+        else:
+            results = [item]
         return results
 
     def list_type(self):
@@ -281,7 +293,8 @@ class AzureRMRecordSetInfo(AzureRMModuleBase):
             records=[x.as_dict() for x in records],
             time_to_live=record.ttl,
             fqdn=record.fqdn,
-            provisioning_state=record.provisioning_state
+            provisioning_state=record.provisioning_state,
+            metadata=record.metadata
         )
 
 

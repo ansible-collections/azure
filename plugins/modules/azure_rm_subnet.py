@@ -66,6 +66,7 @@ options:
             - The reference of the RouteTable resource.
             - Can be the name or resource ID of the route table.
             - Can be a dict containing the I(name) and I(resource_group) of the route table.
+            - Without this configuration, the associated route table will be dissociate. If there is no associated route table, it has no impact.
     service_endpoints:
         description:
             - An array of service endpoints.
@@ -482,10 +483,16 @@ class AzureRMSubnet(AzureRMModuleBase):
                     changed = True
                     results['network_security_group']['id'] = nsg.get('id')
                     results['network_security_group']['name'] = nsg.get('name')
-                if self.route_table is not None and self.route_table != results['route_table'].get('id'):
-                    changed = True
-                    results['route_table']['id'] = self.route_table
-                    self.log("CHANGED: subnet {0} route_table to {1}".format(self.name, route_table.get('name')))
+                if self.route_table is not None:
+                    if self.route_table != results['route_table'].get('id'):
+                        changed = True
+                        results['route_table']['id'] = self.route_table
+                        self.log("CHANGED: subnet {0} route_table to {1}".format(self.name, route_table.get('name')))
+                else:
+                    if results['route_table'].get('id') is not None:
+                        changed = True
+                        results['route_table']['id'] = None
+                        self.log("CHANGED: subnet {0} will dissociate to route_table {1}".format(self.name, route_table.get('name')))
 
                 if self.service_endpoints or self.service_endpoints == []:
                     oldd = {}

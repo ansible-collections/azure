@@ -190,6 +190,27 @@ options:
                 choices:
                     - standard
                     - basic
+            outbound_type:
+                description:
+                    - How outbound traffic will be configured for a cluster.
+                type: str
+                choices:
+                    - loadBalancer
+                    - userDefinedRouting
+    api_server_access_profile:
+        description:
+            - Profile of API Access configuration.
+        suboptions:
+            authorized_ip_ranges:
+                description:
+                    - Authorized IP Ranges to kubernetes API server.
+                    - Cannot be enabled when using private cluster
+                type: list
+            enable_private_cluster:
+                description:
+                    - Whether to create the cluster as a private cluster or not.
+                    - Cannot be changed for an existing cluster.
+                type: bool
     aad_profile:
         description:
             - Profile of Azure Active Directory configuration.
@@ -204,6 +225,15 @@ options:
                 description:
                     - The AAD tenant ID to use for authentication.
                     - If not specified, will use the tenant of the deployment subscription.
+            managed:
+                description:
+                    - Whether to enable manged AAD.
+                type: bool
+                default: false
+            admin_group_object_ids:
+                description:
+                    - AAD group object IDs that will have admin role of the cluster.
+                type: str
     addon:
         description:
             - Profile of managed cluster add-on.
@@ -330,6 +360,36 @@ EXAMPLES = '''
             count: 1
             vm_size: Standard_D2_v2
 
+    - name: Create AKS with userDefinedRouting "Link:https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall"
+      azure_rm_aks:
+        name: "minimal{{ rpfx }}"
+        location: eastus
+        resource_group: "{{ resource_group }}"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        service_principal:
+          client_id: "{{ client_id }}"
+          client_secret: "{{ client_secret }}"
+        network_profile:
+          network_plugin: azure
+          load_balancer_sku: standard
+          outbound_type: userDefinedRouting
+          service_cidr: "10.41.0.0/16"
+          dns_service_ip: "10.41.0.10"
+          docker_bridge_cidr: "172.17.0.1/16"
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "20.106.246.252/32"
+          enable_private_cluster: no
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            mode: System
+            vnet_subnet_id: "{{ output.subnets[0].id }}"
+            type: VirtualMachineScaleSets
+            enable_auto_scaling: false
+
     - name: Remove a managed Azure Container Services (AKS) instance
       azure_rm_aks:
         name: myAKS
@@ -404,6 +464,7 @@ def create_aks_dict(aks):
         enable_rbac=aks.enable_rbac,
         network_profile=create_network_profiles_dict(aks.network_profile),
         aad_profile=create_aad_profiles_dict(aks.aad_profile),
+        api_server_access_profile=create_api_server_access_profile_dict(aks.api_server_access_profile),
         addon=create_addon_dict(aks.addon_profiles),
         fqdn=aks.fqdn,
         node_resource_group=aks.node_resource_group
@@ -418,12 +479,17 @@ def create_network_profiles_dict(network):
         service_cidr=network.service_cidr,
         dns_service_ip=network.dns_service_ip,
         docker_bridge_cidr=network.docker_bridge_cidr,
-        load_balancer_sku=network.load_balancer_sku
+        load_balancer_sku=network.load_balancer_sku,
+        outbound_type=network.outbound_type
     ) if network else dict()
 
 
 def create_aad_profiles_dict(aad):
     return aad.as_dict() if aad else dict()
+
+
+def create_api_server_access_profile_dict(api_server):
+    return api_server.as_dict() if api_server else dict()
 
 
 def create_addon_dict(addon):
@@ -553,7 +619,8 @@ network_profile_spec = dict(
     service_cidr=dict(type='str'),
     dns_service_ip=dict(type='str'),
     docker_bridge_cidr=dict(type='str'),
-    load_balancer_sku=dict(type='str')
+    load_balancer_sku=dict(type='str'),
+    outbound_type=dict(type='str', default='loadBalancer', choices=['userDefinedRouting', 'loadBalancer'])
 )
 
 
@@ -561,7 +628,15 @@ aad_profile_spec = dict(
     client_app_id=dict(type='str'),
     server_app_id=dict(type='str'),
     server_app_secret=dict(type='str', no_log=True),
-    tenant_id=dict(type='str')
+    tenant_id=dict(type='str'),
+    managed=dict(type='bool', default='false'),
+    admin_group_object_ids=dict(type='str')
+)
+
+
+api_server_access_profile_spec = dict(
+    authorized_ip_ranges=dict(type='list', elements='str'),
+    enable_private_cluster=dict(type='bool'),
 )
 
 
@@ -621,6 +696,10 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                 type='dict',
                 options=create_addon_profiles_spec()
             ),
+            api_server_access_profile=dict(
+                type='dict',
+                options=api_server_access_profile_spec
+            ),
             node_resource_group=dict(
                 type='str'
             )
@@ -639,6 +718,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         self.enable_rbac = False
         self.network_profile = None
         self.aad_profile = None
+        self.api_server_access_profile = None
         self.addon = None
         self.node_resource_group = None
 
@@ -723,6 +803,17 @@ class AzureRMManagedCluster(AzureRMModuleBase):
 
                     if response['enable_rbac'] != self.enable_rbac:
                         to_be_updated = True
+
+                    if response['api_server_access_profile'] != self.api_server_access_profile and self.api_server_access_profile is not None:
+                        if self.api_server_access_profile.get('enable_private_cluster') != response['api_server_access_profile'].get('enable_private_cluster'):
+                            self.log(("Api Server Access Diff - Origin {0} / Update {1}"
+                                     .format(str(self.api_server_access_profile), str(response['api_server_access_profile']))))
+                            self.fail("The enable_private_cluster of the api server access profile cannot be updated")
+                        elif len(self.api_server_access_profile.get('authorized_ip_ranges')) != \
+                                len(response['api_server_access_profile'].get('authorized_ip_ranges')):
+                            self.log(("Api Server Access Diff - Origin {0} / Update {1}"
+                                     .format(str(self.api_server_access_profile), str(response['api_server_access_profile']))))
+                            to_be_updated = True
 
                     if self.network_profile:
                         for key in self.network_profile.keys():
@@ -888,6 +979,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             enable_rbac=self.enable_rbac,
             network_profile=self.create_network_profile_instance(self.network_profile),
             aad_profile=self.create_aad_profile_instance(self.aad_profile),
+            api_server_access_profile=self.create_api_server_access_profile_instance(self.api_server_access_profile),
             addon_profiles=self.create_addon_profile_instance(self.addon),
             node_resource_group=self.node_resource_group
         )
@@ -1037,6 +1129,9 @@ class AzureRMManagedCluster(AzureRMModuleBase):
 
     def create_network_profile_instance(self, network):
         return self.managedcluster_models.ContainerServiceNetworkProfile(**network) if network else None
+
+    def create_api_server_access_profile_instance(self, server_access):
+        return self.managedcluster_models.ManagedClusterAPIServerAccessProfile(**server_access) if server_access else None
 
     def create_aad_profile_instance(self, aad):
         return self.managedcluster_models.ManagedClusterAADProfile(**aad) if aad else None

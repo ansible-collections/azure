@@ -1,11 +1,19 @@
 - include_tasks: setup.yml
 
-- name: Create minimal VM with defaults
+- name: create proximity placement group
+  azure_rm_proximityplacementgroup:
+    resource_group: "{{ resource_group }}"
+    name: testproximityplacement
+  register: output
+
+- name: Create minimal VM with proximentplace group
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     admin_username: "testuser"
     ssh_password_enabled: false
+    proximity_placement_group:
+      id: "{{ output.state.id }}"
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
@@ -16,6 +24,15 @@
       sku: 16.04-LTS
       version: latest
   register: vm_output
+
+- name: Get VM facts
+  azure_rm_virtualmachine_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+  register: vm_state
+
+- name: Pause for 10 mimutes to VM updating
+  shell: sleep 600
 
 - name: Generalize VM
   azure_rm_virtualmachine:

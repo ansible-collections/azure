@@ -116,11 +116,10 @@ import time
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
-    from msrestazure.azure_exceptions import CloudError
-    from msrestazure.azure_operation import AzureOperationPoller
+    from azure.core.exceptions import HttpResponseError
+    from azure.core.polling import LROPoller
     from msrestazure.tools import is_valid_resource_id
-    from msrest.serialization import Model
-    from azure.mgmt.monitor.models import (RetentionPolicy, LogProfileResource, ErrorResponseException)
+    from azure.mgmt.monitor.models import (RetentionPolicy, LogProfileResource)
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -330,12 +329,12 @@ class AzureRMMonitorLogprofile(AzureRMModuleBase):
                 tags=self.tags
             )
 
-            response = self.monitor_client.log_profiles.create_or_update(log_profile_name=self.name,
-                                                                         parameters=params)
-            if isinstance(response, AzureOperationPoller):
+            response = self.monitor_log_profiles_client.log_profiles.create_or_update(log_profile_name=self.name,
+                                                                                      parameters=params)
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except HttpResponseError as exc:
             self.log('Error attempting to create/update log profile.')
             self.fail("Error creating/updating log profile: {0}".format(str(exc)))
         return logprofile_to_dict(response)
@@ -348,8 +347,8 @@ class AzureRMMonitorLogprofile(AzureRMModuleBase):
         '''
         self.log("Deleting the log profile instance {0}".format(self.name))
         try:
-            response = self.monitor_client.log_profiles.delete(log_profile_name=self.name)
-        except CloudError as e:
+            response = self.monitor_log_profiles_client.log_profiles.delete(log_profile_name=self.name)
+        except HttpResponseError as e:
             self.log('Error attempting to delete the log profile.')
             self.fail(
                 "Error deleting the log profile: {0}".format(str(e)))
@@ -366,13 +365,13 @@ class AzureRMMonitorLogprofile(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.monitor_client.log_profiles.get(log_profile_name=self.name)
+            response = self.monitor_log_profiles_client.log_profiles.get(log_profile_name=self.name)
 
             self.log("Response : {0}".format(response))
             self.log("log profile : {0} found".format(response.name))
             return logprofile_to_dict(response)
 
-        except ErrorResponseException as ex:
+        except HttpResponseError:
             self.log("Didn't find log profile {0}".format(self.name))
 
         return False

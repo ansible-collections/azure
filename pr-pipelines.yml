@@ -10,11 +10,12 @@ parameters:
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
-  default: "2.10"
+  default: "2.12"
   values:
     - "2.9"
     - "2.10"
     - "2.11"
+    - "2.12"
     - "devel"
 - name: MODULE_NAME
   displayName: 'Test Module'
@@ -53,6 +54,7 @@ parameters:
     - "azure_rm_functionapp"
     - "azure_rm_gallery"
     - "azure_rm_hdinsightcluster"
+    - "azure_rm_hostgroup"
     - "azure_rm_image"
     - "azure_rm_iothub"
     - "azure_rm_ipgroup"
@@ -64,6 +66,7 @@ parameters:
     - "azure_rm_manageddisk"
     - "azure_rm_managementgroup"
     - "azure_rm_mariadbserver"
+    - "azure_rm_monitordiagnosticsetting"
     - "azure_rm_monitorlogprofile"
     - "azure_rm_mysqlserver"
     - "azure_rm_networkinterface"
@@ -73,6 +76,7 @@ parameters:
     - "azure_rm_privatednsrecordset"
     - "azure_rm_privatednszone"
     - "azure_rm_privateendpoint"
+    - "azure_rm_privateendpointdnszonegroup"
     - "azure_rm_privatednszonelink"
     - "azure_rm_publicipaddress"
     - "azure_rm_proximityplacementgroup"
@@ -90,6 +94,7 @@ parameters:
     - "azure_rm_sqlserver"
     - "azure_rm_storageaccount"
     - "azure_rm_storageblob"
+    - "azure_rm_storageshare"
     - "azure_rm_subnet"
     - "azure_rm_subscription"
     - "azure_rm_trafficmanagerprofile"
@@ -103,6 +108,7 @@ parameters:
     - "azure_rm_virtualnetworkpeering"
     - "azure_rm_virtualwan"
     - "azure_rm_vpnsite"
+    - "azure_rm_virtualhub"
     - "azure_rm_backupazurevm"
     - "azure_rm_recoveryservicesvault"
     - "azure_rm_vmbackuppolicy"
