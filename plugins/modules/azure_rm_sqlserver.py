@@ -72,6 +72,41 @@ options:
         type: bool
         default: false
         version_added: "1.10.0"
+    administrators:
+        description:
+            - The Azure Active Directory identity of the server.
+        type: dict
+        suboptions:
+            administrator_type:
+                description:
+                    - Type of the sever administrator.
+                type: str
+                default: ActiveDirectory
+            principal_type:
+                description:
+                    - Principal Type of the sever administrator.
+                type: str
+                choices:
+                    - User
+                    - Group
+                    - Application
+            login:
+                description:
+                    - Login name of the server administrator.
+                type: str
+            sid:
+                description:
+                    - SID (object ID) of the server administrator.
+                type: str
+            tenant_id:
+                description:
+                    - Tenant ID of the administrator.
+                type: str
+            azure_ad_only_authentication:
+                description:
+                    - Azure Active Directory only Authentication enabled.
+                type: bool
+        version_added: "1.10.0"
     state:
         description:
             - State of the SQL server. Use C(present) to create or update a server and use C(absent) to delete a server.
@@ -149,6 +184,16 @@ class Actions:
     NoAction, Create, Update, Delete = range(4)
 
 
+administrators_spec = dict(
+    administrator_type=dict(type='str', default='ActiveDirectory'),
+    principal_type=dict(type='str', choices=['User', 'Group', 'Application']),
+    login=dict(type='str'),
+    sid=dict(type='str'),
+    tenant_id=dict(type='str'),
+    azure_ad_only_authentication=dict(type='bool'),
+)
+
+
 class AzureRMSqlServer(AzureRMModuleBaseExt):
     """Configuration class for an Azure RM SQL Server resource"""
 
@@ -194,6 +239,10 @@ class AzureRMSqlServer(AzureRMModuleBaseExt):
                 type="bool",
                 default=False,
                 no_log=False,
+            ),
+            administrators=dict(
+                type='dict',
+                options=administrators_spec,
             ),
             state=dict(
                 type='str',
