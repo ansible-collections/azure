@@ -90,6 +90,8 @@ gateways:
             type: str
             sample: Succeeded
         ssl_policy:
+            description:
+                - SSL policy of the application gateway.
             returned: always
             type: complex
             version_added: "1.11.0"
