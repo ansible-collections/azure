@@ -1,3 +1,15 @@
+- name: Create an availability set with default options - Check Mode
+  azure_rm_availabilityset:
+    name: myavailabilityset1
+    resource_group: "{{ resource_group }}"
+    tags:
+      tag1: testtag
+  register: results
+  check_mode: yes
+
+- assert:
+    that: results.changed
+
 - name: Create an availability set with default options
   azure_rm_availabilityset:
     name: myavailabilityset1
@@ -113,7 +125,7 @@
 
 - assert:
     that: 
-      - not results.changed
+      - results.changed
       - results.state.tags.checktest1 == 'modified1'
 
 #
@@ -134,12 +146,33 @@
       - results.ansible_info.azure_availabilitysets[0].sku == 'Aligned'
       - results.ansible_info.azure_availabilitysets[0].properties.proximityPlacementGroup.id.split('/')[-1] == ppgroup_name
 
+- name: Delete an availability set - Check Mode
+  azure_rm_availabilityset:
+    name: myavailabilityset1
+    resource_group: "{{ resource_group }}"
+    state: absent
+  check_mode: yes
+  register: results
+- assert:
+    that:
+      - results.changed
 
 - name: Delete an availability set
   azure_rm_availabilityset:
     name: myavailabilityset1
     resource_group: "{{ resource_group }}"
     state: absent
+
+- name: Delete an availability set already deleted - Check Mode
+  azure_rm_availabilityset:
+    name: myavailabilityset1
+    resource_group: "{{ resource_group }}"
+    state: absent
+  check_mode: yes
+  register: results
+- assert:
+    that:
+      - not results.changed
 
 - name: Delete an availability set
   azure_rm_availabilityset:

@@ -1,0 +1,13 @@
+{
+  "storageAccountName": "dummystorageaccount",
+  "storageAccountSasToken": "dummy-storage-sas-token",
+  "sinksConfig": {
+    "sink": [
+      {
+        "name": "TestEventHub",
+        "type": "EventHub",
+        "sasURL": "dummy-sas-url"
+      }
+    ]
+  }
+}

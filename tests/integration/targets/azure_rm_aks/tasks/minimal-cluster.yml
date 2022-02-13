@@ -13,6 +13,9 @@
     resource_group: "{{ resource_group }}"
     kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
     dns_prefix: "aks{{ rpfx }}"
+    enable_rbac: true
+    aad_profile:
+      managed: true
     agent_pool_profiles:
       - name: default
         count: 1
@@ -46,6 +49,7 @@
     that:
       - "fact.aks | length == 1"
       - fact.aks[0].id == output.id
+      - fact.aks[0].properties.aadProfile.managed == true
 
 - name: Use minimal parameters and system-assigned identity (idempotent)
   azure_rm_aks:
@@ -54,6 +58,9 @@
     resource_group: "{{ resource_group }}"
     kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
     dns_prefix: "aks{{ rpfx }}"
+    enable_rbac: true
+    aad_profile:
+      managed: true
     agent_pool_profiles:
       - name: default
         count: 1
@@ -82,6 +89,7 @@
     resource_group: "{{ resource_group }}"
     kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
     dns_prefix: "aks{{ rpfx }}"
+    enable_rbac: true
     agent_pool_profiles:
       - name: default
         count: 1
