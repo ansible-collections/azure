@@ -25,42 +25,63 @@ options:
         description:
             - Name of a resource group where the vm extension exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the vm extension.
         required: true
+        type: str
     state:
         description:
             - State of the vm extension. Use C(present) to create or update a vm extension and C(absent) to delete a vm extension.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     virtual_machine_name:
         description:
             - The name of the virtual machine where the extension should be create or updated.
+        required: true
+        type: str
     publisher:
         description:
             - The name of the extension handler publisher.
+        type: str
     virtual_machine_extension_type:
         description:
             - The type of the extension handler.
+        type: str
     type_handler_version:
         description:
             - The type version of the extension handler.
+        type: str
     settings:
         description:
-            - Json formatted public settings for the extension.
+            - JSON formatted public settings for the extension.
+        type: dict
     protected_settings:
         description:
-            - Json formatted protected settings for the extension.
+            - JSON formatted protected settings for the extension.
+            - >-
+                Previously configured settings are not available, so the parameter is not used for idempotency checks.
+                If changes to this parameter need to be applied, use in conjunction with I(force_update_tag).
+        type: dict
     auto_upgrade_minor_version:
         description:
             - Whether the extension handler should be automatically upgraded across minor versions.
         type: bool
+    force_update_tag:
+        description:
+            - Whether the extension should be updated or re-run even if no changes can be detected from what is currently configured.
+            - Helpful when applying changes to I(protected_settings).
+        type: bool
+        default: false
+        version_added: '1.10.0'
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -71,25 +92,24 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create VM Extension
-      azure_rm_virtualmachineextension:
-        name: myvmextension
-        location: eastus
-        resource_group: myResourceGroup
-        virtual_machine_name: myvm
-        publisher: Microsoft.Azure.Extensions
-        virtual_machine_extension_type: CustomScript
-        type_handler_version: 2.0
-        settings: '{"commandToExecute": "hostname"}'
-        auto_upgrade_minor_version: true
+- name: Create VM Extension
+  azure_rm_virtualmachineextension:
+    name: myvmextension
+    location: eastus
+    resource_group: myResourceGroup
+    virtual_machine_name: myvm
+    publisher: Microsoft.Azure.Extensions
+    virtual_machine_extension_type: CustomScript
+    type_handler_version: 2.0
+    settings: '{"commandToExecute": "hostname"}'
+    auto_upgrade_minor_version: true
 
-    - name: Delete VM Extension
-      azure_rm_virtualmachineextension:
-        name: myvmextension
-        location: eastus
-        resource_group: myResourceGroup
-        virtual_machine_name: myvm
-        state: absent
+- name: Delete VM Extension
+  azure_rm_virtualmachineextension:
+    name: myvmextension
+    resource_group: myResourceGroup
+    virtual_machine_name: myvm
+    state: absent
 '''
 
 RETURN = '''
@@ -157,7 +177,8 @@ class AzureRMVMExtension(AzureRMModuleBase):
                 type='str'
             ),
             virtual_machine_name=dict(
-                type='str'
+                type='str',
+                required=True
             ),
             publisher=dict(
                 type='str'
@@ -176,11 +197,16 @@ class AzureRMVMExtension(AzureRMModuleBase):
             ),
             protected_settings=dict(
                 type='dict', no_log=True
-            )
+            ),
+            force_update_tag=dict(
+                type='bool',
+                default=False
+            ),
         )
 
         self.resource_group = None
         self.name = None
+        self.virtual_machine_name = None
         self.location = None
         self.publisher = None
         self.virtual_machine_extension_type = None
@@ -189,10 +215,10 @@ class AzureRMVMExtension(AzureRMModuleBase):
         self.settings = None
         self.protected_settings = None
         self.state = None
+        self.force_update_tag = False
 
         required_if = [
-            ('state', 'present', [
-             'publisher', 'virtual_machine_extension_type', 'type_handler_version'])
+            ('state', 'present', ['publisher', 'virtual_machine_extension_type', 'type_handler_version']),
         ]
 
         self.results = dict(changed=False, state=dict())
@@ -212,31 +238,27 @@ class AzureRMVMExtension(AzureRMModuleBase):
             self.module.deprecate("The 'azure_rm_virtualmachine_extension' module has been renamed to 'azure_rm_virtualmachineextension'", version=(2, 9))
 
         resource_group = None
-        response = None
         to_be_updated = False
 
         resource_group = self.get_resource_group(self.resource_group)
         if not self.location:
             self.location = resource_group.location
 
+        response = self.get_vmextension()
+
         if self.state == 'present':
-            response = self.get_vmextension()
             if not response:
                 to_be_updated = True
             else:
+                if self.force_update_tag:
+                    to_be_updated = True
+
                 if self.settings is not None:
                     if response['settings'] != self.settings:
                         response['settings'] = self.settings
                         to_be_updated = True
                 else:
                     self.settings = response['settings']
-
-                if self.protected_settings is not None:
-                    if response['protected_settings'] != self.protected_settings:
-                        response['protected_settings'] = self.protected_settings
-                        to_be_updated = True
-                else:
-                    self.protected_settings = response['protected_settings']
 
                 if response['location'] != self.location:
                     self.location = response['location']
@@ -265,8 +287,9 @@ class AzureRMVMExtension(AzureRMModuleBase):
                 self.results['changed'] = True
                 self.results['state'] = self.create_or_update_vmextension()
         elif self.state == 'absent':
-            self.delete_vmextension()
-            self.results['changed'] = True
+            if response:
+                self.delete_vmextension()
+                self.results['changed'] = True
 
         return self.results
 
@@ -284,7 +307,8 @@ class AzureRMVMExtension(AzureRMModuleBase):
                 type_handler_version=self.type_handler_version,
                 auto_upgrade_minor_version=self.auto_upgrade_minor_version,
                 settings=self.settings,
-                protected_settings=self.protected_settings
+                protected_settings=self.protected_settings,
+                force_update_tag=self.force_update_tag,
             )
             poller = self.compute_client.virtual_machine_extensions.create_or_update(self.resource_group, self.virtual_machine_name, self.name, params)
             response = self.get_poller_result(poller)

@@ -443,9 +443,9 @@ EXAMPLES = '''
     availability_set: avs-managed-disk
     managed_disk_type: Standard_LRS
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: 0001-com-ubuntu-server-focal
+      publisher: canonical
+      sku: 20_04-lts-gen2
       version: latest
     vm_size: Standard_D4
 
@@ -477,9 +477,9 @@ EXAMPLES = '''
       - path: /home/adminUser/.ssh/authorized_keys
         key_data: < insert your ssh public key here... >
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: 0001-com-ubuntu-server-focal
+      publisher: canonical
+      sku: 20_04-lts-gen2
       version: latest
     data_disks:
       - lun: 0
@@ -504,9 +504,9 @@ EXAMPLES = '''
     boot_diagnostics:
       enabled: yes
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: 0001-com-ubuntu-server-focal
+      publisher: canonical
+      sku: 20_04-lts-gen2
       version: latest
     data_disks:
       - lun: 0

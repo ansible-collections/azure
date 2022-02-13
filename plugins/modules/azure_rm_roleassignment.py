@@ -304,7 +304,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                     self.fail('State Mismatch Error: The assignment ID exists, but does not match the provided assignee.')
 
                 if role_assignment and self.role_definition_id and (role_assignment.get('role_definition_id').split('/')[-1].lower()
-                                                                    != self.role_definition_id[-1].lower()):
+                                                                    != self.role_definition_id.split('/')[-1].lower()):
                     self.fail('State Mismatch Error: The assignment ID exists, but does not match the provided role.')
 
             except CloudError as ex:
@@ -318,7 +318,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                     self.fail('State Mismatch Error: The assignment name exists, but does not match the provided assignee.')
 
                 if role_assignment and self.role_definition_id and (role_assignment.get('role_definition_id').split('/')[-1].lower()
-                                                                    != self.role_definition_id[-1].lower()):
+                                                                    != self.role_definition_id.split('/')[-1].lower()):
                     self.fail('State Mismatch Error: The assignment name exists, but does not match the provided role.')
 
             except CloudError as ex:
