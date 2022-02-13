@@ -49,7 +49,7 @@ options:
             - 1.0
             - 1.1
             - 1.2
-        version_added: "1.10.0"
+        version_added: "1.11.0"
     public_network_access:
         description:
             - Whether or not public endpoint access is allowed for the server.
@@ -57,7 +57,7 @@ options:
         choices:
             - Enabled
             - Disabled
-        version_added: "1.10.0"
+        version_added: "1.11.0"
     restrict_outbound_network_access:
         description:
             - Whether or not to restrict outbound network access for this server.
@@ -65,13 +65,13 @@ options:
         choices:
             - Enabled
             - Disabled
-        version_added: "1.10.0"
+        version_added: "1.11.0"
     change_admin_password:
         description:
             - Whether or not the c(admin_password) should be updated for an existing server. If true, the password is the only value which will be updated.
         type: bool
         default: false
-        version_added: "1.10.0"
+        version_added: "1.11.0"
     administrators:
         description:
             - The Azure Active Directory identity of the server.
@@ -106,7 +106,7 @@ options:
                 description:
                     - Azure Active Directory only Authentication enabled.
                 type: bool
-        version_added: "1.10.0"
+        version_added: "1.11.0"
     state:
         description:
             - State of the SQL server. Use C(present) to create or update a server and use C(absent) to delete a server.

@@ -111,21 +111,21 @@ servers:
                     returned: always
                     type: str
                     sample: 1.2
-                    version_added: "1.10.0"
+                    version_added: "1.11.0"
                 public_network_access:
                     description:
                         - Whether or not public endpoint access is allowed for the server.
                     returned: always
                     type: str
                     sample: Enabled
-                    version_added: "1.10.0"
+                    version_added: "1.11.0"
                 restrict_outbound_network_access:
                     description:
                         - Whether or not outbound network access is allowed for this server.
                     returned: always
                     type: str
                     sample: Enabled
-                    version_added: "1.10.0"
+                    version_added: "1.11.0"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
