@@ -140,6 +140,20 @@ EXAMPLES = '''
     location: westus
     admin_password: NewPasswordx123!
     change_admin_password: true
+
+- name: Create SQL Server with Azure Active Directory admin
+  azure_rm_sqlserver:
+    resource_group: myResourceGroup
+    name: server_name
+    location: westus
+    admin_username: mylogin
+    admin_password: Testpasswordxyz12!
+    administrators:
+      principal_type: Group
+      login: MySqlAdminGroup
+      sid: "{{ MySqlAdminGroup.object_id }}"
+      tenant_id: "{{ my_tenant_id }}"
+      azure_ad_only_authentication: false
 '''
 
 RETURN = '''
