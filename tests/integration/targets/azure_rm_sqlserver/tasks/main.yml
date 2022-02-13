@@ -1,6 +1,7 @@
 - name: Prepare random number
   set_fact:
     random_postfix: "{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    tenant_id: "{{ azure_tenant }}"
   run_once: yes
 
 - name: Create instance of SQL Server -- check mode
@@ -97,6 +98,53 @@
   assert:
     that:
       - output.changed
+
+- name: Create test sql admin group
+  azure_rm_adgroup:
+    tenant: "{{ tenant_id }}"
+    display_name: "SqlAdminGroup{{ random_postfix }}"
+    mail_nickname: "SqlAdminGroup{{ random_postfix }}"
+  register: admin_group_output
+
+- name: Create instance of SQL Server with Azure AD admin
+  azure_rm_sqlserver:
+    resource_group: "{{ resource_group }}"
+    name: "sqlsrv-azuread-{{ random_postfix }}"
+    location: eastus
+    admin_username: mylogin
+    admin_password: Password123!
+    administrators:
+      principal_type: Group
+      login: "SqlAdminGroup{{ random_postfix }}"
+      sid: "{{ admin_group_output.object_id }}"
+      tenant_id: "{{ tenant_id }}"
+      azure_ad_only_authentication: false
+  register: output
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+      - output.state == 'Ready'
+
+- name: Create instance of SQL Server with Azure AD admin - idempotent
+  azure_rm_sqlserver:
+    resource_group: "{{ resource_group }}"
+    name: "sqlsrv-azuread-{{ random_postfix }}"
+    location: eastus
+    admin_username: mylogin
+    admin_password: Password123!
+    administrators:
+      principal_type: Group
+      login: "SqlAdminGroup{{ random_postfix }}"
+      sid: "{{ admin_group_output.object_id }}"
+      tenant_id: "{{ tenant_id }}"
+      azure_ad_only_authentication: false
+  register: output
+- name: Assert the state has not changed
+  assert:
+    that:
+      - not output.changed
+      - output.state == 'Ready'
 
 # azure_rm_sqlserver_facts tests
 
@@ -613,3 +661,21 @@
   assert:
     that:
       - output.changed == false
+
+- name: Delete extended instance of SQL Server
+  azure_rm_sqlserver:
+    resource_group: "{{ resource_group }}"
+    name: "sqlsrv-extended-{{ random_postfix }}"
+    state: absent
+
+- name: Delete instance of SQL Server with Azure AD admin
+  azure_rm_sqlserver:
+    resource_group: "{{ resource_group }}"
+    name: "sqlsrv-azuread-{{ random_postfix }}"
+    state: absent
+
+- name: Delete test sql admin group
+  azure_rm_adgroup:
+    tenant: "{{ tenant_id }}"
+    object_id: "{{ admin_group_output.object_id }}"
+    state: "absent"
