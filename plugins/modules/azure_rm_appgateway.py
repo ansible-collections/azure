@@ -236,9 +236,11 @@ options:
                             variable:
                                 description:
                                     - The parameter for the condition.
+                                required: True
                             pattern:
                                 description:
                                     - The pattern, either fixed string or regular expression, that evaluates the truthfulness of the condition.
+                                required: True
                             ignore_case:
                                 description:
                                     - Setting this value to true will force the pattern to do a case in-sensitive comparison.
@@ -1085,7 +1087,7 @@ provisioning_state:
 '''
 
 import time
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, is_valid_resource_id
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from copy import deepcopy
 from ansible.module_utils.common.dict_transformations import (
     _snake_to_camel, dict_merge,
@@ -1094,7 +1096,7 @@ from ansible.module_utils.common.dict_transformations import (
 try:
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
-    from msrestazure.tools import parse_resource_id
+    from msrestazure.tools import parse_resource_id, is_valid_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -1174,7 +1176,7 @@ rewrite_url_configuration_spec = dict(
 rewrite_action_set_spec = dict(
     request_header_configurations=dict(type='list', elements='dict', options=rewrite_header_configuration_spec, default=[]),
     response_header_configurations=dict(type='list', elements='dict', options=rewrite_header_configuration_spec, default=[]),
-    url_configuration=dict(type='list', elements='dict', options=rewrite_url_configuration_spec),
+    url_configuration=dict(type='dict', options=rewrite_url_configuration_spec),
 )
 
 
