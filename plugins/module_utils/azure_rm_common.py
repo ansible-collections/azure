@@ -232,12 +232,6 @@ try:
     from msrestazure.tools import parse_resource_id, resource_id, is_valid_resource_id
     from msrestazure import azure_cloud
     from azure.common.credentials import ServicePrincipalCredentials, UserPassCredentials
-    from azure.mgmt.network.version import VERSION as network_client_version
-    from azure.mgmt.storage.version import VERSION as storage_client_version
-    from azure.mgmt.compute.version import VERSION as compute_client_version
-    from azure.mgmt.resource.version import VERSION as resource_client_version
-    from azure.mgmt.dns.version import VERSION as dns_client_version
-    from azure.mgmt.web.version import VERSION as web_client_version
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource.resources import ResourceManagementClient
     from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
