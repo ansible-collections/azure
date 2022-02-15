@@ -30,10 +30,10 @@ options:
             - Resource location.
     admin_username:
         description:
-            - Administrator username for the server. Once created it cannot be changed.
+            - Username of the SQL administrator account for server. Once created it cannot be changed.
     admin_password:
         description:
-            - The administrator login password (required for server creation).
+            - Password of the SQL administrator account for server (required for server creation).
     version:
         description:
             - The version of the server. For example C(12.0).
@@ -79,12 +79,12 @@ options:
         suboptions:
             administrator_type:
                 description:
-                    - Type of the sever administrator.
+                    - Type of the Azure AD administrator.
                 type: str
                 default: ActiveDirectory
             principal_type:
                 description:
-                    - Principal Type of the sever administrator.
+                    - Principal Type of the Azure AD administrator.
                 type: str
                 choices:
                     - User
@@ -92,19 +92,19 @@ options:
                     - Application
             login:
                 description:
-                    - Login name of the server administrator.
+                    - Login name of the Azure AD administrator.
                 type: str
             sid:
                 description:
-                    - SID (object ID) of the server administrator.
+                    - SID (object ID) of the Azure AD administrator.
                 type: str
             tenant_id:
                 description:
-                    - Tenant ID of the administrator.
+                    - Tenant ID of the Azure AD administrator.
                 type: str
             azure_ad_only_authentication:
                 description:
-                    - Azure Active Directory only Authentication enabled.
+                    - Azure AD only authentication enabled.
                 type: bool
         version_added: "1.11.0"
     state:
@@ -362,10 +362,7 @@ class AzureRMSqlServer(AzureRMModuleBaseExt):
             response = old_response
 
         if response:
-            self.results["id"] = response["id"]
-            self.results["version"] = response["version"]
-            self.results["state"] = response["state"]
-            self.results["fully_qualified_domain_name"] = response["fully_qualified_domain_name"]
+            self.results.update(self.format_results(response))
 
         return self.results
 
@@ -427,6 +424,14 @@ class AzureRMSqlServer(AzureRMModuleBaseExt):
             return response.as_dict()
 
         return False
+
+    def format_results(self, response):
+        return {
+            "id": response.get("id"),
+            "version": response.get("version"),
+            "state": response.get("state"),
+            "fully_qualified_domain_name": response.get("fully_qualified_domain_name"),
+        }
 
 
 def main():

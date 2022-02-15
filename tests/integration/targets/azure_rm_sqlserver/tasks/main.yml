@@ -53,7 +53,7 @@
     resource_group: "{{ resource_group }}"
     name: "sqlsrv-extended-{{ random_postfix }}"
     location: eastus
-    admin_username: mylogin
+    admin_username: mylogin2
     admin_password: Password123!
     minimal_tls_version: '1.2'
     public_network_access: Disabled
@@ -72,7 +72,7 @@
     resource_group: "{{ resource_group }}"
     name: "sqlsrv-extended-{{ random_postfix }}"
     location: eastus
-    admin_username: mylogin
+    admin_username: mylogin2
     admin_password: Password123!
     minimal_tls_version: '1.2'
     public_network_access: Disabled
@@ -99,7 +99,7 @@
     that:
       - output.changed
 
-- name: Create test sql admin group
+- name: Create test Azure AD group
   azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
     display_name: "SqlAdminGroup{{ random_postfix }}"
@@ -111,7 +111,7 @@
     resource_group: "{{ resource_group }}"
     name: "sqlsrv-azuread-{{ random_postfix }}"
     location: eastus
-    admin_username: mylogin
+    admin_username: sqllogin
     admin_password: Password123!
     administrators:
       principal_type: Group
@@ -131,7 +131,7 @@
     resource_group: "{{ resource_group }}"
     name: "sqlsrv-azuread-{{ random_postfix }}"
     location: eastus
-    admin_username: mylogin
+    admin_username: sqllogin
     admin_password: Password123!
     administrators:
       principal_type: Group
@@ -166,6 +166,8 @@
       - output.servers.sqlsrv{{ random_postfix }}.state != None
       - output.servers.sqlsrv{{ random_postfix }}.fully_qualified_domain_name != None
       - output.servers.sqlsrv{{ random_postfix }}.tags.aaa == 'bbb'
+      - output.servers.sqlsrv{{ random_postfix }}.admin_username == 'mylogin'
+      - output.servers.sqlsrv{{ random_postfix }}.administrators == None
 
 - name: Gather facts for extended SQL Server
   azure_rm_sqlserver_info:
@@ -188,6 +190,34 @@
       - output.servers['sqlsrv-extended-{{ random_postfix }}'].minimal_tls_version == '1.2'
       - output.servers['sqlsrv-extended-{{ random_postfix }}'].public_network_access == 'Disabled'
       - output.servers['sqlsrv-extended-{{ random_postfix }}'].restrict_outbound_network_access == 'Enabled'
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].admin_username == 'mylogin2'
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].administrators == None
+
+- name: Gather facts for SQL Server with Azure AD admin
+  azure_rm_sqlserver_info:
+    resource_group: "{{ resource_group }}"
+    server_name: "sqlsrv-azuread-{{ random_postfix }}"
+  register: output
+- name: Assert that facts are returned
+  assert:
+    that:
+      - output.changed == False
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].id != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].name == 'sqlsrv-azuread-{{ random_postfix }}'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].type != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].location != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].kind != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].version != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].state != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].fully_qualified_domain_name != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].tags | length == 0
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].admin_username == 'sqllogin'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.administrator_type == 'ActiveDirectory'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.azure_ad_only_authentication == False
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.login == 'SqlAdminGroup{{ random_postfix }}'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.principal_type == 'Group'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.sid == '{{ admin_group_output.object_id }}'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.tenant_id == '{{ tenant_id }}'
 
 - name: Gather facts SQL Server - unexisting
   azure_rm_sqlserver_info:
@@ -674,7 +704,7 @@
     name: "sqlsrv-azuread-{{ random_postfix }}"
     state: absent
 
-- name: Delete test sql admin group
+- name: Delete test Azure AD group
   azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
     object_id: "{{ admin_group_output.object_id }}"
