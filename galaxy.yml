@@ -68,3 +68,5 @@ build_ignore:
 - 'venv*'
 - '.vscode'
 - 'tests/staging'
+- 'ansible_collections'
+- 'ansible.cfg'

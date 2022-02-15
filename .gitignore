@@ -6,3 +6,4 @@ azure-azcollection-*.tar.gz
 venv*
 .venv*
 .vscode
+ansible_collections/
