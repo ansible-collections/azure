@@ -25,7 +25,7 @@ When contributing to this repository, please first discuss the change you wish t
 
 1. Build/install the collection:
     ```bash
-    rm azure-azcollection-*.tar.gz && ansible-galaxy collection build . --force && ansible-galaxy collection install azure-azcollection-*.tar.gz -p tests/staging --force
+    rm -f azure-azcollection-*.tar.gz && ansible-galaxy collection build . --force && ansible-galaxy collection install azure-azcollection-*.tar.gz -p tests/staging --force
     ```
 1. Switch to the test environment directory where the collection installed:
     ```bash
