@@ -292,9 +292,9 @@ EXAMPLES = '''
         key_data: < insert your ssh public key here... >
     managed_disk_type: Standard_LRS
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: 0001-com-ubuntu-server-focal
+      publisher: canonical
+      sku: 20_04-lts-gen2
       version: latest
     data_disks:
       - lun: 0
@@ -475,10 +475,10 @@ azure_vmss:
                         }
                     ],
                     "imageReference": {
-                        "offer": "CoreOS",
-                        "publisher": "CoreOS",
-                        "sku": "Stable",
-                        "version": "899.17.0"
+                        "offer": "0001-com-ubuntu-server-focal",
+                        "publisher": "canonical",
+                        "sku": "20_04-lts-gen2",
+                        "version": "20.04.202111210"
                     },
                     "osDisk": {
                         "caching": "ReadWrite",

@@ -67,8 +67,6 @@ plugins/modules/azure_rm_subnet.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_subnet_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachine.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachine_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_virtualmachineextension.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_virtualmachineextension_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachineimage_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachinescaleset.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachinescaleset_info.py validate-modules:parameter-type-not-in-doc

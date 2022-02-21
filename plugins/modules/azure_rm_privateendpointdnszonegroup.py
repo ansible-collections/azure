@@ -48,6 +48,12 @@ options:
             private_dns_zone:
                 description:
                     - The name of the Private DNS zone.
+                    - If set, the Private DNS Zone under the current resource group is obtained.
+                type: str
+            private_dns_zone_id:
+                description:
+                    - The ID of the private dns zone.
+                    - If set, gets the value of the specified connection Private DNS Zone.
                 type: str
     state:
         description:
@@ -188,7 +194,8 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 private_dns_zone_configs_spec = dict(
     name=dict(type="str"),
-    private_dns_zone=dict(type="str")
+    private_dns_zone=dict(type="str"),
+    private_dns_zone_id=dict(type="str")
 )
 
 
@@ -232,8 +239,11 @@ class AzureRMPrivateEndpointDnsZoneGroup(AzureRMModuleBaseExt):
                 self.parameters[key] = kwargs[key]
 
         for zone_config in self.parameters.get("private_dns_zone_configs", []):
-            zone_name = zone_config.pop("private_dns_zone")
-            zone_config["private_dns_zone_id"] = self.private_dns_zone_id(zone_name)
+            if zone_config.get("private_dns_zone_id") is not None:
+                self.log("The private_dns_zone_id exist, do nothing")
+            else:
+                zone_name = zone_config.pop("private_dns_zone")
+                zone_config["private_dns_zone_id"] = self.private_dns_zone_id(zone_name)
 
         self.log("Fetching private endpoint {0}".format(self.name))
         old_response = self.get_zone()

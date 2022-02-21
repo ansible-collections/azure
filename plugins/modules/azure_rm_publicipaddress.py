@@ -379,6 +379,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                     pip = self.network_models.PublicIPAddress(
                         location=results['location'],
                         public_ip_allocation_method=results['public_ip_allocation_method'],
+                        sku=self.network_models.PublicIPAddressSku(name=self.sku) if self.sku else None,
                         tags=results['tags']
                     )
                     if self.domain_name:
