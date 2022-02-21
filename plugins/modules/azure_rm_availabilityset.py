@@ -286,6 +286,7 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
                     self.faildeploy('sku')
 
             if self.check_mode:
+                self.results['changed'] = to_be_updated
                 return self.results
 
             if to_be_updated:
@@ -293,8 +294,11 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
                 self.results['changed'] = True
 
         elif self.state == 'absent':
-            self.delete_availabilityset()
-            self.results['changed'] = True
+            response = self.get_availabilityset()
+            if response:
+                if not self.check_mode:
+                    self.delete_availabilityset()
+                self.results['changed'] = True
 
         return self.results
 

@@ -232,11 +232,6 @@ try:
     from msrestazure.tools import parse_resource_id, resource_id, is_valid_resource_id
     from msrestazure import azure_cloud
     from azure.common.credentials import ServicePrincipalCredentials, UserPassCredentials
-    from azure.mgmt.network.version import VERSION as network_client_version
-    from azure.mgmt.storage.version import VERSION as storage_client_version
-    from azure.mgmt.resource.version import VERSION as resource_client_version
-    from azure.mgmt.dns.version import VERSION as dns_client_version
-    from azure.mgmt.web.version import VERSION as web_client_version
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource.resources import ResourceManagementClient
     from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
@@ -280,7 +275,7 @@ try:
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
     from azure.mgmt.notificationhubs import NotificationHubsManagementClient
     from azure.mgmt.eventhub import EventHubManagementClient
-    from azure.identity._credentials import client_secret
+    from azure.identity._credentials import client_secret, user_password
 
 except ImportError as exc:
     Authentication = object
@@ -1507,6 +1502,7 @@ class AzureRMAuth(object):
         if self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credentials = self.credentials['credentials']
+            self.azure_credential_track2 = self.credentials['credential']
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
@@ -1523,6 +1519,24 @@ class AzureRMAuth(object):
                                                                                 client_secret=self.credentials['secret'],
                                                                                 tenant_id=self.credentials['tenant'])
 
+        elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
+            tenant = self.credentials.get('tenant')
+            if not tenant:
+                tenant = 'common'  # SDK default
+
+            self.azure_credentials = UserPassCredentials(self.credentials['ad_user'],
+                                                         self.credentials['password'],
+                                                         tenant=tenant,
+                                                         cloud_environment=self._cloud_environment,
+                                                         verify=self._cert_validation_mode == 'validate')
+
+            client_id = self.credentials.get('client_id', '04b07795-8ddb-461a-bbee-02f9e1bf7b46')
+
+            self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
+                                                                                    password=self.credentials['password'],
+                                                                                    tenant_id=self.credentials.get('tenant', 'organizations'),
+                                                                                    client_id=client_id)
+
         elif self.credentials.get('ad_user') is not None and \
                 self.credentials.get('password') is not None and \
                 self.credentials.get('client_id') is not None and \
@@ -1536,16 +1550,6 @@ class AzureRMAuth(object):
                 self.credentials['client_id'],
                 self.credentials['tenant'])
 
-        elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
-            tenant = self.credentials.get('tenant')
-            if not tenant:
-                tenant = 'common'  # SDK default
-
-            self.azure_credentials = UserPassCredentials(self.credentials['ad_user'],
-                                                         self.credentials['password'],
-                                                         tenant=tenant,
-                                                         cloud_environment=self._cloud_environment,
-                                                         verify=self._cert_validation_mode == 'validate')
         else:
             self.fail("Failed to authenticate with provided credentials. Some attributes were missing. "
                       "Credentials must include client_id, secret and tenant or ad_user and password, or "
@@ -1614,6 +1618,7 @@ class AzureRMAuth(object):
 
         cli_credentials = {
             'credentials': credentials,
+            'credential': credentials,
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment
         }
