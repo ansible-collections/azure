@@ -2170,8 +2170,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                                                        self.image['publisher'],
                                                                        self.image['offer'],
                                                                        self.image['sku'],
-                                                                       top=1,
-                                                                       orderby='name desc')
+                                                                       orderby='name')
         except Exception as exc:
             self.fail("Error fetching image {0} {1} {2} - {3}".format(self.image['publisher'],
                                                                       self.image['offer'],
