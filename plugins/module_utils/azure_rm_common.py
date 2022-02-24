@@ -735,7 +735,7 @@ class AzureRMModuleBase(object):
         )
         self.log('Creating default public IP {0}'.format(public_ip_name))
         try:
-            poller = self.network_client.public_ip_addresses.create_or_update(resource_group, public_ip_name, params)
+            poller = self.network_client.public_ip_addresses.begin_create_or_update(resource_group, public_ip_name, params)
         except Exception as exc:
             self.fail("Error creating {0} - {1}".format(public_ip_name, str(exc)))
 
@@ -833,9 +833,9 @@ class AzureRMModuleBase(object):
 
         self.log('Creating default security group {0}'.format(security_group_name))
         try:
-            poller = self.network_client.network_security_groups.create_or_update(resource_group,
-                                                                                  security_group_name,
-                                                                                  parameters)
+            poller = self.network_client.network_security_groups.begin_create_or_update(resource_group,
+                                                                                        security_group_name,
+                                                                                        parameters)
         except Exception as exc:
             self.fail("Error creating default security rule {0} - {1}".format(security_group_name, str(exc)))
 
@@ -1050,13 +1050,14 @@ class AzureRMModuleBase(object):
         if not self._network_client:
             self._network_client = self.get_mgmt_svc_client(NetworkManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2020-06-01')
+                                                            is_track2=True,
+                                                            api_version='2021-03-01')
         return self._network_client
 
     @property
     def network_models(self):
         self.log("Getting network models...")
-        return NetworkManagementClient.models("2020-06-01")
+        return NetworkManagementClient.models("2021-03-01")
 
     @property
     def rm_client(self):

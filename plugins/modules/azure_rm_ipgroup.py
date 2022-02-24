@@ -166,8 +166,8 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
     format_resource_id, normalize_location_name
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -237,7 +237,7 @@ class AzureRMIPGroup(AzureRMModuleBase):
             elif self.state == 'absent':
                 changed = True
 
-        except self.network_models.ErrorException:
+        except ResourceNotFoundError:
             if self.state == 'present':
                 changed = True
             else:
@@ -269,9 +269,9 @@ class AzureRMIPGroup(AzureRMModuleBase):
     def create_or_update_ipgroup(self, ip_group):
         try:
             # create ip group
-            response = self.network_client.ip_groups.create_or_update(resource_group_name=self.resource_group,
-                                                                      ip_groups_name=self.name,
-                                                                      parameters=ip_group)
+            response = self.network_client.ip_groups.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                            ip_groups_name=self.name,
+                                                                            parameters=ip_group)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
@@ -281,8 +281,8 @@ class AzureRMIPGroup(AzureRMModuleBase):
     def delete_ipgroup(self):
         try:
             # delete ip group
-            response = self.network_client.ip_groups.delete(resource_group_name=self.resource_group,
-                                                            ip_groups_name=self.name)
+            response = self.network_client.ip_groups.begin_delete(resource_group_name=self.resource_group,
+                                                                  ip_groups_name=self.name)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:

@@ -814,6 +814,7 @@ try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
     from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
@@ -1947,7 +1948,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         try:
             nic = self.network_client.network_interfaces.get(resource_group, name)
             return nic
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching network interface {0} - {1}".format(name, str(exc)))
         return True
 
@@ -1955,7 +1956,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Deleting network interface {0}".format(name))
         self.results['actions'].append("Deleted network interface {0}".format(name))
         try:
-            poller = self.network_client.network_interfaces.delete(resource_group, name)
+            poller = self.network_client.network_interfaces.begin_delete(resource_group, name)
         except Exception as exc:
             self.fail("Error deleting network interface {0} - {1}".format(name, str(exc)))
         self.get_poller_result(poller)
@@ -1965,7 +1966,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
     def delete_pip(self, resource_group, name):
         self.results['actions'].append("Deleted public IP {0}".format(name))
         try:
-            poller = self.network_client.public_ip_addresses.delete(resource_group, name)
+            poller = self.network_client.public_ip_addresses.begin_delete(resource_group, name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting {0} - {1}".format(name, str(exc)))
@@ -1975,7 +1976,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
     def delete_nsg(self, resource_group, name):
         self.results['actions'].append("Deleted NSG {0}".format(name))
         try:
-            poller = self.network_client.network_security_groups.delete(resource_group, name)
+            poller = self.network_client.network_security_groups.begin_delete(resource_group, name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting {0} - {1}".format(name, str(exc)))
@@ -2199,7 +2200,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Check to see if NIC {0} exists".format(network_interface_name))
         try:
             nic = self.network_client.network_interfaces.get(self.resource_group, network_interface_name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if nic:
@@ -2217,9 +2218,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
         if self.virtual_network_name:
             try:
-                self.network_client.virtual_networks.list(virtual_network_resource_group, self.virtual_network_name)
+                self.network_client.virtual_networks.get(virtual_network_resource_group, self.virtual_network_name)
                 virtual_network_name = self.virtual_network_name
-            except CloudError as exc:
+            except ResourceNotFoundError as exc:
                 self.fail("Error: fetching virtual network {0} - {1}".format(self.virtual_network_name, str(exc)))
 
         else:
@@ -2231,7 +2232,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             virtual_network_name = None
             try:
                 vnets = self.network_client.virtual_networks.list(virtual_network_resource_group)
-            except CloudError:
+            except ResourceNotFoundError:
                 self.log('cloud error!')
                 self.fail(no_vnets_msg)
 
@@ -2258,6 +2259,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             try:
                 subnets = self.network_client.subnets.list(virtual_network_resource_group, virtual_network_name)
             except Exception:
+
                 self.fail(no_subnets_msg)
 
             for subnet in subnets:
@@ -2300,9 +2302,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log(self.serialize_obj(parameters, 'NetworkInterface'), pretty_print=True)
         self.results['actions'].append("Created NIC {0}".format(network_interface_name))
         try:
-            poller = self.network_client.network_interfaces.create_or_update(self.resource_group,
-                                                                             network_interface_name,
-                                                                             parameters)
+            poller = self.network_client.network_interfaces.begin_create_or_update(self.resource_group,
+                                                                                   network_interface_name,
+                                                                                   parameters)
             new_nic = self.get_poller_result(poller)
             self.tags['_own_nic_'] = network_interface_name
         except Exception as exc:

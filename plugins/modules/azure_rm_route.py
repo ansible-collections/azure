@@ -90,7 +90,7 @@ id:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -181,14 +181,14 @@ class AzureRMRoute(AzureRMModuleBase):
 
     def create_or_update_route(self, param):
         try:
-            poller = self.network_client.routes.create_or_update(self.resource_group, self.route_table_name, self.name, param)
+            poller = self.network_client.routes.begin_create_or_update(self.resource_group, self.route_table_name, self.name, param)
             return self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating or updating route {0} - {1}".format(self.name, str(exc)))
 
     def delete_route(self):
         try:
-            poller = self.network_client.routes.delete(self.resource_group, self.route_table_name, self.name)
+            poller = self.network_client.routes.begin_delete(self.resource_group, self.route_table_name, self.name)
             result = self.get_poller_result(poller)
             return result
         except Exception as exc:
@@ -197,7 +197,7 @@ class AzureRMRoute(AzureRMModuleBase):
     def get_route(self):
         try:
             return self.network_client.routes.get(self.resource_group, self.route_table_name, self.name)
-        except CloudError as cloud_err:
+        except ResourceNotFoundError as cloud_err:
             # Return None iff the resource is not found
             if cloud_err.status_code == 404:
                 self.log('{0}'.format(str(cloud_err)))
