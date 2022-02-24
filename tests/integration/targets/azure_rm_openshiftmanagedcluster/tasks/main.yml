@@ -21,7 +21,7 @@
   register: output
 
 - assert:
-    that: output['clusters'] | length == 0
+      that: output['clusters'].keys() | length == 0
 
 - name: Get all clusters
   azure_rm_openshiftmanagedcluster_info:
@@ -79,7 +79,7 @@
   register: output
 
 - assert:
-  that: output.changed
+      that: output.changed
 
 
 - name: Get available clusters for a specific resource_group
@@ -97,7 +97,7 @@
   register: output
 
 - assert:
-    that: output['clusters'] | length == 1
+      that: output['clusters'] | length == 1
 
 - name: Get all clusters
   azure_rm_openshiftmanagedcluster_info:
@@ -115,4 +115,4 @@
   register: output
 
 - assert:
-    that: output.changed
+      that: output.changed
