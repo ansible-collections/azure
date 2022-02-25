@@ -141,6 +141,12 @@ databases:
             returned: always
             type: bool
             sample: true
+        earliest_restore_date:
+            description:
+                - The earliest restore point available for the SQL Database.
+            returned: always
+            type: str
+            sample: '2021-09-01T00:59:59.000Z'
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -270,7 +276,8 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
             'kind': d.get('kind', None),
             'collation': d.get('collation', None),
             'status': d.get('status', None),
-            'zone_redundant': d.get('zone_redundant', None)
+            'zone_redundant': d.get('zone_redundant', None),
+            'earliest_restore_date': d.get('earliest_restore_date', None)
         }
         return d
 
