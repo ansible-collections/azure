@@ -1,0 +1,87 @@
+- name: Create host group name
+  set_fact:
+    group_name: "hostgroup{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+
+- name: Create a host group
+  azure_rm_hostgroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ group_name }}"
+    location: eastus
+    zones:
+      - "1"
+    platform_fault_domain_count: 1
+    state: present
+  register: results
+
+- name: Assert that host group is created
+  assert:
+    that: results.changed
+
+- name: Create a host group again (Idempotent test)
+  azure_rm_hostgroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ group_name }}"
+    location: eastus
+    zones:
+      - "1"
+    platform_fault_domain_count: 1
+    state: present
+  register: results
+
+- name: Assert that output is not changed
+  assert:
+    that: not results.changed
+
+- name: Update a host group
+  azure_rm_hostgroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ group_name }}"
+    location: eastus
+    zones:
+      - "1"
+    platform_fault_domain_count: 1
+    state: present
+    tags:
+      key1: "value1"
+  register: results
+
+- name: Assert that host group is updated
+  assert:
+    that: results.changed
+
+- name: Get host group facts
+  azure_rm_hostgroup_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ group_name }}"
+  register: results
+
+- assert:
+    that:
+      - not results.changed
+      - results.hostgroups[0].name == "{{ group_name }}"
+      - results.hostgroups[0].location == "eastus"
+      - results.hostgroups[0].platform_fault_domain_count == 1
+      - results.hostgroups[0].zones == ["1"]
+      - results.hostgroups[0].tags | length > 0
+
+- name: Delete host group
+  azure_rm_hostgroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ group_name }}"
+    state: absent
+  register: results
+
+- name: Assert that host group is deleted
+  assert:
+    that: results.changed
+
+- name: Delete host group again (Idempotent test)
+  azure_rm_hostgroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ group_name }}"
+    state: absent
+  register: results
+
+- name: Asset that output is not changed
+  assert:
+    that: not results.changed

@@ -232,13 +232,6 @@ try:
     from msrestazure.tools import parse_resource_id, resource_id, is_valid_resource_id
     from msrestazure import azure_cloud
     from azure.common.credentials import ServicePrincipalCredentials, UserPassCredentials
-    from azure.mgmt.monitor.version import VERSION as monitor_client_version
-    from azure.mgmt.network.version import VERSION as network_client_version
-    from azure.mgmt.storage.version import VERSION as storage_client_version
-    from azure.mgmt.compute.version import VERSION as compute_client_version
-    from azure.mgmt.resource.version import VERSION as resource_client_version
-    from azure.mgmt.dns.version import VERSION as dns_client_version
-    from azure.mgmt.web.version import VERSION as web_client_version
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource.resources import ResourceManagementClient
     from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
@@ -282,7 +275,7 @@ try:
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
     from azure.mgmt.notificationhubs import NotificationHubsManagementClient
     from azure.mgmt.eventhub import EventHubManagementClient
-    from azure.identity._credentials import client_secret
+    from azure.identity._credentials import client_secret, user_password
 
 except ImportError as exc:
     Authentication = object
@@ -441,7 +434,9 @@ class AzureRMModuleBase(object):
         self._containerservice_client = None
         self._managedcluster_client = None
         self._traffic_manager_management_client = None
-        self._monitor_client = None
+        self._monitor_autoscale_settings_client = None
+        self._monitor_log_profiles_client = None
+        self._monitor_diagnostic_settings_client = None
         self._resource = None
         self._log_analytics_client = None
         self._servicebus_client = None
@@ -740,7 +735,7 @@ class AzureRMModuleBase(object):
         )
         self.log('Creating default public IP {0}'.format(public_ip_name))
         try:
-            poller = self.network_client.public_ip_addresses.create_or_update(resource_group, public_ip_name, params)
+            poller = self.network_client.public_ip_addresses.begin_create_or_update(resource_group, public_ip_name, params)
         except Exception as exc:
             self.fail("Error creating {0} - {1}".format(public_ip_name, str(exc)))
 
@@ -838,9 +833,9 @@ class AzureRMModuleBase(object):
 
         self.log('Creating default security group {0}'.format(security_group_name))
         try:
-            poller = self.network_client.network_security_groups.create_or_update(resource_group,
-                                                                                  security_group_name,
-                                                                                  parameters)
+            poller = self.network_client.network_security_groups.begin_create_or_update(resource_group,
+                                                                                        security_group_name,
+                                                                                        parameters)
         except Exception as exc:
             self.fail("Error creating default security rule {0} - {1}".format(security_group_name, str(exc)))
 
@@ -1055,13 +1050,14 @@ class AzureRMModuleBase(object):
         if not self._network_client:
             self._network_client = self.get_mgmt_svc_client(NetworkManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2020-06-01')
+                                                            is_track2=True,
+                                                            api_version='2021-03-01')
         return self._network_client
 
     @property
     def network_models(self):
         self.log("Getting network models...")
-        return NetworkManagementClient.models("2020-06-01")
+        return NetworkManagementClient.models("2021-03-01")
 
     @property
     def rm_client(self):
@@ -1242,12 +1238,34 @@ class AzureRMModuleBase(object):
         return self._traffic_manager_management_client
 
     @property
-    def monitor_client(self):
-        self.log('Getting monitor client')
-        if not self._monitor_client:
-            self._monitor_client = self.get_mgmt_svc_client(MonitorManagementClient,
-                                                            base_url=self._cloud_environment.endpoints.resource_manager)
-        return self._monitor_client
+    def monitor_autoscale_settings_client(self):
+        self.log('Getting monitor client for autoscale_settings')
+        if not self._monitor_autoscale_settings_client:
+            self._monitor_autoscale_settings_client = self.get_mgmt_svc_client(MonitorManagementClient,
+                                                                               base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                               api_version="2015-04-01",
+                                                                               is_track2=True)
+        return self._monitor_autoscale_settings_client
+
+    @property
+    def monitor_log_profiles_client(self):
+        self.log('Getting monitor client for log_profiles')
+        if not self._monitor_log_profiles_client:
+            self._monitor_log_profiles_client = self.get_mgmt_svc_client(MonitorManagementClient,
+                                                                         base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                         api_version="2016-03-01",
+                                                                         is_track2=True)
+        return self._monitor_log_profiles_client
+
+    @property
+    def monitor_diagnostic_settings_client(self):
+        self.log('Getting monitor client for diagnostic_settings')
+        if not self._monitor_diagnostic_settings_client:
+            self._monitor_diagnostic_settings_client = self.get_mgmt_svc_client(MonitorManagementClient,
+                                                                                base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                                api_version="2021-05-01-preview",
+                                                                                is_track2=True)
+        return self._monitor_diagnostic_settings_client
 
     @property
     def log_analytics_client(self):
@@ -1483,6 +1501,7 @@ class AzureRMAuth(object):
         if self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credentials = self.credentials['credentials']
+            self.azure_credential_track2 = self.credentials['credential']
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
@@ -1499,6 +1518,24 @@ class AzureRMAuth(object):
                                                                                 client_secret=self.credentials['secret'],
                                                                                 tenant_id=self.credentials['tenant'])
 
+        elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
+            tenant = self.credentials.get('tenant')
+            if not tenant:
+                tenant = 'common'  # SDK default
+
+            self.azure_credentials = UserPassCredentials(self.credentials['ad_user'],
+                                                         self.credentials['password'],
+                                                         tenant=tenant,
+                                                         cloud_environment=self._cloud_environment,
+                                                         verify=self._cert_validation_mode == 'validate')
+
+            client_id = self.credentials.get('client_id', '04b07795-8ddb-461a-bbee-02f9e1bf7b46')
+
+            self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
+                                                                                    password=self.credentials['password'],
+                                                                                    tenant_id=self.credentials.get('tenant', 'organizations'),
+                                                                                    client_id=client_id)
+
         elif self.credentials.get('ad_user') is not None and \
                 self.credentials.get('password') is not None and \
                 self.credentials.get('client_id') is not None and \
@@ -1512,16 +1549,6 @@ class AzureRMAuth(object):
                 self.credentials['client_id'],
                 self.credentials['tenant'])
 
-        elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
-            tenant = self.credentials.get('tenant')
-            if not tenant:
-                tenant = 'common'  # SDK default
-
-            self.azure_credentials = UserPassCredentials(self.credentials['ad_user'],
-                                                         self.credentials['password'],
-                                                         tenant=tenant,
-                                                         cloud_environment=self._cloud_environment,
-                                                         verify=self._cert_validation_mode == 'validate')
         else:
             self.fail("Failed to authenticate with provided credentials. Some attributes were missing. "
                       "Credentials must include client_id, secret and tenant or ad_user and password, or "
@@ -1579,13 +1606,18 @@ class AzureRMAuth(object):
         if self.is_ad_resource:
             resource = 'https://graph.windows.net/'
         subscription_id = subscription_id or self._get_env('subscription_id')
-        profile = get_cli_profile()
+        try:
+            profile = get_cli_profile()
+        except Exception as exc:
+            self.fail("Failed to load CLI profile {0}.".format(str(exc)))
+
         credentials, subscription_id, tenant = profile.get_login_credentials(
             subscription_id=subscription_id, resource=resource)
         cloud_environment = get_cli_active_cloud()
 
         cli_credentials = {
             'credentials': credentials,
+            'credential': credentials,
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment
         }

@@ -21,27 +21,22 @@
  - name: Create a VirtualWan again (Idempotent test)
    azure_rm_virtualwan:
      resource_group: "{{ resource_group }}"
-     office365_local_breakout_category: All
      name: "virtualwan{{ rpfx }}"
-     disable_vpn_encryption: true
-     allow_branch_to_branch_traffic: true
-     allow_vnet_to_vnet_traffic: true
-     virtual_wan_type: Basic
    register: output
 
  - assert:
      that:
        - not output.changed
 
- - name: Update the VirtualWan type
+ - name: Update the VirtualWan
    azure_rm_virtualwan:
      resource_group: "{{ resource_group }}"
      office365_local_breakout_category: All
      name: "virtualwan{{ rpfx }}"
-     disable_vpn_encryption: true
+     disable_vpn_encryption: false
      allow_branch_to_branch_traffic: true
      allow_vnet_to_vnet_traffic: true
-     virtual_wan_type: Standard
+     virtual_wan_type: Basic
    register: output
 
  - assert:
@@ -57,8 +52,7 @@
  - assert:
      that:
        - output.virtual_wans[0]['allow_branch_to_branch_traffic'] == true
-       - output.virtual_wans[0]['virtual_wan_type'] == 'Standard'
-       - output.virtual_wans[0]['disable_vpn_encryption'] == true
+       - output.virtual_wans[0]['disable_vpn_encryption'] == false
 
  - name: Delete the VirtualWan
    azure_rm_virtualwan:

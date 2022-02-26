@@ -292,9 +292,9 @@ EXAMPLES = '''
         key_data: < insert your ssh public key here... >
     managed_disk_type: Standard_LRS
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: 0001-com-ubuntu-server-focal
+      publisher: canonical
+      sku: 20_04-lts-gen2
       version: latest
     data_disks:
       - lun: 0
@@ -475,10 +475,10 @@ azure_vmss:
                         }
                     ],
                     "imageReference": {
-                        "offer": "CoreOS",
-                        "publisher": "CoreOS",
-                        "sku": "Stable",
-                        "version": "899.17.0"
+                        "offer": "0001-com-ubuntu-server-focal",
+                        "publisher": "canonical",
+                        "sku": "20_04-lts-gen2",
+                        "version": "20.04.202111210"
                     },
                     "osDisk": {
                         "caching": "ReadWrite",
@@ -504,6 +504,7 @@ import base64
 
 try:
     from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.tools import parse_resource_id
 
 except ImportError:
@@ -1124,7 +1125,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         try:
             vnet = self.network_client.virtual_networks.get(self.virtual_network_resource_group, name)
             return vnet
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching virtual network {0} - {1}".format(name, str(exc)))
 
     def get_subnet(self, vnet_name, subnet_name):
@@ -1142,14 +1143,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         id_dict = parse_resource_id(id)
         try:
             return self.network_client.load_balancers.get(id_dict.get('resource_group', self.resource_group), id_dict.get('name'))
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching load balancer {0} - {1}".format(id, str(exc)))
 
     def get_application_gateway(self, id):
         id_dict = parse_resource_id(id)
         try:
             return self.network_client.application_gateways.get(id_dict.get('resource_group', self.resource_group), id_dict.get('name'))
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching application_gateway {0} - {1}".format(id, str(exc)))
 
     def serialize_vmss(self, vmss):

@@ -353,8 +353,6 @@ from ansible.module_utils._text import to_native
 from datetime import timedelta
 
 try:
-    from msrestazure.tools import parse_resource_id
-    from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.monitor.models import WebhookNotification, EmailNotification, AutoscaleNotification, RecurrentSchedule, MetricTrigger, \
         ScaleAction, AutoscaleSettingResource, AutoscaleProfile, ScaleCapacity, TimeWindow, Recurrence, ScaleRule
 except ImportError:
@@ -586,7 +584,7 @@ class AzureRMAutoScale(AzureRMModuleBase):
                 changed = True
             else:
                 # check changed
-                resource_name = results.autoscale_setting_resource_name or self.name
+                resource_name = results.name_properties_name or self.name
                 update_tags, tags = self.update_tags(results.tags)
                 if update_tags:
                     changed = True
@@ -608,7 +606,7 @@ class AzureRMAutoScale(AzureRMModuleBase):
                                                    profiles=profiles,
                                                    notifications=notifications,
                                                    enabled=self.enabled,
-                                                   autoscale_setting_resource_name=resource_name,
+                                                   name_properties_name=resource_name,
                                                    target_resource_uri=self.target)
                 if not self.check_mode:
                     results = self.create_or_update_auto_scale(results)
@@ -619,21 +617,21 @@ class AzureRMAutoScale(AzureRMModuleBase):
 
     def get_auto_scale(self):
         try:
-            return self.monitor_client.autoscale_settings.get(self.resource_group, self.name)
+            return self.monitor_autoscale_settings_client.autoscale_settings.get(self.resource_group, self.name)
         except Exception as exc:
             self.log('Error: failed to get auto scale settings {0} - {1}'.format(self.name, str(exc)))
             return None
 
     def create_or_update_auto_scale(self, param):
         try:
-            return self.monitor_client.autoscale_settings.create_or_update(self.resource_group, self.name, param)
+            return self.monitor_autoscale_settings_client.autoscale_settings.create_or_update(self.resource_group, self.name, param)
         except Exception as exc:
             self.fail("Error creating auto scale settings {0} - {1}".format(self.name, str(exc)))
 
     def delete_auto_scale(self):
         self.log('Deleting auto scale settings {0}'.format(self.name))
         try:
-            return self.monitor_client.autoscale_settings.delete(self.resource_group, self.name)
+            return self.monitor_autoscale_settings_client.autoscale_settings.delete(self.resource_group, self.name)
         except Exception as exc:
             self.fail("Error deleting auto scale settings {0} - {1}".format(self.name, str(exc)))
 

@@ -124,8 +124,7 @@ vnetpeerings:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -220,7 +219,7 @@ class AzureRMVirtualNetworkPeeringInfo(AzureRMModuleBase):
                                                                         virtual_network_peering_name=self.name)
             self.log("Response : {0}".format(response))
             results.append(vnetpeering_to_dict(response))
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Did not find the Virtual Network Peering.')
         return results
 
@@ -240,7 +239,7 @@ class AzureRMVirtualNetworkPeeringInfo(AzureRMModuleBase):
             if response:
                 for p in response:
                     results.append(vnetpeering_to_dict(p))
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Did not find the Virtual Network Peering.')
         return results
 

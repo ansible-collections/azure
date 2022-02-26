@@ -203,7 +203,7 @@ networkinterfaces:
                         - Fully qualified DNS name supporting internal communications between VMs in the same virtual network.
 '''  # NOQA
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.common import AzureMissingResourceHttpError, AzureHttpError
 except Exception:
     # This is handled in azure_rm_common
@@ -320,7 +320,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         item = None
         try:
             item = self.network_client.network_interfaces.get(self.resource_group, self.name)
-        except Exception:
+        except ResourceNotFoundError:
             pass
 
         return [item] if item and self.has_tags(item.tags, self.tags) else []
@@ -330,7 +330,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         try:
             response = self.network_client.network_interfaces.list(self.resource_group)
             return [item for item in response if self.has_tags(item.tags, self.tags)]
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error listing by resource group {0} - {1}".format(self.resource_group, str(exc)))
 
     def list_all(self):
@@ -338,7 +338,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         try:
             response = self.network_client.network_interfaces.list_all()
             return [item for item in response if self.has_tags(item.tags, self.tags)]
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error listing all - {0}".format(str(exc)))
 
     def serialize_nics(self, raws):

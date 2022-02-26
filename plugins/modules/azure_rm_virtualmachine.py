@@ -137,6 +137,23 @@ options:
     availability_set:
         description:
             - Name or ID of an existing availability set to add the VM to. The I(availability_set) should be in the same resource group as VM.
+    proximity_placement_group:
+        description:
+            - The name or ID of the proximity placement group the VM should be associated with.
+        type: dict
+        suboptions:
+            id:
+                description:
+                    - The ID of the proximity placement group the VM should be associated with.
+                type: str
+            name:
+                description:
+                    - The Name of the proximity placement group the VM should be associated with.
+                type: str
+            resource_group:
+                description:
+                    - The resource group of the proximity placement group the VM should be associated with.
+                type: str
     storage_account_name:
         description:
             - Name of a storage account that supports creation of VHD blobs.
@@ -426,9 +443,9 @@ EXAMPLES = '''
     availability_set: avs-managed-disk
     managed_disk_type: Standard_LRS
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: 0001-com-ubuntu-server-focal
+      publisher: canonical
+      sku: 20_04-lts-gen2
       version: latest
     vm_size: Standard_D4
 
@@ -460,9 +477,9 @@ EXAMPLES = '''
       - path: /home/adminUser/.ssh/authorized_keys
         key_data: < insert your ssh public key here... >
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: 0001-com-ubuntu-server-focal
+      publisher: canonical
+      sku: 20_04-lts-gen2
       version: latest
     data_disks:
       - lun: 0
@@ -487,9 +504,9 @@ EXAMPLES = '''
     boot_diagnostics:
       enabled: yes
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: 0001-com-ubuntu-server-focal
+      publisher: canonical
+      sku: 20_04-lts-gen2
       version: latest
     data_disks:
       - lun: 0
@@ -651,6 +668,9 @@ azure_vm:
             "availabilitySet": {
                     "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Compute/availabilitySets/MYAVAILABILITYSET"
             },
+            "proximityPlacementGroup": {
+                    "id": "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/proximityPlacementGroups/testid13"
+            },
             "hardwareProfile": {
                 "vmSize": "Standard_D1"
             },
@@ -792,6 +812,7 @@ import re
 
 try:
     from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.tools import parse_resource_id
     from msrest.polling import LROPoller
 except ImportError:
@@ -819,6 +840,13 @@ def extract_names_from_blob_uri(blob_uri, storage_suffix):
         raise Exception("unable to parse blob uri '%s'" % blob_uri)
     extracted_names = m.groupdict()
     return extracted_names
+
+
+proximity_placement_group_spec = dict(
+    id=dict(type='str'),
+    name=dict(type='str'),
+    resource_group=dict(type='str')
+)
 
 
 class AzureRMVirtualMachine(AzureRMModuleBase):
@@ -849,6 +877,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             os_disk_size_gb=dict(type='int'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'Premium_LRS']),
             os_disk_name=dict(type='str'),
+            proximity_placement_group=dict(type='dict', options=proximity_placement_group_spec),
             os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
             public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static', 'Disabled'], default='Static',
                                              aliases=['public_ip_allocation']),
@@ -896,6 +925,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.os_disk_size_gb = None
         self.managed_disk_type = None
         self.os_disk_name = None
+        self.proximity_placement_group = None
         self.network_interface_names = None
         self.remove_on_absent = set()
         self.tags = None
@@ -1027,6 +1057,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             if self.image and isinstance(self.image, dict):
                 if all(key in self.image for key in ('publisher', 'offer', 'sku', 'version')):
                     marketplace_image = self.get_marketplace_image_version()
+
                     if self.image['version'] == 'latest':
                         self.image['version'] = marketplace_image.name
                         self.log("Using image version {0}".format(self.image['version']))
@@ -1275,6 +1306,17 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         if self.zones:
                             self.fail("Parameter error: you can't use Availability Set and Availability Zones at the same time")
 
+                    proximity_placement_group_resource = None
+                    if self.proximity_placement_group is not None:
+                        if self.proximity_placement_group.get('id') is not None:
+                            proximity_placement_group_resource = self.compute_models.SubResource(id=self.proximity_placement_group['id'])
+                        elif self.proximity_placement_group.get('name') is not None and self.proximity_placement_group.get('resource_group') is not None:
+                            proximity_placement_group = self.get_proximity_placement_group(self.proximity_placement_group.get('resource_group'),
+                                                                                           self.proximity_placement_group.get('name'))
+                            proximity_placement_group_resource = self.compute_models.SubResource(id=proximity_placement_group.id)
+                        else:
+                            self.fail("Parameter error: Please recheck your proximity placement group ")
+
                     # Get defaults
                     if not self.network_interface_names:
                         default_nic = self.create_default_nic()
@@ -1351,6 +1393,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             network_interfaces=nics
                         ),
                         availability_set=availability_set_resource,
+                        proximity_placement_group=proximity_placement_group_resource,
                         plan=plan,
                         zones=self.zones,
                     )
@@ -1522,6 +1565,13 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             storage_account_type=vm_dict['properties']['storageProfile']['osDisk']['managedDisk'].get('storageAccountType')
                         )
 
+                    proximity_placement_group_resource = None
+                    try:
+                        proximity_placement_group_resource = self.compute_models.SubResource(id=vm_dict['properties']['proximityPlacementGroup'].get('id'))
+                    except Exception:
+                        # pass if the proximity Placement Group
+                        pass
+
                     availability_set_resource = None
                     try:
                         availability_set_resource = self.compute_models.SubResource(id=vm_dict['properties']['availabilitySet'].get('id'))
@@ -1575,6 +1625,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             image_reference=image_reference
                         ),
                         availability_set=availability_set_resource,
+                        proximity_placement_group=proximity_placement_group_resource,
                         network_profile=self.compute_models.NetworkProfile(
                             network_interfaces=nics
                         )
@@ -1896,7 +1947,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         try:
             nic = self.network_client.network_interfaces.get(resource_group, name)
             return nic
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching network interface {0} - {1}".format(name, str(exc)))
         return True
 
@@ -1904,7 +1955,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Deleting network interface {0}".format(name))
         self.results['actions'].append("Deleted network interface {0}".format(name))
         try:
-            poller = self.network_client.network_interfaces.delete(resource_group, name)
+            poller = self.network_client.network_interfaces.begin_delete(resource_group, name)
         except Exception as exc:
             self.fail("Error deleting network interface {0} - {1}".format(name, str(exc)))
         self.get_poller_result(poller)
@@ -1914,7 +1965,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
     def delete_pip(self, resource_group, name):
         self.results['actions'].append("Deleted public IP {0}".format(name))
         try:
-            poller = self.network_client.public_ip_addresses.delete(resource_group, name)
+            poller = self.network_client.public_ip_addresses.begin_delete(resource_group, name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting {0} - {1}".format(name, str(exc)))
@@ -1924,7 +1975,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
     def delete_nsg(self, resource_group, name):
         self.results['actions'].append("Deleted NSG {0}".format(name))
         try:
-            poller = self.network_client.network_security_groups.delete(resource_group, name)
+            poller = self.network_client.network_security_groups.begin_delete(resource_group, name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting {0} - {1}".format(name, str(exc)))
@@ -2012,6 +2063,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
         self.fail("Error could not find image with name {0}".format(name))
         return None
+
+    def get_proximity_placement_group(self, resource_group, name):
+        try:
+            return self.compute_client.proximity_placement_groups.get(resource_group, name)
+        except Exception as exc:
+            self.fail("Error fetching proximity placement group {0} - {1}".format(name, str(exc)))
 
     def get_availability_set(self, resource_group, name):
         try:
@@ -2142,7 +2199,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Check to see if NIC {0} exists".format(network_interface_name))
         try:
             nic = self.network_client.network_interfaces.get(self.resource_group, network_interface_name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if nic:
@@ -2160,9 +2217,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
         if self.virtual_network_name:
             try:
-                self.network_client.virtual_networks.list(virtual_network_resource_group, self.virtual_network_name)
+                self.network_client.virtual_networks.get(virtual_network_resource_group, self.virtual_network_name)
                 virtual_network_name = self.virtual_network_name
-            except CloudError as exc:
+            except ResourceNotFoundError as exc:
                 self.fail("Error: fetching virtual network {0} - {1}".format(self.virtual_network_name, str(exc)))
 
         else:
@@ -2174,7 +2231,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             virtual_network_name = None
             try:
                 vnets = self.network_client.virtual_networks.list(virtual_network_resource_group)
-            except CloudError:
+            except ResourceNotFoundError:
                 self.log('cloud error!')
                 self.fail(no_vnets_msg)
 
@@ -2200,7 +2257,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             subnet_id = None
             try:
                 subnets = self.network_client.subnets.list(virtual_network_resource_group, virtual_network_name)
-            except CloudError:
+            except ResourceNotFoundError:
                 self.fail(no_subnets_msg)
 
             for subnet in subnets:
@@ -2243,9 +2300,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log(self.serialize_obj(parameters, 'NetworkInterface'), pretty_print=True)
         self.results['actions'].append("Created NIC {0}".format(network_interface_name))
         try:
-            poller = self.network_client.network_interfaces.create_or_update(self.resource_group,
-                                                                             network_interface_name,
-                                                                             parameters)
+            poller = self.network_client.network_interfaces.begin_create_or_update(self.resource_group,
+                                                                                   network_interface_name,
+                                                                                   parameters)
             new_nic = self.get_poller_result(poller)
             self.tags['_own_nic_'] = network_interface_name
         except Exception as exc:
