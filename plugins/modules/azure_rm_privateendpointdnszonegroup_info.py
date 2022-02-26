@@ -148,7 +148,7 @@ groups:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -202,7 +202,7 @@ class AzureRMPrivateEndpointDnsZoneGroupInfo(AzureRMModuleBase):
                                                                    private_endpoint_name=self.private_endpoint,
                                                                    private_dns_zone_group_name=self.name)
             return [self.zone_to_dict(item)]
-        except CloudError:
+        except ResourceNotFoundError:
             self.log("Could not get info for {0} in {1}".format(self.name, self.private_endpoint))
 
         return []
@@ -212,7 +212,7 @@ class AzureRMPrivateEndpointDnsZoneGroupInfo(AzureRMModuleBase):
         try:
             items = self.network_client.private_dns_zone_groups.list(private_endpoint_name=self.private_endpoint, resource_group_name=self.resource_group)
             return [self.zone_to_dict(item) for item in items]
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list all items in {0}: {1}".format(self.private_endpoint, str(exc)))
 
     def zone_to_dict(self, zone):
