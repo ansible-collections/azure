@@ -1094,8 +1094,8 @@ from ansible.module_utils.common.dict_transformations import (
 )
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
     from msrestazure.tools import parse_resource_id, is_valid_resource_id
 except ImportError:
     # This is handled in azure_rm_common
@@ -1779,13 +1779,13 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
         self.log("Creating / Updating the Application Gateway instance {0}".format(self.name))
 
         try:
-            response = self.network_client.application_gateways.create_or_update(resource_group_name=self.resource_group,
-                                                                                 application_gateway_name=self.name,
-                                                                                 parameters=self.parameters)
+            response = self.network_client.application_gateways.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                       application_gateway_name=self.name,
+                                                                                       parameters=self.parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Application Gateway instance.')
             self.fail("Error creating the Application Gateway instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -1798,9 +1798,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
         '''
         self.log("Deleting the Application Gateway instance {0}".format(self.name))
         try:
-            response = self.network_client.application_gateways.delete(resource_group_name=self.resource_group,
-                                                                       application_gateway_name=self.name)
-        except CloudError as e:
+            response = self.network_client.application_gateways.begin_delete(resource_group_name=self.resource_group,
+                                                                             application_gateway_name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the Application Gateway instance.')
             self.fail("Error deleting the Application Gateway instance: {0}".format(str(e)))
 
@@ -1820,7 +1820,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Application Gateway instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Application Gateway instance.')
         if found is True:
             return response.as_dict()
@@ -1830,22 +1830,22 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
     def start_applicationgateway(self):
         self.log("Starting the Application Gateway instance {0}".format(self.name))
         try:
-            response = self.network_client.application_gateways.start(resource_group_name=self.resource_group,
-                                                                      application_gateway_name=self.name)
+            response = self.network_client.application_gateways.begin_start(resource_group_name=self.resource_group,
+                                                                            application_gateway_name=self.name)
             if isinstance(response, LROPoller):
                 self.get_poller_result(response)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to start the Application Gateway instance.')
             self.fail("Error starting the Application Gateway instance: {0}".format(str(e)))
 
     def stop_applicationgateway(self):
         self.log("Stopping the Application Gateway instance {0}".format(self.name))
         try:
-            response = self.network_client.application_gateways.stop(resource_group_name=self.resource_group,
-                                                                     application_gateway_name=self.name)
+            response = self.network_client.application_gateways.begin_stop(resource_group_name=self.resource_group,
+                                                                           application_gateway_name=self.name)
             if isinstance(response, LROPoller):
                 self.get_poller_result(response)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to stop the Application Gateway instance.')
             self.fail("Error stopping the Application Gateway instance: {0}".format(str(e)))
 

@@ -226,6 +226,7 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
 
 try:
+    import dateutil.parser
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
     from azure.mgmt.sql import SqlManagementClient
@@ -308,10 +309,10 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 type='str'
             ),
             source_database_deletion_date=dict(
-                type='datetime'
+                type='str'
             ),
             restore_point_in_time=dict(
-                type='datetime'
+                type='str'
             ),
             recovery_services_recovery_point_resource_id=dict(
                 type='str'
@@ -393,9 +394,15 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 elif key == "source_database_id":
                     self.parameters["source_database_id"] = kwargs[key]
                 elif key == "source_database_deletion_date":
-                    self.parameters["source_database_deletion_date"] = kwargs[key]
+                    try:
+                        self.parameters["source_database_deletion_date"] = dateutil.parser.parse(kwargs[key])
+                    except dateutil.parser._parser.ParserError:
+                        self.fail("Error parsing date from source_database_deletion_date: {0}".format(kwargs[key]))
                 elif key == "restore_point_in_time":
-                    self.parameters["restore_point_in_time"] = kwargs[key]
+                    try:
+                        self.parameters["restore_point_in_time"] = dateutil.parser.parse(kwargs[key])
+                    except dateutil.parser._parser.ParserError:
+                        self.fail("Error parsing date from restore_point_in_time: {0}".format(kwargs[key]))
                 elif key == "recovery_services_recovery_point_resource_id":
                     self.parameters["recovery_services_recovery_point_resource_id"] = kwargs[key]
                 elif key == "edition":

@@ -119,7 +119,7 @@ vpn_site_links:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -168,7 +168,7 @@ class AzureRMVpnSiteLinkInfo(AzureRMModuleBase):
             response = self.network_client.vpn_site_links.get(resource_group_name=self.resource_group,
                                                               vpn_site_name=self.vpn_site_name,
                                                               vpn_site_link_name=self.name)
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response
@@ -179,7 +179,7 @@ class AzureRMVpnSiteLinkInfo(AzureRMModuleBase):
         try:
             response = self.network_client.vpn_site_links.list_by_vpn_site(resource_group_name=self.resource_group,
                                                                            vpn_site_name=self.vpn_site_name)
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response

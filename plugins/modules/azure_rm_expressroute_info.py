@@ -92,7 +92,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.network import NetworkManagementClient
     from msrest.serialization import Model
 except ImportError:
@@ -143,7 +143,7 @@ class AzureExpressRouteInfo(AzureRMModuleBase):
             response = self.network_client.express_route_circuits.get(
                 self.resource_group, self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get info for express route. {0}').format(str(e))
 
         if response and self.has_tags(response.tags, self.tags):
@@ -156,7 +156,7 @@ class AzureExpressRouteInfo(AzureRMModuleBase):
             response = self.network_client.express_route_circuits.list(
                 self.resource_group)
 
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail(
                 "Failed to list for resource group {0} - {1}".format(self.resource_group, str(exc)))
 

@@ -218,6 +218,7 @@ import time
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.azure_operation import AzureOperationPoller
     from msrest.polling import LROPoller
     from msrest.serialization import Model
@@ -730,7 +731,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             self.log("Subnet found : {0}".format(response))
             return response.id
 
-        except CloudError as ex:
+        except ResourceNotFoundError as ex:
             self.log("Didn't find subnet {0} in resource group {1}".format(
                 self.subnet['name'], self.subnet['resource_group']))
 

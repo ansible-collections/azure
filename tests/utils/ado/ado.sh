@@ -18,6 +18,7 @@ else
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa
     sudo apt install python"$2" -y
+    sudo apt install python3-dateutil
     sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python"$2" 1
 fi
 
