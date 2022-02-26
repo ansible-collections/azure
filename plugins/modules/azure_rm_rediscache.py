@@ -251,6 +251,7 @@ import time
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.core.exceptions import ResourceNotFoundError
+    from msrestazure.azure_operation import AzureOperationPoller
     from azure.core.polling import LROPoller
     from azure.mgmt.redis import RedisManagementClient
     from azure.mgmt.redis.models import (
@@ -641,7 +642,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
                                                        name=self.name,
                                                        parameters=params)
 
-            if isinstance(response, LROPoller):
+            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
             if self.wait_for_provisioning:
@@ -682,7 +683,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             response = self._client.redis.update(resource_group_name=self.resource_group,
                                                  name=self.name,
                                                  parameters=params)
-            if isinstance(response, LROPoller):
+            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
             if self.wait_for_provisioning:
@@ -748,7 +749,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             response = self._client.redis.force_reboot(resource_group_name=self.resource_group,
                                                        name=self.name,
                                                        parameters=params)
-            if isinstance(response, LROPoller):
+            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
             if self.wait_for_provisioning:
