@@ -178,7 +178,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.network import NetworkManagementClient
 except ImportError:
     # This is handled in azure_rm_common
@@ -272,7 +272,7 @@ class AzureExpressRoute(AzureRMModuleBase):
             elif self.state == 'absent':
                 changed = True
 
-        except CloudError:
+        except ResourceNotFoundError:
             # the express route does not exist so create it
             if self.state == 'present':
                 changed = True
@@ -306,13 +306,13 @@ class AzureExpressRoute(AzureRMModuleBase):
         self.log("create or update Express Route {0}".format(self.name))
         try:
             params["sku"]["name"] = params.get("sku").get("tier") + "_" + params.get("sku").get("family")
-            poller = self.network_client.express_route_circuits.create_or_update(
+            poller = self.network_client.express_route_circuits.begin_create_or_update(
                 resource_group_name=params.get("resource_group"),
                 circuit_name=params.get("name"),
                 parameters=params)
             result = self.get_poller_result(poller)
             self.log("Response : {0}".format(result))
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to create express route {0} in resource group {1}: {2}".format(
                 self.name, self.resource_group, str(ex)))
         return express_route_to_dict(result)
@@ -324,10 +324,10 @@ class AzureExpressRoute(AzureRMModuleBase):
         '''
         self.log("Deleting the express route {0}".format(self.name))
         try:
-            poller = self.network_client.express_route_circuits.delete(
+            poller = self.network_client.express_route_circuits.begin_delete(
                 self.resource_group, self.name)
             result = self.get_poller_result(poller)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete express route.')
             self.fail(
                 "Error deleting the express route : {0}".format(str(e)))

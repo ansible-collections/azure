@@ -68,7 +68,7 @@ azure_loadbalancers:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.common import AzureHttpError
 except Exception:
     # handled in azure_rm_common
@@ -132,7 +132,7 @@ class AzureRMLoadBalancerInfo(AzureRMModuleBase):
 
         try:
             item = self.network_client.load_balancers.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -148,12 +148,12 @@ class AzureRMLoadBalancerInfo(AzureRMModuleBase):
         if self.resource_group:
             try:
                 response = self.network_client.load_balancers.list(self.resource_group)
-            except AzureHttpError as exc:
+            except ResourceNotFoundError as exc:
                 self.fail('Failed to list items in resource group {0} - {1}'.format(self.resource_group, str(exc)))
         else:
             try:
                 response = self.network_client.load_balancers.list_all()
-            except AzureHttpError as exc:
+            except ResourceNotFoundError as exc:
                 self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []

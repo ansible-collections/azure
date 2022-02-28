@@ -179,8 +179,7 @@ publicipaddresses:
             sample: Basic
 '''
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -288,7 +287,7 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
         item = None
         try:
             item = self.network_client.public_ip_addresses.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
         return [item] if item else []
 
@@ -296,7 +295,7 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
         self.log('List items in resource groups')
         try:
             response = self.network_client.public_ip_addresses.list(self.resource_group)
-        except AzureHttpError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error listing items in resource groups {0} - {1}".format(self.resource_group, str(exc)))
         return response
 
@@ -304,7 +303,7 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
         self.log('List all items')
         try:
             response = self.network_client.public_ip_addresses.list_all()
-        except AzureHttpError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error listing all items - {0}".format(str(exc)))
         return response
 

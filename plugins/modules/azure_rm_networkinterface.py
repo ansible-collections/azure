@@ -486,7 +486,7 @@ state:
 
 try:
     from msrestazure.tools import parse_resource_id, resource_id, is_valid_resource_id
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -761,7 +761,7 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
             elif self.state == 'absent':
                 self.log("CHANGED: network interface {0} exists but requested state is 'absent'".format(self.name))
                 changed = True
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Network interface {0} does not exist'.format(self.name))
             if self.state == 'present':
                 self.log("CHANGED: network interface {0} does not exist but requested state is 'present'".format(self.name))
@@ -846,15 +846,15 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                 public_ip_allocation_method=ip_config.get('public_ip_allocation_method'),
             )
             try:
-                poller = self.network_client.public_ip_addresses.create_or_update(self.resource_group, name, params)
+                poller = self.network_client.public_ip_addresses.begin_create_or_update(self.resource_group, name, params)
                 pip = self.get_poller_result(poller)
-            except CloudError as exc:
+            except Exception as exc:
                 self.fail("Error creating {0} - {1}".format(name, str(exc)))
         return pip
 
     def create_or_update_nic(self, nic):
         try:
-            poller = self.network_client.network_interfaces.create_or_update(self.resource_group, self.name, nic)
+            poller = self.network_client.network_interfaces.begin_create_or_update(self.resource_group, self.name, nic)
             new_nic = self.get_poller_result(poller)
             return nic_to_dict(new_nic)
         except Exception as exc:
@@ -862,7 +862,7 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
 
     def delete_nic(self):
         try:
-            poller = self.network_client.network_interfaces.delete(self.resource_group, self.name)
+            poller = self.network_client.network_interfaces.begin_delete(self.resource_group, self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting network interface {0} - {1}".format(self.name, str(exc)))
@@ -872,14 +872,14 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
         self.log("Fetching public ip address {0}".format(name))
         try:
             return self.network_client.public_ip_addresses.get(self.resource_group, name)
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             return None
 
     def get_security_group(self, resource_group, name):
         self.log("Fetching security group {0}".format(name))
         try:
             return self.network_client.network_security_groups.get(resource_group, name)
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             return None
 
     def backend_addr_pool_id(self, val):
