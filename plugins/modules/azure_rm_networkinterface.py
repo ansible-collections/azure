@@ -853,7 +853,6 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
         return pip
 
     def create_or_update_nic(self, nic):
-        nic.network_security_group.flow_logs = None
         try:
             poller = self.network_client.network_interfaces.create_or_update(self.resource_group, self.name, nic)
             new_nic = self.get_poller_result(poller)
