@@ -32,8 +32,8 @@ all:
     ansible_connection: local
     ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
-    uid: "{{ (resource_group ~ inventory_hostname) | hash('md5') | truncate(18, True, '') }}"
-    uid_short: "{{ (resource_group ~ inventory_hostname) | hash('md5') | truncate(10, True, '') }}"
+    uid: "{{ (resource_group ~ inventory_hostname) | hash('md5') | truncate(18, True, '') }}{{ 1000 | random }}"
+    uid_short: "{{ (resource_group ~ inventory_hostname) | hash('md5') | truncate(10, True, '') }}{{ 1000 | random }}"
 
     storage_account: "{{ 'stor' ~ uid }}"
     availability_set: "{{ 'avbs' ~ uid_short }}"

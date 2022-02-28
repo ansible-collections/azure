@@ -6,56 +6,56 @@
 - name: Create virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
-    name: VMSStestVnet
+    name: "VMSStestVnet{{ rpfx }}"
     address_prefixes: "10.0.0.0/16"
 
 - name: Add subnet
   azure_rm_subnet:
     resource_group: "{{ resource_group }}"
-    name: VMSStestSubnet
+    name: "VMSStestSubnet{{ rpfx }}"
     address_prefix: "10.0.1.0/24"
-    virtual_network: VMSStestVnet
+    virtual_network: "VMSStestVnet{{ rpfx }}"
 
 - name: Create public IP address
   azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
-    name: testPublicIP
+    name: "testPublicIP{{ rpfx }}"
 
 - name: Create load balancer
   azure_rm_loadbalancer:
     resource_group: "{{ resource_group }}"
-    name: testLB
-    public_ip_address_name: testPublicIP
+    name: "testLB{{ rpfx }}"
+    public_ip_address_name: "testPublicIP{{ rpfx }}"
 
 - name: Create public IP address 1
   azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
-    name: testPublicIP1
+    name: "testPublicIP{{ rpfx }}1"
 
 - name: Create load balancer 1
   azure_rm_loadbalancer:
     resource_group: "{{ resource_group }}"
-    name: testLB1
-    public_ip_address_name: testPublicIP1
+    name: "testLB{{ rpfx }}1"
+    public_ip_address_name: "testPublicIP{{ rpfx }}1"
 
 - name: Create network security group within same resource group of VMSS.
   azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
-    name: testNetworkSecurityGroup
+    name: "testNetworkSecurityGroup{{ rpfx }}"
 
 - name: Create network security group in different resource group of VMSS.
   azure_rm_securitygroup:
     resource_group: "{{ resource_group_secondary }}"
-    name: testNetworkSecurityGroup2
+    name: "testNetworkSecurityGroup{{ rpfx }}2"
 
 - name: Create virtual network inteface cards for VM A and B
   azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}nic"
-    virtual_network: VMSStestVnet
-    subnet: VMSStestSubnet
+    virtual_network: "VMSStestVnet{{ rpfx }}"
+    subnet: "VMSStestSubnet{{ rpfx }}"
 
 - name: Create VM
   azure_rm_virtualmachine:
@@ -114,8 +114,8 @@
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     capacity: 1
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
     upgrade_policy: Manual
     tier: Standard
     managed_disk_type: Standard_LRS
@@ -159,8 +159,8 @@
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     capacity: 1
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
     upgrade_policy: Manual
     tier: Standard
     managed_disk_type: Standard_LRS
@@ -201,9 +201,9 @@
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     capacity: 1
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    load_balancer: testLB
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
+    load_balancer: "testLB{{ rpfx }}"
     upgrade_policy: Manual
     tier: Standard
     managed_disk_type: Standard_LRS
@@ -248,10 +248,10 @@
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     capacity: 1
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
     upgrade_policy: Manual
-    load_balancer: testLB
+    load_balancer: "testLB{{ rpfx }}"
     tier: Standard
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
@@ -284,10 +284,10 @@
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     capacity: 1
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
     upgrade_policy: Automatic
-    load_balancer: testLB1
+    load_balancer: "testLB{{ rpfx }}1"
     tier: Standard
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
@@ -317,7 +317,7 @@
 
 - assert:
     that:
-        - output_scaleset.vmss[0].load_balancer == "testLB1"
+        - output_scaleset.vmss[0].load_balancer == "testLB{{ rpfx }}1"
 
 - name: Retrieve scaleset VMs facts
   azure_rm_virtualmachinescalesetinstance_info:
@@ -501,8 +501,8 @@
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_D3_v2
     capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -512,7 +512,7 @@
       name: testimagea
       resource_group: "{{ resource_group }}"
     upgrade_policy: Manual
-    security_group: testNetworkSecurityGroup
+    security_group: "testNetworkSecurityGroup{{ rpfx }}"
     enable_accelerated_networking: yes
   register: results
   check_mode: yes
@@ -527,8 +527,8 @@
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_D3_v2
     capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -538,7 +538,7 @@
       name: testimagea
       resource_group: "{{ resource_group }}"
     upgrade_policy: Manual
-    security_group: testNetworkSecurityGroup
+    security_group: "testNetworkSecurityGroup{{ rpfx }}"
     enable_accelerated_networking: yes
   register: results
 
@@ -555,8 +555,8 @@
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_D3_v2
     capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -566,7 +566,7 @@
       name: testimagea
       resource_group: "{{ resource_group }}"
     upgrade_policy: Manual
-    security_group: testNetworkSecurityGroup
+    security_group: "testNetworkSecurityGroup{{ rpfx }}"
     enable_accelerated_networking: yes
   register: results
 
@@ -581,8 +581,8 @@
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_D3_v2
     capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -592,7 +592,7 @@
       name: testimageb
       resource_group: "{{ resource_group }}"
     upgrade_policy: Manual
-    security_group: testNetworkSecurityGroup
+    security_group: "testNetworkSecurityGroup{{ rpfx }}"
     enable_accelerated_networking: yes
   register: results
 
@@ -607,8 +607,8 @@
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_B1s
     capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -619,7 +619,7 @@
       resource_group: "{{ resource_group }}"
     upgrade_policy: Manual
     security_group:
-      name: testNetworkSecurityGroup2
+      name: "testNetworkSecurityGroup{{ rpfx }}2"
       resource_group: "{{ resource_group_secondary }}"
   register: results
 
@@ -628,7 +628,7 @@
 #  assert:
 #    that:
 #      - 'results.changed'
-#      - '"testNetworkSecurityGroup2" in results.ansible_facts.azure_vmss.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.0.properties.networkSecurityGroup.id'
+#      - '""testNetworkSecurityGroup{{ rpfx }}"2" in results.ansible_facts.azure_vmss.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.0.properties.networkSecurityGroup.id'
 
 - name: Delete VMSS
   azure_rm_virtualmachinescaleset:
@@ -642,8 +642,8 @@
     name: testVMSS{{ rpfx }}3
     vm_size: Standard_DS2_v2
     capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -655,7 +655,7 @@
       resource_group: "{{ resource_group }}"
     upgrade_policy: Manual
     security_group:
-      name: testNetworkSecurityGroup2
+      name: "testNetworkSecurityGroup{{ rpfx }}2"
       resource_group: "{{ resource_group_secondary }}"
   register: results
 
@@ -670,8 +670,8 @@
     name: testVMSS{{ rpfx }}3
     vm_size: Standard_DS2_v2
     capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -683,7 +683,7 @@
       resource_group: "{{ resource_group }}"
     upgrade_policy: Manual
     security_group:
-      name: testNetworkSecurityGroup2
+      name: "testNetworkSecurityGroup{{ rpfx }}2"
       resource_group: "{{ resource_group_secondary }}"
   ignore_errors: yes
 
@@ -698,8 +698,8 @@
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}4
     vm_size: Standard_B1s
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
+    virtual_network_name: "VMSStestVnet{{ rpfx }}"
+    subnet_name: "VMSStestSubnet{{ rpfx }}"
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
@@ -729,31 +729,31 @@
 - name: Delete network security group
   azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
-    name: testNetworkSecurityGroup
+    name: "testNetworkSecurityGroup{{ rpfx }}"
     state: absent
 
 - name: Delete network security group
   azure_rm_securitygroup:
     resource_group: "{{ resource_group_secondary }}"
-    name: testNetworkSecurityGroup2
+    name: "testNetworkSecurityGroup{{ rpfx }}2"
     state: absent
 
 - name: Delete load balancer
   azure_rm_loadbalancer:
     resource_group: "{{ resource_group }}"
-    name: testLB
+    name: "testLB{{ rpfx }}"
     state: absent
 
 - name: Delete public IP address
   azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     state: absent
-    name: testPublicIP
+    name: "testPublicIP{{ rpfx }}"
 
 - name: Delete virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
-    name: VMSStestVnet
+    name: "VMSStestVnet{{ rpfx }}"
     state: absent
     address_prefixes: "10.0.0.0/16"
 
