@@ -1616,7 +1616,6 @@ class AzureRMAuth(object):
 
         cli_credentials = {
             'credentials': credentials,
-            'credential': credentials,
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment
         }
