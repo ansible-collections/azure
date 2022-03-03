@@ -7,15 +7,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import (AzureRMModuleBase,
-                                                                                         azure_id_to_dict,
-                                                                                         normalize_location_name,
-                                                                                         format_resource_id
-                                                                                         )
-from ansible.module_utils.basic import to_native, to_bytes
-import re
-import random
-import base64
 __metaclass__ = type
 
 
@@ -815,6 +806,9 @@ azure_vm:
     }
 '''  # NOQA
 
+import base64
+import random
+import re
 
 try:
     from msrestazure.azure_exceptions import CloudError
@@ -825,6 +819,12 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
+from ansible.module_utils.basic import to_native, to_bytes
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import (AzureRMModuleBase,
+                                                                                         azure_id_to_dict,
+                                                                                         normalize_location_name,
+                                                                                         format_resource_id
+                                                                                         )
 
 AZURE_OBJECT_CLASS = 'VirtualMachine'
 
@@ -2078,7 +2078,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             return nic
 
         except ResourceNotFoundError as exc:
-            self.fail("Error fetching network interface {0} - {1}".format(name, str(exc)))
+            self.fail(
+                "Error fetching network interface {0} - {1}".format(name, str(exc)))
 
         return True
 
@@ -2087,7 +2088,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.results['actions'].append(
             "Deleted network interface {0}".format(name))
         try:
-            poller = self.network_client.network_interfaces.begin_delete(resource_group, name)
+            poller = self.network_client.network_interfaces.begin_delete(
+                resource_group, name)
         except Exception as exc:
             self.fail(
                 "Error deleting network interface {0} - {1}".format(name, str(exc)))
@@ -2098,7 +2100,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
     def delete_pip(self, resource_group, name):
         self.results['actions'].append("Deleted public IP {0}".format(name))
         try:
-            poller = self.network_client.public_ip_addresses.begin_delete(resource_group, name)
+            poller = self.network_client.public_ip_addresses.begin_delete(
+                resource_group, name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting {0} - {1}".format(name, str(exc)))
@@ -2108,7 +2111,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
     def delete_nsg(self, resource_group, name):
         self.results['actions'].append("Deleted NSG {0}".format(name))
         try:
-            poller = self.network_client.network_security_groups.begin_delete(resource_group, name)
+            poller = self.network_client.network_security_groups.begin_delete(
+                resource_group, name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting {0} - {1}".format(name, str(exc)))
@@ -2361,7 +2365,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Check to see if NIC {0} exists".format(
             network_interface_name))
         try:
-            nic = self.network_client.network_interfaces.get(self.resource_group, network_interface_name)
+            nic = self.network_client.network_interfaces.get(
+                self.resource_group, network_interface_name)
         except ResourceNotFoundError:
             pass
 
@@ -2380,10 +2385,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
         if self.virtual_network_name:
             try:
-                self.network_client.virtual_networks.get(virtual_network_resource_group, self.virtual_network_name)
+                self.network_client.virtual_networks.get(
+                    virtual_network_resource_group, self.virtual_network_name)
                 virtual_network_name = self.virtual_network_name
             except ResourceNotFoundError as exc:
-                self.fail("Error: fetching virtual network {0} - {1}".format(self.virtual_network_name, str(exc)))
+                self.fail(
+                    "Error: fetching virtual network {0} - {1}".format(self.virtual_network_name, str(exc)))
 
         else:
             # Find a virtual network
@@ -2393,7 +2400,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
             virtual_network_name = None
             try:
-                vnets = self.network_client.virtual_networks.list(virtual_network_resource_group)
+                vnets = self.network_client.virtual_networks.list(
+                    virtual_network_resource_group)
             except ResourceNotFoundError:
                 self.log('cloud error!')
                 self.fail(no_vnets_msg)
@@ -2421,7 +2429,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
             subnet_id = None
             try:
-                subnets = self.network_client.subnets.list(virtual_network_resource_group, virtual_network_name)
+                subnets = self.network_client.subnets.list(
+                    virtual_network_resource_group, virtual_network_name)
             except ResourceNotFoundError:
                 self.fail(no_subnets_msg)
 
