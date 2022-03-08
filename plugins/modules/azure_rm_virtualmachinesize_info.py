@@ -90,7 +90,7 @@ sizes:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -135,7 +135,7 @@ class AzureRMVirtualMachineSizeInfo(AzureRMModuleBase):
         self.log('List items by location')
         try:
             items = self.compute_client.virtual_machine_sizes.list(location=self.location)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list items - {0}".format(str(exc)))
         return [self.serialize_size(item) for item in items if self.name is None or self.name == item.name]
 

@@ -812,10 +812,11 @@ import re
 import time
 
 try:
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
     from msrestazure.azure_exceptions import CloudError
     from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.tools import parse_resource_id
-    from msrest.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -1277,7 +1278,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 results = dict()
                 changed = True
 
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Virtual machine {0} does not exist'.format(self.name))
             if self.state == 'present':
                 self.log("CHANGED: virtual machine {0} does not exist but state is 'present'.".format(self.name))
@@ -1809,7 +1810,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Powered off virtual machine {0}".format(self.name))
         self.results['actions'].append("Powered off virtual machine {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machines.power_off(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machines.begin_power_off(self.resource_group, self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error powering off virtual machine {0} - {1}".format(self.name, str(exc)))
@@ -1819,7 +1820,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.results['actions'].append("Powered on virtual machine {0}".format(self.name))
         self.log("Power on virtual machine {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machines.start(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machines.begin_start(self.resource_group, self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error powering on virtual machine {0} - {1}".format(self.name, str(exc)))
@@ -1829,7 +1830,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.results['actions'].append("Restarted virtual machine {0}".format(self.name))
         self.log("Restart virtual machine {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machines.restart(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machines.begin_restart(self.resource_group, self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error restarting virtual machine {0} - {1}".format(self.name, str(exc)))
@@ -1839,7 +1840,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.results['actions'].append("Deallocated virtual machine {0}".format(self.name))
         self.log("Deallocate virtual machine {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machines.deallocate(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machines.begin_deallocate(self.resource_group, self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deallocating virtual machine {0} - {1}".format(self.name, str(exc)))
@@ -1923,7 +1924,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Deleting virtual machine {0}".format(self.name))
         self.results['actions'].append("Deleted virtual machine {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machines.delete(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machines.begin_delete(self.resource_group, self.name)
             # wait for the poller to finish
             self.get_poller_result(poller)
         except Exception as exc:
@@ -2098,7 +2099,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
     def create_or_update_vm(self, params, remove_autocreated_on_failure):
         try:
-            poller = self.compute_client.virtual_machines.create_or_update(self.resource_group, self.name, params)
+            poller = self.compute_client.virtual_machines.begin_create_or_update(self.resource_group, self.name, params)
             self.get_poller_result(poller)
         except Exception as exc:
             if remove_autocreated_on_failure:
@@ -2259,7 +2260,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             try:
                 subnet = self.network_client.subnets.get(virtual_network_resource_group, virtual_network_name, self.subnet_name)
                 subnet_id = subnet.id
-            except Exception as exc:
+            except CloudError as exc:
                 self.fail("Error: fetching subnet {0} - {1}".format(self.subnet_name, str(exc)))
         else:
             no_subnets_msg = "Error: unable to find a subnet in virtual network {0}. A virtual network " \
@@ -2269,7 +2270,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             subnet_id = None
             try:
                 subnets = self.network_client.subnets.list(virtual_network_resource_group, virtual_network_name)
-            except ResourceNotFoundError:
+            except Exception:
+
                 self.fail(no_subnets_msg)
 
             for subnet in subnets:

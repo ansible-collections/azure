@@ -272,8 +272,8 @@ vms:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from msrestazure.tools import parse_resource_id
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -347,7 +347,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         self.log('List all items')
         try:
             items = self.compute_client.virtual_machines.list(self.resource_group)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []
@@ -360,7 +360,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         self.log('List all items')
         try:
             items = self.compute_client.virtual_machines.list_all()
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []
@@ -378,7 +378,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         try:
             vm = self.compute_client.virtual_machines.get(resource_group, name, expand='instanceview')
             return self.serialize_vm(vm)
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error getting virtual machine {0} - {1}".format(self.name, str(exc)))
 
     def serialize_vm(self, vm):

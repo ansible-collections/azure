@@ -228,7 +228,7 @@ import re
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 try:
     from msrestazure.tools import parse_resource_id
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -424,7 +424,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
 
     def _update_vm(self, name, params):
         try:
-            poller = self.compute_client.virtual_machines.create_or_update(self.resource_group, name, params)
+            poller = self.compute_client.virtual_machines.begin_create_or_update(self.resource_group, name, params)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error updating virtual machine {0} - {1}".format(name, str(exc)))
@@ -467,13 +467,12 @@ class AzureRMManagedDisk(AzureRMModuleBase):
 
     def create_or_update_managed_disk(self, parameter):
         try:
-            poller = self.compute_client.disks.create_or_update(
-                self.resource_group,
-                self.name,
-                parameter)
+            poller = self.compute_client.disks.begin_create_or_update(self.resource_group,
+                                                                      self.name,
+                                                                      parameter)
             aux = self.get_poller_result(poller)
             return managed_disk_to_dict(aux)
-        except CloudError as e:
+        except Exception as e:
             self.fail("Error creating the managed disk: {0}".format(str(e)))
 
     # This method accounts for the difference in structure between the
@@ -500,11 +499,10 @@ class AzureRMManagedDisk(AzureRMModuleBase):
 
     def delete_managed_disk(self):
         try:
-            poller = self.compute_client.disks.delete(
-                self.resource_group,
-                self.name)
+            poller = self.compute_client.disks.begin_delete(self.resource_group,
+                                                            self.name)
             return self.get_poller_result(poller)
-        except CloudError as e:
+        except Exception as e:
             self.fail("Error deleting the managed disk: {0}".format(str(e)))
 
     def get_managed_disk(self):
@@ -513,7 +511,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 self.resource_group,
                 self.name)
             return managed_disk_to_dict(resp)
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find managed disk')
 
     def is_attach_caching_option_different(self, vm_name, disk):
