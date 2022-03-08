@@ -2187,7 +2187,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
     def check_storage_account_name(self, name):
         self.log("Checking storage account name availability for {0}".format(name))
         try:
-            response = self.storage_client.storage_accounts.check_name_availability(name)
+            account_name = self.storage_models.StorageAccountCheckNameAvailabilityParameters(name=name)
+            response = self.storage_client.storage_accounts.check_name_availability(account_name)
             if response.reason == 'AccountNameInvalid':
                 raise Exception("Invalid default storage account name: {0}".format(name))
         except Exception as exc:
