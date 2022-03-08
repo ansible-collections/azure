@@ -273,6 +273,13 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                 return KeyVaultClient(credentials)
             except Exception:
                 self.log("Get KeyVaultClient from service principal")
+        else:
+            try:
+                self.log("Get KeyVaultClient from MSI")
+                credentials = MSIAuthentication(resource='https://vault.azure.net')
+                return KeyVaultClient(credentials)
+            except Exception:
+                self.log("Get KeyVaultClient from service principal")
 
         # Create KeyVault Client using KeyVault auth class and auth_callback
         def auth_callback(server, resource, scope):
