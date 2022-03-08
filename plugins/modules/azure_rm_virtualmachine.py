@@ -809,7 +809,6 @@ azure_vm:
 import base64
 import random
 import re
-import time
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
@@ -1110,18 +1109,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         try:
             self.log("Fetching virtual machine {0}".format(self.name))
             vm = self.compute_client.virtual_machines.get(self.resource_group, self.name, expand='instanceview')
-            retry_count = 0
-            while True:
-                if retry_count == 10:
-                    self.fail("Error {0} has a provisioning state of Updating. Expecting state to be Successed.".format(self.name))
-
-                if vm.provisioning_state == 'Updating':
-                    retry_count = retry_count + 1
-                    time.sleep(300)
-                    vm = self.compute_client.virtual_machines.get(self.resource_group, self.name, expand='instanceview')
-                else:
-                    break
-
+            self.check_provisioning_state(vm, self.state)
             vm_dict = self.serialize_vm(vm)
 
             if self.state == 'present':
