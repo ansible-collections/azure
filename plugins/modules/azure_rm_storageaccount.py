@@ -550,7 +550,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         try:
             account_obj = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name)
             blob_service_props = self.storage_client.blob_services.get_service_properties(self.resource_group, self.name)
-        except ResourceNotFoundError:
+        except Exception:
             pass
 
         if account_obj:
