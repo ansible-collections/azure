@@ -153,7 +153,7 @@ state:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -273,7 +273,7 @@ class AzureRMStorageShare(AzureRMModuleBase):
                                                                 share_name=self.name)
             found = True
             self.log("Response : {0}".format(storage_share))
-        except Exception as e:
+        except ResourceNotFoundError as e:
             self.log("Did not find the storage file share with name {0} : {1}".format(self.name, str(e)))
         return self.storage_share_to_dict(storage_share) if found else None
 
