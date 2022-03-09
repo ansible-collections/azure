@@ -409,6 +409,10 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                 display_status = instance['statuses'][index]['displayStatus']
                 power_state = 'generalized'
                 break
+            elif code[0] == 'ProvisioningState' and code[1] == 'failed':
+                display_status = instance['statuses'][index]['displayStatus']
+                power_state = ''
+                break
 
         new_result = {}
         new_result['power_state'] = power_state
