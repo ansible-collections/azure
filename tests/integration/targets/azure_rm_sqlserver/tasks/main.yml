@@ -320,6 +320,7 @@
     source_database_id: "{{ output.databases[0].id }}"
     server_name: sqlsrv{{ random_postfix }}
     name: database{{ random_postfix }}PITR
+    location: eastus
   register: output
 - name: Assert the state has changed
   assert:
