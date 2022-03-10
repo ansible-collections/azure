@@ -5,8 +5,8 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 DOCUMENTATION = r'''
-    module: azure_rm
-    plugin: azure.azcollection.azure_rm
+    name: azure_rm
+    plugin_type: inventory
     short_description: Azure Resource Manager inventory plugin
     extends_documentation_fragment:
       - azure.azcollection.azure
