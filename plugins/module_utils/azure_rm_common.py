@@ -1081,13 +1081,13 @@ class AzureRMModuleBase(object):
             self._image_client = self.get_mgmt_svc_client(ComputeManagementClient,
                                                           base_url=self._cloud_environment.endpoints.resource_manager,
                                                           is_track2=True,
-                                                          api_version='2021-04-01')
+                                                          api_version='2021-11-01')
         return self._image_client
 
     @property
     def image_models(self):
         self.log("Getting compute image models")
-        return ComputeManagementClient.models("2021-04-01")
+        return ComputeManagementClient.models("2021-11-01")
 
     @property
     def compute_client(self):
@@ -1096,13 +1096,13 @@ class AzureRMModuleBase(object):
             self._compute_client = self.get_mgmt_svc_client(ComputeManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
                                                             is_track2=True,
-                                                            api_version='2021-04-01')
+                                                            api_version='2021-11-01')
         return self._compute_client
 
     @property
     def compute_models(self):
         self.log("Getting compute models")
-        return ComputeManagementClient.models("2021-04-01")
+        return ComputeManagementClient.models("2021-11-01")
 
     @property
     def dns_client(self):
