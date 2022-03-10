@@ -2,6 +2,7 @@
   set_fact:
     random_postfix: "{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     tenant_id: "{{ azure_tenant }}"
+    create_sql_admin_group: false  # disabled by default as special permission is needed to manage Azure AD resources
   run_once: yes
 
 - name: Create instance of SQL Server -- check mode
@@ -105,6 +106,7 @@
     display_name: "SqlAdminGroup{{ random_postfix }}"
     mail_nickname: "SqlAdminGroup{{ random_postfix }}"
   register: admin_group_output
+  when: create_sql_admin_group | bool
 
 - name: Create instance of SQL Server with Azure AD admin
   azure_rm_sqlserver:
@@ -751,3 +753,4 @@
     tenant: "{{ tenant_id }}"
     object_id: "{{ admin_group_output.object_id }}"
     state: "absent"
+  when: create_sql_admin_group | bool
