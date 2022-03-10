@@ -6,7 +6,7 @@ __metaclass__ = type
 
 DOCUMENTATION = r'''
     name: azure_rm
-    plugin_type: inventory_plugins
+    type: inventory_plugins
     short_description: Azure Resource Manager inventory plugin
     extends_documentation_fragment:
       - azure.azcollection.azure
