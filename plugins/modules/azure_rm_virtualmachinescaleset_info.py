@@ -246,7 +246,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 import re
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # handled in azure_rm_common
     pass
@@ -397,7 +397,7 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
 
         try:
             item = self.compute_client.virtual_machine_scale_sets.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -412,7 +412,7 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
 
         try:
             response = self.compute_client.virtual_machine_scale_sets.list(self.resource_group)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []

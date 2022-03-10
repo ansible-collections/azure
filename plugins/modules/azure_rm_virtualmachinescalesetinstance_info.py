@@ -115,9 +115,9 @@ instances:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.compute import ComputeManagementClient
     from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -163,7 +163,9 @@ class AzureRMVirtualMachineScaleSetVMInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(ComputeManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager)
+                                                    base_url=self._cloud_environment.endpoints.resource_manager,
+                                                    is_track2=True,
+                                                    api_version='2021-04-01')
 
         if (self.instance_id is None):
             self.results['instances'] = self.list()
@@ -179,7 +181,7 @@ class AzureRMVirtualMachineScaleSetVMInfo(AzureRMModuleBase):
                                                                           vm_scale_set_name=self.vmss_name,
                                                                           instance_id=self.instance_id)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Virtual Machine Scale Set VM.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -193,7 +195,7 @@ class AzureRMVirtualMachineScaleSetVMInfo(AzureRMModuleBase):
             items = self.mgmt_client.virtual_machine_scale_set_vms.list(resource_group_name=self.resource_group,
                                                                         virtual_machine_scale_set_name=self.vmss_name)
             self.log("Response : {0}".format(items))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Virtual Machine ScaleSet VM.')
 
         results = []
