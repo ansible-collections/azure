@@ -2,7 +2,7 @@
   set_fact:
     random_postfix: "{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     tenant_id: "{{ azure_tenant }}"
-    create_sql_admin_group: false  # disabled by default as special permission is needed to manage Azure AD resources
+    sql_admin_group: "Test Security Group"
   run_once: yes
 
 - name: Create instance of SQL Server -- check mode
@@ -100,13 +100,16 @@
     that:
       - output.changed
 
-- name: Create test Azure AD group
-  azure_rm_adgroup:
+- name: Get Azure AD group info
+  azure_rm_adgroup_info:
+    attribute_name: "displayName"
+    attribute_value: "{{ sql_admin_group }}"
     tenant: "{{ tenant_id }}"
-    display_name: "SqlAdminGroup{{ random_postfix }}"
-    mail_nickname: "SqlAdminGroup{{ random_postfix }}"
   register: admin_group_output
-  when: create_sql_admin_group | bool
+- name: Assert AD group exists
+  assert:
+    that:
+      - admin_group_output.ad_groups | length > 0
 
 - name: Create instance of SQL Server with Azure AD admin
   azure_rm_sqlserver:
@@ -117,8 +120,8 @@
     admin_password: Password123!
     administrators:
       principal_type: Group
-      login: "SqlAdminGroup{{ random_postfix }}"
-      sid: "{{ admin_group_output.object_id }}"
+      login: "{{ sql_admin_group }}"
+      sid: "{{ admin_group_output.ad_groups[0].object_id }}"
       tenant_id: "{{ tenant_id }}"
       azure_ad_only_authentication: false
   register: output
@@ -137,8 +140,8 @@
     admin_password: Password123!
     administrators:
       principal_type: Group
-      login: "SqlAdminGroup{{ random_postfix }}"
-      sid: "{{ admin_group_output.object_id }}"
+      login: "{{ sql_admin_group }}"
+      sid: "{{ admin_group_output.ad_groups[0].object_id }}"
       tenant_id: "{{ tenant_id }}"
       azure_ad_only_authentication: false
   register: output
@@ -216,9 +219,9 @@
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].admin_username == 'sqllogin'
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.administrator_type == 'ActiveDirectory'
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.azure_ad_only_authentication == False
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.login == 'SqlAdminGroup{{ random_postfix }}'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.login == '{{ sql_admin_group }}'
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.principal_type == 'Group'
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.sid == '{{ admin_group_output.object_id }}'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.sid == '{{ admin_group_output.ad_groups[0].object_id }}'
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.tenant_id == '{{ tenant_id }}'
 
 - name: Gather facts SQL Server - unexisting
@@ -748,10 +751,3 @@
     resource_group: "{{ resource_group }}"
     name: "sqlsrv-azuread-{{ random_postfix }}"
     state: absent
-
-- name: Delete test Azure AD group
-  azure_rm_adgroup:
-    tenant: "{{ tenant_id }}"
-    object_id: "{{ admin_group_output.object_id }}"
-    state: "absent"
-  when: create_sql_admin_group | bool
