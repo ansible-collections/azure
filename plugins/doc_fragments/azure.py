@@ -34,7 +34,7 @@ options:
         type: str
     client_id:
         description:
-            - Azure client ID. Use when authenticating with a Service Principal or Managed Identity (msi). 
+            - Azure client ID. Use when authenticating with a Service Principal or Managed Identity (msi).
             - Can also be set via the C(AZURE_CLIENT_ID) environment variable.
         type: str
     secret:
