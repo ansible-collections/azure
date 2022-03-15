@@ -33,6 +33,8 @@
   - azure_rm_cosmosdbaccount: Update the backup region in the test case ([#776](https://github.com/ansible-collections/azure/pull/776))
   - azure_rm_virtualmachine_info: Fix VM info module for failed VM provisions ([#745](https://github.com/ansible-collections/azure/pull/745))
   - azure_rm_loadbalancer_info: BugFix : Fixed documentation issue for azure_rm_loadbalancer_info ([#719](https://github.com/ansible-collections/azure/pull/719))
+  - azure_rm: Fix ansible 2.13 sanity fail ([#778](https://github.com/ansible-collections/azure/pull/778))
+  - azure_rm: Fixes for issue #732 ([#733](https://github.com/ansible-collections/azure/pull/733))
 
 
 ## v1.11.0 (2022-01-18)
