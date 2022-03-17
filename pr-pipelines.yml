@@ -4,11 +4,11 @@ parameters:
   type: string
   default: "3.8"
   values:
-    - "2.6"
     - "2.7"
     - "3.6"
     - "3.8"
     - "3.9"
+    - "3.10"
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
