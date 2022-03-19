@@ -101,6 +101,90 @@
     name: "vmforimage{{ rpfx }}"
     state: absent
 
+- name: Create VMSS with I(orchestration_mode=Flexible)
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    vm_size: Standard_A1_v2
+    admin_username: testuser
+    single_placement_group: False
+    platform_fault_domain_count: 1
+    public_ip_per_vm: True
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
+    managed_disk_type: Standard_LRS
+    orchestration_mode: Flexible
+    os_disk_caching: ReadWrite
+    image:
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
+      version: latest
+    data_disks:
+      - lun: 0
+        disk_size_gb: 64
+        caching: ReadWrite
+        managed_disk_type: Standard_LRS
+  register: results
+
+- name: Assert that VMSS can be created
+  assert:
+    that: results.changed
+
+- name: Create VMSS with I(orchestration_mode=Flexible) again --- Idempotent
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    vm_size: Standard_A1_v2
+    admin_username: testuser
+    single_placement_group: False
+    platform_fault_domain_count: 1
+    public_ip_per_vm: True
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
+    managed_disk_type: Standard_LRS
+    orchestration_mode: Flexible
+    os_disk_caching: ReadWrite
+    image:
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
+      version: latest
+    data_disks:
+      - lun: 0
+        disk_size_gb: 64
+        caching: ReadWrite
+        managed_disk_type: Standard_LRS
+  register: results
+
+- name: Assert that VMSS can be created
+  assert:
+    that: not results.changed
+
+- name: Retrieve scaleset VMSS fact
+  azure_rm_virtualmachinescaleset_info:
+    name: testVMSS{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+  register: output_scaleset
+
+- assert:
+    that:
+      - output_scaleset.vmss[0].properties.orchestrationMode == "Flexible"
+
+- name: Delete VMSS
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    state: absent
+
 - name: Create VMSS with Spot Instance default value
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
