@@ -215,7 +215,6 @@ options:
         description:
             - Specifies whether the Virtual Machine Scale Set should be overprovisioned.
         type: bool
-        default: True
     single_placement_group:
         description:
             - When true this limits the scale set to a single placement group, of max size 100 virtual machines.

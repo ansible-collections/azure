@@ -438,7 +438,7 @@
     capacity: "{{ body.capacity }}"
     virtual_network_name: "{{ body.virtual_network_name }}"
     subnet_name: "{{ body.subnet_name }}"
-    upgrade_policy: "{{ body.upgrade_policy }}"
+    upgrade_policy: "{{ body.upgrade_policy.mode }}"
     load_balancer: "{{ body.load_balancer }}"
     tier: "{{ body.tier }}"
     managed_disk_type: "{{ body.managed_disk_type }}"
