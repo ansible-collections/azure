@@ -234,6 +234,7 @@ automation_accounts:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from azure.core.exceptions import ResourceNotFoundError
 
 try:
     from msrestazure.tools import parse_resource_id
@@ -311,7 +312,7 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
     def get(self):
         try:
             return self.automation_client.automation_account.get(self.resource_group, self.name)
-        except self.automation_models.ErrorResponseException as exc:
+        except ResourceNotFoundError as exc:
             self.fail('Error when getting automation account {0}: {1}'.format(self.name, exc.message))
 
     def list_by_resource_group(self):
@@ -322,7 +323,7 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
                 result.append(resp.next())
         except StopIteration:
             pass
-        except self.automation_models.ErrorResponseException as exc:
+        except Exception as exc:
             self.fail('Error when listing automation account in resource group {0}: {1}'.format(self.resource_group, exc.message))
         return result
 
@@ -334,7 +335,7 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
                 result.append(resp.next())
         except StopIteration:
             pass
-        except self.automation_models.ErrorResponseException as exc:
+        except Exception as exc:
             self.fail('Error when listing automation account: {0}'.format(exc.message))
         return result
 
@@ -346,7 +347,7 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
                 result.append(resp.next().as_dict())
         except StopIteration:
             pass
-        except self.automation_models.ErrorResponseException as exc:
+        except Exception as exc:
             self.fail('Error when getting statics for automation account {0}/{1}: {2}'.format(resource_group, name, exc.message))
         return result
 
@@ -358,7 +359,7 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
                 result.append(resp.next().as_dict())
         except StopIteration:
             pass
-        except self.automation_models.ErrorResponseException as exc:
+        except Exception as exc:
             self.fail('Error when getting usage for automation account {0}/{1}: {2}'.format(resource_group, name, exc.message))
         return result
 
@@ -366,7 +367,7 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
         try:
             resp = self.automation_client.keys.list_by_automation_account(resource_group, name)
             return [x.as_dict() for x in resp.keys]
-        except self.automation_models.ErrorResponseException as exc:
+        except Exception as exc:
             self.fail('Error when listing keys for automation account {0}/{1}: {2}'.format(resource_group, name, exc.message))
 
 
