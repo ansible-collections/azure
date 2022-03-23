@@ -108,7 +108,7 @@ id:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -250,31 +250,31 @@ class AzureRMVMSSExtension(AzureRMModuleBase):
             params = self.compute_models.VirtualMachineScaleSetExtension(
                 location=self.location,
                 publisher=self.publisher,
-                type=self.type,
+                type_properties_type=self.type,
                 type_handler_version=self.type_handler_version,
                 auto_upgrade_minor_version=self.auto_upgrade_minor_version,
                 settings=self.settings,
                 protected_settings=self.protected_settings
             )
-            poller = self.compute_client.virtual_machine_scale_set_extensions.create_or_update(resource_group_name=self.resource_group,
-                                                                                               vm_scale_set_name=self.vmss_name,
-                                                                                               vmss_extension_name=self.name,
-                                                                                               extension_parameters=params)
+            poller = self.compute_client.virtual_machine_scale_set_extensions.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                                     vm_scale_set_name=self.vmss_name,
+                                                                                                     vmss_extension_name=self.name,
+                                                                                                     extension_parameters=params)
             response = self.get_poller_result(poller)
             return response.as_dict()
 
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to create the VMSS extension.')
             self.fail("Error creating the VMSS extension: {0}".format(str(e)))
 
     def delete_vmssextension(self):
         self.log("Deleting vmextension {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machine_scale_set_extensions.delete(resource_group_name=self.resource_group,
-                                                                                     vm_scale_set_name=self.vmss_name,
-                                                                                     vmss_extension_name=self.name)
+            poller = self.compute_client.virtual_machine_scale_set_extensions.begin_delete(resource_group_name=self.resource_group,
+                                                                                           vm_scale_set_name=self.vmss_name,
+                                                                                           vmss_extension_name=self.name)
             self.get_poller_result(poller)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the vmextension.')
             self.fail("Error deleting the vmextension: {0}".format(str(e)))
 
@@ -283,7 +283,7 @@ class AzureRMVMSSExtension(AzureRMModuleBase):
         try:
             response = self.compute_client.virtual_machine_scale_set_extensions.get(self.resource_group, self.vmss_name, self.name)
             return response.as_dict()
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find VMSS extension')
             return False
 

@@ -164,7 +164,7 @@ images:
 
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -231,7 +231,7 @@ class AzureRMImageInfo(AzureRMModuleBase):
         item = None
         try:
             item = self.image_client.images.get(resource_group, image_name)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail('Failed to list images - {0}'.format(str(exc)))
 
         result = [self.format_item(item)]
@@ -246,7 +246,7 @@ class AzureRMImageInfo(AzureRMModuleBase):
         response = None
         try:
             response = self.image_client.images.list_by_resource_group(resource_group)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list images: {0}".format(str(exc)))
 
         return [self.format_item(x) for x in response if self.has_tags(x.tags, self.tags)] if response else []
@@ -261,7 +261,7 @@ class AzureRMImageInfo(AzureRMModuleBase):
         results = []
         try:
             response = self.image_client.images.list()
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list all images: {0}".format(str(exc)))
 
         results = [self.format_item(x) for x in response if self.has_tags(x.tags, self.tags)] if response else []

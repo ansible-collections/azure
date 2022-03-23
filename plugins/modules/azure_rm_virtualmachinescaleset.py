@@ -506,6 +506,7 @@ try:
     from msrestazure.azure_exceptions import CloudError
     from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.tools import parse_resource_id
+    from azure.core.exceptions import ResourceNotFoundError
 
 except ImportError:
     # This is handled in azure_rm_common
@@ -865,7 +866,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                 results = dict()
                 changed = True
 
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Virtual machine scale set {0} does not exist'.format(self.name))
             if self.state == 'present':
                 self.log("CHANGED: virtual machine scale set {0} does not exist but state is 'present'.".format(self.name))
@@ -1118,7 +1119,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         try:
             vmss = self.compute_client.virtual_machine_scale_sets.get(self.resource_group, self.name)
             return vmss
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error getting virtual machine scale set {0} - {1}".format(self.name, str(exc)))
 
     def get_virtual_network(self, name):
@@ -1174,10 +1175,10 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         self.log("Deleting virtual machine scale set {0}".format(self.name))
         self.results['actions'].append("Deleted virtual machine scale set {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machine_scale_sets.delete(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machine_scale_sets.begin_delete(self.resource_group, self.name)
             # wait for the poller to finish
             self.get_poller_result(poller)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error deleting virtual machine scale set {0} - {1}".format(self.name, str(exc)))
 
         return True
@@ -1188,7 +1189,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                                                                        self.image['publisher'],
                                                                        self.image['offer'],
                                                                        self.image['sku'])
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching image {0} {1} {2} - {3}".format(self.image['publisher'],
                                                                       self.image['offer'],
                                                                       self.image['sku'],
@@ -1211,7 +1212,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                 vm_images = self.compute_client.images.list_by_resource_group(resource_group)
             else:
                 vm_images = self.compute_client.images.list()
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching custom images from subscription - {0}".format(str(exc)))
 
         for vm_image in vm_images:
@@ -1223,9 +1224,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
 
     def create_or_update_vmss(self, params):
         try:
-            poller = self.compute_client.virtual_machine_scale_sets.create_or_update(self.resource_group, self.name, params)
+            poller = self.compute_client.virtual_machine_scale_sets.begin_create_or_update(self.resource_group, self.name, params)
             self.get_poller_result(poller)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error creating or updating virtual machine {0} - {1}".format(self.name, str(exc)))
 
     def vm_size_is_valid(self):
@@ -1236,7 +1237,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         '''
         try:
             sizes = self.compute_client.virtual_machine_sizes.list(self.location)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error retrieving available machine sizes - {0}".format(str(exc)))
         for size in sizes:
             if size.name == self.vm_size:

@@ -120,12 +120,12 @@
   azure_rm_cosmosdbaccount:
     resource_group: "{{ resource_group_secondary }}"
     name: "{{ db2name }}"
-    location: westus
+    location: eastasia
     kind: global_document_db
     geo_rep_locations:
-      - name: southcentralus
+      - name: eastasia
         failover_priority: 0
-      - name: eastus2
+      - name: westus
         failover_priority: 1
     database_account_offer_type: Standard
     is_virtual_network_filter_enabled: yes
