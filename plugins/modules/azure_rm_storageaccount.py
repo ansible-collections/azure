@@ -399,7 +399,7 @@ state:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.storage.cloudstorageaccount import CloudStorageAccount
     from azure.common import AzureMissingResourceHttpError
 except ImportError:
@@ -535,13 +535,11 @@ class AzureRMStorageAccount(AzureRMModuleBase):
     def check_name_availability(self):
         self.log('Checking name availability for {0}'.format(self.name))
         try:
-            response = self.storage_client.storage_accounts.check_name_availability(self.name)
-        except CloudError as e:
+            account_name = self.storage_models.StorageAccountCheckNameAvailabilityParameters(name=self.name)
+            response = self.storage_client.storage_accounts.check_name_availability(account_name)
+        except Exception as e:
             self.log('Error attempting to validate name.')
             self.fail("Error checking name availability: {0}".format(str(e)))
-        if not response.name_available:
-            self.log('Error name not available.')
-            self.fail("{0} - {1}".format(response.message, response.reason))
 
     def get_account(self):
         self.log('Get properties for account {0}'.format(self.name))
@@ -552,7 +550,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         try:
             account_obj = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name)
             blob_service_props = self.storage_client.blob_services.get_service_properties(self.resource_group, self.name)
-        except CloudError:
+        except Exception:
             pass
 
         if account_obj:
@@ -567,16 +565,13 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             location=account_obj.location,
             resource_group=self.resource_group,
             type=account_obj.type,
-            access_tier=(account_obj.access_tier.value
-                         if account_obj.access_tier is not None else None),
+            access_tier=account_obj.access_tier,
             sku_tier=account_obj.sku.tier,
             sku_name=account_obj.sku.name,
-            provisioning_state=account_obj.provisioning_state.value,
+            provisioning_state=account_obj.provisioning_state,
             secondary_location=account_obj.secondary_location,
-            status_of_primary=(account_obj.status_of_primary.value
-                               if account_obj.status_of_primary is not None else None),
-            status_of_secondary=(account_obj.status_of_secondary.value
-                                 if account_obj.status_of_secondary is not None else None),
+            status_of_primary=account_obj.status_of_primary,
+            status_of_secondary=account_obj.status_of_secondary,
             primary_location=account_obj.primary_location,
             https_only=account_obj.enable_https_traffic_only,
             minimum_tls_version=account_obj.minimum_tls_version,
@@ -834,9 +829,9 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         access_tier=self.access_tier)
         self.log(str(parameters))
         try:
-            poller = self.storage_client.storage_accounts.create(self.resource_group, self.name, parameters)
+            poller = self.storage_client.storage_accounts.begin_create(self.resource_group, self.name, parameters)
             self.get_poller_result(poller)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error creating storage account.')
             self.fail("Failed to create account: {0}".format(str(e)))
         if self.network_acls:
@@ -858,7 +853,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 status = self.storage_client.storage_accounts.delete(self.resource_group, self.name)
                 self.log("delete status: ")
                 self.log(str(status))
-            except CloudError as e:
+            except Exception as e:
                 self.fail("Failed to delete the account: {0}".format(str(e)))
         return True
 
@@ -871,7 +866,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         blob_service = self.get_blob_client(self.resource_group, self.name)
         try:
             response = blob_service.list_containers()
-        except AzureMissingResourceHttpError:
+        except Exception:
             # No blob storage available?
             return False
 

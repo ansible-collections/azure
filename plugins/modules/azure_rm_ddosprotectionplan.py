@@ -86,7 +86,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.network import NetworkManagementClient
 except ImportError:
     # This is handled in azure_rm_common
@@ -153,7 +153,7 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
             elif self.state == 'absent':
                 changed = True
 
-        except CloudError:
+        except ResourceNotFoundError:
             # the DDoS protection plan does not exist so create it
             if self.state == 'present':
                 changed = True
@@ -186,14 +186,13 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         '''
         self.log("create or update DDoS protection plan {0}".format(self.name))
         try:
-            poller = self.network_client.ddos_protection_plans.create_or_update(
+            poller = self.network_client.ddos_protection_plans.begin_create_or_update(
                 resource_group_name=params.get("resource_group"),
-                location=self.location,
                 ddos_protection_plan_name=params.get("name"),
-                tags=self.tags)
+                parameters=params)
             result = self.get_poller_result(poller)
             self.log("Response : {0}".format(result))
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to create DDoS protection plan {0} in resource group {1}: {2}".format(
                 self.name, self.resource_group, str(ex)))
         return ddos_protection_plan_to_dict(result)
@@ -205,10 +204,10 @@ class AzureDDoSProtectionPlan(AzureRMModuleBase):
         '''
         self.log("Deleting the DDoS protection plan {0}".format(self.name))
         try:
-            poller = self.network_client.ddos_protection_plans.delete(
+            poller = self.network_client.ddos_protection_plans.begin_delete(
                 self.resource_group, self.name)
             result = self.get_poller_result(poller)
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Error attempting to delete DDoS protection plan.')
             self.fail(
                 "Error deleting the DDoS protection plan : {0}".format(str(e)))

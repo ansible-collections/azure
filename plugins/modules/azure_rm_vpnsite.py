@@ -294,9 +294,9 @@ state:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
-    from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -563,21 +563,21 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
 
     def create_update_resource(self):
         try:
-            response = self.network_client.vpn_sites.create_or_update(resource_group_name=self.resource_group,
-                                                                      vpn_site_name=self.name,
-                                                                      vpn_site_parameters=self.body)
+            response = self.network_client.vpn_sites.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                            vpn_site_name=self.name,
+                                                                            vpn_site_parameters=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the VpnSite instance.')
             self.fail('Error creating the VpnSite instance: {0}'.format(str(exc)))
         return response.as_dict()
 
     def delete_resource(self):
         try:
-            response = self.network_client.vpn_sites.delete(resource_group_name=self.resource_group,
-                                                            vpn_site_name=self.name)
-        except CloudError as e:
+            response = self.network_client.vpn_sites.begin_delete(resource_group_name=self.resource_group,
+                                                                  vpn_site_name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the VpnSite instance.')
             self.fail('Error deleting the VpnSite instance: {0}'.format(str(e)))
 
@@ -587,7 +587,7 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
         try:
             response = self.network_client.vpn_sites.get(resource_group_name=self.resource_group,
                                                          vpn_site_name=self.name)
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             return False
         return response.as_dict()
 

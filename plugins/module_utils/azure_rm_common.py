@@ -101,7 +101,7 @@ AZURE_API_PROFILES = {
         'NetworkManagementClient': '2019-06-01',
         'ResourceManagementClient': '2017-05-10',
         'SearchManagementClient': '2020-08-01',
-        'StorageManagementClient': '2019-06-01',
+        'StorageManagementClient': '2021-06-01',
         'SubscriptionClient': '2019-11-01',
         'WebSiteManagementClient': '2018-02-01',
         'PostgreSQLManagementClient': '2017-12-01',
@@ -329,7 +329,7 @@ def normalize_location_name(name):
 AZURE_PKG_VERSIONS = {
     'StorageManagementClient': {
         'package_name': 'storage',
-        'expected_version': '11.1.0'
+        'expected_version': '19.0.0'
     },
     'ComputeManagementClient': {
         'package_name': 'compute',
@@ -735,7 +735,7 @@ class AzureRMModuleBase(object):
         )
         self.log('Creating default public IP {0}'.format(public_ip_name))
         try:
-            poller = self.network_client.public_ip_addresses.create_or_update(resource_group, public_ip_name, params)
+            poller = self.network_client.public_ip_addresses.begin_create_or_update(resource_group, public_ip_name, params)
         except Exception as exc:
             self.fail("Error creating {0} - {1}".format(public_ip_name, str(exc)))
 
@@ -833,9 +833,9 @@ class AzureRMModuleBase(object):
 
         self.log('Creating default security group {0}'.format(security_group_name))
         try:
-            poller = self.network_client.network_security_groups.create_or_update(resource_group,
-                                                                                  security_group_name,
-                                                                                  parameters)
+            poller = self.network_client.network_security_groups.begin_create_or_update(resource_group,
+                                                                                        security_group_name,
+                                                                                        parameters)
         except Exception as exc:
             self.fail("Error creating default security rule {0} - {1}".format(security_group_name, str(exc)))
 
@@ -1000,12 +1000,13 @@ class AzureRMModuleBase(object):
         if not self._storage_client:
             self._storage_client = self.get_mgmt_svc_client(StorageManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2019-06-01')
+                                                            is_track2=True,
+                                                            api_version='2021-06-01')
         return self._storage_client
 
     @property
     def storage_models(self):
-        return StorageManagementClient.models("2019-06-01")
+        return StorageManagementClient.models("2021-06-01")
 
     @property
     def authorization_client(self):
@@ -1050,13 +1051,14 @@ class AzureRMModuleBase(object):
         if not self._network_client:
             self._network_client = self.get_mgmt_svc_client(NetworkManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2020-06-01')
+                                                            is_track2=True,
+                                                            api_version='2021-03-01')
         return self._network_client
 
     @property
     def network_models(self):
         self.log("Getting network models...")
-        return NetworkManagementClient.models("2020-06-01")
+        return NetworkManagementClient.models("2021-03-01")
 
     @property
     def rm_client(self):
@@ -1078,13 +1080,14 @@ class AzureRMModuleBase(object):
         if not self._image_client:
             self._image_client = self.get_mgmt_svc_client(ComputeManagementClient,
                                                           base_url=self._cloud_environment.endpoints.resource_manager,
-                                                          api_version='2018-06-01')
+                                                          is_track2=True,
+                                                          api_version='2021-04-01')
         return self._image_client
 
     @property
     def image_models(self):
         self.log("Getting compute image models")
-        return ComputeManagementClient.models("2018-06-01")
+        return ComputeManagementClient.models("2021-04-01")
 
     @property
     def compute_client(self):
@@ -1092,13 +1095,14 @@ class AzureRMModuleBase(object):
         if not self._compute_client:
             self._compute_client = self.get_mgmt_svc_client(ComputeManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2019-07-01')
+                                                            is_track2=True,
+                                                            api_version='2021-04-01')
         return self._compute_client
 
     @property
     def compute_models(self):
         self.log("Getting compute models")
-        return ComputeManagementClient.models("2019-07-01")
+        return ComputeManagementClient.models("2021-04-01")
 
     @property
     def dns_client(self):
@@ -1500,7 +1504,7 @@ class AzureRMAuth(object):
         if self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credentials = self.credentials['credentials']
-            self.azure_credential_track2 = self.credentials['credential']
+            self.azure_credential_track2 = self.credentials['credentials']
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
@@ -1616,7 +1620,6 @@ class AzureRMAuth(object):
 
         cli_credentials = {
             'credentials': credentials,
-            'credential': credentials,
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment
         }

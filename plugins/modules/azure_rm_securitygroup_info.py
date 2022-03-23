@@ -246,7 +246,7 @@ securitygroups:
 '''  # NOQA
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -363,7 +363,7 @@ class AzureRMSecurityGroupInfo(AzureRMModuleBase):
 
         try:
             item = self.network_client.network_security_groups.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if item and self.has_tags(item.tags, self.tags):

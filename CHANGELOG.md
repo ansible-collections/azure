@@ -1,5 +1,41 @@
 # Change Log
 
+## v1.12.0 (2022-03-14)
+
+### NEW MODULES
+
+### FEATURE ENHANCEMENT
+  - azure_rm_privateendpointdnszonegroup: Add `private_dns_zone_id` for `azure_rm_privateendpointdnszonegroup` ([#735](https://github.com/ansible-collections/azure/pull/735))
+  - azure_rm_virtualmachineextension: Ignore comparing `protected_settings` ([#580](https://github.com/ansible-collections/azure/pull/580))
+  - azure_rm_aks: Add new parameter to enable AAD profile ([#654](https://github.com/ansible-collections/azure/pull/654))
+  - azure_rm_*: Upgrade azure-mgmt-network to 19.1.0 ([#729](https://github.com/ansible-collections/azure/pull/729))
+  - azure_rm_sqldatabase: Parse datetime module arguments ([#623](https://github.com/ansible-collections/azure/pull/623))
+  - azure_rm_sqldatabase_info: Parse datetime module arguments ([#623](https://github.com/ansible-collections/azure/pull/623))
+  - azure_rm_virtualmachine: Add VM status detection mechanism ([#772](https://github.com/ansible-collections/azure/pull/772))
+  - azure_rm_*: Upgrade azure-mgmt-compute SDK to track2 SDK ([#672](https://github.com/ansible-collections/azure/pull/672))
+  - azure_rm_*: Upgrade azure-mgmt-storage to 19.0.0 ([#777](https://github.com/ansible-collections/azure/pull/777))
+  - requirements-azure.txt: Update azure-cli-core to 2.34.0 ([#775](https://github.com/ansible-collections/azure/pull/775))
+  - azure_rm_virtualmachine: Update `azure_rm_galleryimage` to allow Hyper-V Generation ([#647](https://github.com/ansible-collections/azure/pull/647))
+
+### BUG FIXING
+  - azure_rm_roleassignment: Fix mismatch assignment error ([#613](https://github.com/ansible-collections/azure/pull/613))
+  - README.md: Delete unnecessary backtick in readme ([#736](https://github.com/ansible-collections/azure/pull/736))
+  - azure_rm_availabilityset: Fix `check_mode` support ([#627](https://github.com/ansible-collections/azure/pull/627))
+  - azure_rm_manageddisk: Fix `azure_rm_manageddisk` caching comparison ([#624](https://github.com/ansible-collections/azure/pull/624))
+  - azure_rm_publicipaddress: Add mandatory field when updating IPAddress ([#752](https://github.com/ansible-collections/azure/pull/752))
+  - azure_rm_common: Remove unused and deprecated `VERSION` import ([#751](https://github.com/ansible-collections/azure/pull/751))
+  - azure_rm_keyvaultkey: Conditionally call non MSI authorization when interacting with keyvault ([#770](https://github.com/ansible-collections/azure/pull/770))
+  - azure_rm_keyvaultkey_info: Conditionally call non MSI authorization when interacting with keyvault ([#770](https://github.com/ansible-collections/azure/pull/770))
+  - azure_rm_keyvaultsecret: Conditionally call non MSI authorization when interacting with keyvault ([#770](https://github.com/ansible-collections/azure/pull/770))
+  - azure_rm_keyvaultsecret_info: Conditionally call non MSI authorization when interacting with keyvault ([#770](https://github.com/ansible-collections/azure/pull/770))
+  - azure_rm_common: Fix typo error. ([#769](https://github.com/ansible-collections/azure/pull/769))
+  - azure_rm_cosmosdbaccount: Update test case region ([#776](https://github.com/ansible-collections/azure/pull/776))
+  - azure_rm_virtualmachine_info: Fix VM info module for failed VM provisions ([#745](https://github.com/ansible-collections/azure/pull/745))
+  - azure_rm_loadbalancer_info: Fix documentation issue ([#719](https://github.com/ansible-collections/azure/pull/719))
+  - azure_rm: Fix ansible 2.13 sanity fail ([#778](https://github.com/ansible-collections/azure/pull/778))
+  - azure_rm: Append secondary network information to relevant `hostvars` ([#733](https://github.com/ansible-collections/azure/pull/733))
+
+
 ## v1.11.0 (2022-01-18)
 
 ### NEW MODULES

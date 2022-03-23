@@ -809,11 +809,14 @@ azure_vm:
 import base64
 import random
 import re
+import time
 
 try:
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
     from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.tools import parse_resource_id
-    from msrest.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -1107,7 +1110,18 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         try:
             self.log("Fetching virtual machine {0}".format(self.name))
             vm = self.compute_client.virtual_machines.get(self.resource_group, self.name, expand='instanceview')
-            self.check_provisioning_state(vm, self.state)
+            retry_count = 0
+            while True:
+                if retry_count == 10:
+                    self.fail("Error {0} has a provisioning state of Updating. Expecting state to be Successed.".format(self.name))
+
+                if vm.provisioning_state == 'Updating':
+                    retry_count = retry_count + 1
+                    time.sleep(300)
+                    vm = self.compute_client.virtual_machines.get(self.resource_group, self.name, expand='instanceview')
+                else:
+                    break
+
             vm_dict = self.serialize_vm(vm)
 
             if self.state == 'present':
@@ -1264,7 +1278,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 results = dict()
                 changed = True
 
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Virtual machine {0} does not exist'.format(self.name))
             if self.state == 'present':
                 self.log("CHANGED: virtual machine {0} does not exist but state is 'present'.".format(self.name))
@@ -1796,7 +1810,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Powered off virtual machine {0}".format(self.name))
         self.results['actions'].append("Powered off virtual machine {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machines.power_off(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machines.begin_power_off(self.resource_group, self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error powering off virtual machine {0} - {1}".format(self.name, str(exc)))
@@ -1806,7 +1820,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.results['actions'].append("Powered on virtual machine {0}".format(self.name))
         self.log("Power on virtual machine {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machines.start(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machines.begin_start(self.resource_group, self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error powering on virtual machine {0} - {1}".format(self.name, str(exc)))
@@ -1816,7 +1830,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.results['actions'].append("Restarted virtual machine {0}".format(self.name))
         self.log("Restart virtual machine {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machines.restart(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machines.begin_restart(self.resource_group, self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error restarting virtual machine {0} - {1}".format(self.name, str(exc)))
@@ -1826,7 +1840,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.results['actions'].append("Deallocated virtual machine {0}".format(self.name))
         self.log("Deallocate virtual machine {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machines.deallocate(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machines.begin_deallocate(self.resource_group, self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deallocating virtual machine {0} - {1}".format(self.name, str(exc)))
@@ -1910,7 +1924,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Deleting virtual machine {0}".format(self.name))
         self.results['actions'].append("Deleted virtual machine {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machines.delete(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machines.begin_delete(self.resource_group, self.name)
             # wait for the poller to finish
             self.get_poller_result(poller)
         except Exception as exc:
@@ -1946,7 +1960,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         try:
             nic = self.network_client.network_interfaces.get(resource_group, name)
             return nic
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching network interface {0} - {1}".format(name, str(exc)))
         return True
 
@@ -1954,7 +1968,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Deleting network interface {0}".format(name))
         self.results['actions'].append("Deleted network interface {0}".format(name))
         try:
-            poller = self.network_client.network_interfaces.delete(resource_group, name)
+            poller = self.network_client.network_interfaces.begin_delete(resource_group, name)
         except Exception as exc:
             self.fail("Error deleting network interface {0} - {1}".format(name, str(exc)))
         self.get_poller_result(poller)
@@ -1964,7 +1978,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
     def delete_pip(self, resource_group, name):
         self.results['actions'].append("Deleted public IP {0}".format(name))
         try:
-            poller = self.network_client.public_ip_addresses.delete(resource_group, name)
+            poller = self.network_client.public_ip_addresses.begin_delete(resource_group, name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting {0} - {1}".format(name, str(exc)))
@@ -1974,7 +1988,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
     def delete_nsg(self, resource_group, name):
         self.results['actions'].append("Deleted NSG {0}".format(name))
         try:
-            poller = self.network_client.network_security_groups.delete(resource_group, name)
+            poller = self.network_client.network_security_groups.begin_delete(resource_group, name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting {0} - {1}".format(name, str(exc)))
@@ -2085,7 +2099,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
     def create_or_update_vm(self, params, remove_autocreated_on_failure):
         try:
-            poller = self.compute_client.virtual_machines.create_or_update(self.resource_group, self.name, params)
+            poller = self.compute_client.virtual_machines.begin_create_or_update(self.resource_group, self.name, params)
             self.get_poller_result(poller)
         except Exception as exc:
             if remove_autocreated_on_failure:
@@ -2148,7 +2162,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
         try:
             account = self.storage_client.storage_accounts.get_properties(self.resource_group, storage_account_name)
-        except CloudError:
+        except Exception:
             pass
 
         if account:
@@ -2163,7 +2177,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Creating storage account {0} in location {1}".format(storage_account_name, self.location))
         self.results['actions'].append("Created storage account {0}".format(storage_account_name))
         try:
-            poller = self.storage_client.storage_accounts.create(self.resource_group, storage_account_name, parameters)
+            poller = self.storage_client.storage_accounts.begin_create(self.resource_group, storage_account_name, parameters)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Failed to create storage account: {0} - {1}".format(storage_account_name, str(exc)))
@@ -2173,7 +2187,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
     def check_storage_account_name(self, name):
         self.log("Checking storage account name availability for {0}".format(name))
         try:
-            response = self.storage_client.storage_accounts.check_name_availability(name)
+            account_name = self.storage_models.StorageAccountCheckNameAvailabilityParameters(name=name)
+            response = self.storage_client.storage_accounts.check_name_availability(account_name)
             if response.reason == 'AccountNameInvalid':
                 raise Exception("Invalid default storage account name: {0}".format(name))
         except Exception as exc:
@@ -2198,7 +2213,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Check to see if NIC {0} exists".format(network_interface_name))
         try:
             nic = self.network_client.network_interfaces.get(self.resource_group, network_interface_name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if nic:
@@ -2216,9 +2231,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
         if self.virtual_network_name:
             try:
-                self.network_client.virtual_networks.list(virtual_network_resource_group, self.virtual_network_name)
+                self.network_client.virtual_networks.get(virtual_network_resource_group, self.virtual_network_name)
                 virtual_network_name = self.virtual_network_name
-            except CloudError as exc:
+            except ResourceNotFoundError as exc:
                 self.fail("Error: fetching virtual network {0} - {1}".format(self.virtual_network_name, str(exc)))
 
         else:
@@ -2230,7 +2245,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             virtual_network_name = None
             try:
                 vnets = self.network_client.virtual_networks.list(virtual_network_resource_group)
-            except CloudError:
+            except ResourceNotFoundError:
                 self.log('cloud error!')
                 self.fail(no_vnets_msg)
 
@@ -2246,7 +2261,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             try:
                 subnet = self.network_client.subnets.get(virtual_network_resource_group, virtual_network_name, self.subnet_name)
                 subnet_id = subnet.id
-            except Exception as exc:
+            except CloudError as exc:
                 self.fail("Error: fetching subnet {0} - {1}".format(self.subnet_name, str(exc)))
         else:
             no_subnets_msg = "Error: unable to find a subnet in virtual network {0}. A virtual network " \
@@ -2256,7 +2271,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             subnet_id = None
             try:
                 subnets = self.network_client.subnets.list(virtual_network_resource_group, virtual_network_name)
-            except CloudError:
+            except Exception:
+
                 self.fail(no_subnets_msg)
 
             for subnet in subnets:
@@ -2299,9 +2315,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log(self.serialize_obj(parameters, 'NetworkInterface'), pretty_print=True)
         self.results['actions'].append("Created NIC {0}".format(network_interface_name))
         try:
-            poller = self.network_client.network_interfaces.create_or_update(self.resource_group,
-                                                                             network_interface_name,
-                                                                             parameters)
+            poller = self.network_client.network_interfaces.begin_create_or_update(self.resource_group,
+                                                                                   network_interface_name,
+                                                                                   parameters)
             new_nic = self.get_poller_result(poller)
             self.tags['_own_nic_'] = network_interface_name
         except Exception as exc:
