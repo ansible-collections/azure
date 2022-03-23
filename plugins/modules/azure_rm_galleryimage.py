@@ -69,6 +69,13 @@ options:
             - specialized
         required: true
         type: str
+    hypervgeneration:
+        description:
+            - This property allows you to specify the Hyper V Version of the Virtual Machines.
+        choices:
+            - V1
+            - V2
+        type: str
     end_of_life_date:
         description:
             - The end of life date of the gallery Image Definition.
@@ -266,6 +273,12 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                 disposition='/properties/osState',
                 choices=['generalized',
                          'specialized']
+            ),
+            hypervgeneration=dict(
+                type='str',
+                disposition='/properties/hyperVGeneration',
+                choices=['V1',
+                         'V2']
             ),
             end_of_life_date=dict(
                 type='str',

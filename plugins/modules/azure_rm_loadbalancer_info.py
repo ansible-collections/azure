@@ -24,12 +24,16 @@ options:
     name:
         description:
             - Limit results to a specific resource group.
+        type: str
     resource_group:
         description:
             - The resource group to search for the desired load balancer.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -58,11 +62,53 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-azure_loadbalancers:
+loadbalancers:
     description:
-        - List of load balancer dicts.
+        - Gets a list of load balancers.
     returned: always
     type: list
+    elements: dict
+    sample: [
+        {
+            "etag": "1c83ade9-9dee-4027-860a-d5fabacc184f",
+            "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myAzureResourceGroup/providers/
+                   Microsoft.Network/loadBalancers/testloadbalancer1",
+            "location": "centralindia",
+            "name": "testloadbalancer1",
+            "properties": {
+                "backendAddressPools": [],
+                "frontendIPConfigurations": [
+                    {
+                        "etag": "1c83ade9-9dee-4027-860a-d5fabacc184f",
+                        "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myAzureResourceGroup/
+                               providers/Microsoft.Network/loadBalancers/testloadbalancer1/
+                               frontendIPConfigurations/frontendipconf0",
+                        "name": "frontendipconf0",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "provisioningState": "Succeeded",
+                            "publicIPAddress": {
+                                "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/
+                                       myAzureResourceGroup/providers/Microsoft.Network/publicIPAddresses/testpip"
+                            }
+                        },
+                        "type": "Microsoft.Network/loadBalancers/frontendIPConfigurations"
+                    }
+                ],
+                "inboundNatPools": [],
+                "inboundNatRules": [],
+                "loadBalancingRules": [],
+                "outboundRules": [],
+                "probes": [],
+                "provisioningState": "Succeeded",
+                "resourceGuid": "0b31ab3e-7c55-438d-92a0-5acdc99b5277"
+            },
+            "sku": {
+                "name": "Standard"
+            },
+            "type": "Microsoft.Network/loadBalancers"
+        }
+    ]
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -85,14 +131,12 @@ class AzureRMLoadBalancerInfo(AzureRMModuleBase):
         self.module_args = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list')
+            tags=dict(type='list', elements='str')
         )
 
         self.results = dict(
             changed=False,
-            ansible_info=dict(
-                azure_loadbalancers=[]
-            )
+            loadbalancers=[]
         )
 
         self.name = None
@@ -115,7 +159,7 @@ class AzureRMLoadBalancerInfo(AzureRMModuleBase):
         for key in self.module_args:
             setattr(self, key, kwargs[key])
 
-        self.results['ansible_info']['azure_loadbalancers'] = (
+        self.results['loadbalancers'] = (
             self.get_item() if self.name
             else self.list_items()
         )
