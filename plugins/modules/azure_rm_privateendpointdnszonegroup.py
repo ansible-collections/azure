@@ -183,7 +183,8 @@ state:
 
 try:
     from msrestazure.tools import resource_id
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -284,17 +285,17 @@ class AzureRMPrivateEndpointDnsZoneGroup(AzureRMModuleBaseExt):
                                                                    private_endpoint_name=self.private_endpoint,
                                                                    private_dns_zone_group_name=self.name)
             return self.zone_to_dict(item)
-        except Exception:
+        except ResourceNotFoundError:
             self.log("Did not find the private endpoint resource")
         return None
 
     def create_update_zone(self):
         try:
             self.parameters["name"] = self.name
-            response = self.network_client.private_dns_zone_groups.create_or_update(resource_group_name=self.resource_group,
-                                                                                    private_endpoint_name=self.private_endpoint,
-                                                                                    private_dns_zone_group_name=self.name,
-                                                                                    parameters=self.parameters)
+            response = self.network_client.private_dns_zone_groups.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                          private_endpoint_name=self.private_endpoint,
+                                                                                          private_dns_zone_group_name=self.name,
+                                                                                          parameters=self.parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -306,14 +307,14 @@ class AzureRMPrivateEndpointDnsZoneGroup(AzureRMModuleBaseExt):
         try:
             self.network_client.private_endpoints.get(resource_group_name=self.resource_group,
                                                       private_endpoint_name=self.private_endpoint)
-        except Exception:
+        except ResourceNotFoundError:
             self.fail("Could not load the private endpoint {0}.".format(self.private_endpoint))
 
     def delete_zone(self):
         try:
-            response = self.network_client.private_dns_zone_groups.delete(resource_group_name=self.resource_group,
-                                                                          private_endpoint_name=self.private_endpoint,
-                                                                          private_dns_zone_group_name=self.name)
+            response = self.network_client.private_dns_zone_groups.begin_delete(resource_group_name=self.resource_group,
+                                                                                private_endpoint_name=self.private_endpoint,
+                                                                                private_dns_zone_group_name=self.name)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -322,7 +323,10 @@ class AzureRMPrivateEndpointDnsZoneGroup(AzureRMModuleBaseExt):
             self.fail("Error deleting private endpoint {0}: {1}".format(self.name, str(exc)))
 
     def zone_to_dict(self, zone):
-        zone_dict = zone.as_dict()
+        if zone is not None:
+            zone_dict = zone.as_dict()
+        else:
+            return None
         return dict(
             id=zone_dict.get("id"),
             name=zone_dict.get("name"),

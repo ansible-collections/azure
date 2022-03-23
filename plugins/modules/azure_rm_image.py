@@ -113,7 +113,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from msrestazure.tools import parse_resource_id
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -328,18 +328,16 @@ class AzureRMImage(AzureRMModuleBase):
                 return get_method(resource_group, name, expand=expand)
             else:
                 return get_method(resource_group, name)
-        except CloudError as cloud_err:
+        except ResourceNotFoundError as cloud_err:
             # Return None iff the resource is not found
             if cloud_err.status_code == 404:
                 self.log('{0}'.format(str(cloud_err)))
                 return None
             self.fail('Error: failed to get resource {0} - {1}'.format(name, str(cloud_err)))
-        except Exception as exc:
-            self.fail('Error: failed to get resource {0} - {1}'.format(name, str(exc)))
 
     def create_image(self, image):
         try:
-            poller = self.image_client.images.create_or_update(self.resource_group, self.name, image)
+            poller = self.image_client.images.begin_create_or_update(self.resource_group, self.name, image)
             new_image = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating image {0} - {1}".format(self.name, str(exc)))
@@ -349,7 +347,7 @@ class AzureRMImage(AzureRMModuleBase):
     def delete_image(self):
         self.log('Deleting image {0}'.format(self.name))
         try:
-            poller = self.image_client.images.delete(self.resource_group, self.name)
+            poller = self.image_client.images.begin_delete(self.resource_group, self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting image {0} - {1}".format(self.name, str(exc)))
