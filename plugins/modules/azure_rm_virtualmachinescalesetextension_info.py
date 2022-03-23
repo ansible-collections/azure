@@ -117,8 +117,8 @@ extensions:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -174,7 +174,7 @@ class AzureRMVirtualMachineScaleSetExtensionInfo(AzureRMModuleBase):
                                                                                     vm_scale_set_name=self.vmss_name,
                                                                                     vmss_extension_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Virtual Machine Extension.')
 
         if response:
@@ -189,7 +189,7 @@ class AzureRMVirtualMachineScaleSetExtensionInfo(AzureRMModuleBase):
             response = self.compute_client.virtual_machine_scale_set_extensions.list(resource_group_name=self.resource_group,
                                                                                      vm_scale_set_name=self.vmss_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Virtual Machine Extension.')
 
         if response is not None:

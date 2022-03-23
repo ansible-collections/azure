@@ -219,9 +219,9 @@ state:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
     from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -362,21 +362,21 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
 
     def create_update_resource(self):
         try:
-            response = self.network_client.virtual_wans.create_or_update(resource_group_name=self.resource_group,
-                                                                         virtual_wan_name=self.name,
-                                                                         wan_parameters=self.body)
+            response = self.network_client.virtual_wans.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                               virtual_wan_name=self.name,
+                                                                               wan_parameters=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the VirtualWan instance.')
             self.fail('Error creating the VirtualWan instance: {0}'.format(str(exc)))
         return response.as_dict()
 
     def delete_resource(self):
         try:
-            response = self.network_client.virtual_wans.delete(resource_group_name=self.resource_group,
-                                                               virtual_wan_name=self.name)
-        except CloudError as e:
+            response = self.network_client.virtual_wans.begin_delete(resource_group_name=self.resource_group,
+                                                                     virtual_wan_name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the VirtualWan instance.')
             self.fail('Error deleting the VirtualWan instance: {0}'.format(str(e)))
 
@@ -386,7 +386,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
         try:
             response = self.network_client.virtual_wans.get(resource_group_name=self.resource_group,
                                                             virtual_wan_name=self.name)
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             return False
         return response.as_dict()
 

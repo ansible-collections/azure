@@ -138,6 +138,7 @@
     virtual_network_name: My_Virtual_Network
     resource_group: "{{ resource_group }}"
     address_prefix_cidr: "10.1.0.0/16"
+    route_table: "{{ route_table.id }}"
     security_group: "{{ nsg.state.id }}"
   register: output
 

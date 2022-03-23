@@ -1,5 +1,97 @@
 # Change Log
 
+## v1.12.0 (2022-03-14)
+
+### NEW MODULES
+
+### FEATURE ENHANCEMENT
+  - azure_rm_privateendpointdnszonegroup: Add `private_dns_zone_id` for `azure_rm_privateendpointdnszonegroup` ([#735](https://github.com/ansible-collections/azure/pull/735))
+  - azure_rm_virtualmachineextension: Ignore comparing `protected_settings` ([#580](https://github.com/ansible-collections/azure/pull/580))
+  - azure_rm_aks: Add new parameter to enable AAD profile ([#654](https://github.com/ansible-collections/azure/pull/654))
+  - azure_rm_*: Upgrade azure-mgmt-network to 19.1.0 ([#729](https://github.com/ansible-collections/azure/pull/729))
+  - azure_rm_sqldatabase: Parse datetime module arguments ([#623](https://github.com/ansible-collections/azure/pull/623))
+  - azure_rm_sqldatabase_info: Parse datetime module arguments ([#623](https://github.com/ansible-collections/azure/pull/623))
+  - azure_rm_virtualmachine: Add VM status detection mechanism ([#772](https://github.com/ansible-collections/azure/pull/772))
+  - azure_rm_*: Upgrade azure-mgmt-compute SDK to track2 SDK ([#672](https://github.com/ansible-collections/azure/pull/672))
+  - azure_rm_*: Upgrade azure-mgmt-storage to 19.0.0 ([#777](https://github.com/ansible-collections/azure/pull/777))
+  - requirements-azure.txt: Update azure-cli-core to 2.34.0 ([#775](https://github.com/ansible-collections/azure/pull/775))
+  - azure_rm_virtualmachine: Update `azure_rm_galleryimage` to allow Hyper-V Generation ([#647](https://github.com/ansible-collections/azure/pull/647))
+
+### BUG FIXING
+  - azure_rm_roleassignment: Fix mismatch assignment error ([#613](https://github.com/ansible-collections/azure/pull/613))
+  - README.md: Delete unnecessary backtick in readme ([#736](https://github.com/ansible-collections/azure/pull/736))
+  - azure_rm_availabilityset: Fix `check_mode` support ([#627](https://github.com/ansible-collections/azure/pull/627))
+  - azure_rm_manageddisk: Fix `azure_rm_manageddisk` caching comparison ([#624](https://github.com/ansible-collections/azure/pull/624))
+  - azure_rm_publicipaddress: Add mandatory field when updating IPAddress ([#752](https://github.com/ansible-collections/azure/pull/752))
+  - azure_rm_common: Remove unused and deprecated `VERSION` import ([#751](https://github.com/ansible-collections/azure/pull/751))
+  - azure_rm_keyvaultkey: Conditionally call non MSI authorization when interacting with keyvault ([#770](https://github.com/ansible-collections/azure/pull/770))
+  - azure_rm_keyvaultkey_info: Conditionally call non MSI authorization when interacting with keyvault ([#770](https://github.com/ansible-collections/azure/pull/770))
+  - azure_rm_keyvaultsecret: Conditionally call non MSI authorization when interacting with keyvault ([#770](https://github.com/ansible-collections/azure/pull/770))
+  - azure_rm_keyvaultsecret_info: Conditionally call non MSI authorization when interacting with keyvault ([#770](https://github.com/ansible-collections/azure/pull/770))
+  - azure_rm_common: Fix typo error. ([#769](https://github.com/ansible-collections/azure/pull/769))
+  - azure_rm_cosmosdbaccount: Update test case region ([#776](https://github.com/ansible-collections/azure/pull/776))
+  - azure_rm_virtualmachine_info: Fix VM info module for failed VM provisions ([#745](https://github.com/ansible-collections/azure/pull/745))
+  - azure_rm_loadbalancer_info: Fix documentation issue ([#719](https://github.com/ansible-collections/azure/pull/719))
+  - azure_rm: Fix ansible 2.13 sanity fail ([#778](https://github.com/ansible-collections/azure/pull/778))
+  - azure_rm: Append secondary network information to relevant `hostvars` ([#733](https://github.com/ansible-collections/azure/pull/733))
+
+
+## v1.11.0 (2022-01-18)
+
+### NEW MODULES
+  - azure_rm_virtualhub: New Module azure_rm_virtualhub ([#597](https://github.com/ansible-collections/azure/pull/597))
+  - azure_rm_virtualhub_info: New Module azure_rm_virtualhub_info ([#597](https://github.com/ansible-collections/azure/pull/597))
+  - azure_rm_hostgroup: New Module : azure_rm_hostgroup ([#704](https://github.com/ansible-collections/azure/pull/704))
+  - azure_rm_hostgroup_info: New Module : azure_rm_hostgroup ([#704](https://github.com/ansible-collections/azure/pull/704))
+  - azure_rm_privateendpointdnszonegroup: Add module for private endpoint DNS zone groups ([#689](https://github.com/ansible-collections/azure/pull/689))
+  - azure_rm_privateendpointdnszonegroup_info: Add module for private endpoint DNS zone groups ([#689](https://github.com/ansible-collections/azure/pull/689))
+  - azure_rm_monitordiagnosticsetting: Add new monitor diagnostic setting modules ([#701](https://github.com/ansible-collections/azure/pull/701))
+  - azure_rm_monitordiagnosticsetting_info: Add new monitor diagnostic setting modules ([#701](https://github.com/ansible-collections/azure/pull/701))
+  - azure_rm_storageshare: Azure storage file share module ([#603](https://github.com/ansible-collections/azure/pull/603))
+  - azure_rm_storageshare_info: Azure storage file share module ([#603](https://github.com/ansible-collections/azure/pull/603))
+  - azure_rm_appgateway_info: Application gateway start/stop ability and info module ([#673](https://github.com/ansible-collections/azure/pull/673))
+
+### FEATURE ENHANCEMENT
+  - azure_rm_webapp: Add additional parameters for webapp site config ([#695](https://github.com/ansible-collections/azure/pull/695))
+  - azure_rm_webapp_info: Add additional parameters for webapp site config ([#695](https://github.com/ansible-collections/azure/pull/695))
+  - azure_rm: Add managed disks list to dynamic inventory hostvars ([#687](https://github.com/ansible-collections/azure/pull/687))
+  - azure_rm_networkinterface: Add ability to connect network interface to application gateway backend pool ([#683](https://github.com/ansible-collections/azure/pull/683))
+  - azure_rm_networkinterface_info: Add ability to connect network interface to application gateway backend pool ([#683](https://github.com/ansible-collections/azure/pull/683))
+  - azure_rm_keyvaultsecret: feat: Add expiry information for keyvaultsecrets ([#660](https://github.com/ansible-collections/azure/pull/660))
+  - azure_rm_virtualmachine_info: Verify the VM status after created ([#657](https://github.com/ansible-collections/azure/pull/657))
+  - azure_rm_appgateway: Add advanced routing/redirect support for application gateway ([#685](https://github.com/ansible-collections/azure/pull/685))
+  - azure_rm_virtualmachine: Add new parameter `proximity_placement_group` ([#611](https://github.com/ansible-collections/azure/pull/611))
+  - azure_rm_virtualmachine_info: Add new parameter `proximity_placement_group` ([#611](https://github.com/ansible-collections/azure/pull/611))
+  - azure_rm_dnsrecordset: Added Metadata support ([#589](https://github.com/ansible-collections/azure/pull/589))
+  - azure_rm_dnsrecordset_info: Added Metadata support ([#589](https://github.com/ansible-collections/azure/pull/589))
+  - azure_rm_virtualmachine_info: Add managed disk ID to returned facts for data disks ([#682](https://github.com/ansible-collections/azure/pull/682))
+  - azure_rm_appgateway: Application gateway start/stop ability ([#673](https://github.com/ansible-collections/azure/pull/673))
+  - azure_rm_aks: Add new feature - `outbound_type` ([#651](https://github.com/ansible-collections/azure/pull/651))
+  - azure_rm_common: Support track2 SDK CLI authorization ([#676](https://github.com/ansible-collections/azure/pull/676))
+
+### BUG FIXING
+  - azure_rm_common: Supprot track2 SDK ([#670](https://github.com/ansible-collections/azure/pull/670))
+  - azure_rm_common: Allow module-level subscription id to be used for cross-subscription resource management ([#694](https://github.com/ansible-collections/azure/pull/694))
+  - azure_rm_appserviceplan: Correct idempotency and premium SKU plans ([#693](https://github.com/ansible-collections/azure/pull/693))
+  - ignore-2.13.txt: Update ignore file ([#696](https://github.com/ansible-collections/azure/pull/696))
+  - ignore-2.12.txt: Update ignore file ([#696](https://github.com/ansible-collections/azure/pull/696))
+  - ignore-2.11.txt: Update ignore file ([#696](https://github.com/ansible-collections/azure/pull/696))
+  - ignore-2.10.txt: Update ignore file ([#696](https://github.com/ansible-collections/azure/pull/696))
+  - azure_rm_virtualmachine: Misc typo fixes ([#698](https://github.com/ansible-collections/azure/pull/698))
+  - azure_rm_publicipaddress: Misc typo fixes ([#698](https://github.com/ansible-collections/azure/pull/698))
+  - azure_rm_virtualmachinescaleset: Misc typo fixes ([#698](https://github.com/ansible-collections/azure/pull/698))
+  - azure_rm_appgateway: Update `state` document ([#674](https://github.com/ansible-collections/azure/pull/674))
+  - azure_rm_dnsrecordset_info: Fixed error where recordset relative did not exist ([#706](https://github.com/ansible-collections/azure/pull/706))
+  - azure_rm_cosmosdbaccount_info: Correct cosmosdb info module when loading by resource group ([#709](https://github.com/ansible-collections/azure/pull/709))
+  - azure_rm_notificationhub: Avoid the case when service returns None ([#718](https://github.com/ansible-collections/azure/pull/718))
+  - azure_rm_notificationhub_info: Avoid the case when service returns None ([#718](https://github.com/ansible-collections/azure/pull/718))
+  - azure_rm_common: common: Handle exception raised while loading profile ([#610](https://github.com/ansible-collections/azure/pull/610))
+  - README.md: Clarify document for installing collection and dependencies ([#716](https://github.com/ansible-collections/azure/pull/716))
+  - azure_rm_deployment: azure_rm_deployment : Fixed tags related bug ([#641](https://github.com/ansible-collections/azure/pull/641))
+  - azure_rm_subnet: Dissociate routetable from subnet ([#727](https://github.com/ansible-collections/azure/pull/727))
+  - azure_rm_securitygroup_info: Align `azure_rm_securitygroup_info` return to match `azure_rm_securitygroup` ([#726](https://github.com/ansible-collections/azure/pull/726))
+
+
 ## v1.10.0 (2021-10-22)
 
 ### NEW MODULES

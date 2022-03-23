@@ -139,8 +139,6 @@ plugins/modules/azure_rm_virtualmachine.py validate-modules:doc-required-mismatc
 plugins/modules/azure_rm_virtualmachine.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_virtualmachine_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachine_info.py validate-modules:parameter-list-no-elements
-plugins/modules/azure_rm_virtualmachineextension.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_virtualmachineextension_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachineextension_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_virtualmachineimage_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachinescaleset.py validate-modules:parameter-type-not-in-doc
@@ -255,7 +253,6 @@ plugins/modules/azure_rm_servicebussaspolicy.py validate-modules:doc-required-mi
 plugins/modules/azure_rm_snapshot.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_snapshot.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_sqldatabase.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_sqldatabase.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_sqldatabase_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_sqldatabase_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_sqlfirewallrule.py validate-modules:parameter-type-not-in-doc
@@ -307,8 +304,6 @@ plugins/modules/azure_rm_devtestlabschedule_info.py validate-modules:return-synt
 plugins/modules/azure_rm_hdinsightcluster_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_hdinsightcluster_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_hdinsightcluster_info.py validate-modules:return-syntax-error
-plugins/modules/azure_rm_loadbalancer_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_loadbalancer_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_lock_info.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_cdnprofile_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_cdnprofile_info.py validate-modules:parameter-list-no-elements

@@ -388,7 +388,7 @@ state:
                     "source_address_prefix": "174.109.158.0/24",
                     "source_port_range": "*"
                 }
-                ]
+            ]
         subnets:
             description:
                 - A collection of references to subnets.
@@ -414,7 +414,7 @@ state:
 '''  # NOQA
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.tools import is_valid_resource_id
     from azure.mgmt.network import NetworkManagementClient
 except ImportError:
@@ -669,7 +669,7 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         # tighten up poll interval for security groups; default 30s is an eternity
         # this value is still overridden by the response Retry-After header (which is set on the initial operation response to 10s)
-        self.network_client.config.long_running_operation_timeout = 3
+        # self.network_client.config.long_running_operation_timeout = 3
         self.nsg_models = self.network_client.network_security_groups.models
 
         for key in list(self.module_arg_spec.keys()) + ['tags']:
@@ -710,7 +710,7 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
             elif self.state == 'absent':
                 self.log("CHANGED: security group found but state is 'absent'")
                 changed = True
-        except CloudError:  # TODO: actually check for ResourceMissingError
+        except ResourceNotFoundError:  # TODO: actually check for ResourceMissingError
             if self.state == 'present':
                 self.log("CHANGED: security group not found and state is 'present'")
                 changed = True
@@ -788,19 +788,19 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
         parameters.location = results.get('location')
 
         try:
-            poller = self.network_client.network_security_groups.create_or_update(resource_group_name=self.resource_group,
-                                                                                  network_security_group_name=self.name,
-                                                                                  parameters=parameters)
+            poller = self.network_client.network_security_groups.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                        network_security_group_name=self.name,
+                                                                                        parameters=parameters)
             result = self.get_poller_result(poller)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error creating/updating security group {0} - {1}".format(self.name, str(exc)))
         return create_network_security_group_dict(result)
 
     def delete(self):
         try:
-            poller = self.network_client.network_security_groups.delete(resource_group_name=self.resource_group, network_security_group_name=self.name)
+            poller = self.network_client.network_security_groups.begin_delete(resource_group_name=self.resource_group, network_security_group_name=self.name)
             result = self.get_poller_result(poller)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error deleting security group {0} - {1}".format(self.name, str(exc)))
 
         return result

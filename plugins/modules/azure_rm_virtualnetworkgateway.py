@@ -165,7 +165,7 @@ id:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -278,7 +278,7 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
             if self.state == 'absent':
                 self.log("CHANGED: vnet exists but requested state is 'absent'")
                 changed = True
-        except CloudError:
+        except ResourceNotFoundError:
             if self.state == 'present':
                 self.log("CHANGED: VPN Gateway {0} does not exist but requested state is 'present'".format(self.name))
                 changed = True
@@ -359,7 +359,7 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
 
     def create_or_update_vgw(self, vgw):
         try:
-            poller = self.network_client.virtual_network_gateways.create_or_update(self.resource_group, self.name, vgw)
+            poller = self.network_client.virtual_network_gateways.begin_create_or_update(self.resource_group, self.name, vgw)
             new_vgw = self.get_poller_result(poller)
             return vgw_to_dict(new_vgw)
         except Exception as exc:
@@ -367,7 +367,7 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
 
     def delete_vgw(self):
         try:
-            poller = self.network_client.virtual_network_gateways.delete(self.resource_group, self.name)
+            poller = self.network_client.virtual_network_gateways.begin_delete(self.resource_group, self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting virtual network gateway {0} - {1}".format(self.name, str(exc)))

@@ -1,0 +1,122 @@
+---
+- name: Set storage account name
+  set_fact:
+      storage_account: "sb{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+
+- name: Create storage account
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account }}"
+    account_type: Standard_LRS
+    kind: StorageV2
+
+- name: Set storage share facts
+  set_fact:
+    share_name: testshare
+    quota: 32
+    access_tier: Cool
+    metadata:
+      source: ansible
+      purpose: test
+
+- name: Create share
+  azure_rm_storageshare:
+    name: "{{ share_name }}"
+    resource_group: "{{ resource_group }}"
+    account_name: "{{ storage_account }}"
+    quota: "{{ quota }}"
+    metadata: "{{ metadata }}"
+    access_tier: "{{ access_tier }}"
+  register: create_result
+
+- name: Assert create success
+  assert:
+    that:
+      - create_result.changed
+      - create_result.state.name == share_name
+      - create_result.state.share_quota == quota
+      - create_result.state.metadata.source == metadata.source
+      - create_result.state.metadata.purpose == metadata.purpose
+      - create_result.state.access_tier == access_tier
+      - create_result.state.id is defined
+      - create_result.state.etag is defined
+
+- name: Run again to check idempotence
+  azure_rm_storageshare:
+    name: "{{ share_name }}"
+    resource_group: "{{ resource_group }}"
+    account_name: "{{ storage_account }}"
+  register: create_result
+
+- name: Assert idempotence
+  assert:
+    that: not create_result.changed
+
+- name: Get share details
+  azure_rm_storageshare_info:
+    name: "{{ share_name }}"
+    resource_group: "{{ resource_group }}"
+    account_name: "{{ storage_account }}"
+  register: share_facts
+
+- name: Assert storage share details
+  assert:
+    that:
+      - not share_facts.changed
+      - share_facts.storageshares.name == share_name
+      - share_facts.storageshares.share_quota == quota
+      - share_facts.storageshares.metadata.source == metadata.source
+      - share_facts.storageshares.metadata.purpose == metadata.purpose
+      - share_facts.storageshares.access_tier == access_tier
+      - share_facts.storageshares.id is defined
+      - share_facts.storageshares.etag is defined
+
+- name: Set new storage share facts
+  set_fact:
+    quota: 64
+    access_tier: Hot
+
+- name: Update share
+  azure_rm_storageshare:
+    name: "{{ share_name }}"
+    resource_group: "{{ resource_group }}"
+    account_name: "{{ storage_account }}"
+    quota: "{{ quota }}"
+    access_tier: "{{ access_tier }}"
+  register: update_result
+
+- name: Assert share update success
+  assert:
+    that: update_result.changed
+
+- name: Get updated details
+  azure_rm_storageshare_info:
+    name: "{{ share_name }}"
+    resource_group: "{{ resource_group }}"
+    account_name: "{{ storage_account }}"
+  register: share_facts
+
+- name: Assert storage share details
+  assert:
+    that:
+      - share_facts.storageshares.name == share_name
+      - share_facts.storageshares.share_quota == quota
+      - share_facts.storageshares.metadata.source== metadata.source
+      - share_facts.storageshares.metadata.purpose == metadata.purpose
+      - share_facts.storageshares.access_tier == access_tier
+      - share_facts.storageshares.id is defined
+      - share_facts.storageshares.etag is defined
+
+- name: Delete share
+  azure_rm_storageshare:
+    name: "{{ share_name }}"
+    resource_group: "{{ resource_group }}"
+    account_name: "{{ storage_account }}"
+    state: absent
+  register: delete_output
+
+- name: Delete storage account
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account }}"
+    state: absent

@@ -1,6 +1,8 @@
 - name: Create Random Storage Account Name
   set_fact:
     storage_account: "vme{{ resource_group | hash('md5') | truncate(21, True, '') }}"
+    public_settings_file: "files/test-public-settings.json"
+    protected_settings_file: "files/test-protected-settings.json"
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
@@ -59,14 +61,15 @@
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     network_interfaces: testNIC
+    managed_disk_type: StandardSSD_LRS
     storage_account_name: "{{ storage_account }}"
     storage_container: osdisk
     storage_blob: osdisk.vhd
     os_disk_caching: ReadWrite
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: 0001-com-ubuntu-server-focal
+      publisher: canonical
+      sku: 20_04-lts-gen2
       version: latest
 
 - name: Create VM Extension
@@ -78,9 +81,8 @@
     virtual_machine_extension_type: CustomScript
     type_handler_version: 2.0
     auto_upgrade_minor_version: true
-    settings: {"commandToExecute": "hostname"}
+    settings: {"commandToExecute": "date"}
   register: results
-
 - name: Assert that VM Extension ran
   assert:
     that: results.changed
@@ -105,6 +107,37 @@
       - results.extensions[0]['settings'] != None
       - results.extensions[0]['auto_upgrade_minor_version'] != None
       - results.extensions[0]['provisioning_state'] != None
+
+- name: Create VM Extension (idempotent)
+  azure_rm_virtualmachineextension:
+    resource_group: "{{ resource_group }}"
+    name: testVMExtension
+    virtual_machine_name: testVM
+    publisher: Microsoft.Azure.Extensions
+    virtual_machine_extension_type: CustomScript
+    type_handler_version: 2.0
+    auto_upgrade_minor_version: true
+    settings: {"commandToExecute": "date"}
+  register: results
+- name: Assert no updates
+  assert:
+    that: not results.changed
+
+- name: Create VM Extension (force update)
+  azure_rm_virtualmachineextension:
+    resource_group: "{{ resource_group }}"
+    name: testVMExtension
+    virtual_machine_name: testVM
+    publisher: Microsoft.Azure.Extensions
+    virtual_machine_extension_type: CustomScript
+    type_handler_version: 2.0
+    auto_upgrade_minor_version: true
+    settings: {"commandToExecute": "date"}
+    force_update_tag: true
+  register: results
+- name: Assert updates
+  assert:
+    that: results.changed
 
 - name: List extensions
   azure_rm_virtualmachineextension_info:
@@ -132,16 +165,81 @@
     name: testVMExtension
     virtual_machine_name: testVM
     state: absent
+  register: results
+- name: Assert that VM Extension deleted
+  assert:
+    that: results.changed
+
+- name: Delete VM Extension (idempotent)
+  azure_rm_virtualmachineextension:
+    resource_group: "{{ resource_group }}"
+    name: testVMExtension
+    virtual_machine_name: testVM
+    state: absent
+  register: results
+- name: Assert no changes
+  assert:
+    that: not results.changed
+
+- name: Create VM Extension to configure python required for VM diagnostic extension
+  azure_rm_virtualmachineextension:
+    resource_group: "{{ resource_group }}"
+    name: python-install
+    virtual_machine_name: testVM
     publisher: Microsoft.Azure.Extensions
     virtual_machine_extension_type: CustomScript
     type_handler_version: 2.0
     auto_upgrade_minor_version: true
-    settings: {"commandToExecute": "hostname"}
+    settings: {"commandToExecute": "apt-get update && apt-get install -y python2 && update-alternatives --install /usr/bin/python python /usr/bin/python2 1"}
   register: results
-
-- name: Assert that VM Extension deleted
+- name: Assert that VM Extension ran
   assert:
     that: results.changed
+
+- name: Install VM Extension for diagnostics
+  azure_rm_virtualmachineextension:
+    resource_group: "{{ resource_group }}"
+    name: "linux-diagnostics"
+    virtual_machine_name: testVM
+    publisher: "Microsoft.Azure.Diagnostics"
+    virtual_machine_extension_type: "LinuxDiagnostic"
+    type_handler_version: "4.0"
+    auto_upgrade_minor_version: true
+    settings: "{{ lookup('file', public_settings_file) }}"
+    protected_settings: "{{ lookup('file', protected_settings_file) }}"
+  register: results
+- name: Assert extension installed
+  assert:
+    that: results.changed
+
+- name: Install VM Extension for diagnostics (idempotent)
+  azure_rm_virtualmachineextension:
+    resource_group: "{{ resource_group }}"
+    name: "linux-diagnostics"
+    virtual_machine_name: testVM
+    publisher: "Microsoft.Azure.Diagnostics"
+    virtual_machine_extension_type: "LinuxDiagnostic"
+    type_handler_version: "4.0"
+    auto_upgrade_minor_version: true
+    settings: "{{ lookup('file', public_settings_file) }}"
+    protected_settings: "{{ lookup('file', protected_settings_file) }}"
+  register: results
+- name: Assert no updates
+  assert:
+    that: not results.changed
+
+- name: List extensions
+  azure_rm_virtualmachineextension_info:
+    resource_group: "{{ resource_group }}"
+    virtual_machine_name: testVM
+  register: results
+- name: Assert that facts are returned
+  assert:
+    that:
+      - results.changed == False
+      - results.extensions | length >= 2
+      - "'python-install' in results.extensions | map(attribute='name')"
+      - "'linux-diagnostics' in results.extensions | map(attribute='name')"
 
 - name: Delete VM
   azure_rm_virtualmachine:
@@ -149,17 +247,6 @@
     name: testVM
     state: absent
     remove_on_absent: ['all']
-    vm_size: Standard_DS1_v2
-    admin_username: testuser
-    network_interfaces: testNIC
-    storage_container: osdisk
-    storage_blob: osdisk.vhd
-    os_disk_caching: ReadWrite
-    image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
-      version: latest
 
 - name: Delete a storage account
   azure_rm_storageaccount:

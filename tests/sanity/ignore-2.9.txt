@@ -67,8 +67,6 @@ plugins/modules/azure_rm_subnet.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_subnet_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachine.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachine_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_virtualmachineextension.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_virtualmachineextension_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachineimage_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachinescaleset.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachinescaleset_info.py validate-modules:parameter-type-not-in-doc
@@ -157,7 +155,6 @@ plugins/modules/azure_rm_cosmosdbaccount.py validate-modules:nonexistent-paramet
 plugins/modules/azure_rm_cosmosdbaccount_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_devtestlabschedule.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_hdinsightcluster_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_loadbalancer_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_loganalyticsworkspace_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_cdnprofile_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_azurefirewall.py validate-modules:missing-suboption-docs

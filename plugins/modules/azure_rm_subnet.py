@@ -66,6 +66,7 @@ options:
             - The reference of the RouteTable resource.
             - Can be the name or resource ID of the route table.
             - Can be a dict containing the I(name) and I(resource_group) of the route table.
+            - Without this configuration, the associated route table will be dissociate. If there is no associated route table, it has no impact.
     service_endpoints:
         description:
             - An array of service endpoints.
@@ -296,7 +297,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -482,10 +483,16 @@ class AzureRMSubnet(AzureRMModuleBase):
                     changed = True
                     results['network_security_group']['id'] = nsg.get('id')
                     results['network_security_group']['name'] = nsg.get('name')
-                if self.route_table is not None and self.route_table != results['route_table'].get('id'):
-                    changed = True
-                    results['route_table']['id'] = self.route_table
-                    self.log("CHANGED: subnet {0} route_table to {1}".format(self.name, route_table.get('name')))
+                if self.route_table is not None:
+                    if self.route_table != results['route_table'].get('id'):
+                        changed = True
+                        results['route_table']['id'] = self.route_table
+                        self.log("CHANGED: subnet {0} route_table to {1}".format(self.name, route_table.get('name')))
+                else:
+                    if results['route_table'].get('id') is not None:
+                        changed = True
+                        results['route_table']['id'] = None
+                        self.log("CHANGED: subnet {0} will dissociate to route_table {1}".format(self.name, route_table.get('name')))
 
                 if self.service_endpoints or self.service_endpoints == []:
                     oldd = {}
@@ -523,7 +530,7 @@ class AzureRMSubnet(AzureRMModuleBase):
 
             elif self.state == 'absent':
                 changed = True
-        except CloudError:
+        except ResourceNotFoundError:
             # the subnet does not exist
             if self.state == 'present':
                 changed = True
@@ -588,10 +595,10 @@ class AzureRMSubnet(AzureRMModuleBase):
 
     def create_or_update_subnet(self, subnet):
         try:
-            poller = self.network_client.subnets.create_or_update(self.resource_group,
-                                                                  self.virtual_network_name,
-                                                                  self.name,
-                                                                  subnet)
+            poller = self.network_client.subnets.begin_create_or_update(self.resource_group,
+                                                                        self.virtual_network_name,
+                                                                        self.name,
+                                                                        subnet)
             new_subnet = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating or updating subnet {0} - {1}".format(self.name, str(exc)))
@@ -601,9 +608,9 @@ class AzureRMSubnet(AzureRMModuleBase):
     def delete_subnet(self):
         self.log('Deleting subnet {0}'.format(self.name))
         try:
-            poller = self.network_client.subnets.delete(self.resource_group,
-                                                        self.virtual_network_name,
-                                                        self.name)
+            poller = self.network_client.subnets.begin_delete(self.resource_group,
+                                                              self.virtual_network_name,
+                                                              self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting subnet {0} - {1}".format(self.name, str(exc)))

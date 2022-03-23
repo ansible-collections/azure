@@ -7,14 +7,17 @@ parameters:
     - "2.7"
     - "3.6"
     - "3.8"
+    - "3.9"
+    - "3.10"
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
-  default: "2.10"
+  default: "2.12"
   values:
     - "2.9"
     - "2.10"
     - "2.11"
+    - "2.12"
     - "devel"
 - name: MODULE_NAME
   displayName: 'Test Module'
@@ -93,6 +96,7 @@ parameters:
     - "azure_rm_sqlserver"
     - "azure_rm_storageaccount"
     - "azure_rm_storageblob"
+    - "azure_rm_storageshare"
     - "azure_rm_subnet"
     - "azure_rm_subscription"
     - "azure_rm_trafficmanagerprofile"
