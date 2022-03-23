@@ -136,7 +136,7 @@ extensions:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -196,7 +196,7 @@ class AzureRMVirtualMachineExtensionInfo(AzureRMModuleBase):
                                                                           vm_name=self.virtual_machine_name,
                                                                           vm_extension_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Virtual Machine Extension.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -211,7 +211,7 @@ class AzureRMVirtualMachineExtensionInfo(AzureRMModuleBase):
             response = self.compute_client.virtual_machine_extensions.list(resource_group_name=self.resource_group,
                                                                            vm_name=self.virtual_machine_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Virtual Machine Extension.')
 
         if response is not None and response.value is not None:
@@ -230,7 +230,7 @@ class AzureRMVirtualMachineExtensionInfo(AzureRMModuleBase):
             'location': d.get('location'),
             'name': d.get('name'),
             'publisher': d.get('publisher'),
-            'type': d.get('virtual_machine_extension_type'),
+            'type': d.get('type_properties_type'),
             'settings': d.get('settings'),
             'auto_upgrade_minor_version': d.get('auto_upgrade_minor_version'),
             'tags': d.get('tags', None),
