@@ -61,8 +61,8 @@ options:
         type: bool
     publish:
         description:
-            - Wether to publish the runbook.
-        type: str
+            - Whether to publish the runbook.
+        type: bool
     state:
         description:
             - State of the automation runbook. Use C(present) to create or update a automation runbook and use C(absent) to delete.
@@ -212,7 +212,7 @@ state:
         tags:
             description:
                 - The resource tags.
-            type: list
+            type: dict
             returned: always
             sample: { 'key1': 'value1' }
         type:
