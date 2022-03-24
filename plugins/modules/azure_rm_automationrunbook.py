@@ -250,7 +250,6 @@ class AzureRMAutomationRunbook(AzureRMModuleBase):
             runbook_type=dict(
                 type='str',
                 choices=['Script', 'Graph', 'PowerShellWorkflow', 'PowerShell', 'GraphPowerShellWorkflow', 'GraphPowerShell']
-                #choices=['Script', 'Graph', 'PowerShellWorkflow', 'PowerShell', 'GraphPowerShellWorkflow', 'GraphPowerShell']
             ),
             description=dict(
                 type='str'
@@ -332,15 +331,18 @@ class AzureRMAutomationRunbook(AzureRMModuleBase):
 
                 if changed:
                     if not self.check_mode:
+                        if update_parameter.get('log_activity_trace'):
+                            runbook['log_activity_trace'] = update_parameter.get('log_activity_trace')
+
                         paramters = self.automation_models.RunbookCreateOrUpdateParameters(
                             location=runbook['location'] if update_parameter.get('location') else update_parameter.get('location'),
                             log_verbose=runbook['log_verbose'] if update_parameter.get('log_verbose') else update_parameter.get('log_verbose'),
                             runbook_type=runbook['runbook_type'] if update_parameter.get('runbook_type') else update_parameter.get('runbook_type'),
                             description=runbook['description'] if update_parameter.get('description') else update_parameter.get('description'),
-                            log_activity_trace=runbook['log_activity_trace'] if update_parameter.get('log_activity_trace') else update_parameter.get('log_activity_trace'),
+                            log_activity_trace=runbook['log_activity_trace'],
                             tags=runbook['tags'] if update_parameter.get('tags') else update_parameter.get('tags'),
                             log_progress=runbook['log_progress'] if update_parameter.get('log_progress') else update_parameter.get('log_progress')
-                            )
+                        )
 
                         runbook = self.update_runbook(update_parameter)
 
@@ -370,7 +372,6 @@ class AzureRMAutomationRunbook(AzureRMModuleBase):
         self.results['changed'] = changed
         self.results['state'] = runbook
         return self.results
-
 
     def get(self):
         try:
