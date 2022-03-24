@@ -65,8 +65,8 @@ options:
         type: str
     state:
         description:
-            - State of the storage account. Use C(present) to create or update a storage account and use C(absent) to delete an account.
-        type:
+            - State of the automation runbook. Use C(present) to create or update a automation runbook and use C(absent) to delete.
+        type: str
         default: present
         choices:
             - present
