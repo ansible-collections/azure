@@ -32,6 +32,10 @@ options:
             - The name of the automation account.
         type: str
         required: True
+    location:
+        description:
+            - The location of the automation runbook.
+        type: str
     description:
         description:
             - Sets the description.
@@ -169,6 +173,7 @@ state:
             returned: always
             sample: Fred-sun
         last_modified_time:
+            description:
                 - The last person to update the resource.
             type: str
             returned: always
@@ -181,13 +186,13 @@ state:
             sample: 3
         log_progress:
             description:
-                - Wether show progress log option..
+                - Whether show progress log option.
             type: bool
             returned: always
             sample: True
         log_verbose:
             description:
-                - Wether show verbose log option.
+                - Whether show verbose log option.
             type: bool
             returned: always
             sample: True

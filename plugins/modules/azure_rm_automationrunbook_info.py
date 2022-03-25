@@ -26,6 +26,7 @@ options:
         description:
             - The name of the automation account.
         type: str
+        required: True
     name:
         description:
             - The name of the automation runbook.
@@ -37,6 +38,7 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     - Fred Sun (@Fred-sun)
@@ -115,6 +117,7 @@ automation_runbook:
             returned: always
             sample: Fred-sun
         last_modified_time:
+            description:
                 - The last person to update the resource.
             type: str
             returned: always
@@ -127,13 +130,13 @@ automation_runbook:
             sample: 3
         log_progress:
             description:
-                - Wether show progress log option..
+                - Whether show progress log option.
             type: bool
             returned: always
             sample: True
         log_verbose:
             description:
-                - Wether show verbose log option.
+                - Whether show verbose log option.
             type: bool
             returned: always
             sample: True
@@ -203,7 +206,7 @@ class AzureRMAutomationRunbookInfo(AzureRMModuleBase):
         self.automation_account_name = None
         self.show_content = None
 
-        super(AzureRMAutomationRunbookInfo, self).__init__(self.module_arg_spec, supports_tags=True)
+        super(AzureRMAutomationRunbookInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
 
     def exec_module(self, **kwargs):
 
