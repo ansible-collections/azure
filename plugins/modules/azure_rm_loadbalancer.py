@@ -775,7 +775,11 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                 public_ip_address=self.get_public_ip_address_instance(item.get('public_ip_address')) if item.get('public_ip_address') else None,
                 private_ip_address=item.get('private_ip_address'),
                 private_ip_allocation_method=item.get('private_ip_allocation_method'),
-                subnet=self.network_models.Subnet(id=item.get('subnet')) if item.get('subnet') else None
+                subnet=self.network_models.Subnet(
+                    id=item.get('subnet'),
+                    private_endpoint_network_policies=None,
+                    private_link_service_network_policies=None
+                ) if item.get('subnet') else None
             ) for item in self.frontend_ip_configurations] if self.frontend_ip_configurations else None
 
             backend_address_pools_param = [self.network_models.BackendAddressPool(
