@@ -356,6 +356,8 @@ options:
         choices:
             - Windows_Server
             - Windows_Client
+            - RHEL_BYOS
+            - SLES_BYOS
     vm_identity:
         description:
             - Identity for the VM.
