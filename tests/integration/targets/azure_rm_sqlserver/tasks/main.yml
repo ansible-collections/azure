@@ -2,7 +2,8 @@
   set_fact:
     random_postfix: "{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     tenant_id: "{{ azure_tenant }}"
-    sql_admin_group: "Test Security Group"
+    sql_admin_group_name: "Test Security Group"
+    sql_admin_group_id: "00000000-0000-0000-0000-000000000000"
   run_once: yes
 
 - name: Create instance of SQL Server -- check mode
@@ -100,17 +101,6 @@
     that:
       - output.changed
 
-- name: Get Azure AD group info
-  azure_rm_adgroup_info:
-    attribute_name: "displayName"
-    attribute_value: "{{ sql_admin_group }}"
-    tenant: "{{ tenant_id }}"
-  register: admin_group_output
-- name: Assert AD group exists
-  assert:
-    that:
-      - admin_group_output.ad_groups | length > 0
-
 - name: Create instance of SQL Server with Azure AD admin
   azure_rm_sqlserver:
     resource_group: "{{ resource_group }}"
@@ -120,8 +110,8 @@
     admin_password: Password123!
     administrators:
       principal_type: Group
-      login: "{{ sql_admin_group }}"
-      sid: "{{ admin_group_output.ad_groups[0].object_id }}"
+      login: "{{ sql_admin_group_name }}"
+      sid: "{{ sql_admin_group_id }}"
       tenant_id: "{{ tenant_id }}"
       azure_ad_only_authentication: false
   register: output
@@ -140,8 +130,8 @@
     admin_password: Password123!
     administrators:
       principal_type: Group
-      login: "{{ sql_admin_group }}"
-      sid: "{{ admin_group_output.ad_groups[0].object_id }}"
+      login: "{{ sql_admin_group_name }}"
+      sid: "{{ sql_admin_group_id }}"
       tenant_id: "{{ tenant_id }}"
       azure_ad_only_authentication: false
   register: output
@@ -219,9 +209,9 @@
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].admin_username == 'sqllogin'
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.administrator_type == 'ActiveDirectory'
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.azure_ad_only_authentication == False
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.login == '{{ sql_admin_group }}'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.login == '{{ sql_admin_group_name }}'
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.principal_type == 'Group'
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.sid == '{{ admin_group_output.ad_groups[0].object_id }}'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.sid == '{{ sql_admin_group_id }}'
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.tenant_id == '{{ tenant_id }}'
 
 - name: Gather facts SQL Server - unexisting
