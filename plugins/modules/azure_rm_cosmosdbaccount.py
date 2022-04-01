@@ -95,6 +95,7 @@ options:
         description:
             - The IP addresses or IP address ranges in CIDR form to be included as the allowed list of client IPs.
         type: list
+        elements: str
         version_added: "1.10.0"
     is_virtual_network_filter_enabled:
         description:
