@@ -5,7 +5,7 @@ DOCUMENTATION = """
     lookup: azure_keyvault_secret
     author:
         - Hai Cao <t-haicao@microsoft.com>
-    version_added: 2.7
+    version_added: 1.12.0
     requirements:
         - requests
         - azure
@@ -85,7 +85,10 @@ RETURN = """
 from ansible.errors import AnsibleError, AnsibleParserError
 from ansible.plugins.lookup import LookupBase
 from ansible.utils.display import Display
-import requests
+try:
+    import requests
+except ImportError:
+    pass
 
 display = Display()
 
