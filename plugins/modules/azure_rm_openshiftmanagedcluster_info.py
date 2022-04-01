@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_openshiftmanagedcluster_info
-version_added: '1.12.0'
+version_added: '1.11.0'
 short_description: Get Info onf Azure Red Hat OpenShift Managed Cluster
 description:
     - Create, update and delete instance of Azure Red Hat OpenShift Managed Cluster instance.
