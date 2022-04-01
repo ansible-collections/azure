@@ -300,6 +300,7 @@ class AzureRMOpenShiftManagedClustersInfo(AzureRMModuleBaseExt):
             # self.log('Response : {0}'.format(response))
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
+            return {}
 
         return self.format_item(results)
 
