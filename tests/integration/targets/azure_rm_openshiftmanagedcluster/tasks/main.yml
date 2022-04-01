@@ -28,7 +28,7 @@
   register: output
 
 - assert:
-      that: output['clusters'] | length == 0
+      that: output['clusters']['value'] | length == 0
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
