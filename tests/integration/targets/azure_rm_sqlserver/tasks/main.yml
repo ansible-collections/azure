@@ -2,8 +2,9 @@
   set_fact:
     random_postfix: "{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     tenant_id: "{{ azure_tenant }}"
-    sql_admin_group_name: "Test Security Group"
-    sql_admin_group_id: "00000000-0000-0000-0000-000000000000"
+    run_azuread_tests: false
+    azuread_group_name: "Test Security Group"
+    azuread_group_id: "00000000-0000-0000-0000-000000000000"
   run_once: yes
 
 - name: Create instance of SQL Server -- check mode
@@ -110,16 +111,18 @@
     admin_password: Password123!
     administrators:
       principal_type: Group
-      login: "{{ sql_admin_group_name }}"
-      sid: "{{ sql_admin_group_id }}"
+      login: "{{ azuread_group_name }}"
+      sid: "{{ azuread_group_id }}"
       tenant_id: "{{ tenant_id }}"
       azure_ad_only_authentication: false
   register: output
+  when: run_azuread_tests | bool
 - name: Assert the resource instance is well created
   assert:
     that:
       - output.changed
       - output.state == 'Ready'
+  when: run_azuread_tests | bool
 
 - name: Create instance of SQL Server with Azure AD admin - idempotent
   azure_rm_sqlserver:
@@ -130,16 +133,18 @@
     admin_password: Password123!
     administrators:
       principal_type: Group
-      login: "{{ sql_admin_group_name }}"
-      sid: "{{ sql_admin_group_id }}"
+      login: "{{ azuread_group_name }}"
+      sid: "{{ azuread_group_id }}"
       tenant_id: "{{ tenant_id }}"
       azure_ad_only_authentication: false
   register: output
+  when: run_azuread_tests | bool
 - name: Assert the state has not changed
   assert:
     that:
       - not output.changed
       - output.state == 'Ready'
+  when: run_azuread_tests | bool
 
 # azure_rm_sqlserver_facts tests
 
@@ -193,6 +198,7 @@
     resource_group: "{{ resource_group }}"
     server_name: "sqlsrv-azuread-{{ random_postfix }}"
   register: output
+  when: run_azuread_tests | bool
 - name: Assert that facts are returned
   assert:
     that:
@@ -209,10 +215,11 @@
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].admin_username == 'sqllogin'
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.administrator_type == 'ActiveDirectory'
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.azure_ad_only_authentication == False
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.login == '{{ sql_admin_group_name }}'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.login == '{{ azuread_group_name }}'
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.principal_type == 'Group'
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.sid == '{{ sql_admin_group_id }}'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.sid == '{{ azuread_group_id }}'
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.tenant_id == '{{ tenant_id }}'
+  when: run_azuread_tests | bool
 
 - name: Gather facts SQL Server - unexisting
   azure_rm_sqlserver_info:
@@ -741,3 +748,4 @@
     resource_group: "{{ resource_group }}"
     name: "sqlsrv-azuread-{{ random_postfix }}"
     state: absent
+  when: run_azuread_tests | bool
