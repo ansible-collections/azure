@@ -38,7 +38,14 @@ DOCUMENTATION = """
 
 EXAMPLE = """
 - name: Look up secret when ansible host is MSI enabled Azure VM
-  debug: msg="the value of this secret is {{lookup('azure.azcollection.azure_keyvault_secret','testSecret/version',vault_url='https://yourvault.vault.azure.net')}}"
+  debug: 
+    msg: "the value of this secret is {{ 
+        lookup(
+          'azure.azcollection.azure_keyvault_secret',
+          'testSecret/version',
+          vault_url='https://yourvault.vault.azure.net'
+        )
+      }}"
 
 - name: Look up secret when ansible host is general VM
   vars:
@@ -47,7 +54,17 @@ EXAMPLE = """
     client_id: '123456789'
     secret: 'abcdefg'
     tenant: 'uvwxyz'
-  debug: msg="the value of this secret is {{lookup('azure.azcollection.azure_keyvault_secret',secretname,vault_url=url, cliend_id=client_id, secret=secret, tenant_id=tenant)}}"
+  debug:
+    msg: "the value of this secret is {{
+        lookup(
+          'azure.azcollection.azure_keyvault_secret',
+          secretname,
+          vault_url=url,
+          cliend_id=client_id,
+          secret=secret,
+          tenant_id=tenant
+        )
+      }}"
 
 # Example below creates an Azure Virtual Machine with SSH public key from key vault using 'azure_keyvault_secret' lookup plugin.
 - name: Create Azure VM
@@ -115,7 +132,6 @@ try:
 except requests.exceptions.RequestException:
     display.v('Unable to fetch MSI token. Will use service principal if provided.')
     TOKEN_ACQUIRED = False
-
 
 
 def lookup_secret_non_msi(terms, vault_url, kwargs):
