@@ -1058,10 +1058,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
             if self.image and isinstance(self.image, dict):
                 if all(key in self.image for key in ('publisher', 'offer', 'sku', 'version')):
-                    marketplace_image = self.get_marketplace_image_version()
-
                     if self.image['version'] == 'latest':
-                        self.image['version'] = marketplace_image.name
+                        self.image['version'] = self.get_latest_marketplace_image_version()
                         self.log("Using image version {0}".format(self.image['version']))
 
                     image_reference = self.compute_models.ImageReference(
@@ -2034,7 +2032,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 self.fail("Error deleting blob {0}:{1} - {2}".format(container_name, blob_name, str(exc)))
         return True
 
-    def get_marketplace_image_version(self):
+    def get_latest_marketplace_image_version(self):
         try:
             versions = self.compute_client.virtual_machine_images.list(self.location,
                                                                        self.image['publisher'],
@@ -2048,11 +2046,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                                                       self.image['sku'],
                                                                       str(exc)))
         if versions and len(versions) > 0:
-            if self.image['version'] == 'latest':
-                return versions[len(versions) - 1]
-            for version in versions:
-                if version.name == self.image['version']:
-                    return version
+            return versions[len(versions) - 1].name
 
         self.fail("Error could not find image {0} {1} {2} {3}".format(self.image['publisher'],
                                                                       self.image['offer'],
