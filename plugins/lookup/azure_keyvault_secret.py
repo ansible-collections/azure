@@ -38,7 +38,7 @@ DOCUMENTATION = """
 
 EXAMPLE = """
 - name: Look up secret when ansible host is MSI enabled Azure VM
-  debug: 
+  debug:
     msg: "the value of this secret is {{ 
         lookup(
           'azure.azcollection.azure_keyvault_secret',
