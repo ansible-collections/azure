@@ -139,7 +139,6 @@ except Exception:
 
 def lookup_secret_non_msi(terms, vault_url, kwargs):
     import logging
-    
     logging.getLogger('msrestazure.azure_active_directory').addHandler(logging.NullHandler())
     logging.getLogger('msrest.service_client').addHandler(logging.NullHandler())
 
