@@ -94,7 +94,7 @@ gateways:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.network import NetworkManagementClient
     from msrestazure.tools import parse_resource_id
 except ImportError:
@@ -117,7 +117,6 @@ class AzureRMApplicationGatewayInfo(AzureRMModuleBase):
 
         self.name = None
         self.resource_group = None
-        self.mgmt_client = None
 
         super(AzureRMApplicationGatewayInfo, self).__init__(self.module_arg_spec,
                                                             supports_check_mode=True,
@@ -127,9 +126,6 @@ class AzureRMApplicationGatewayInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
-
-        self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name is not None:
             self.results["gateways"] = self.get()
@@ -144,8 +140,8 @@ class AzureRMApplicationGatewayInfo(AzureRMModuleBase):
         response = None
         results = []
         try:
-            response = self.mgmt_client.application_gateways.get(resource_group_name=self.resource_group, application_gateway_name=self.name)
-        except CloudError:
+            response = self.network_client.application_gateways.get(resource_group_name=self.resource_group, application_gateway_name=self.name)
+        except ResourceNotFoundError:
             pass
 
         if response is not None:
@@ -157,8 +153,8 @@ class AzureRMApplicationGatewayInfo(AzureRMModuleBase):
         response = None
         results = []
         try:
-            response = self.mgmt_client.application_gateways.list(resource_group_name=self.resource_group)
-        except CloudError as exc:
+            response = self.network_client.application_gateways.list(resource_group_name=self.resource_group)
+        except Exception as exc:
             request_id = exc.request_id if exc.request_id else ''
             self.fail("Error listing application gateways in resource groups {0}: {1} - {2}".format(self.resource_group, request_id, str(exc)))
 
@@ -171,8 +167,8 @@ class AzureRMApplicationGatewayInfo(AzureRMModuleBase):
         response = None
         results = []
         try:
-            response = self.mgmt_client.application_gateways.list_all()
-        except CloudError as exc:
+            response = self.network_client.application_gateways.list_all()
+        except Exception as exc:
             request_id = exc.request_id if exc.request_id else ''
             self.fail("Error listing all application gateways: {0} - {1}".format(request_id, str(exc)))
 
