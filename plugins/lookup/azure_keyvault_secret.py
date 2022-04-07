@@ -105,7 +105,7 @@ from ansible.utils.display import Display
 try:
     import requests
 except ImportError:
-    pass
+    raise AnsibleError('The azure_keyvault_secret lookup plugin requires requests to be installed.')
 
 display = Display()
 
@@ -115,10 +115,13 @@ token_params = {
     'api-version': '2018-02-01',
     'resource': 'https://vault.azure.net'
 }
+
 token_headers = {
     'Metadata': 'true'
 }
+
 token = None
+
 try:
     token_res = requests.get('http://169.254.169.254/metadata/identity/oauth2/token', params=token_params, headers=token_headers, timeout=(3.05, 27))
     if token_res.ok:
@@ -136,6 +139,7 @@ except Exception:
 
 def lookup_secret_non_msi(terms, vault_url, kwargs):
     import logging
+    
     logging.getLogger('msrestazure.azure_active_directory').addHandler(logging.NullHandler())
     logging.getLogger('msrest.service_client').addHandler(logging.NullHandler())
 
@@ -176,9 +180,9 @@ def lookup_secret_non_msi(terms, vault_url, kwargs):
 class LookupModule(LookupBase):
 
     def run(self, terms, variables, **kwargs):
-
         ret = []
         vault_url = kwargs.pop('vault_url', None)
+        
         if vault_url is None:
             raise AnsibleError('Failed to get valid vault url.')
         if TOKEN_ACQUIRED:
