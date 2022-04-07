@@ -181,7 +181,6 @@ class LookupModule(LookupBase):
     def run(self, terms, variables, **kwargs):
         ret = []
         vault_url = kwargs.pop('vault_url', None)
-        
         if vault_url is None:
             raise AnsibleError('Failed to get valid vault url.')
         if TOKEN_ACQUIRED:
