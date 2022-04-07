@@ -188,7 +188,10 @@ class LookupModule(LookupBase):
                 try:
                     secret_res = requests.get(vault_url + '/secrets/' + term, params=secret_params, headers=secret_headers)
                     ret.append(secret_res.json()["value"])
-                except requests.exceptions.RequestException:
+                except KeyError:
+                    raise AnsibleError('Failed to fetch secret ' + term + '.')
+                except Exception:
+                    raise AnsibleError('Failed to fetch secret: ' + term + ' via MSI endpoint.')
                     raise AnsibleError('Failed to fetch secret: ' + term + ' via MSI endpoint.')
                 except KeyError:
                     raise AnsibleError('Failed to fetch secret ' + term + '.')
