@@ -4,6 +4,18 @@
     cert1_file: "cert1.txt"
     cert2_file: "cert2.txt"
   run_once: yes
+- name: Set json query to only retrieve gateways from this test
+  set_fact:
+    query: "[?ends_with(name, `{{ rpfx }}`)]"
+  run_once: yes
+
+- name: Load app gateways
+  azure_rm_appgateway_info:
+  register: appgw_output
+- name: Assert there are no gateways
+  assert:
+    that:
+      - appgw_output.gateways | community.general.json_query(query) | length == 0
 
 - name: Create a virtual network
   azure_rm_virtualnetwork:
