@@ -105,7 +105,7 @@ from ansible.utils.display import Display
 try:
     import requests
 except ImportError:
-    raise AnsibleError('The azure_keyvault_secret lookup plugin requires requests to be installed.')
+    pass
 
 display = Display()
 
