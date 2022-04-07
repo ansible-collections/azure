@@ -105,7 +105,7 @@ from ansible.utils.display import Display
 try:
     import requests
 except ImportError:
-    requests = object
+    pass
 
 display = Display()
 
@@ -129,7 +129,7 @@ try:
             display.v('Successfully called MSI endpoint, but no token was available. Will use service principal if provided.')
     else:
         display.v("Unable to query MSI endpoint, Error Code %s. Will use service principal if provided" % token_res.status_code)
-except requests.exceptions.RequestException:
+except Exception:
     display.v('Unable to fetch MSI token. Will use service principal if provided.')
     TOKEN_ACQUIRED = False
 
@@ -188,10 +188,10 @@ class LookupModule(LookupBase):
                 try:
                     secret_res = requests.get(vault_url + '/secrets/' + term, params=secret_params, headers=secret_headers)
                     ret.append(secret_res.json()["value"])
-                except requests.exceptions.RequestException:
-                    raise AnsibleError('Failed to fetch secret: ' + term + ' via MSI endpoint.')
                 except KeyError:
                     raise AnsibleError('Failed to fetch secret ' + term + '.')
+                except Exception:
+                    raise AnsibleError('Failed to fetch secret: ' + term + ' via MSI endpoint.')
             return ret
         else:
             return lookup_secret_non_msi(terms, vault_url, kwargs)
