@@ -192,7 +192,6 @@ class LookupModule(LookupBase):
                     raise AnsibleError('Failed to fetch secret ' + term + '.')
                 except Exception:
                     raise AnsibleError('Failed to fetch secret: ' + term + ' via MSI endpoint.')
-                    raise AnsibleError('Failed to fetch secret: ' + term + ' via MSI endpoint.')
                 except KeyError:
                     raise AnsibleError('Failed to fetch secret ' + term + '.')
             return ret
