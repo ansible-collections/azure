@@ -127,7 +127,6 @@ plugins/modules/azure_rm_storageblob.py validate-modules:parameter-type-not-in-d
 plugins/modules/azure_rm_subnet.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_subnet.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_subnet_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_subscription_info.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_virtualmachine.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualmachine.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_virtualmachine.py validate-modules:doc-required-mismatch
