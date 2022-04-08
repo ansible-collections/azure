@@ -105,7 +105,6 @@ plugins/modules/azure_rm_resource_info.py validate-modules:parameter-list-no-ele
 plugins/modules/azure_rm_resourcegroup.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_resourcegroup_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_resourcegroup_info.py validate-modules:parameter-list-no-elements
-plugins/modules/azure_rm_registrationdefinition.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_registrationdefinition.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_registrationassignment.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_securitygroup.py validate-modules:doc-choices-do-not-match-spec
