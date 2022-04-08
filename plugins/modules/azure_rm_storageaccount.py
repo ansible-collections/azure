@@ -170,7 +170,6 @@ options:
                 description:
                     - The number of seconds that the client/browser should cache a preflight response.
                 type: int
-                elements: str
                 required: true
             exposed_headers:
                 description:
