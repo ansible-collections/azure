@@ -102,6 +102,7 @@ options:
                     - It could be list of dict containing resource_group and name.
                     - It is mutually exclusive with C(source_address_prefix) and C(source_address_prefixes).
                 type: list
+                elements: raw
             destination_application_security_groups:
                 description:
                     - List of the destination application security groups.
@@ -110,6 +111,7 @@ options:
                     - It could be list of dict containing I(resource_group) and I(name).
                     - It is mutually exclusive with C(destination_address_prefix) and C(destination_address_prefixes).
                 type: list
+                elements: raw
             access:
                 description:
                     - Whether or not to allow the traffic flow.

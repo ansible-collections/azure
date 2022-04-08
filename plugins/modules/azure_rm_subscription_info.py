@@ -40,9 +40,10 @@ options:
         type: bool
     tags:
         description:
-            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+            - Limit results by providing a list of tags. Format tags as 'key:value'.
             - Option has no effect when searching by id or name, and will be silently ignored.
         type: list
+        elements: dict
 
 extends_documentation_fragment:
     - azure.azcollection.azure
