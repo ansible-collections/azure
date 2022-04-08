@@ -95,6 +95,7 @@ options:
                 description:
                     - BGP peering address with IP configuration ID for virtual network gateway.
                 type: list
+                elements: dict
                 suboptions:
                     ipconfiguration_id:
                         description:

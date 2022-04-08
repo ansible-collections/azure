@@ -120,7 +120,6 @@ plugins/modules/azure_rm_securitygroup_info.py validate-modules:parameter-type-n
 plugins/modules/azure_rm_securitygroup_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_storageaccount.py validate-modules:doc-missing-type
 plugins/modules/azure_rm_storageaccount.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_storageaccount.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_storageaccount.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_storageaccount_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_storageaccount_info.py validate-modules:parameter-list-no-elements
@@ -283,7 +282,6 @@ plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:doc-missing-t
 plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_virtualnetworkgateway.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_vpnsite.py validate-modules:invalid-ansiblemodule-schema
-plugins/modules/azure_rm_vpnsite.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_batchaccount.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_batchaccount.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_cdnendpoint_info.py validate-modules:parameter-type-not-in-doc

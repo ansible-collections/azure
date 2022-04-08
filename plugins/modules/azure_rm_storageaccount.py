@@ -153,6 +153,7 @@ options:
             - If no blob_cors elements are included in the argument list, nothing about CORS will be changed.
             - If you want to delete all CORS rules and disable CORS for the Blob service, explicitly set I(blob_cors=[]).
         type: list
+        elements: dict
         suboptions:
             allowed_origins:
                 description:
