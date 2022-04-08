@@ -158,26 +158,31 @@ options:
                 description:
                     - A list of origin domains that will be allowed via CORS, or "*" to allow all domains.
                 type: list
+                elements: str
                 required: true
             allowed_methods:
                 description:
                     - A list of HTTP methods that are allowed to be executed by the origin.
                 type: list
+                elements: str
                 required: true
             max_age_in_seconds:
                 description:
                     - The number of seconds that the client/browser should cache a preflight response.
                 type: int
+                elements: str
                 required: true
             exposed_headers:
                 description:
                     - A list of response headers to expose to CORS clients.
                 type: list
+                elements: str
                 required: true
             allowed_headers:
                 description:
                     - A list of headers allowed to be part of the cross-origin request.
                 type: list
+                elements: str
                 required: true
 
 extends_documentation_fragment:

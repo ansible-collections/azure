@@ -73,6 +73,7 @@ options:
                 description:
                     - A list of address blocks reserved for this virtual network in CIDR notation.
                 type: list
+                elements: str
     bgp_properties:
         description:
             - The set of bgp properties.
@@ -103,14 +104,17 @@ options:
                         description:
                             - The list of default BGP peering addresses which belong to IP configuration.
                         type: list
+                        elements: str
                     custom_bgp_ip_addresses:
                         description:
                             - The list of custom BGP peering addresses which belong to IP configuration.
                         type: list
+                        elements: str
                     tunnel_ip_addresses:
                         description:
                             - The list of tunnel public IP addresses which belong to IP configuration.
                         type: list
+                        elements: str
     is_security_site:
         description:
             - IsSecuritySite flag.
@@ -119,6 +123,7 @@ options:
         description:
             - List of all vpn site links.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:

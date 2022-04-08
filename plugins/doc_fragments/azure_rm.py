@@ -89,5 +89,6 @@ options:
             resulted in a valid hostname.
         - Use ``default_inventory_hostname`` to access the default hostname generator's value in any of the Jinja2 expressions.
         type: list
+        elements: str
         default: [default]
 '''
