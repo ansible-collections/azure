@@ -211,7 +211,6 @@ plugins/modules/azure_rm_mariadbdatabase.py validate-modules:parameter-type-not-
 plugins/modules/azure_rm_mariadbfirewallrule.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mariadbserver.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mariadbserver_info.py validate-modules:parameter-list-no-elements
-plugins/modules/azure_rm_monitorlogprofile.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_mysqlconfiguration.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mysqlconfiguration_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_mysqldatabase.py validate-modules:parameter-type-not-in-doc
