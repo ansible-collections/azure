@@ -4,6 +4,7 @@
     db2name: "cosmos2-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     vnname: "vn{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     subnetname: "subnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    free_tier_supported: false  # https://github.com/ansible-collections/azure/pull/675#discussion_r843584406
   run_once: yes
 
 - name: Create virtual network
@@ -260,7 +261,7 @@
     location: eastasia
     kind: mongo_db
     mongo_version: "4.0"
-    enable_free_tier: false
+    enable_free_tier: "{{ free_tier_supported }}"
     public_network_access: "Disabled"
     ip_rules:
       - "1.1.1.1"
@@ -294,7 +295,7 @@
   assert:
     that:
       - output.accounts[0]['mongo_version'] == '4.0'
-      - output.accounts[0]['enable_free_tier'] == false
+      - output.accounts[0]['enable_free_tier'] == free_tier_supported
       - output.accounts[0]['public_network_access'] == 'Disabled'
       - output.accounts[0]['ip_range_filter'] == '1.1.1.1,2.2.2.2/28'
       - (output.accounts[0]['ip_rules'] | length) == 2
