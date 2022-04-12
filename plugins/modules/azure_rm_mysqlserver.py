@@ -87,8 +87,8 @@ options:
             - Server version.
         type: str
         choices:
-            - 5.7
-            - 8.0
+            - '5.7'
+            - '8.0'
     enforce_ssl:
         description:
             - Enable SSL enforcement.

@@ -215,7 +215,6 @@ options:
         description:
             - Specifies whether the Virtual Machine Scale Set should be overprovisioned.
         type: bool
-        default: True
     single_placement_group:
         description:
             - When true this limits the scale set to a single placement group, of max size 100 virtual machines.
@@ -263,7 +262,22 @@ options:
         description:
             - timeout time for termination notification event
             - in range between 5 and 15
-
+    platform_fault_domain_count:
+        description:
+            - Fault Domain count for each placement group.
+        type: int
+    orchestration_mode:
+        description:
+            - Specifies the orchestration mode for the virtual machine scale set.
+            - When I(orchestration_mode=Flexible), I(public_ip_per_vm=True) must be set.
+            - When I(orchestration_mode=Flexible), I(platform_fault_domain_count) must be set.
+            - When I(orchestration_mode=Flexible), I(single_placement_group=Flase) must be set.
+            - When I(orchestration_mode=Flexible), it cannot be configured I(overprovision).
+            - When I(orchestration_mode=Flexible), it cannot be configured I(upgrade_policy) and configured when I(orchestration_mode=Uniform)..
+        type: str
+        choices:
+            - Flexible
+            - Uniform
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -405,6 +419,8 @@ azure_vmss:
     sample: {
         "properties": {
             "overprovision": true,
+            "platformFaultDomainCount": 1,
+            "orchestrationMode": "Flexible",
              "scaleInPolicy": {
                     "rules": [
                         "NewestVM"
@@ -557,7 +573,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             remove_on_absent=dict(type='list', default=['all']),
             enable_accelerated_networking=dict(type='bool'),
             security_group=dict(type='raw', aliases=['security_group_name']),
-            overprovision=dict(type='bool', default=True),
+            overprovision=dict(type='bool'),
             single_placement_group=dict(type='bool', default=True),
             zones=dict(type='list'),
             custom_data=dict(type='str'),
@@ -566,7 +582,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                       promotion_code=dict(type='str'))),
             scale_in_policy=dict(type='str', choices=['Default', 'OldestVM', 'NewestVM']),
             terminate_event_timeout_minutes=dict(type='int'),
-            ephemeral_os_disk=dict(type='bool')
+            ephemeral_os_disk=dict(type='bool'),
+            orchestration_mode=dict(type='str', choices=['Uniform', 'Flexible']),
+            platform_fault_domain_count=dict(type='int')
         )
 
         self.resource_group = None
@@ -607,6 +625,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         self.scale_in_policy = None
         self.terminate_event_timeout_minutes = None
         self.ephemeral_os_disk = None
+        self.orchestration_mode = None
+        self.platform_fault_domain_count = None
 
         mutually_exclusive = [('load_balancer', 'application_gateway')]
         self.results = dict(
@@ -798,7 +818,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     differences.append('Tags')
                     changed = True
 
-                if bool(self.overprovision) != bool(vmss_dict['properties']['overprovision']):
+                if self.overprovision is not None and bool(self.overprovision) != bool(vmss_dict['properties'].get('overprovision')):
                     differences.append('overprovision')
                     changed = True
 
@@ -858,6 +878,15 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                         differences.append('custom_data')
                         changed = True
                         vmss_dict['properties']['virtualMachineProfile']['osProfile']['customData'] = self.custom_data
+                if self.orchestration_mode == "Flexible":
+                    if self.orchestration_mode != vmss_dict['properties'].get('orchestrationMode'):
+                        self.fail("The orchestration_mode parameter cannot be updated!")
+                else:
+                    if vmss_dict['properties'].get('orchestrationMode') is not None:
+                        self.fail("The orchestration_mode parameter cannot be updated!")
+
+                if self.platform_fault_domain_count and self.platform_fault_domain_count != vmss_dict['properties'].get('platformFaultDomainCount'):
+                    self.fail("The platform_fault_domain_count parameter cannot be updated!")
 
                 self.differences = differences
 
@@ -930,9 +959,11 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                         overprovision=self.overprovision,
                         single_placement_group=self.single_placement_group,
                         tags=self.tags,
+                        orchestration_mode=self.orchestration_mode,
+                        platform_fault_domain_count=self.platform_fault_domain_count,
                         upgrade_policy=self.compute_models.UpgradePolicy(
                             mode=self.upgrade_policy
-                        ),
+                        ) if self.upgrade_policy is not None else None,
                         sku=self.compute_models.Sku(
                             name=self.vm_size,
                             capacity=self.capacity,
@@ -972,7 +1003,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                                         enable_accelerated_networking=self.enable_accelerated_networking,
                                         network_security_group=self.security_group
                                     )
-                                ]
+                                ],
+                                network_api_version='2020-11-01' if self.orchestration_mode == 'Flexible' else None
                             )
                         ),
                         zones=self.zones
@@ -1053,6 +1085,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     vmss_resource = self.get_vmss()
                     vmss_resource.virtual_machine_profile.storage_profile.os_disk.caching = self.os_disk_caching
                     vmss_resource.sku.capacity = self.capacity
+                    vmss_resource.orchestration_mode = self.orchestration_mode
+                    vmss_resource.platform_fault_domain_count = self.platform_fault_domain_count
                     vmss_resource.overprovision = self.overprovision
                     vmss_resource.single_placement_group = self.single_placement_group
 

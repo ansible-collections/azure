@@ -95,7 +95,7 @@ gateways:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
@@ -141,7 +141,7 @@ class AzureRMApplicationGatewayInfo(AzureRMModuleBase):
         results = []
         try:
             response = self.network_client.application_gateways.get(resource_group_name=self.resource_group, application_gateway_name=self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if response is not None:
@@ -154,7 +154,7 @@ class AzureRMApplicationGatewayInfo(AzureRMModuleBase):
         results = []
         try:
             response = self.network_client.application_gateways.list(resource_group_name=self.resource_group)
-        except CloudError as exc:
+        except Exception as exc:
             request_id = exc.request_id if exc.request_id else ''
             self.fail("Error listing application gateways in resource groups {0}: {1} - {2}".format(self.resource_group, request_id, str(exc)))
 
@@ -168,7 +168,7 @@ class AzureRMApplicationGatewayInfo(AzureRMModuleBase):
         results = []
         try:
             response = self.network_client.application_gateways.list_all()
-        except CloudError as exc:
+        except Exception as exc:
             request_id = exc.request_id if exc.request_id else ''
             self.fail("Error listing all application gateways: {0} - {1}".format(request_id, str(exc)))
 

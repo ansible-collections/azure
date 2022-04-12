@@ -8,7 +8,7 @@ azure-mgmt-apimanagement==0.2.0
 azure-mgmt-authorization==0.51.1
 azure-mgmt-batch==5.0.1
 azure-mgmt-cdn==3.0.0
-azure-mgmt-compute==23.1.0
+azure-mgmt-compute==26.1.0
 azure-mgmt-containerinstance==1.4.0
 azure-mgmt-containerregistry==2.0.0
 azure-mgmt-containerservice==9.1.0
@@ -41,7 +41,7 @@ azure-mgmt-cosmosdb==0.5.2
 azure-mgmt-hdinsight==0.1.0
 azure-mgmt-devtestlabs==3.0.0
 azure-mgmt-loganalytics==1.0.0
-azure-mgmt-automation==0.1.1
+azure-mgmt-automation==1.0.0
 azure-mgmt-iothub==0.7.0
 azure-mgmt-recoveryservices==0.4.0
 azure-mgmt-recoveryservicesbackup==0.6.0

@@ -99,6 +99,8 @@ keyed_groups:
 exclude_host_filters:
 # excludes hosts in the eastus region
 - location in ['eastus']
+- tags['tagkey'] is defined and tags['tagkey'] == 'tagkey'
+- tags['tagkey2'] is defined and tags['tagkey2'] == 'tagkey2'
 # excludes hosts that are powered off
 - powerstate != 'running'
 '''

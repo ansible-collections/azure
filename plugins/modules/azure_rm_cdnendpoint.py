@@ -39,6 +39,7 @@ options:
         description:
             - Use with I(state=present) and I(purge=true) to specify content paths to be purged.
         type: list
+        elements: str
         default: ['/']
     profile_name:
         description:
@@ -80,6 +81,7 @@ options:
             - List of content types on which compression applies.
             - This value should be a valid MIME type.
         type: list
+        elements: str
     is_compression_enabled:
         description:
             - Indicates whether content compression is enabled on CDN.

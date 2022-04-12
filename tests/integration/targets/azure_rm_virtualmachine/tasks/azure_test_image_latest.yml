@@ -1,0 +1,69 @@
+- include_tasks: setup.yml
+
+- name: List available versions for UbuntuServer image
+  azure_rm_virtualmachineimage_info:
+    location: eastus
+    publisher: Canonical
+    offer: UbuntuServer
+    sku: 16.04-LTS
+  register: image_list
+
+- name: Get latest UbuntuServer image name
+  set_fact:
+    latest_image_name: "{{ (image_list['vmimages'] | map(attribute='name') | sort(reverse=True))[0] }}"
+
+- name: Create minimal VM with defaults
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    admin_username: "testuser"
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    vm_size: Standard_B1ms
+    virtual_network: "{{ network_name }}"
+    image:
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 16.04-LTS
+      version: latest
+  register: vm_output
+
+- name: Ensure VM was created using the latest UbuntuServer image version / name
+  assert:
+    that:
+      - vm_output.azure_vm.properties.storageProfile.imageReference.version == latest_image_name
+
+- name: Delete VM
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    remove_on_absent: all_autocreated
+    state: absent
+
+- name: Destroy subnet
+  azure_rm_subnet:
+    resource_group: "{{ resource_group }}"
+    virtual_network: "{{ network_name }}"
+    name: "{{ subnet_name }}"
+    state: absent
+
+- name: Destroy virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "{{ network_name }}"
+    state: absent
+
+- name: Destroy availability set
+  azure_rm_availabilityset:
+    resource_group: "{{ resource_group }}"
+    name: "{{ availability_set }}"
+    state: absent
+
+- name: Destroy storage account
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account }}"
+    force_delete_nonempty: yes
+    state: absent
