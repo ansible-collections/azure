@@ -104,7 +104,7 @@
   register: output
 
 - assert:
-      that: output['clusters'] | length == 1
+      that: output['clusters'] | length >= 1
 
 - name: Delete openshift cluster
   azure_rm_openshiftmanagedcluster:
