@@ -88,7 +88,7 @@
   register: output
 
 - assert:
-      that: output['clusters']['name'] == "{{ cluster_name }}"
+      that: output['clusters'] | length == 1
 
 - name: Get specific cluster information for a specific cluster
   azure_rm_openshiftmanagedcluster_info:
