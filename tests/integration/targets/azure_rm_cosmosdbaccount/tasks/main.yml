@@ -260,7 +260,7 @@
     location: eastasia
     kind: mongo_db
     mongo_version: "4.0"
-    enable_free_tier: true
+    enable_free_tier: false
     public_network_access: "Disabled"
     ip_rules:
       - "1.1.1.1"
@@ -294,7 +294,7 @@
   assert:
     that:
       - output.accounts[0]['mongo_version'] == '4.0'
-      - output.accounts[0]['enable_free_tier'] == true
+      - output.accounts[0]['enable_free_tier'] == false
       - output.accounts[0]['public_network_access'] == 'Disabled'
       - output.accounts[0]['ip_range_filter'] == '1.1.1.1,2.2.2.2/28'
       - (output.accounts[0]['ip_rules'] | length) == 2
