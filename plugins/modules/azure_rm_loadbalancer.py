@@ -74,7 +74,6 @@ options:
                     - This must be specified I(sku=Standard) and I(subnet) when setting zones.
                 type: list
                 elements: str
-
     backend_address_pools:
         description:
             - List of backend address pools.
@@ -216,10 +215,10 @@ options:
                     - Configures a virtual machine's endpoint for the floating IP capability required to configure a SQL AlwaysOn Availability Group.
             disable_outbound_snat:
                 description:
-                    - Configure outbound source network address translation (SNAT)
-                    - The default value is False
-                    - True is equivalent to "Use outbound rules to provide backend pool members access to the internet" in portal
-                    - False is equivalent to "Use implicit outbound rule" in portal
+                    - Configure outbound source network address translation (SNAT).
+                    - The default behavior when omitted is equivalent to I(disable_outbound_snat=True).
+                    - True is equivalent to "(Recommended) Use outbound rules to provide backend pool members access to the internet" in portal.
+                    - False is equivalent to "Use default outbound access" in portal.
     inbound_nat_rules:
         description:
             - Collection of inbound NAT Rules used by a load balancer.
@@ -579,8 +578,8 @@ load_balancing_rule_spec = dict(
     ),
     disable_outbound_snat=dict(
         type='bool',
-        default=False
-    )
+        default=None
+    ),
 )
 
 
@@ -788,7 +787,6 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                     backend_port=self.backend_port,
                     idle_timeout=self.idle_timeout,
                     enable_floating_ip=False,
-                    disable_outbound_snat=False
                 )] if self.protocol else None
 
             # create new load balancer structure early, so it can be easily compared
@@ -882,7 +880,7 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                 backend_port=item.get('backend_port'),
                 idle_timeout_in_minutes=item.get('idle_timeout'),
                 enable_floating_ip=item.get('enable_floating_ip'),
-                disable_outbound_snat=item.get('disable_outbound_snat')
+                disable_outbound_snat=item.get('disable_outbound_snat'),
             ) for item in self.load_balancing_rules] if self.load_balancing_rules else None
 
             inbound_nat_rules_param = [self.network_models.InboundNatRule(

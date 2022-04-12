@@ -196,6 +196,7 @@
         frontend_port: 80
         backend_port: 80
         probe: prob0
+        disable_outbound_snat: True
   register: output
 
 - name: assert complex load balancer created
@@ -228,6 +229,7 @@
         frontend_port: 80
         backend_port: 80
         probe: prob0
+        disable_outbound_snat: True
     inbound_nat_rules:
       - name: inboundnatrule0
         backend_port: 8080
@@ -293,6 +295,7 @@
         frontend_port: 80
         backend_port: 80
         probe: prob0
+        disable_outbound_snat: False
   register: output
 
 - name: assert complex load balancer created
