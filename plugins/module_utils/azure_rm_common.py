@@ -1300,7 +1300,8 @@ class AzureRMModuleBase(object):
         self.log('Getting automation client')
         if not self._automation_client:
             self._automation_client = self.get_mgmt_svc_client(AutomationClient,
-                                                               base_url=self._cloud_environment.endpoints.resource_manager)
+                                                               base_url=self._cloud_environment.endpoints.resource_manager,
+                                                               is_track2=True)
         return self._automation_client
 
     @property
@@ -1318,18 +1319,6 @@ class AzureRMModuleBase(object):
     @property
     def IoThub_models(self):
         return IoTHubModels
-
-    @property
-    def automation_client(self):
-        self.log('Getting automation client')
-        if not self._automation_client:
-            self._automation_client = self.get_mgmt_svc_client(AutomationClient,
-                                                               base_url=self._cloud_environment.endpoints.resource_manager)
-        return self._automation_client
-
-    @property
-    def automation_models(self):
-        return AutomationModel
 
     @property
     def lock_client(self):

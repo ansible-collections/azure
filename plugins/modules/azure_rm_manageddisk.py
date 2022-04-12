@@ -519,9 +519,10 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         if vm_name:
             vm = self._get_vm(vm_name)
             correspondence = next((d for d in vm.storage_profile.data_disks if d.name.lower() == disk.get('name').lower()), None)
-            if correspondence and correspondence.caching.name != self.attach_caching:
+            caching_options = self.compute_models.CachingTypes[self.attach_caching] if self.attach_caching and self.attach_caching != '' else None
+            if correspondence and correspondence.caching != caching_options:
                 resp = True
-                if correspondence.caching.name == 'none' and (self.attach_caching == '' or self.attach_caching is None):
+                if correspondence.caching == 'none' and (self.attach_caching == '' or self.attach_caching is None):
                     resp = False
         return resp
 

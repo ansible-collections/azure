@@ -122,9 +122,9 @@ options:
             - The minimum TLS encryption version required for the app.
         type: str
         choices:
-            - 1.0
-            - 1.1
-            - 1.2
+            - '1.0'
+            - '1.1'
+            - '1.2'
 
     ftps_state:
         description:

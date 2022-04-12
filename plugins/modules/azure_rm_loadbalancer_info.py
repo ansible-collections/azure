@@ -92,6 +92,7 @@ loadbalancers:
                                        myAzureResourceGroup/providers/Microsoft.Network/publicIPAddresses/testpip"
                             }
                         },
+                        "zones": ["1", "2", "3"],
                         "type": "Microsoft.Network/loadBalancers/frontendIPConfigurations"
                     }
                 ],

@@ -240,6 +240,18 @@ vmss:
             returned: always
             type: dict
             sample: { "tag1": "abc" }
+        orchestrationMode:
+            description:
+                - The orchestration mode for the virtual machine scale set.
+            type: str
+            returned: always
+            sample: Flexible
+        platformFaultDomainCount:
+            description:
+                - Fault Domain count for each placement group.
+            type: int
+            returned: always
+            sample: 1
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -356,14 +368,16 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
                     'vm_size': vmss['sku']['name'],
                     'capacity': vmss['sku']['capacity'],
                     'tier': vmss['sku']['tier'],
-                    'upgrade_policy': vmss['properties']['upgradePolicy']['mode'],
+                    'upgrade_policy': vmss['properties'].get('upgradePolicy'),
+                    'orchestrationMode': vmss['properties'].get('orchestrationMode'),
+                    'platformFaultDomainCount': vmss['properties'].get('platformFaultDomainCount'),
                     'admin_username': vmss['properties']['virtualMachineProfile']['osProfile']['adminUsername'],
                     'admin_password': vmss['properties']['virtualMachineProfile']['osProfile'].get('adminPassword'),
                     'ssh_password_enabled': ssh_password_enabled,
                     'image': vmss['properties']['virtualMachineProfile']['storageProfile']['imageReference'],
                     'os_disk_caching': vmss['properties']['virtualMachineProfile']['storageProfile']['osDisk']['caching'],
                     'os_type': 'Linux' if (vmss['properties']['virtualMachineProfile']['osProfile'].get('linuxConfiguration') is not None) else 'Windows',
-                    'overprovision': vmss['properties']['overprovision'],
+                    'overprovision': vmss['properties'].get('overprovision'),
                     'managed_disk_type': vmss['properties']['virtualMachineProfile']['storageProfile']['osDisk']['managedDisk']['storageAccountType'],
                     'data_disks': data_disks,
                     'virtual_network_name': virtual_network_name,
