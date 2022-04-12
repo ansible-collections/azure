@@ -73,6 +73,11 @@ id:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
+try:
+    from azure.core.exceptions import ResourceNotFoundError
+except ImportError:
+    pass
+
 
 class AzureRMAutomationAccount(AzureRMModuleBase):
 
@@ -139,25 +144,25 @@ class AzureRMAutomationAccount(AzureRMModuleBase):
     def get_account(self):
         try:
             return self.automation_client.automation_account.get(self.resource_group, self.name)
-        except self.automation_models.ErrorResponseException:
+        except ResourceNotFoundError:
             pass
 
     def create_or_update(self, param):
         try:
             return self.automation_client.automation_account.create_or_update(self.resource_group, self.name, param)
-        except self.automation_models.ErrorResponseException as exc:
+        except Exception as exc:
             self.fail('Error when creating automation account {0}: {1}'.format(self.name, exc.message))
 
     def update_account_tags(self, param):
         try:
             return self.automation_client.automation_account.update(self.resource_group, self.name, param)
-        except self.automation_models.ErrorResponseException as exc:
+        except Exception as exc:
             self.fail('Error when updating automation account {0}: {1}'.format(self.name, exc.message))
 
     def delete_account(self):
         try:
             return self.automation_client.automation_account.delete(self.resource_group, self.name)
-        except self.automation_models.ErrorResponseException as exc:
+        except Exception as exc:
             self.fail('Error when deleting automation account {0}: {1}'.format(self.name, exc.message))
 
 

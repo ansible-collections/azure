@@ -30,10 +30,12 @@ options:
         description:
             - List of regions for which Activity Log events should be stored.
         type: list
+        elements: str
     categories:
         description:
             - List of categories of logs. These categories are created as is convenient to  user. Some Values are C(Write), C(Delete) and/or C(Action).
         type: list
+        elements: str
     retention_policy:
         description:
             - Retention policy for events in the log.

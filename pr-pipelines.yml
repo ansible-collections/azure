@@ -35,6 +35,7 @@ parameters:
     - "azure_rm_appgateway"
     - "azure_rm_appserviceplan"
     - "azure_rm_automationaccount"
+    - "azure_rm_automationrunbook"
     - "azure_rm_autoscale"
     - "azure_rm_availabilityset"
     - "azure_rm_azurefirewall"

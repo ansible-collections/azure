@@ -121,6 +121,7 @@ options:
                 description:
                     - Availability zones for nodes. Must use VirtualMachineScaleSets AgentPoolType.
                 type: list
+                elements: int
                 choices:
                     - 1
                     - 2
@@ -206,6 +207,7 @@ options:
                     - Authorized IP Ranges to kubernetes API server.
                     - Cannot be enabled when using private cluster
                 type: list
+                elements: str
             enable_private_cluster:
                 description:
                     - Whether to create the cluster as a private cluster or not.

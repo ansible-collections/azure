@@ -68,6 +68,13 @@ options:
                 description:
                     - The reference of the subnet resource.
                     - Should be an existing subnet's resource id.
+            zones:
+                description:
+                    - list of availability zones denoting the IP allocated for the resource needs to come from.
+                    - This must be specified I(sku=Standard) and I(subnet) when setting zones.
+                type: list
+                elements: str
+
     backend_address_pools:
         description:
             - List of backend address pools.
@@ -419,6 +426,10 @@ frontend_ip_configuration_spec = dict(
     ),
     subnet=dict(
         type='str'
+    ),
+    zones=dict(
+        type='list',
+        elements='str'
     )
 )
 
@@ -770,13 +781,36 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                 )] if self.protocol else None
 
             # create new load balancer structure early, so it can be easily compared
-            frontend_ip_configurations_param = [self.network_models.FrontendIPConfiguration(
-                name=item.get('name'),
-                public_ip_address=self.get_public_ip_address_instance(item.get('public_ip_address')) if item.get('public_ip_address') else None,
-                private_ip_address=item.get('private_ip_address'),
-                private_ip_allocation_method=item.get('private_ip_allocation_method'),
-                subnet=self.network_models.Subnet(id=item.get('subnet')) if item.get('subnet') else None
-            ) for item in self.frontend_ip_configurations] if self.frontend_ip_configurations else None
+            if not load_balancer:
+                frontend_ip_configurations_param = [self.network_models.FrontendIPConfiguration(
+                    name=item.get('name'),
+                    public_ip_address=self.get_public_ip_address_instance(item.get('public_ip_address')) if item.get('public_ip_address') else None,
+                    private_ip_address=item.get('private_ip_address'),
+                    private_ip_allocation_method=item.get('private_ip_allocation_method'),
+                    zones=item.get('zones'),
+                    subnet=self.network_models.Subnet(
+                        id=item.get('subnet'),
+                        private_endpoint_network_policies=None,
+                        private_link_service_network_policies=None
+                    ) if item.get('subnet') else None
+                ) for item in self.frontend_ip_configurations] if self.frontend_ip_configurations else None
+            else:
+                old_front = load_balancer.frontend_ip_configurations
+                new_front = self.frontend_ip_configurations
+                frontend_ip_configurations_param = [self.network_models.FrontendIPConfiguration(
+                    name=new_front[index].get('name'),
+                    public_ip_address=self.get_public_ip_address_instance(
+                        new_front[index].get('public_ip_address')
+                    ) if new_front[index].get('public_ip_address') else None,
+                    private_ip_address=new_front[index].get('private_ip_address'),
+                    private_ip_allocation_method=new_front[index].get('private_ip_allocation_method'),
+                    zones=new_front[index].get('zones') if new_front[index].get('zones') else old_front[index].zones,
+                    subnet=self.network_models.Subnet(
+                        id=new_front[index].get('subnet'),
+                        private_endpoint_network_policies=None,
+                        private_link_service_network_policies=None
+                    ) if new_front[index].get('subnet') else None
+                ) for index in range(len(new_front))] if new_front else None
 
             backend_address_pools_param = [self.network_models.BackendAddressPool(
                 name=item.get('name')
