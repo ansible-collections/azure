@@ -602,6 +602,14 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         if self.static_ip is not None and existing['static_ip'] != self.static_ip:
             self.log("static_ip diff: origin {0} / update {1}".format(existing['static_ip'], self.static_ip))
             return True
+        if self.minimum_tls_version is not None and existing['minimum_tls_version'] != self.minimum_tls_version:
+            self.log("minimum_tls_version diff: origin {0} / update {1}".format(existing['minimum_tls_version'], self.minimum_tls_version))
+            return True
+        if self.public_network_access is not None and existing['public_network_access'] != self.public_network_access:
+            self.log("public_network_access diff: origin {0} / update {1}".format(existing['public_network_access'], self.public_network_access))
+            return True
+        if self.redis_version is not None and existing['redis_version'][0] != self.redis_version[0]:
+            self.fail("Updating redis_version is not supported")
         for config in self.redis_configuration_properties:
             if getattr(self, config) is not None and existing.get(config, None) != getattr(self, config, None):
                 self.log("redis_configuration {0} diff: origin {1} / update {2}".format(config, existing.get(config, None), getattr(self, config, None)))
