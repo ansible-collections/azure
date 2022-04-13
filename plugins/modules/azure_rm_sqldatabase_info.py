@@ -34,6 +34,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -179,7 +181,8 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -191,7 +194,7 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
         self.name = None
         self.elastic_pool_name = None
         self.tags = None
-        super(AzureRMSqlDatabaseInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
+        super(AzureRMSqlDatabaseInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_sqldatabase_facts'

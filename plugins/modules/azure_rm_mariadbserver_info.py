@@ -31,6 +31,7 @@ options:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
         type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -50,6 +51,8 @@ EXAMPLES = '''
   - name: List instances of MariaDB Server
     azure_rm_mariadbserver_info:
       resource_group: myResourceGroup
+      tags:
+        - key:value
 '''
 
 RETURN = '''
@@ -172,7 +175,8 @@ class AzureRMMariaDbServerInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -182,7 +186,7 @@ class AzureRMMariaDbServerInfo(AzureRMModuleBase):
         self.resource_group = None
         self.name = None
         self.tags = None
-        super(AzureRMMariaDbServerInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
+        super(AzureRMMariaDbServerInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_mariadbserver_facts'

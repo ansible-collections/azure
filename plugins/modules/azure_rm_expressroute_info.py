@@ -24,11 +24,14 @@ options:
         description:
             - The name of the express route.
         type: str
-
+    tags:
+        description:
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Praveen Ghuge (@praveenghuge)
@@ -43,6 +46,8 @@ EXAMPLES = '''
     community.azure.azure_rm_expressroute_info:
       resource_group: myResourceGroup
       name: myExpressRoute
+      tags:
+        - key:value
 
 '''
 
@@ -109,6 +114,10 @@ class AzureExpressRouteInfo(AzureRMModuleBase):
             ),
             name=dict(
                 type='str'
+            ),
+            tags=dict(
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -119,7 +128,7 @@ class AzureExpressRouteInfo(AzureRMModuleBase):
         self.tags = None
 
         super(AzureExpressRouteInfo, self).__init__(
-            self.module_arg_spec, supports_check_mode=True, supports_tags=True)
+            self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 

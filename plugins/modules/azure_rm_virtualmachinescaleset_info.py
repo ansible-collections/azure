@@ -28,7 +28,9 @@ options:
             - The resource group to search for the desired virtual machine scale set.
     tags:
         description:
-            - List of tags to be matched.
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
     format:
         description:
             - Format of the data returned.
@@ -276,7 +278,7 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
         self.module_args = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             format=dict(
                 type='str',
                 choices=['curated',

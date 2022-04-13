@@ -26,7 +26,9 @@ options:
             - Name of the image to filter from existing images.
     tags:
         description:
-            - List of tags to be matched.
+            -  Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -182,7 +184,7 @@ class AzureRMImageInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(type='str'),
             name=dict(type='str'),
-            tags=dict(type='list')
+            tags=dict(type='list', elements='str')
         )
 
         self.results = dict(
