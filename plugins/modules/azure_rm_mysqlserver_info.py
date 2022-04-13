@@ -46,7 +46,7 @@ EXAMPLES = '''
       resource_group: myResourceGroup
       name: server_name
       tags:
-	- key:value
+        - key
 
   - name: List instances of MySQL Server
     azure_rm_mysqlserver_info:
@@ -197,9 +197,9 @@ class AzureRMMySqlServerInfo(AzureRMModuleBase):
                 type='str'
             ),
 	    tags=dict(
-		type='list',
-		elements='str'
-	    )
+                type='list',
+                elements='str'
+            )
         )
         # store the results of the module operation
         self.results = dict(

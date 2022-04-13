@@ -196,7 +196,8 @@ class AzureRMCdnEndpointInfo(AzureRMModuleBase):
                 type='str',
                 required=True
             ),
-            tags=dict(type='list',
+            tags=dict(
+                type='list',
                 elements='str'
             )
         )

@@ -50,7 +50,7 @@ EXAMPLES = '''
     azure_rm_postgresqlserver_info:
       resource_group: myResourceGroup
       tags:
-	- key:value
+        - key
 '''
 
 RETURN = '''
