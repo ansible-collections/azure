@@ -69,7 +69,6 @@ plugins/modules/azure_rm_keyvaultkey.py validate-modules:parameter-type-not-in-d
 plugins/modules/azure_rm_keyvaultkey_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_keyvaultsecret.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_manageddisk.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_manageddisk_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_managementgroup.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_networkinterface.py validate-modules:doc-missing-type
 plugins/modules/azure_rm_networkinterface.py validate-modules:parameter-type-not-in-doc

@@ -196,7 +196,7 @@ class AzureRMMySqlServerInfo(AzureRMModuleBase):
             name=dict(
                 type='str'
             ),
-	    tags=dict(
+            tags=dict(
                 type='list',
                 elements='str'
             )
