@@ -84,11 +84,13 @@ import time
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.polling import LROPoller
     from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.redis import RedisManagementClient
+    from azure.mgmt.redis.models import (
+        RedisFirewallRule
+    )
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -171,7 +173,8 @@ class AzureRMRedisCacheFirewallRule(AzureRMModuleBase):
         # get management client
         self._client = self.get_mgmt_svc_client(RedisManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
-                                                api_version='2018-03-01')
+                                                api_version='2018-03-01',
+                                                is_track2=True)
 
         # check if the firewall rule exists
         old_response = self.get()
@@ -249,15 +252,19 @@ class AzureRMRedisCacheFirewallRule(AzureRMModuleBase):
             "Creating Firewall rule of Azure Cache for Redis {0}".format(self.name))
 
         try:
+            params = RedisFirewallRule(
+                name=self.name,
+                start_ip=self.start_ip_address,
+                end_ip=self.end_ip_address,
+            )
             response = self._client.firewall_rules.create_or_update(resource_group_name=self.resource_group,
                                                                     cache_name=self.cache_name,
                                                                     rule_name=self.name,
-                                                                    start_ip=self.start_ip_address,
-                                                                    end_ip=self.end_ip_address)
+                                                                    parameters=params)
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create/update Firewall rule of Azure Cache for Redis.')
             self.fail(
                 "Error creating/updating Firewall rule of Azure Cache for Redis: {0}".format(str(exc)))
@@ -271,10 +278,10 @@ class AzureRMRedisCacheFirewallRule(AzureRMModuleBase):
         '''
         self.log("Deleting the Firewall rule of Azure Cache for Redis {0}".format(self.name))
         try:
-            response = self._client.firewall_rules.delete(resource_group_name=self.resource_group,
-                                                          rule_name=self.name,
-                                                          cache_name=self.cache_name)
-        except CloudError as e:
+            self._client.firewall_rules.delete(resource_group_name=self.resource_group,
+                                               rule_name=self.name,
+                                               cache_name=self.cache_name)
+        except Exception as e:
             self.log('Error attempting to delete the Firewall rule of Azure Cache for Redis.')
             self.fail(
                 "Error deleting the Firewall rule of Azure Cache for Redis: {0}".format(str(e)))
@@ -299,7 +306,7 @@ class AzureRMRedisCacheFirewallRule(AzureRMModuleBase):
             self.log("Redis Firewall Rule : {0} found".format(response.name))
             return firewall_rule_to_dict(response)
 
-        except CloudError as ex:
+        except ResourceNotFoundError:
             self.log("Didn't find Azure Redis Firewall rule {0} in resource group {1}".format(
                 self.name, self.resource_group))
 
