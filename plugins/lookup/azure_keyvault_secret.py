@@ -60,7 +60,7 @@ EXAMPLE = """
           'azure.azcollection.azure_keyvault_secret',
           secretname,
           vault_url=url,
-          cliend_id=client_id,
+          client_id=client_id,
           secret=secret,
           tenant_id=tenant
         )
