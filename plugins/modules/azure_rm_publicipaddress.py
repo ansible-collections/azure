@@ -124,7 +124,7 @@ state:
         dns_settings:
             description:
                 - The FQDN of the DNS record associated with the public IP address.
-            returns: always
+            returned: always
             type: dict
             sample: {
             "domain_name_label": "ansible-b57dc95985712e45eb8b9c2e",
@@ -134,49 +134,49 @@ state:
         etag:
             description:
                 - A unique read-only string that changes whenever the resource is updated.
-            returns: always
+            returned: always
             type: str
             sample: "W/'1905ee13-7623-45b1-bc6b-4a12b2fb9d15'"
         idle_timeout_in_minutes:
             description:
                 - The idle timeout of the public IP address.
-            returns: always
+            returned: always
             type: int
             sample: 4
         ip_address:
             description:
                 - The Public IP Prefix this Public IP Address should be allocated from.
-            returns: always
+            returned: always
             type: str
             sample: 52.160.103.93
         location:
             description:
                 - Resource location.
-            returns: always
+            returned: always
             type: str
             example: eastus
         name:
             description:
                 - Name of the Public IP Address.
-            returns: always
+            returned: always
             type: str
             example: publicip002
         provisioning_state:
             description:
                 - The provisioning state of the Public IP resource.
-            returns: always
+            returned: always
             type: str
             example: Succeeded
         public_ip_allocation_method:
              description:
                  - The public IP allocation method.
-             returns: always
+             returned: always
              type: str
              sample: static
         public_ip_address_version:
              description:
                  - The public IP address version.
-             returns: always
+             returned: always
              type: str
              sample: ipv4
         sku:
@@ -188,7 +188,7 @@ state:
         tags:
             description:
                 - The resource tags.
-            returns: always
+            returned: always
             type: dict
             sample: {
                 "delete": "on-exit",
@@ -197,7 +197,7 @@ state:
         type:
             description:
                 - Type of the resource.
-            returns: always
+            returned: always
             type: str
             sample: "Microsoft.Network/publicIPAddresses"
 '''
