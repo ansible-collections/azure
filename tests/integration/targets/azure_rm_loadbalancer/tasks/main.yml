@@ -200,7 +200,8 @@
 
 - name: assert complex load balancer created
   assert:
-    that: output.changed
+    that:
+      - output.changed
 
 - name: delete load balancer
   azure_rm_loadbalancer:
@@ -263,11 +264,16 @@
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_d }}"
+    sku: Standard
     frontend_ip_configurations:
       - name: frontendipconf0
         private_ip_address: 10.10.0.10
         private_ip_allocation_method: Static
         subnet: "{{ subnet.state.id }}"
+        zones:
+          - 1
+          - 2
+          - 3
     backend_address_pools:
       - name: backendaddrpool0
     probes:
@@ -291,7 +297,9 @@
 
 - name: assert complex load balancer created
   assert:
-    that: output.changed
+    that:
+      - output.changed
+      - output.state.frontend_ip_configurations[0].zones | length == 3
 
 - name: delete load balancer
   azure_rm_loadbalancer:

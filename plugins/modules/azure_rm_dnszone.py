@@ -60,12 +60,14 @@ options:
             - This is a only when I(type=private).
             - Each element can be the name or resource id, or a dict contains C(name), C(resource_group) information of the virtual network.
         type: list
+        elements: raw
     resolution_virtual_networks:
         description:
             - A list of references to virtual networks that resolve records in this DNS zone.
             - This is a only when I(type=private).
             - Each element can be the name or resource id, or a dict contains C(name), C(resource_group) information of the virtual network.
         type: list
+        elements: raw
 
 extends_documentation_fragment:
     - azure.azcollection.azure

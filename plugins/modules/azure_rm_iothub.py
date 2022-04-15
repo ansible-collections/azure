@@ -82,6 +82,7 @@ options:
         description:
             - Configure rules for rejecting or accepting traffic from specific IPv4 addresses.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -105,6 +106,7 @@ options:
         description:
             - Custom endpoints.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -149,6 +151,7 @@ options:
         description:
             - Route device-to-cloud messages to service-facing endpoints.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:

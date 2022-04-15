@@ -40,6 +40,7 @@ options:
                     - Authorization tuple containing principal ID of the user/security group or service principal and ID of the build-in role.
                 required: true
                 type: list
+                elements: dict
                 suboptions:
                     principal_id:
                         description:
