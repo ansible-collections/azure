@@ -96,7 +96,6 @@ plugins/modules/azure_rm_networkinterface_info.py validate-modules:return-syntax
 plugins/modules/azure_rm_publicipaddress.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_publicipaddress.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_publicipaddress.py validate-modules:doc-required-mismatch
-plugins/modules/azure_rm_publicipaddress.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_publicipaddress_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_publicipaddress_info.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_resource.py validate-modules:parameter-type-not-in-doc

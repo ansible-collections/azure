@@ -63,6 +63,8 @@ options:
             disabled_ssl_protocols:
                 description:
                     - List of SSL protocols to be disabled on application gateway.
+                type: list
+                elements: str
                 choices:
                     - 'tls_v1_0'
                     - 'tls_v1_1'
@@ -83,6 +85,8 @@ options:
             cipher_suites:
                 description:
                     - List of SSL cipher suites to be enabled in the specified order to application gateway.
+                type: list
+                elements: str
                 choices:
                     - tls_ecdhe_rsa_with_aes_256_gcm_sha384
                     - tls_ecdhe_rsa_with_aes_128_gcm_sha256
@@ -114,7 +118,7 @@ options:
                     - tls_dhe_dss_with_3des_ede_cbc_sha
             min_protocol_version:
                 description:
-                    - Minimum version of Ssl protocol to be supported on application gateway.
+                    - Minimum version of SSL protocol to be supported on application gateway.
                 choices:
                     - 'tls_v1_0'
                     - 'tls_v1_1'
@@ -1390,6 +1394,11 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                         if suites is not None:
                             for i in range(len(suites)):
                                 suites[i] = suites[i].upper()
+                    for prop_name in ['policy_name', 'min_protocol_version', 'disabled_ssl_protocols', 'cipher_suites']:
+                        if prop_name in ev and ev[prop_name] is None:
+                            # delete unspecified properties for clean comparison
+                            del ev[prop_name]
+                    self.parameters["ssl_policy"] = ev
                 elif key == "gateway_ip_configurations":
                     ev = kwargs[key]
                     for i in range(len(ev)):
@@ -1703,6 +1712,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     self.parameters['sku']['tier'] != old_response['sku']['tier'] or
                     self.parameters['sku']['capacity'] != old_response['sku']['capacity'] or
                     not compare_arrays(old_response, self.parameters, 'authentication_certificates') or
+                    not compare_arrays(old_response, self.parameters, 'ssl_policy') or
                     not compare_arrays(old_response, self.parameters, 'gateway_ip_configurations') or
                     not compare_arrays(old_response, self.parameters, 'redirect_configurations') or
                     not compare_arrays(old_response, self.parameters, 'rewrite_rule_sets') or
