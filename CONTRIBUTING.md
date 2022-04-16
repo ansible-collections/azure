@@ -21,6 +21,27 @@ When contributing to this repository, please first discuss the change you wish t
     pip3 install -r sanity-requirements-azure.txt
     ```
 
+## Formatting and code style
+
+Python formatting should use the following rules:
+* Line length: 160
+* Ignore: E402, W504
+
+The following can be used for pycodestyle in Visual Studio Code settings:
+```json
+{
+    "python.linting.ignorePatterns": [
+        ".vscode/*.py",
+        "**/site-packages/**/*.py",
+        "venv*/**"
+    ],
+    "python.formatting.provider": "yapf",
+    "python.linting.pycodestyleEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.pycodestyleArgs": ["--max-line-length=160", "--ignore=E402,W504"]
+}
+```
+
 ## Running tests
 
 1. Build/install the collection:
