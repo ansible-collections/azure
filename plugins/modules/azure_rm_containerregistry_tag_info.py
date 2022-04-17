@@ -161,23 +161,20 @@ class AzureRMContainerRegistryTagInfo(AzureRMModuleBase):
 
     def get_tag(self, repository_name, tag_name):
         response = None
-        result = None
-        tags = []
         try:
             response = self._client.get_tag_properties(repository=repository_name, tag=tag_name)
             self.log("Response : {0}".format(response))
         except Exception as e:
             self.log("Could not get ACR tag for {0}:{1} - {2}".format(repository_name, tag_name, str(e)))
 
+        tags = []
         if response is not None:
             tags.append(format_tag(response))
 
-        result = {
+        return {
             "name": repository_name,
             "tags": tags,
         }
-
-        return result
 
     def list_by_repository(self, repository_name, tag_name):
         response = None

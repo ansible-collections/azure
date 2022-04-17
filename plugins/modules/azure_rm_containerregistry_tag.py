@@ -171,10 +171,7 @@ class AzureRMContainerRegistryTag(AzureRMModuleBase):
         except Exception as e:
             self.log("Could not get ACR tag for {0}:{1} - {2}".format(repository_name, tag_name, str(e)))
 
-        if response is not None:
-            return response
-
-        return None
+        return response
 
     def delete_repository(self, repository_name):
         try:
