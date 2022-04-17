@@ -37,7 +37,6 @@ extends_documentation_fragment:
 
 author:
     - Ross Bender (@l3ender)
-
 '''
 
 EXAMPLES = '''
@@ -148,7 +147,7 @@ class AzureRMContainerRegistryTagInfo(AzureRMModuleBase):
         elif self.repository_name:
             self.results["repositories"] = [self.list_by_repository(self.repository_name, self.name)]
         else:
-            self.results['repositories'] = self.list_all_repositories(self.name)
+            self.results["repositories"] = self.list_all_repositories(self.name)
 
         return self.results
 
@@ -168,7 +167,7 @@ class AzureRMContainerRegistryTagInfo(AzureRMModuleBase):
             response = self._client.get_tag_properties(repository=repository_name, tag=tag_name)
             self.log("Response : {0}".format(response))
         except Exception as e:
-            self.log("Could not get ACR tag for {0}:{1}: {2}".format(repository_name, tag_name, str(e)))
+            self.log("Could not get ACR tag for {0}:{1} - {2}".format(repository_name, tag_name, str(e)))
 
         if response is not None:
             tags.append(format_tag(response))
@@ -182,12 +181,11 @@ class AzureRMContainerRegistryTagInfo(AzureRMModuleBase):
 
     def list_by_repository(self, repository_name, tag_name):
         response = None
-        result = None
         try:
             response = self._client.list_tag_properties(repository=repository_name)
             self.log("Response : {0}".format(response))
         except Exception as e:
-            self.log("Could not get ACR tag for {0}: {1}".format(repository_name, str(e)))
+            self.log("Could not get ACR tag for {0} - {1}".format(repository_name, str(e)))
 
         if response is not None:
             tags = []
@@ -195,27 +193,29 @@ class AzureRMContainerRegistryTagInfo(AzureRMModuleBase):
                 if not tag_name or tag.name == tag_name:
                     tags.append(format_tag(tag))
 
-            result = {
+            return {
                 "name": repository_name,
                 "tags": tags
             }
 
-        return result
+        return None
 
     def list_all_repositories(self, tag_name):
         response = None
-        results = []
         try:
             response = self._client.list_repository_names()
             self.log("Response : {0}".format(response))
         except Exception as e:
-            self.fail("Could not get ACR repositories: {0}".format(str(e)))
+            self.fail("Could not get ACR repositories - {0}".format(str(e)))
 
         if response is not None:
+            results = []
             for repo_name in response:
                 results.append(self.list_by_repository(repo_name, tag_name))
 
-        return results
+            return results
+
+        return None
 
 
 def format_tag(tag):
@@ -231,5 +231,5 @@ def main():
     AzureRMContainerRegistryTagInfo()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
