@@ -51,7 +51,8 @@ gateways:
     description:
         - A list of dictionaries containing facts for an application gateway.
     returned: always
-    type: complex
+    type: list
+    elements: dict
     contains:
         id:
             description:
@@ -115,7 +116,6 @@ from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.mgmt.network import NetworkManagementClient
     from msrestazure.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
