@@ -9,7 +9,7 @@ When contributing to this repository, please first discuss the change you wish t
 1. Ensure the resource groups defined in your configuration file are already created. Recommended region: **East US** (not all regions support all Azure features).
 1. Prepare testing directory (necessary until [ansible/ansible#68499](https://github.com/ansible/ansible/issues/68499) is resolved):
     ```bash
-    git init tests/staging
+    git init ansible_collections
     ```
 1. Unless you are running `ansible-test` inside a container (`--docker` flag), it is recommended you install Ansible and this repository's dependencies in a virtual environment:
     ```bash
@@ -25,11 +25,11 @@ When contributing to this repository, please first discuss the change you wish t
 
 1. Build/install the collection:
     ```bash
-    rm azure-azcollection-*.tar.gz && ansible-galaxy collection build . --force && ansible-galaxy collection install azure-azcollection-*.tar.gz -p tests/staging --force
+    rm -f azure-azcollection-*.tar.gz && ansible-galaxy collection build . --force && ansible-galaxy collection install azure-azcollection-*.tar.gz --force
     ```
 1. Switch to the test environment directory where the collection installed:
     ```bash
-    cd tests/staging/ansible_collections/azure/azcollection/
+    cd ansible_collections/azure/azcollection/
     ```
 1. Run tests for the desired module(s):
     ```bash

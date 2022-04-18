@@ -88,9 +88,9 @@ options:
             - Require clients to use a specified TLS version.
         type: str
         choices:
-            - 1.0
-            - 1.1
-            - 1.2
+            - "1.0"
+            - "1.1"
+            - "1.2"
         version_added: "1.10.0"
     public_network_access:
         description:
@@ -111,9 +111,9 @@ options:
             - The major version of Redis.
         type: str
         choices:
-            - 4
-            - 6
-        default: 4
+            - "4"
+            - "6"
+        default: "4"
         version_added: "1.10.0"
     shard_count:
         description:
