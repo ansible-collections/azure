@@ -1,0 +1,26 @@
+- name: Prepare random number
+  set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  run_once: true
+
+- name: Create an container registry
+  azure_rm_containerregistry:
+    name: "acr{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    location: eastus2
+    admin_user_enabled: true
+    sku: Standard
+
+- name: Load all tags
+  azure_rm_containerregistry_tag_info:
+    registry: "acr{{ rpfx }}"
+  register: output
+- name: Verify no tags exist
+  assert:
+    that: output.repositories | length == 0
+
+- name: Delete container registry
+  azure_rm_containerregistry:
+    name: "acr{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
