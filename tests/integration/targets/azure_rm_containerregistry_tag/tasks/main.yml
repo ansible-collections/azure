@@ -19,6 +19,127 @@
   assert:
     that: output.repositories | length == 0
 
+- name: "Manual step to ensure images in registry"
+  pause:
+    prompt: |
+      Run the following commands to import images into the registry:
+      az acr import --name acr{{ rpfx }} --source docker.io/library/hello-world:latest --image app1:v1
+      az acr import --name acr{{ rpfx }} --source docker.io/library/hello-world:latest --image app2:1.1.1
+      az acr import --name acr{{ rpfx }} --source docker.io/library/hello-world:latest --image app2:test-image
+      az acr import --name acr{{ rpfx }} --source docker.io/library/hello-world:latest --image app2:v1
+
+- name: Load all tags
+  azure_rm_containerregistry_tag_info:
+    registry: "acr{{ rpfx }}"
+  register: output
+- name: Assert tags exist
+  assert:
+    that:
+      - output.repositories | length == 2
+      - output.repositories[0].name == 'app1'
+      - output.repositories[0].tags | length == 1
+      - output.repositories[0].tags[0].name == 'v1'
+      - output.repositories[1].name == 'app2'
+      - output.repositories[1].tags | length == 3
+      - output.repositories[1].tags[0].name == '1.1.1'
+      - output.repositories[1].tags[1].name == 'test-image'
+      - output.repositories[1].tags[2].name == 'v1'
+
+- name: Load tags by repository
+  azure_rm_containerregistry_tag_info:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app2"
+  register: output
+- name: Assert tags exist
+  assert:
+    that:
+      - output.repositories | length == 1
+      - output.repositories[0].name == 'app2'
+      - output.repositories[0].tags | length == 3
+      - output.repositories[0].tags[0].name == '1.1.1'
+      - output.repositories[0].tags[1].name == 'test-image'
+      - output.repositories[0].tags[2].name == 'v1'
+
+- name: Load tags by repository and name
+  azure_rm_containerregistry_tag_info:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app2"
+    name: "test-image"
+  register: output
+- name: Assert tags exist
+  assert:
+    that:
+      - output.repositories | length == 1
+      - output.repositories[0].name == 'app2'
+      - output.repositories[0].tags | length == 1
+      - output.repositories[0].tags[0].name == 'test-image'
+
+- name: Load tags by name
+  azure_rm_containerregistry_tag_info:
+    registry: "acr{{ rpfx }}"
+    name: "v1"
+  register: output
+- name: Assert tags exist
+  assert:
+    that:
+      - output.repositories | length == 2
+      - output.repositories[0].name == 'app1'
+      - output.repositories[0].tags | length == 1
+      - output.repositories[0].tags[0].name == 'v1'
+      - output.repositories[1].name == 'app2'
+      - output.repositories[1].tags | length == 1
+      - output.repositories[1].tags[0].name == 'v1'
+
+- name: Delete tag by name (check mode)
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app2"
+    name: "test-image"
+    state: "absent"
+  check_mode: true
+  register: output
+- name: Assert output
+  assert:
+    that: output.changed
+
+- name: Delete tag by name (actually delete)
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app2"
+    name: "test-image"
+    state: "absent"
+  register: output
+- name: Assert output
+  assert:
+    that: output.changed
+
+# TODO
+- name: Delete tag by name (test idempotency)
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app2"
+    name: "test-image"
+    state: "absent"
+  register: output
+- name: Assert output
+  assert:
+    that: not output.changed
+
+- name: Load tags by repository
+  azure_rm_containerregistry_tag_info:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app2"
+  register: output
+- name: Assert tags exist
+  assert:
+    that:
+      - output.repositories | length == 1
+      - output.repositories[0].name == 'app2'
+      - output.repositories[0].tags | length == 2
+      - output.repositories[0].tags[0].name == '1.1.1'
+      - output.repositories[0].tags[1].name == 'v1'
+
+# TODO
 - name: Delete container registry
   azure_rm_containerregistry:
     name: "acr{{ rpfx }}"
