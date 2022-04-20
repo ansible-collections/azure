@@ -90,7 +90,7 @@ options:
             - ipv6
         default: ipv4
     zones:
-	description:
+        description:
             - A list of availability zones denoting the IP allocated for the resource needs to come from.
         type: list
         elements: str
