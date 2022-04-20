@@ -19,14 +19,90 @@
   assert:
     that: output.repositories | length == 0
 
-- name: "Manual step to ensure images in registry"
-  pause:
-    prompt: |
-      Run the following commands to import images into the registry:
-      az acr import --name acr{{ rpfx }} --source docker.io/library/hello-world:latest --image app1:v1
-      az acr import --name acr{{ rpfx }} --source docker.io/library/hello-world:latest --image app2:1.1.1
-      az acr import --name acr{{ rpfx }} --source docker.io/library/hello-world:latest --image app2:test-image
-      az acr import --name acr{{ rpfx }} --source docker.io/library/hello-world:latest --image app2:v1
+- name: Import tag (check mode)
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app1"
+    name: "v1"
+    source_image:
+      registry_uri: "docker.io"
+      repository: "library/hello-world"
+      name: "latest"
+  check_mode: true
+  register: output
+- name: Assert output
+  assert:
+    that: output.changed
+
+- name: Import tag (actually import)
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app1"
+    name: "v1"
+    source_image:
+      registry_uri: "docker.io"
+      repository: "library/hello-world"
+      name: "latest"
+  register: output
+- name: Assert output
+  assert:
+    that: output.changed
+
+- name: Import tag (test idempotency)
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app1"
+    name: "v1"
+    source_image:
+      registry_uri: "docker.io"
+      repository: "library/hello-world"
+      name: "latest"
+  register: output
+- name: Assert output
+  assert:
+    that: not output.changed
+
+- name: Import additional tag
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app2"
+    name: "1.1.1"
+    source_image:
+      registry_uri: "docker.io"
+      repository: "library/hello-world"
+      name: "latest"
+  register: output
+- name: Assert output
+  assert:
+    that: output.changed
+
+- name: Import additional tag
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app2"
+    name: "test-image"
+    source_image:
+      registry_uri: "docker.io"
+      repository: "library/hello-world"
+      name: "latest"
+  register: output
+- name: Assert output
+  assert:
+    that: output.changed
+
+- name: Import additional tag
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app2"
+    name: "v1"
+    source_image:
+      registry_uri: "docker.io"
+      repository: "library/hello-world"
+      name: "latest"
+  register: output
+- name: Assert output
+  assert:
+    that: output.changed
 
 - name: Load all tags
   azure_rm_containerregistry_tag_info:
@@ -113,7 +189,6 @@
   assert:
     that: output.changed
 
-# TODO
 - name: Delete tag by name (test idempotency)
   azure_rm_containerregistry_tag:
     registry: "acr{{ rpfx }}"
@@ -138,6 +213,142 @@
       - output.repositories[0].tags | length == 2
       - output.repositories[0].tags[0].name == '1.1.1'
       - output.repositories[0].tags[1].name == 'v1'
+
+- name: Delete repository (check mode)
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app2"
+    state: "absent"
+  check_mode: true
+  register: output
+- name: Assert output
+  assert:
+    that: output.changed
+
+- name: Delete repository (actually delete)
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app2"
+    state: "absent"
+  register: output
+- name: Assert output
+  assert:
+    that: output.changed
+
+- name: Delete repository (test idempotency)
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: "app2"
+    state: "absent"
+  register: output
+- name: Assert output
+  assert:
+    that: not output.changed
+
+- name: Load all tags
+  azure_rm_containerregistry_tag_info:
+    registry: "acr{{ rpfx }}"
+  register: output
+- name: Assert tags exist
+  assert:
+    that:
+      - output.repositories | length == 1
+      - output.repositories[0].name == 'app1'
+      - output.repositories[0].tags | length == 1
+      - output.repositories[0].tags[0].name == 'v1'
+
+- name: Import tag with same name
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    source_image:
+      registry_uri: "docker.io"
+      repository: "library/hello-world"
+      name: "latest"
+  register: output
+- name: Assert output
+  assert:
+    that: output.changed
+
+- name: Import tag with same name (test idempotency)
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    source_image:
+      registry_uri: "docker.io"
+      repository: "library/hello-world"
+      name: "latest"
+  register: output
+- name: Assert output
+  assert:
+    that: not output.changed
+
+- name: Import tag with different repo, same name
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: app1
+    source_image:
+      registry_uri: "docker.io"
+      repository: "library/hello-world"
+      name: "latest"
+  register: output
+- name: Assert output
+  assert:
+    that: output.changed
+
+- name: Import tag with different repo, same name (test idempotency)
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    repository_name: app1
+    source_image:
+      registry_uri: "docker.io"
+      repository: "library/hello-world"
+      name: "latest"
+  register: output
+- name: Assert output
+  assert:
+    that: not output.changed
+
+- name: Import tag with different name, same repo
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    name: "myversion"
+    source_image:
+      registry_uri: "docker.io"
+      repository: "library/hello-world"
+      name: "latest"
+  register: output
+- name: Assert output
+  assert:
+    that: output.changed
+
+- name: Import tag with different name, same repo (test idempotency)
+  azure_rm_containerregistry_tag:
+    registry: "acr{{ rpfx }}"
+    name: "myversion"
+    source_image:
+      registry_uri: "docker.io"
+      repository: "library/hello-world"
+      name: "latest"
+  register: output
+- name: Assert output
+  assert:
+    that: not output.changed
+
+- name: Load all tags
+  azure_rm_containerregistry_tag_info:
+    registry: "acr{{ rpfx }}"
+  register: output
+- name: Assert tags exist
+  assert:
+    that:
+      - output.repositories | length == 2
+      - output.repositories[0].name == 'app1'
+      - output.repositories[0].tags | length == 2
+      - output.repositories[0].tags[0].name == 'latest'
+      - output.repositories[0].tags[1].name == 'v1'
+      - output.repositories[1].name == 'library/hello-world'
+      - output.repositories[1].tags | length == 2
+      - output.repositories[1].tags[0].name == 'latest'
+      - output.repositories[1].tags[1].name == 'myversion'
 
 - name: Delete container registry
   azure_rm_containerregistry:
