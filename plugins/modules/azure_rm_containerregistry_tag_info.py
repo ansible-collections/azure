@@ -40,20 +40,20 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get tags for all repositories in registry
-    azure_rm_containerregistry_tag_info:
-      registry: myRegistry.azurecr.io
+- name: Get tags for all repositories in registry
+  azure_rm_containerregistry_tag_info:
+    registry: myRegistry.azurecr.io
 
-  - name: List tags for a specific repository
-    azure_rm_containerregistry_tag_info:
-      registry: myRegistry.azurecr.io
-      repository_name: myRepository
+- name: List tags for a specific repository
+  azure_rm_containerregistry_tag_info:
+    registry: myRegistry.azurecr.io
+    repository_name: myRepository
 
-  - name: List tags matching a name for a specific repository
-    azure_rm_containerregistry_tag_info:
-      registry: myRegistry.azurecr.io
-      repository_name: myRepository
-      name: myTag
+- name: List tags matching a name for a specific repository
+  azure_rm_containerregistry_tag_info:
+    registry: myRegistry.azurecr.io
+    repository_name: myRepository
+    name: myTag
 '''
 
 RETURN = '''
