@@ -139,7 +139,6 @@
       - output.repositories[0].tags[0].name == '1.1.1'
       - output.repositories[0].tags[1].name == 'v1'
 
-# TODO
 - name: Delete container registry
   azure_rm_containerregistry:
     name: "acr{{ rpfx }}"

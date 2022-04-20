@@ -253,10 +253,9 @@ class AzureRMContainerRegistry(AzureRMModuleBase):
         if not self.location:
             self.location = resource_group.location
 
-        # Check if the container registry instance already present in the RG
-        if self.state == 'present':
-            response = self.get_containerregistry()
+        response = self.get_containerregistry()
 
+        if self.state == 'present':
             if not response:
                 to_do = Actions.Create
             else:
@@ -283,7 +282,8 @@ class AzureRMContainerRegistry(AzureRMModuleBase):
                 self.results['changed'] = False
 
             self.log("Container registry instance created or updated")
-        elif self.state == 'absent':
+        elif self.state == 'absent' and response:
+            self.results['changed'] = True
             if self.check_mode:
                 return self.results
             self.delete_containerregistry()
@@ -360,7 +360,9 @@ class AzureRMContainerRegistry(AzureRMModuleBase):
         '''
         self.log("Deleting the container registry instance {0}".format(self.name))
         try:
-            self.containerregistry_client.registries.delete(resource_group_name=self.resource_group, registry_name=self.name).wait()
+            poller = self.containerregistry_client.registries.begin_delete(resource_group_name=self.resource_group, registry_name=self.name)
+            response = self.get_poller_result(poller)
+            self.log("Delete container registry response: {0}".format(response))
         except Exception as e:
             self.log('Error attempting to delete the container registry instance.')
             self.fail("Error deleting the container registry instance: {0}".format(str(e)))
