@@ -27,6 +27,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -45,6 +47,9 @@ EXAMPLES = '''
   - name: List instances of Auto Scale Setting
     azure_rm_autoscale_info:
       resource_group: myResourceGroup
+      tags:
+        - key
+        - key:value
 '''
 
 RETURN = '''
@@ -212,7 +217,8 @@ class AzureRMAutoScaleInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -221,7 +227,7 @@ class AzureRMAutoScaleInfo(AzureRMModuleBase):
         self.name = None
         self.tags = None
 
-        super(AzureRMAutoScaleInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
+        super(AzureRMAutoScaleInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 
@@ -242,7 +248,7 @@ class AzureRMAutoScaleInfo(AzureRMModuleBase):
         result = []
         try:
             instance = self.monitor_autoscale_settings_client.autoscale_settings.get(self.resource_group, self.name)
-            result = [auto_scale_to_dict(instance)]
+            result = [auto_scale_to_dict(instance) if self.has_tags(instance.tags, self.tags) else None]
         except Exception as ex:
             self.log('Could not get facts for autoscale {0} - {1}.'.format(self.name, str(ex)))
         return result

@@ -38,6 +38,7 @@ options:
             - Limit results by providing a list of tags.
             - Format tags as 'key' or 'key:value'.
         type: list
+        elements: str
     managed_by:
         description:
             - Limit results to disks managed by the given VM fqid.
@@ -45,7 +46,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Bruno Medina (@brusMX)
@@ -143,7 +143,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(type='str'),
             name=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             managed_by=dict(type='str')
         )
 
@@ -161,7 +161,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
         super(AzureRMManagedDiskInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                      supports_check_mode=True,
                                                      facts_module=True,
-                                                     supports_tags=True)
+                                                     supports_tags=False)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:

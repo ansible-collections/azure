@@ -28,9 +28,14 @@ options:
         description:
             - Limit results by resource group.
         type: str
+    tags:
+        description:
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
+
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Fred-sun (@Fred-sun)
@@ -49,7 +54,7 @@ EXAMPLES = '''
     - name: Get all private endpoint under subscription
       azure_rm_virtualnetwork_info:
         tags:
-          key1: value1
+          - key1:value1
 '''
 
 RETURN = '''
@@ -137,6 +142,7 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
+            tags=dict(type='list', elements='str')
         )
 
         self.results = dict(
@@ -153,7 +159,7 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
 
         super(AzureRMPrivateEndpointInfo, self).__init__(self.module_arg_spec,
                                                          supports_check_mode=True,
-                                                         supports_tags=True,
+                                                         supports_tags=False,
                                                          facts_module=True)
 
     def exec_module(self, **kwargs):

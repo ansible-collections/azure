@@ -30,6 +30,7 @@ options:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
         type: list
+        elements: str
     list_statistics:
         description:
             - List statistics details for a automation account.
@@ -62,6 +63,9 @@ EXAMPLES = '''
       list_statistics: yes
       list_usages: yes
       list_keys: yes
+      tags:
+        - key
+        - key:value
 
 - name: List automation account in a resource group
   azure_rm_automationaccount_info:
@@ -254,7 +258,8 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='list',
+                elements='str'
             ),
             list_statistics=dict(
                 type='bool'

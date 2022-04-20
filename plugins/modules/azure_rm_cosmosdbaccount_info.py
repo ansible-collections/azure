@@ -26,6 +26,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
     retrieve_keys:
         description:
             - Retrieve keys and connection strings.
@@ -55,6 +57,9 @@ EXAMPLES = '''
   - name: List instances of Database Account
     azure_rm_cosmosdbaccount_info:
       resource_group: myResourceGroup
+      tags:
+        - key
+        - key:value
 '''
 
 RETURN = '''
@@ -362,7 +367,8 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='list',
+                elements='str'
             ),
             retrieve_keys=dict(
                 type='str',
@@ -383,7 +389,7 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
         self.retrieve_keys = None
         self.retrieve_connection_strings = None
 
-        super(AzureRMCosmosDBAccountInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
+        super(AzureRMCosmosDBAccountInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 

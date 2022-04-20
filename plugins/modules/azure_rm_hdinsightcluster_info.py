@@ -26,6 +26,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -44,6 +46,8 @@ EXAMPLES = '''
   - name: List instances of HDInsight Cluster
     azure_rm_hdinsightcluster_info:
       resource_group: myResourceGroup
+      tags:
+        - key:value
 '''
 
 RETURN = '''
@@ -198,7 +202,8 @@ class AzureRMHDInsightclusterInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -210,7 +215,7 @@ class AzureRMHDInsightclusterInfo(AzureRMModuleBase):
         self.name = None
         self.tags = None
 
-        super(AzureRMHDInsightclusterInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
+        super(AzureRMHDInsightclusterInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 

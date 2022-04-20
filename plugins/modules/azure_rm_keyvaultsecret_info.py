@@ -41,7 +41,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
-        type: dict
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -222,7 +223,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                                     vault_uri=dict(type='str', required=True),
                                     show_deleted_secret=dict(type='bool',
                                                              default=False),
-                                    tags=dict(type='dict'))
+                                    tags=dict(type='list', elements='str'))
 
         self.vault_uri = None
         self.name = None
@@ -236,7 +237,8 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
         super(AzureRMKeyVaultSecretInfo,
               self).__init__(derived_arg_spec=self.module_arg_spec,
                              supports_check_mode=True,
-                             supports_tags=False)
+                             supports_tags=False,
+                             facts_module=True)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
