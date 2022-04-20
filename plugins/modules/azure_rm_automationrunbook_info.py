@@ -35,10 +35,14 @@ options:
         description:
             - Wether retrieve the content of runbook identified by runbook name.
         type: bool
+    tags:
+        description:
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Fred Sun (@Fred-sun)
@@ -198,15 +202,20 @@ class AzureRMAutomationRunbookInfo(AzureRMModuleBase):
             show_content=dict(
                 type='bool'
             ),
+            tags=dict(
+                type='list',
+                elements='str'
+            )
         )
         # store the results of the module operation
         self.results = dict()
         self.resource_group = None
         self.name = None
+        self.tags = None
         self.automation_account_name = None
         self.show_content = None
 
-        super(AzureRMAutomationRunbookInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
+        super(AzureRMAutomationRunbookInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 

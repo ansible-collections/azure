@@ -29,10 +29,11 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Obezimnaka Boms (@ozboms)
@@ -141,7 +142,7 @@ class AzureRMDNSZoneInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list')
+            tags=dict(type='list', elements='str')
         )
 
         # store the results of the module operation
@@ -154,7 +155,7 @@ class AzureRMDNSZoneInfo(AzureRMModuleBase):
         self.resource_group = None
         self.tags = None
 
-        super(AzureRMDNSZoneInfo, self).__init__(self.module_arg_spec, supports_check_mode=True)
+        super(AzureRMDNSZoneInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 

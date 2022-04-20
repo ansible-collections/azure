@@ -40,6 +40,7 @@ options:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
         type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -56,6 +57,8 @@ EXAMPLES = '''
       lab_name: myLab
       policy_set_name: myPolicySet
       name: myPolicy
+      tags:
+        - key:value
 '''
 
 RETURN = '''
@@ -147,7 +150,8 @@ class AzureRMDtlPolicyInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -160,7 +164,7 @@ class AzureRMDtlPolicyInfo(AzureRMModuleBase):
         self.policy_set_name = None
         self.name = None
         self.tags = None
-        super(AzureRMDtlPolicyInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
+        super(AzureRMDtlPolicyInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_devtestlabpolicy_facts'

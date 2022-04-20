@@ -32,6 +32,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
     show_connection_string:
         description:
             - Show the connection string for each of the storageaccount's endpoints.
@@ -419,7 +421,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str', aliases=['resource_group_name']),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             show_connection_string=dict(type='bool'),
             show_blob_cors=dict(type='bool')
         )
