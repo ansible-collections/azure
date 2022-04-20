@@ -89,6 +89,15 @@ options:
             - ipv4
             - ipv6
         default: ipv4
+    zones:
+	description:
+            - A list of availability zones denoting the IP allocated for the resource needs to come from.
+        type: list
+        elements: str
+        choices:
+            - '1'
+            - '2'
+            - '3'
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -200,6 +209,12 @@ state:
             returned: always
             type: str
             sample: "Microsoft.Network/publicIPAddresses"
+        zones:
+            description:
+                - A list of availability zones denoting the IP allocated for the resource needs to come from.
+            returned: always
+            type: list
+            sample: ['1', '2']
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -225,7 +240,8 @@ def pip_to_dict(pip):
         idle_timeout_in_minutes=pip.idle_timeout_in_minutes,
         provisioning_state=pip.provisioning_state,
         etag=pip.etag,
-        sku=pip.sku.name
+        sku=pip.sku.name,
+        zones=pip.zones
     )
     if pip.dns_settings:
         result['dns_settings']['domain_name_label'] = pip.dns_settings.domain_name_label
@@ -256,7 +272,8 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
             domain_name=dict(type='str', aliases=['domain_name_label']),
             sku=dict(type='str', choices=['Basic', 'Standard', 'basic', 'standard']),
             ip_tags=dict(type='list', elements='dict', options=ip_tag_spec),
-            idle_timeout=dict(type='int')
+            idle_timeout=dict(type='int'),
+            zones=dict(type='list', elements='str', choices=['1', '2', '3'])
         )
 
         self.resource_group = None
@@ -264,6 +281,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
         self.location = None
         self.state = None
         self.tags = None
+        self.zones = None
         self.allocation_method = None
         self.domain_name = None
         self.sku = None
@@ -331,6 +349,11 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                     changed = True
                     results['idle_timeout_in_minutes'] = self.idle_timeout
 
+                if self.zones and self.zones != results['zones']:
+                    self.log("Zones defined do not same with existing zones")
+                    changed = False
+                    self.fail("ResourceAvailabilityZonesCannotBeModified: defines is {0}, existing is {1}".format(self.zones, results['zones']))
+
                 if str(self.ip_tags or []) != str(results.get('ip_tags') or []):
                     self.log("CHANGED: ip_tags")
                     changed = True
@@ -364,7 +387,8 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                         public_ip_address_version=self.version,
                         public_ip_allocation_method=self.allocation_method,
                         sku=self.network_models.PublicIPAddressSku(name=self.sku) if self.sku else None,
-                        idle_timeout_in_minutes=self.idle_timeout if self.idle_timeout and self.idle_timeout > 0 else None
+                        idle_timeout_in_minutes=self.idle_timeout if self.idle_timeout and self.idle_timeout > 0 else None,
+                        zones=self.zones
                     )
                     if self.ip_tags:
                         pip.ip_tags = [self.network_models.IpTag(ip_tag_type=x.type, tag=x.value) for x in self.ip_tags]
@@ -380,7 +404,8 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                         location=results['location'],
                         public_ip_allocation_method=results['public_ip_allocation_method'],
                         sku=self.network_models.PublicIPAddressSku(name=self.sku) if self.sku else None,
-                        tags=results['tags']
+                        tags=results['tags'],
+                        zones=results['zones']
                     )
                     if self.domain_name:
                         pip.dns_settings = self.network_models.PublicIPAddressDnsSettings(

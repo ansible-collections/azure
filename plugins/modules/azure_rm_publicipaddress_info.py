@@ -181,6 +181,12 @@ publicipaddresses:
             returned: always
             type: str
             sample: Basic
+        zones:
+            description:
+                - A list of availability zones denoting the IP allocated for the resource needs to come from.
+            returned: always
+            type: list
+            sample: ['1', '2']
 '''
 try:
     from azure.core.exceptions import ResourceNotFoundError
@@ -276,7 +282,8 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
             idle_timeout=pip.idle_timeout_in_minutes,
             provisioning_state=pip.provisioning_state,
             etag=pip.etag,
-            sku=pip.sku.name
+            sku=pip.sku.name,
+            zones=pip.zones
         )
         if pip.dns_settings:
             result['dns_settings']['domain_name_label'] = pip.dns_settings.domain_name_label
