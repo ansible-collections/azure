@@ -19,7 +19,7 @@ description:
 options:
     registry:
         description:
-            - The name or URL of the container registry.
+            - The name of the container registry.
         type: str
         required: true
     repository_name:
@@ -42,16 +42,16 @@ author:
 EXAMPLES = '''
 - name: Get tags for all repositories in registry
   azure_rm_containerregistry_tag_info:
-    registry: myRegistry.azurecr.io
+    registry: myRegistry
 
 - name: List tags for a specific repository
   azure_rm_containerregistry_tag_info:
-    registry: myRegistry.azurecr.io
+    registry: myRegistry
     repository_name: myRepository
 
 - name: List tags matching a name for a specific repository
   azure_rm_containerregistry_tag_info:
-    registry: myRegistry.azurecr.io
+    registry: myRegistry
     repository_name: myRepository
     name: myTag
 '''

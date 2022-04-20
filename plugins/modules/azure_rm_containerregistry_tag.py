@@ -90,7 +90,7 @@ author:
 EXAMPLES = '''
 - name: Import a tag
   azure_rm_containerregistry_tag:
-    registry: myRegistry.azurecr.io
+    registry: myRegistry
     source_image:
       registry_uri: docker.io
       repository: library/hello-world
@@ -98,7 +98,7 @@ EXAMPLES = '''
 
 - name: Import a tag to a different name
   azure_rm_containerregistry_tag:
-    registry: myRegistry.azurecr.io
+    registry: myRegistry
     repository_name: app1
     name: v1
     source_image:
@@ -108,13 +108,13 @@ EXAMPLES = '''
 
 - name: Delete all tags in repository
   azure_rm_containerregistry_tag:
-    registry: myRegistry.azurecr.io
+    registry: myRegistry
     repository_name: myRepository
     state: absent
 
 - name: Delete specific tag in repository
   azure_rm_containerregistry_tag:
-    registry: myRegistry.azurecr.io
+    registry: myRegistry
     repository_name: myRepository
     name: myTag
     state: absent
