@@ -120,7 +120,7 @@
 - assert:
       that:
           - output.images != []
-          - output.images.hyper_v_generation == 'V1'
+          - output.images[0].hyper_v_generation == 'V1'
 
 - name: Delete image (check mode)
   azure_rm_image:
