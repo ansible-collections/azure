@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_containerregistry_tag
+module: azure_rm_containerregistrytag
 version_added: "1.12.0"
 short_description: Delete tags in Azure Container Registry
 description:
@@ -90,7 +90,7 @@ author:
 
 EXAMPLES = '''
 - name: Import a tag
-  azure_rm_containerregistry_tag:
+  azure_rm_containerregistrytag:
     registry: myRegistry
     source_image:
       registry_uri: docker.io
@@ -98,7 +98,7 @@ EXAMPLES = '''
       name: latest
 
 - name: Import a tag to a different name
-  azure_rm_containerregistry_tag:
+  azure_rm_containerregistrytag:
     registry: myRegistry
     repository_name: app1
     name: v1
@@ -108,13 +108,13 @@ EXAMPLES = '''
       name: latest
 
 - name: Delete all tags in repository
-  azure_rm_containerregistry_tag:
+  azure_rm_containerregistrytag:
     registry: myRegistry
     repository_name: myRepository
     state: absent
 
 - name: Delete specific tag in repository
-  azure_rm_containerregistry_tag:
+  azure_rm_containerregistrytag:
     registry: myRegistry
     repository_name: myRepository
     name: myTag

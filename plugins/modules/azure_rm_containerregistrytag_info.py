@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_containerregistry_tag_info
+module: azure_rm_containerregistrytag_info
 version_added: "1.12.0"
 short_description: Get Azure Container Registry tag facts
 description:
@@ -40,16 +40,16 @@ author:
 
 EXAMPLES = '''
 - name: Get tags for all repositories in registry
-  azure_rm_containerregistry_tag_info:
+  azure_rm_containerregistrytag_info:
     registry: myRegistry
 
 - name: List tags for a specific repository
-  azure_rm_containerregistry_tag_info:
+  azure_rm_containerregistrytag_info:
     registry: myRegistry
     repository_name: myRepository
 
 - name: List tags matching a name for a specific repository
-  azure_rm_containerregistry_tag_info:
+  azure_rm_containerregistrytag_info:
     registry: myRegistry
     repository_name: myRepository
     name: myTag
