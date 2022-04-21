@@ -109,15 +109,12 @@ from ansible.utils.display import Display
 try:
     import requests
     import logging
-except ImportError:
-    pass
-try:
     from azure.common.credentials import ServicePrincipalCredentials
     from azure.keyvault import KeyVaultClient
     from msrest.exceptions import AuthenticationError, ClientRequestError
     from azure.keyvault.models.key_vault_error import KeyVaultErrorException
 except ImportError:
-    raise AnsibleError('The azure_keyvault_secret lookup plugin requires azure.keyvault and azure.common.credentials to be installed.')
+    pass
 
 display = Display()
 
