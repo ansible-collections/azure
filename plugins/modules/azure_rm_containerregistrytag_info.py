@@ -84,16 +84,19 @@ repositories:
                     description:
                         - Digest of the tag.
                     type: str
+                    returned: always
                     sample: sha256:7bd8fcb425afc34a7865f85868126e9c4fef5b2d6291986524687d289ab3a64a
                 created_on:
                     description:
                         - Datetime of when the tag was created.
                     type: datetime
+                    returned: always
                     sample: 2022-02-02T18:18:57.145778+00:00
                 last_updated_on:
                     description:
                         - Datetime of when the tag was last updated.
                     type: datetime
+                    returned: always
                     sample: 2022-02-02T18:18:57.145778+00:00
 '''
 
