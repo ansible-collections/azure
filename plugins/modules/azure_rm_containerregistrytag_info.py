@@ -72,8 +72,8 @@ repositories:
             description:
                 - A list of dictionaries for the tags in the repository.
             returned: always
-            type: list
-            suboptions:
+            type: complex
+            contains:
                 name:
                     description:
                         - Name of the tag.
@@ -89,15 +89,15 @@ repositories:
                 created_on:
                     description:
                         - Datetime of when the tag was created.
-                    type: datetime
+                    type: str
                     returned: always
-                    sample: 2022-02-02T18:18:57.145778+00:00
+                    sample: "2022-02-02T18:18:57.145778+00:00"
                 last_updated_on:
                     description:
                         - Datetime of when the tag was last updated.
-                    type: datetime
+                    type: str
                     returned: always
-                    sample: 2022-02-02T18:18:57.145778+00:00
+                    sample: "2022-02-02T18:18:57.145778+00:00"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -166,9 +166,9 @@ class AzureRMContainerRegistryTagInfo(AzureRMModuleBase):
         response = None
         try:
             response = self._client.get_tag_properties(repository=repository_name, tag=tag_name)
-            self.log("Response : {0}".format(response))
+            self.log(f"Response : {response}")
         except Exception as e:
-            self.log("Could not get ACR tag for {0}:{1} - {2}".format(repository_name, tag_name, str(e)))
+            self.log(f"Could not get ACR tag for {repository_name}:{tag_name} - {str(e)}")
 
         tags = []
         if response is not None:
@@ -183,9 +183,9 @@ class AzureRMContainerRegistryTagInfo(AzureRMModuleBase):
         response = None
         try:
             response = self._client.list_tag_properties(repository=repository_name)
-            self.log("Response : {0}".format(response))
+            self.log(f"Response : {response}")
         except Exception as e:
-            self.log("Could not get ACR tag for {0} - {1}".format(repository_name, str(e)))
+            self.log(f"Could not get ACR tag for {repository_name} - {str(e)}")
 
         if response is not None:
             tags = []
@@ -204,9 +204,9 @@ class AzureRMContainerRegistryTagInfo(AzureRMModuleBase):
         response = None
         try:
             response = self._client.list_repository_names()
-            self.log("Response : {0}".format(response))
+            self.log(f"Response : {response}")
         except Exception as e:
-            self.fail("Could not get ACR repositories - {0}".format(str(e)))
+            self.fail(f"Could not get ACR repositories - {str(e)}")
 
         if response is not None:
             results = []

@@ -12,9 +12,9 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_containerregistrytag
 version_added: "1.12.0"
-short_description: Delete tags in Azure Container Registry
+short_description: Import or delete tags in Azure Container Registry
 description:
-    - Delete tags in Azure Container Registry.
+    - Import or delete tags in Azure Container Registry.
 
 options:
     resource_group:
@@ -38,7 +38,7 @@ options:
             - If omitted when I(state=present), the name of the source tag will be used.
             - If omitted when I(state=absent), the whole repository will be deleted.
         type: str
-    source:
+    source_image:
         description:
             - The source image detail. Required when I(state=present).
         type: dict
@@ -82,7 +82,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Ross Bender (@l3ender)
@@ -172,7 +171,7 @@ class AzureRMContainerRegistryTag(AzureRMModuleBase):
                         type="dict",
                         options=dict(
                             username=dict(type="str"),
-                            password=dict(type="str"),
+                            password=dict(type="str", no_log=True),
                         )
                     ),
                 ),
@@ -236,11 +235,11 @@ class AzureRMContainerRegistryTag(AzureRMModuleBase):
             if not self.check_mode:
                 self.import_tag(self.repository_name, self.name, self.resource_group, self.registry, self.source_image)
         elif self._todo == Actions.DeleteTag:
-            self.log("deleting tag {0}:{1}".format(self.repository_name, self.name))
+            self.log(f"deleting tag {self.repository_name}:{self.name}")
             if not self.check_mode:
                 self.delete_tag(self.repository_name, self.name)
         elif self._todo == Actions.DeleteRepo:
-            self.log("deleting repository {0}".format(self.repository_name))
+            self.log(f"deleting repository {self.repository_name}")
             if not self.check_mode:
                 self.delete_repository(self.repository_name)
         else:
@@ -261,9 +260,9 @@ class AzureRMContainerRegistryTag(AzureRMModuleBase):
         response = None
         try:
             response = self._client.get_repository_properties(repository=repository_name)
-            self.log("Response : {0}".format(response))
+            self.log(f"Response : {response}")
         except Exception as e:
-            self.log("Could not get ACR repository for {0} - {1}".format(repository_name, str(e)))
+            self.log(f"Could not get ACR repository for {repository_name} - {str(e)}")
 
         if response is not None:
             return response.name
@@ -273,11 +272,11 @@ class AzureRMContainerRegistryTag(AzureRMModuleBase):
     def get_tag(self, repository_name, tag_name):
         response = None
         try:
-            self.log("Getting tag for {0}:{1}".format(repository_name, tag_name))
+            self.log(f"Getting tag for {repository_name}:{tag_name}")
             response = self._client.get_tag_properties(repository=repository_name, tag=tag_name)
-            self.log("Response : {0}".format(response))
+            self.log(f"Response : {response}")
         except Exception as e:
-            self.log("Could not get ACR tag for {0}:{1} - {2}".format(repository_name, tag_name, str(e)))
+            self.log(f"Could not get ACR tag for {repository_name}:{tag_name} - {str(e)}")
 
         return response
 
@@ -302,20 +301,20 @@ class AzureRMContainerRegistryTag(AzureRMModuleBase):
             if not resource_group:
                 resource_group = self.get_registry_resource_group(registry)
 
-            self.log("Importing {0} as {1} to {2} in {3}".format(source_tag, dest_tag, registry, resource_group))
+            self.log(f"Importing {source_tag} as {dest_tag} to {registry} in {resource_group}")
             poller = self.containerregistry_client.registries.begin_import_image(resource_group_name=resource_group,
                                                                                  registry_name=registry,
                                                                                  parameters=params)
             self.get_poller_result(poller)
         except Exception as e:
-            self.fail("Could not import {0} as {1} to {2} in {3} - {4}".format(source_tag, dest_tag, registry, resource_group, str(e)))
+            self.fail(f"Could not import {source_tag} as {dest_tag} to {registry} in {resource_group} - {str(e)}")
 
     def get_registry_resource_group(self, registry_name):
         response = None
         try:
             response = self.containerregistry_client.registries.list()
         except Exception as e:
-            self.fail("Could not load resource group for registry {0} - {1}".format(registry_name, str(e)))
+            self.fail(f"Could not load resource group for registry {registry_name} - {str(e)}")
 
         if response is not None:
             for item in response:
@@ -329,13 +328,13 @@ class AzureRMContainerRegistryTag(AzureRMModuleBase):
         try:
             self._client.delete_repository(repository=repository_name)
         except Exception as e:
-            self.fail("Could not delete repository {0} - {1}".format(repository_name, str(e)))
+            self.fail(f"Could not delete repository {repository_name} - {str(e)}")
 
     def delete_tag(self, repository_name, tag_name):
         try:
             self._client.delete_tag(repository=repository_name, tag=tag_name)
         except Exception as e:
-            self.fail("Could not delete tag {0}:{1} - {2}".format(repository_name, tag_name, str(e)))
+            self.fail(f"Could not delete tag {repository_name}:{tag_name} - {str(e)}")
 
 
 def get_tag(repository, tag):
