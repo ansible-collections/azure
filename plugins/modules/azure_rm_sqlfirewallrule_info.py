@@ -99,10 +99,7 @@ rules:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from azure.mgmt.sql import SqlManagementClient
-    from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -160,7 +157,7 @@ class AzureRMSqlFirewallRuleInfo(AzureRMModuleBase):
                                                           server_name=self.server_name,
                                                           firewall_rule_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError:
             self.log('Could not get facts for FirewallRules.')
 
         if response is not None:
@@ -180,7 +177,7 @@ class AzureRMSqlFirewallRuleInfo(AzureRMModuleBase):
             response = self.sql_client.firewall_rules.list_by_server(resource_group_name=self.resource_group,
                                                                      server_name=self.server_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError:
             self.log('Could not get facts for FirewallRules.')
 
         if response is not None:
