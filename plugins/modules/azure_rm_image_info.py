@@ -21,9 +21,11 @@ options:
     resource_group:
         description:
             - Name of resource group.
+        type: str
     name:
         description:
             - Name of the image to filter from existing images.
+        type: str
     tags:
         description:
             -  Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -74,6 +76,7 @@ images:
                 - Name of the image.
             returned: always
             type: str
+            sample: foo
         resource_group:
             description:
                 - Resource group of the image.
@@ -89,6 +92,7 @@ images:
             description:
                 - Id of os disk for image.
             type: str
+            returned: always
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/disks/xx
         os_disk_caching:
             description:
@@ -105,6 +109,7 @@ images:
             description:
                 - Specifies the storage account type for the managed disk.
             type: str
+            returned: always
             sample: Standard_LRS
         os_type:
             description:
@@ -122,11 +127,20 @@ images:
             description:
                 - Resource id of source VM from which the image is created.
             type: str
+            returned: always
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/xx
         tags:
             description:
                 - Dictionary of tags associated with the image.
-            type: complex
+            type: dict
+            returned: always
+            sample: {"key1":"value1"}
+        hyper_v_generation:
+            description:
+                - The hypervisor generation of the Virtual Machine created from the image.
+            type: str
+            returned: always
+            sample: 'V1'
         data_disks:
             description:
                 - List of data disks associated with the image.
@@ -153,15 +167,20 @@ images:
                     description:
                         - Specifies the storage account type for the managed disk data disk.
                     type: str
+                    returned: always
                     sample: Standard_LRS
                 managed_disk_id:
                     description:
                         - Id of managed disk.
                     type: str
+                    returned: always
                     sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/disks/xx
                 blob_uri:
                     description:
                         - The virtual hard disk.
+                    type: str
+                    returned: always
+                    sample: null
 '''
 
 
@@ -293,7 +312,8 @@ class AzureRMImageInfo(AzureRMModuleBase):
             'os_disk': d['storage_profile']['os_disk']['managed_disk']['id'] if 'managed_disk' in d['storage_profile']['os_disk'].keys() else None,
             'os_blob_uri': d['storage_profile']['os_disk']['blob_uri'] if 'blob_uri' in d['storage_profile']['os_disk'].keys() else None,
             'provisioning_state': d['provisioning_state'],
-            'data_disks': d['storage_profile']['data_disks']
+            'data_disks': d['storage_profile']['data_disks'],
+            'hyper_v_generation': d.get('hyper_v_generation')
         }
         return d
 

@@ -55,11 +55,6 @@ plugins/modules/azure_rm_galleryimageversion.py validate-modules:parameter-type-
 plugins/modules/azure_rm_galleryimageversion.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_galleryimageversion.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_galleryimageversion.py validate-modules:parameter-list-no-elements
-plugins/modules/azure_rm_image.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_image.py validate-modules:doc-required-mismatch
-plugins/modules/azure_rm_image.py validate-modules:parameter-list-no-elements
-plugins/modules/azure_rm_image_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_image_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_iothubconsumergroup.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_keyvault.py validate-modules:doc-choices-do-not-match-spec
 plugins/modules/azure_rm_keyvault.py validate-modules:parameter-type-not-in-doc
