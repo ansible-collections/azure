@@ -30,17 +30,17 @@ options:
         description:
             - The name of the repository within the registry.
             - Required when state = C(absent).
-            - If omitted when state = C(present), the name of the source repository will be used.
+            - If omitted when I(state=present), the name of the source repository will be used.
         type: str
     name:
         description:
             - The name of the tag.
-            - If omitted when state = C(present), the name of the source tag will be used.
-            - If omitted when state = C(absent), the whole repository will be deleted.
+            - If omitted when I(state=present), the name of the source tag will be used.
+            - If omitted when I(state=absent), the whole repository will be deleted.
         type: str
     source:
         description:
-            - The source image detail. Required when state = C(present).
+            - The source image detail. Required when I(state=present).
         type: dict
         suboptions:
             registry_uri:
@@ -64,15 +64,16 @@ options:
                 suboptions:
                     username:
                         description:
-                            - Username for the source registry
+                            - Username for the source registry.
                         type: str
                     password:
                         description:
-                            - Password for the source registry
+                            - Password for the source registry.
                         type: str
     state:
         description:
-            - Assert the state of the tag.
+            - State of the container registry tag.
+            - Use C(present) to create or update a  container registry tag and use C(absent) to delete an  container registry tag.
         type: str
         default: present
         choices:

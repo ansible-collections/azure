@@ -33,7 +33,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Ross Bender (@l3ender)
@@ -79,6 +78,7 @@ repositories:
                     description:
                         - Name of the tag.
                     type: str
+                    returned: always
                     sample: my-tag
                 digest:
                     description:
