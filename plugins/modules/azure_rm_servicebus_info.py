@@ -29,6 +29,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
     namespace:
         description:
             - Servicebus namespace name.
@@ -404,7 +406,7 @@ class AzureRMServiceBusInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             type=dict(type='str', required=True, choices=['namespace', 'topic', 'queue', 'subscription']),
             namespace=dict(type='str'),
             topic=dict(type='str'),

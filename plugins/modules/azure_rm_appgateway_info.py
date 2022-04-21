@@ -51,7 +51,8 @@ gateways:
     description:
         - A list of dictionaries containing facts for an application gateway.
     returned: always
-    type: complex
+    type: list
+    elements: dict
     contains:
         id:
             description:
@@ -89,13 +90,32 @@ gateways:
             returned: always
             type: str
             sample: Succeeded
+        ssl_policy:
+            description:
+                - SSL policy of the application gateway.
+            returned: always
+            type: complex
+            version_added: "1.11.0"
+            contains:
+                policy_type:
+                    description:
+                        - The type of SSL policy.
+                    returned: always
+                    type: str
+                    sample: predefined
+                policy_name:
+                    description:
+                        - The name of the SSL policy.
+                    returned: always
+                    type: str
+                    sample: ssl_policy20170401_s
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.mgmt.network import NetworkManagementClient
     from msrestazure.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
@@ -188,8 +208,21 @@ class AzureRMApplicationGatewayInfo(AzureRMModuleBase):
             "location": d.get("location"),
             "operational_state": d.get("operational_state"),
             "provisioning_state": d.get("provisioning_state"),
+            "ssl_policy": None if d.get("ssl_policy") is None else {
+                "policy_type": _camel_to_snake(d.get("ssl_policy").get("policy_type", None)),
+                "policy_name": self.ssl_policy_name(d.get("ssl_policy").get("policy_name", None)),
+            },
         }
         return d
+
+    def ssl_policy_name(self, policy_name):
+        if policy_name == "AppGwSslPolicy20150501":
+            return "ssl_policy20150501"
+        elif policy_name == "AppGwSslPolicy20170401":
+            return "ssl_policy20170401"
+        elif policy_name == "AppGwSslPolicy20170401S":
+            return "ssl_policy20170401_s"
+        return None
 
 
 def main():

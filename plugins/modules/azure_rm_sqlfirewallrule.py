@@ -77,10 +77,9 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from azure.mgmt.sql import SqlManagementClient
-    from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
+    from azure.mgmt.sql.models import FirewallRule
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -206,15 +205,16 @@ class AzureRMSqlFirewallRule(AzureRMModuleBase):
         self.log("Creating / Updating the Firewall Rule instance {0}".format(self.name))
 
         try:
+            params = FirewallRule(
+                name=self.name,
+                start_ip_address=self.start_ip_address,
+                end_ip_address=self.end_ip_address,
+            )
             response = self.sql_client.firewall_rules.create_or_update(resource_group_name=self.resource_group,
                                                                        server_name=self.server_name,
                                                                        firewall_rule_name=self.name,
-                                                                       start_ip_address=self.start_ip_address,
-                                                                       end_ip_address=self.end_ip_address)
-            if isinstance(response, LROPoller):
-                response = self.get_poller_result(response)
-
-        except CloudError as exc:
+                                                                       parameters=params)
+        except Exception as exc:
             self.log('Error attempting to create the Firewall Rule instance.')
             self.fail("Error creating the Firewall Rule instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -227,10 +227,10 @@ class AzureRMSqlFirewallRule(AzureRMModuleBase):
         '''
         self.log("Deleting the Firewall Rule instance {0}".format(self.name))
         try:
-            response = self.sql_client.firewall_rules.delete(resource_group_name=self.resource_group,
-                                                             server_name=self.server_name,
-                                                             firewall_rule_name=self.name)
-        except CloudError as e:
+            self.sql_client.firewall_rules.delete(resource_group_name=self.resource_group,
+                                                  server_name=self.server_name,
+                                                  firewall_rule_name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the Firewall Rule instance.')
             self.fail("Error deleting the Firewall Rule instance: {0}".format(str(e)))
 
@@ -251,7 +251,7 @@ class AzureRMSqlFirewallRule(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Firewall Rule instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError:
             self.log('Did not find the Firewall Rule instance.')
         if found is True:
             return response.as_dict()

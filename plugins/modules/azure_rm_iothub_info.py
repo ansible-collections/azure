@@ -33,6 +33,7 @@ options:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
         type: list
+        elements: str
     show_stats:
         description:
             - Show the statistics for IoT Hub.
@@ -411,7 +412,7 @@ class AzureRMIoTHubFacts(AzureRMModuleBase):
         self.module_args = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             show_stats=dict(type='bool'),
             show_quota_metrics=dict(type='bool'),
             show_endpoint_health=dict(type='bool'),

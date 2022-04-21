@@ -29,6 +29,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
     show_kubeconfig:
         description:
             - Show kubeconfig of the AKS cluster.
@@ -86,7 +88,7 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
         self.module_args = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             show_kubeconfig=dict(type='str', choices=['user', 'admin']),
         )
 

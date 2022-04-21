@@ -1,8 +1,8 @@
 *.pyc
 tests/output/
-tests/staging/
 tests/integration/cloud-config-azure.ini
 azure-azcollection-*.tar.gz
 venv*
 .venv*
 .vscode
+ansible_collections/

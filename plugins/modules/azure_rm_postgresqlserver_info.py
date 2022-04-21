@@ -26,10 +26,14 @@ options:
         description:
             - The name of the server.
         type: str
+    tags:
+        description:
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -45,6 +49,8 @@ EXAMPLES = '''
   - name: List instances of PostgreSQL Server
     azure_rm_postgresqlserver_info:
       resource_group: myResourceGroup
+      tags:
+        - key
 '''
 
 RETURN = '''
@@ -181,7 +187,8 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='dict'
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -191,7 +198,7 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
         self.resource_group = None
         self.name = None
         self.tags = None
-        super(AzureRMPostgreSqlServersInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
+        super(AzureRMPostgreSqlServersInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_postgresqlserver_facts'

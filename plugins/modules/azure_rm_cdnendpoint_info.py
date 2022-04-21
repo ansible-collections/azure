@@ -34,6 +34,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -48,6 +50,9 @@ EXAMPLES = '''
     azure_rm_cdnendpoint_info:
       resource_group: myResourceGroup
       profile_name: myCDNProfile
+      tags:
+        - key
+        - key:value
 
   - name: Get facts of specific CDN endpoint
     azure_rm_cdnendpoint_info:
@@ -191,7 +196,10 @@ class AzureRMCdnEndpointInfo(AzureRMModuleBase):
                 type='str',
                 required=True
             ),
-            tags=dict(type='list')
+            tags=dict(
+                type='list',
+                elements='str'
+            )
         )
 
         self.results = dict(

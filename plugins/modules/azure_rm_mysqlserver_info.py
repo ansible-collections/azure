@@ -26,10 +26,14 @@ options:
         description:
             - The name of the server.
         type: str
+    tags:
+        description:
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -41,6 +45,8 @@ EXAMPLES = '''
     azure_rm_mysqlserver_info:
       resource_group: myResourceGroup
       name: server_name
+      tags:
+        - key
 
   - name: List instances of MySQL Server
     azure_rm_mysqlserver_info:
@@ -189,6 +195,10 @@ class AzureRMMySqlServerInfo(AzureRMModuleBase):
             ),
             name=dict(
                 type='str'
+            ),
+            tags=dict(
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -198,7 +208,7 @@ class AzureRMMySqlServerInfo(AzureRMModuleBase):
         self.resource_group = None
         self.name = None
         self.tags = None
-        super(AzureRMMySqlServerInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
+        super(AzureRMMySqlServerInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_mysqlserver_facts'

@@ -22,12 +22,16 @@ options:
     name:
         description:
             - Limit results to a specific availability set.
+        type: str
     resource_group:
         description:
             - The resource group to search for the desired availability set.
+        type: str
     tags:
         description:
-            - List of tags to be matched.
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -45,6 +49,9 @@ EXAMPLES = '''
     - name: Get facts for all availability sets in a specific resource group
       azure_rm_availabilityset_info:
         resource_group: myResourceGroup
+        tags:
+          - key
+          - key:value
 
 '''
 
@@ -120,7 +127,7 @@ class AzureRMAvailabilitySetInfo(AzureRMModuleBase):
         self.module_args = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list')
+            tags=dict(type='list', elements='str')
         )
 
         self.results = dict(

@@ -26,6 +26,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
     show_intelligence_packs:
         description:
             - Show the intelligence packs for a workspace.
@@ -150,7 +152,7 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(type='str', required=True),
             name=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             show_shared_keys=dict(type='bool'),
             show_intelligence_packs=dict(type='bool'),
             show_usages=dict(type='bool'),

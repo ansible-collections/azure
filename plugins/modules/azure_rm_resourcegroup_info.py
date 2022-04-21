@@ -27,6 +27,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
     list_resources:
         description:
             - List all resources under the resource group.
@@ -142,7 +144,7 @@ class AzureRMResourceGroupInfo(AzureRMModuleBase):
 
         self.module_arg_spec = dict(
             name=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             list_resources=dict(type='bool')
         )
 

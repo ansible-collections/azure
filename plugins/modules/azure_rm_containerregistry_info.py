@@ -30,10 +30,15 @@ options:
             - Retrieve credentials for container registry.
         type: bool
         default: no
+    tags:
+        description:
+            - List of tags to be matched.
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -49,6 +54,9 @@ EXAMPLES = '''
   - name: List instances of Registry
     azure_rm_containerregistry_info:
       resource_group: myResourceGroup
+      tags:
+        - key
+        - key:value
 '''
 
 RETURN = '''
@@ -157,6 +165,10 @@ class AzureRMContainerRegistryInfo(AzureRMModuleBase):
             retrieve_credentials=dict(
                 type='bool',
                 default=False
+            ),
+            tags=dict(
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -166,8 +178,9 @@ class AzureRMContainerRegistryInfo(AzureRMModuleBase):
         self.resource_group = None
         self.name = None
         self.retrieve_credentials = False
+        self.tags = None
 
-        super(AzureRMContainerRegistryInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True, facts_module=True)
+        super(AzureRMContainerRegistryInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 

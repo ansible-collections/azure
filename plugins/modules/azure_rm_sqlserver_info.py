@@ -105,14 +105,77 @@ servers:
                     returned: always
                     type: str
                     sample: fully_qualified_domain_name
+                minimal_tls_version:
+                    description:
+                        - The version TLS clients at which must connect.
+                    returned: always
+                    type: str
+                    sample: 1.2
+                    version_added: "1.11.0"
+                public_network_access:
+                    description:
+                        - Whether or not public endpoint access is allowed for the server.
+                    returned: always
+                    type: str
+                    sample: Enabled
+                    version_added: "1.11.0"
+                restrict_outbound_network_access:
+                    description:
+                        - Whether or not outbound network access is allowed for this server.
+                    returned: always
+                    type: str
+                    sample: Enabled
+                    version_added: "1.11.0"
+                admin_username:
+                    description:
+                        - Username of the SQL administrator account for server.
+                    returned: always
+                    type: str
+                    sample: sqladmin
+                    version_added: "1.11.0"
+                administrators:
+                    description:
+                        - The Azure Active Directory identity of the server.
+                    returned: always
+                    type: dict
+                    version_added: "1.11.0"
+                    contains:
+                        administrator_type:
+                            description:
+                                - Type of the Azure AD administrator.
+                            type: str
+                            sample: ActiveDirectory
+                        azure_ad_only_authentication:
+                            description:
+                                - Azure AD only authentication enabled.
+                            type: bool
+                            sample: False
+                        login:
+                            description:
+                                - Login name of the Azure AD administrator.
+                            type: str
+                            sample: MyAzureAdGroup
+                        principal_type:
+                            description:
+                                - Principal Type of the Azure AD administrator.
+                            type: str
+                            sample: Group
+                        sid:
+                            description:
+                                - SID (object ID) of the Azure AD administrator.
+                            type: str
+                            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                        tenant_id:
+                            description:
+                                - Tenant ID of the Azure AD administrator.
+                            type: str
+                            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.sql import SqlManagementClient
-    from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -165,11 +228,11 @@ class AzureRMSqlServerInfo(AzureRMModuleBase):
             response = self.sql_client.servers.get(resource_group_name=self.resource_group,
                                                    server_name=self.server_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError:
             self.log('Could not get facts for Servers.')
 
         if response is not None:
-            results[response.name] = response.as_dict()
+            results[response.name] = self.format_results(response.as_dict())
 
         return results
 
@@ -184,14 +247,40 @@ class AzureRMSqlServerInfo(AzureRMModuleBase):
         try:
             response = self.sql_client.servers.list_by_resource_group(resource_group_name=self.resource_group)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError:
             self.log('Could not get facts for Servers.')
 
         if response is not None:
             for item in response:
-                results[item.name] = item.as_dict()
+                results[item.name] = self.format_results(item.as_dict())
 
         return results
+
+    def format_results(self, response):
+        administrators = response.get("administrators")
+        return {
+            "id": response.get("id"),
+            "name": response.get("name"),
+            "type": response.get("type"),
+            "location": response.get("location"),
+            "kind": response.get("kind"),
+            "version": response.get("version"),
+            "state": response.get("state"),
+            "tags": response.get("tags", {}),
+            "fully_qualified_domain_name": response.get("fully_qualified_domain_name"),
+            "minimal_tls_version": response.get("minimal_tls_version"),
+            "public_network_access": response.get("public_network_access"),
+            "restrict_outbound_network_access": response.get("restrict_outbound_network_access"),
+            "admin_username": response.get("administrator_login"),
+            "administrators": None if not administrators else {
+                "administrator_type": administrators.get("administrator_type"),
+                "azure_ad_only_authentication": administrators.get("azure_ad_only_authentication"),
+                "login": administrators.get("login"),
+                "principal_type": administrators.get("principal_type"),
+                "sid": administrators.get("sid"),
+                "tenant_id": administrators.get("tenant_id"),
+            },
+        }
 
 
 def main():

@@ -29,6 +29,7 @@ options:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
         type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -228,7 +229,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(type='str'),
             name=dict(type='str'),
-            tags=dict(type='list')
+            tags=dict(type='list', elements='str')
         )
 
         self.resource_group = None
@@ -240,7 +241,8 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
 
         super(AzureRMKeyVaultInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                   supports_check_mode=True,
-                                                  supports_tags=False)
+                                                  supports_tags=False,
+                                                  facts_module=True)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""

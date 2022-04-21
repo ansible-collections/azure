@@ -35,12 +35,12 @@ options:
         type: str
     tags:
         description:
-            - Limit the results by providing resource tags.
-        type: dict
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Aparna Patil (@techcon65)
@@ -107,7 +107,7 @@ class AzureRMVirtualNetworkLinkInfo(AzureRMModuleBase):
             name=dict(type='str'),
             resource_group=dict(type='str', required=True),
             zone_name=dict(type='str', required=True),
-            tags=dict(type='dict')
+            tags=dict(type='list', elements='str')
         )
 
         # store the results of the module operation
@@ -122,7 +122,7 @@ class AzureRMVirtualNetworkLinkInfo(AzureRMModuleBase):
         self.log_path = None
         self.log_mode = None
 
-        super(AzureRMVirtualNetworkLinkInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
+        super(AzureRMVirtualNetworkLinkInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 

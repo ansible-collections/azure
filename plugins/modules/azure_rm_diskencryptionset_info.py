@@ -29,12 +29,12 @@ options:
         type: str
     tags:
         description:
-            - Limit the results by providing resource tags.
-        type: dict
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Aparna Patil (@techcon65)
@@ -46,6 +46,8 @@ EXAMPLES = '''
   azure_rm_diskencryptionset_info:
     resource_group: myResourceGroup
     name: mydiskencryptionset
+    tags:
+      - key:value
 
 - name: Get facts for all disk encryption sets in resource group
   azure_rm_diskencryptionset_info:
@@ -105,7 +107,7 @@ class AzureRMDiskEncryptionSetInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='dict')
+            tags=dict(type='list', elements='str')
         )
 
         # store the results of the module operation
@@ -117,7 +119,7 @@ class AzureRMDiskEncryptionSetInfo(AzureRMModuleBase):
         self.resource_group = None
         self.tags = None
 
-        super(AzureRMDiskEncryptionSetInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
+        super(AzureRMDiskEncryptionSetInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 
