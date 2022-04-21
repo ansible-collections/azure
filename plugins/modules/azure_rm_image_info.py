@@ -150,6 +150,8 @@ images:
                 caching:
                     description:
                         - Type of caching of data disk.
+                    type: str
+                    returned: always
                     sample: read_only
                 disk_size_gb:
                     description:

@@ -51,7 +51,7 @@ options:
         type: str
     hyper_v_generation:
         description:
-            - Specifies the HyperVGenerationType of the VirtualMachine created from the image. 
+            - Specifies the HyperVGenerationType of the VirtualMachine created from the image.
         type: str
         choices:
             - V1
@@ -141,7 +141,7 @@ class AzureRMImage(AzureRMModuleBase):
             state=dict(type='str', default='present', choices=['present', 'absent']),
             location=dict(type='str'),
             source=dict(type='raw'),
-            data_disk_sources=dict(type='list', default=[]),
+            data_disk_sources=dict(type='list', elements='str', default=[]),
             os_type=dict(type='str', choices=['Windows', 'Linux']),
             hyper_v_generation=dict(type='str', choices=['V1', 'V2'])
         )
@@ -193,6 +193,8 @@ class AzureRMImage(AzureRMModuleBase):
             if self.hyper_v_generation and self.hyper_v_generation != image.hyper_v_generation:
                 self.log("Compare configure Check whether hyper_v_generation needs to be updated")
                 self.fail("The hyper_v_generation parameter cannot be updated to {0}".format(self.hyper_v_generation))
+            else:
+                self.hyper_v_generation = image.hyper_v_generation
             if self.state == 'absent':
                 changed = True
         # the image does not exist and create a new one
@@ -212,7 +214,7 @@ class AzureRMImage(AzureRMModuleBase):
                         self.fail('data_disk_sources is not allowed when capturing image from vm')
                     image_instance = self.image_models.Image(location=self.location,
                                                              source_virtual_machine=self.image_models.SubResource(id=vm.id),
-                                                             hyper_v_generation=image.hyper_v_generation,
+                                                             hyper_v_generation=self.hyper_v_generation,
                                                              tags=self.tags)
                 else:
                     if not self.os_type:
@@ -221,11 +223,10 @@ class AzureRMImage(AzureRMModuleBase):
                     data_disks = self.create_data_disks()
                     storage_profile = self.image_models.ImageStorageProfile(os_disk=os_disk, data_disks=data_disks)
                     image_instance = self.image_models.Image(
-                                                            location=self.location,
-                                                            storage_profile=storage_profile,
-                                                            hyper_v_generation=self.hyper_v_generation,
-                                                            tags=self.tags
-                                                            )
+                                                             location=self.location,
+                                                             storage_profile=storage_profile,
+                                                             hyper_v_generation=self.hyper_v_generation,
+                                                             tags=self.tags)
 
                 # finally make the change if not check mode
                 if not self.check_mode and image_instance:
