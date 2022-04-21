@@ -223,10 +223,11 @@ class AzureRMImage(AzureRMModuleBase):
                     data_disks = self.create_data_disks()
                     storage_profile = self.image_models.ImageStorageProfile(os_disk=os_disk, data_disks=data_disks)
                     image_instance = self.image_models.Image(
-                                                             location=self.location,
-                                                             storage_profile=storage_profile,
-                                                             hyper_v_generation=self.hyper_v_generation,
-                                                             tags=self.tags)
+                        location=self.location,
+                        storage_profile=storage_profile,
+                        hyper_v_generation=self.hyper_v_generation,
+                        tags=self.tags
+                    )
 
                 # finally make the change if not check mode
                 if not self.check_mode and image_instance:
