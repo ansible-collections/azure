@@ -405,7 +405,6 @@ state:
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.storage.cloudstorageaccount import CloudStorageAccount
     from azure.common import AzureMissingResourceHttpError
 except ImportError:
     # This is handled in azure_rm_common

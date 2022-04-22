@@ -246,7 +246,6 @@ try:
     from azure.mgmt.containerservice import ContainerServiceClient
     from azure.mgmt.marketplaceordering import MarketplaceOrderingAgreements
     from azure.mgmt.trafficmanager import TrafficManagerManagementClient
-    from azure.storage.cloudstorageaccount import CloudStorageAccount
     from azure.storage.blob import PageBlobService, BlockBlobService
     from adal.authentication_context import AuthenticationContext
     from azure.mgmt.authorization import AuthorizationManagementClient
