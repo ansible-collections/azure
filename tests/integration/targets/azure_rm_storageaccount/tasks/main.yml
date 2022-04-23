@@ -9,8 +9,7 @@
     name: "invalid_char$"
     account_type: Standard_LRS
   register: output
-  ignore_errors: yes
-
+  ignore_errors: true
 - name: Check intentional name failure.
   assert: 
     that: 
@@ -22,7 +21,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ item }}"
     state: absent
-    force_delete_nonempty: True
+    force_delete_nonempty: true
   loop:
     - "{{ storage_account_name_default }}"
     - "{{ storage_account_name_explicit }}"
@@ -65,7 +64,7 @@
     access_tier: Hot
     account_type: Premium_LRS
     allow_blob_public_access: False
-    append_tags: no
+    append_tags: false
     blob_cors:
       - allowed_origins:
           - http://www.example.com/
@@ -114,7 +113,7 @@
     access_tier: Hot
     account_type: Premium_LRS
     allow_blob_public_access: False
-    append_tags: no
+    append_tags: false
     blob_cors:
       - allowed_origins:
           - http://www.example.com/
@@ -200,7 +199,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}"
     allow_blob_public_access: False
-    append_tags: no
+    append_tags: false
     blob_cors:
       - allowed_origins:
           - http://www.example.com/
@@ -249,7 +248,7 @@
     name: "{{ storage_account_name_default }}"
     account_type: Premium_LRS
   register: output
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert account type change failed
   assert:
@@ -263,8 +262,8 @@
     name: "{{ storage_account_name_default }}"
     custom_domain:
       name: ansible.com
-      use_sub_domain: no
-  ignore_errors: yes  
+      use_sub_domain: false
+  ignore_errors: true
   register: output
 
 - name: Assert CNAME failure
@@ -288,7 +287,7 @@
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_explicit }}"
-    append_tags: no
+    append_tags: false
     tags:
       testing: testing
       delete: never
