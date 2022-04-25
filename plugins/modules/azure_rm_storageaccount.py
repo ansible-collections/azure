@@ -867,14 +867,14 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         not be deleted.
         '''
         self.log('Checking for existing blob containers')
-        blob_service = self.get_blob_client(self.resource_group, self.name)
+        blob_service = self.get_blob_service_client(self.resource_group, self.name)
         try:
             response = blob_service.list_containers()
         except Exception:
             # No blob storage available?
             return False
 
-        if len(response.items) > 0:
+        if len(list(response)) > 0:
             return True
         return False
 
