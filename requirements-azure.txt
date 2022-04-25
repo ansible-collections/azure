@@ -38,7 +38,7 @@ msrest==0.6.21
 msrestazure==0.6.4
 azure-keyvault==1.0.0a1
 azure-graphrbac==0.61.1
-azure-mgmt-cosmosdb==0.5.2
+azure-mgmt-cosmosdb==0.15.0
 azure-mgmt-hdinsight==0.1.0
 azure-mgmt-devtestlabs==3.0.0
 azure-mgmt-loganalytics==1.0.0

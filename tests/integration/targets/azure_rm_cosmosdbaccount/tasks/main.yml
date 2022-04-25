@@ -4,6 +4,7 @@
     db2name: "cosmos2-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     vnname: "vn{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     subnetname: "subnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    free_tier_supported: false  # https://github.com/ansible-collections/azure/pull/675#discussion_r843584406
   run_once: yes
 
 - name: Create virtual network
@@ -111,7 +112,7 @@
         ignore_missing_vnet_service_endpoint: yes
     enable_automatic_failover: yes
   register: output
-- name: Assert the state has not changed
+- name: Assert the state has changed
   assert:
     that:
       - output.changed
@@ -162,6 +163,7 @@
       - output.accounts[0]['write_locations'] != None
       - output.accounts[0]['database_account_offer_type'] != None
       - output.accounts[0]['ip_range_filter'] != None
+      - output.accounts[0]['ip_rules'] != None
       - output.accounts[0]['is_virtual_network_filter_enabled'] != None
       - output.accounts[0]['enable_automatic_failover'] != None
       - output.accounts[0]['enable_cassandra'] != None
@@ -172,6 +174,8 @@
       - output.accounts[0]['document_endpoint'] != None
       - output.accounts[0]['provisioning_state'] != None
       - output.accounts[0]['tags'] != None
+      - output.accounts[0]['enable_free_tier'] == false
+      - output.accounts[0]['public_network_access'] == 'Enabled'
 
 - name: Get facts with keys
   azure_rm_cosmosdbaccount_info:
@@ -225,6 +229,7 @@
       - output.accounts[0]['write_locations'] != None
       - output.accounts[0]['database_account_offer_type'] != None
       - output.accounts[0]['ip_range_filter'] != None
+      - output.accounts[0]['ip_rules'] != None
       - output.accounts[0]['is_virtual_network_filter_enabled'] != None
       - output.accounts[0]['enable_automatic_failover'] != None
       - output.accounts[0]['enable_cassandra'] != None
@@ -235,6 +240,8 @@
       - output.accounts[0]['document_endpoint'] != None
       - output.accounts[0]['provisioning_state'] != None
       - output.accounts[0]['tags'] != None
+      - output.accounts[0]['enable_free_tier'] == false
+      - output.accounts[0]['public_network_access'] == 'Enabled'
 
 - name: List all accounts
   azure_rm_cosmosdbaccount_info:
@@ -246,6 +253,54 @@
       - output.accounts | length >= 2
       - dbname in (output.accounts | map(attribute='name'))
       - db2name in (output.accounts | map(attribute='name'))
+
+- name: Create 4.0 Mongo free-tier instance with public networking disabled
+  azure_rm_cosmosdbaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ dbname }}-free4"
+    location: eastasia
+    kind: mongo_db
+    mongo_version: "4.0"
+    enable_free_tier: "{{ free_tier_supported }}"
+    public_network_access: "Disabled"
+    ip_rules:
+      - "1.1.1.1"
+      - "2.2.2.2/28"
+    geo_rep_locations:
+      - name: eastasia
+        failover_priority: 0
+      - name: westus
+        failover_priority: 1
+    database_account_offer_type: Standard
+    is_virtual_network_filter_enabled: yes
+    virtual_network_rules:
+      - subnet:
+          resource_group: "{{ resource_group }}"
+          virtual_network_name: "{{ vnname }}"
+          subnet_name: "{{ subnetname }}"
+        ignore_missing_vnet_service_endpoint: yes
+    enable_automatic_failover: yes
+  register: output
+- name: Assert resource created
+  assert:
+    that:
+      - output.changed
+
+- name: Get facts for free tier account
+  azure_rm_cosmosdbaccount_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ dbname }}-free4"
+  register: output
+- name: Assert that facts are returned
+  assert:
+    that:
+      - output.accounts[0]['mongo_version'] == '4.0'
+      - output.accounts[0]['enable_free_tier'] == free_tier_supported
+      - output.accounts[0]['public_network_access'] == 'Disabled'
+      - output.accounts[0]['ip_range_filter'] == '1.1.1.1,2.2.2.2/28'
+      - (output.accounts[0]['ip_rules'] | length) == 2
+      - output.accounts[0]['ip_rules'][0] == '1.1.1.1'
+      - output.accounts[0]['ip_rules'][1] == '2.2.2.2/28'
 
 - name: Delete instance of Database Account -- check mode
   azure_rm_cosmosdbaccount:
@@ -270,6 +325,17 @@
     that:
       - output.changed
 
+- name: Delete unexisting instance of Database Account
+  azure_rm_cosmosdbaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ dbname }}"
+    state: absent
+  register: output
+- name: Assert the state has not changed
+  assert:
+    that:
+      - output.changed == false
+
 - name: Delete second instance of Database Account
   azure_rm_cosmosdbaccount:
     resource_group: "{{ resource_group_secondary }}"
@@ -281,14 +347,19 @@
     that:
       - output.changed
 
-# currently disabled as there's a bug in SDK / Service
-#- name: Delete unexisting instance of Database Account
-#  azure_rm_cosmosdbaccount:
-#    resource_group: "{{ resource_group }}"
-#    name: "{{ dbname }}"
-#    state: absent
-#  register: output
-#- name: Assert the state has changed
-#  assert:
-#    that:
-#      - output.changed == false
+- name: Delete free tier instance of Database Account
+  azure_rm_cosmosdbaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ dbname }}-free4"
+    state: absent
+  register: output
+- name: Assert the state has changed
+  assert:
+    that:
+      - output.changed
+
+- name: Clean up virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vnname }}"
+    state: absent
