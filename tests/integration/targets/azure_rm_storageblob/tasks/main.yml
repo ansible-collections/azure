@@ -1,6 +1,7 @@
 - name: Create storage account name
   set_fact:
     storage_account: "sb{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    test1_file: "Ratings.png"
 
 - name: Create storage account
   azure_rm_storageaccount:
@@ -20,16 +21,12 @@
     account_name: "{{ storage_account }}"
     container_name: my-blobs
     blob: 'Ratings.png'
-    src: './targets/azure_rm_storageblob/files/Ratings.png'
+    src: '{{ test1_file }}'
     content_type: image/png
     tags:
       val1: foo
       val2: bar
     force: true
-
-- name: storage blob seems to have some timing issues
-  wait_for:
-    delay: 10
 
 - name: Upload blob idempotence
   azure_rm_storageblob:
@@ -37,7 +34,7 @@
     account_name: "{{ storage_account }}"
     container_name: my-blobs
     blob: 'Ratings.png'
-    src: './targets/azure_rm_storageblob/files/Ratings.png'
+    src: '{{ test1_file }}'
     content_type: image/png
     tags:
       val1: foo
@@ -52,7 +49,7 @@
     account_name: "{{ storage_account }}"
     container_name: my-blobs
     blob: 'Ratings.png'
-    dest: './targets/azure_rm_storageblob/files/Ratings.png'
+    dest: '{{ test1_file }}'
   register: download_results
 - assert: 
     that: not download_results.changed

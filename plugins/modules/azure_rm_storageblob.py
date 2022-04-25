@@ -266,6 +266,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
         self.blob_service_client = self.get_blob_service_client(self.resource_group, self.storage_account_name)
         self.container_obj = self.get_container()
+        if self.blob:
+            self.blob_obj = self.get_blob()
 
         if self.state == 'present':
             if not self.container_obj:
@@ -283,11 +285,9 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
             if self.blob:
                 # create, update or download blob
-                self.blob_obj = self.get_blob()
                 if self.src and self.src_is_valid():
                     if self.blob_obj and not self.force:
-                        self.log("Cannot upload to {0}. Blob with that name already exists. "
-                                 "Use the force option".format(self.blob))
+                        self.log("Cannot upload to {0}. Blob with that name already exists. Use the force option".format(self.blob))
                     else:
                         self.upload_blob()
                 elif self.dest and self.dest_is_valid():
@@ -414,7 +414,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         blob = None
         if self.blob:
             try:
-                blob = self.blob_service_client.get_blob_client(container=self.container, blob=blob).get_blob_properties()
+                blob = self.blob_service_client.get_blob_client(container=self.container, blob=self.blob).get_blob_properties()
             except ResourceNotFoundError:
                 pass
         if blob:
@@ -472,7 +472,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                 client.upload_blob(data=self.src,
                                    blob_type=self.get_blob_type(self.blob_type),
                                    metadata=self.tags,
-                                   content_settings=content_settings)
+                                   content_settings=content_settings,
+                                   overwrite=self.force)
             except Exception as exc:
                 self.fail("Error creating blob {0} - {1}".format(self.blob, str(exc)))
 

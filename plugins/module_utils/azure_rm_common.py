@@ -678,17 +678,17 @@ class AzureRMModuleBase(object):
 
     def get_blob_service_client(self, resource_group_name, storage_account_name):
         try:
-            # Get keys from the storage account
-            self.log("Getting account properties")
+            self.log("Getting storage account detail")
             account = self.storage_client.storage_accounts.get_properties(resource_group_name=resource_group_name, account_name=storage_account_name)
+            account_keys = self.storage_client.storage_accounts.list_keys(resource_group_name=resource_group_name, account_name=storage_account_name)
         except Exception as exc:
-            self.fail("Error getting storage account properties for {0}: {1}".format(storage_account_name, str(exc)))
+            self.fail("Error getting storage account detail for {0}: {1}".format(storage_account_name, str(exc)))
 
         try:
             self.log("Create blob service client")
             return BlobServiceClient(
                 account_url=account.primary_endpoints.blob,
-                credential=self.azure_auth.azure_credential_track2,
+                credential=account_keys.keys[0].value,
             )
         except Exception as exc:
             self.fail("Error creating blob service client for storage account {0} - {1}".format(storage_account_name, str(exc)))
