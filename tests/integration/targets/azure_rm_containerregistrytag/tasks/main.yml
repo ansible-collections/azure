@@ -19,6 +19,15 @@
   assert:
     that: output.repositories | length == 0
 
+- name: Load all tags for non-existant repository
+  azure_rm_containerregistrytag_info:
+    registry: "acr{{ rpfx }}"
+    repository_name: "does-not-exist"
+  register: output
+- name: Verify no tags exist
+  assert:
+    that: output.repositories | length == 0
+
 - name: Import tag (check mode)
   azure_rm_containerregistrytag:
     registry: "acr{{ rpfx }}"

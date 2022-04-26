@@ -104,6 +104,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.containerregistry import ContainerRegistryClient
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError as exc:
     # This is handled in azure_rm_common
     pass
@@ -148,7 +149,8 @@ class AzureRMContainerRegistryTagInfo(AzureRMModuleBase):
         if self.repository_name and self.name:
             self.results["repositories"] = [self.get_tag(self.repository_name, self.name)]
         elif self.repository_name:
-            self.results["repositories"] = [self.list_by_repository(self.repository_name, self.name)]
+            tags = self.list_by_repository(self.repository_name, self.name)
+            self.results["repositories"] = [] if not tags else [tags]
         else:
             self.results["repositories"] = self.list_all_repositories(self.name)
 
@@ -180,14 +182,9 @@ class AzureRMContainerRegistryTagInfo(AzureRMModuleBase):
         }
 
     def list_by_repository(self, repository_name, tag_name):
-        response = None
         try:
             response = self._client.list_tag_properties(repository=repository_name)
             self.log(f"Response : {response}")
-        except Exception as e:
-            self.log(f"Could not get ACR tag for {repository_name} - {str(e)}")
-
-        if response is not None:
             tags = []
             for tag in response:
                 if not tag_name or tag.name == tag_name:
@@ -197,6 +194,8 @@ class AzureRMContainerRegistryTagInfo(AzureRMModuleBase):
                 "name": repository_name,
                 "tags": tags
             }
+        except ResourceNotFoundError as e:
+            self.log(f"Could not get ACR tags for {repository_name} - {str(e)}")
 
         return None
 
@@ -211,7 +210,9 @@ class AzureRMContainerRegistryTagInfo(AzureRMModuleBase):
         if response is not None:
             results = []
             for repo_name in response:
-                results.append(self.list_by_repository(repo_name, tag_name))
+                tags = self.list_by_repository(repo_name, tag_name)
+                if tags:
+                    results.append(tags)
 
             return results
 
