@@ -525,7 +525,8 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                                  if account_obj.status_of_secondary is not None else None),
             primary_location=account_obj.primary_location,
             https_only=account_obj.enable_https_traffic_only,
-            minimum_tls_version=account_obj.minimum_tls_version,
+            minimum_tls_version=account_obj.minimum_tls_version,  # todo add doc
+            public_network_access=account_obj.public_network_access,
             allow_blob_public_access=account_obj.allow_blob_public_access
         )
 

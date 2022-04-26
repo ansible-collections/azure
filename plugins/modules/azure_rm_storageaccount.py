@@ -97,6 +97,13 @@ options:
             - TLS1_1
             - TLS1_2
         version_added: "1.0.0"
+    public_network_access:
+        description:
+            - Allow or disallow public network access to Storage Account.
+        choices:
+            - Enabled
+            - Disabled
+        version_added: "1.12.0"
     allow_blob_public_access:
         description:
             - Allows blob containers in account to be set for anonymous public access.
@@ -403,12 +410,6 @@ state:
             sample: "Microsoft.Storage/storageAccounts"
 '''
 
-try:
-    from azure.core.exceptions import ResourceNotFoundError
-    from azure.common import AzureMissingResourceHttpError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 import copy
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AZURE_SUCCESS_STATE, AzureRMModuleBase
@@ -461,6 +462,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             access_tier=dict(type='str', choices=['Hot', 'Cool']),
             https_only=dict(type='bool'),
             minimum_tls_version=dict(type='str', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
+            public_network_access=dict(type='str', choices=['Enabled', 'Disabled']),
             allow_blob_public_access=dict(type='bool'),
             network_acls=dict(type='dict'),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict')
@@ -484,6 +486,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.access_tier = None
         self.https_only = None
         self.minimum_tls_version = None
+        self.public_network_access = None
         self.allow_blob_public_access = None
         self.network_acls = None
         self.blob_cors = None
@@ -579,6 +582,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             primary_location=account_obj.primary_location,
             https_only=account_obj.enable_https_traffic_only,
             minimum_tls_version=account_obj.minimum_tls_version,
+            public_network_access=account_obj.public_network_access,
             allow_blob_public_access=account_obj.allow_blob_public_access,
             network_acls=account_obj.network_rule_set
         )
@@ -690,7 +694,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                 self.name,
                                                                 parameters)
                 except Exception as exc:
-                    self.fail("Failed to update account type: {0}".format(str(exc)))
+                    self.fail("Failed to update https only: {0}".format(str(exc)))
 
         if self.minimum_tls_version is not None and self.minimum_tls_version != self.account_dict.get('minimum_tls_version'):
             self.results['changed'] = True
@@ -702,7 +706,19 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                 self.name,
                                                                 parameters)
                 except Exception as exc:
-                    self.fail("Failed to update account type: {0}".format(str(exc)))
+                    self.fail("Failed to update minimum tls: {0}".format(str(exc)))
+
+        if self.public_network_access is not None and self.public_network_access != self.account_dict.get('public_network_access'):
+            self.results['changed'] = True
+            self.account_dict['public_network_access'] = self.public_network_access
+            if not self.check_mode:
+                try:
+                    parameters = self.storage_models.StorageAccountUpdateParameters(public_network_access=self.public_network_access)
+                    self.storage_client.storage_accounts.update(self.resource_group,
+                                                                self.name,
+                                                                parameters)
+                except Exception as exc:
+                    self.fail("Failed to update public network access: {0}".format(str(exc)))
 
         if self.allow_blob_public_access is not None and self.allow_blob_public_access != self.account_dict.get('allow_blob_public_access'):
             self.results['changed'] = True
@@ -714,7 +730,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                 self.name,
                                                                 parameters)
                 except Exception as exc:
-                    self.fail("Failed to update account type: {0}".format(str(exc)))
+                    self.fail("Failed to update allow public blob access: {0}".format(str(exc)))
 
         if self.account_type:
             if self.account_type != self.account_dict['sku_name']:
@@ -808,6 +824,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 resource_group=self.resource_group,
                 enable_https_traffic_only=self.https_only,
                 minimum_tls_version=self.minimum_tls_version,
+                public_network_access=self.public_network_access,
                 allow_blob_public_access=self.allow_blob_public_access,
                 networks_acls=dict(),
                 tags=dict()
@@ -829,6 +846,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         tags=self.tags,
                                                                         enable_https_traffic_only=self.https_only,
                                                                         minimum_tls_version=self.minimum_tls_version,
+                                                                        public_network_access=self.public_network_access,
                                                                         allow_blob_public_access=self.allow_blob_public_access,
                                                                         access_tier=self.access_tier)
         self.log(str(parameters))
