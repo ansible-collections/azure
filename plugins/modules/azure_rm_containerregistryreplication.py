@@ -220,12 +220,12 @@ class AzureRMReplications(AzureRMModuleBase):
 
         try:
             if self.to_do == Actions.Create:
-                response = self.containerregistry_client.replications.create(resource_group_name=self.resource_group,
+                response = self.containerregistry_client.replications.begin_create(resource_group_name=self.resource_group,
                                                                              registry_name=self.registry_name,
                                                                              replication_name=self.replication_name,
                                                                              location=self.location)
             else:
-                response = self.containerregistry_client.replications.update(resource_group_name=self.resource_group,
+                response = self.containerregistry_client.replications.begin_update(resource_group_name=self.resource_group,
                                                                              registry_name=self.registry_name,
                                                                              replication_name=self.replication_name,
                                                                              location=self.location)
@@ -245,7 +245,7 @@ class AzureRMReplications(AzureRMModuleBase):
         '''
         self.log("Deleting the Replication instance {0}".format(self.replication_name))
         try:
-            response = self.containerregistry_client.replications.delete(resource_group_name=self.resource_group,
+            response = self.containerregistry_client.replications.begin_delete(resource_group_name=self.resource_group,
                                                                          registry_name=self.registry_name,
                                                                          replication_name=self.replication_name)
             self.get_poller_result(response)
