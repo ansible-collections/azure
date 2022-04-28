@@ -1,7 +1,7 @@
 - name: Create storage account name
   set_fact:
     storage_account: "sb{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-    test1_file: "Ratings.png"
+    test1_file: "./targets/azure_rm_storageblob/files/Ratings.png"
 
 - name: Create storage account
   azure_rm_storageaccount:
