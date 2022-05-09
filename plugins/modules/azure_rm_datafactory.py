@@ -271,7 +271,6 @@ class AzureRMDataFactory(AzureRMModuleBase):
         self.results = dict(
             changed=False,
         )
-        mutually_exclusive = [['github_repo_configuration', 'vsts_repo_configuration']]
 
         self.name = None
         self.resource_group = None
@@ -284,7 +283,6 @@ class AzureRMDataFactory(AzureRMModuleBase):
         super(AzureRMDataFactory, self).__init__(self.module_arg_spec,
                                                  supports_check_mode=True,
                                                  supports_tags=True,
-                                                 mutually_exclusive=mutually_exclusive,
                                                  facts_module=False)
 
     def exec_module(self, **kwargs):
