@@ -251,7 +251,7 @@ repo_configuration_spec = dict(
     collaboration_branch=dict(type='str', required=True),
     root_folder=dict(type='str', required=True),
     project_name=dict(type='str'),
-    )
+)
 
 
 class AzureRMDataFactory(AzureRMModuleBase):
@@ -282,10 +282,10 @@ class AzureRMDataFactory(AzureRMModuleBase):
         self.repo_configuration = None
 
         super(AzureRMDataFactory, self).__init__(self.module_arg_spec,
-                                                  supports_check_mode=True,
-                                                  supports_tags=True,
-                                                  mutually_exclusive=mutually_exclusive,
-                                                  facts_module=False)
+                                                 supports_check_mode=True,
+                                                 supports_tags=True,
+                                                 mutually_exclusive=mutually_exclusive,
+                                                 facts_module=False)
 
     def exec_module(self, **kwargs):
 
@@ -360,17 +360,16 @@ class AzureRMDataFactory(AzureRMModuleBase):
                 response = self.delete()
             else:
                 changed = False
-                
+
         self.results['changed'] = changed
         self.results['state'] = response
         return self.results
-
 
     def get_item(self):
         response = None
         self.log('Get properties for {0}'.format(self.name))
         try:
-            response= self.datafactory_client.factories.get(self.resource_group, self.name)
+            response = self.datafactory_client.factories.get(self.resource_group, self.name)
         except ResourceNotFoundError:
             pass
         return self.pip_to_dict(response) if response else None
@@ -379,7 +378,7 @@ class AzureRMDataFactory(AzureRMModuleBase):
         response = None
         self.log('Delete data factory for {0}'.format(self.name))
         try:
-            response= self.datafactory_client.factories.delete(self.resource_group, self.name)
+            response = self.datafactory_client.factories.delete(self.resource_group, self.name)
         except Exception as ec:
             self.fail("Delete fail {0}, error message {1}".format(self.name, ec))
         return self.pip_to_dict(response) if response else None
@@ -388,10 +387,10 @@ class AzureRMDataFactory(AzureRMModuleBase):
         response = None
         self.log('Create data factory for {0}'.format(self.name))
         try:
-            response= self.datafactory_client.factories.create_or_update(self.resource_group,
-                                                                         self.name,
-                                                                         parameters,
-                                                                         self.if_match)
+            response = self.datafactory_client.factories.create_or_update(self.resource_group,
+                                                                          self.name,
+                                                                          parameters,
+                                                                          self.if_match)
         except Exception as ec:
             self.fail("Create fail {0}, error message {1}".format(self.name, ec))
         return self.pip_to_dict(response) if response else None

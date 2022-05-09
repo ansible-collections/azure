@@ -57,7 +57,7 @@ EXAMPLES = '''
 
     - name: Get data factory in relate subscription
       azure_rm_datafactory_info:
-	tags:
+        tags:
           - key1
 '''
 
@@ -210,9 +210,9 @@ class AzureRMDataFactoryInfo(AzureRMModuleBase):
         self.tags = None
 
         super(AzureRMDataFactoryInfo, self).__init__(self.module_arg_spec,
-                                                  supports_check_mode=True,
-                                                  supports_tags=False,
-                                                  facts_module=True)
+                                                     supports_check_mode=True,
+                                                     supports_tags=False,
+                                                     facts_module=True)
 
     def exec_module(self, **kwargs):
 
@@ -260,7 +260,7 @@ class AzureRMDataFactoryInfo(AzureRMModuleBase):
             result['repo_configuration']['type'] = pip.repo_configuration.type
             result['repo_configuration']['account_name'] = pip.repo_configuration.account_name
             result['repo_configuration']['repository_name'] = pip.repo_configuration.repository_name
-            result['repo_configuration']['collaboration_branch'] = pip.repo_configuration.collaboration_branch 
+            result['repo_configuration']['collaboration_branch'] = pip.repo_configuration.collaboration_branch
             result['repo_configuration']['root_folder'] = pip.repo_configuration.root_folder
             if pip.repo_configuration.type == "FactoryVSTSConfiguration":
                 result['repo_configuration']['project_name'] = pip.repo_configuration.project_name
@@ -270,7 +270,7 @@ class AzureRMDataFactoryInfo(AzureRMModuleBase):
         response = None
         self.log('Get properties for {0}'.format(self.name))
         try:
-            response= self.datafactory_client.factories.get(self.resource_group, self.name, self.if_none_match)
+            response = self.datafactory_client.factories.get(self.resource_group, self.name, self.if_none_match)
         except ResourceNotFoundError:
             pass
         return [response] if response else []
@@ -281,7 +281,7 @@ class AzureRMDataFactoryInfo(AzureRMModuleBase):
             response = self.datafactory_client.factories.list_by_resource_group(self.resource_group)
         except Exception:
             pass
-        return response if response  else []
+        return response if response else []
 
     def list_all(self):
         self.log("Get GitHub Access Token Response")
@@ -289,7 +289,7 @@ class AzureRMDataFactoryInfo(AzureRMModuleBase):
             response = self.datafactory_client.factories.list()
         except Exception:
             pass
-        return response if response  else []
+        return response if response else []
 
 
 def main():

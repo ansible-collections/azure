@@ -275,6 +275,7 @@ try:
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
     from azure.mgmt.notificationhubs import NotificationHubsManagementClient
     from azure.mgmt.eventhub import EventHubManagementClient
+    from azure.mgmt.datafactory import DataFactoryManagementClient
     from azure.identity._credentials import client_secret, user_password
 
 except ImportError as exc:
@@ -1380,6 +1381,19 @@ class AzureRMModuleBase(object):
                 base_url=self._cloud_environment.endpoints.resource_manager,
                 api_version='2018-05-04')
         return self._event_hub_client
+
+    @property
+    def datafactory_client(self):
+        self.log('Getting datafactory client...')
+        if not self._datafactory_client:
+            self._datafactory_client = self.get_mgmt_svc_client(DataFactoryManagementClient,
+                                                                is_track2=True,
+                                                                base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._datafactory_client
+
+    @property
+    def datafactory_model(self):
+        return DataFactoryModel
 
 
 class AzureSASAuthentication(Authentication):
