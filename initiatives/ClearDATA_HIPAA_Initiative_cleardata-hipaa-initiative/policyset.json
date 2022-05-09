@@ -1,0 +1,1093 @@
+{
+ "properties": {
+  "displayName": "ClearDATA HIPAA Initiative",
+  "policyType": "Custom",
+  "description": "This initiative contains ClearDATA healthcare compliance policy definitions for Azure HIPAA services.",
+  "metadata": {
+   "category": "Regulatory Compliance",
+   "ASC": "true",
+   "initiative": "HIPAA",
+   "createdBy": "d450f931-dfdc-443c-a274-5cce3839c1e4",
+   "createdOn": "2021-10-01T00:31:20.4897618Z",
+   "updatedBy": "d450f931-dfdc-443c-a274-5cce3839c1e4",
+   "updatedOn": "2022-05-09T06:10:52.1912146Z"
+  },
+  "parameters": {},
+  "policyDefinitions": [
+   {
+    "policyDefinitionReferenceId": "12816347949139617770",
+    "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/1a5b4dca-0b6f-4cf5-907c-56316bc1bf3d",
+    "parameters": {
+     "excludedNamespaces": {
+      "value": [
+       "kube-system",
+       "gatekeeper-system",
+       "azure-arc"
+      ]
+     },
+     "effect": {
+      "value": "audit"
+     }
+    },
+    "groupNames": [
+     "Kubernetes"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "15263942440154972870",
+    "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/440b515e-a580-421e-abeb-b159a61ddcbc",
+    "parameters": {
+     "allowedContainerPortsList": {
+      "value": [
+       "443"
+      ]
+     },
+     "excludedNamespaces": {
+      "value": [
+       "kube-system",
+       "gatekeeper-system",
+       "azure-arc"
+      ]
+     },
+     "effect": {
+      "value": "audit"
+     }
+    },
+    "groupNames": [
+     "Kubernetes"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "11031414390473141050",
+    "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/233a2a17-77ca-4fb1-9b6b-69223d272a44",
+    "parameters": {
+     "allowedServicePortsList": {
+      "value": [
+       "443"
+      ]
+     },
+     "excludedNamespaces": {
+      "value": [
+       "kube-system",
+       "gatekeeper-system",
+       "azure-arc"
+      ]
+     },
+     "effect": {
+      "value": "audit"
+     }
+    },
+    "groupNames": [
+     "Kubernetes"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "4188795386400658661",
+    "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/95edb821-ddaf-4404-9732-666045e056b4",
+    "parameters": {
+     "excludedNamespaces": {
+      "value": [
+       "kube-system",
+       "gatekeeper-system",
+       "azure-arc"
+      ]
+     },
+     "effect": {
+      "value": "audit"
+     }
+    },
+    "groupNames": [
+     "Kubernetes"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "3538632973992563689",
+    "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/3fc4dc25-5baf-40d8-9b05-7fe74c1bc64e",
+    "parameters": {
+     "excludedNamespaces": {
+      "value": [
+       "kube-system",
+       "gatekeeper-system",
+       "azure-arc"
+      ]
+     },
+     "effect": {
+      "value": "audit"
+     }
+    },
+    "groupNames": [
+     "Kubernetes"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "6817999674685148117",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-aks-log-backup",
+    "groupNames": [
+     "Kubernetes"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "15571742551510222179",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-analysis-services-data-backup",
+    "groupNames": [
+     "Analysis Services"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "2328114407395308619",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-analysis-services-log-backup",
+    "groupNames": [
+     "Analysis Services"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "13646738160920083365",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-analysis-services-network-accessibility",
+    "groupNames": [
+     "Analysis Services"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "9588158789105232649",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-arc-access-managed-customer",
+    "groupNames": [
+     "Resource Manager"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "13803152443324288278",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-automation-accounts-log-backup",
+    "groupNames": [
+     "Automation Accounts"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "16820381783798648473",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-automation-accounts-log-backupalllogs",
+    "groupNames": [
+     "Automation Accounts"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "17769160850586367331",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-batch-account-log-backup",
+    "groupNames": [
+     "Batch"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "16335326073148252895",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-container-registry-allowed-sku",
+    "groupNames": [
+     "Container Registry"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "6813710258079932435",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-container-registry-log-backup",
+    "groupNames": [
+     "Container Registry"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "7391899780429470607",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-container-registry-log-backupalllogs",
+    "groupNames": [
+     "Container Registry"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "10335339288942545132",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-container-registry-network-accessibility",
+    "groupNames": [
+     "Container Registry"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "7867649381994818791",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-data-explorer-log-backup",
+    "groupNames": [
+     "DataExplorer"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "4852915616808216980",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-event-hub-log-backup",
+    "groupNames": [
+     "Event Hub"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "18207572076109214849",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-event-hub-log-backupalllogs",
+    "groupNames": [
+     "Event Hub"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "13483260193074326970",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-event-hub-network-accessibility",
+    "groupNames": [
+     "Event Hub"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "1120365033529609082",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-logicapp-log-backup",
+    "groupNames": [
+     "Logic App"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "17270030700704266293",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-monitor-activity-log-backup",
+    "groupNames": [
+     "Monitor"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "5556089483612254073",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-power-bi-embeded-log-backup",
+    "groupNames": [
+     "PowerBI Embedded"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "3799550266367451624",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-recovery-services-vault-log-backup",
+    "groupNames": [
+     "RecoveryServicesVault"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "4086294964402446990",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-resource-manager-allowed-regions",
+    "groupNames": [
+     "Resource Manager"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "16916757102235387607",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-resource-manager-allowed-resources",
+    "groupNames": [
+     "Resource Manager"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "10992145028130447353",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-allowed-sku",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "13010439018841183719",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-allowed-skudinedeny",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "16659598844539124541",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-appservices-skudine",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "7270442672425925697",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-arm-skudine",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "18323908125640537345",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-containers-skudine",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "2132311935628212096",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-cosmosdb-skudine",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "10527211438276860656",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-dns-skudine",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "9947091644112297209",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-keyvaults-skudine",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "3138244921317175858",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-osrdbs-skudine",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "9128966430734379707",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-pricing-tier-app-service",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "7580200991748515909",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-sqlservers-skudine",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "11076608545740775402",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-sqlservervms-skudine",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "13954884672794412094",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-storageaccounts-skudine",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "3118949134038478661",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-security-center-virtualmachines-skudine",
+    "groupNames": [
+     "Security Center"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "8869595256106684687",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-service-bus-log-backup",
+    "groupNames": [
+     "Service Bus"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "5481017124312070442",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-service-bus-network-accessibility",
+    "groupNames": [
+     "Service Bus"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "10923657616957561621",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-traffic-manager-log-backup",
+    "groupNames": [
+     "TrafficManager"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "5046644739163418704",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-app-service-allowed-sku",
+    "groupNames": [
+     "App Service"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "8787746646265769289",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-app-service-log-backup",
+    "groupNames": [
+     "App Service"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "11716950867271671493",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-app-service-network-accessibility",
+    "groupNames": [
+     "App Service"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "16160279724910291577",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-app-service-network-accessibilitydeny",
+    "groupNames": [
+     "App Service"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "10108308853426477965",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-app-service-network-encryption",
+    "groupNames": [
+     "App Service"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "11189028510217423263",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-app-service-network-encryptiondeny",
+    "groupNames": [
+     "App Service"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "9139722953467774563",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-app-service-private-endpoint",
+    "groupNames": [
+     "App Service"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "3785220914092058526",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-databricks-network-accessibility",
+    "groupNames": [
+     "Databricks"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "5724180340601130952",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-function-app-log-backup",
+    "groupNames": [
+     "Function App"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "6086471703095141050",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-virtual-machine-log-backup",
+    "groupNames": [
+     "Virtual Machine"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "15531685265383652230",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-virtual-machine-os-backup",
+    "groupNames": [
+     "Virtual Machine"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "13177076974070400497",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-application-gateway-intrusion-prevention",
+    "groupNames": [
+     "Application Gateway"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "9395896601104578631",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-application-gateway-log-backup",
+    "groupNames": [
+     "Application Gateway"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "8445399167356667007",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-application-gateway-network-encryption",
+    "groupNames": [
+     "Application Gateway"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "129804076375201535",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-cognitive-services-log-backup",
+    "groupNames": [
+     "Cognitive Services"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "5221641192647128415",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-cognitive-services-log-backupalllogs",
+    "groupNames": [
+     "Cognitive Services"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "12848364964453332954",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-datalake-analytics-log-backup",
+    "groupNames": [
+     "DataLakeAnalytics"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "11274735660678199640",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-network-security-groups-jitrdpdeny",
+    "groupNames": [
+     "Network Security Groups"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "7321019286675619603",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-network-security-groups-log-backup",
+    "groupNames": [
+     "Network Security Groups"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "7423722127409587799",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-stream-analytics-log-backup",
+    "groupNames": [
+     "Batch"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "4750184389426467008",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-virtual-network-log-backup",
+    "groupNames": [
+     "Virtual Network"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "15858980157560767004",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-virtual-network-network-accessibility",
+    "groupNames": [
+     "Virtual Network"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "10227419907500349417",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-cosmos-db-log-backup",
+    "groupNames": [
+     "Cosmos DB"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "8781558977304791548",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-cosmos-db-network-accessibility",
+    "groupNames": [
+     "Cosmos DB"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "6717158986536920901",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-cosmos-db-network-accessibilitydeny",
+    "groupNames": [
+     "Cosmos DB"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "1766714553296405051",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-data-factory-log-backup",
+    "groupNames": [
+     "Data Factory"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "11155081136089211942",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-datalake-store-log-backup",
+    "groupNames": [
+     "Data Lake Storage V1"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "9107350884952419966",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-datalake-store-storage-encryption",
+    "groupNames": [
+     "Data Lake Storage V1"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "5978185605288062339",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-datalakev2-account-network-encryption",
+    "groupNames": [
+     "Data Lake Storage V2"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "11162228508302833924",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-datalakev2-account-network-encryptiondeny",
+    "groupNames": [
+     "Data Lake Storage V2"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "17984655093706820811",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-datalakev2-account-public-access",
+    "groupNames": [
+     "Data Lake Storage V2"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "11284293646163398165",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-datalakev2-account-public-accessdeny",
+    "groupNames": [
+     "Data Lake Storage V2"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "12214203554254372428",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-datalakev2-intrusion-detection",
+    "groupNames": [
+     "Data Lake Storage V2"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "8571126747213858634",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-datalakev2-intrusion-detectiondeny",
+    "groupNames": [
+     "Data Lake Storage V2"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "8029797346556054894",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-mysql-log-backup",
+    "groupNames": [
+     "Mysql"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "17705201008285307241",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-postgresql-data-backup",
+    "groupNames": [
+     "PostgreSQL"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "3522804962726846200",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-postgresql-log-backup",
+    "groupNames": [
+     "PostgreSQL"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "5359131006849769009",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-postgresql-network-accessibility",
+    "groupNames": [
+     "PostgreSQL"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "7419174313632073837",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-postgresql-network-encryption",
+    "groupNames": [
+     "PostgreSQL"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "17448030499737747796",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-redis-cache-allowed-sku",
+    "groupNames": [
+     "Redis Cache"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "13382900335396969866",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-redis-cache-network-accessibility",
+    "groupNames": [
+     "Redis Cache"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "12150253675678285311",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-redis-cache-network-encryption",
+    "groupNames": [
+     "Redis Cache"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "10376985543031385720",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-database-allowed-sku",
+    "groupNames": [
+     "SQL Database"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "13866100757504624400",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-database-data-backup",
+    "groupNames": [
+     "SQL Database"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "10997593230863218817",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-database-log-backup",
+    "groupNames": [
+     "SQL Database"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "10232865219401005262",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-database-tde",
+    "groupNames": [
+     "SQL Database"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "1894085377549375517",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-database-tdedeny",
+    "groupNames": [
+     "SQL Database"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "3279543181826147482",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-managed-database-data-backup",
+    "groupNames": [
+     "SQL Managed Database"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "14376459584450275805",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-managed-database-data-backupdeny",
+    "groupNames": [
+     "SQL Managed Database"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "14035662151798297282",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-managed-server-ids",
+    "groupNames": [
+     "SQL Managed Server"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "11055477477998192541",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-managed-server-idsdeny",
+    "groupNames": [
+     "SQL Managed Server"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "7813725310284663414",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-managed-server-log-backup",
+    "groupNames": [
+     "SQL Managed Server"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "14772333771700334520",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-managed-server-network-accessibility",
+    "groupNames": [
+     "SQL Managed Server"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "8270537912697099576",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-managed-server-vulnerability-scan",
+    "groupNames": [
+     "SQL Managed Server"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "3748909562124555062",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-managed-server-vulnerability-scandeny",
+    "groupNames": [
+     "SQL Managed Server"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "15917697750041172675",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-server-audit-log-backup",
+    "groupNames": [
+     "SQL Server"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "14634017014864676397",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-server-intrusion-detection",
+    "groupNames": [
+     "SQL Server"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "17910529452414369292",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-server-intrusion-detectiondeny",
+    "groupNames": [
+     "SQL Server"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "8939990354309606019",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-server-network-accessibility",
+    "groupNames": [
+     "SQL Server"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "17967660335632176498",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-server-vulnerability-scan",
+    "groupNames": [
+     "SQL Server"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "1772394484154914171",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-sql-server-vulnerability-scandeny",
+    "groupNames": [
+     "SQL Server"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "9742358987999240800",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-synapse-analytics-log-backup",
+    "groupNames": [
+     "Synapse Analytics Database"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "17464777733509016347",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-synapse-analytics-tdedine",
+    "groupNames": [
+     "Synapse Analytics Database"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "10039294224038117045",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-synapse-analytics-tdedinedeny",
+    "groupNames": [
+     "Synapse Analytics Database"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "176446430832188329",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-key-vault-log-backup",
+    "groupNames": [
+     "Key Vault"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "3189837068231549294",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-key-vault-log-backupalllogs",
+    "groupNames": [
+     "Key Vault"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "17057785040558580051",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-key-vault-network-accessibility",
+    "groupNames": [
+     "Key Vault"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "14963513132306392077",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-storage-account-data-backup",
+    "groupNames": [
+     "Storage Account"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "12660263019576432770",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-storage-account-data-backupdeny",
+    "groupNames": [
+     "Storage Account"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "16875467459307529370",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-storage-account-filestorage-data-backup",
+    "groupNames": [
+     "Storage Account"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "17484456264377517581",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-storage-account-filestorage-data-backupdeny",
+    "groupNames": [
+     "Storage Account"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "9967030105940186406",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-storage-account-intrusion-detection",
+    "groupNames": [
+     "Storage Account"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "292173400048932426",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-storage-account-intrusion-detectiondeny",
+    "groupNames": [
+     "Storage Account"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "2650290542763096461",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-storage-account-network-encryption",
+    "groupNames": [
+     "Storage Account"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "16579201049870210173",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-storage-account-network-encryptiondeny",
+    "groupNames": [
+     "Storage Account"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "6352385840758060213",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-storage-account-public-access",
+    "groupNames": [
+     "Storage Account"
+    ]
+   },
+   {
+    "policyDefinitionReferenceId": "8029954308562804525",
+    "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyDefinitions/cleardata-storage-account-public-accessdeny",
+    "groupNames": [
+     "Storage Account"
+    ]
+   }
+  ],
+  "policyDefinitionGroups": [
+   {
+    "name": "Analysis Services",
+    "category": "Management Tool"
+   },
+   {
+    "name": "Resource Manager",
+    "category": "Management Tool"
+   },
+   {
+    "name": "Automation Accounts",
+    "category": "Management Tool"
+   },
+   {
+    "name": "Batch",
+    "category": "Management Tool"
+   },
+   {
+    "name": "Container Registry",
+    "category": "Management Tool"
+   },
+   {
+    "name": "DataExplorer",
+    "category": "Management Tool"
+   },
+   {
+    "name": "Event Hub",
+    "category": "Management Tool"
+   },
+   {
+    "name": "Logic App",
+    "category": "Management Tool"
+   },
+   {
+    "name": "Monitor",
+    "category": "Management Tool"
+   },
+   {
+    "name": "PowerBI Embedded",
+    "category": "Management Tool"
+   },
+   {
+    "name": "RecoveryServicesVault",
+    "category": "Management Tool"
+   },
+   {
+    "name": "Security Center",
+    "category": "Management Tool"
+   },
+   {
+    "name": "Service Bus",
+    "category": "Management Tool"
+   },
+   {
+    "name": "TrafficManager",
+    "category": "Management Tool"
+   },
+   {
+    "name": "App Service",
+    "category": "Compute"
+   },
+   {
+    "name": "Databricks",
+    "category": "Compute"
+   },
+   {
+    "name": "Function App",
+    "category": "Compute"
+   },
+   {
+    "name": "Virtual Machine",
+    "category": "Compute"
+   },
+   {
+    "name": "Application Gateway",
+    "category": "Network"
+   },
+   {
+    "name": "Cognitive Services",
+    "category": "Network"
+   },
+   {
+    "name": "DataLakeAnalytics",
+    "category": "Network"
+   },
+   {
+    "name": "Network Security Groups",
+    "category": "Network"
+   },
+   {
+    "name": "Virtual Network",
+    "category": "Network"
+   },
+   {
+    "name": "Cosmos DB",
+    "category": "Database"
+   },
+   {
+    "name": "Data Factory",
+    "category": "Database"
+   },
+   {
+    "name": "Data Lake Storage V1",
+    "category": "Database"
+   },
+   {
+    "name": "Data Lake Storage V2",
+    "category": "Database"
+   },
+   {
+    "name": "Mysql",
+    "category": "Database"
+   },
+   {
+    "name": "PostgreSQL",
+    "category": "Database"
+   },
+   {
+    "name": "Redis Cache",
+    "category": "Database"
+   },
+   {
+    "name": "SQL Database",
+    "category": "Database"
+   },
+   {
+    "name": "SQL Managed Database",
+    "category": "Database"
+   },
+   {
+    "name": "SQL Managed Server",
+    "category": "Database"
+   },
+   {
+    "name": "SQL Server",
+    "category": "Database"
+   },
+   {
+    "name": "Synapse Analytics Database",
+    "category": "Database"
+   },
+   {
+    "name": "Key Vault",
+    "category": "Storage"
+   },
+   {
+    "name": "Storage Account",
+    "category": "Storage"
+   },
+   {
+    "name": "Kubernetes",
+    "category": "AKS"
+   }
+  ]
+ },
+ "id": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policySetDefinitions/cleardata-hipaa-initiative",
+ "type": "Microsoft.Authorization/policySetDefinitions",
+ "name": "cleardata-hipaa-initiative"
+}

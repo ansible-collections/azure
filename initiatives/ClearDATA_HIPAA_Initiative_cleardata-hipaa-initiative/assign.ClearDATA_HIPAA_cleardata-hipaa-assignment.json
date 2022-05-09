@@ -1,0 +1,32 @@
+{
+ "sku": {
+  "name": "A0",
+  "tier": "Free"
+ },
+ "identity": {
+  "principalId": "07c94181-d7fc-40c8-81d0-ad955a1426d2",
+  "tenantId": "1a3204cc-a581-4f7f-ba4c-339683be8bbe",
+  "type": "SystemAssigned"
+ },
+ "properties": {
+  "displayName": "ClearDATA HIPAA",
+  "policyDefinitionId": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policySetDefinitions/cleardata-hipaa-initiative",
+  "scope": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc",
+  "notScopes": [],
+  "parameters": {},
+  "description": "This assignment contains ClearDATA healthcare compliance policy initiatives for Azure HIPAA services.",
+  "metadata": {
+   "category": "HIPAA",
+   "initiative": "HIPAA",
+   "createdBy": "d450f931-dfdc-443c-a274-5cce3839c1e4",
+   "createdOn": "2021-10-01T00:33:46.1052177Z",
+   "updatedBy": "d450f931-dfdc-443c-a274-5cce3839c1e4",
+   "updatedOn": "2022-05-09T06:13:52.3682427Z"
+  },
+  "enforcementMode": "Default"
+ },
+ "id": "/subscriptions/db42cf4b-fff5-46c1-8298-59a203d8b9fc/providers/Microsoft.Authorization/policyAssignments/cleardata-hipaa-assignment",
+ "type": "Microsoft.Authorization/policyAssignments",
+ "name": "cleardata-hipaa-assignment",
+ "location": "eastus"
+}
