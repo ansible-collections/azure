@@ -332,13 +332,9 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from msrest.serialization import Model
-    from azure.mgmt.web.models import (
-        site_config, app_service_plan, Site,
-        AppServicePlan, SkuDescription, NameValuePair
-    )
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
+    from azure.mgmt.web.models import Site, AppServicePlan, SkuDescription, NameValuePair, SiteSourceControl
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -889,20 +885,19 @@ class AzureRMWebApps(AzureRMModuleBase):
             skip_dns_registration = self.dns_registration
             force_dns_registration = None if self.dns_registration is None else not self.dns_registration
 
-            response = self.web_client.web_apps.create_or_update(resource_group_name=self.resource_group,
-                                                                 name=self.name,
-                                                                 site_envelope=self.site,
-                                                                 skip_dns_registration=skip_dns_registration,
-                                                                 skip_custom_domain_verification=self.skip_custom_domain_verification,
-                                                                 force_dns_registration=force_dns_registration,
-                                                                 ttl_in_seconds=self.ttl_in_seconds)
+            response = self.web_client.web_apps.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                       name=self.name,
+                                                                       site_envelope=self.site,
+                                                                       skip_dns_registration=skip_dns_registration,
+                                                                       skip_custom_domain_verification=self.skip_custom_domain_verification,
+                                                                       force_dns_registration=force_dns_registration,
+                                                                       ttl_in_seconds=self.ttl_in_seconds)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Web App instance.')
-            self.fail(
-                "Error creating the Web App instance: {0}".format(str(exc)))
+            self.fail("Error creating the Web App instance: {0}".format(str(exc)))
         return webapp_to_dict(response)
 
     def delete_webapp(self):
@@ -913,12 +908,10 @@ class AzureRMWebApps(AzureRMModuleBase):
         '''
         self.log("Deleting the Web App instance {0}".format(self.name))
         try:
-            response = self.web_client.web_apps.delete(resource_group_name=self.resource_group,
-                                                       name=self.name)
-        except CloudError as e:
+            self.web_client.web_apps.delete(resource_group_name=self.resource_group, name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the Web App instance.')
-            self.fail(
-                "Error deleting the Web App instance: {0}".format(str(e)))
+            self.fail("Error deleting the Web App instance: {0}".format(str(e)))
 
         return True
 
@@ -934,20 +927,18 @@ class AzureRMWebApps(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.web_client.web_apps.get(resource_group_name=self.resource_group,
-                                                    name=self.name)
+            response = self.web_client.web_apps.get(resource_group_name=self.resource_group, name=self.name)
 
-            # Newer SDK versions (0.40.0+) seem to return None if it doesn't exist instead of raising CloudError
+            # Newer SDK versions (0.40.0+) seem to return None if it doesn't exist instead of raising error
             if response is not None:
                 self.log("Response : {0}".format(response))
                 self.log("Web App instance : {0} found".format(response.name))
                 return webapp_to_dict(response)
 
-        except CloudError as ex:
+        except ResourceNotFoundError:
             pass
 
-        self.log("Didn't find web app {0} in resource group {1}".format(
-            self.name, self.resource_group))
+        self.log("Didn't find web app {0} in resource group {1}".format(self.name, self.resource_group))
 
         return False
 
@@ -963,13 +954,13 @@ class AzureRMWebApps(AzureRMModuleBase):
                 resource_group_name=self.plan['resource_group'],
                 name=self.plan['name'])
 
-            # Newer SDK versions (0.40.0+) seem to return None if it doesn't exist instead of raising CloudError
+            # Newer SDK versions (0.40.0+) seem to return None if it doesn't exist instead of raising error
             if response is not None:
                 self.log("Response : {0}".format(response))
                 self.log("App Service Plan : {0} found".format(response.name))
 
                 return appserviceplan_to_dict(response)
-        except CloudError as ex:
+        except ResourceNotFoundError:
             pass
 
         self.log("Didn't find app service plan {0} in resource group {1}".format(
@@ -993,8 +984,8 @@ class AzureRMWebApps(AzureRMModuleBase):
             plan_def = AppServicePlan(
                 location=self.plan['location'], app_service_plan_name=self.plan['name'], sku=sku_def, reserved=(self.plan.get('is_linux', None)))
 
-            poller = self.web_client.app_service_plans.create_or_update(
-                self.plan['resource_group'], self.plan['name'], plan_def)
+            poller = self.web_client.app_service_plans.begin_create_or_update(
+                resource_group_name=self.plan['resource_group'], name=self.plan['name'], app_service_plan=plan_def)
 
             if isinstance(poller, LROPoller):
                 response = self.get_poller_result(poller)
@@ -1002,7 +993,7 @@ class AzureRMWebApps(AzureRMModuleBase):
             self.log("Response : {0}".format(response))
 
             return appserviceplan_to_dict(response)
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to create app service plan {0} in resource group {1}: {2}".format(
                 self.plan['name'], self.plan['resource_group'], str(ex)))
 
@@ -1014,13 +1005,11 @@ class AzureRMWebApps(AzureRMModuleBase):
         self.log("List application setting")
 
         try:
-
-            response = self.web_client.web_apps.list_application_settings(
-                resource_group_name=self.resource_group, name=self.name)
+            response = self.web_client.web_apps.list_application_settings(resource_group_name=self.resource_group, name=self.name)
             self.log("Response : {0}".format(response))
 
             return response.properties
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to list application settings for web app {0} in resource group {1}: {2}".format(
                 self.name, self.resource_group, str(ex)))
 
@@ -1033,11 +1022,11 @@ class AzureRMWebApps(AzureRMModuleBase):
 
         try:
             response = self.web_client.web_apps.update_application_settings(
-                resource_group_name=self.resource_group, name=self.name, properties=self.app_settings_strDic)
+                resource_group_name=self.resource_group, name=self.name, app_settings=self.app_settings_strDic)
             self.log("Response : {0}".format(response))
 
             return response
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to update application settings for web app {0} in resource group {1}: {2}".format(
                 self.name, self.resource_group, str(ex)))
 
@@ -1055,12 +1044,16 @@ class AzureRMWebApps(AzureRMModuleBase):
         self.deployment_source['is_mercurial'] = False
 
         try:
-            response = self.web_client.web_client.create_or_update_source_control(
-                self.resource_group, self.name, self.deployment_source)
+            site_source_control = SiteSourceControl(
+                repo_url=self.deployment_source.get('url'),
+                branch=self.deployment_source.get('branch')
+            )
+            response = self.web_client.web_apps.begin_create_or_update_source_control(
+                resource_group_name=self.resource_group, name=self.name, site_source_control=site_source_control)
             self.log("Response : {0}".format(response))
 
             return response.as_dict()
-        except CloudError as ex:
+        except Exception:
             self.fail("Failed to update site source control for web app {0} in resource group {1}".format(
                 self.name, self.resource_group))
 
@@ -1072,13 +1065,12 @@ class AzureRMWebApps(AzureRMModuleBase):
         self.log("Get web app configuration")
 
         try:
-
             response = self.web_client.web_apps.get_configuration(
                 resource_group_name=self.resource_group, name=self.name)
             self.log("Response : {0}".format(response))
 
             return response
-        except CloudError as ex:
+        except ResourceNotFoundError as ex:
             self.log("Failed to get configuration for web app {0} in resource group {1}: {2}".format(
                 self.name, self.resource_group, str(ex)))
 
@@ -1102,7 +1094,7 @@ class AzureRMWebApps(AzureRMModuleBase):
             self.log("Response : {0}".format(response))
 
             return response
-        except CloudError as ex:
+        except Exception as ex:
             request_id = ex.request_id if ex.request_id else ''
             self.log("Failed to {0} web app {1} in resource group {2}, request_id {3} - {4}".format(
                 appstate, self.name, self.resource_group, request_id, str(ex)))
