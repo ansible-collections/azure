@@ -119,6 +119,7 @@ parameters:
     - "azure_rm_webappvnetconnection"
     - "azure_rm_webappaccessrestriction"
     - "azure_rm_workspace"
+    - "azure_rm_datafactory"
     - "inventory_azure"
     - "setup_azure"
 
