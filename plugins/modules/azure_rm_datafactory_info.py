@@ -62,7 +62,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-datafactory:
+state:
     description:
         - Current state fo the data factory.
     returned: always
