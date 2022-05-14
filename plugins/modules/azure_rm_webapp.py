@@ -320,7 +320,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-azure_webapp:
+id:
     description:
         - ID of current web app.
     returned: always
