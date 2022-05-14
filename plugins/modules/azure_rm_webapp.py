@@ -162,20 +162,6 @@ options:
             - Configures web site to accept only https requests.
         type: bool
 
-    dns_registration:
-        description:
-            - Whether or not the web app hostname is registered with DNS on creation. Set to C(false) to register.
-        type: bool
-
-    skip_custom_domain_verification:
-        description:
-            - Whether or not to skip verification of custom (non *.azurewebsites.net) domains associated with web app. Set to C(true) to skip.
-        type: bool
-
-    ttl_in_seconds:
-        description:
-            - Time to live in seconds for web app default domain name.
-
     app_settings:
         description:
             - Configure web app application settings. Suboptions are in key value pair format.
@@ -334,7 +320,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from azure.mgmt.web.models import Site, AppServicePlan, SkuDescription, NameValuePair, SiteSourceControl
+    from azure.mgmt.web.models import Site, AppServicePlan, SkuDescription, NameValuePair, SiteSourceControl, StringDictionary
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -487,17 +473,8 @@ class AzureRMWebApps(AzureRMModuleBase):
                 type='bool',
                 default=True
             ),
-            dns_registration=dict(
-                type='bool'
-            ),
             https_only=dict(
                 type='bool'
-            ),
-            skip_custom_domain_verification=dict(
-                type='bool'
-            ),
-            ttl_in_seconds=dict(
-                type='int'
             ),
             app_settings=dict(
                 type='dict'
@@ -526,9 +503,6 @@ class AzureRMWebApps(AzureRMModuleBase):
 
         # update in create_or_update as parameters
         self.client_affinity_enabled = True
-        self.dns_registration = None
-        self.skip_custom_domain_verification = None
-        self.ttl_in_seconds = None
         self.https_only = None
 
         self.tags = None
@@ -574,10 +548,7 @@ class AzureRMWebApps(AzureRMModuleBase):
 
         # updatable_properties
         self.updatable_properties = ["client_affinity_enabled",
-                                     "force_dns_registration",
-                                     "https_only",
-                                     "skip_custom_domain_verification",
-                                     "ttl_in_seconds"]
+                                     "https_only"]
 
         self.supported_linux_frameworks = ['ruby', 'php', 'dotnetcore', 'node', 'java']
         self.supported_windows_frameworks = ['net_framework', 'php', 'python', 'node', 'java']
@@ -882,16 +853,9 @@ class AzureRMWebApps(AzureRMModuleBase):
             "Creating / Updating the Web App instance {0}".format(self.name))
 
         try:
-            skip_dns_registration = self.dns_registration
-            force_dns_registration = None if self.dns_registration is None else not self.dns_registration
-
             response = self.web_client.web_apps.begin_create_or_update(resource_group_name=self.resource_group,
                                                                        name=self.name,
-                                                                       site_envelope=self.site,
-                                                                       skip_dns_registration=skip_dns_registration,
-                                                                       skip_custom_domain_verification=self.skip_custom_domain_verification,
-                                                                       force_dns_registration=force_dns_registration,
-                                                                       ttl_in_seconds=self.ttl_in_seconds)
+                                                                       site_envelope=self.site)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -1021,8 +985,11 @@ class AzureRMWebApps(AzureRMModuleBase):
         self.log("Update application setting")
 
         try:
+            settings = StringDictionary(
+                properties=self.app_settings_strDic
+            )
             response = self.web_client.web_apps.update_application_settings(
-                resource_group_name=self.resource_group, name=self.name, app_settings=self.app_settings_strDic)
+                resource_group_name=self.resource_group, name=self.name, app_settings=settings)
             self.log("Response : {0}".format(response))
 
             return response

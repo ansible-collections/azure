@@ -240,6 +240,7 @@ webapps:
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
+    from azure.mgmt.web.models import CsmPublishingProfileOptions
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -387,7 +388,12 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
 
         url = None
         try:
-            content = self.web_client.web_apps.list_publishing_profile_xml_with_secrets(resource_group_name=resource_group, name=name)
+            publishing_profile_options = CsmPublishingProfileOptions(
+                format="Ftp"
+            )
+            content = self.web_client.web_apps.list_publishing_profile_xml_with_secrets(resource_group_name=resource_group,
+                                                                                        name=name,
+                                                                                        publishing_profile_options=publishing_profile_options)
             if not content:
                 return url
 
@@ -403,8 +409,8 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
                 if profile['@publishMethod'] == 'FTP':
                     url = profile['@publishUrl']
 
-        except Exception:
-            self.fail('Error getting web app {0} app settings'.format(name))
+        except Exception as ex:
+            self.fail('Error getting web app {0} app settings - {1}'.format(name, str(ex)))
 
         return url
 

@@ -229,7 +229,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from azure.mgmt.web.models import Site, NameValuePair, SiteSourceControl, CsmSlotEntity
+    from azure.mgmt.web.models import Site, NameValuePair, SiteSourceControl, CsmSlotEntity, StringDictionary
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -846,11 +846,13 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
         if app_settings is None:
             app_settings = self.app_settings_strDic
         try:
+            settings = StringDictionary(
+                properties=self.app_settings
+            )
             response = self.web_client.web_apps.update_application_settings_slot(resource_group_name=self.resource_group,
                                                                                  name=self.webapp_name,
                                                                                  slot=slot_name,
-                                                                                 kind=None,
-                                                                                 properties=app_settings)
+                                                                                 app_settings=settings)
             self.log("Response : {0}".format(response))
 
             return response.as_dict()
