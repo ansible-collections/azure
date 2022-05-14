@@ -108,6 +108,11 @@ from ansible.plugins.lookup import LookupBase
 from ansible.utils.display import Display
 try:
     import requests
+    import logging
+    from azure.common.credentials import ServicePrincipalCredentials
+    from azure.keyvault import KeyVaultClient
+    from msrest.exceptions import AuthenticationError, ClientRequestError
+    from azure.keyvault.models.key_vault_error import KeyVaultErrorException
 except ImportError:
     pass
 
@@ -142,17 +147,8 @@ except Exception:
 
 
 def lookup_secret_non_msi(terms, vault_url, kwargs):
-    import logging
     logging.getLogger('msrestazure.azure_active_directory').addHandler(logging.NullHandler())
     logging.getLogger('msrest.service_client').addHandler(logging.NullHandler())
-
-    try:
-        from azure.common.credentials import ServicePrincipalCredentials
-        from azure.keyvault import KeyVaultClient
-        from msrest.exceptions import AuthenticationError, ClientRequestError
-        from azure.keyvault.models.key_vault_error import KeyVaultErrorException
-    except ImportError:
-        raise AnsibleError('The azure_keyvault_secret lookup plugin requires azure.keyvault and azure.common.credentials to be installed.')
 
     client_id = kwargs.pop('client_id', None)
     secret = kwargs.pop('secret', None)

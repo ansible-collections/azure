@@ -119,6 +119,7 @@ parameters:
     - "azure_rm_webappvnetconnection"
     - "azure_rm_webappaccessrestriction"
     - "azure_rm_workspace"
+    - "azure_rm_datafactory"
     - "inventory_azure"
     - "setup_azure"
 
@@ -153,7 +154,7 @@ jobs:
 
   - job: RunTests
     dependsOn: CreateResourceGroups
-    timeoutInMinutes: 90
+    timeoutInMinutes: 120
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
