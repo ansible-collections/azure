@@ -268,7 +268,7 @@ class AzureRMFunctionApp(AzureRMModuleBase):
                 if self.container_settings.get('registry_server_password'):
                     self.app_settings['DOCKER_REGISTRY_SERVER_PASSWORD'] = self.container_settings.get('registry_server_password')
 
-            if not self.plan and function_app:
+            if not self.plan and exists:
                 self.plan = function_app.server_farm_id
 
             if not exists:
