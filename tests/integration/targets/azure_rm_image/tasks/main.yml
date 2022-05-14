@@ -42,7 +42,7 @@
   azure_rm_virtualmachine:
       resource_group: "{{ resource_group }}"
       name: "{{ vm_name }}"
-      vm_size: Standard_A0
+      vm_size: Standard_B1ms
       managed_disk_type: Standard_LRS
       admin_username: adminuser
       ssh_password_enabled: false
@@ -72,6 +72,7 @@
       source: "{{ vm.ansible_facts.azure_vm.properties.storageProfile.osDisk.managedDisk.id }}"
       name: testimage001
       os_type: Linux
+      hyper_v_generation: V1
       data_disk_sources:
           - "{{ empty_disk_name }}"
   check_mode: yes
@@ -87,6 +88,7 @@
         name: "{{ vm_name }}"
         type: disks
       name: testimage001
+      hyper_v_generation: V1
       os_type: Linux
   register: output
 
@@ -100,6 +102,7 @@
       resource_group: "{{ resource_group }}"
       source: "{{ vm.ansible_facts.azure_vm.properties.storageProfile.osDisk.managedDisk.id }}"
       name: testimage001
+      hyper_v_generation: V1
       os_type: Linux
   register: output
 
@@ -117,6 +120,7 @@
 - assert:
       that:
           - output.images != []
+          - output.images[0].hyper_v_generation == 'V1'
 
 - name: Delete image (check mode)
   azure_rm_image:

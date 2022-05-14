@@ -1,0 +1,76 @@
+- name: Create data factory name
+  set_fact:
+    name: "df{{ resource_group | hash('md5') | truncate(21, True, '') }}"
+
+- name: Create data factory (Checkmode)
+  azure_rm_datafactory:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    public_network_access: Enabled
+    tags:
+      key1: value1
+  check_mode: True
+
+- name: Create data factory 
+  azure_rm_datafactory:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    public_network_access: Enabled
+    tags:
+      key1: value1
+  register: output
+
+- assert:
+    that:
+      - output.changed
+
+- name: Create data factory again (Idempotent test)
+  azure_rm_datafactory:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    public_network_access: Enabled
+    tags:
+      key1: value1
+  register: output
+
+- assert:
+    that:
+      - not output.changed
+
+- name: Update data factory
+  azure_rm_datafactory:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    public_network_access: Disabled
+    tags:
+      key1: value1
+      key2: value2
+  register: output
+
+- assert:
+    that:
+      - output.changed
+
+- name: Get data factory info
+  azure_rm_datafactory_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+  register: output
+
+- name: Assert status succeed and result match expectations
+  assert:
+    that:
+      - output.datafactory[0].tags | length == 2
+      - output.datafactory[0].public_network_access == 'Disabled'
+
+        
+- name: Delete data factory
+  azure_rm_datafactory:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
+    state: absent
+  register: output
+
+- assert:
+    that:
+      - output.changed
