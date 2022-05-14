@@ -26,6 +26,7 @@
     - "{{ storage_account_name_default }}"
     - "{{ storage_account_name_explicit }}"
     - "{{ storage_account_name_default }}02"
+    - "{{ storage_account_name_default }}03"
 
 - name: Create new storage account with defaults (omitted parameters)
   azure_rm_storageaccount:
@@ -264,6 +265,40 @@
       - output.failed
       - output.msg is regex('custom domain name could not be verified')
 
+- name: Create storage account with no public access
+  azure_rm_storageaccount:
+    name: "{{ storage_account_name_explicit }}03"
+    resource_group: "{{ resource_group }}"
+    account_type: Standard_LRS
+    https_only: true
+    minimum_tls_version: 'TLS1_2'
+    allow_blob_public_access: false
+    public_network_access: 'Disabled'
+  register: output
+- name: Assert desired account config
+  assert:
+    that:
+      - output.changed
+      - output.state.https_only
+      - output.state.minimum_tls_version == 'TLS1_2'
+      - not output.state.allow_blob_public_access
+      - output.state.public_network_access == 'Disabled'
+
+- name: Create storage account with no public access (idempotent)
+  azure_rm_storageaccount:
+    name: "{{ storage_account_name_explicit }}03"
+    resource_group: "{{ resource_group }}"
+    account_type: Standard_LRS
+    https_only: true
+    minimum_tls_version: 'TLS1_2'
+    allow_blob_public_access: false
+    public_network_access: 'Disabled'
+  register: output
+- name: Assert no change
+  assert:
+    that:
+      - not output.changed
+
 - name: Gather facts by tags
   azure_rm_storageaccount_info:
     resource_group: "{{ resource_group }}"
@@ -328,3 +363,4 @@
     - "{{ storage_account_name_default }}"
     - "{{ storage_account_name_default }}02"
     - "{{ storage_account_name_explicit }}"
+    - "{{ storage_account_name_explicit }}03"
