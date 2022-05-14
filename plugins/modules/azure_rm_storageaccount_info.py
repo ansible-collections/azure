@@ -168,6 +168,24 @@ storageaccounts:
             returned: always
             type: bool
             sample: false
+        minimum_tls_version:
+            description:
+                -  The minimum TLS version permitted on requests to storage.
+            returned: always
+            type: str
+            sample: TLS1_2
+        public_network_access:
+            description:
+                -  Public network access to Storage Account allowed or disallowed.
+            returned: always
+            type: str
+            sample: Enabled
+        allow_blob_public_access:
+            description:
+                -  Public access to all blobs or containers in the storage account allowed or disallowed.
+            returned: always
+            type: bool
+            sample: true
         network_acls:
             description:
                 - A set of firewall and virtual network rules
@@ -525,7 +543,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                                  if account_obj.status_of_secondary is not None else None),
             primary_location=account_obj.primary_location,
             https_only=account_obj.enable_https_traffic_only,
-            minimum_tls_version=account_obj.minimum_tls_version,  # todo add doc
+            minimum_tls_version=account_obj.minimum_tls_version,
             public_network_access=account_obj.public_network_access,
             allow_blob_public_access=account_obj.allow_blob_public_access
         )
