@@ -219,7 +219,7 @@ options:
         description:
             - When true this limits the scale set to a single placement group, of max size 100 virtual machines.
         type: bool
-        default: True
+        default: False
     plan:
         description:
             - Third-party billing plan for the VM.
@@ -266,12 +266,12 @@ options:
         description:
             - Fault Domain count for each placement group.
         type: int
+        default: 1
     orchestration_mode:
         description:
             - Specifies the orchestration mode for the virtual machine scale set.
             - When I(orchestration_mode=Flexible), I(public_ip_per_vm=True) must be set.
             - When I(orchestration_mode=Flexible), I(platform_fault_domain_count) must be set.
-            - When I(orchestration_mode=Flexible), I(single_placement_group=Flase) must be set.
             - When I(orchestration_mode=Flexible), it cannot be configured I(overprovision).
             - When I(orchestration_mode=Flexible), it cannot be configured I(upgrade_policy) and configured when I(orchestration_mode=Uniform)..
         type: str
@@ -574,7 +574,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             enable_accelerated_networking=dict(type='bool'),
             security_group=dict(type='raw', aliases=['security_group_name']),
             overprovision=dict(type='bool'),
-            single_placement_group=dict(type='bool', default=True),
+            single_placement_group=dict(type='bool', default=False),
             zones=dict(type='list'),
             custom_data=dict(type='str'),
             plan=dict(type='dict', options=dict(publisher=dict(type='str', required=True),
@@ -584,7 +584,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             terminate_event_timeout_minutes=dict(type='int'),
             ephemeral_os_disk=dict(type='bool'),
             orchestration_mode=dict(type='str', choices=['Uniform', 'Flexible']),
-            platform_fault_domain_count=dict(type='int')
+            platform_fault_domain_count=dict(type='int', default=1)
         )
 
         self.resource_group = None
@@ -618,7 +618,6 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         self.enable_accelerated_networking = None
         self.security_group = None
         self.overprovision = None
-        self.single_placement_group = None
         self.zones = None
         self.custom_data = None
         self.plan = None
@@ -626,7 +625,6 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         self.terminate_event_timeout_minutes = None
         self.ephemeral_os_disk = None
         self.orchestration_mode = None
-        self.platform_fault_domain_count = None
 
         mutually_exclusive = [('load_balancer', 'application_gateway')]
         self.results = dict(
