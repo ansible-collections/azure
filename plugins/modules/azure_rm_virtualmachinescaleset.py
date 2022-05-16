@@ -219,7 +219,7 @@ options:
         description:
             - When true this limits the scale set to a single placement group, of max size 100 virtual machines.
         type: bool
-        default: False
+        default: True
     plan:
         description:
             - Third-party billing plan for the VM.
@@ -272,6 +272,7 @@ options:
             - Specifies the orchestration mode for the virtual machine scale set.
             - When I(orchestration_mode=Flexible), I(public_ip_per_vm=True) must be set.
             - When I(orchestration_mode=Flexible), I(platform_fault_domain_count) must be set.
+            - When I(orchestration_mode=Flexible), I(single_placement_group=Flase) must be set.
             - When I(orchestration_mode=Flexible), it cannot be configured I(overprovision).
             - When I(orchestration_mode=Flexible), it cannot be configured I(upgrade_policy) and configured when I(orchestration_mode=Uniform)..
         type: str
@@ -574,7 +575,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             enable_accelerated_networking=dict(type='bool'),
             security_group=dict(type='raw', aliases=['security_group_name']),
             overprovision=dict(type='bool'),
-            single_placement_group=dict(type='bool', default=False),
+            single_placement_group=dict(type='bool', default=True),
             zones=dict(type='list'),
             custom_data=dict(type='str'),
             plan=dict(type='dict', options=dict(publisher=dict(type='str', required=True),
