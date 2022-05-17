@@ -891,12 +891,12 @@ class AzureRMModuleBase(object):
         # Some management clients do not take a subscription ID as parameters.
         if suppress_subscription_id:
             if is_track2:
-                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, base_url=base_url)
+                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, base_url=base_url, credential_scopes=[base_url + ".default"])
             else:
                 client_kwargs = dict(credentials=self.azure_auth.azure_credentials, base_url=base_url)
         else:
             if is_track2:
-                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, subscription_id=mgmt_subscription_id, base_url=base_url)
+                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, subscription_id=mgmt_subscription_id, base_url=base_url, credential_scopes=[base_url + ".default"])
             else:
                 client_kwargs = dict(credentials=self.azure_auth.azure_credentials, subscription_id=mgmt_subscription_id, base_url=base_url)
 

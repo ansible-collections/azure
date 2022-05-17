@@ -176,12 +176,13 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
         return self.results
 
     def get_keyvault_client(self):
+        kv_url = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
         # Don't use MSI credentials if the auth_source isn't set to MSI.  The below will Always result in credentials when running on an Azure VM.
         if self.module.params['auth_source'] == 'msi':
             try:
                 self.log("Get KeyVaultClient from MSI")
                 resource = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
-                credentials = MSIAuthentication(resource="https://{0}".format(resource))
+                credentials = MSIAuthentication(resource="https://{0}".format(kv_url))
                 return KeyVaultClient(credentials)
             except Exception:
                 self.log("Get KeyVaultClient from service principal")
@@ -189,7 +190,7 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
             try:
                 profile = get_cli_profile()
                 credentials, subscription_id, tenant = profile.get_login_credentials(
-                    subscription_id=self.credentials['subscription_id'], resource="https://vault.azure.net")
+                    subscription_id=self.credentials['subscription_id'], resource="https://{0}".format(kv_url))
                 return KeyVaultClient(credentials)
             except Exception as exc:
                 self.log("Get KeyVaultClient from service principal")
@@ -209,7 +210,7 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
                 secret=self.credentials['secret'],
                 tenant=tenant,
                 cloud_environment=self._cloud_environment,
-                resource="https://vault.azure.net")
+                resource="https://{0}".format(kv_url))
 
             token = authcredential.token
             return token['token_type'], token['access_token']
