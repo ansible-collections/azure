@@ -184,6 +184,25 @@ options:
                 type: list
                 elements: str
                 required: true
+    static_website:
+        description:
+            - Manage static website configuration for the storage account.
+        type: dict
+        version_added: "1.12.0"
+        suboptions:
+            enabled:
+                description:
+                    - Indicates whether this account is hosting a static website.
+                type: bool
+                default: false
+            index_document:
+                description:
+                    - The default name of the index page under each directory.
+                type: str
+            error_document404_path:
+                description:
+                    - The absolute path of the custom 404 page.
+                type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -401,6 +420,31 @@ state:
             returned: always
             type: str
             sample: "Microsoft.Storage/storageAccounts"
+        static_website:
+            description:
+                - Static website configuration for the storage account.
+            returned: always
+            version_added: "1.12.0"
+            type: complex
+            contains:
+                enabled:
+                    description:
+                        - Whether this account is hosting a static website.
+                    returned: always
+                    type: bool
+                    sample: true
+                index_document:
+                    description:
+                        - The default name of the index page under each directory.
+                    returned: always
+                    type: str
+                    sample: index.html
+                error_document404_path:
+                    description:
+                        - The absolute path of the custom 404 page.
+                    returned: always
+                    type: str
+                    sample: error.html
 '''
 
 try:
@@ -420,6 +464,12 @@ cors_rule_spec = dict(
     max_age_in_seconds=dict(type='int', required=True),
     exposed_headers=dict(type='list', elements='str', required=True),
     allowed_headers=dict(type='list', elements='str', required=True),
+)
+
+static_website_spec = dict(
+    enabled=dict(type='bool', default=False),
+    index_document=dict(type='str'),
+    error_document404_path=dict(type='str'),
 )
 
 
@@ -463,7 +513,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             minimum_tls_version=dict(type='str', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
             allow_blob_public_access=dict(type='bool'),
             network_acls=dict(type='dict'),
-            blob_cors=dict(type='list', options=cors_rule_spec, elements='dict')
+            blob_cors=dict(type='list', options=cors_rule_spec, elements='dict'),
+            static_website=dict(type='dict', options=static_website_spec),
         )
 
         self.results = dict(
@@ -487,6 +538,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.allow_blob_public_access = None
         self.network_acls = None
         self.blob_cors = None
+        self.static_website = None
 
         super(AzureRMStorageAccount, self).__init__(self.module_arg_spec,
                                                     supports_check_mode=True)
@@ -540,7 +592,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.log('Checking name availability for {0}'.format(self.name))
         try:
             account_name = self.storage_models.StorageAccountCheckNameAvailabilityParameters(name=self.name)
-            response = self.storage_client.storage_accounts.check_name_availability(account_name)
+            self.storage_client.storage_accounts.check_name_availability(account_name)
         except Exception as e:
             self.log('Error attempting to validate name.')
             self.fail("Error checking name availability: {0}".format(str(e)))
@@ -548,21 +600,23 @@ class AzureRMStorageAccount(AzureRMModuleBase):
     def get_account(self):
         self.log('Get properties for account {0}'.format(self.name))
         account_obj = None
-        blob_service_props = None
+        blob_mgmt_props = None
+        blob_client_props = None
         account_dict = None
 
         try:
             account_obj = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name)
-            blob_service_props = self.storage_client.blob_services.get_service_properties(self.resource_group, self.name)
+            blob_mgmt_props = self.storage_client.blob_services.get_service_properties(self.resource_group, self.name)
+            blob_client_props = self.get_blob_service_client(self.resource_group, self.name).get_service_properties()
         except Exception:
             pass
 
         if account_obj:
-            account_dict = self.account_obj_to_dict(account_obj, blob_service_props)
+            account_dict = self.account_obj_to_dict(account_obj, blob_mgmt_props, blob_client_props)
 
         return account_dict
 
-    def account_obj_to_dict(self, account_obj, blob_service_props=None):
+    def account_obj_to_dict(self, account_obj, blob_mgmt_props=None, blob_client_props=None):
         account_dict = dict(
             id=account_obj.id,
             name=account_obj.name,
@@ -606,14 +660,22 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         account_dict['tags'] = None
         if account_obj.tags:
             account_dict['tags'] = account_obj.tags
-        if blob_service_props and blob_service_props.cors and blob_service_props.cors.cors_rules:
+        if blob_mgmt_props and blob_mgmt_props.cors and blob_mgmt_props.cors.cors_rules:
             account_dict['blob_cors'] = [dict(
                 allowed_origins=[to_native(y) for y in x.allowed_origins],
                 allowed_methods=[to_native(y) for y in x.allowed_methods],
                 max_age_in_seconds=x.max_age_in_seconds,
                 exposed_headers=[to_native(y) for y in x.exposed_headers],
                 allowed_headers=[to_native(y) for y in x.allowed_headers]
-            ) for x in blob_service_props.cors.cors_rules]
+            ) for x in blob_mgmt_props.cors.cors_rules]
+
+        if blob_client_props and blob_client_props['static_website']:
+            static_website = blob_client_props['static_website']
+            account_dict['static_website'] = dict(
+                enabled=static_website.enabled,
+                index_document=static_website.index_document,
+                error_document404_path=static_website.error_document404_path,
+            )
 
         account_dict['network_acls'] = None
         if account_obj.network_rule_set:
@@ -785,6 +847,11 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             if not self.check_mode:
                 self.set_blob_cors()
 
+        if self.static_website and self.static_website != self.account_dict.get("static_website", dict()):
+            self.results['changed'] = True
+            self.account_dict['static_website'] = self.static_website
+            self.update_static_website()
+
     def create_account(self):
         self.log("Creating account {0}".format(self.name))
 
@@ -809,7 +876,6 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 enable_https_traffic_only=self.https_only,
                 minimum_tls_version=self.minimum_tls_version,
                 allow_blob_public_access=self.allow_blob_public_access,
-                networks_acls=dict(),
                 tags=dict()
             )
             if self.tags:
@@ -818,6 +884,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 account_dict['network_acls'] = self.network_acls
             if self.blob_cors:
                 account_dict['blob_cors'] = self.blob_cors
+            if self.static_website:
+                account_dict['static_website'] = self.static_website
             return account_dict
         sku = self.storage_models.Sku(name=self.storage_models.SkuName(self.account_type))
         sku.tier = self.storage_models.SkuTier.standard if 'Standard' in self.account_type else \
@@ -842,7 +910,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             self.set_network_acls()
         if self.blob_cors:
             self.set_blob_cors()
-        # the poller doesn't actually return anything
+        if self.static_website:
+            self.update_static_website()
         return self.get_account()
 
     def delete_account(self):
@@ -886,6 +955,12 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                      self.storage_models.BlobServiceProperties(cors=cors_rules))
         except Exception as exc:
             self.fail("Failed to set CORS rules: {0}".format(str(exc)))
+
+    def update_static_website(self):
+        try:
+            self.get_blob_service_client(self.resource_group, self.name).set_service_properties(static_website=self.static_website)
+        except Exception as exc:
+            self.fail("Failed to set static website config: {0}".format(str(exc)))
 
     def set_network_acls(self):
         try:
