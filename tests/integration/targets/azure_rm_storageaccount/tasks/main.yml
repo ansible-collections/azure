@@ -379,7 +379,6 @@
     show_connection_string: True
     show_blob_cors: True
   register: output
-
 - assert:
     that:
       - "output.storageaccounts | length == 1"
@@ -393,6 +392,20 @@
       - output.storageaccounts[0].network_acls.bypass == "AzureServices"
       - output.storageaccounts[0].network_acls.default_action == "Deny"
       - output.storageaccounts[0].network_acls.ip_rules | length == 1
+
+- name: Gather static website properties
+  azure_rm_storageaccount_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}01"
+  register: output
+- assert:
+    that:
+      - output.storageaccounts | length == 1
+      - output.storageaccounts[0].static_website is defined
+      - output.storageaccounts[0].static_website.enabled
+      - output.storageaccounts[0].static_website.index_document == 'index.html'
+      - output.storageaccounts[0].static_website.error_document404_path == 'error.html'
+
 - name: List storage accounts by resource group.
   azure_rm_storageaccount_info:
     resource_group: "{{ resource_group }}"
