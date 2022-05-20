@@ -1,6 +1,7 @@
 - name: Set Private Link Service Names
   set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+    azure_subscription_id: f64d4ee8-be94-457d-ba26-3fa6b6506cef
 
 - name: Delete the private link service
   azure_rm_privatelinkservice:
@@ -155,7 +156,6 @@
 - assert:
     that: not output.changed
 
-
 - name: Update private link service
   azure_rm_privatelinkservice:
     name: "lsp{{ rpfx }}"
@@ -200,6 +200,76 @@
       - output.link_service[0].fqdns | length == 4
       - output.link_service[0].enable_proxy_protocol == false
 
+- name: Create private endpoint
+  azure_rm_privateendpoint:
+    name: "pd{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    private_link_service_connections:
+      - name: private_connection_name
+        private_link_service_id: "{{ output.link_service[0].id }}"
+    subnet:
+      id: "{{ subnet_output.state.id }}"
+  register: output
+
+- name: Get private endpoint connection info
+  azure_rm_privateendpointconnection_info:
+    service_name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- assert:
+    that:
+      - output.endpoint_connection[0].private_link_service_connection_state.actions_required == "None"
+      - output.endpoint_connection[0].private_link_service_connection_state.description == "Approved"
+      - output.endpoint_connection[0].private_link_service_connection_state.status == "Approved"
+
+- name: Update private endpoint connection
+  azure_rm_privateendpointconnection:
+    name: "{{ output.endpoint_connection[0].name }}"
+    service_name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    connection_state:
+      status: "Rejected"
+      description: "Rejected"
+      actions_required: "actions required"
+  register: output
+
+- assert:
+    that: output.changed
+
+- name: Get private endpoint connection info by name
+  azure_rm_privateendpointconnection_info:
+    name: "{{ output.state.name }}"
+    service_name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- assert:
+    that:
+      - output.endpoint_connection[0].private_link_service_connection_state.actions_required == "actions required"
+      - output.endpoint_connection[0].private_link_service_connection_state.description == "Rejected"
+      - output.endpoint_connection[0].private_link_service_connection_state.status == "Rejected"
+
+- name: Delete private endpoint connection
+  azure_rm_privateendpointconnection:
+    name: "{{ output.endpoint_connection[0].name }}"
+    service_name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: output
+
+- assert:
+    that: output.changed
+
+- name: Delete private endpoint
+  azure_rm_privateendpoint:
+    name: "pd{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+
+- assert:
+    that: output.changed
+
 - name: Delete private link service
   azure_rm_privatelinkservice:
     name: "lsp{{ rpfx }}"
@@ -209,4 +279,3 @@
 
 - assert:
     that: output.changed
-
