@@ -1225,7 +1225,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     powerstate_change = 'generalized'
 
                 vm_dict['zones'] = [int(i) for i in vm_dict['zones']] if 'zones' in vm_dict and vm_dict['zones'] else None
-                if self.zones != vm_dict['zones']:
+                if self.zones is not None and self.zones != vm_dict['zones']:
                     self.log("CHANGED: virtual machine {0} zones".format(self.name))
                     differences.append('Zones')
                     changed = True
@@ -1610,7 +1610,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         image_reference = None
 
                     # You can't change a vm zone
-                    if vm_dict['zones'] != self.zones:
+                    if self.zones is not None and vm_dict['zones'] != self.zones:
                         self.fail("You can't change the Availability Zone of a virtual machine (have: {0}, want: {1})".format(vm_dict['zones'], self.zones))
 
                     if 'osProfile' in vm_dict['properties']:
