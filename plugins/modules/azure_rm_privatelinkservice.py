@@ -300,13 +300,13 @@ link_service:
                                 - The reference to the subnet resource.
                             returned: always
                             type: dict
-                            sample: { "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/vnetfredprivate/subnets/subnetfredpe" }
+                            sample: { "id": "/subscriptions/xxxx/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/vnetfredprivate/subnets/subnamee" }
         load_balancer_frontend_ip_configurations:
             description:
                 - An array of references to the load balancer IP configurations.
             tpee: list
             returned: awalys
-            sample: [{ "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/loadBalancers/testloadblancer/frontendIPConfigurations/frontconfig" }]
+            sample: [{ "id": "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/loadBalancers/testloadblancer/frontendIPConfigurations/front01" }]
         fqdns:
             description:
                 - The list of Fqdn.
@@ -324,7 +324,7 @@ link_service:
                         - The ID of the private endpoint connection.
                     type: str
                     returned: always
-                    sample: "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateLinkServices/testlinkservice/privateEndpointConnections/tes"
+                    sample: "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/privateLinkServices/linkservice/privateEndpointConnections/tes"
                 private_endpoint:
                     description:
                         - The ID of the private endpoint.
@@ -343,25 +343,26 @@ except Exception:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
-load_balancer_frontend_ip_configurations_spec=dict(
+load_balancer_frontend_ip_configurations_spec = dict(
     id=dict(type='str'),
-    )
+)
 
-auto_approval_spec=dict(
+auto_approval_spec = dict(
     subscriptions=dict(type='list', elements='str')
-    )
+)
 
-visibility_spec=dict(
+visibility_spec = dict(
     subscriptions=dict(type='list', elements='str')
-    )
+)
 
-properties_spec=dict(
+properties_spec = dict(
     primary=dict(type='bool'),
     # private_ip_address=dict(type='str'),
     private_ip_allocation_method=dict(type='str', choices=['Static', 'Dynamic']),
     subnet=dict(type='dict', options=dict(id=dict(type='str'))),
     private_ip_address_version=dict(type='str', choices=['IPv4', 'IPv6'])
-    )
+)
+
 
 class AzureRMPrivateLinkService(AzureRMModuleBase):
 
@@ -411,7 +412,7 @@ class AzureRMPrivateLinkService(AzureRMModuleBase):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                self.body[key] = kwargs[key] 
+                self.body[key] = kwargs[key]
 
         old_response = self.get_item()
         result = None
@@ -482,7 +483,7 @@ class AzureRMPrivateLinkService(AzureRMModuleBase):
 
             if changed:
                 if self.check_mode:
-                        self.log("Check mode test. The private link service is exist, will be create or updated")
+                    self.log("Check mode test. The private link service is exist, will be create or updated")
                 else:
                     result = self.create_or_update(self.body)
             else:
@@ -572,16 +573,16 @@ class AzureRMPrivateLinkService(AzureRMModuleBase):
         if service.get('ip_configurations'):
             for items in service['ip_configurations']:
                 result['ip_configurations'].append(
-                        {
-                            "name": items['name'],
-                            'properties': {
-                                "primary": items['primary'],
-                                "private_ip_address_version": items["private_ip_address_version"],
-                                "private_ip_allocation_method": items["private_ip_allocation_method"],
-                                "subnet": items["subnet"],
-                                }
+                    {
+                        "name": items['name'],
+                        'properties': {
+                            "primary": items['primary'],
+                            "private_ip_address_version": items["private_ip_address_version"],
+                            "private_ip_allocation_method": items["private_ip_allocation_method"],
+                            "subnet": items["subnet"],
                         }
-                    )
+                    }
+                )
 
         return result
 

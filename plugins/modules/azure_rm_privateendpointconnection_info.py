@@ -67,7 +67,7 @@ endpoint_connection:
         id:
             description:
                 - Resource ID of the private endpoint connection.
-            sample: "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateLinkServices/testlinkservice/privateEndpointConnections/testlink.09
+            sample: "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/privateLinkServices/linkservice/privateEndpointConnections/link.09
             returned: always
             type: str
         name:
@@ -93,7 +93,7 @@ endpoint_connection:
                         - The private endpoint resource ID.
                     type: str
                     returned: always
-                    sample: /subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateEndpoints/testlink02
+                    sample: /subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/privateEndpoints/testlink02
         private_link_service_connection_state:
             description:
                 - A collection of information about the state of the connection between service consumer and provider.
@@ -102,7 +102,7 @@ endpoint_connection:
             contains:
                 description:
                     description:
-                        - The reason for approval/rejection of the connection. 
+                        - The reason for approval/rejection of the connection.
                     returned: always
                     type: str
                     sample: "Auto Approved"

@@ -180,13 +180,13 @@ link_service:
                                 - The reference to the subnet resource.
                             returned: always
                             type: dict
-                            sample: { "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/vnetfredprivate/subnets/subnetfredpe" }
+                            sample: { "id": "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/vnetfredprivate/subnets/subname" }
         load_balancer_frontend_ip_configurations:
             description:
                 - An array of references to the load balancer IP configurations.
             tpee: list
             returned: awalys
-            sample: [{ "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/loadBalancers/testloadblancer/frontendIPConfigurations/frontconfig" }]
+            sample: [{ "id": "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/loadBalancers/testloadblancer/frontendIPConfigurations/front01" }]
         fqdns:
             description:
                 - The list of Fqdn.
@@ -204,7 +204,7 @@ link_service:
                         - The ID of the private endpoint connection.
                     type: str
                     returned: always
-                    sample: "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateLinkServices/testlinkservice/privateEndpointConnections/tes"
+                    sample: "/subscriptions/xxx/resourceGroups/myReG/providers/Microsoft.Network/privateLinkServices/linkservice/privateEndpointConnections/tes"
                 private_endpoint:
                     description:
                         - The ID of the private endpoint.
@@ -240,9 +240,9 @@ class AzureRMPrivateLinkServiceInfo(AzureRMModuleBase):
         )
 
         super(AzureRMPrivateLinkServiceInfo, self).__init__(self.module_arg_spec,
-                                                                   supports_check_mode=False,
-                                                                   supports_tags=False,
-                                                                   facts_module=True)
+                                                            supports_check_mode=False,
+                                                            supports_tags=False,
+                                                            facts_module=True)
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
@@ -323,17 +323,16 @@ class AzureRMPrivateLinkServiceInfo(AzureRMModuleBase):
         if service.get('ip_configurations'):
             for items in service['ip_configurations']:
                 result['ip_configurations'].append(
-                        {
-                            "name": items['name'],
-                            'properties': {
-                                "primary": items['primary'],
-                                "private_ip_address_version": items["private_ip_address_version"],
-                                "private_ip_allocation_method": items["private_ip_allocation_method"],
-                                "subnet": items["subnet"],
-                                }
+                    {
+                        "name": items['name'],
+                        'properties': {
+                            "primary": items['primary'],
+                            "private_ip_address_version": items["private_ip_address_version"],
+                            "private_ip_allocation_method": items["private_ip_allocation_method"],
+                            "subnet": items["subnet"],
                         }
-                    )
-
+                    }
+                )
 
         return result
 

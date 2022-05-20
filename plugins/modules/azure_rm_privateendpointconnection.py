@@ -93,7 +93,7 @@ state:
         id:
             description:
                 - Resource ID of the private endpoint connection.
-            sample: "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateLinkServices/testlinkservice/privateEndpointConnections/testlink.09
+            sample: "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/privateLinkServices/linkservice/privateEndpointConnections/link.09
             returned: always
             type: str
         name:
@@ -119,7 +119,7 @@ state:
                         - The private endpoint resource ID.
                     type: str
                     returned: always
-                    sample: /subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/privateEndpoints/testlink02
+                    sample: /subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/privateEndpoints/testlink02
         private_link_service_connection_state:
             description:
                 - A collection of information about the state of the connection between service consumer and provider.
@@ -128,7 +128,7 @@ state:
             contains:
                 description:
                     description:
-                        - The reason for approval/rejection of the connection. 
+                        - The reason for approval/rejection of the connection.
                     returned: always
                     type: str
                     sample: "Auto Approved"
@@ -174,11 +174,11 @@ except Exception:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 
-connection_state_spec=dict(
+connection_state_spec = dict(
     # status=dict(type='str', required=True, choices=['Approved', 'Rejected', 'Removed']),
     description=dict(type='str'),
     actions_required=dict(type='str')
-    )
+)
 
 
 class AzureRMPrivateEndpointConnection(AzureRMModuleBase):
@@ -202,9 +202,10 @@ class AzureRMPrivateEndpointConnection(AzureRMModuleBase):
         )
 
         super(AzureRMPrivateEndpointConnection, self).__init__(self.module_arg_spec,
-                                                                   supports_check_mode=True,
-                                                                   supports_tags=False,
-                                                                   facts_module=False)
+                                                               supports_check_mode=True,
+                                                               supports_tags=False,
+                                                               facts_module=False)
+
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
@@ -212,19 +213,21 @@ class AzureRMPrivateEndpointConnection(AzureRMModuleBase):
         old_response = self.get_resource()
         response = None
         changed = False
-        
+
         if self.state == 'present':
             if old_response:
                 if self.connection_state is not None:
 
                     self.connection_state['status'] = old_response['private_link_service_connection_state']['status']
 
-                    if self.connection_state.get('description') and self.connection_state.get('description') != old_response['private_link_service_connection_state']['description']:
-                        changed = True
+                    if self.connection_state.get('description'):
+                        if self.connection_state.get('description') != old_response['private_link_service_connection_state']['description']:
+                            changed = True
                     else:
                         self.connection_state['description'] = old_response['private_link_service_connection_state']['description']
-                    if self.connection_state.get('actions_required') and self.connection_state.get('actions_required') != old_response['private_link_service_connection_state']['actions_required']:
-                        changed = True
+                    if self.connection_state.get('actions_required'):
+                        if self.connection_state.get('actions_required') != old_response['private_link_service_connection_state']['actions_required']:
+                            changed = True
                     else:
                         self.connection_state['actions_required'] = old_response['private_link_service_connection_state']['actions_required']
 
@@ -278,7 +281,9 @@ class AzureRMPrivateEndpointConnection(AzureRMModuleBase):
     def update_resource(self, parameters):
         self.log("Update the private endpoint connection for {0} in {1}".format(self.name, self.service_name))
         try:
-            response = self.network_client.private_link_services.update_private_endpoint_connection(self.resource_group, self.service_name, self.name, parameters)
+            response = self.network_client.private_link_services.update_private_endpoint_connection(self.resource_group,
+                                                                                                    self.service_name,
+                                                                                                    self.name, parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
             return response
