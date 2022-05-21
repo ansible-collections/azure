@@ -317,7 +317,7 @@ link_service:
         private_endpoint_connections:
             description:
                 - An array of list about connections to the private endpoint.
-            type: comple
+            type: complex
             returned: always
             contains:
                 id:
