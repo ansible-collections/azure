@@ -80,9 +80,9 @@ EXAMPLES = '''
     service_name: testserviceName
     resource_group: myRG
     connection_state:
-        description: "new_description string"
-        actions_required: "Message string"
-        status: "Rejected"
+      description: "new_description string"
+      actions_required: "Message string"
+      status: "Rejected"
 
 - name: Delee private endpoint connection
   azure_rm_privateendpointconnection_info:
