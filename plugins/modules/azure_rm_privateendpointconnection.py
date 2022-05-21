@@ -78,16 +78,17 @@ EXAMPLES = '''
   azure_rm_privateendpointconnection_info:
     name: pe-connection-name
     service_name: testserviceName
-    resource_group: "{{ resource_group }}"
+    resource_group: myRG
     connection_state:
         description: "new_description string"
         actions_required: "Message string"
+        status: "Rejected"
 
 - name: Delee private endpoint connection
   azure_rm_privateendpointconnection_info:
     name: pe-connection-name
     service_name: testserviceName
-    resource_group: "{{ resource_group }}"
+    resource_group: myRG
     state: absent
 '''
 
@@ -103,7 +104,7 @@ state:
                 - Resource ID of the private endpoint connection.
             returned: always
             type: str
-            sample: "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/privateLinkServices/linkservice/privateEndpointConnections/link.09
+            sample: "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/privateLinkServices/linkservice/privateEndpointConnections/link.09"
         name:
             description:
                 - Name of the private endpoint connection.
@@ -127,7 +128,7 @@ state:
                         - The private endpoint resource ID.
                     type: str
                     returned: always
-                    sample: /subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/privateEndpoints/testlink02
+                    sample: "/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/privateEndpoints/testlink02"
         private_link_service_connection_state:
             description:
                 - A collection of information about the state of the connection between service consumer and provider.
