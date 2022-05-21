@@ -300,13 +300,13 @@ link_service:
                                 - The reference to the subnet resource.
                             returned: always
                             type: dict
-                            sample: { "id": "/subscriptions/xxxx/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/vnetfredprivate/subnets/subnamee" }
+                            sample: { "id": "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnamee" }
         load_balancer_frontend_ip_configurations:
             description:
                 - An array of references to the load balancer IP configurations.
             tpee: list
             returned: awalys
-            sample: [{ "id": "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/loadBalancers/testloadblancer/frontendIPConfigurations/front01" }]
+            sample: [{ "id": "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/loadBalancers/testlb/frontendIPConfigurations/front01" }]
         fqdns:
             description:
                 - The list of Fqdn.
