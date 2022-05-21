@@ -153,8 +153,8 @@ class AzureRMPrivateEndpointConnectionInfo(AzureRMModuleBase):
 
         self.module_arg_spec = dict(
             name=dict(type="str"),
-            service_name=dict(type="str"),
-            resource_group=dict(type="str"),
+            service_name=dict(type="str", required=True),
+            resource_group=dict(type="str", required=True),
         )
 
         self.name = None
@@ -165,7 +165,7 @@ class AzureRMPrivateEndpointConnectionInfo(AzureRMModuleBase):
         )
 
         super(AzureRMPrivateEndpointConnectionInfo, self).__init__(self.module_arg_spec,
-                                                                   supports_check_mode=False,
+                                                                   supports_check_mode=True,
                                                                    supports_tags=False,
                                                                    facts_module=True)
 

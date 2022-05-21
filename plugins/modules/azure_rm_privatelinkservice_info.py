@@ -196,7 +196,7 @@ link_service:
         private_endpoint_connections:
             description:
                 - An array of list about connections to the private endpoint.
-            type: comple
+            type: complex
             returned: always
             contains:
                 id:
@@ -240,7 +240,7 @@ class AzureRMPrivateLinkServiceInfo(AzureRMModuleBase):
         )
 
         super(AzureRMPrivateLinkServiceInfo, self).__init__(self.module_arg_spec,
-                                                            supports_check_mode=False,
+                                                            supports_check_mode=True,
                                                             supports_tags=False,
                                                             facts_module=True)
 

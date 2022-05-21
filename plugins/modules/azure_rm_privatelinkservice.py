@@ -78,7 +78,8 @@ options:
     ip_configurations:
         description:
             - An array of private link service IP configurations.
-        type: dict
+        type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -162,13 +163,13 @@ EXAMPLES = '''
           private_ip_address_version: 'IPv4'
           subnet:
             id: subnet_id
-       - name: subnetfredprivate-1
-         properties:
-           primary: True
-           private_ip_allocation_method: 'Static'
-           private_ip_address_version: 'IPv4'
-           subnet:
-             id: subnet_id
+      - name: subnetfredprivate-1
+        properties:
+          primary: True
+          private_ip_allocation_method: 'Static'
+          private_ip_address_version: 'IPv4'
+          subnet:
+            id: subnet_id
     tags:
       key1: value1
       key2: value2

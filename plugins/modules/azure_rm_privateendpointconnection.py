@@ -61,6 +61,7 @@ options:
         description:
             - Assert the state of the connection. Use C(present) to update an connection and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -184,7 +185,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 
 connection_state_spec = dict(
-    status=dict(type='str', required=True, choices=['Approved', 'Rejected', 'Removed']),
+    status=dict(type='str', choices=['Approved', 'Rejected', 'Removed']),
     description=dict(type='str'),
     actions_required=dict(type='str')
 )
