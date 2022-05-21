@@ -41,6 +41,14 @@ options:
             - A collection of information about the state of the connection between service consumer and provider.
         type: dict
         suboptions:
+            status:
+                description:
+                    - Indicates whether the connection has been Approved/Rejected/Removed by the owner of the service.
+                type: str
+                choices:
+                    - Approved
+                    - Rejected
+                    - Removed
             description:
                 description:
                     - The reason for approval/rejection of the connection.
@@ -93,9 +101,9 @@ state:
         id:
             description:
                 - Resource ID of the private endpoint connection.
-            sample: "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/privateLinkServices/linkservice/privateEndpointConnections/link.09
             returned: always
             type: str
+            sample: "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/privateLinkServices/linkservice/privateEndpointConnections/link.09
         name:
             description:
                 - Name of the private endpoint connection.
@@ -175,7 +183,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 
 connection_state_spec = dict(
-    # status=dict(type='str', required=True, choices=['Approved', 'Rejected', 'Removed']),
+    status=dict(type='str', required=True, choices=['Approved', 'Rejected', 'Removed']),
     description=dict(type='str'),
     actions_required=dict(type='str')
 )
@@ -218,7 +226,11 @@ class AzureRMPrivateEndpointConnection(AzureRMModuleBase):
             if old_response:
                 if self.connection_state is not None:
 
-                    self.connection_state['status'] = old_response['private_link_service_connection_state']['status']
+                    if self.connection_state.get('status') is not None:
+                        if self.connection_state.get('status') != old_response['private_link_service_connection_state']['status']:
+                            changed = True
+                    else:
+                        self.connection_state['status'] = old_response['private_link_service_connection_state']['status']
 
                     if self.connection_state.get('description'):
                         if self.connection_state.get('description') != old_response['private_link_service_connection_state']['description']:
