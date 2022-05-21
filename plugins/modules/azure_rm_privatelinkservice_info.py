@@ -124,7 +124,7 @@ link_service:
         tags:
             description:
                 - The resource tags.
-            type: list
+            type: dict
             returned: always
             sample: { 'key1': 'value1' }
         provisioning_state:
@@ -147,7 +147,7 @@ link_service:
             contains:
                 name:
                     description:
-                        - The name of the IP configurations
+                        - The name of the IP configurations.
                     type: str
                     returned: always
                     sample: subnetfredprivate-1
