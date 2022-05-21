@@ -184,7 +184,7 @@ link_service:
         load_balancer_frontend_ip_configurations:
             description:
                 - An array of references to the load balancer IP configurations.
-            tpee: list
+            type: list
             returned: awalys
             sample: [{ "id": "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/loadBalancers/testlb/frontendIPConfigurations/front01" }]
         fqdns:

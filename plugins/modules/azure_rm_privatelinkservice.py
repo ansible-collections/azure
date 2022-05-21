@@ -38,7 +38,7 @@ options:
     load_balancer_frontend_ip_configurations:
         description:
             - An array of references to the load balancer IP configurations
-            -  Cannot have more than one load balancer frontend IP configuration on the private link service.
+            - Cannot have more than one load balancer frontend IP configuration on the private link service.
         type: list
         elements: dict
         suboptions:
@@ -75,7 +75,7 @@ options:
         description:
             - Whether the private link service is enabled for proxy protocol or not.
         type: bool
-    ip_configurations::
+    ip_configurations:
         description:
             - An array of private link service IP configurations.
         type: dict
@@ -219,7 +219,7 @@ link_service:
             sample: { "subscriptions": ['xxxx-xxxx', 'yyyy-yyyyy'] }
         enable_proxy_protocol:
             description:
-                - Whether the private link service is enabled for proxy protocol or not
+                - Whether the private link service is enabled for proxy protocol or not.
             type: bool
             returned: always
             sample: False
@@ -304,7 +304,7 @@ link_service:
         load_balancer_frontend_ip_configurations:
             description:
                 - An array of references to the load balancer IP configurations.
-            tpee: list
+            type: list
             returned: awalys
             sample: [{ "id": "/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/loadBalancers/testlb/frontendIPConfigurations/front01" }]
         fqdns:
