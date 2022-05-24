@@ -76,6 +76,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
+    from azure.mgmt.containerregistry.models import Replication, ReplicationUpdateParameters
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -220,15 +221,19 @@ class AzureRMReplications(AzureRMModuleBase):
 
         try:
             if self.to_do == Actions.Create:
+                replication = Replication(
+                    location=self.location,
+                )
                 response = self.containerregistry_client.replications.begin_create(resource_group_name=self.resource_group,
                                                                                    registry_name=self.registry_name,
                                                                                    replication_name=self.replication_name,
-                                                                                   location=self.location)
+                                                                                   replication=replication)
             else:
+                update_params = ReplicationUpdateParameters()
                 response = self.containerregistry_client.replications.begin_update(resource_group_name=self.resource_group,
                                                                                    registry_name=self.registry_name,
                                                                                    replication_name=self.replication_name,
-                                                                                   location=self.location)
+                                                                                   replication_update_parameters=update_params)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
