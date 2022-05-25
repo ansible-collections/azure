@@ -219,7 +219,7 @@ options:
         description:
             - When true this limits the scale set to a single placement group, of max size 100 virtual machines.
         type: bool
-        default: True
+        default: False
     plan:
         description:
             - Third-party billing plan for the VM.
@@ -575,7 +575,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             enable_accelerated_networking=dict(type='bool'),
             security_group=dict(type='raw', aliases=['security_group_name']),
             overprovision=dict(type='bool'),
-            single_placement_group=dict(type='bool', default=True),
+            single_placement_group=dict(type='bool', default=False),
             zones=dict(type='list'),
             custom_data=dict(type='str'),
             plan=dict(type='dict', options=dict(publisher=dict(type='str', required=True),

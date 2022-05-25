@@ -193,6 +193,7 @@
     admin_username: testuser
     priority: Spot
     eviction_policy: Deallocate
+    single_placement_group: True
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
@@ -249,6 +250,7 @@
     tier: Standard
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
+    single_placement_group: True
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -292,6 +294,7 @@
     tier: Standard
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
+    single_placement_group: True
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -340,6 +343,7 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
+    single_placement_group: True
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -376,6 +380,7 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
+    single_placement_group: True
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -446,6 +451,7 @@
     image: "{{ body.image }}"
     data_disks: "{{ body.data_disks }}"
     overprovision: "{{ body.overprovision }}"
+    single_placement_group: True
   register: results
 
 - name: Assert that nothing was changed
@@ -598,6 +604,7 @@
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
     enable_accelerated_networking: yes
+    single_placement_group: True
   register: results
   check_mode: yes
 
@@ -624,6 +631,7 @@
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
     enable_accelerated_networking: yes
+    single_placement_group: True
   register: results
 
 - name: Assert that VMSS ran
@@ -652,6 +660,7 @@
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
     enable_accelerated_networking: yes
+    single_placement_group: True
   register: results
 
 - name: Assert that nothing has changed
@@ -678,6 +687,7 @@
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
     enable_accelerated_networking: yes
+    single_placement_group: True
   register: results
 
 - name: Assert that something has changed
@@ -705,6 +715,7 @@
     security_group:
       name: testNetworkSecurityGroup2
       resource_group: "{{ resource_group_secondary }}"
+    single_placement_group: True
   register: results
 
 # disable for now
@@ -741,6 +752,7 @@
     security_group:
       name: testNetworkSecurityGroup2
       resource_group: "{{ resource_group_secondary }}"
+    single_placement_group: True
   register: results
 
 - assert:
@@ -769,6 +781,7 @@
     security_group:
       name: testNetworkSecurityGroup2
       resource_group: "{{ resource_group_secondary }}"
+    single_placement_group: True
   ignore_errors: yes
 
 - name: Delete VMSS
@@ -796,6 +809,7 @@
       version: latest
     upgrade_policy: Manual
     enable_accelerated_networking: yes
+    single_placement_group: True
   register: results
   ignore_errors: yes
 
