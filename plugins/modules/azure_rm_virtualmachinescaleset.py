@@ -272,9 +272,9 @@ options:
             - Specifies the orchestration mode for the virtual machine scale set.
             - When I(orchestration_mode=Flexible), I(public_ip_per_vm=True) must be set.
             - When I(orchestration_mode=Flexible), I(platform_fault_domain_count) must be set.
-            - When I(orchestration_mode=Flexible), I(single_placement_group=Flase) must be set.
+            - When I(orchestration_mode=Flexible), I(single_placement_group=False) must be set.
             - When I(orchestration_mode=Flexible), it cannot be configured I(overprovision).
-            - When I(orchestration_mode=Flexible), it cannot be configured I(upgrade_policy) and configured when I(orchestration_mode=Uniform)..
+            - When I(orchestration_mode=Flexible), it cannot be configured I(upgrade_policy) and configured when I(orchestration_mode=Uniform).
         type: str
         choices:
             - Flexible
