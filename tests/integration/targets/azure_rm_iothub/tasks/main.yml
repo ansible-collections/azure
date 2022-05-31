@@ -90,9 +90,6 @@
       hub_policy_key: "{{ registry_write_key }}"
   register: devices
 
-- debug:
-    var: devices
-
 - assert:
      that:
         - devices.iot_devices | length == 2
@@ -105,14 +102,14 @@
       hub_policy_key: "{{ registry_write_key }}"
   register: devices
 
-- debug:
-    var: devices
 - assert:
      that:
         - devices.iot_devices | length == 1
         - devices.iot_devices[0].deviceId == 'mydevice1'
-- name: Pause for 10 mimutes
-  shell: sleep 600
+
+- name: Pause for 5 mimutes
+  shell: sleep 300
+
 - name: Query devices twin
   azure_rm_iotdevice_info:
       hub: "hub{{ rpfx }}"
@@ -120,8 +117,6 @@
       hub_policy_name: "{{ registry_write_name }}"
       hub_policy_key: "{{ registry_write_key }}"
   register: devices
-- debug:
-    var: devices
 
 - assert:
      that:
