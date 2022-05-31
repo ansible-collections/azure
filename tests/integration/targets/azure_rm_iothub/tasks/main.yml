@@ -107,7 +107,7 @@
         - devices.iot_devices | length == 1
         - devices.iot_devices[0].deviceId == 'mydevice1'
 
-- name: Pause for 6 mimutes
+- name: Pause for 10 mimutes
   shell: sleep 600
 
 - name: Query devices twin
@@ -137,6 +137,9 @@
   with_items:
     - 1
     - 3
+
+- name: Pause for 10 mimutes
+  shell: sleep 600
 
 - name: Query devices twin
   azure_rm_iotdevice_info:
