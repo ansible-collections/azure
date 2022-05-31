@@ -89,6 +89,8 @@
       hub_policy_name: "{{ registry_write_name }}"
       hub_policy_key: "{{ registry_write_key }}"
   register: devices
+- debug:
+    var: devices
 
 - assert:
      that:
@@ -101,6 +103,8 @@
       hub_policy_name: "{{ registry_write_name }}"
       hub_policy_key: "{{ registry_write_key }}"
   register: devices
+- debug:
+    var: devices
 
 - assert:
      that:
