@@ -114,6 +114,11 @@
       hub_policy_name: "{{ registry_write_name }}"
       hub_policy_key: "{{ registry_write_key }}"
   register: devices
+- debug:
+    var: devices
+
+- name: Pause for 10 mimutes to VM updating
+    shell: sleep 600
 
 - assert:
      that:
