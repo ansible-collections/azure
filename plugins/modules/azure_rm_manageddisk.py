@@ -90,7 +90,8 @@ options:
         description:
             - List of name and resource group of the VMs that have the disk attached.
             - I(max_shares) should be set to a value greater than one for disks to allow attaching them to multiple VMs.
-        type: dict
+        type: list
+        elements: dict
         suboptions:
             resource_group:
                 description:
@@ -274,7 +275,7 @@ except ImportError:
     pass
 
 
-managed_by_extended_spec=dict(
+managed_by_extended_spec = dict(
     resource_group=dict(type='str'),
     name=dict(type='str')
 )
