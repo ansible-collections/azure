@@ -1,6 +1,7 @@
 - name: Create Azure Search name
   set_fact:
     search_name: "search{{ resource_group | hash('md5') | truncate(16, True, '') }}"
+    search_name_secondary: "search{{ resource_group | hash('md5') | truncate(16, True, '') }}-secondary"
 
 - name: Create invalid Azure Search - Hosting Name
   azure_rm_cognitivesearch:
@@ -133,7 +134,7 @@
 
 - name: Create Azure Search '{{ search_name }}' not default parameters
   azure_rm_cognitivesearch:
-    name: "{{ search_name }}"
+    name: "{{ search_name_secondary }}"
     resource_group: "{{ resource_group }}"
     hosting_mode: default
     identity: SystemAssigned
@@ -156,7 +157,7 @@
       - search_info.state.identity.type == "SystemAssigned"
       - search_info.state.identity.principal_id is defined
       - search_info.state.hosting_mode == "default"
-      - search_info.state.name == search_name
+      - search_info.state.name == search_name_secondary
       - search_info.state.partition_count == 2
       - search_info.state.replica_count == 2
       - search_info.state.sku == "standard"
@@ -165,7 +166,7 @@
 
 - name: Update Azure Search '{{ search_name }}' not default parameters (Idempotence)
   azure_rm_cognitivesearch:
-    name: "{{ search_name }}"
+    name: "{{ search_name_secondary }}"
     resource_group: "{{ resource_group }}"
     hosting_mode: default
     identity: SystemAssigned
@@ -187,7 +188,7 @@
 
 - name: Delete Azure Search
   azure_rm_cognitivesearch:
-    name: "{{ search_name }}"
+    name: "{{ search_name_secondary }}"
     resource_group: "{{ resource_group }}"
     state: absent
   
