@@ -324,7 +324,8 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
             if response:
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
-                        results.append(keyvault_to_dict(item))
+                        source_id = item.id.split('/')
+                        results.append(keyvault_to_dict(self._client.vaults.get(source_id[4], source_id[8])))
         except CloudError as e:
             self.log("Did not find key vault in current subscription {0}.".format(str(e)))
         return results
