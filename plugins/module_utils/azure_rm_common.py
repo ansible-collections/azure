@@ -229,6 +229,7 @@ try:
     from msrestazure.azure_active_directory import AADTokenCredentials
     from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_active_directory import MSIAuthentication
+    from azure.cli.core.auth.adal_authentication import MSIAuthenticationWrapper
     from msrestazure.tools import parse_resource_id, resource_id, is_valid_resource_id
     from msrestazure import azure_cloud
     from azure.common.credentials import ServicePrincipalCredentials, UserPassCredentials
@@ -1500,7 +1501,11 @@ class AzureRMAuth(object):
         else:
             self._adfs_authority_url = self.credentials.get('adfs_authority_url')
 
-        if self.credentials.get('credentials') is not None:
+        if self.credentials.get('auth_source') == 'msi':
+            # MSI Credentials
+            self.azure_credentials = self.credentials['credentials']
+            self.azure_credential_track2 = self.credentials['credential']
+        elif self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credentials = self.credentials['credentials']
             self.azure_credential_track2 = self.credentials['credentials']
@@ -1589,6 +1594,7 @@ class AzureRMAuth(object):
 
     def _get_msi_credentials(self, subscription_id=None, client_id=None, **kwargs):
         credentials = MSIAuthentication(client_id=client_id)
+        credential = MSIAuthenticationWrapper(client_id=client_id)
         subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
             try:
@@ -1601,7 +1607,9 @@ class AzureRMAuth(object):
                           "Please check whether your machine enabled MSI or grant access to any subscription.".format(str(exc)))
         return {
             'credentials': credentials,
-            'subscription_id': subscription_id
+            'credential': credential,
+            'subscription_id': subscription_id,
+            'auth_source': 'msi'
         }
 
     def _get_azure_cli_credentials(self, subscription_id=None, resource=None):
