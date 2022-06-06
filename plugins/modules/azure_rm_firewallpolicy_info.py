@@ -133,7 +133,7 @@ class AzureRMFirewallPolicyInfo(AzureRMModuleBase):
         self.tags = None
 
         super(AzureRMFirewallPolicyInfo, self).__init__(self.module_arg_spec,
-                                                        supports_check_mode=False,
+                                                        supports_check_mode=True,
                                                         facts_module=True,
                                                         supports_tags=False)
 
