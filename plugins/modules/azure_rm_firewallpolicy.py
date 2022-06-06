@@ -11,7 +11,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_firewallpolicy
 
-version_added: "1.12.0
+version_added: "1.13.0"
 
 short_description: Create, delete or update specified firewall policy.
 
@@ -251,8 +251,8 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 import copy
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -278,7 +278,7 @@ class AzureRMFirewallPolicy(AzureRMModuleBase):
             base_policy=dict(type='str'),
             threat_intel_mode=dict(choices=['alert', 'deny', 'off'], default='alert', type='str'),
             threat_intel_whitelist=dict(type='dict', options=threat_intel_whitelist_spec),
-            state=dict(choices=['present', 'absent'], default='present', type='str')
+            state=dict(choices=['present', 'absent'], default='present', type='str'),
         )
 
         self.results = dict(
@@ -296,6 +296,7 @@ class AzureRMFirewallPolicy(AzureRMModuleBase):
         self.tags = None
 
         super(AzureRMFirewallPolicy, self).__init__(self.module_arg_spec,
+                                                    supports_tags=True,
                                                     supports_check_mode=True)
 
     def exec_module(self, **kwargs):
@@ -371,7 +372,7 @@ class AzureRMFirewallPolicy(AzureRMModuleBase):
             elif self.state == 'absent':
                 changed = True
 
-        except CloudError:
+        except ResourceNotFoundError:
             if self.state == 'present':
                 changed = True
             else:
