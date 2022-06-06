@@ -11,7 +11,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_firewallpolicy
 
-version_added: "1.10.0"
+version_added: "1.12.0
 
 short_description: Create, delete or update specified firewall policy.
 
@@ -411,9 +411,9 @@ class AzureRMFirewallPolicy(AzureRMModuleBase):
     def create_or_update_firewallpolicy(self, firewall_policy):
         try:
             # create a firewall policy
-            response = self.network_client.firewall_policies.create_or_update(resource_group_name=self.resource_group,
-                                                                              firewall_policy_name=self.name,
-                                                                              parameters=firewall_policy)
+            response = self.network_client.firewall_policies.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                    firewall_policy_name=self.name,
+                                                                                    parameters=firewall_policy)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
@@ -423,8 +423,8 @@ class AzureRMFirewallPolicy(AzureRMModuleBase):
     def delete_firewallpolicy(self):
         try:
             # delete a firewall policy
-            response = self.network_client.firewall_policies.delete(resource_group_name=self.resource_group,
-                                                                    firewall_policy_name=self.name)
+            response = self.network_client.firewall_policies.begin_delete(resource_group_name=self.resource_group,
+                                                                          firewall_policy_name=self.name)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:

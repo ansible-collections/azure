@@ -11,7 +11,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_firewallpolicy_info
 
-version_added: "1.10.0"
+version_added: "1.12.0"
 
 short_description: Get firewall policy facts
 
