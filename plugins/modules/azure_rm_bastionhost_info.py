@@ -317,15 +317,13 @@ class AzureRMBastionHostInfo(AzureRMModuleBase):
         if bastion.get('ip_configurations'):
             for items in bastion['ip_configurations']:
                 result['ip_configurations'].append(
-                        {
-                            "name": items['name'],
-                            "subnet": dict(id=items['subnet']['id']),
-                            "public_ip_address": dict(id=items['public_ip_address']['id']),
-                            "private_ip_allocation_method":items['private_ip_allocation_method'],
-                        }
-                    )
-
-
+                    {
+                        "name": items['name'],
+                        "subnet": dict(id=items['subnet']['id']),
+                        "public_ip_address": dict(id=items['public_ip_address']['id']),
+                        "private_ip_allocation_method": items['private_ip_allocation_method'],
+                    }
+                )
         return result
 
 

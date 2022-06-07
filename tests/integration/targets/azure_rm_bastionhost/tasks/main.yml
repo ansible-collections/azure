@@ -118,8 +118,8 @@
     that:
       - not output.changed
 
-- name: Pause for 5 mimutes to Bastion host updating
-  shell: sleep 300
+- name: Pause for 10 mimutes to Bastion host updating
+  shell: sleep 600
 
 - name: Update bastion host
   azure_rm_bastionhost:

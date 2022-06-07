@@ -67,7 +67,7 @@ options:
         description:
             - The scale units for the Bastion Host resource.
         type: int
-    disable_copy_pastes:
+    disable_copy_paste:
         description:
             - Enable or Disable Copy or Paste feature of the Bastion Host resource.
         type: bool
@@ -314,17 +314,18 @@ except Exception:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 
-sku_spec=dict(
+sku_spec = dict(
     name=dict(type='str', choices=['Standard', 'Basic'])
-    )
+)
 
-subnet_spec=dict(
+subnet_spec = dict(
     id=dict(type='str')
-    )
+)
 
-public_ip_address_spec=dict(
+public_ip_address_spec = dict(
     id=dict(type='str')
-    )
+)
+
 
 class AzureRMBastionHost(AzureRMModuleBase):
 
@@ -374,7 +375,7 @@ class AzureRMBastionHost(AzureRMModuleBase):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                self.body[key] = kwargs[key] 
+                self.body[key] = kwargs[key]
 
         old_response = self.get_item()
         result = None
@@ -446,7 +447,7 @@ class AzureRMBastionHost(AzureRMModuleBase):
 
             if changed:
                 if self.check_mode:
-                        self.log("Check mode test. The bastion host is exist, will be create or updated")
+                    self.log("Check mode test. The bastion host is exist, will be create or updated")
                 else:
                     result = self.create_or_update(self.body)
             else:
@@ -530,15 +531,13 @@ class AzureRMBastionHost(AzureRMModuleBase):
         if bastion.get('ip_configurations'):
             for items in bastion['ip_configurations']:
                 result['ip_configurations'].append(
-                        {
-                            "name": items['name'],
-                            "subnet": dict(id=items['subnet']['id']),
-                            "public_ip_address": dict(id=items['public_ip_address']['id']),
-                            "private_ip_allocation_method":items['private_ip_allocation_method'],
-                        }
-                    )
-
-
+                    {
+                        "name": items['name'],
+                        "subnet": dict(id=items['subnet']['id']),
+                        "public_ip_address": dict(id=items['public_ip_address']['id']),
+                        "private_ip_allocation_method": items['private_ip_allocation_method'],
+                    }
+                )
         return result
 
 
