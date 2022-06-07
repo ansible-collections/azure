@@ -44,21 +44,24 @@ options:
                 description:
                     - The name of the SKU.
                 type: str
+                choices:
+                    - Standard
+                    - Basic
     enable_tunneling:
         description:
-            - Enable/Disable Tunneling feature of the Bastion Host resource.
+            - Enable or Disable Tunneling feature of the Bastion Host resource.
         type: bool
     enable_shareable_link:
         description:
-            - Enable/Disable Shareable Link of the Bastion Host resource.
+            - Enable or Disable Shareable Link of the Bastion Host resource.
         type: bool
     enable_ip_connect:
         description:
-            - Enable/Disable IP Connect feature of the Bastion Host resource.
+            - Enable or Disable IP Connect feature of the Bastion Host resource.
         type: bool
     enable_file_copy:
         description:
-            - Enable/Disable File Copy feature of the Bastion Host resource.
+            - Enable or Disable File Copy feature of the Bastion Host resource.
         type: bool
     scale_units:
         description:
@@ -66,9 +69,9 @@ options:
         type: int
     disable_copy_pastes:
         description:
-            - Enable/Disable Copy/Paste feature of the Bastion Host resource.
+            - Enable or Disable Copy or Paste feature of the Bastion Host resource.
         type: bool
-    ip_configurations::
+    ip_configurations:
         description:
             - An array of bastion host IP configurations.
         type: list
@@ -101,8 +104,8 @@ options:
                     - Private IP allocation method.
                 type: str
                 choices:
-                  - Static
-                  - Dynamic
+                    - Static
+                    - Dynamic
     state:
         description:
             - Assert the state of the pirvate link service.
