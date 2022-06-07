@@ -105,11 +105,7 @@ webhooks:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrestazure.azure_operation import AzureOperationPoller
-    from azure.mgmt.containerregistry import ContainerRegistryManagementClient
-    from msrest.serialization import Model
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -137,7 +133,6 @@ class AzureRMWebhooksFacts(AzureRMModuleBase):
             changed=False,
             ansible_facts=dict()
         )
-        self.mgmt_client = None
         self.resource_group = None
         self.registry_name = None
         self.webhook_name = None
@@ -146,9 +141,6 @@ class AzureRMWebhooksFacts(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
-        self.mgmt_client = self.get_mgmt_svc_client(ContainerRegistryManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2017-10-01')
 
         if (self.resource_group is not None and
                 self.registry_name is not None and
@@ -165,12 +157,12 @@ class AzureRMWebhooksFacts(AzureRMModuleBase):
         response = None
         results = {}
         try:
-            response = self.mgmt_client.webhooks.get(resource_group_name=self.resource_group,
-                                                     registry_name=self.registry_name,
-                                                     webhook_name=self.webhook_name)
+            response = self.containerregistry_client.webhooks.get(resource_group_name=self.resource_group,
+                                                                  registry_name=self.registry_name,
+                                                                  webhook_name=self.webhook_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
-            self.log('Could not get facts for Webhooks.')
+        except ResourceNotFoundError as e:
+            self.log('Could not get facts for Webhooks: {0}'.format(str(e)))
 
         if response is not None:
             results[response.name] = response.as_dict()

@@ -90,11 +90,8 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrestazure.azure_operation import AzureOperationPoller
-    from azure.mgmt.containerregistry import ContainerRegistryManagementClient
-    from msrest.serialization import Model
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -168,7 +165,6 @@ class AzureRMWebhooks(AzureRMModuleBase):
         self.parameters = dict()
 
         self.results = dict(changed=False)
-        self.mgmt_client = None
         self.state = None
         self.to_do = Actions.NoAction
 
@@ -198,10 +194,6 @@ class AzureRMWebhooks(AzureRMModuleBase):
 
         old_response = None
         response = None
-
-        self.mgmt_client = self.get_mgmt_svc_client(ContainerRegistryManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2017-10-01')
 
         resource_group = self.get_resource_group(self.resource_group)
 
@@ -271,19 +263,19 @@ class AzureRMWebhooks(AzureRMModuleBase):
 
         try:
             if self.to_do == Actions.Create:
-                response = self.mgmt_client.webhooks.create(resource_group_name=self.resource_group,
-                                                            registry_name=self.registry_name,
-                                                            webhook_name=self.webhook_name,
-                                                            webhook_create_parameters=self.parameters)
+                response = self.containerregistry_client.webhooks.begin_create(resource_group_name=self.resource_group,
+                                                                               registry_name=self.registry_name,
+                                                                               webhook_name=self.webhook_name,
+                                                                               webhook_create_parameters=self.parameters)
             else:
-                response = self.mgmt_client.webhooks.update(resource_group_name=self.resource_group,
-                                                            registry_name=self.registry_name,
-                                                            webhook_name=self.webhook_name,
-                                                            webhook_update_parameters=self.parameters)
+                response = self.containerregistry_client.webhooks.begin_update(resource_group_name=self.resource_group,
+                                                                               registry_name=self.registry_name,
+                                                                               webhook_name=self.webhook_name,
+                                                                               webhook_update_parameters=self.parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Webhook instance.')
             self.fail("Error creating the Webhook instance: {0}".format(str(exc)))
         return create_webhook_dict(response)
@@ -296,10 +288,11 @@ class AzureRMWebhooks(AzureRMModuleBase):
         '''
         self.log("Deleting the Webhook instance {0}".format(self.webhook_name))
         try:
-            response = self.mgmt_client.webhooks.delete(resource_group_name=self.resource_group,
-                                                        registry_name=self.registry_name,
-                                                        webhook_name=self.webhook_name)
-        except CloudError as e:
+            response = self.containerregistry_client.webhooks.begin_delete(resource_group_name=self.resource_group,
+                                                                           registry_name=self.registry_name,
+                                                                           webhook_name=self.webhook_name)
+            self.get_poller_result(response)
+        except Exception as e:
             self.log('Error attempting to delete the Webhook instance.')
             self.fail("Error deleting the Webhook instance: {0}".format(str(e)))
 
@@ -314,14 +307,14 @@ class AzureRMWebhooks(AzureRMModuleBase):
         self.log("Checking if the Webhook instance {0} is present".format(self.webhook_name))
         found = False
         try:
-            response = self.mgmt_client.webhooks.get(resource_group_name=self.resource_group,
-                                                     registry_name=self.registry_name,
-                                                     webhook_name=self.webhook_name)
+            response = self.containerregistry_client.webhooks.get(resource_group_name=self.resource_group,
+                                                                  registry_name=self.registry_name,
+                                                                  webhook_name=self.webhook_name)
             found = True
             self.log("Response : {0}".format(response))
             self.log("Webhook instance : {0} found".format(response.name))
-        except CloudError as e:
-            self.log('Did not find the Webhook instance.')
+        except ResourceNotFoundError as e:
+            self.log('Did not find the Webhook instance: {0}'.format(str(e)))
         if found is True:
             return response.as_dict()
 
