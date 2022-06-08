@@ -9,8 +9,7 @@
     name: "invalid_char$"
     account_type: Standard_LRS
   register: output
-  ignore_errors: yes
-
+  ignore_errors: true
 - name: Check intentional name failure.
   assert: 
     that: 
@@ -22,7 +21,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ item }}"
     state: absent
-    force_delete_nonempty: True
+    force_delete_nonempty: true
   loop:
     - "{{ storage_account_name_default }}"
     - "{{ storage_account_name_explicit }}"
@@ -34,7 +33,6 @@
     name: "{{ storage_account_name_default }}"
     account_type: Standard_LRS
   register: defaults_output
-
 - name: Assert status succeeded and results match expectations
   assert:
     that:
@@ -53,7 +51,6 @@
     account_type: Premium_ZRS
     kind: FileStorage
   register: filestorage_output
-
 - name: Assert status succeeded and results match I(kind=FileStorage)
   assert:
     that:
@@ -65,7 +62,7 @@
     access_tier: Hot
     account_type: Premium_LRS
     allow_blob_public_access: False
-    append_tags: no
+    append_tags: false
     blob_cors:
       - allowed_origins:
           - http://www.example.com/
@@ -95,7 +92,6 @@
       test: test
       galaxy: galaxy
   register: explicit_output
-
 - name: Assert status succeeded and correct parameter results
   assert:
     that:
@@ -114,7 +110,7 @@
     access_tier: Hot
     account_type: Premium_LRS
     allow_blob_public_access: False
-    append_tags: no
+    append_tags: false
     blob_cors:
       - allowed_origins:
           - http://www.example.com/
@@ -144,7 +140,6 @@
       test: test
       galaxy: galaxy
   register: output
-
 - name: Assert that properties have not changed
   assert:
     that:
@@ -172,7 +167,6 @@
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_explicit }}"
   register: output
-
 - name: Assert that properties have not changed
   assert:
     that:
@@ -200,7 +194,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}"
     allow_blob_public_access: False
-    append_tags: no
+    append_tags: false
     blob_cors:
       - allowed_origins:
           - http://www.example.com/
@@ -227,7 +221,6 @@
       test: test
       galaxy: galaxy
   register: output
-
 - name: Assert account change success
   assert:
     that:
@@ -249,8 +242,7 @@
     name: "{{ storage_account_name_default }}"
     account_type: Premium_LRS
   register: output
-  ignore_errors: yes
-
+  ignore_errors: true
 - name: Assert account type change failed
   assert:
     that:
@@ -263,10 +255,9 @@
     name: "{{ storage_account_name_default }}"
     custom_domain:
       name: ansible.com
-      use_sub_domain: no
-  ignore_errors: yes  
+      use_sub_domain: false
+  ignore_errors: true
   register: output
-
 - name: Assert CNAME failure
   assert: 
     that: 
@@ -280,20 +271,18 @@
       - test
       - galaxy
   register: output
-
 - assert:
-      that: output.storageaccounts | length >= 1
+    that: output.storageaccounts | length >= 1
 
 - name: Update account tags
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_explicit }}"
-    append_tags: no
+    append_tags: false
     tags:
       testing: testing
       delete: never
   register: output
-
 - assert:
     that:
       - "output.state.tags | length == 2"
@@ -321,12 +310,10 @@
       - output.storageaccounts[0].network_acls.bypass == "AzureServices"
       - output.storageaccounts[0].network_acls.default_action == "Deny"
       - output.storageaccounts[0].network_acls.ip_rules | length == 1
-
 - name: List storage accounts by resource group.
   azure_rm_storageaccount_info:
     resource_group: "{{ resource_group }}"
   register: output
-
 - assert:
     that:
       - "output.storageaccounts | length >= 2"

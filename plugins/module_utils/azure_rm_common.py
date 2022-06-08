@@ -247,8 +247,7 @@ try:
     from azure.mgmt.containerservice import ContainerServiceClient
     from azure.mgmt.marketplaceordering import MarketplaceOrderingAgreements
     from azure.mgmt.trafficmanager import TrafficManagerManagementClient
-    from azure.storage.cloudstorageaccount import CloudStorageAccount
-    from azure.storage.blob import PageBlobService, BlockBlobService
+    from azure.storage.blob import BlobServiceClient
     from adal.authentication_context import AuthenticationContext
     from azure.mgmt.authorization import AuthorizationManagementClient
     from azure.mgmt.sql import SqlManagementClient
@@ -681,30 +680,22 @@ class AzureRMModuleBase(object):
                 self.fail("Error {0} has a provisioning state of {1}. Expecting state to be {2}.".format(
                     azure_object.name, azure_object.provisioning_state, AZURE_SUCCESS_STATE))
 
-    def get_blob_client(self, resource_group_name, storage_account_name, storage_blob_type='block'):
-        keys = dict()
+    def get_blob_service_client(self, resource_group_name, storage_account_name):
         try:
-            # Get keys from the storage account
-            self.log('Getting keys')
-            account_keys = self.storage_client.storage_accounts.list_keys(resource_group_name, storage_account_name)
+            self.log("Getting storage account detail")
+            account = self.storage_client.storage_accounts.get_properties(resource_group_name=resource_group_name, account_name=storage_account_name)
+            account_keys = self.storage_client.storage_accounts.list_keys(resource_group_name=resource_group_name, account_name=storage_account_name)
         except Exception as exc:
-            self.fail("Error getting keys for account {0} - {1}".format(storage_account_name, str(exc)))
+            self.fail("Error getting storage account detail for {0}: {1}".format(storage_account_name, str(exc)))
 
         try:
-            self.log('Create blob service')
-            if storage_blob_type == 'page':
-                return PageBlobService(endpoint_suffix=self._cloud_environment.suffixes.storage_endpoint,
-                                       account_name=storage_account_name,
-                                       account_key=account_keys.keys[0].value)
-            elif storage_blob_type == 'block':
-                return BlockBlobService(endpoint_suffix=self._cloud_environment.suffixes.storage_endpoint,
-                                        account_name=storage_account_name,
-                                        account_key=account_keys.keys[0].value)
-            else:
-                raise Exception("Invalid storage blob type defined.")
+            self.log("Create blob service client")
+            return BlobServiceClient(
+                account_url=account.primary_endpoints.blob,
+                credential=account_keys.keys[0].value,
+            )
         except Exception as exc:
-            self.fail("Error creating blob service client for storage account {0} - {1}".format(storage_account_name,
-                                                                                                str(exc)))
+            self.fail("Error creating blob service client for storage account {0} - {1}".format(storage_account_name, str(exc)))
 
     def create_default_pip(self, resource_group, location, public_ip_name, allocation_method='Dynamic', sku=None):
         '''
@@ -1208,7 +1199,8 @@ class AzureRMModuleBase(object):
         if not self._containerregistry_client:
             self._containerregistry_client = self.get_mgmt_svc_client(ContainerRegistryManagementClient,
                                                                       base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                      api_version='2017-10-01')
+                                                                      is_track2=True,
+                                                                      api_version='2021-09-01')
 
         return self._containerregistry_client
 

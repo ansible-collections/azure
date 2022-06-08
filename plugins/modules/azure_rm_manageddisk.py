@@ -47,13 +47,17 @@ options:
             - If not specified, the disk is created as C(Standard_LRS).
             - C(Standard_LRS) is for Standard HDD.
             - C(StandardSSD_LRS) (added in 2.8) is for Standard SSD.
+            - C(StandardSSD_ZRS) is for Standard SSD Zone-redundant.
             - C(Premium_LRS) is for Premium SSD.
-            - C(UltraSSD_LRS) (added in 2.8) is for Ultra SSD, which is in preview mode, and only available on select instance types.
+            - C(Premium_ZRS) is for Premium SSD Zone-redundant.
+            - C(UltraSSD_LRS) (added in 2.8) is for Ultra SSD, which is only available on select instance types.
             - See U(https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-types) for more information about disk types.
         choices:
             - Standard_LRS
             - StandardSSD_LRS
+            - StandardSSD_ZRS
             - Premium_LRS
+            - Premium_ZRS
             - UltraSSD_LRS
     create_option:
         description:
@@ -275,7 +279,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ),
             storage_account_type=dict(
                 type='str',
-                choices=['Standard_LRS', 'StandardSSD_LRS', 'Premium_LRS', 'UltraSSD_LRS']
+                choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']
             ),
             create_option=dict(
                 type='str',

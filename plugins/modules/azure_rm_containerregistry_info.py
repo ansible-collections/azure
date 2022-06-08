@@ -142,15 +142,6 @@ registries:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
-try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrestazure.azure_operation import AzureOperationPoller
-    from azure.mgmt.containerregistry import ContainerRegistryManagementClient
-    from msrest.serialization import Model
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
-
 
 class AzureRMContainerRegistryInfo(AzureRMModuleBase):
     def __init__(self):
@@ -207,8 +198,8 @@ class AzureRMContainerRegistryInfo(AzureRMModuleBase):
             response = self.containerregistry_client.registries.get(resource_group_name=self.resource_group,
                                                                     registry_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
-            self.log('Could not get facts for Registries.')
+        except Exception as e:
+            self.log("Could not get facts for Registries: {0}".format(str(e)))
 
         if response is not None:
             if self.has_tags(response.tags, self.tags):
@@ -222,8 +213,8 @@ class AzureRMContainerRegistryInfo(AzureRMModuleBase):
         try:
             response = self.containerregistry_client.registries.list()
             self.log("Response : {0}".format(response))
-        except CloudError as e:
-            self.fail('Could not get facts for Registries.')
+        except Exception as e:
+            self.fail("Could not get facts for Registries: {0}".format(str(e)))
 
         if response is not None:
             for item in response:
@@ -237,8 +228,8 @@ class AzureRMContainerRegistryInfo(AzureRMModuleBase):
         try:
             response = self.containerregistry_client.registries.list_by_resource_group(resource_group_name=self.resource_group)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
-            self.fail('Could not get facts for Registries.')
+        except Exception as e:
+            self.fail("Could not get facts for Registries: {0}".format(str(e)))
 
         if response is not None:
             for item in response:
@@ -254,7 +245,7 @@ class AzureRMContainerRegistryInfo(AzureRMModuleBase):
         admin_user_enabled = d['admin_user_enabled']
 
         if self.retrieve_credentials and admin_user_enabled:
-            credentials = self.containerregistry_client.registries.list_credentials(resource_group, name).as_dict()
+            credentials = self.containerregistry_client.registries.list_credentials(resource_group_name=resource_group, registry_name=name).as_dict()
             for index in range(len(credentials['passwords'])):
                 password = credentials['passwords'][index]
                 if password['name'] == 'password':

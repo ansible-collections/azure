@@ -190,8 +190,8 @@ import os
 import mimetypes
 
 try:
-    from azure.storage.blob.models import ContentSettings
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
+    from azure.storage.blob._models import BlobType, ContentSettings
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -226,7 +226,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
         mutually_exclusive = [('src', 'dest'), ('src', 'batch_upload_src'), ('dest', 'batch_upload_src')]
 
-        self.blob_client = None
+        self.blob_service_client = None
         self.blob_details = None
         self.storage_account_name = None
         self.blob = None
@@ -264,8 +264,10 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
         # add file path validation
 
-        self.blob_client = self.get_blob_client(self.resource_group, self.storage_account_name, self.blob_type)
+        self.blob_service_client = self.get_blob_service_client(self.resource_group, self.storage_account_name)
         self.container_obj = self.get_container()
+        if self.blob:
+            self.blob_obj = self.get_blob()
 
         if self.state == 'present':
             if not self.container_obj:
@@ -283,11 +285,9 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
             if self.blob:
                 # create, update or download blob
-                self.blob_obj = self.get_blob()
                 if self.src and self.src_is_valid():
                     if self.blob_obj and not self.force:
-                        self.log("Cannot upload to {0}. Blob with that name already exists. "
-                                 "Use the force option".format(self.blob))
+                        self.log("Cannot upload to {0}. Blob with that name already exists. Use the force option".format(self.blob))
                     else:
                         self.upload_blob()
                 elif self.dest and self.dest_is_valid():
@@ -373,28 +373,40 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                 blob_path = _normalize_blob_file_path(self.batch_upload_dst, blob_path)
             if not self.check_mode:
                 try:
-                    self.blob_client.create_blob_from_path(self.container, blob_path, src,
-                                                           metadata=self.tags, content_settings=_guess_content_type(src, content_settings))
-                except AzureHttpError as exc:
+                    client = self.blob_service_client.get_blob_client(container=self.container, blob=blob_path)
+                    with open(src, "rb") as data:
+                        client.upload_blob(data=data,
+                                           blob_type=self.get_blob_type(self.blob_type),
+                                           metadata=self.tags,
+                                           content_settings=_guess_content_type(src, content_settings))
+                except Exception as exc:
                     self.fail("Error creating blob {0} - {1}".format(src, str(exc)))
             self.results['actions'].append('created blob from {0}'.format(src))
 
         self.results['changed'] = True
         self.results['container'] = self.container_obj
 
+    def get_blob_type(self, blob_type):
+        if blob_type == "block":
+            return BlobType.BlockBlob
+        elif blob_type == "page":
+            return BlobType.PageBlob
+        else:
+            return BlobType.AppendBlob
+
     def get_container(self):
         result = {}
         container = None
         if self.container:
             try:
-                container = self.blob_client.get_container_properties(self.container)
-            except AzureMissingResourceHttpError:
+                container = self.blob_service_client.get_container_client(container=self.container).get_container_properties()
+            except ResourceNotFoundError:
                 pass
         if container:
             result = dict(
-                name=container.name,
-                tags=container.metadata,
-                last_modified=container.properties.last_modified.strftime('%d-%b-%Y %H:%M:%S %z'),
+                name=container["name"],
+                tags=container["metadata"],
+                last_modified=container["last_modified"].strftime('%d-%b-%Y %H:%M:%S %z'),
             )
         return result
 
@@ -403,23 +415,23 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         blob = None
         if self.blob:
             try:
-                blob = self.blob_client.get_blob_properties(self.container, self.blob)
-            except AzureMissingResourceHttpError:
+                blob = self.blob_service_client.get_blob_client(container=self.container, blob=self.blob).get_blob_properties()
+            except ResourceNotFoundError:
                 pass
         if blob:
             result = dict(
-                name=blob.name,
-                tags=blob.metadata,
-                last_modified=blob.properties.last_modified.strftime('%d-%b-%Y %H:%M:%S %z'),
-                type=blob.properties.blob_type,
-                content_length=blob.properties.content_length,
+                name=blob["name"],
+                tags=blob["metadata"],
+                last_modified=blob["last_modified"].strftime('%d-%b-%Y %H:%M:%S %z'),
+                type=blob["blob_type"],
+                content_length=blob["size"],
                 content_settings=dict(
-                    content_type=blob.properties.content_settings.content_type,
-                    content_encoding=blob.properties.content_settings.content_encoding,
-                    content_language=blob.properties.content_settings.content_language,
-                    content_disposition=blob.properties.content_settings.content_disposition,
-                    cache_control=blob.properties.content_settings.cache_control,
-                    content_md5=blob.properties.content_settings.content_md5
+                    content_type=blob["content_settings"]["content_type"],
+                    content_encoding=blob["content_settings"]["content_encoding"],
+                    content_language=blob["content_settings"]["content_language"],
+                    content_disposition=blob["content_settings"]["content_disposition"],
+                    cache_control=blob["content_settings"]["cache_control"],
+                    content_md5=blob["content_settings"]["content_md5"],
                 )
             )
         return result
@@ -434,8 +446,9 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
         if not self.check_mode:
             try:
-                self.blob_client.create_container(self.container, metadata=tags, public_access=self.public_access)
-            except AzureHttpError as exc:
+                client = self.blob_service_client.get_container_client(container=self.container)
+                client.create_container(metadata=tags, public_access=self.public_access)
+            except Exception as exc:
                 self.fail("Error creating container {0} - {1}".format(self.container, str(exc)))
         self.container_obj = self.get_container()
         self.results['changed'] = True
@@ -456,9 +469,14 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             )
         if not self.check_mode:
             try:
-                self.blob_client.create_blob_from_path(self.container, self.blob, self.src,
-                                                       metadata=self.tags, content_settings=content_settings)
-            except AzureHttpError as exc:
+                client = self.blob_service_client.get_blob_client(container=self.container, blob=self.blob)
+                with open(self.src, "rb") as data:
+                    client.upload_blob(data=data,
+                                       blob_type=self.get_blob_type(self.blob_type),
+                                       metadata=self.tags,
+                                       content_settings=content_settings,
+                                       overwrite=self.force)
+            except Exception as exc:
                 self.fail("Error creating blob {0} - {1}".format(self.blob, str(exc)))
 
         self.blob_obj = self.get_blob()
@@ -470,7 +488,10 @@ class AzureRMStorageBlob(AzureRMModuleBase):
     def download_blob(self):
         if not self.check_mode:
             try:
-                self.blob_client.get_blob_to_path(self.container, self.blob, self.dest)
+                client = self.blob_service_client.get_blob_client(container=self.container, blob=self.blob)
+                with open(self.dest, "wb") as blob_stream:
+                    blob_data = client.download_blob()
+                    blob_data.readinto(blob_stream)
             except Exception as exc:
                 self.fail("Failed to download blob {0}:{1} to {2} - {3}".format(self.container,
                                                                                 self.blob,
@@ -527,8 +548,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
     def delete_container(self):
         if not self.check_mode:
             try:
-                self.blob_client.delete_container(self.container)
-            except AzureHttpError as exc:
+                self.blob_service_client.get_container_client(container=self.container).delete_container()
+            except Exception as exc:
                 self.fail("Error deleting container {0} - {1}".format(self.container, str(exc)))
 
         self.results['changed'] = True
@@ -536,18 +557,18 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
     def container_has_blobs(self):
         try:
-            list_generator = self.blob_client.list_blobs(self.container)
-        except AzureHttpError as exc:
+            blobs = self.blob_service_client.get_container_client(container=self.container).list_blobs()
+        except Exception as exc:
             self.fail("Error list blobs in {0} - {1}".format(self.container, str(exc)))
-        if len(list_generator.items) > 0:
+        if len(list(blobs)) > 0:
             return True
         return False
 
     def delete_blob(self):
         if not self.check_mode:
             try:
-                self.blob_client.delete_blob(self.container, self.blob)
-            except AzureHttpError as exc:
+                self.blob_service_client.get_container_client(container=self.container).delete_blob(blob=self.blob)
+            except Exception as exc:
                 self.fail("Error deleting blob {0}:{1} - {2}".format(self.container, self.blob, str(exc)))
 
         self.results['changed'] = True
@@ -557,8 +578,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
     def update_container_tags(self, tags):
         if not self.check_mode:
             try:
-                self.blob_client.set_container_metadata(self.container, metadata=tags)
-            except AzureHttpError as exc:
+                self.blob_service_client.get_container_client(container=self.container).set_container_metadata(metadata=tags)
+            except Exception as exc:
                 self.fail("Error updating container tags {0} - {1}".format(self.container, str(exc)))
         self.container_obj = self.get_container()
         self.results['changed'] = True
@@ -568,8 +589,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
     def update_blob_tags(self, tags):
         if not self.check_mode:
             try:
-                self.blob_client.set_blob_metadata(self.container, self.blob, metadata=tags)
-            except AzureHttpError as exc:
+                self.blob_service_client.get_blob_client(container=self.container, blob=self.blob).set_blob_metadata(metadata=tags)
+            except Exception as exc:
                 self.fail("Update blob tags {0}:{1} - {2}".format(self.container, self.blob, str(exc)))
         self.blob_obj = self.get_blob()
         self.results['changed'] = True
@@ -604,8 +625,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         )
         if not self.check_mode:
             try:
-                self.blob_client.set_blob_properties(self.container, self.blob, content_settings=content_settings)
-            except AzureHttpError as exc:
+                self.blob_service_client.get_blob_client(container=self.container, blob=self.blob).set_http_headers(content_settings=content_settings)
+            except Exception as exc:
                 self.fail("Update blob content settings {0}:{1} - {2}".format(self.container, self.blob, str(exc)))
 
         self.blob_obj = self.get_blob()
