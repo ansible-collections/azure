@@ -74,11 +74,9 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrestazure.azure_operation import AzureOperationPoller
-    from azure.mgmt.containerregistry import ContainerRegistryManagementClient
-    from msrest.serialization import Model
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
+    from azure.mgmt.containerregistry.models import Replication, ReplicationUpdateParameters
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -155,10 +153,6 @@ class AzureRMReplications(AzureRMModuleBase):
         old_response = None
         response = None
 
-        self.mgmt_client = self.get_mgmt_svc_client(ContainerRegistryManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2017-10-01')
-
         resource_group = self.get_resource_group(self.resource_group)
 
         if self.location is None:
@@ -227,19 +221,23 @@ class AzureRMReplications(AzureRMModuleBase):
 
         try:
             if self.to_do == Actions.Create:
-                response = self.mgmt_client.replications.create(resource_group_name=self.resource_group,
-                                                                registry_name=self.registry_name,
-                                                                replication_name=self.replication_name,
-                                                                location=self.location)
+                replication = Replication(
+                    location=self.location,
+                )
+                response = self.containerregistry_client.replications.begin_create(resource_group_name=self.resource_group,
+                                                                                   registry_name=self.registry_name,
+                                                                                   replication_name=self.replication_name,
+                                                                                   replication=replication)
             else:
-                response = self.mgmt_client.replications.update(resource_group_name=self.resource_group,
-                                                                registry_name=self.registry_name,
-                                                                replication_name=self.replication_name,
-                                                                location=self.location)
+                update_params = ReplicationUpdateParameters()
+                response = self.containerregistry_client.replications.begin_update(resource_group_name=self.resource_group,
+                                                                                   registry_name=self.registry_name,
+                                                                                   replication_name=self.replication_name,
+                                                                                   replication_update_parameters=update_params)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Replication instance.')
             self.fail("Error creating the Replication instance: {0}".format(str(exc)))
         return create_replication_dict(response)
@@ -252,10 +250,11 @@ class AzureRMReplications(AzureRMModuleBase):
         '''
         self.log("Deleting the Replication instance {0}".format(self.replication_name))
         try:
-            response = self.mgmt_client.replications.delete(resource_group_name=self.resource_group,
-                                                            registry_name=self.registry_name,
-                                                            replication_name=self.replication_name)
-        except CloudError as e:
+            response = self.containerregistry_client.replications.begin_delete(resource_group_name=self.resource_group,
+                                                                               registry_name=self.registry_name,
+                                                                               replication_name=self.replication_name)
+            self.get_poller_result(response)
+        except Exception as e:
             self.log('Error attempting to delete the Replication instance.')
             self.fail("Error deleting the Replication instance: {0}".format(str(e)))
 
@@ -270,14 +269,14 @@ class AzureRMReplications(AzureRMModuleBase):
         self.log("Checking if the Replication instance {0} is present".format(self.replication_name))
         found = False
         try:
-            response = self.mgmt_client.replications.get(resource_group_name=self.resource_group,
-                                                         registry_name=self.registry_name,
-                                                         replication_name=self.replication_name)
+            response = self.containerregistry_client.replications.get(resource_group_name=self.resource_group,
+                                                                      registry_name=self.registry_name,
+                                                                      replication_name=self.replication_name)
             found = True
             self.log("Response : {0}".format(response))
             self.log("Replication instance : {0} found".format(response.name))
-        except CloudError as e:
-            self.log('Did not find the Replication instance.')
+        except ResourceNotFoundError as e:
+            self.log('Did not find the Replication instance: {0}'.format(str(e)))
         if found is True:
             return response.as_dict()
 

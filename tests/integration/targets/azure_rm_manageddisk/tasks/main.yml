@@ -135,7 +135,7 @@
    azure_rm_manageddisk_info:
        resource_group: "{{ resource_group }}"
        name: "md{{ rpfx }}1"
-   register: output  
+   register: output
 
  - assert:
        that:
@@ -164,6 +164,60 @@
        that:
            - not output.changed
 
+ - name: Create new managed disk with  I(account_type=StandardSSD_ZRS)
+   azure_rm_manageddisk:
+       resource_group: "{{ resource_group }}"
+       name: "md{{ rpfx }}4"
+       storage_account_type: "StandardSSD_ZRS"
+       disk_size_gb: 2
+       location: westus2
+   register: output
+
+ - assert:
+     that:
+       - output.changed
+       - output.state.storage_account_type == "StandardSSD_ZRS"
+       - output.state.disk_size_gb == 2
+
+ - name: Gather facts to one specific disk
+   azure_rm_manageddisk_info:
+       resource_group: "{{ resource_group }}"
+       name: "md{{ rpfx }}4"
+   register: output
+
+ - assert:
+       that:
+           - "output.ansible_info.azure_managed_disk | length == 1"
+           - output.ansible_info.azure_managed_disk[0].storage_account_type == "StandardSSD_ZRS"
+           - output.ansible_info.azure_managed_disk[0].disk_size_gb == 2
+
+ - name: Create new managed disk with  I(account_type=Premium_ZRS)
+   azure_rm_manageddisk:
+       resource_group: "{{ resource_group }}"
+       name: "md{{ rpfx }}5"
+       storage_account_type: "Premium_ZRS"
+       disk_size_gb: 2
+       location: westus2
+   register: output
+
+ - assert:
+     that:
+       - output.changed
+       - output.state.storage_account_type == "Premium_ZRS"
+       - output.state.disk_size_gb == 2
+
+ - name: Gather facts to one specific disk
+   azure_rm_manageddisk_info:
+       resource_group: "{{ resource_group }}"
+       name: "md{{ rpfx }}5"
+   register: output
+
+ - assert:
+       that:
+           - "output.ansible_info.azure_managed_disk | length == 1"
+           - output.ansible_info.azure_managed_disk[0].storage_account_type == "Premium_ZRS"
+           - output.ansible_info.azure_managed_disk[0].disk_size_gb == 2
+
  - name: Delete managed disk (Check Mode)
    azure_rm_manageddisk:
        resource_group: "{{ resource_group }}"
@@ -188,6 +242,8 @@
        - 1
        - 2
        - 3
+       - 4
+       - 5
 
  - name: Delete virtual machine
    azure_rm_virtualmachine:

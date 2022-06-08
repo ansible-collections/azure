@@ -182,7 +182,9 @@ options:
         choices:
             - Standard_LRS
             - StandardSSD_LRS
+            - StandardSSD_ZRS
             - Premium_LRS
+            - Premium_ZRS
     os_disk_name:
         description:
             - OS disk name.
@@ -232,7 +234,9 @@ options:
                 choices:
                     - Standard_LRS
                     - StandardSSD_LRS
+                    - StandardSSD_ZRS
                     - Premium_LRS
+                    - Premium_ZRS
             storage_account_name:
                 description:
                     - Name of an existing storage account that supports creation of VHD blobs.
@@ -879,7 +883,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             storage_blob_name=dict(type='str', aliases=['storage_blob']),
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite']),
             os_disk_size_gb=dict(type='int'),
-            managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'Premium_LRS']),
+            managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS']),
             os_disk_name=dict(type='str'),
             proximity_placement_group=dict(type='dict', options=proximity_placement_group_spec),
             os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
@@ -1225,7 +1229,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     powerstate_change = 'generalized'
 
                 vm_dict['zones'] = [int(i) for i in vm_dict['zones']] if 'zones' in vm_dict and vm_dict['zones'] else None
-                if self.zones != vm_dict['zones']:
+                if self.zones is not None and self.zones != vm_dict['zones']:
                     self.log("CHANGED: virtual machine {0} zones".format(self.name))
                     differences.append('Zones')
                     changed = True
@@ -1610,7 +1614,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         image_reference = None
 
                     # You can't change a vm zone
-                    if vm_dict['zones'] != self.zones:
+                    if self.zones is not None and vm_dict['zones'] != self.zones:
                         self.fail("You can't change the Availability Zone of a virtual machine (have: {0}, want: {1})".format(vm_dict['zones'], self.zones))
 
                     if 'osProfile' in vm_dict['properties']:
