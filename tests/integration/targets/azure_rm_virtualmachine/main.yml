@@ -1,4 +1,4 @@
-- name: Run Azurue VM tests in parallel
+- name: Run Azure VM tests in parallel
   hosts: all
   gather_facts: no
   strategy: free
