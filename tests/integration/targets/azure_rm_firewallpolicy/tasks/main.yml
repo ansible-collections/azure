@@ -1,0 +1,100 @@
+- name: Create firewall policy name
+  set_fact:
+    policy_name: "fp{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+
+- name: Create firewall policy
+  azure_rm_firewallpolicy:
+    resource_group: "{{ resource_group }}"
+    name: "{{ policy_name }}"
+    threat_intel_mode: alert
+    threat_intel_whitelist:
+      ip_addresses:
+        - 10.0.0.1
+        - 10.0.0.2
+      fqdns:
+        - "*.microsoft.com"
+        - "*.azure.com"
+    state: present
+  register: results
+
+- name: Assert that firewall policy is created
+  assert:
+    that: results.changed
+
+- name: Create a firewall policy again (Idempotent test)
+  azure_rm_firewallpolicy:
+    resource_group: "{{ resource_group }}"
+    name: "{{ policy_name }}"
+    threat_intel_mode: alert
+    threat_intel_whitelist:
+      ip_addresses:
+        - 10.0.0.1
+        - 10.0.0.2
+      fqdns:
+        - "*.microsoft.com"
+        - "*.azure.com"
+    state: present
+  register: results
+
+- name: Assert that output is not changed
+  assert:
+    that: not results.changed
+
+- name: Update a firewall policy
+  azure_rm_firewallpolicy:
+    resource_group: "{{ resource_group }}"
+    name: "{{ policy_name }}"
+    threat_intel_mode: deny
+    threat_intel_whitelist:
+      ip_addresses:
+        - 10.0.0.1
+      append_ip_addresses: false
+      fqdns:
+        - "*.microsoft.com"
+      append_fqdns: false
+    state: present
+    tags:
+      key1: "value1"
+  register: results
+
+- name: Assert that firewall policy is updated
+  assert:
+    that: results.changed
+
+- name: Get firewall policy facts
+  azure_rm_firewallpolicy_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ policy_name }}"
+  register: results
+
+- assert:
+    that:
+      - not results.changed
+      - results.firewallpolicies[0].id != None
+      - results.firewallpolicies[0].name == "{{ policy_name }}"
+      - results.firewallpolicies[0].threat_intel_mode == "Deny"
+      - results.firewallpolicies[0].threat_intel_whitelist.ip_addresses == ["10.0.0.1"]
+      - results.firewallpolicies[0].threat_intel_whitelist.fqdns == ["*.microsoft.com"]
+      - results.firewallpolicies[0].tags | length > 0
+
+- name: Delete the firewall policy
+  azure_rm_firewallpolicy:
+    resource_group: "{{ resource_group }}"
+    name: "{{ policy_name }}"
+    state: absent
+  register: results
+
+- name: Assert that firewall policy is deleted
+  assert:
+    that: results.changed
+
+- name: Delete firewall policy again (Idempotent test)
+  azure_rm_firewallpolicy:
+    resource_group: "{{ resource_group }}"
+    name: "{{ policy_name }}"
+    state: absent
+  register: results
+
+- name: Asset that output is not changed
+  assert:
+    that: not results.changed
