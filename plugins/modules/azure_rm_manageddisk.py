@@ -352,6 +352,17 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             self.location = resource_group.location
 
         disk_instance = self.get_managed_disk()
+        if disk_instance is not None:
+            if self.create_option is None:
+                self.create_option = disk_instance.get('create_option')
+            if self.source_uri is None:
+                self.source_uri = disk_instance.get('source_uri')
+            if self.disk_size_gb is None:
+                self.disk_size_gb = disk_instance.get('disk_size_gb')
+            if self.os_type is None:
+                self.os_type = disk_instance.get('os_type')
+            if self.zone is None:
+                self.zone = disk_instance.get('zone')
         result = disk_instance
 
         # need create or update
