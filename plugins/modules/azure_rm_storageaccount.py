@@ -607,7 +607,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         try:
             account_obj = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name)
             blob_mgmt_props = self.storage_client.blob_services.get_service_properties(self.resource_group, self.name)
-            blob_client_props = self.get_blob_service_client(self.resource_group, self.name).get_service_properties()
+            if self.kind != "FileStorage":
+                blob_client_props = self.get_blob_service_client(self.resource_group, self.name).get_service_properties()
         except Exception:
             pass
 
@@ -935,6 +936,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         If there are blob containers, then there are likely VMs depending on this account and it should
         not be deleted.
         '''
+        if self.kind == "FileStorage":
+            return False
         self.log('Checking for existing blob containers')
         blob_service = self.get_blob_service_client(self.resource_group, self.name)
         try:
@@ -957,6 +960,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             self.fail("Failed to set CORS rules: {0}".format(str(exc)))
 
     def update_static_website(self):
+        if self.kind == "FileStorage":
+            return
         try:
             self.get_blob_service_client(self.resource_group, self.name).set_service_properties(static_website=self.static_website)
         except Exception as exc:

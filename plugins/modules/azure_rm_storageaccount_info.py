@@ -613,7 +613,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 exposed_headers=to_native(x.exposed_headers),
                 allowed_headers=to_native(x.allowed_headers)
             ) for x in blob_mgmt_props.cors.cors_rules]
-        blob_client_props = self.get_blob_client_props(account_dict['resource_group'], account_dict['name'])
+        blob_client_props = self.get_blob_client_props(account_dict['resource_group'], account_dict['name'], account_dict['kind'])
         if blob_client_props and blob_client_props['static_website']:
             static_website = blob_client_props['static_website']
             account_dict['static_website'] = dict(
@@ -644,7 +644,9 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             pass
         return None
 
-    def get_blob_client_props(self, resource_group, name):
+    def get_blob_client_props(self, resource_group, name, kind):
+        if kind == "FileStorage":
+            return None
         try:
             return self.get_blob_service_client(resource_group, name).get_service_properties()
         except Exception:
