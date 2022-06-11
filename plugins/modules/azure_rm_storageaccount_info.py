@@ -404,7 +404,7 @@ storageaccounts:
             description:
                 - Static website configuration for the storage account.
             returned: always
-            version_added: "1.12.0"
+            version_added: "1.13.0"
             type: complex
             contains:
                 enabled:
@@ -551,7 +551,12 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             primary_location=account_obj.primary_location,
             https_only=account_obj.enable_https_traffic_only,
             minimum_tls_version=account_obj.minimum_tls_version,
-            allow_blob_public_access=account_obj.allow_blob_public_access
+            allow_blob_public_access=account_obj.allow_blob_public_access,
+            static_website=dict(
+                enabled=False,
+                index_document=None,
+                error_document404_path=None,
+            ),
         )
 
         id_dict = self.parse_resource_to_dict(account_obj.id)

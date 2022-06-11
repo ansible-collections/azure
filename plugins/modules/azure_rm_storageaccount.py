@@ -188,7 +188,7 @@ options:
         description:
             - Manage static website configuration for the storage account.
         type: dict
-        version_added: "1.12.0"
+        version_added: "1.13.0"
         suboptions:
             enabled:
                 description:
@@ -424,7 +424,7 @@ state:
             description:
                 - Static website configuration for the storage account.
             returned: always
-            version_added: "1.12.0"
+            version_added: "1.13.0"
             type: complex
             contains:
                 enabled:
@@ -635,7 +635,12 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             https_only=account_obj.enable_https_traffic_only,
             minimum_tls_version=account_obj.minimum_tls_version,
             allow_blob_public_access=account_obj.allow_blob_public_access,
-            network_acls=account_obj.network_rule_set
+            network_acls=account_obj.network_rule_set,
+            static_website=dict(
+                enabled=False,
+                index_document=None,
+                error_document404_path=None,
+            ),
         )
         account_dict['custom_domain'] = None
         if account_obj.custom_domain:
