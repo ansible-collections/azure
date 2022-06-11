@@ -27,7 +27,7 @@
     - "{{ storage_account_name_explicit }}"
     - "{{ storage_account_name_default }}01"
     - "{{ storage_account_name_default }}02"
-    - "{{ storage_account_name_default }}03"
+    - "{{ storage_account_name_default }}04"
 
 - name: Create new storage account with defaults (omitted parameters)
   azure_rm_storageaccount:
@@ -135,7 +135,7 @@
 - name: Create storage account with static website enabled
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
-    name: "{{ storage_account_name_default }}03"
+    name: "{{ storage_account_name_default }}04"
     account_type: Standard_LRS
     kind: StorageV2
     static_website:
@@ -154,7 +154,7 @@
 - name: Create storage account with static website enabled (idempotency test)
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
-    name: "{{ storage_account_name_default }}03"
+    name: "{{ storage_account_name_default }}04"
     account_type: Standard_LRS
     kind: StorageV2
     static_website:
@@ -169,7 +169,7 @@
 - name: Disable storage account static website
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
-    name: "{{ storage_account_name_default }}03"
+    name: "{{ storage_account_name_default }}04"
     account_type: Standard_LRS
     kind: StorageV2
     static_website:
@@ -466,7 +466,7 @@
 - name: Gather disabled static website properties
   azure_rm_storageaccount_info:
     resource_group: "{{ resource_group }}"
-    name: "{{ storage_account_name_default }}03"
+    name: "{{ storage_account_name_default }}04"
   register: output
 - assert:
     that:
@@ -495,4 +495,4 @@
     - "{{ storage_account_name_explicit }}"
     - "{{ storage_account_name_default }}01"
     - "{{ storage_account_name_default }}02"
-    - "{{ storage_account_name_default }}03"
+    - "{{ storage_account_name_default }}04"
