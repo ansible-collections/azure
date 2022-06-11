@@ -27,6 +27,7 @@
     - "{{ storage_account_name_explicit }}"
     - "{{ storage_account_name_default }}01"
     - "{{ storage_account_name_default }}02"
+    - "{{ storage_account_name_default }}03"
 
 - name: Create new storage account with defaults (omitted parameters)
   azure_rm_storageaccount:
@@ -60,6 +61,8 @@
       - output.changed
       - output.state.static_website is defined
       - not output.state.static_website.enabled
+      - output.state.static_website.index_document == None
+      - output.state.static_website.error_document404_path == None
 
 - name: Create storage account with static website disabled (idempotency test)
   azure_rm_storageaccount:
@@ -90,6 +93,8 @@
       - output.changed
       - output.state.static_website is defined
       - output.state.static_website.enabled
+      - output.state.static_website.index_document == None
+      - output.state.static_website.error_document404_path == None
 
 - name: Configure additional storage account static website properties
   azure_rm_storageaccount:
@@ -126,6 +131,58 @@
   assert:
     that:
       - not output.changed
+
+- name: Create storage account with static website enabled
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}03"
+    account_type: Standard_LRS
+    kind: StorageV2
+    static_website:
+      enabled: true
+      index_document: "abc.htm"
+  register: output
+- name: Assert output
+  assert:
+    that:
+      - output.changed
+      - output.state.static_website is defined
+      - output.state.static_website.enabled
+      - output.state.static_website.index_document == "abc.htm"
+      - output.state.static_website.error_document404_path == None
+
+- name: Create storage account with static website enabled (idempotency test)
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}03"
+    account_type: Standard_LRS
+    kind: StorageV2
+    static_website:
+      enabled: true
+      index_document: "abc.htm"
+  register: output
+- name: Assert not changed
+  assert:
+    that:
+      - not output.changed
+
+- name: Disable storage account static website
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}03"
+    account_type: Standard_LRS
+    kind: StorageV2
+    static_website:
+      enabled: false
+  register: output
+- name: Assert output
+  assert:
+    that:
+      - output.changed
+      - output.state.static_website is defined
+      - not output.state.static_website.enabled
+      - output.state.static_website.index_document == None
+      - output.state.static_website.error_document404_path == None
 
 - name: Create new storage account with I(kind=FileStorage)
   azure_rm_storageaccount:
@@ -393,7 +450,7 @@
       - output.storageaccounts[0].network_acls.default_action == "Deny"
       - output.storageaccounts[0].network_acls.ip_rules | length == 1
 
-- name: Gather static website properties
+- name: Gather enabled static website properties
   azure_rm_storageaccount_info:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}01"
@@ -405,6 +462,19 @@
       - output.storageaccounts[0].static_website.enabled
       - output.storageaccounts[0].static_website.index_document == 'index.html'
       - output.storageaccounts[0].static_website.error_document404_path == 'error.html'
+
+- name: Gather disabled static website properties
+  azure_rm_storageaccount_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}03"
+  register: output
+- assert:
+    that:
+      - output.storageaccounts | length == 1
+      - output.storageaccounts[0].static_website is defined
+      - not output.storageaccounts[0].static_website.enabled
+      - output.storageaccounts[0].static_website.index_document == None
+      - output.storageaccounts[0].static_website.error_document404_path == None
 
 - name: List storage accounts by resource group.
   azure_rm_storageaccount_info:
@@ -422,6 +492,7 @@
     force_delete_nonempty: True
   loop:
     - "{{ storage_account_name_default }}"
+    - "{{ storage_account_name_explicit }}"
     - "{{ storage_account_name_default }}01"
     - "{{ storage_account_name_default }}02"
-    - "{{ storage_account_name_explicit }}"
+    - "{{ storage_account_name_default }}03"
