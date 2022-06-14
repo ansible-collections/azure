@@ -400,6 +400,31 @@ storageaccounts:
             returned: always
             type: dict
             sample: { "tag1": "abc" }
+        static_website:
+            description:
+                - Static website configuration for the storage account.
+            returned: always
+            version_added: "1.13.0"
+            type: complex
+            contains:
+                enabled:
+                    description:
+                        - Whether this account is hosting a static website.
+                    returned: always
+                    type: bool
+                    sample: true
+                index_document:
+                    description:
+                        - The default name of the index page under each directory.
+                    returned: always
+                    type: str
+                    sample: index.html
+                error_document404_path:
+                    description:
+                        - The absolute path of the custom 404 page.
+                    returned: always
+                    type: str
+                    sample: error.html
 '''
 
 try:
@@ -508,7 +533,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
     def format_to_dict(self, raw):
         return [self.account_obj_to_dict(item) for item in raw]
 
-    def account_obj_to_dict(self, account_obj, blob_service_props=None):
+    def account_obj_to_dict(self, account_obj):
         account_dict = dict(
             id=account_obj.id,
             name=account_obj.name,
@@ -526,7 +551,12 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             primary_location=account_obj.primary_location,
             https_only=account_obj.enable_https_traffic_only,
             minimum_tls_version=account_obj.minimum_tls_version,
-            allow_blob_public_access=account_obj.allow_blob_public_access
+            allow_blob_public_access=account_obj.allow_blob_public_access,
+            static_website=dict(
+                enabled=False,
+                index_document=None,
+                error_document404_path=None,
+            ),
         )
 
         id_dict = self.parse_resource_to_dict(account_obj.id)
@@ -579,15 +609,23 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         account_dict['tags'] = None
         if account_obj.tags:
             account_dict['tags'] = account_obj.tags
-        blob_service_props = self.get_blob_service_props(account_dict['resource_group'], account_dict['name'])
-        if blob_service_props and blob_service_props.cors and blob_service_props.cors.cors_rules:
+        blob_mgmt_props = self.get_blob_mgmt_props(account_dict['resource_group'], account_dict['name'])
+        if blob_mgmt_props and blob_mgmt_props.cors and blob_mgmt_props.cors.cors_rules:
             account_dict['blob_cors'] = [dict(
                 allowed_origins=to_native(x.allowed_origins),
                 allowed_methods=to_native(x.allowed_methods),
                 max_age_in_seconds=x.max_age_in_seconds,
                 exposed_headers=to_native(x.exposed_headers),
                 allowed_headers=to_native(x.allowed_headers)
-            ) for x in blob_service_props.cors.cors_rules]
+            ) for x in blob_mgmt_props.cors.cors_rules]
+        blob_client_props = self.get_blob_client_props(account_dict['resource_group'], account_dict['name'], account_dict['kind'])
+        if blob_client_props and blob_client_props['static_website']:
+            static_website = blob_client_props['static_website']
+            account_dict['static_website'] = dict(
+                enabled=static_website.enabled,
+                index_document=static_website.index_document,
+                error_document404_path=static_website.error_document404_path,
+            )
         return account_dict
 
     def format_endpoint_dict(self, name, key, endpoint, storagetype, protocol='https'):
@@ -602,12 +640,20 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                                          endpoint)
         return result
 
-    def get_blob_service_props(self, resource_group, name):
+    def get_blob_mgmt_props(self, resource_group, name):
         if not self.show_blob_cors:
             return None
         try:
-            blob_service_props = self.storage_client.blob_services.get_service_properties(resource_group, name)
-            return blob_service_props
+            return self.storage_client.blob_services.get_service_properties(resource_group, name)
+        except Exception:
+            pass
+        return None
+
+    def get_blob_client_props(self, resource_group, name, kind):
+        if kind == "FileStorage":
+            return None
+        try:
+            return self.get_blob_service_client(resource_group, name).get_service_properties()
         except Exception:
             pass
         return None
