@@ -282,7 +282,7 @@ def zone_to_dict(zone):
         number_of_record_sets=zone.number_of_record_sets,
         name_servers=zone.name_servers,
         tags=zone.tags,
-        type=zone.zone_type.value.lower(),
+        type=zone.zone_type.lower(),
         registration_virtual_networks=[to_native(x.id) for x in zone.registration_virtual_networks] if zone.registration_virtual_networks else None,
         resolution_virtual_networks=[to_native(x.id) for x in zone.resolution_virtual_networks] if zone.resolution_virtual_networks else None
     )

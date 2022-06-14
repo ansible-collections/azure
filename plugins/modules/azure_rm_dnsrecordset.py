@@ -324,7 +324,7 @@ RECORD_ARGSPECS = dict(
 )
 
 RECORDSET_VALUE_MAP = dict(
-    A=dict(attrname='arecords', classobj='ARecord', is_list=True),
+    A=dict(attrname='a_records', classobj='ARecord', is_list=True),
     AAAA=dict(attrname='aaaa_records', classobj='AaaaRecord', is_list=True),
     CNAME=dict(attrname='cname_record', classobj='CnameRecord', is_list=False),
     MX=dict(attrname='mx_records', classobj='MxRecord', is_list=True),
