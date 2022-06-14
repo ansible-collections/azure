@@ -155,7 +155,7 @@ AZURE_OBJECT_CLASS = 'RecordSet'
 
 
 RECORDSET_VALUE_MAP = dict(
-    A='arecords',
+    A='a_records',
     AAAA='aaaa_records',
     CNAME='cname_record',
     MX='mx_records',
