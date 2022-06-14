@@ -144,7 +144,7 @@ EXAMPLES = '''
         resource_group: myResourceGroup
         create_option: import
         source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
-        storage_account_id: /subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
+        storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
         os_type: windows
         storage_account_type: Premium_LRS
 
