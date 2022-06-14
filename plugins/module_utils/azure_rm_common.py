@@ -351,7 +351,7 @@ AZURE_PKG_VERSIONS = {
     },
     'DnsManagementClient': {
         'package_name': 'dns',
-        'expected_version': '2.1.0'
+        'expected_version': '8.0.0'
     },
     'PrivateDnsManagementClient': {
         'package_name': 'privatedns',
@@ -1105,6 +1105,7 @@ class AzureRMModuleBase(object):
         if not self._dns_client:
             self._dns_client = self.get_mgmt_svc_client(DnsManagementClient,
                                                         base_url=self._cloud_environment.endpoints.resource_manager,
+                                                        is_track2=True,
                                                         api_version='2018-05-01')
         return self._dns_client
 
