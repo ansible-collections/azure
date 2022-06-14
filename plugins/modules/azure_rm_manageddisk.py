@@ -70,6 +70,7 @@ options:
         description:
             - The full path to the storage account the image is to be imported from.
             - Required when I(create_option=import).
+        type: str
     source_uri:
         description:
             - URI to a valid VHD file to be used or the resource ID of the managed disk to copy.
