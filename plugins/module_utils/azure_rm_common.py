@@ -1173,6 +1173,7 @@ class AzureRMModuleBase(object):
         self.log('Getting PostgreSQL client')
         if not self._postgresql_client:
             self._postgresql_client = self.get_mgmt_svc_client(PostgreSQLManagementClient,
+                                                               is_track2=True,
                                                                base_url=self._cloud_environment.endpoints.resource_manager)
         return self._postgresql_client
 
@@ -1181,6 +1182,7 @@ class AzureRMModuleBase(object):
         self.log('Getting MySQL client')
         if not self._mysql_client:
             self._mysql_client = self.get_mgmt_svc_client(MySQLManagementClient,
+                                                          is_track2=True,
                                                           base_url=self._cloud_environment.endpoints.resource_manager)
         return self._mysql_client
 
@@ -1189,6 +1191,7 @@ class AzureRMModuleBase(object):
         self.log('Getting MariaDB client')
         if not self._mariadb_client:
             self._mariadb_client = self.get_mgmt_svc_client(MariaDBManagementClient,
+                                                            is_track2=True,
                                                             base_url=self._cloud_environment.endpoints.resource_manager)
         return self._mariadb_client
 
