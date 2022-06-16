@@ -1212,7 +1212,6 @@ class AzureRMModuleBase(object):
                                                                       is_track2=True,
                                                                       api_version='2018-06-01')
 
-
         return self._containerinstance_client
 
     @property
