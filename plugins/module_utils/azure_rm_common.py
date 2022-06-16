@@ -339,7 +339,7 @@ AZURE_PKG_VERSIONS = {
     },
     'ContainerInstanceManagementClient': {
         'package_name': 'containerinstance',
-        'expected_version': '0.4.0'
+        'expected_version': '9.0.0'
     },
     'NetworkManagementClient': {
         'package_name': 'network',
