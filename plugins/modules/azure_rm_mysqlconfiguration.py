@@ -184,8 +184,7 @@ class AzureRMMySqlConfiguration(AzureRMModuleBase):
             response = self.mysql_client.configurations.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                server_name=self.server_name,
                                                                                configuration_name=self.name,
-                                                                               parameters=self.value,
-                                                                               source='user-override')
+                                                                               parameters={'value': self.value, 'source': 'user-override'})
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -200,8 +199,7 @@ class AzureRMMySqlConfiguration(AzureRMModuleBase):
             response = self.mysql_client.configurations.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                server_name=self.server_name,
                                                                                configuration_name=self.name,
-                                                                               parameters=None,
-                                                                               source='system-default')
+                                                                               parameters={'source': 'system-default'})
         except Exception as e:
             self.log('Error attempting to delete the Configuration instance.')
             self.fail("Error deleting the Configuration instance: {0}".format(str(e)))
