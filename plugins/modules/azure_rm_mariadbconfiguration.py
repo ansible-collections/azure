@@ -187,10 +187,10 @@ class AzureRMMariaDbConfiguration(AzureRMModuleBase):
         self.log("Creating / Updating the Configuration instance {0}".format(self.name))
 
         try:
-            response = self.mariadb_client.configurations.create_or_update(resource_group_name=self.resource_group,
-                                                                           server_name=self.server_name,
-                                                                           configuration_name=self.name,
-                                                                           parameters={'value': self.value, 'source': 'user-override'})
+            response = self.mariadb_client.configurations.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                 server_name=self.server_name,
+                                                                                 configuration_name=self.name,
+                                                                                 parameters={'value': self.value, 'source': 'user-override'})
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -202,10 +202,10 @@ class AzureRMMariaDbConfiguration(AzureRMModuleBase):
     def delete_configuration(self):
         self.log("Deleting the Configuration instance {0}".format(self.name))
         try:
-            response = self.mariadb_client.configurations.create_or_update(resource_group_name=self.resource_group,
-                                                                           server_name=self.server_name,
-                                                                           configuration_name=self.name,
-                                                                           parameters={'sourc':'system-default'})
+            response = self.mariadb_client.configurations.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                 server_name=self.server_name,
+                                                                                 configuration_name=self.name,
+                                                                                 parameters={'sourc':'system-default'})
         except Exception as e:
             self.log('Error attempting to delete the Configuration instance.')
             self.fail("Error deleting the Configuration instance: {0}".format(str(e)))
