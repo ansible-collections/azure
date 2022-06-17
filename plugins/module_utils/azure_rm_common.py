@@ -363,7 +363,7 @@ AZURE_PKG_VERSIONS = {
     },
     'TrafficManagerManagementClient': {
         'package_name': 'trafficmanager',
-        'expected_version': '0.50.0'
+        'expected_version': '1.0.0'
     },
     'EventHubManagementClient': {
         'package_name': 'azure-mgmt-eventhub',
@@ -1226,6 +1226,7 @@ class AzureRMModuleBase(object):
         self.log('Getting traffic manager client')
         if not self._traffic_manager_management_client:
             self._traffic_manager_management_client = self.get_mgmt_svc_client(TrafficManagerManagementClient,
+                                                                               is_track2=True,
                                                                                base_url=self._cloud_environment.endpoints.resource_manager)
         return self._traffic_manager_management_client
 
