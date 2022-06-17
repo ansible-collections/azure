@@ -205,7 +205,7 @@ class AzureRMMariaDbConfiguration(AzureRMModuleBase):
             response = self.mariadb_client.configurations.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                  server_name=self.server_name,
                                                                                  configuration_name=self.name,
-                                                                                 parameters={'sourc':'system-default'})
+                                                                                 parameters={'sourc': 'system-default'})
         except Exception as e:
             self.log('Error attempting to delete the Configuration instance.')
             self.fail("Error deleting the Configuration instance: {0}".format(str(e)))
