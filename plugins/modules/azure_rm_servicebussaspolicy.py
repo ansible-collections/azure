@@ -248,7 +248,10 @@ class AzureRMServiceBusSASPolicy(AzureRMModuleBase):
         try:
             client = self._get_client()
             if self.queue or self.topic:
-                rule = client.create_or_update_authorization_rule(self.resource_group, self.namespace, self.queue or self.topic, self.name, parameters={'rights': rights})
+                rule = client.create_or_update_authorization_rule(self.resource_group,
+                                                                  self.namespace,
+                                                                  self.queue or self.topic,
+                                                                  self.name, parameters={'rights': rights})
             else:
                 rule = client.create_or_update_authorization_rule(self.resource_group, self.namespace, self.name, parameters={'rights': rights})
             return rule
