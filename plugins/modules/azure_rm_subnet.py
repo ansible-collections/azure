@@ -143,6 +143,13 @@ options:
                 description:
                     - A list of actions.
                 type: list
+    nat_gateway:
+        description:
+            - Existing NAT Gateway with which to associate the subnet.
+            - It can be the NAT Gateway name which is in the same resource group.
+            - Can be the resource ID of the NAT Gateway.
+            - Can be a dict containing the I(name) and I(resource_group) of the NAT Gateway.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -192,6 +199,14 @@ EXAMPLES = '''
         delegations:
           - name: 'mydeleg'
             serviceName: 'Microsoft.ContainerInstance/containerGroups'
+
+    - name: Create a subnet with an associated NAT Gateway
+      azure_rm_subnet:
+        resource_group: myResourceGroup
+        virtual_network_name: myVirtualNetwork
+        name: mySubnet
+        address_prefix_cidr: "10.1.0.0/16"
+        nat_gateway: myNatGateway
 
     - name: Delete a subnet
       azure_rm_subnet:
@@ -298,6 +313,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
+    from msrestazure.tools import is_valid_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -339,7 +355,8 @@ def subnet_to_dict(subnet):
         network_security_group=dict(),
         route_table=dict(),
         private_endpoint_network_policies=subnet.private_endpoint_network_policies,
-        private_link_service_network_policies=subnet.private_link_service_network_policies
+        private_link_service_network_policies=subnet.private_link_service_network_policies,
+        nat_gateway=None
     )
     if subnet.network_security_group:
         id_keys = azure_id_to_dict(subnet.network_security_group.id)
@@ -355,6 +372,8 @@ def subnet_to_dict(subnet):
         result['service_endpoints'] = [{'service': item.service, 'locations': item.locations or []} for item in subnet.service_endpoints]
     if subnet.delegations:
         result['delegations'] = [{'name': item.name, 'serviceName': item.service_name, 'actions': item.actions or []} for item in subnet.delegations]
+    if subnet.nat_gateway:
+        result['nat_gateway'] = subnet.nat_gateway.id
     return result
 
 
@@ -388,7 +407,8 @@ class AzureRMSubnet(AzureRMModuleBase):
                 type='list',
                 elements='dict',
                 options=delegations_spec
-            )
+            ),
+            nat_gateway=dict(type='str')
         )
 
         mutually_exclusive = [['address_prefix_cidr', 'address_prefixes_cidr']]
@@ -410,6 +430,7 @@ class AzureRMSubnet(AzureRMModuleBase):
         self.private_link_service_network_policies = None
         self.private_endpoint_network_policies = None
         self.delegations = None
+        self.nat_gateway = None
 
         super(AzureRMSubnet, self).__init__(self.module_arg_spec,
                                             supports_check_mode=True,
@@ -432,6 +453,8 @@ class AzureRMSubnet(AzureRMModuleBase):
         nsg = dict()
         if self.security_group:
             nsg = self.parse_nsg()
+
+        nat_gateway = self.build_nat_gateway_id(self.nat_gateway)
 
         route_table = dict()
         if self.route_table:
@@ -528,6 +551,17 @@ class AzureRMSubnet(AzureRMModuleBase):
                         changed = True
                         results['delegations'] = self.delegations
 
+                if nat_gateway is not None:
+                    if nat_gateway != results['nat_gateway']:
+                        changed = True
+                        # Update associated NAT Gateway
+                        results['nat_gateway'] = nat_gateway
+                else:
+                    if results['nat_gateway'] is not None:
+                        changed = True
+                        # Disassociate NAT Gateway
+                        results['nat_gateway'] = None
+
             elif self.state == 'absent':
                 changed = True
         except ResourceNotFoundError:
@@ -562,6 +596,8 @@ class AzureRMSubnet(AzureRMModuleBase):
                         subnet.private_link_service_network_policies = self.private_link_service_network_policies
                     if self.delegations:
                         subnet.delegations = self.delegations
+                    if nat_gateway:
+                        subnet.nat_gateway = self.network_models.SubResource(id=nat_gateway)
                 else:
                     # update subnet
                     self.log('Updating subnet {0}'.format(self.name))
@@ -582,6 +618,8 @@ class AzureRMSubnet(AzureRMModuleBase):
                         subnet.private_endpoint_network_policies = results['private_endpoint_network_policies']
                     if results.get('delegations') is not None:
                         subnet.delegations = results['delegations']
+                    if results.get('nat_gateway') is not None:
+                        subnet.nat_gateway = self.network_models.SubResource(id=results['nat_gateway'])
 
                 self.results['state'] = self.create_or_update_subnet(subnet)
             elif self.state == 'absent' and changed:
@@ -630,6 +668,21 @@ class AzureRMSubnet(AzureRMModuleBase):
                                 resource_group=resource_group)
         name = azure_id_to_dict(id).get('name')
         return dict(id=id, name=name)
+
+    def build_nat_gateway_id(self, resource):
+        """
+        Common method to build a resource id from different inputs
+        """
+        if resource is None:
+            return None
+        if is_valid_resource_id(resource):
+            return resource
+        resource_dict = self.parse_resource_to_dict(resource)
+        return format_resource_id(val=resource_dict['name'],
+                                  subscription_id=resource_dict.get('subscription_id'),
+                                  namespace='Microsoft.Network',
+                                  types='natGateways',
+                                  resource_group=resource_dict.get('resource_group'))
 
 
 def main():
