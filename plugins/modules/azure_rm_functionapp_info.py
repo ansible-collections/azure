@@ -97,7 +97,7 @@ azure_functionapps:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -157,11 +157,8 @@ class AzureRMFunctionAppInfo(AzureRMModuleBase):
         result = []
 
         try:
-            function_app = self.web_client.web_apps.get(
-                self.resource_group,
-                self.name
-            )
-        except CloudError:
+            function_app = self.web_client.web_apps.get(resource_group_name=self.resource_group, name=self.name)
+        except ResourceNotFoundError:
             pass
 
         if function_app and self.has_tags(function_app.tags, self.tags):
@@ -172,7 +169,7 @@ class AzureRMFunctionAppInfo(AzureRMModuleBase):
     def list_resource_group(self):
         self.log('List items')
         try:
-            response = self.web_client.web_apps.list_by_resource_group(self.resource_group)
+            response = self.web_client.web_apps.list_by_resource_group(resource_group_name=self.resource_group)
         except Exception as exc:
             self.fail("Error listing for resource group {0} - {1}".format(self.resource_group, str(exc)))
 
@@ -185,7 +182,7 @@ class AzureRMFunctionAppInfo(AzureRMModuleBase):
     def list_all(self):
         self.log('List all items')
         try:
-            response = self.web_client.web_apps.list_by_resource_group(self.resource_group)
+            response = self.web_client.web_apps.list_by_resource_group(resource_group_name=self.resource_group)
         except Exception as exc:
             self.fail("Error listing all items - {0}".format(str(exc)))
 
