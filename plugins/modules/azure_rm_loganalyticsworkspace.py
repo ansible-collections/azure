@@ -156,7 +156,7 @@ from ansible.module_utils.common.dict_transformations import _snake_to_camel, _c
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
     from msrestazure.tools import parse_resource_id
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -260,21 +260,21 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
 
     def create_workspace(self, workspace):
         try:
-            poller = self.log_analytics_client.workspaces.create_or_update(self.resource_group, self.name, workspace)
+            poller = self.log_analytics_client.workspaces.begin_create_or_update(self.resource_group, self.name, workspace)
             return self.get_poller_result(poller)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when creating workspace {0} - {1}'.format(self.name, exc.message or str(exc)))
 
     def get_workspace(self):
         try:
             return self.log_analytics_client.workspaces.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
     def delete_workspace(self):
         try:
-            self.log_analytics_client.workspaces.delete(self.resource_group, self.name, force=self.force)
-        except CloudError as exc:
+            self.log_analytics_client.workspaces.begin_delete(self.resource_group, self.name, force=self.force)
+        except Exception as exc:
             self.fail('Error when deleting workspace {0} - {1}'.format(self.name, exc.message or str(exc)))
 
     def to_dict(self, workspace):
@@ -286,7 +286,7 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
         try:
             response = self.log_analytics_client.intelligence_packs.list(self.resource_group, self.name)
             return [x.as_dict() for x in response]
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when listing intelligence packs {0}'.format(exc.message or str(exc)))
 
     def change_intelligence(self, key, value):
@@ -295,7 +295,7 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
                 self.log_analytics_client.intelligence_packs.enable(self.resource_group, self.name, key)
             else:
                 self.log_analytics_client.intelligence_packs.disable(self.resource_group, self.name, key)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when changing intelligence pack {0} - {1}'.format(key, exc.message or str(exc)))
 
     def list_management_groups(self):
@@ -306,7 +306,7 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
                 result.append(response.next().as_dict())
         except StopIteration:
             pass
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when listing management groups {0}'.format(exc.message or str(exc)))
         return result
 
@@ -318,14 +318,14 @@ class AzureRMLogAnalyticsWorkspace(AzureRMModuleBase):
                 result.append(response.next().as_dict())
         except StopIteration:
             pass
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when listing usages {0}'.format(exc.message or str(exc)))
         return result
 
     def get_shared_keys(self):
         try:
             return self.log_analytics_client.shared_keys.get_shared_keys(self.resource_group, self.name).as_dict()
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when getting shared key {0}'.format(exc.message or str(exc)))
 
 
