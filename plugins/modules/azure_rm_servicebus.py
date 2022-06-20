@@ -135,7 +135,7 @@ class AzureRMServiceBus(AzureRMModuleBase):
 
     def check_name(self):
         try:
-            check_name = self.servicebus_client.namespaces.check_name_availability(self.name)
+            check_name = self.servicebus_client.namespaces.check_name_availability(parameters={'name': self.name})
             if not check_name or not check_name.name_available:
                 self.fail("Error creating namespace {0} - {1}".format(self.name, check_name.message or str(check_name)))
         except Exception as exc:
@@ -148,7 +148,7 @@ class AzureRMServiceBus(AzureRMModuleBase):
             poller = self.servicebus_client.namespaces.begin_create_or_update(self.resource_group,
                                                                               self.name,
                                                                               self.servicebus_models.SBNamespace(location=self.location,
-                                                                                                           sku=sku))
+                                                                                                                 sku=sku))
             ns = self.get_poller_result(poller)
         except Exception as exc:
             self.fail('Error creating namespace {0} - {1}'.format(self.name, str(exc.inner_exception) or str(exc)))
