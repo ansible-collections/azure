@@ -481,7 +481,7 @@ class AzureRMIoTHubFacts(AzureRMModuleBase):
 
     def list_by_resource_group(self):
         try:
-            return self.IoThub_client.iot_hub_resource.list(self.resource_group)
+            return self.IoThub_client.iot_hub_resource.list_by_resource_group(self.resource_group)
         except Exception as exc:
             self.fail('Failed to list IoT Hub in resource group {0} - {1}'.format(self.resource_group, exc.message or str(exc)))
 

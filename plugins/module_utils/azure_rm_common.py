@@ -1304,7 +1304,7 @@ class AzureRMModuleBase(object):
         if not self._IoThub_client:
             self._IoThub_client = self.get_mgmt_svc_client(IotHubClient,
                                                            is_track2=True,
-                                                           api_version='2021-07-02',
+                                                           api_version='2018-04-01',
                                                            base_url=self._cloud_environment.endpoints.resource_manager)
         return self._IoThub_client
 
