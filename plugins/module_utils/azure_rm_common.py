@@ -1303,6 +1303,7 @@ class AzureRMModuleBase(object):
         self.log('Getting iothub client')
         if not self._IoThub_client:
             self._IoThub_client = self.get_mgmt_svc_client(IotHubClient,
+                                                           is_track2=True,
                                                            base_url=self._cloud_environment.endpoints.resource_manager)
         return self._IoThub_client
 
