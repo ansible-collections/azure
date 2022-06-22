@@ -116,11 +116,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 import re
 import json
 import time
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -279,7 +274,7 @@ class BackupAzureVM(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as e:
+        except Exception as e:
             self.log('Error in enabling/updating protection for Azure VM.')
             self.fail(
                 'Error in creating/updating protection for Azure VM {0}'.format(str(e)))
@@ -306,7 +301,7 @@ class BackupAzureVM(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to stop protection.')
             self.fail('Error in disabling the protection: {0}'.format(str(e)))
 
@@ -332,7 +327,7 @@ class BackupAzureVM(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete backup.')
             self.fail('Error deleting the azure backup: {0}'.format(str(e)))
 
@@ -358,7 +353,7 @@ class BackupAzureVM(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to backup azure vm.')
             self.fail(
                 'Error while taking on-demand backup: {0}'.format(str(e)))
