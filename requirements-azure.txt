@@ -46,6 +46,6 @@ azure-mgmt-loganalytics==1.0.0
 azure-mgmt-automation==1.0.0
 azure-mgmt-iothub==0.7.0
 azure-mgmt-recoveryservices==2.0.0
-azure-mgmt-recoveryservicesbackup==5.0.0
+azure-mgmt-recoveryservicesbackup==3.0.0
 azure-mgmt-notificationhubs==2.0.0
 azure-mgmt-eventhub==2.0.0
