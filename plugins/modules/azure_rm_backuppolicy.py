@@ -405,9 +405,9 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.recovery_services_backup_client.protection_policies.delete(vault_name=self.vault_name,
-                                                                                       resource_group_name=self.resource_group,
-                                                                                       policy_name=self.name)
+            response = self.recovery_services_backup_client.protection_policies.begin_delete(vault_name=self.vault_name,
+                                                                                             resource_group_name=self.resource_group,
+                                                                                             policy_name=self.name)
 
         except Exception as e:
             self.log('Error attempting to delete the backup policy.')
