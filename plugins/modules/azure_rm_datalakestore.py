@@ -418,7 +418,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 import datetime
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -550,7 +550,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         self.log('Checking name availability for {0}'.format(self.name))
         try:
             response = self.datalake_store_client.accounts.check_name_availability(self.location, self.name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to validate name.')
             self.fail("Error checking name availability: {0}".format(str(e)))
         if not response.name_available:
@@ -609,7 +609,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         try:
             poller = self.datalake_store_client.accounts.create(self.resource_group, self.name, parameters)
             self.get_poller_result(poller)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error creating datalake store.')
             self.fail("Failed to create datalake store: {0}".format(str(e)))
 
@@ -689,7 +689,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
             try:
                 poller = self.datalake_store_client.accounts.update(self.resource_group, self.name, parameters)
                 self.get_poller_result(poller)
-            except CloudError as e:
+            except Exception as e:
                 self.log('Error creating datalake store.')
                 self.fail("Failed to create datalake store: {0}".format(str(e)))
 
@@ -704,7 +704,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                 status = self.datalake_store_client.accounts.delete(self.resource_group, self.name)
                 self.log("delete status: ")
                 self.log(str(status))
-            except CloudError as e:
+            except Exception as e:
                 self.fail("Failed to delete datalake store: {0}".format(str(e)))
 
         return True
@@ -716,7 +716,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
 
         try:
             datalake_store_obj = self.datalake_store_client.accounts.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if datalake_store_obj:
