@@ -66,6 +66,11 @@ options:
             - empty
             - import
             - copy
+    storage_account_id:
+        description:
+            - The full path to the storage account the image is to be imported from.
+            - Required when I(create_option=import).
+        type: str
     source_uri:
         description:
             - URI to a valid VHD file to be used or the resource ID of the managed disk to copy.
@@ -155,6 +160,7 @@ EXAMPLES = '''
         resource_group: myResourceGroup
         create_option: import
         source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
+        storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
         os_type: windows
         storage_account_type: Premium_LRS
 
@@ -227,6 +233,11 @@ state:
                 - Create option of the disk.
             type: str
             sample: copy
+        storage_account_id:
+            description:
+                - The full path to the storage account the image is to be imported from
+            type: str
+            sample: /subscriptions/<uuid>/resourceGroups/<resource group name>/providers/Microsoft.Storage/storageAccounts/<storage account name>
         source_uri:
             description:
                 - URI to a valid VHD file to be used or the resource ID of the managed disk to copy.
@@ -334,6 +345,9 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 type='str',
                 choices=['empty', 'import', 'copy']
             ),
+            storage_account_id=dict(
+                type='str'
+            ),
             source_uri=dict(
                 type='str',
                 aliases=['source_resource_uri']
@@ -369,7 +383,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             )
         )
         required_if = [
-            ('create_option', 'import', ['source_uri']),
+            ('create_option', 'import', ['source_uri', 'storage_account_id']),
             ('create_option', 'copy', ['source_uri']),
             ('create_option', 'empty', ['disk_size_gb'])
         ]
@@ -382,6 +396,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         self.location = None
         self.storage_account_type = None
         self.create_option = None
+        self.storage_account_id = None
         self.source_uri = None
         self.os_type = None
         self.disk_size_gb = None
@@ -536,6 +551,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         if self.create_option == 'import':
             creation_data['create_option'] = self.compute_models.DiskCreateOption.import_enum
             creation_data['source_uri'] = self.source_uri
+            creation_data['source_account_id'] = self.storage_account_id
         elif self.create_option == 'copy':
             creation_data['create_option'] = self.compute_models.DiskCreateOption.copy
             creation_data['source_resource_id'] = self.source_uri
