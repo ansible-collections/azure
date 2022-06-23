@@ -549,7 +549,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
     def check_name_availability(self):
         self.log('Checking name availability for {0}'.format(self.name))
         try:
-            response = self.datalake_store_client.accounts.check_name_availability(self.location, self.name)
+            response = self.datalake_store_client.accounts.check_name_availability(self.location, parameters={'name': self.name})
         except Exception as e:
             self.log('Error attempting to validate name.')
             self.fail("Error checking name availability: {0}".format(str(e)))
@@ -607,7 +607,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
 
         self.log(str(parameters))
         try:
-            poller = self.datalake_store_client.accounts.create(self.resource_group, self.name, parameters)
+            poller = self.datalake_store_client.accounts.begin_create(self.resource_group, self.name, parameters)
             self.get_poller_result(poller)
         except Exception as e:
             self.log('Error creating datalake store.')
@@ -687,7 +687,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         self.log(str(parameters))
         if self.results['changed']:
             try:
-                poller = self.datalake_store_client.accounts.update(self.resource_group, self.name, parameters)
+                poller = self.datalake_store_client.accounts.begin_update(self.resource_group, self.name, parameters)
                 self.get_poller_result(poller)
             except Exception as e:
                 self.log('Error creating datalake store.')
@@ -701,7 +701,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         self.results['changed'] = True if self.account_dict is not None else False
         if not self.check_mode and self.account_dict is not None:
             try:
-                status = self.datalake_store_client.accounts.delete(self.resource_group, self.name)
+                status = self.datalake_store_client.accounts.begin_delete(self.resource_group, self.name)
                 self.log("delete status: ")
                 self.log(str(status))
             except Exception as e:
