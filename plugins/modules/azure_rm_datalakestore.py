@@ -71,6 +71,7 @@ options:
         description:
             - The list of firewall rules associated with this Data Lake Store account.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -144,6 +145,7 @@ options:
         description:
             - The list of virtual network rules associated with this Data Lake Store account.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
