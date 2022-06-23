@@ -1342,6 +1342,7 @@ class AzureRMModuleBase(object):
         if not self._search_client:
             self._search_client = self.get_mgmt_svc_client(SearchManagementClient,
                                                            base_url=self._cloud_environment.endpoints.resource_manager,
+                                                           is_track2=True,
                                                            api_version='2020-08-01')
         return self._search_client
 
