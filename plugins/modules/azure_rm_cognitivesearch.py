@@ -406,7 +406,7 @@ class AzureRMSearch(AzureRMModuleBase):
             self.results['changed'] = True
             search_update_model.partition_count = self.partition_count
 
-        if self.public_network_access and self.account_dict.get('public_network_access') != self.public_network_access:
+        if self.public_network_access and self.account_dict.get('public_network_access').lower() != self.public_network_access.lower():
             self.results['changed'] = True
             search_update_model.public_network_access = self.public_network_access
 
@@ -425,7 +425,7 @@ class AzureRMSearch(AzureRMModuleBase):
 
         try:
             if self.results['changed']:
-                poller = self.search_client.services.create_or_update(self.resource_group, self.name, search_update_model)
+                poller = self.search_client.services.begin_create_or_update(self.resource_group, self.name, search_update_model)
                 self.get_poller_result(poller)
         except Exception as e:
             self.fail("Failed to update the search: {0}".format(str(e)))
