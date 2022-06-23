@@ -90,6 +90,26 @@ options:
             - Name of an existing virtual machine with which the disk is or will be associated, this VM should be in the same resource group.
             - To detach a disk from a vm, explicitly set to ''.
             - If this option is unset, the value will not be changed.
+    managed_by_extended:
+        description:
+            - List of name and resource group of the VMs that have the disk attached.
+            - I(max_shares) should be set to a value greater than one for disks to allow attaching them to multiple VMs.
+        type: list
+        elements: dict
+        suboptions:
+            resource_group:
+                description:
+                    - The resource group of the attache VM.
+                type: str
+            name:
+                description:
+                    - The name of the attache VM.
+                type: str
+    max_shares:
+        description:
+            - The maximum number of VMs that can attach to the disk at the same time.
+            - Value greater than one indicates a disk that can be mounted on multiple VMs at the same time.
+        type: int
     attach_caching:
         description:
             - Disk caching policy controlled by VM. Will be used when attached to the VM defined by C(managed_by).
@@ -98,10 +118,6 @@ options:
             - ''
             - read_only
             - read_write
-    tags:
-        description:
-            - Tags to assign to the managed disk.
-            - Format tags as 'key' or 'key:value'.
     zone:
         description:
             - The Azure managed disk's zone.
@@ -151,6 +167,20 @@ EXAMPLES = '''
         managed_by: testvm001
         attach_caching: read_only
 
+    - name: Mount the managed disk to multiple VMs
+      azure_rm_manageddisk:
+        resource_group: myResourceGroup
+        name: freddisk04
+        max_shares: 4
+        disk_size_gb: 1024
+        storage_account_type: Premium_LRS
+        managed_by_extended:
+          - resource_group: myResourceGroup01
+            name: testVM01
+          - resource_group: myResourceGroup02
+            name: testVM02
+        zone: 1
+
     - name: Unmount the managed disk to VM
       azure_rm_manageddisk:
         name: mymanageddisk
@@ -172,7 +202,7 @@ state:
     description:
         - Current state of the managed disk.
     returned: always
-    type: dict
+    type: complex
     contains:
         id:
             description:
@@ -214,6 +244,17 @@ state:
             description:
                 - Name of an existing virtual machine with which the disk is or will be associated, this VM should be in the same resource group.
             type: str
+        max_shares:
+            description:
+                - The maximum number of VMs that can attach to the disk at the same time.
+                - Value greater than one indicates a disk that can be mounted on multiple VMs at the same time.
+            type: int
+            sample: 3
+        managed_by_extended:
+            description:
+                - List ID of an existing virtual machine with which the disk is or will be associated.
+            type: list
+            sample: ["/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Compute/virtualMachines/testVM"]
         tags:
             description:
                 - Tags to assign to the managed disk.
@@ -238,6 +279,12 @@ except ImportError:
     pass
 
 
+managed_by_extended_spec = dict(
+    resource_group=dict(type='str'),
+    name=dict(type='str')
+)
+
+
 # duplicated in azure_rm_manageddisk_facts
 def managed_disk_to_dict(managed_disk):
     create_data = managed_disk.creation_data
@@ -252,6 +299,8 @@ def managed_disk_to_dict(managed_disk):
         os_type=managed_disk.os_type.lower() if managed_disk.os_type else None,
         storage_account_type=managed_disk.sku.name if managed_disk.sku else None,
         managed_by=managed_disk.managed_by,
+        max_shares=managed_disk.max_shares,
+        managed_by_extended=managed_disk.managed_by_extended,
         zone=managed_disk.zones[0] if managed_disk.zones and len(managed_disk.zones) > 0 else ''
     )
 
@@ -309,6 +358,14 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ),
             lun=dict(
                 type='int'
+            ),
+            max_shares=dict(
+                type='int'
+            ),
+            managed_by_extended=dict(
+                type='list',
+                elements='dict',
+                options=managed_by_extended_spec
             )
         )
         required_if = [
@@ -333,10 +390,16 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         self.managed_by = None
         self.attach_caching = None
         self.lun = None
+        self.max_shares = None
+        self.managed_by_extended = None
+
+        mutually_exclusive = [['managed_by_extended', 'managed_by']]
+
         super(AzureRMManagedDisk, self).__init__(
             derived_arg_spec=self.module_arg_spec,
             required_if=required_if,
             supports_check_mode=True,
+            mutually_exclusive=mutually_exclusive,
             supports_tags=True)
 
     def exec_module(self, **kwargs):
@@ -375,19 +438,27 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 else:
                     result = True
 
+        # Mount the disk to multiple VM
+        if self.managed_by_extended:
+            if not self.check_mode:
+                for vm_item in self.managed_by_extended:
+                    vm_name_id = self.compute_client.virtual_machines.get(vm_item['resource_group'], vm_item['name'])
+                    if result['managed_by_extended'] is None or vm_name_id.id not in result['managed_by_extended']:
+                        changed = True
+                        self.attach(vm_item['resource_group'], vm_item['name'], result)
+                result = self.get_managed_disk()
+
         # unmount from the old virtual machine and mount to the new virtual machine
         if self.managed_by or self.managed_by == '':
             vm_name = parse_resource_id(disk_instance.get('managed_by', '')).get('name') if disk_instance else None
             vm_name = vm_name or ''
-            vm_old = None
             if self.managed_by != vm_name or self.is_attach_caching_option_different(vm_name, result):
                 changed = True
                 if not self.check_mode:
                     if vm_name:
-                        vm_old = self._get_vm(vm_name)
-                        self.detach(vm_name, result)
+                        self.detach(self.resource_group, vm_name, result)
                     if self.managed_by:
-                        self.attach(self.managed_by, result, vm_old)
+                        self.attach(self.resource_group, self.managed_by, result)
                     result = self.get_managed_disk()
 
         if self.state == 'absent' and disk_instance:
@@ -400,8 +471,8 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         self.results['state'] = result
         return self.results
 
-    def attach(self, vm_name, disk, vm_old):
-        vm = self._get_vm(vm_name)
+    def attach(self, resource_group, vm_name, disk):
+        vm = self._get_vm(resource_group, vm_name)
         # find the lun
         if self.lun:
             lun = self.lun
@@ -413,10 +484,9 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 if lun not in luns:
                     break
                 lun = lun + 1
-            if vm_old is not None:
-                for item in vm_old.storage_profile.data_disks:
-                    if item.name == self.name:
-                        lun = item.lun
+            for item in vm.storage_profile.data_disks:
+                if item.name == self.name:
+                    lun = item.lun
 
         # prepare the data disk
         params = self.compute_models.ManagedDiskParameters(id=disk.get('id'), storage_account_type=disk.get('storage_account_type'))
@@ -427,26 +497,26 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                                                  managed_disk=params,
                                                  caching=caching_options)
         vm.storage_profile.data_disks.append(data_disk)
-        self._update_vm(vm_name, vm)
+        self._update_vm(resource_group, vm_name, vm)
 
-    def detach(self, vm_name, disk):
-        vm = self._get_vm(vm_name)
+    def detach(self, resource_group, vm_name, disk):
+        vm = self._get_vm(resource_group, vm_name)
         leftovers = [d for d in vm.storage_profile.data_disks if d.name.lower() != disk.get('name').lower()]
         if len(vm.storage_profile.data_disks) == len(leftovers):
             self.fail("No disk with the name '{0}' was found".format(disk.get('name')))
         vm.storage_profile.data_disks = leftovers
-        self._update_vm(vm_name, vm)
+        self._update_vm(resource_group, vm_name, vm)
 
-    def _update_vm(self, name, params):
+    def _update_vm(self, resource_group, name, params):
         try:
-            poller = self.compute_client.virtual_machines.begin_create_or_update(self.resource_group, name, params)
+            poller = self.compute_client.virtual_machines.begin_create_or_update(resource_group, name, params)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error updating virtual machine {0} - {1}".format(name, str(exc)))
 
-    def _get_vm(self, name):
+    def _get_vm(self, resource_group, name):
         try:
-            return self.compute_client.virtual_machines.get(self.resource_group, name, expand='instanceview')
+            return self.compute_client.virtual_machines.get(resource_group, name, expand='instanceview')
         except Exception as exc:
             self.fail("Error getting virtual machine {0} - {1}".format(name, str(exc)))
 
@@ -473,6 +543,8 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             disk_params['os_type'] = self.compute_models.OperatingSystemTypes(self.os_type.capitalize())
         else:
             disk_params['os_type'] = None
+        if self.max_shares:
+            disk_params['max_shares'] = self.max_shares
         disk_params['creation_data'] = creation_data
         return disk_params
 
@@ -506,6 +578,9 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         if self.zone is not None:
             if not found_disk['zone'] == self.zone:
                 resp = True
+        if self.max_shares is not None:
+            if not found_disk['max_shares'] == self.max_shares:
+                resp = True
         return resp
 
     def delete_managed_disk(self):
@@ -522,7 +597,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 self.resource_group,
                 self.name)
             return managed_disk_to_dict(resp)
-        except ResourceNotFoundError as e:
+        except ResourceNotFoundError:
             self.log('Did not find managed disk')
 
     def is_attach_caching_option_different(self, vm_name, disk):
