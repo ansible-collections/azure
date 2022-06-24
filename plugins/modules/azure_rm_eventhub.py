@@ -304,7 +304,7 @@ class AzureRMEventHub(AzureRMModuleBase):
                 sku=Sku(name=self.sku),
                 tags=self.tags
             )
-            result = self.event_hub_client.namespaces.create_or_update(
+            result = self.event_hub_client.namespaces.begin_create_or_update(
                 self.resource_group,
                 self.namespace_name,
                 namespace_params)
@@ -370,7 +370,7 @@ class AzureRMEventHub(AzureRMModuleBase):
         '''
         self.log("Deleting the namespace {0}".format(self.namespace_name))
         try:
-            result = self.event_hub_client.namespaces.delete(
+            result = self.event_hub_client.namespaces.begin_delete(
                 self.resource_group, self.namespace_name)
         except Exception as e:
             self.log('Error attempting to delete namespace.')
