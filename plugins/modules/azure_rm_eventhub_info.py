@@ -72,7 +72,7 @@ state:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -138,7 +138,7 @@ class AzureRMEventHubInfo(AzureRMModuleBase):
                 self.resource_group, self.namespace_name)
             self.log("Response : {0}".format(response))
 
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get info for namespace. {0}').format(
                 str(e))
 
@@ -157,7 +157,7 @@ class AzureRMEventHubInfo(AzureRMModuleBase):
             response = self.event_hub_client.event_hubs.get(
                 self.resource_group, self.namespace_name, self.name)
 
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get info for event hub. {0}').format(
                 str(e))
 
@@ -174,7 +174,7 @@ class AzureRMEventHubInfo(AzureRMModuleBase):
             response = self.event_hub_client.namespaces.list_by_resource_group(
                 self.resource_group)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.fail(
                 "Failed to list for resource group {0} - {1}".format(self.resource_group, str(exc)))
 
