@@ -159,7 +159,7 @@ state:
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.eventhub.models import Eventhub, EHNamespace
-    from azure.mgmt.eventhub.models.sku import Sku
+    from azure.mgmt.eventhub.models import Sku
 except ImportError:
     # This is handled in azure_rm_common
     pass
