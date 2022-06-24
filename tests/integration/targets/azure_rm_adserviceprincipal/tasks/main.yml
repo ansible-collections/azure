@@ -60,6 +60,29 @@
         - ad_info.service_principals[0].app_display_name == ad_fact.app_display_name
         - ad_info.service_principals[0].app_role_assignment_required == True
 
+- name: Get ad service principal info by object_id
+  azure_rm_adserviceprincipal_info:
+    tenant: "{{ tenant_id }}"
+    app_display_name: "{{ ad_info.ad_fact.app_display_name }}"
+  register: ad_info
+
+- assert:
+    that:
+        - ad_info.service_principals[0].app_display_name == ad_fact.app_display_name
+        - ad_info.service_principals[0].app_role_assignment_required == True
+
+- name: Get ad service principal info by object_id
+  azure_rm_adserviceprincipal_info:
+    tenant: "{{ tenant_id }}"
+  register: ad_info
+
+- assert:
+    that:
+        - (ad_info | json_query(jmesquery))[0].app_display_name == ad_fact.app_display_name
+        - (ad_info | json_query(jmesquery))[0].app_role_assignment_required == True
+    vars:
+        jmesquery: "service_principals[?app_display_name == `{{ app_display_name }}`]"
+
 - name: delete ad service principal
   azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"

@@ -30,8 +30,11 @@ options:
         required: True
     object_id:
         description:
-            - It's service principal's object ID.
+            - service principal's object ID.
         type: str
+    app_display_name:
+        description:
+            - service principal's display name.
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -39,6 +42,7 @@ extends_documentation_fragment:
 author:
     haiyuan_zhang (@haiyuazhang)
     Fred-sun (@Fred-sun)
+    Paul Czarkowski (@paulczar)
 '''
 
 EXAMPLES = '''
@@ -94,12 +98,14 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             app_id=dict(type='str'),
             object_id=dict(type='str'),
+            app_display_name=dict(type='str'),
             tenant=dict(type='str', required=True),
         )
 
         self.tenant = None
         self.app_id = None
         self.object_id = None
+        self.app_display_name = None
         self.results = dict(changed=False)
 
         super(AzureRMADServicePrincipalInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
@@ -116,10 +122,14 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
 
         try:
             client = self.get_graphrbac_client(self.tenant)
-            if self.object_id is None:
-                service_principals = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id)))
-            else:
+            if self.object_id:
                 service_principals = [client.service_principals.get(self.object_id)]
+            elif self.app_id:
+                service_principals = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id)))
+            elif self.app_display_name:
+                service_principals = list(client.service_principals.list(filter="appDisplayName eq '%s'" % self.app_display_name))
+            else:
+                service_principals = list(client.service_principals.list())
 
             self.results['service_principals'] = [self.to_dict(sp) for sp in service_principals]
         except GraphErrorException as ge:
