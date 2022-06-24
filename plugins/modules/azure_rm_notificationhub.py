@@ -319,7 +319,7 @@ class AzureNotificationHub(AzureRMModuleBase):
         '''
         self.log("Deleting the namespace {0}".format(self.namespace_name))
         try:
-            result = self.notification_hub_client.namespaces.delete(
+            result = self.notification_hub_client.namespaces.begin_delete(
                 self.resource_group, self.namespace_name)
         except Exception as e:
             self.log('Error attempting to delete namespace.')
