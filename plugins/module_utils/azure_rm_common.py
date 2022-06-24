@@ -1366,7 +1366,8 @@ class AzureRMModuleBase(object):
             self._notification_hub_client = self.get_mgmt_svc_client(
                 NotificationHubsManagementClient,
                 base_url=self._cloud_environment.endpoints.resource_manager,
-                is_track2=True)
+                is_track2=True,
+                api_version='2016-03-01')
         return self._notification_hub_client
 
     @property
