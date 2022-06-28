@@ -103,6 +103,20 @@ options:
         description:
             - Parent argument.
         type: str
+    x509_certificate:
+        description:
+            - The X509 certificate used to create the service principal in PEM format.
+            - The certificate must be appended to the private key.
+            - Use when authenticating with a Service Principal.
+        type: str
+        version_added: '1.14.0'
+    thumbprint:
+        description:
+            - The thumbprint of the private key specified in I(x509_certificate).
+            - Use when authenticating with a Service Principal.
+            - Required if I(x509_certificate) is defined.
+        type: str
+        version_added: '1.14.0'
 requirements:
     - python >= 2.7
     - The host that executes this module must have the azure.azcollection collection installed via galaxy
