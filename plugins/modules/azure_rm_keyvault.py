@@ -138,6 +138,10 @@ options:
             - Property specifying whether protection against purge is enabled for this vault.
         type: bool
         default: False
+    soft_delete_retention_in_days:
+        description:
+            - Property specifying the number of days to retain deleted vaults.
+        type: int
     recover_mode:
         description:
             - Create vault in recovery mode.
@@ -252,6 +256,9 @@ class AzureRMVaults(AzureRMModuleBase):
                 type='bool',
                 default=True
             ),
+            soft_delete_retention_in_days=dict(
+                type='int'
+            ),
             enable_purge_protection=dict(
                 type='bool',
                 default=False
@@ -326,6 +333,8 @@ class AzureRMVaults(AzureRMModuleBase):
                     self.parameters.setdefault("properties", {})["enable_soft_delete"] = kwargs[key]
                 elif key == "enable_purge_protection":
                     self.parameters.setdefault("properties", {})["enable_purge_protection"] = kwargs[key]
+                elif key == "soft_delete_retention_in_days":
+                    self.parameters.setdefault("properties", {})["soft_delete_retention_in_days"] = kwargs[key]
                 elif key == "recover_mode":
                     self.parameters.setdefault("properties", {})["create_mode"] = 'recover' if kwargs[key] else 'default'
 
@@ -334,7 +343,7 @@ class AzureRMVaults(AzureRMModuleBase):
 
         self.mgmt_client = self.get_mgmt_svc_client(KeyVaultManagementClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version="2018-02-14")
+                                                    api_version="2019-09-01")
 
         resource_group = self.get_resource_group(self.resource_group)
 
@@ -379,6 +388,11 @@ class AzureRMVaults(AzureRMModuleBase):
                     self.to_do = Actions.Update
                 elif (('enable_soft_delete' in self.parameters['properties']) and
                         (self.parameters['properties']['enable_soft_delete'] != getattr(old_response['properties'], 'enable_soft_delete', None))):
+                    self.to_do = Actions.Update
+                elif (('soft_delete_retention_in_days' in self.parameters['properties']) and
+                        (self.parameters['properties']['soft_delete_retention_in_days'] != getattr(old_response['properties'],
+                                                                                                   'soft_delete_retention_in_days',
+                                                                                                   None))):
                     self.to_do = Actions.Update
                 elif (('enable_purge_protection' in self.parameters['properties']) and
                       (self.parameters['properties']['enable_purge_protection'] != getattr(old_response['properties'],

@@ -113,6 +113,12 @@ keyvaults:
             type: bool
             returned: always
             sample: False
+        soft_delete_retention_in_days:
+            description:
+                - Property specifying the number of days to retain deleted vaults.
+            type: int
+            returned: always
+            sample: 90
         tags:
             description:
                 - List of tags.
@@ -204,6 +210,8 @@ def keyvault_to_dict(vault):
         enabled_for_disk_encryption=vault.properties.enabled_for_disk_encryption,
         enabled_for_template_deployment=vault.properties.enabled_for_template_deployment,
         enable_soft_delete=vault.properties.enable_soft_delete,
+        soft_delete_retention_in_days=vault.properties.soft_delete_retention_in_days
+        if vault.properties.soft_delete_retention_in_days else 90,
         enable_purge_protection=vault.properties.enable_purge_protection
         if vault.properties.enable_purge_protection else False,
         access_policies=[dict(
@@ -253,7 +261,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
 
         self._client = self.get_mgmt_svc_client(KeyVaultManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
-                                                api_version="2018-02-14")
+                                                api_version="2019-09-01")
 
         if self.name:
             if self.resource_group:
