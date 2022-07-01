@@ -283,6 +283,7 @@ import re
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 try:
+    import threading
     from msrestazure.tools import parse_resource_id
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
@@ -460,7 +461,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                     vm_name_id = self.compute_client.virtual_machines.get(vm_item['resource_group'], vm_item['name'])
                     if result['managed_by_extended'] is None or vm_name_id.id not in result['managed_by_extended']:
                         changed = True
-                        self.attach(vm_item['resource_group'], vm_item['name'], result)
+                        threading.Thread(target=self.attach, args=(vm_item['resource_group'], vm_item['name'], result)).start()
                 result = self.get_managed_disk()
 
         # unmount from the old virtual machine and mount to the new virtual machine
