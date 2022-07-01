@@ -9,25 +9,9 @@ Documentation of individual modules is [available in the Ansible docs site](http
 
 ## Installation
 
-To install virtual environment
-
-pip3 install virtualenv
-pip3 install virtualenvwrapper
-
-Create a directory to store the virtual environment
-mkdir $HOME/.virtualenvs
-
-Open the ~/.bashrc file and add the following four lines
-export WORKON_HOME=$HOME/.virtualenvs
-export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3
-export VIRTUALENVWRAPPER_VIRTUALENV=/usr/local/bin/virtualenv
-source /usr/local/bin/virtualenvwrapper.sh
-
-Run ~/.bashrc
-source ~/.bashrc
-
-Create and enter the virtual environment -- ansible-project
-mkvirtualenv -p python3 ansible-project
+Prompt:
+If you run this command in a virtual environment, you can better isolate hosts from problems caused by unstable factors.
+You can reference this link to using ansible -- https://virtualenvwrapper.readthedocs.io/en/latest/
 
 ## Requirements
 
