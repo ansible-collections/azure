@@ -9,9 +9,7 @@ Documentation of individual modules is [available in the Ansible docs site](http
 
 ## Installation
 
-Prompt:
-If you run this command in a virtual environment, you can better isolate hosts from problems caused by unstable factors.
-You can reference this link to using ansible -- https://virtualenvwrapper.readthedocs.io/en/latest/
+It is recommended to run ansible in [Virtualenv](https://virtualenv.pypa.io/en/latest/) 
 
 ## Requirements
 
