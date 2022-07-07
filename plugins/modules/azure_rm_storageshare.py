@@ -154,6 +154,7 @@ state:
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
+    import time
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -343,6 +344,15 @@ class AzureRMStorageShare(AzureRMModuleBase):
             self.storage_client.file_shares.delete(resource_group_name=self.resource_group,
                                                    account_name=self.account_name,
                                                    share_name=self.name)
+            try:
+                while True:
+                    storage_share = self.storage_client.file_shares.get(resource_group_name=self.resource_group,
+                                                                        account_name=self.account_name,
+                                                                        share_name=self.name)
+                    time.sleep(180)
+            except ResourceNotFoundError:
+                self.log("The storage file share with name {0} has deleted".format(self.name))
+
         except Exception as e:
             self.fail("Error deleting file share {0} : {1}".format(self.name, str(e)))
         return self.get_share()

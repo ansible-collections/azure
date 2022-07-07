@@ -115,10 +115,6 @@
     state: absent
   register: delete_output
 
-- name: Pause for 3 minutes to delay
-  pause:
-    minutes: 3
-
 - name: Delete storage account
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
