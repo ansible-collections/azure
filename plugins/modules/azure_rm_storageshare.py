@@ -346,10 +346,10 @@ class AzureRMStorageShare(AzureRMModuleBase):
                                                    share_name=self.name)
             try:
                 while True:
+                    time.sleep(180)
                     storage_share = self.storage_client.file_shares.get(resource_group_name=self.resource_group,
                                                                         account_name=self.account_name,
                                                                         share_name=self.name)
-                    time.sleep(180)
             except ResourceNotFoundError:
                 self.log("The storage file share with name {0} has deleted".format(self.name))
 
