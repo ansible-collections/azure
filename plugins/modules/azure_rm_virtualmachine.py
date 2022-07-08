@@ -1218,7 +1218,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                              .format(self.name, vm_dict['powerstate']))
                     changed = True
                     powerstate_change = 'deallocated'
-                elif not self.started and vm_dict['powerstate'] == 'running':
+                elif self.started is not None and not self.started and vm_dict['powerstate'] == 'running':
                     self.log("CHANGED: virtual machine {0} running and requested state 'stopped'".format(self.name))
                     changed = True
                     powerstate_change = 'poweroff'
