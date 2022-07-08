@@ -60,6 +60,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
+    started: True
   register: start_result
 
 - name: Ensure VM was started
