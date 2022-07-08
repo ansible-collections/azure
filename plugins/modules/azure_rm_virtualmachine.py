@@ -55,7 +55,6 @@ options:
             - Whether the VM is started or stopped.
             - Set to (true) with I(state=present) to start the VM.
             - Set to C(false) to stop the VM.
-        default: true
         type: bool
     allocated:
         description:
@@ -897,7 +896,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             subnet_name=dict(type='str', aliases=['subnet']),
             allocated=dict(type='bool', default=True),
             restarted=dict(type='bool', default=False),
-            started=dict(type='bool', default=True),
+            started=dict(type='bool'),
             generalized=dict(type='bool', default=False),
             data_disks=dict(type='list'),
             plan=dict(type='dict'),
