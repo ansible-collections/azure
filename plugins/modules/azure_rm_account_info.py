@@ -12,108 +12,35 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_account_info
 
-version_added: "1.2.0"
+version_added: "1.14.0"
 
 short_description: Get Azure Account facts (output of az account show)
 
 description:
-    - Get facts for a specific account or all accounts.
-
-options:
-    id:
-        description:
-            - Limit results to a specific subscription by id.
-            - Mutually exclusive with I(name).
-        type: str
-    name:
-        description:
-            - Limit results to a specific subscription by name.
-            - Mutually exclusive with I(id).
-        aliases:
-            - subscription_name
-        type: str
-    all:
-        description:
-            - If true, will return all subscriptions.
-            - If false will omit disabled subscriptions (default).
-            - Option has no effect when searching by id or name, and will be silently ignored.
-        type: bool
-    tags:
-        description:
-            - Limit results by providing a list of tags. Format tags as 'key:value'.
-            - Option has no effect when searching by id or name, and will be silently ignored.
-        type: list
-        elements: str
+    - Get facts for current logged in user.
+    - Output equivalent of `az account show` command.
 
 extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
-    - Paul Aiton (@paultaiton)
+    - Mandar Kulkarni (@mandar242)
 '''
 
 EXAMPLES = '''
-- name: Get facts for one subscription by id
-  azure_rm_subscription_info:
-    id: 00000000-0000-0000-0000-000000000000
-
-- name: Get facts for one subscription by name
-  azure_rm_subscription_info:
-    name: "my-subscription"
-
-- name: Get facts for all subscriptions, including ones that are disabled.
-  azure_rm_subscription_info:
-    all: True
-
-- name: Get facts for subscriptions containing tags provided.
-  azure_rm_subscription_info:
-    tags:
-        - testing
-        - foo:bar
+- name: Get facts for current logged in user
+  azure.azcollection.azure_rm_account_info:
 '''
 
 RETURN = '''
-subscriptions:
-    description:
-        - List of subscription dicts.
-    returned: always
-    type: list
-    contains:
-        display_name:
-            description: Subscription display name.
-            returned: always
-            type: str
-            sample: my-subscription
-        fqid:
-            description: Subscription fully qualified id.
-            returned: always
-            type: str
-            sample: "/subscriptions/00000000-0000-0000-0000-000000000000"
-        subscription_id:
-            description: Subscription guid.
-            returned: always
-            type: str
-            sample: "00000000-0000-0000-0000-000000000000"
-        state:
-            description: Subscription state.
-            returned: always
-            type: str
-            sample: "'Enabled' or 'Disabled'"
-        tags:
-            description: Tags assigned to resource group.
-            returned: always
-            type: dict
-            sample: { "tag1": "value1", "tag2": "value2" }
-        tenant_id:
-            description: Subscription tenant id
-            returned: always
-            type: str
-            sample: "00000000-0000-0000-0000-000000000000"
+# To be added
 '''
+
 
 try:
     from msrestazure.azure_exceptions import CloudError
-except Exception:
+    from azure.graphrbac.models import GraphErrorException
+except ImportError:
     # This is handled in azure_rm_common
     pass
 
@@ -131,10 +58,21 @@ class AzureRMAccountInfo(AzureRMModuleBase):
             account_info=[]
         )
 
-        super(AzureRMAccountInfo, self).__init__(self.module_arg_spec,
-                                                      supports_check_mode=True,
-                                                      supports_tags=False,
-                                                      facts_module=True)
+        # Remove param after below issue resolved
+        self.get_user_info = False
+
+        # As different return info is gathered using 2 different clients
+        # 1. All except "user" section of the return value uses azure.mgmt.subsctiption.operations.subscriptionoperations
+        # 2. "user" section of the return value uses different client (graphrbac), 
+        # both clients cannot be used in the same module hence module can return either (1) or (2)
+
+        # Issue mentioned above: https://github.com/mandar242/azure/blob/dev/plugins/module_utils/azure_rm_common.py#L1515
+        
+        super(AzureRMAccountInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                       supports_check_mode=True,
+                                                       supports_tags=False,
+                                                       is_ad_resource=False)
+
 
     def exec_module(self, **kwargs):
 
@@ -148,17 +86,50 @@ class AzureRMAccountInfo(AzureRMModuleBase):
 
         results = {}
         
+        # Get
+        # "homeTenantId": "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx",
+        # "id": "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx",
+        # "isDefault": true,
+        # "managedByTenants": [
+        #     {
+        #     "tenantId": "64xxxxxx-xxxx-49fc-xxxx-ebxxxxxxxxxx"
+        #     },
+        #     {
+        #     "tenantId": "2axxxxxx-xxxx-xxxx-a339-ebxxxxxxxxxx"
+        #     },
+        #     {
+        #     "tenantId": "xxxxxxxx-xxxx-4e68-xxxx-ebxxxxxxxxxx"
+        #     }
+        # ],
+        # "name": "Pay-As-You-Go",
+        # "state": "Enabled",
+        # "tenantId": "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx",
+        # Makes use of azure.mgmt.subsctiption.operations.subscriptionoperations
+        # https://docs.microsoft.com/en-us/python/api/azure-mgmt-subscription/azure.mgmt.subscription.operations.subscriptionsoperations?view=azure-python#methods
+
         try:
             subscription_list_response = list(self.subscription_client.subscriptions.list())
         except CloudError as exc:
             self.fail("Failed to list all subscriptions - {0}".format(str(exc)))
 
         results['id'] = subscription_list_response[0].subscription_id
-        results['tenant_id'] = subscription_list_response[0].tenant_id
+        results['tenantId'] = subscription_list_response[0].tenant_id
         results['homeTenantId'] = subscription_list_response[0].tenant_id
         results['name'] = subscription_list_response[0].display_name
         results['state'] = subscription_list_response[0].state
         results['managedByTenants'] = self.get_managed_by_tenants_list(subscription_list_response[0].managed_by_tenants)
+        
+        # Get
+        # "user": {
+        #     "name": "mandar123456@abcdefg.onmicrosoft.com",
+        #     "type": "user"self.
+        # }
+        # Makes use of azure graphrbac 
+        # https://docs.microsoft.com/en-us/python/api/overview/azure/microsoft-graph?view=azure-python#client-library
+        if self.get_user_info:
+            results['user'] = self.get_aduser_info(subscription_list_response[0].tenant_id)
+        else:
+            results['user'] = {}
 
         return results
 
@@ -170,6 +141,21 @@ class AzureRMAccountInfo(AzureRMModuleBase):
             result.append({"tenantId": item.tenant_id })
 
         return result
+
+    def get_aduser_info(self, tenant_id):
+
+        user = {}
+
+        try:
+            client = self.get_graphrbac_client(tenant_id)
+            user_info = client.signed_in_user.get()
+            user['name'] = user_info.user_principal_name
+            user['type'] = user_info.object_type
+
+        except GraphErrorException as e:
+            self.fail("failed to get ad user info {0}".format(str(e)))
+
+        return user
 
 def main():
     AzureRMAccountInfo()
