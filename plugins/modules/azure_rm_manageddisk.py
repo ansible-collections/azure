@@ -283,7 +283,8 @@ import re
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 try:
-    import threading
+    from concurrent.futures import ThreadPoolExecutor
+    import multiprocessing
     from msrestazure.tools import parse_resource_id
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
@@ -457,11 +458,13 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         # Mount the disk to multiple VM
         if self.managed_by_extended:
             if not self.check_mode:
+                cpu_count = multiprocessing.cpu_count()
+                executor = ThreadPoolExecutor(max_workers=cpu_count)
                 for vm_item in self.managed_by_extended:
                     vm_name_id = self.compute_client.virtual_machines.get(vm_item['resource_group'], vm_item['name'])
                     if result['managed_by_extended'] is None or vm_name_id.id not in result['managed_by_extended']:
                         changed = True
-                        threading.Thread(target=self.attach, args=(vm_item['resource_group'], vm_item['name'], result)).start()
+                        executor.submit(self.attach, vm_item['resource_group'], vm_item['name'], result)
                 result = self.get_managed_disk()
 
         # unmount from the old virtual machine and mount to the new virtual machine
