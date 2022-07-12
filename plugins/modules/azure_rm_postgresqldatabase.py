@@ -240,7 +240,8 @@ class AzureRMPostgreSqlDatabases(AzureRMModuleBase):
             response = self.mgmt_client.databases.create_or_update(resource_group_name=self.resource_group,
                                                                    server_name=self.server_name,
                                                                    database_name=self.name,
-                                                                   parameters=self.parameters)
+                                                                   charset=self.parameters.get('charset'),
+                                                                   collation=self.parameters.get('collation'))
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
