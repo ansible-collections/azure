@@ -460,11 +460,22 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             if not self.check_mode:
                 cpu_count = multiprocessing.cpu_count()
                 executor = ThreadPoolExecutor(max_workers=cpu_count)
+                task_result = []
                 for vm_item in self.managed_by_extended:
                     vm_name_id = self.compute_client.virtual_machines.get(vm_item['resource_group'], vm_item['name'])
                     if result['managed_by_extended'] is None or vm_name_id.id not in result['managed_by_extended']:
                         changed = True
-                        executor.submit(self.attach, vm_item['resource_group'], vm_item['name'], result)
+                        feature = executor.submit(self.attach, vm_item['resource_group'], vm_item['name'], result)
+                        task_result.append({'task': feature, 'vm_name': vm_item['name'], 'resource_group': vm_item['resource_group']})
+                fail_attach_VM = []
+                for task_item in task_result:
+                    if task_item['task'].result() is not None:
+                        task_item['error_msg'] = task_item['task'].result()
+                        task_item.pop('task')
+                        fail_attach_VM.append(task_item)
+                if len(fail_attach_VM) > 0:
+                    self.fail("Disk mount failure, VM and Error message information: {0}".format(fail_attach_VM))
+
                 result = self.get_managed_disk()
 
         # unmount from the old virtual machine and mount to the new virtual machine
@@ -516,7 +527,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                                                  managed_disk=params,
                                                  caching=caching_options)
         vm.storage_profile.data_disks.append(data_disk)
-        self._update_vm(resource_group, vm_name, vm)
+        return self._update_vm(resource_group, vm_name, vm)
 
     def detach(self, resource_group, vm_name, disk):
         vm = self._get_vm(resource_group, vm_name)
@@ -531,7 +542,10 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             poller = self.compute_client.virtual_machines.begin_create_or_update(resource_group, name, params)
             self.get_poller_result(poller)
         except Exception as exc:
-            self.fail("Error updating virtual machine {0} - {1}".format(name, str(exc)))
+            if self.managed_by_extended:
+                return exc
+            else:
+                self.fail("Error updating virtual machine {0} - {1}".format(name, str(exc)))
 
     def _get_vm(self, resource_group, name):
         try:
