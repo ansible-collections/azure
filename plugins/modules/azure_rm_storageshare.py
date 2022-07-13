@@ -154,7 +154,6 @@ state:
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    import time
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -346,7 +345,6 @@ class AzureRMStorageShare(AzureRMModuleBase):
                                                    share_name=self.name)
         except Exception as e:
             self.fail("Error deleting file share {0} : {1}".format(self.name, str(e)))
-
         return self.get_share()
 
 
