@@ -225,6 +225,7 @@ except ImportError:
     HAS_MSRESTAZURE = False
 
 try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
     from enum import Enum
     from msrestazure.azure_active_directory import AADTokenCredentials
     from msrestazure.azure_exceptions import CloudError
@@ -287,7 +288,7 @@ except ImportError as exc:
 from base64 import b64encode, b64decode
 from hashlib import sha256
 from hmac import HMAC
-from time import time
+from time import time, sleep
 
 try:
     from urllib import (urlencode, quote_plus)
@@ -1391,6 +1392,35 @@ class AzureRMModuleBase(object):
     @property
     def datafactory_model(self):
         return DataFactoryModel
+
+    def check_resource_delete(self, url, api_version):
+        query_parameters = {}
+        query_parameters['api-version'] = api_version
+        header_parameters = {}
+        header_parameters['Content-Type'] = 'application/json; charset=utf-8'
+        delay_time = 0
+        not_found = False
+        mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                               base_url=self._cloud_environment.endpoints.resource_manager)
+        while delay_time < 180:
+            try:
+                response = mgmt_client.query(
+                    url,
+                    'GET',
+                    query_parameters,
+                    header_parameters,
+                    None,
+                    [404],
+                    600,
+                    30,
+                )
+                not_found = True
+            except Exception as e:
+                sleep(30)
+
+            delay_time += 30
+            if not_found:
+                break
 
 
 class AzureSASAuthentication(Authentication):

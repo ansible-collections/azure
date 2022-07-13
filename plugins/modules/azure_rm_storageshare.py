@@ -234,7 +234,7 @@ class AzureRMStorageShare(AzureRMModuleBase):
             self.results['changed'] = True
             if self.check_mode:
                 return self.results
-            response = self.delete_storage_share()
+            response = self.delete_storage_share(old_response)
         elif self.to_do == Actions.Update:
             if self.update_needed(old_response):
                 self.results['changed'] = True
@@ -335,7 +335,7 @@ class AzureRMStorageShare(AzureRMModuleBase):
             self.fail("Error updating file share {0} : {1}".format(self.name, str(e)))
         return self.get_share()
 
-    def delete_storage_share(self):
+    def delete_storage_share(self, old_response):
         '''
         Method calling the Azure SDK to delete storage share.
         :return: object resulting from the original request
@@ -344,17 +344,13 @@ class AzureRMStorageShare(AzureRMModuleBase):
             self.storage_client.file_shares.delete(resource_group_name=self.resource_group,
                                                    account_name=self.account_name,
                                                    share_name=self.name)
-            try:
-                while True:
-                    time.sleep(180)
-                    storage_share = self.storage_client.file_shares.get(resource_group_name=self.resource_group,
-                                                                        account_name=self.account_name,
-                                                                        share_name=self.name)
-            except ResourceNotFoundError:
-                self.log("The storage file share with name {0} has deleted".format(self.name))
 
         except Exception as e:
             self.fail("Error deleting file share {0} : {1}".format(self.name, str(e)))
+
+        url = old_response['id']
+        self.check_resource_delete(url, '2021-06-01')
+
         return self.get_share()
 
 
