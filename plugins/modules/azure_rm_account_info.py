@@ -118,7 +118,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
         results['name'] = subscription_list_response[0].display_name
         results['state'] = subscription_list_response[0].state
         results['managedByTenants'] = self.get_managed_by_tenants_list(subscription_list_response[0].managed_by_tenants)
-        
+        results['environmentName'] = self.azure_auth._cloud_environment.name
         # Get
         # "user": {
         #     "name": "mandar123456@abcdefg.onmicrosoft.com",
