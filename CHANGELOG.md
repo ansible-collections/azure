@@ -1,5 +1,10 @@
 # Change Log
 
+## v1.13.1 (2022-07-14)
+
+### FEATURE ENHANCEMENT
+  - azure_rm_virtualnetworkgateway: Added support for `vpn_gateway_generation` 
+
 ## v1.13.0 (2022-05-27)
 
 ### NEW MODULES
@@ -60,7 +65,7 @@
   - azcollection: Install collection to local directory during development ([#763](https://github.com/ansible-collections/azure/pull/763))
 
 ### BREAKING CHANGES:
-  - azure_rm_virtualmachinescaleset: Change default value of `single_placement_group` from `True` to `Flase` ([#851](https://github.com/ansible-collections/azure/pull/851))
+  - azure_rm_virtualmachinescaleset: Change default value of `single_placement_group` from `True` to `False` ([#851](https://github.com/ansible-collections/azure/pull/851))
 
 ## v1.12.0 (2022-03-14)
 
