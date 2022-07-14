@@ -102,7 +102,7 @@ options:
             - HighPerformance
     vpn_gateway_generation:
         description:
-            - The generation for this VirtualNetworkGateway. Must be C(None) if C(gateway_type) is not VPN. 
+            - The generation for this VirtualNetworkGateway. Must be C(None) if C(gateway_type) is not VPN.
         default: Generation1
         choices:
             - None
