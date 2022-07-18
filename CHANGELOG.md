@@ -1,10 +1,5 @@
 # Change Log
 
-## v1.13.1 (2022-07-14)
-
-### FEATURE ENHANCEMENT
-  - azure_rm_virtualnetworkgateway: Added support for `vpn_gateway_generation` 
-
 ## v1.13.0 (2022-05-27)
 
 ### NEW MODULES
