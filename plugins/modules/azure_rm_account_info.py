@@ -33,7 +33,71 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-# To be added
+account_info:
+    description:
+        - Facts for current logged in user, equivalent to `az account show`.
+    returned: always
+    type: dict
+    contains:
+        environmentName:
+            description: For cloud environments other than the US public cloud, the environment name.
+            returned: always
+            type: str
+            sample: AzureCloud
+        homeTenantId:
+            description: Subscription tenant id.
+            returned: always
+            type: str
+            sample: "00000000-0000-0000-0000-000000000000"
+        id:
+            description: Subscription id.
+            returned: always
+            type: str
+            sample: "00000000-0000-0000-0000-000000000000"
+        managedByTenants:
+            description: An array containing the tenants managing the subscription.
+            returned: always
+            type: list
+            elements: dict
+            contains:
+                tenantId:
+                    description: Subscription tenant id
+                    returned: always
+                    type: str
+                    sample: "00000000-0000-0000-0000-000000000000"
+        name:
+            description: The subscription display name.
+            returned: always
+            type: str
+            sample: "Pay-As-You-Go"
+        state:
+            description:
+                - The subscription state.
+                - Possible values include: "Enabled", "Warned", "PastDue", "Disabled", "Deleted".
+            returned: always
+            type: str
+            sample: "Enabled"
+        tenant_id:
+            description: Subscription tenant id
+            returned: always
+            type: str
+            sample: "00000000-0000-0000-0000-000000000000"
+        user:
+            description: An dict containing the current user name and type.
+            returned: always
+            type: dict
+            elements: str
+            contains:
+                name:
+                    description: The principal name of the active directory user.
+                    returned: always
+                    type: str
+                    sample: "sample-user@sample-tenant.onmicrosoft.com"
+                type:
+                    description: Active Directory user type.
+                    returned: always
+                    type: str
+                    sample: "User"
 '''
 
 
@@ -47,6 +111,7 @@ except ImportError:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMAuth
+
 
 class AzureRMAccountInfo(AzureRMModuleBase):
 
@@ -62,14 +127,12 @@ class AzureRMAccountInfo(AzureRMModuleBase):
 
         # Different return info is gathered using 2 different clients
         # 1. All except "user" section of the return value uses azure.mgmt.subsctiption.operations.subscriptionoperations
-        # 2. "user" section of the return value uses different client (graphrbac), 
-        
+        # 2. "user" section of the return value uses different client (graphrbac)
+
         super(AzureRMAccountInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                        supports_check_mode=True,
                                                        supports_tags=False,
                                                        is_ad_resource=False)
-
-
     def exec_module(self, **kwargs):
 
         result = []
@@ -81,7 +144,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
     def list_items(self):
 
         results = {}
-        
+
         # Get
         # "homeTenantId": "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx",
         # "id": "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx",
@@ -123,9 +186,9 @@ class AzureRMAccountInfo(AzureRMModuleBase):
     def get_managed_by_tenants_list(self, object_list):
 
         result = []
-        import q; q(len(object_list))
+
         for item in object_list:
-            result.append({"tenantId": item.tenant_id })
+            result.append({"tenantId": item.tenant_id})
 
         return result
 
@@ -155,6 +218,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
             self.fail("failed to get ad user info {0}".format(str(e)))
 
         return user
+
 
 def main():
     AzureRMAccountInfo()
