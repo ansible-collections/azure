@@ -73,7 +73,7 @@ account_info:
         state:
             description:
                 - The subscription state.
-                - Possible values include: "Enabled", "Warned", "PastDue", "Disabled", "Deleted".
+                - Possible values include "Enabled", "Warned", "PastDue", "Disabled", "Deleted".
             returned: always
             type: str
             sample: "Enabled"
@@ -130,9 +130,10 @@ class AzureRMAccountInfo(AzureRMModuleBase):
         # 2. "user" section of the return value uses different client (graphrbac)
 
         super(AzureRMAccountInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                       supports_check_mode=True,
-                                                       supports_tags=False,
-                                                       is_ad_resource=False)
+                                                 supports_check_mode=True,
+                                                 supports_tags=False,
+                                                 is_ad_resource=False)
+
     def exec_module(self, **kwargs):
 
         result = []
