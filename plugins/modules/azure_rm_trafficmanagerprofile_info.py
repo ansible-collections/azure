@@ -247,8 +247,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # handled in azure_rm_common
     pass
@@ -337,7 +336,7 @@ class AzureRMTrafficManagerProfileInfo(AzureRMModuleBase):
         try:
             item = self.traffic_manager_management_client.profiles.get(
                 self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -353,7 +352,7 @@ class AzureRMTrafficManagerProfileInfo(AzureRMModuleBase):
         try:
             response = self.traffic_manager_management_client.profiles.list_by_resource_group(
                 self.resource_group)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []
