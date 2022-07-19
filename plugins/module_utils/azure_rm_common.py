@@ -1394,7 +1394,8 @@ class AzureRMModuleBase(object):
             self._event_hub_client = self.get_mgmt_svc_client(
                 EventHubManagementClient,
                 base_url=self._cloud_environment.endpoints.resource_manager,
-                api_version='2018-05-04')
+                is_track2=True,
+                api_version='2021-11-01')
         return self._event_hub_client
 
     @property
