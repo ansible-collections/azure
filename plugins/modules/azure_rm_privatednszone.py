@@ -85,8 +85,8 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils._text import to_native
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -149,7 +149,7 @@ class AzureRMPrivateDNSZone(AzureRMModuleBase):
             elif self.state == 'absent':
                 changed = True
 
-        except CloudError:
+        except ResourceNotFoundError:
             # the zone does not exist so create it
             if self.state == 'present':
                 changed = True
@@ -181,7 +181,7 @@ class AzureRMPrivateDNSZone(AzureRMModuleBase):
     def create_or_update_zone(self, zone):
         try:
             # create or update the new Zone object we created
-            new_zone = self.private_dns_client.private_zones.create_or_update(
+            new_zone = self.private_dns_client.private_zones.begin_create_or_update(
                 self.resource_group, self.name, zone)
 
             if isinstance(new_zone, LROPoller):
@@ -195,7 +195,7 @@ class AzureRMPrivateDNSZone(AzureRMModuleBase):
     def delete_zone(self):
         try:
             # delete the Zone
-            poller = self.private_dns_client.private_zones.delete(
+            poller = self.private_dns_client.private_zones.begin_delete(
                 self.resource_group, self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:

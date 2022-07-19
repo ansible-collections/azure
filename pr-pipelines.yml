@@ -124,6 +124,7 @@ parameters:
     - "azure_rm_webappaccessrestriction"
     - "azure_rm_workspace"
     - "azure_rm_datafactory"
+    - "azure_rm_bastionhost"
     - "inventory_azure"
     - "setup_azure"
 
