@@ -108,8 +108,7 @@ dnsrecordsets:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -195,7 +194,7 @@ class AzureRMPrivateDNSRecordSetInfo(AzureRMModuleBase):
                                                            self.zone_name,
                                                            self.record_type,
                                                            self.relative_name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         results = [item]
@@ -208,7 +207,7 @@ class AzureRMPrivateDNSRecordSetInfo(AzureRMModuleBase):
                                                                         self.zone_name,
                                                                         self.record_type,
                                                                         top=self.top)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail("Failed to list for record type {0} - {1}".format(self.record_type, str(exc)))
 
         results = []
@@ -220,7 +219,7 @@ class AzureRMPrivateDNSRecordSetInfo(AzureRMModuleBase):
         self.log('Lists all record sets in a Private DNS zone')
         try:
             response = self.private_dns_client.record_sets.list(self.resource_group, self.zone_name, top=self.top)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail("Failed to list for zone {0} - {1}".format(self.zone_name, str(exc)))
 
         results = []

@@ -154,7 +154,7 @@ endpoints:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, normalize_location_name
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.trafficmanager.models import (
         Profile, Endpoint, DnsConfig, MonitorConfig
     )
@@ -382,7 +382,7 @@ class AzureRMTrafficManagerProfile(AzureRMModuleBase):
             self.log("Traffic Manager profile : {0} found".format(response.name))
             self.endpoints_copy = response.endpoints if response and response.endpoints else None
             return traffic_manager_profile_to_dict(response)
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Did not find the Traffic Manager profile.')
             return False
 
@@ -396,7 +396,7 @@ class AzureRMTrafficManagerProfile(AzureRMModuleBase):
         try:
             operation_result = self.traffic_manager_management_client.profiles.delete(self.resource_group, self.name)
             return True
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Traffic Manager profile.')
             self.fail("Error deleting the Traffic Manager profile: {0}".format(e.message))
             return False
@@ -421,7 +421,7 @@ class AzureRMTrafficManagerProfile(AzureRMModuleBase):
         try:
             response = self.traffic_manager_management_client.profiles.create_or_update(self.resource_group, self.name, parameters)
             return traffic_manager_profile_to_dict(response)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Traffic Manager.')
             self.fail("Error creating the Traffic Manager: {0}".format(exc.message))
 

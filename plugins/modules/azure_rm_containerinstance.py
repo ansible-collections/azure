@@ -398,9 +398,8 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from azure.mgmt.containerinstance import ContainerInstanceManagementClient
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -730,12 +729,12 @@ class AzureRMContainerInstance(AzureRMModuleBase):
                                                   tags=self.tags)
 
         try:
-            response = self.containerinstance_client.container_groups.create_or_update(resource_group_name=self.resource_group,
-                                                                                       container_group_name=self.name,
-                                                                                       container_group=parameters)
+            response = self.containerinstance_client.container_groups.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                             container_group_name=self.name,
+                                                                                             container_group=parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error when creating ACI {0}: {1}".format(self.name, exc.message or str(exc)))
 
         return response.as_dict()
@@ -748,9 +747,9 @@ class AzureRMContainerInstance(AzureRMModuleBase):
         '''
         self.log("Deleting the container instance {0}".format(self.name))
         try:
-            response = self.containerinstance_client.container_groups.delete(resource_group_name=self.resource_group, container_group_name=self.name)
+            response = self.containerinstance_client.container_groups.begin_delete(resource_group_name=self.resource_group, container_group_name=self.name)
             return True
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when deleting ACI {0}: {1}'.format(self.name, exc.message or str(exc)))
             return False
 
@@ -767,7 +766,7 @@ class AzureRMContainerInstance(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Container instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the container instance.')
         if found is True:
             return response.as_dict()

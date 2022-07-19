@@ -95,8 +95,7 @@ rules:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
+    from azure.core.exceptions import ResourceNotFoundError
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -123,7 +122,6 @@ class AzureRMPostgreSQLFirewallRulesInfo(AzureRMModuleBase):
         self.results = dict(
             changed=False
         )
-        self.mgmt_client = None
         self.resource_group = None
         self.server_name = None
         self.name = None
@@ -137,8 +135,6 @@ class AzureRMPostgreSQLFirewallRulesInfo(AzureRMModuleBase):
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
-        self.mgmt_client = self.get_mgmt_svc_client(PostgreSQLManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager)
 
         if (self.name is not None):
             self.results['rules'] = self.get()
@@ -150,11 +146,11 @@ class AzureRMPostgreSQLFirewallRulesInfo(AzureRMModuleBase):
         response = None
         results = []
         try:
-            response = self.mgmt_client.firewall_rules.get(resource_group_name=self.resource_group,
-                                                           server_name=self.server_name,
-                                                           firewall_rule_name=self.name)
+            response = self.postgresql_client.firewall_rules.get(resource_group_name=self.resource_group,
+                                                                 server_name=self.server_name,
+                                                                 firewall_rule_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for FirewallRules.')
 
         if response is not None:
@@ -166,10 +162,10 @@ class AzureRMPostgreSQLFirewallRulesInfo(AzureRMModuleBase):
         response = None
         results = []
         try:
-            response = self.mgmt_client.firewall_rules.list_by_server(resource_group_name=self.resource_group,
-                                                                      server_name=self.server_name)
+            response = self.postgresql_client.firewall_rules.list_by_server(resource_group_name=self.resource_group,
+                                                                            server_name=self.server_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for FirewallRules.')
 
         if response is not None:
