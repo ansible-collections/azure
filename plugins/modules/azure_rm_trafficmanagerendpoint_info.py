@@ -145,8 +145,7 @@ from ansible.module_utils.common.dict_transformations import (
 )
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # handled in azure_rm_common
     pass
@@ -255,7 +254,7 @@ class AzureRMTrafficManagerEndpointInfo(AzureRMModuleBase):
         try:
             item = self.traffic_manager_management_client.endpoints.get(
                 self.resource_group, self.profile_name, self.type, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if item:
@@ -271,7 +270,7 @@ class AzureRMTrafficManagerEndpointInfo(AzureRMModuleBase):
 
         try:
             response = self.traffic_manager_management_client.profiles.get(self.resource_group, self.profile_name)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []
@@ -286,7 +285,7 @@ class AzureRMTrafficManagerEndpointInfo(AzureRMModuleBase):
         self.log('List all Traffic Manager endpoints of a profile by type')
         try:
             response = self.traffic_manager_management_client.profiles.get(self.resource_group, self.profile_name)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []

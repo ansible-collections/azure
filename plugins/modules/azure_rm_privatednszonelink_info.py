@@ -89,8 +89,7 @@ virtualnetworklinks:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -151,7 +150,7 @@ class AzureRMVirtualNetworkLinkInfo(AzureRMModuleBase):
             item = self.private_dns_client.virtual_network_links.get(self.resource_group,
                                                                      self.zone_name,
                                                                      self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         # serialize result
@@ -163,7 +162,7 @@ class AzureRMVirtualNetworkLinkInfo(AzureRMModuleBase):
         self.log('List all virtual network links for private DNS zone - {0}'.format(self.zone_name))
         try:
             response = self.private_dns_client.virtual_network_links.list(self.resource_group, self.zone_name)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []

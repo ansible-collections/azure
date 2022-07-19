@@ -125,12 +125,6 @@ import re
 import json
 import time
 
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
-
 
 class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
     def __init__(self):
@@ -250,7 +244,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as e:
+        except Exception as e:
             self.log('Error in creating Azure Recovery Service Vault.')
             self.fail('Error in creating Azure Recovery Service Vault {0}'.format(str(e)))
 
@@ -274,7 +268,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete Azure Recovery Service Vault.')
             self.fail('Error while deleting Azure Recovery Service Vault: {0}'.format(str(e)))
 
@@ -299,7 +293,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
                 30,
             )
             found = True
-        except CloudError as e:
+        except Exception as e:
             self.log('Recovery Service Vault Does not exist.')
         if found is True:
             response = json.loads(response.text)

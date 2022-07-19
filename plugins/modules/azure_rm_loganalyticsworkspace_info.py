@@ -139,7 +139,7 @@ from ansible.module_utils.common.dict_transformations import _snake_to_camel, _c
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
     from msrestazure.tools import parse_resource_id
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -196,14 +196,14 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
     def get_workspace(self):
         try:
             return self.log_analytics_client.workspaces.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
         return None
 
     def list_by_resource_group(self):
         try:
             return self.log_analytics_client.resource_group.list(self.resource_group)
-        except CloudError:
+        except Exception:
             pass
         return []
 
@@ -211,7 +211,7 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
         try:
             response = self.log_analytics_client.intelligence_packs.list(self.resource_group, self.name)
             return [x.as_dict() for x in response]
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when listing intelligence packs {0}'.format(exc.message or str(exc)))
 
     def list_management_groups(self):
@@ -222,7 +222,7 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
                 result.append(response.next().as_dict())
         except StopIteration:
             pass
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when listing management groups {0}'.format(exc.message or str(exc)))
         return result
 
@@ -234,14 +234,14 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
                 result.append(response.next().as_dict())
         except StopIteration:
             pass
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when listing usages {0}'.format(exc.message or str(exc)))
         return result
 
     def get_shared_keys(self):
         try:
             return self.log_analytics_client.shared_keys.get_shared_keys(self.resource_group, self.name).as_dict()
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when getting shared key {0}'.format(exc.message or str(exc)))
 
     def to_dict(self, workspace):

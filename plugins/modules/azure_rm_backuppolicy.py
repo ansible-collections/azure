@@ -176,7 +176,7 @@ from datetime import datetime
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 
 except ImportError:
     # This is handled in azure_rm_common
@@ -386,7 +386,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                                                                                                      policy_name=self.name,
                                                                                                      parameters=policy_resource)
 
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to create the backup policy.')
             self.fail("Error creating the backup policy {0} for vault {1} in resource group {2}. Error Reads: {3}".format(self.name,
                                                                                                                           self.vault_name,
@@ -405,11 +405,11 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.recovery_services_backup_client.protection_policies.delete(vault_name=self.vault_name,
-                                                                                       resource_group_name=self.resource_group,
-                                                                                       policy_name=self.name)
+            response = self.recovery_services_backup_client.protection_policies.begin_delete(vault_name=self.vault_name,
+                                                                                             resource_group_name=self.resource_group,
+                                                                                             policy_name=self.name)
 
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the backup policy.')
             self.fail("Error deleting the backup policy {0} for vault {1} in resource group {2}. Error Reads: {3}".format(self.name,
                                                                                                                           self.vault_name,
@@ -433,7 +433,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             policy = self.recovery_services_backup_client.protection_policies.get(vault_name=self.vault_name,
                                                                                   resource_group_name=self.resource_group,
                                                                                   policy_name=self.name)
-        except CloudError as ex:
+        except ResourceNotFoundError as ex:
             self.log("Could not find backup policy {0} for vault {1} in resource group {2}".format(self.name, self.vault_name, self.resource_group))
 
         return policy

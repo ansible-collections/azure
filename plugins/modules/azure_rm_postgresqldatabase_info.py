@@ -101,8 +101,7 @@ databases:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
+    from azure.core.exceptions import ResourceNotFoundError
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -159,7 +158,7 @@ class AzureRMPostgreSqlDatabasesInfo(AzureRMModuleBase):
                                                             server_name=self.server_name,
                                                             database_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Databases.')
 
         if response is not None:
@@ -174,7 +173,7 @@ class AzureRMPostgreSqlDatabasesInfo(AzureRMModuleBase):
             response = self.postgresql_client.databases.list_by_server(resource_group_name=self.resource_group,
                                                                        server_name=self.server_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.fail("Error listing for server {0} - {1}".format(self.server_name, str(e)))
 
         if response is not None:

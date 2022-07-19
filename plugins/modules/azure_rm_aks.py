@@ -436,7 +436,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -994,20 +994,20 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         # self.log("agent_pool_profiles : {0}".format(parameters.agent_pool_profiles))
 
         try:
-            poller = self.managedcluster_client.managed_clusters.create_or_update(self.resource_group, self.name, parameters)
+            poller = self.managedcluster_client.managed_clusters.begin_create_or_update(self.resource_group, self.name, parameters)
             response = self.get_poller_result(poller)
             response.kube_config = self.get_aks_kubeconfig()
             return create_aks_dict(response)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the AKS instance.')
             self.fail("Error creating the AKS instance: {0}".format(exc.message))
 
     def update_aks_tags(self):
         try:
-            poller = self.managedcluster_client.managed_clusters.update_tags(self.resource_group, self.name, self.tags)
+            poller = self.managedcluster_client.managed_clusters.begin_update_tags(self.resource_group, self.name, self.tags)
             response = self.get_poller_result(poller)
             return response.tags
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error attempting to update AKS tags: {0}".format(exc.message))
 
     def create_update_agentpool(self, to_update_name_list):
@@ -1028,10 +1028,10 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                     mode=profile["mode"]
                 )
                 try:
-                    poller = self.managedcluster_client.agent_pools.create_or_update(self.resource_group, self.name, profile["name"], parameters)
+                    poller = self.managedcluster_client.agent_pools.begin_create_or_update(self.resource_group, self.name, profile["name"], parameters)
                     response = self.get_poller_result(poller)
                     response_all.append(response)
-                except CloudError as exc:
+                except Exception as exc:
                     self.fail("Error attempting to update AKS agentpool: {0}".format(exc.message))
         return create_agent_pool_profiles_dict(response_all)
 
@@ -1039,9 +1039,9 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         for name in to_delete_name_list:
             self.log("Deleting the AKS agentpool {0}".format(name))
             try:
-                poller = self.managedcluster_client.agent_pools.delete(self.resource_group, self.name, name)
+                poller = self.managedcluster_client.agent_pools.begin_delete(self.resource_group, self.name, name)
                 self.get_poller_result(poller)
-            except CloudError as exc:
+            except Exception as exc:
                 self.fail("Error attempting to update AKS agentpool: {0}".format(exc.message))
 
     def delete_aks(self):
@@ -1052,10 +1052,10 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         '''
         self.log("Deleting the AKS instance {0}".format(self.name))
         try:
-            poller = self.managedcluster_client.managed_clusters.delete(self.resource_group, self.name)
+            poller = self.managedcluster_client.managed_clusters.begin_delete(self.resource_group, self.name)
             self.get_poller_result(poller)
             return True
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the AKS instance.')
             self.fail("Error deleting the AKS instance: {0}".format(e.message))
             return False
@@ -1073,7 +1073,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             self.log("AKS instance : {0} found".format(response.name))
             response.kube_config = self.get_aks_kubeconfig()
             return create_aks_dict(response)
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Did not find the AKS instance.')
             return False
 

@@ -69,7 +69,6 @@ id:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -136,7 +135,7 @@ class AzureRMServiceBus(AzureRMModuleBase):
 
     def check_name(self):
         try:
-            check_name = self.servicebus_client.namespaces.check_name_availability_method(self.name)
+            check_name = self.servicebus_client.namespaces.check_name_availability(parameters={'name': self.name})
             if not check_name or not check_name.name_available:
                 self.fail("Error creating namespace {0} - {1}".format(self.name, check_name.message or str(check_name)))
         except Exception as exc:
@@ -146,10 +145,10 @@ class AzureRMServiceBus(AzureRMModuleBase):
         self.log('Cannot find namespace, creating a one')
         try:
             sku = self.servicebus_models.SBSku(name=str.capitalize(self.sku))
-            poller = self.servicebus_client.namespaces.create_or_update(self.resource_group,
-                                                                        self.name,
-                                                                        self.servicebus_models.SBNamespace(location=self.location,
-                                                                                                           sku=sku))
+            poller = self.servicebus_client.namespaces.begin_create_or_update(self.resource_group,
+                                                                              self.name,
+                                                                              self.servicebus_models.SBNamespace(location=self.location,
+                                                                                                                 sku=sku))
             ns = self.get_poller_result(poller)
         except Exception as exc:
             self.fail('Error creating namespace {0} - {1}'.format(self.name, str(exc.inner_exception) or str(exc)))
@@ -157,7 +156,7 @@ class AzureRMServiceBus(AzureRMModuleBase):
 
     def delete(self):
         try:
-            self.servicebus_client.namespaces.delete(self.resource_group, self.name)
+            self.servicebus_client.namespaces.begin_delete(self.resource_group, self.name)
             return True
         except Exception as exc:
             self.fail("Error deleting route {0} - {1}".format(self.name, str(exc)))

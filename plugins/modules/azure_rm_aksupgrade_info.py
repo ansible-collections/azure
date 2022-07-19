@@ -113,8 +113,7 @@ azure_aks_upgrades:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # handled in azure_rm_common
     pass
@@ -168,14 +167,14 @@ class AzureRMAKSUpgrade(AzureRMModuleBase):
         self.log('Get properties for {0}'.format(self.name))
         try:
             cluster = self.managedcluster_client.managed_clusters.get(resource_group_name=resource_group, resource_name=name)
-        except CloudError as err:
+        except ResourceNotFoundError as err:
             self.fail('Error when getting AKS cluster information for {0} : {1}'.format(self.name, err.message or str(err)))
 
         self.log('Get available upgrade versions for {0}'.format(self.name))
         try:
             upgrade_profiles = self.managedcluster_client.managed_clusters.get_upgrade_profile(resource_group_name=resource_group,
                                                                                                resource_name=name)
-        except CloudError as err:
+        except ResourceNotFoundError as err:
             self.fail('Error when getting upgrade versions for {0} : {1}'.format(self.name, err.message or str(err)))
 
         return dict(

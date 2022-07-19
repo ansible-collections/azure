@@ -66,12 +66,6 @@ import re
 import json
 import time
 
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
-
 
 class Actions:
     (NoAction, Create, Update, Delete) = range(4)
@@ -159,7 +153,7 @@ class BackupAzureVMInfo(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as e:
+        except Exception as e:
             self.log('Error in fetching recovery point.')
             self.fail('Error in fetching recovery point {0}'.format(str(e)))
 

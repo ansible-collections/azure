@@ -159,12 +159,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 import json
 
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
-
 
 class BackupPolicyVMInfo(AzureRMModuleBaseExt):
     def __init__(self):
@@ -244,7 +238,7 @@ class BackupPolicyVMInfo(AzureRMModuleBaseExt):
                 30,
             )
             found = True
-        except CloudError as e:
+        except Exception as e:
             self.log('Backup policy does not exist.')
             self.fail('Error in fetching VM Backup Policy {0}'.format(str(e)))
         try:
