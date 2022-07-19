@@ -283,7 +283,7 @@ datalake:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -335,7 +335,7 @@ class AzureRMDatalakeStoreInfo(AzureRMModuleBase):
 
         try:
             datalake_store_obj = self.datalake_store_client.accounts.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if datalake_store_obj:
@@ -350,7 +350,7 @@ class AzureRMDatalakeStoreInfo(AzureRMModuleBase):
 
         try:
             datalake_store_obj = self.datalake_store_client.accounts.list_by_resource_group(self.resource_group)
-        except CloudError:
+        except Exception:
             pass
 
         if datalake_store_obj:
@@ -367,7 +367,7 @@ class AzureRMDatalakeStoreInfo(AzureRMModuleBase):
 
         try:
             datalake_store_obj = self.datalake_store_client.accounts.list()
-        except CloudError:
+        except Exception:
             pass
 
         if datalake_store_obj:
