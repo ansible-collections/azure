@@ -213,12 +213,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 import time
 import json
 
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
-
 
 class VMBackupPolicy(AzureRMModuleBaseExt):
     def __init__(self):
@@ -398,7 +392,7 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as e:
+        except Exception as e:
             self.log('Error in creating Backup Policy.')
             self.fail('Error in creating Backup Policy {0}'.format(str(e)))
 
@@ -422,7 +416,7 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete Azure Backup policy.')
             self.fail('Error attempting to delete Azure Backup policy: {0}'.format(str(e)))
 
@@ -447,7 +441,7 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
                 30,
             )
             found = True
-        except CloudError as e:
+        except Exception as e:
             self.log('Backup policy does not exist.')
         if found is True:
             response = json.loads(response.text)
