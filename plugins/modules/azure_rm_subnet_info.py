@@ -180,6 +180,12 @@ subnets:
             returned: always
             type: str
             sample: Succeeded
+        nat_gateway:
+            description:
+                - ID of the associated NAT Gateway.
+            returned: when available
+            type: str
+            sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/natGateways/myGw"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -279,7 +285,8 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'service_endpoints': d.get('service_endpoints'),
             'private_endpoint_network_policies': d.get('private_endpoint_network_policies'),
             'private_link_service_network_policies': d.get('private_link_service_network_policies'),
-            'delegations': d.get('delegations')
+            'delegations': d.get('delegations'),
+            'nat_gateway': d.get('nat_gateway', {}).get('id')
         }
         return d
 

@@ -46,7 +46,14 @@
     groupname: azure_vms
   with_items: "{{ output.deployment.instances }}"
 
-- name: Get Deployment Facts
+- name: Get Deployment Facts for Resource Group
+  azure_rm_deployment_info:
+    resource_group: "{{ resource_group }}"
+  register: output
+- debug:
+    var: output
+
+- name: Get Deployment Facts for named deployment
   azure_rm_deployment_info:
     resource_group: "{{ resource_group }}"
     name: "{{ dns_label }}"
