@@ -186,12 +186,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
 
     def get_managed_by_tenants_list(self, object_list):
 
-        result = []
-
-        for item in object_list:
-            result.append({"tenantId": item.tenant_id})
-
-        return result
+        return [dict(tenantId=item.tenant_id) for item in object_list]
 
     def get_aduser_info(self, tenant_id):
 
