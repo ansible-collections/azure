@@ -125,8 +125,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils._text import to_native
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -193,7 +192,7 @@ class AzureRMDNSZoneInfo(AzureRMModuleBase):
         # get specific zone
         try:
             item = self.dns_client.zones.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         # serialize result
@@ -205,7 +204,7 @@ class AzureRMDNSZoneInfo(AzureRMModuleBase):
         self.log('List items for resource group')
         try:
             response = self.dns_client.zones.list_by_resource_group(self.resource_group)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail("Failed to list for resource group {0} - {1}".format(self.resource_group, str(exc)))
 
         results = []
@@ -218,7 +217,7 @@ class AzureRMDNSZoneInfo(AzureRMModuleBase):
         self.log('List all items')
         try:
             response = self.dns_client.zones.list()
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []
@@ -241,7 +240,7 @@ class AzureRMDNSZoneInfo(AzureRMModuleBase):
             max_number_of_record_sets=zone.max_number_of_record_sets,
             name_servers=zone.name_servers,
             tags=zone.tags,
-            type=zone.zone_type.value.lower(),
+            type=zone.zone_type.lower(),
             registration_virtual_networks=[to_native(x.id) for x in zone.registration_virtual_networks] if zone.registration_virtual_networks else None,
             resolution_virtual_networks=[to_native(x.id) for x in zone.resolution_virtual_networks] if zone.resolution_virtual_networks else None
         )

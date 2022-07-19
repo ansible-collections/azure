@@ -271,7 +271,7 @@ from ansible.module_utils.six import iteritems
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, HAS_AZURE
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -324,7 +324,7 @@ RECORD_ARGSPECS = dict(
 )
 
 RECORDSET_VALUE_MAP = dict(
-    A=dict(attrname='arecords', classobj='ARecord', is_list=True),
+    A=dict(attrname='a_records', classobj='ARecord', is_list=True),
     AAAA=dict(attrname='aaaa_records', classobj='AaaaRecord', is_list=True),
     CNAME=dict(attrname='cname_record', classobj='CnameRecord', is_list=False),
     MX=dict(attrname='mx_records', classobj='MxRecord', is_list=True),
@@ -400,7 +400,7 @@ class AzureRMRecordSet(AzureRMModuleBase):
             self.log('Fetching Record Set {0}'.format(self.relative_name))
             record_set = self.dns_client.record_sets.get(self.resource_group, self.zone_name, self.relative_name, self.record_type)
             self.results['state'] = self.recordset_to_dict(record_set)
-        except CloudError:
+        except ResourceNotFoundError:
             record_set = None
             # FUTURE: fail on anything other than ResourceNotFound
 

@@ -117,8 +117,7 @@ appserviceplans:
                     sample: 1
 '''
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -174,8 +173,8 @@ class AzureRMAppServicePlanInfo(AzureRMModuleBase):
         result = []
 
         try:
-            item = self.web_client.app_service_plans.get(self.resource_group, self.name)
-        except CloudError:
+            item = self.web_client.app_service_plans.get(resource_group_name=self.resource_group, name=self.name)
+        except ResourceNotFoundError:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -187,8 +186,8 @@ class AzureRMAppServicePlanInfo(AzureRMModuleBase):
     def list_by_resource_group(self):
         self.log('List app service plans in resource groups {0}'.format(self.resource_group))
         try:
-            response = list(self.web_client.app_service_plans.list_by_resource_group(self.resource_group))
-        except CloudError as exc:
+            response = list(self.web_client.app_service_plans.list_by_resource_group(resource_group_name=self.resource_group))
+        except Exception as exc:
             self.fail("Error listing app service plan in resource groups {0} - {1}".format(self.resource_group, str(exc)))
 
         results = []
@@ -202,7 +201,7 @@ class AzureRMAppServicePlanInfo(AzureRMModuleBase):
         self.log('List app service plans in current subscription')
         try:
             response = list(self.web_client.app_service_plans.list())
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error listing app service plans: {0}".format(str(exc)))
 
         results = []
