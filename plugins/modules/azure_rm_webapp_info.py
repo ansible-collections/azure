@@ -238,9 +238,9 @@ webapps:
             sample: { tag1: abc }
 '''
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
+    from azure.mgmt.web.models import CsmPublishingProfileOptions
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -305,8 +305,8 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
         result = []
 
         try:
-            item = self.web_client.web_apps.get(self.resource_group, self.name)
-        except CloudError:
+            item = self.web_client.web_apps.get(resource_group_name=self.resource_group, name=self.name)
+        except ResourceNotFoundError:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -318,8 +318,8 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
     def list_by_resource_group(self):
         self.log('List web apps in resource groups {0}'.format(self.resource_group))
         try:
-            response = list(self.web_client.web_apps.list_by_resource_group(self.resource_group))
-        except CloudError as exc:
+            response = list(self.web_client.web_apps.list_by_resource_group(resource_group_name=self.resource_group))
+        except Exception as exc:
             request_id = exc.request_id if exc.request_id else ''
             self.fail("Error listing web apps in resource groups {0}, request id: {1} - {2}".format(self.resource_group, request_id, str(exc)))
 
@@ -334,7 +334,7 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
         self.log('List web apps in current subscription')
         try:
             response = list(self.web_client.web_apps.list())
-        except CloudError as exc:
+        except Exception as exc:
             request_id = exc.request_id if exc.request_id else ''
             self.fail("Error listing web apps, request id {0} - {1}".format(request_id, str(exc)))
 
@@ -352,7 +352,7 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
 
         try:
             response = self.web_client.web_apps.get_configuration(resource_group_name=resource_group, name=name)
-        except CloudError as ex:
+        except Exception as ex:
             request_id = ex.request_id if ex.request_id else ''
             self.fail('Error getting web app {0} configuration, request id {1} - {2}'.format(name, request_id, str(ex)))
 
@@ -365,7 +365,7 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
 
         try:
             response = self.web_client.web_apps.list_application_settings(resource_group_name=resource_group, name=name)
-        except CloudError as ex:
+        except Exception as ex:
             request_id = ex.request_id if ex.request_id else ''
             self.fail('Error getting web app {0} app settings, request id {1} - {2}'.format(name, request_id, str(ex)))
 
@@ -374,10 +374,10 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
     def get_publish_credentials(self, resource_group, name):
         self.log('Get web app {0} publish credentials'.format(name))
         try:
-            poller = self.web_client.web_apps.list_publishing_credentials(resource_group, name)
+            poller = self.web_client.web_apps.begin_list_publishing_credentials(resource_group_name=resource_group, name=name)
             if isinstance(poller, LROPoller):
                 response = self.get_poller_result(poller)
-        except CloudError as ex:
+        except Exception as ex:
             request_id = ex.request_id if ex.request_id else ''
             self.fail('Error getting web app {0} publishing credentials - {1}'.format(request_id, str(ex)))
         return response
@@ -388,7 +388,12 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
 
         url = None
         try:
-            content = self.web_client.web_apps.list_publishing_profile_xml_with_secrets(resource_group_name=resource_group, name=name)
+            publishing_profile_options = CsmPublishingProfileOptions(
+                format="Ftp"
+            )
+            content = self.web_client.web_apps.list_publishing_profile_xml_with_secrets(resource_group_name=resource_group,
+                                                                                        name=name,
+                                                                                        publishing_profile_options=publishing_profile_options)
             if not content:
                 return url
 
@@ -404,8 +409,8 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
                 if profile['@publishMethod'] == 'FTP':
                     url = profile['@publishUrl']
 
-        except CloudError as ex:
-            self.fail('Error getting web app {0} app settings'.format(name))
+        except Exception as ex:
+            self.fail('Error getting web app {0} app settings - {1}'.format(name, str(ex)))
 
         return url
 
@@ -417,7 +422,7 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
             app_settings = self.list_webapp_appsettings(resource_group, name)
             publish_cred = self.get_publish_credentials(resource_group, name)
             ftp_publish_url = self.get_webapp_ftp_publish_url(resource_group, name)
-        except CloudError as ex:
+        except Exception:
             pass
         return self.construct_curated_webapp(webapp=pip,
                                              configuration=site_config,

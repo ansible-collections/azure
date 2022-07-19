@@ -146,8 +146,7 @@ dnsrecordsets:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -156,7 +155,7 @@ AZURE_OBJECT_CLASS = 'RecordSet'
 
 
 RECORDSET_VALUE_MAP = dict(
-    A='arecords',
+    A='a_records',
     AAAA='aaaa_records',
     CNAME='cname_record',
     MX='mx_records',
@@ -241,7 +240,7 @@ class AzureRMRecordSetInfo(AzureRMModuleBase):
         # try to get information for specific Record Set
         try:
             item = self.dns_client.record_sets.get(self.resource_group, self.zone_name, self.relative_name, self.record_type)
-        except CloudError:
+        except ResourceNotFoundError:
             results = []
             pass
         else:
@@ -252,7 +251,7 @@ class AzureRMRecordSetInfo(AzureRMModuleBase):
         self.log('Lists the record sets of a specified type in a DNS zone')
         try:
             response = self.dns_client.record_sets.list_by_type(self.resource_group, self.zone_name, self.record_type, top=self.top)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail("Failed to list for record type {0} - {1}".format(self.record_type, str(exc)))
 
         results = []
@@ -264,7 +263,7 @@ class AzureRMRecordSetInfo(AzureRMModuleBase):
         self.log('Lists all record sets in a DNS zone')
         try:
             response = self.dns_client.record_sets.list_by_dns_zone(self.resource_group, self.zone_name, top=self.top)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail("Failed to list for zone {0} - {1}".format(self.zone_name, str(exc)))
 
         results = []

@@ -227,13 +227,9 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from msrest.serialization import Model
-    from azure.mgmt.web.models import (
-        site_config, app_service_plan, Site,
-        AppServicePlan, SkuDescription, NameValuePair
-    )
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
+    from azure.mgmt.web.models import Site, NameValuePair, SiteSourceControl, CsmSlotEntity, StringDictionary
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -716,14 +712,14 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
             "Creating / Updating the Web App slot {0}".format(self.name))
 
         try:
-            response = self.web_client.web_apps.create_or_update_slot(resource_group_name=self.resource_group,
-                                                                      slot=self.name,
-                                                                      name=self.webapp_name,
-                                                                      site_envelope=self.site)
+            response = self.web_client.web_apps.begin_create_or_update_slot(resource_group_name=self.resource_group,
+                                                                            slot=self.name,
+                                                                            name=self.webapp_name,
+                                                                            site_envelope=self.site)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Web App slot instance.')
             self.fail("Error creating the Web App slot: {0}".format(str(exc)))
         return slot_to_dict(response)
@@ -736,10 +732,10 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
         '''
         self.log("Deleting the Web App slot {0}".format(self.name))
         try:
-            response = self.web_client.web_apps.delete_slot(resource_group_name=self.resource_group,
-                                                            name=self.webapp_name,
-                                                            slot=self.name)
-        except CloudError as e:
+            self.web_client.web_apps.delete_slot(resource_group_name=self.resource_group,
+                                                 name=self.webapp_name,
+                                                 slot=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the Web App slot.')
             self.fail(
                 "Error deleting the Web App slots: {0}".format(str(e)))
@@ -761,13 +757,13 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
             response = self.web_client.web_apps.get(resource_group_name=self.resource_group,
                                                     name=self.webapp_name)
 
-            # Newer SDK versions (0.40.0+) seem to return None if it doesn't exist instead of raising CloudError
+            # Newer SDK versions (0.40.0+) seem to return None if it doesn't exist instead of raising error
             if response is not None:
                 self.log("Response : {0}".format(response))
                 self.log("Web App instance : {0} found".format(response.name))
                 return webapp_to_dict(response)
 
-        except CloudError as ex:
+        except ResourceNotFoundError:
             pass
 
         self.log("Didn't find web app {0} in resource group {1}".format(
@@ -791,13 +787,13 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
                                                          name=self.webapp_name,
                                                          slot=self.name)
 
-            # Newer SDK versions (0.40.0+) seem to return None if it doesn't exist instead of raising CloudError
+            # Newer SDK versions (0.40.0+) seem to return None if it doesn't exist instead of raising error
             if response is not None:
                 self.log("Response : {0}".format(response))
                 self.log("Web App slot: {0} found".format(response.name))
                 return slot_to_dict(response)
 
-        except CloudError as ex:
+        except ResourceNotFoundError:
             pass
 
         self.log("Does not find web app slot {0} in resource group {1}".format(self.name, self.resource_group))
@@ -812,13 +808,12 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
         self.log("List webapp application setting")
 
         try:
-
             response = self.web_client.web_apps.list_application_settings(
                 resource_group_name=self.resource_group, name=self.webapp_name)
             self.log("Response : {0}".format(response))
 
             return response.properties
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to list application settings for web app {0} in resource group {1}: {2}".format(
                 self.name, self.resource_group, str(ex)))
 
@@ -830,13 +825,12 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
         self.log("List application setting")
 
         try:
-
             response = self.web_client.web_apps.list_application_settings_slot(
                 resource_group_name=self.resource_group, name=self.webapp_name, slot=slot_name)
             self.log("Response : {0}".format(response))
 
             return response.properties
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to list application settings for web app slot {0} in resource group {1}: {2}".format(
                 self.name, self.resource_group, str(ex)))
 
@@ -852,15 +846,17 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
         if app_settings is None:
             app_settings = self.app_settings_strDic
         try:
+            settings = StringDictionary(
+                properties=self.app_settings
+            )
             response = self.web_client.web_apps.update_application_settings_slot(resource_group_name=self.resource_group,
                                                                                  name=self.webapp_name,
                                                                                  slot=slot_name,
-                                                                                 kind=None,
-                                                                                 properties=app_settings)
+                                                                                 app_settings=settings)
             self.log("Response : {0}".format(response))
 
             return response.as_dict()
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to update application settings for web app slot {0} in resource group {1}: {2}".format(
                 self.name, self.resource_group, str(ex)))
 
@@ -880,15 +876,19 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
         self.deployment_source['is_mercurial'] = False
 
         try:
-            response = self.web_client.web_client.create_or_update_source_control_slot(
+            site_source_control = SiteSourceControl(
+                repo_url=self.deployment_source.get('url'),
+                branch=self.deployment_source.get('branch')
+            )
+            response = self.web_client.web_client.begin_create_or_update_source_control_slot(
                 resource_group_name=self.resource_group,
                 name=self.webapp_name,
-                site_source_control=self.deployment_source,
+                site_source_control=site_source_control,
                 slot=self.name)
             self.log("Response : {0}".format(response))
 
             return response.as_dict()
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to update site source control for web app slot {0} in resource group {1}: {2}".format(
                 self.name, self.resource_group, str(ex)))
 
@@ -900,13 +900,12 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
         self.log("Get web app configuration")
 
         try:
-
             response = self.web_client.web_apps.get_configuration(
                 resource_group_name=self.resource_group, name=self.webapp_name)
             self.log("Response : {0}".format(response))
 
             return response
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to get configuration for web app {0} in resource group {1}: {2}".format(
                 self.webapp_name, self.resource_group, str(ex)))
 
@@ -918,13 +917,12 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
         self.log("Get web app slot configuration")
 
         try:
-
             response = self.web_client.web_apps.get_configuration_slot(
                 resource_group_name=self.resource_group, name=self.webapp_name, slot=slot_name)
             self.log("Response : {0}".format(response))
 
             return response
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to get configuration for web app slot {0} in resource group {1}: {2}".format(
                 slot_name, self.resource_group, str(ex)))
 
@@ -940,13 +938,12 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
         if site_config is None:
             site_config = self.site_config
         try:
-
             response = self.web_client.web_apps.update_configuration_slot(
                 resource_group_name=self.resource_group, name=self.webapp_name, slot=slot_name, site_config=site_config)
             self.log("Response : {0}".format(response))
 
             return response
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to update configuration for web app slot {0} in resource group {1}: {2}".format(
                 slot_name, self.resource_group, str(ex)))
 
@@ -968,7 +965,7 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
             self.log("Response : {0}".format(response))
 
             return response
-        except CloudError as ex:
+        except Exception as ex:
             request_id = ex.request_id if ex.request_id else ''
             self.fail("Failed to {0} web app slot {1} in resource group {2}, request_id {3} - {4}".format(
                 appstate, self.name, self.resource_group, request_id, str(ex)))
@@ -983,28 +980,40 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
         try:
             if self.swap['action'] == 'swap':
                 if self.swap['target_slot'] is None:
-                    response = self.web_client.web_apps.swap_slot_with_production(resource_group_name=self.resource_group,
-                                                                                  name=self.webapp_name,
-                                                                                  target_slot=self.name,
-                                                                                  preserve_vnet=self.swap['preserve_vnet'])
+                    slot_swap_entity = CsmSlotEntity(
+                        target_slot=self.name,
+                        preserve_vnet=self.swap['preserve_vnet']
+                    )
+                    response = self.web_client.web_apps.begin_swap_slot_with_production(resource_group_name=self.resource_group,
+                                                                                        name=self.webapp_name,
+                                                                                        slot_swap_entity=slot_swap_entity)
                 else:
-                    response = self.web_client.web_apps.swap_slot_slot(resource_group_name=self.resource_group,
-                                                                       name=self.webapp_name,
-                                                                       slot=self.name,
-                                                                       target_slot=self.swap['target_slot'],
-                                                                       preserve_vnet=self.swap['preserve_vnet'])
+                    slot_swap_entity = CsmSlotEntity(
+                        target_slot=self.swap['target_slot'],
+                        preserve_vnet=self.swap['preserve_vnet']
+                    )
+                    response = self.web_client.web_apps.begin_swap_slot(resource_group_name=self.resource_group,
+                                                                        name=self.webapp_name,
+                                                                        slot=self.name,
+                                                                        slot_swap_entity=slot_swap_entity)
             elif self.swap['action'] == 'preview':
                 if self.swap['target_slot'] is None:
+                    slot_swap_entity = CsmSlotEntity(
+                        target_slot=self.name,
+                        preserve_vnet=self.swap['preserve_vnet']
+                    )
                     response = self.web_client.web_apps.apply_slot_config_to_production(resource_group_name=self.resource_group,
                                                                                         name=self.webapp_name,
-                                                                                        target_slot=self.name,
-                                                                                        preserve_vnet=self.swap['preserve_vnet'])
+                                                                                        slot_swap_entity=slot_swap_entity)
                 else:
+                    slot_swap_entity = CsmSlotEntity(
+                        target_slot=self.swap['target_slot'],
+                        preserve_vnet=self.swap['preserve_vnet']
+                    )
                     response = self.web_client.web_apps.apply_slot_configuration_slot(resource_group_name=self.resource_group,
                                                                                       name=self.webapp_name,
                                                                                       slot=self.name,
-                                                                                      target_slot=self.swap['target_slot'],
-                                                                                      preserve_vnet=self.swap['preserve_vnet'])
+                                                                                      slot_swap_entity=slot_swap_entity)
             elif self.swap['action'] == 'reset':
                 if self.swap['target_slot'] is None:
                     response = self.web_client.web_apps.reset_production_slot_config(resource_group_name=self.resource_group,
@@ -1020,7 +1029,7 @@ class AzureRMWebAppSlots(AzureRMModuleBase):
             self.log("Response : {0}".format(response))
 
             return response
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to swap web app slot {0} in resource group {1}: {2}".format(self.name, self.resource_group, str(ex)))
 
     def clone_slot(self):

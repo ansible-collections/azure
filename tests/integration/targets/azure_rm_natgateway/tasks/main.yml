@@ -1,0 +1,346 @@
+- name: Prepare random number
+  set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  run_once: true
+- name: Set json query to only retrieve gateways from this test
+  set_fact:
+    query: "[?ends_with(name, `{{ rpfx }}`)]"
+  run_once: true
+
+- name: Get resource group info
+  azure_rm_resourcegroup_info:
+    name: "{{ resource_group }}"
+  register: rg_output
+- name: Store rg location
+  set_fact:
+    rg_location: "{{ rg_output.resourcegroups[0].location }}"
+  run_once: true
+
+- name: Get NAT gateways
+  azure_rm_natgateway_info:
+    resource_group: "{{ resource_group }}"
+  register: natgw_output
+- name: Assert there are no gateways
+  assert:
+    that:
+      - natgw_output.gateways | community.general.json_query(query) | length == 0
+
+- name: Create instance of NAT Gateway in check_mode
+  azure_rm_natgateway:
+    resource_group: "{{ resource_group }}"
+    name: nat-gateway{{ rpfx }}1
+  register: output
+  check_mode: yes
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+
+- name: Get NAT gateways
+  azure_rm_natgateway_info:
+    resource_group: "{{ resource_group }}"
+  register: natgw_output
+- name: Assert there are still no gateways
+  assert:
+    that:
+      - natgw_output.gateways | community.general.json_query(query) | length == 0
+
+- name: Create instance of NAT Gateway
+  azure_rm_natgateway:
+    resource_group: "{{ resource_group }}"
+    name: nat-gateway{{ rpfx }}1
+  register: natgw_output
+- name: Assert that gateway is well created
+  assert:
+    that:
+      - natgw_output.changed
+      - natgw_output.resource_group == "{{ resource_group }}"
+      - natgw_output.name == "nat-gateway{{ rpfx }}1"
+      - natgw_output.location == "{{ rg_location }}"
+- name: Get NAT gateways
+  azure_rm_natgateway_info:
+    name: nat-gateway{{ rpfx }}1
+    resource_group: "{{ resource_group }}"
+  register: natgw_output
+- name: Assert that gateway has the right default parameters
+  assert:
+    that:
+      - natgw_output.gateways[0].idle_timeout_in_minutes == 4
+
+- name: Try to update instance of NAT Gateway - no change
+  azure_rm_natgateway:
+    resource_group: "{{ resource_group }}"
+    name: nat-gateway{{ rpfx }}1
+  register: output
+- name: Assert the resource instance is not changed
+  assert:
+    that:
+      - not output.changed
+
+- name: Try to update instance of NAT Gateway - change timeout
+  azure_rm_natgateway:
+    resource_group: "{{ resource_group }}"
+    name: nat-gateway{{ rpfx }}1
+    idle_timeout_in_minutes: 10
+  register: natgw_output
+- name: Assert the resource instance is changed
+  assert:
+    that:
+      - natgw_output.changed
+      - natgw_output.location == "{{ rg_location }}"
+- name: Get NAT gateways
+  azure_rm_natgateway_info:
+    name: nat-gateway{{ rpfx }}1
+    resource_group: "{{ resource_group }}"
+  register: natgw_output
+- name: Assert that gateway has the right parameters
+  assert:
+    that:
+      - natgw_output.gateways[0].idle_timeout_in_minutes == 10
+
+- name: Try to update instance of NAT Gateway - no change as this is the default value
+  azure_rm_natgateway:
+    resource_group: "{{ resource_group }}"
+    name: nat-gateway{{ rpfx }}1
+    sku:
+      name: standard
+    idle_timeout_in_minutes: 10
+  register: output
+- name: Assert the resource instance is not changed
+  assert:
+    that:
+      - not output.changed
+
+- name: Create public IP for NAT Gateway
+  azure_rm_publicipaddress:
+    name: "nat-gateway{{ rpfx }}-pip1"
+    resource_group: "{{ resource_group }}"
+    sku: "standard"
+    allocation_method: "static"
+- name: Get public IP for NAT Gateway
+  azure_rm_publicipaddress_info:
+    name: "nat-gateway{{ rpfx }}-pip1"
+    resource_group: "{{ resource_group }}"
+  register: pip_info_output
+
+- name: Create second public IP for NAT Gateway
+  azure_rm_publicipaddress:
+    name: "nat-gateway{{ rpfx }}-pip2"
+    resource_group: "{{ resource_group }}"
+    sku: "standard"
+    allocation_method: "static"
+
+- name: Try to update instance of NAT Gateway - add public IPs
+  azure_rm_natgateway:
+    resource_group: "{{ resource_group }}"
+    name: nat-gateway{{ rpfx }}1
+    idle_timeout_in_minutes: 10
+    sku:
+      name: standard
+    public_ip_addresses:
+      - "{{ pip_info_output.publicipaddresses[0].id }}"
+      - "nat-gateway{{ rpfx }}-pip2"
+  register: natgw_output
+- name: Assert the resource instance is changed
+  assert:
+    that:
+      - natgw_output.changed
+- name: Get NAT gateways
+  azure_rm_natgateway_info:
+    name: nat-gateway{{ rpfx }}1
+    resource_group: "{{ resource_group }}"
+  register: natgw_output
+- name: Assert that gateway has the right parameters
+  assert:
+    that:
+      - natgw_output.gateways[0].public_ip_addresses | length == 2
+
+- name: Try to update instance of NAT Gateway - remove 1 public IPs
+  azure_rm_natgateway:
+    resource_group: "{{ resource_group }}"
+    name: nat-gateway{{ rpfx }}1
+    idle_timeout_in_minutes: 10
+    sku:
+      name: standard
+    public_ip_addresses:
+      - "nat-gateway{{ rpfx }}-pip2"
+  register: natgw_output
+- name: Assert the resource instance is changed
+  assert:
+    that:
+      - natgw_output.changed
+- name: Get NAT gateways
+  azure_rm_natgateway_info:
+    name: nat-gateway{{ rpfx }}1
+    resource_group: "{{ resource_group }}"
+  register: natgw_output
+- name: Assert that gateway has the right parameters
+  assert:
+    that:
+      - natgw_output.gateways[0].public_ip_addresses | length == 1
+
+# Note: disassociating first IP address helps avoiding issues when deleting them
+- name: Try to update instance of NAT Gateway - remove last public IPs
+  azure_rm_natgateway:
+    resource_group: "{{ resource_group }}"
+    name: nat-gateway{{ rpfx }}1
+    idle_timeout_in_minutes: 10
+    sku:
+      name: standard
+  register: natgw_output
+- name: Assert the resource instance is changed
+  assert:
+    that:
+      - natgw_output.changed
+- name: Get NAT gateways
+  azure_rm_natgateway_info:
+    name: nat-gateway{{ rpfx }}1
+    resource_group: "{{ resource_group }}"
+  register: natgw_output
+- name: Assert that gateway has the right parameters
+  assert:
+    that:
+      - natgw_output.gateways[0].public_ip_addresses == None
+
+- name: Create virtual network
+  azure_rm_virtualnetwork:
+    name: "vnet{{ rpfx }}"
+    address_prefixes_cidr:
+      - 10.1.0.0/16
+      - 172.100.0.0/16
+      - fdda:e69b:1587:495e::/64
+    dns_servers:
+      - 127.0.0.1
+      - 127.0.0.3
+    tags:
+      testing: testing
+      delete: on-exit
+    resource_group: "{{ resource_group }}"
+
+- name: Create the subnet
+  azure_rm_subnet:
+    name: "subnet{{ rpfx }}"
+    virtual_network_name: "vnet{{ rpfx }}"
+    address_prefix_cidr: "10.1.0.0/24"
+    nat_gateway: "{{ natgw_output.gateways[0].id }}"
+    resource_group: "{{ resource_group }}"
+- name: Get the subnet facts
+  azure_rm_subnet_info:
+    name: "subnet{{ rpfx }}"
+    virtual_network_name: "vnet{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+- name: Assert the NAT Gateway is associated
+  assert:
+    that:
+      - output.subnets[0].nat_gateway == "{{ natgw_output.gateways[0].id }}"
+
+- name: Create instance of NAT Gateway
+  azure_rm_natgateway:
+    resource_group: "{{ resource_group }}"
+    name: nat-gateway{{ rpfx }}3
+  register: natgw_output3
+- name: Update the subnet - Update associated NAT Gateway
+  azure_rm_subnet:
+    name: "subnet{{ rpfx }}"
+    virtual_network_name: "vnet{{ rpfx }}"
+    address_prefix_cidr: "10.1.0.0/24"
+    resource_group: "{{ resource_group }}"
+    nat_gateway: nat-gateway{{ rpfx }}3
+- name: Get the subnet facts
+  azure_rm_subnet_info:
+    name: "subnet{{ rpfx }}"
+    virtual_network_name: "vnet{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+- name: Assert the NAT Gateway is not associated
+  assert:
+    that:
+      - output.subnets[0].nat_gateway == "{{ natgw_output3.id }}"
+
+- name: Update the subnet - Disassociate NAT Gateway
+  azure_rm_subnet:
+    name: "subnet{{ rpfx }}"
+    virtual_network_name: "vnet{{ rpfx }}"
+    address_prefix_cidr: "10.1.0.0/24"
+    resource_group: "{{ resource_group }}"
+- name: Get the subnet facts
+  azure_rm_subnet_info:
+    name: "subnet{{ rpfx }}"
+    virtual_network_name: "vnet{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+- name: Assert the NAT Gateway is not associated
+  assert:
+    that:
+      - output.subnets[0].nat_gateway == None
+
+# A resource with the same name cannot be created in another location
+- name: Create a second instance of NAT Gateway - change location and name
+  azure_rm_natgateway:
+    resource_group: "{{ resource_group }}"
+    name: nat-gateway{{ rpfx }}2
+    idle_timeout_in_minutes: 10
+    location: eastus
+    zones: [ 1 ]
+    sku:
+      name: standard
+  register: natgw_output
+- name: Assert the resource instance is changed
+  assert:
+    that:
+      - natgw_output.changed
+      - natgw_output.location == "eastus"
+- name: Get NAT gateways
+  azure_rm_natgateway_info:
+    name: nat-gateway{{ rpfx }}2
+    resource_group: "{{ resource_group }}"
+  register: natgw_output
+- name: Assert that gateway has the right parameters
+  assert:
+    that:
+      - natgw_output.gateways[0].idle_timeout_in_minutes == 10
+      - natgw_output.gateways[0].zones[0] == "1"
+
+#### Final cleanup
+- name: Delete instance of NAT Gateway
+  azure_rm_natgateway:
+    resource_group: "{{ resource_group }}"
+    name: nat-gateway{{ rpfx }}{{ item }}
+    state: absent
+  register: output
+  with_items:
+       - 1
+       - 2
+       - 3
+
+- name: Remove subnet
+  azure_rm_subnet:
+    state: absent
+    name: subnet{{ rpfx }}
+    virtual_network_name: vnet{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+
+- name: Remove virtual network
+  azure_rm_virtualnetwork:
+    name: "vnet{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+
+- name: Get NAT gateways
+  azure_rm_natgateway_info:
+    resource_group: "{{ resource_group }}"
+  register: natgw_output
+- name: Assert there are no gateways left
+  assert:
+    that:
+      - natgw_output.gateways | community.general.json_query(query) | length == 0
+
+- name: Delete public IPs for NAT Gateway
+  azure_rm_publicipaddress:
+       resource_group: "{{ resource_group }}"
+       name: "nat-gateway{{ rpfx }}-pip{{ item }}"
+       state: absent
+  with_items:
+       - 1
+       - 2

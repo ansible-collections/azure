@@ -175,7 +175,7 @@ search:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -228,7 +228,7 @@ class AzureRMSearchInfo(AzureRMModuleBase):
 
         try:
             search_obj = self.search_client.services.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if search_obj:
@@ -243,7 +243,7 @@ class AzureRMSearchInfo(AzureRMModuleBase):
 
         try:
             search_obj = self.search_client.services.list_by_resource_group(self.resource_group)
-        except CloudError:
+        except Exception:
             pass
 
         if search_obj:
@@ -260,7 +260,7 @@ class AzureRMSearchInfo(AzureRMModuleBase):
 
         try:
             search_obj = self.search_client.services.list_by_subscription()
-        except CloudError:
+        except Exception:
             pass
 
         if search_obj:

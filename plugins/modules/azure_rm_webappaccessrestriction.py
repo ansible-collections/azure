@@ -357,7 +357,18 @@ class AzureRMWebAppAccessRestriction(AzureRMModuleBase):
         )
 
     def to_restriction_dict_list(self, restriction_obj_list):
-        return [] if not restriction_obj_list else [self.to_restriction_dict(restriction) for restriction in restriction_obj_list]
+        restrictions = []
+        if restriction_obj_list:
+            for r in restriction_obj_list:
+                restriction = self.to_restriction_dict(r)
+                if not self.is_azure_default_restriction(restriction):
+                    restrictions.append(restriction)
+
+        return restrictions
+
+    def is_azure_default_restriction(self, restriction_obj):
+        return (restriction_obj["action"] == "Allow" and restriction_obj["ip_address"] == "Any" and restriction_obj["priority"] == 1) or \
+            (restriction_obj["action"] == "Deny" and restriction_obj["ip_address"] == "Any" and restriction_obj["priority"] == 2147483647)
 
     def to_restriction_dict(self, restriction_obj):
         return dict(

@@ -391,7 +391,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                         zones=self.zones
                     )
                     if self.ip_tags:
-                        pip.ip_tags = [self.network_models.IpTag(ip_tag_type=x.type, tag=x.value) for x in self.ip_tags]
+                        pip.ip_tags = [self.network_models.IpTag(ip_tag_type=x['type'], tag=x['value']) for x in self.ip_tags]
                     if self.tags:
                         pip.tags = self.tags
                     if self.domain_name:
