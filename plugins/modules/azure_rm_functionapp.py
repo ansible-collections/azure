@@ -160,13 +160,8 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.web.models import (
-        site_config, app_service_plan, Site, SiteConfig, NameValuePair, SiteSourceControl,
-        AppServicePlan, SkuDescription
-    )
-    from azure.mgmt.resource.resources import ResourceManagementClient
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.mgmt.web.models import Site, SiteConfig, NameValuePair
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -233,19 +228,16 @@ class AzureRMFunctionApp(AzureRMModuleBase):
 
         try:
             resource_group = self.rm_client.resource_groups.get(self.resource_group)
-        except CloudError:
+        except Exception:
             self.fail('Unable to retrieve resource group')
 
         self.location = self.location or resource_group.location
 
         try:
-            function_app = self.web_client.web_apps.get(
-                resource_group_name=self.resource_group,
-                name=self.name
-            )
-            # Newer SDK versions (0.40.0+) seem to return None if it doesn't exist instead of raising CloudError
+            function_app = self.web_client.web_apps.get(resource_group_name=self.resource_group, name=self.name)
+            # Newer SDK versions (0.40.0+) seem to return None if it doesn't exist instead of raising error
             exists = function_app is not None
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             exists = False
 
         if self.state == 'absent':
@@ -254,12 +246,9 @@ class AzureRMFunctionApp(AzureRMModuleBase):
                     self.results['changed'] = True
                     return self.results
                 try:
-                    self.web_client.web_apps.delete(
-                        resource_group_name=self.resource_group,
-                        name=self.name
-                    )
+                    self.web_client.web_apps.delete(resource_group_name=self.resource_group, name=self.name)
                     self.results['changed'] = True
-                except CloudError as exc:
+                except Exception as exc:
                     self.fail('Failure while deleting web app: {0}'.format(exc))
             else:
                 self.results['changed'] = False
@@ -279,7 +268,7 @@ class AzureRMFunctionApp(AzureRMModuleBase):
                 if self.container_settings.get('registry_server_password'):
                     self.app_settings['DOCKER_REGISTRY_SERVER_PASSWORD'] = self.container_settings.get('registry_server_password')
 
-            if not self.plan and function_app:
+            if not self.plan and exists:
                 self.plan = function_app.server_farm_id
 
             if not exists:
@@ -313,13 +302,12 @@ class AzureRMFunctionApp(AzureRMModuleBase):
                 self.results['state'] = function_app.as_dict()
             elif self.results['changed']:
                 try:
-                    new_function_app = self.web_client.web_apps.create_or_update(
-                        resource_group_name=self.resource_group,
-                        name=self.name,
-                        site_envelope=function_app
-                    ).result()
+                    response = self.web_client.web_apps.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                               name=self.name,
+                                                                               site_envelope=function_app)
+                    new_function_app = self.get_poller_result(response)
                     self.results['state'] = new_function_app.as_dict()
-                except CloudError as exc:
+                except Exception as exc:
                     self.fail('Error creating or updating web app: {0}'.format(exc))
 
         return self.results

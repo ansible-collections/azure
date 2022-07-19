@@ -103,13 +103,10 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
     from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.serialization import Model
-    from azure.mgmt.web.models import (
-        app_service_plan, AppServicePlan, SkuDescription
-    )
+    from azure.mgmt.web.models import AppServicePlan, SkuDescription
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -309,13 +306,13 @@ class AzureRMAppServicePlans(AzureRMModuleBase):
         self.log("Get App Service Plan {0}".format(self.name))
 
         try:
-            response = self.web_client.app_service_plans.get(self.resource_group, self.name)
+            response = self.web_client.app_service_plans.get(resource_group_name=self.resource_group, name=self.name)
             if response:
                 self.log("Response : {0}".format(response))
                 self.log("App Service Plan : {0} found".format(response.name))
 
                 return appserviceplan_to_dict(response)
-        except CloudError as ex:
+        except ResourceNotFoundError:
             self.log("Didn't find app service plan {0} in resource group {1}".format(self.name, self.resource_group))
 
         return False
@@ -336,7 +333,9 @@ class AzureRMAppServicePlans(AzureRMModuleBase):
             plan_def = AppServicePlan(
                 location=self.location, app_service_plan_name=self.name, sku=sku_def, reserved=self.is_linux, tags=self.tags if self.tags else None)
 
-            response = self.web_client.app_service_plans.create_or_update(self.resource_group, self.name, plan_def)
+            response = self.web_client.app_service_plans.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                name=self.name,
+                                                                                app_service_plan=plan_def)
 
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
@@ -344,7 +343,7 @@ class AzureRMAppServicePlans(AzureRMModuleBase):
             self.log("Response : {0}".format(response))
 
             return appserviceplan_to_dict(response)
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to create app service plan {0} in resource group {1}: {2}".format(self.name, self.resource_group, str(ex)))
 
     def delete_plan(self):
@@ -355,12 +354,10 @@ class AzureRMAppServicePlans(AzureRMModuleBase):
         '''
         self.log("Deleting the App service plan {0}".format(self.name))
         try:
-            response = self.web_client.app_service_plans.delete(resource_group_name=self.resource_group,
-                                                                name=self.name)
-        except CloudError as e:
+            self.web_client.app_service_plans.delete(resource_group_name=self.resource_group, name=self.name)
+        except ResourceNotFoundError as e:
             self.log('Error attempting to delete App service plan.')
-            self.fail(
-                "Error deleting the App service plan : {0}".format(str(e)))
+            self.fail("Error deleting the App service plan : {0}".format(str(e)))
 
         return True
 

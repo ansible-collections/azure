@@ -226,7 +226,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -304,7 +304,7 @@ class AzureRMSearch(AzureRMModuleBase):
 
         try:
             search_obj = self.search_client.services.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if search_obj:
@@ -361,9 +361,9 @@ class AzureRMSearch(AzureRMModuleBase):
         )
 
         try:
-            poller = self.search_client.services.create_or_update(self.resource_group, self.name, search_model)
+            poller = self.search_client.services.begin_create_or_update(self.resource_group, self.name, search_model)
             self.get_poller_result(poller)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error creating Azure Search.')
             self.fail("Failed to create Azure Search: {0}".format(str(e)))
 
@@ -406,7 +406,7 @@ class AzureRMSearch(AzureRMModuleBase):
             self.results['changed'] = True
             search_update_model.partition_count = self.partition_count
 
-        if self.public_network_access and self.account_dict.get('public_network_access') != self.public_network_access:
+        if self.public_network_access and self.account_dict.get('public_network_access').lower() != self.public_network_access.lower():
             self.results['changed'] = True
             search_update_model.public_network_access = self.public_network_access
 
@@ -425,9 +425,9 @@ class AzureRMSearch(AzureRMModuleBase):
 
         try:
             if self.results['changed']:
-                poller = self.search_client.services.create_or_update(self.resource_group, self.name, search_update_model)
+                poller = self.search_client.services.begin_create_or_update(self.resource_group, self.name, search_update_model)
                 self.get_poller_result(poller)
-        except CloudError as e:
+        except Exception as e:
             self.fail("Failed to update the search: {0}".format(str(e)))
 
         return self.get_search()
@@ -439,14 +439,14 @@ class AzureRMSearch(AzureRMModuleBase):
             if self.account_dict is not None:
                 self.results['changed'] = True
                 self.search_client.services.delete(self.resource_group, self.name)
-        except CloudError as e:
+        except Exception as e:
             self.fail("Failed to delete the search: {0}".format(str(e)))
 
     def check_name_availability(self):
         self.log('Checking name availability for {0}'.format(self.name))
         try:
             response = self.search_client.services.check_name_availability(self.name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to validate name.')
             self.fail("Error checking name availability: {0}".format(str(e)))
         if not response.is_name_available:

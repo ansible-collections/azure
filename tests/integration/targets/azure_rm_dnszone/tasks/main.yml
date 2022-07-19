@@ -76,7 +76,7 @@
   assert:
     that:
         - results.changed
-        - 'results.state.arecords | length == 3'
+        - 'results.state.a_records | length == 3'
 
 - name: re-run "A" record with same values
   azure_rm_dnsrecordset:
@@ -109,7 +109,7 @@
   assert:
     that: 
       - results.changed
-      - 'results.state.arecords | length == 4'
+      - 'results.state.a_records | length == 4'
 
 - name: re-update "A" record set with additional record
   azure_rm_dnsrecordset:
@@ -143,7 +143,7 @@
   assert:
     that:
       - results.changed
-      - 'results.state.arecords | length == 3'      
+      - 'results.state.a_records | length == 3'      
 
 - name: Check_mode test
   azure_rm_dnsrecordset:
