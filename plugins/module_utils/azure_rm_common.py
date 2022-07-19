@@ -339,7 +339,7 @@ AZURE_PKG_VERSIONS = {
     },
     'ContainerInstanceManagementClient': {
         'package_name': 'containerinstance',
-        'expected_version': '0.4.0'
+        'expected_version': '9.0.0'
     },
     'NetworkManagementClient': {
         'package_name': 'network',
@@ -1215,6 +1215,7 @@ class AzureRMModuleBase(object):
         if not self._containerinstance_client:
             self._containerinstance_client = self.get_mgmt_svc_client(ContainerInstanceManagementClient,
                                                                       base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                      is_track2=True,
                                                                       api_version='2018-06-01')
 
         return self._containerinstance_client
