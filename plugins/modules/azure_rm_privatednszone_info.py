@@ -114,8 +114,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils._text import to_native
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -183,7 +182,7 @@ class AzurePrivateRMDNSZoneInfo(AzureRMModuleBase):
         try:
             item = self.private_dns_client.private_zones.get(
                 self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         # serialize result
@@ -196,7 +195,7 @@ class AzurePrivateRMDNSZoneInfo(AzureRMModuleBase):
         try:
             response = self.private_dns_client.private_zones.list_by_resource_group(
                 self.resource_group)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail("Failed to list for resource group {0} - {1}".format(
                 self.resource_group, str(exc)))
 
@@ -210,7 +209,7 @@ class AzurePrivateRMDNSZoneInfo(AzureRMModuleBase):
         self.log('List all items')
         try:
             response = self.private_dns_client.private_zones.list()
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []

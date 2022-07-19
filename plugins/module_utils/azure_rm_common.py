@@ -339,7 +339,7 @@ AZURE_PKG_VERSIONS = {
     },
     'ContainerInstanceManagementClient': {
         'package_name': 'containerinstance',
-        'expected_version': '0.4.0'
+        'expected_version': '9.0.0'
     },
     'NetworkManagementClient': {
         'package_name': 'network',
@@ -351,11 +351,11 @@ AZURE_PKG_VERSIONS = {
     },
     'DnsManagementClient': {
         'package_name': 'dns',
-        'expected_version': '2.1.0'
+        'expected_version': '8.0.0'
     },
     'PrivateDnsManagementClient': {
         'package_name': 'privatedns',
-        'expected_version': '0.1.0'
+        'expected_version': '1.0.0'
     },
     'WebSiteManagementClient': {
         'package_name': 'web',
@@ -363,7 +363,7 @@ AZURE_PKG_VERSIONS = {
     },
     'TrafficManagerManagementClient': {
         'package_name': 'trafficmanager',
-        'expected_version': '0.50.0'
+        'expected_version': '1.0.0'
     },
     'EventHubManagementClient': {
         'package_name': 'azure-mgmt-eventhub',
@@ -883,12 +883,13 @@ class AzureRMModuleBase(object):
         # Some management clients do not take a subscription ID as parameters.
         if suppress_subscription_id:
             if is_track2:
-                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, base_url=base_url)
+                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, base_url=base_url, credential_scopes=[base_url + ".default"])
             else:
                 client_kwargs = dict(credentials=self.azure_auth.azure_credentials, base_url=base_url)
         else:
             if is_track2:
-                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, subscription_id=mgmt_subscription_id, base_url=base_url)
+                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2,
+                                     subscription_id=mgmt_subscription_id, base_url=base_url, credential_scopes=[base_url + ".default"])
             else:
                 client_kwargs = dict(credentials=self.azure_auth.azure_credentials, subscription_id=mgmt_subscription_id, base_url=base_url)
 
@@ -1105,6 +1106,7 @@ class AzureRMModuleBase(object):
         if not self._dns_client:
             self._dns_client = self.get_mgmt_svc_client(DnsManagementClient,
                                                         base_url=self._cloud_environment.endpoints.resource_manager,
+                                                        is_track2=True,
                                                         api_version='2018-05-01')
         return self._dns_client
 
@@ -1119,6 +1121,7 @@ class AzureRMModuleBase(object):
         if not self._private_dns_client:
             self._private_dns_client = self.get_mgmt_svc_client(
                 PrivateDnsManagementClient,
+                is_track2=True,
                 base_url=self._cloud_environment.endpoints.resource_manager)
         return self._private_dns_client
 
@@ -1143,13 +1146,14 @@ class AzureRMModuleBase(object):
         if not self._containerservice_client:
             self._containerservice_client = self.get_mgmt_svc_client(ContainerServiceClient,
                                                                      base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                     is_track2=True,
                                                                      api_version='2017-07-01')
         return self._containerservice_client
 
     @property
     def managedcluster_models(self):
         self.log("Getting container service models")
-        return ContainerServiceClient.models('2020-04-01')
+        return ContainerServiceClient.models('2022-02-01')
 
     @property
     def managedcluster_client(self):
@@ -1157,7 +1161,8 @@ class AzureRMModuleBase(object):
         if not self._managedcluster_client:
             self._managedcluster_client = self.get_mgmt_svc_client(ContainerServiceClient,
                                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                   api_version='2020-04-01')
+                                                                   is_track2=True,
+                                                                   api_version='2022-02-01')
         return self._managedcluster_client
 
     @property
@@ -1174,6 +1179,7 @@ class AzureRMModuleBase(object):
         self.log('Getting PostgreSQL client')
         if not self._postgresql_client:
             self._postgresql_client = self.get_mgmt_svc_client(PostgreSQLManagementClient,
+                                                               is_track2=True,
                                                                base_url=self._cloud_environment.endpoints.resource_manager)
         return self._postgresql_client
 
@@ -1182,6 +1188,7 @@ class AzureRMModuleBase(object):
         self.log('Getting MySQL client')
         if not self._mysql_client:
             self._mysql_client = self.get_mgmt_svc_client(MySQLManagementClient,
+                                                          is_track2=True,
                                                           base_url=self._cloud_environment.endpoints.resource_manager)
         return self._mysql_client
 
@@ -1190,6 +1197,7 @@ class AzureRMModuleBase(object):
         self.log('Getting MariaDB client')
         if not self._mariadb_client:
             self._mariadb_client = self.get_mgmt_svc_client(MariaDBManagementClient,
+                                                            is_track2=True,
                                                             base_url=self._cloud_environment.endpoints.resource_manager)
         return self._mariadb_client
 
@@ -1210,6 +1218,7 @@ class AzureRMModuleBase(object):
         if not self._containerinstance_client:
             self._containerinstance_client = self.get_mgmt_svc_client(ContainerInstanceManagementClient,
                                                                       base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                      is_track2=True,
                                                                       api_version='2018-06-01')
 
         return self._containerinstance_client
@@ -1227,6 +1236,7 @@ class AzureRMModuleBase(object):
         self.log('Getting traffic manager client')
         if not self._traffic_manager_management_client:
             self._traffic_manager_management_client = self.get_mgmt_svc_client(TrafficManagerManagementClient,
+                                                                               is_track2=True,
                                                                                base_url=self._cloud_environment.endpoints.resource_manager)
         return self._traffic_manager_management_client
 
@@ -1265,6 +1275,7 @@ class AzureRMModuleBase(object):
         self.log('Getting log analytics client')
         if not self._log_analytics_client:
             self._log_analytics_client = self.get_mgmt_svc_client(LogAnalyticsManagementClient,
+                                                                  is_track2=True,
                                                                   base_url=self._cloud_environment.endpoints.resource_manager)
         return self._log_analytics_client
 
@@ -1278,12 +1289,14 @@ class AzureRMModuleBase(object):
         self.log('Getting servicebus client')
         if not self._servicebus_client:
             self._servicebus_client = self.get_mgmt_svc_client(ServiceBusManagementClient,
+                                                               is_track2=True,
+                                                               api_version="2021-06-01-preview",
                                                                base_url=self._cloud_environment.endpoints.resource_manager)
         return self._servicebus_client
 
     @property
     def servicebus_models(self):
-        return ServicebusModel
+        return ServiceBusManagementClient.models("2021-06-01-preview")
 
     @property
     def automation_client(self):
@@ -1303,6 +1316,8 @@ class AzureRMModuleBase(object):
         self.log('Getting iothub client')
         if not self._IoThub_client:
             self._IoThub_client = self.get_mgmt_svc_client(IotHubClient,
+                                                           is_track2=True,
+                                                           api_version='2018-04-01',
                                                            base_url=self._cloud_environment.endpoints.resource_manager)
         return self._IoThub_client
 
@@ -1343,6 +1358,7 @@ class AzureRMModuleBase(object):
         if not self._search_client:
             self._search_client = self.get_mgmt_svc_client(SearchManagementClient,
                                                            base_url=self._cloud_environment.endpoints.resource_manager,
+                                                           is_track2=True,
                                                            api_version='2020-08-01')
         return self._search_client
 
@@ -1352,6 +1368,7 @@ class AzureRMModuleBase(object):
         if not self._datalake_store_client:
             self._datalake_store_client = self.get_mgmt_svc_client(DataLakeStoreAccountManagementClient,
                                                                    base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                   is_track2=True,
                                                                    api_version='2016-11-01')
         return self._datalake_store_client
 

@@ -513,7 +513,6 @@ import re
 
 try:
     from msrestazure.tools import parse_resource_id
-    from msrestazure.azure_exceptions import CloudError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -821,21 +820,21 @@ class AzureRMIoTHub(AzureRMModuleBase):
 
     def create_or_update_hub(self, hub):
         try:
-            poller = self.IoThub_client.iot_hub_resource.create_or_update(self.resource_group, self.name, hub, if_match=hub.etag)
+            poller = self.IoThub_client.iot_hub_resource.begin_create_or_update(self.resource_group, self.name, hub, if_match=hub.etag)
             return self.get_poller_result(poller)
         except Exception as exc:
             self.fail('Error creating or updating IoT Hub {0}: {1}'.format(self.name, exc.message or str(exc)))
 
     def update_instance_tags(self, tags):
         try:
-            poller = self.IoThub_client.iot_hub_resource.update(self.resource_group, self.name, tags=tags)
+            poller = self.IoThub_client.iot_hub_resource.begin_update(self.resource_group, self.name, tags=tags)
             return self.get_poller_result(poller)
         except Exception as exc:
             self.fail('Error updating IoT Hub {0}\'s tag: {1}'.format(self.name, exc.message or str(exc)))
 
     def delete_hub(self):
         try:
-            self.IoThub_client.iot_hub_resource.delete(self.resource_group, self.name)
+            self.IoThub_client.iot_hub_resource.begin_delete(self.resource_group, self.name)
             return True
         except Exception as exc:
             self.fail('Error deleting IoT Hub {0}: {1}'.format(self.name, exc.message or str(exc)))

@@ -177,8 +177,7 @@ servers:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.rdbms.mysql import MySQLManagementClient
+    from azure.core.exceptions import ResourceNotFoundError
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -232,7 +231,7 @@ class AzureRMMySqlServerInfo(AzureRMModuleBase):
             response = self.mysql_client.servers.get(resource_group_name=self.resource_group,
                                                      server_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for MySQL Server.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -246,7 +245,7 @@ class AzureRMMySqlServerInfo(AzureRMModuleBase):
         try:
             response = self.mysql_client.servers.list_by_resource_group(resource_group_name=self.resource_group)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for MySQL Servers.')
 
         if response is not None:

@@ -91,7 +91,7 @@
       - search_info.state.replica_count == 1
       - search_info.state.sku == "basic"
       - search_info.state.provisioning_state == "succeeded"
-      - search_info.state.public_network_access == "enabled"
+      - search_info.state.public_network_access == "Enabled"
       - search_info.state.status == "running"
 
 - name: Get info for Azure Search
@@ -112,7 +112,7 @@
       - search_info_module.search.replica_count == 1
       - search_info_module.search.sku == "basic"
       - search_info_module.search.provisioning_state == "succeeded"
-      - search_info_module.search.public_network_access == "enabled"
+      - search_info_module.search.public_network_access == "Enabled"
       - search_info_module.search.status == "running"
 
 - name: Update basic Azure Search (Idempotence)

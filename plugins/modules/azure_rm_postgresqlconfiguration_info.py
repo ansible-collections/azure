@@ -95,9 +95,8 @@ settings:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.azure_operation import AzureOperationPoller
-    from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -124,7 +123,6 @@ class AzureRMPostgreSQLConfigurationInfo(AzureRMModuleBase):
         self.results = dict(
             changed=False
         )
-        self.mgmt_client = None
         self.resource_group = None
         self.server_name = None
         self.name = None
@@ -138,8 +136,6 @@ class AzureRMPostgreSQLConfigurationInfo(AzureRMModuleBase):
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
-        self.mgmt_client = self.get_mgmt_svc_client(PostgreSQLManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name is not None:
             self.results['settings'] = self.get()
@@ -156,11 +152,11 @@ class AzureRMPostgreSQLConfigurationInfo(AzureRMModuleBase):
         response = None
         results = []
         try:
-            response = self.mgmt_client.configurations.get(resource_group_name=self.resource_group,
-                                                           server_name=self.server_name,
-                                                           configuration_name=self.name)
+            response = self.postgresql_client.configurations.get(resource_group_name=self.resource_group,
+                                                                 server_name=self.server_name,
+                                                                 configuration_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get requested setting.')
 
         if response is not None:
@@ -177,10 +173,10 @@ class AzureRMPostgreSQLConfigurationInfo(AzureRMModuleBase):
         response = None
         results = []
         try:
-            response = self.mgmt_client.configurations.list_by_server(resource_group_name=self.resource_group,
-                                                                      server_name=self.server_name)
+            response = self.postgresql_client.configurations.list_by_server(resource_group_name=self.resource_group,
+                                                                            server_name=self.server_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.fail('Could not get settings for server.')
 
         if response is not None:

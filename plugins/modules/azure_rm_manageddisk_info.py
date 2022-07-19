@@ -120,6 +120,18 @@ azure_managed_disk:
             description:
                 - Name of an existing virtual machine with which the disk is or will be associated, this VM should be in the same resource group.
             type: str
+            sample: "/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Compute/virtualMachines/testVM"
+        max_shares:
+            description:
+                - The maximum number of VMs that can attach to the disk at the same time.
+                - Value greater than one indicates a disk that can be mounted on multiple VMs at the same time.
+            type: int
+            sample: 3
+        managed_by_extended:
+            description:
+                - List ID of an existing virtual machine with which the disk is or will be associated.
+            type: list
+            sample: ["/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Compute/virtualMachines/testVM"]
         tags:
             description:
                 - Tags to assign to the managed disk.
@@ -241,6 +253,8 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             os_type=managed_disk.os_type.lower() if managed_disk.os_type else None,
             storage_account_type=managed_disk.sku.name if managed_disk.sku else None,
             managed_by=managed_disk.managed_by,
+            max_shares=managed_disk.max_shares,
+            managed_by_extended=managed_disk.managed_by_extended,
             zone=managed_disk.zones[0] if managed_disk.zones and len(managed_disk.zones) > 0 else ''
         )
 

@@ -123,7 +123,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.trafficmanager.models import (
         Endpoint, DnsConfig, MonitorConfig
     )
@@ -279,7 +279,7 @@ class AzureRMTrafficManagerEndpoint(AzureRMModuleBase):
             response = self.traffic_manager_management_client.endpoints.get(self.resource_group, self.profile_name, self.type, self.name)
             self.log("Response : {0}".format(response))
             return traffic_manager_endpoint_to_dict(response)
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Did not find the Traffic Manager endpoint.')
             return False
 
@@ -293,7 +293,7 @@ class AzureRMTrafficManagerEndpoint(AzureRMModuleBase):
         try:
             operation_result = self.traffic_manager_management_client.endpoints.delete(self.resource_group, self.profile_name, self.type, self.name)
             return True
-        except CloudError as exc:
+        except Exception as exc:
             request_id = exc.request_id if exc.request_id else ''
             self.fail("Error deleting the Traffic Manager endpoint {0}, request id {1} - {2}".format(self.name, request_id, str(exc)))
             return False
@@ -322,7 +322,7 @@ class AzureRMTrafficManagerEndpoint(AzureRMModuleBase):
                                                                                          self.name,
                                                                                          parameters)
             return traffic_manager_endpoint_to_dict(response)
-        except CloudError as exc:
+        except Exception as exc:
             request_id = exc.request_id if exc.request_id else ''
             self.fail("Error creating the Traffic Manager endpoint {0}, request id {1} - {2}".format(self.name, request_id, str(exc)))
 

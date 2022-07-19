@@ -519,7 +519,7 @@ class AzureRMServiceBusInfo(AzureRMModuleBase):
                 return client.list_by_topic(self.resource_group, self.namespace, self.topic)
             else:
                 return client.list_by_namespace(self.resource_group, self.namespace)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list items - {0}".format(str(exc)))
         return []
 
@@ -530,7 +530,7 @@ class AzureRMServiceBusInfo(AzureRMModuleBase):
                 return []
             response = self.servicebus_client.namespaces.list()
             return [x for x in response if self.has_tags(x.tags, self.tags)]
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
         return []
 
