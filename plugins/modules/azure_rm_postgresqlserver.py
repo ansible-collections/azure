@@ -174,9 +174,8 @@ import time
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -395,19 +394,19 @@ class AzureRMPostgreSqlServers(AzureRMModuleBase):
         try:
             self.parameters['tags'] = self.tags
             if self.to_do == Actions.Create:
-                response = self.postgresql_client.servers.create(resource_group_name=self.resource_group,
-                                                                 server_name=self.name,
-                                                                 parameters=self.parameters)
+                response = self.postgresql_client.servers.begin_create(resource_group_name=self.resource_group,
+                                                                       server_name=self.name,
+                                                                       parameters=self.parameters)
             else:
                 # structure of parameters for update must be changed
                 self.parameters.update(self.parameters.pop("properties", {}))
-                response = self.postgresql_client.servers.update(resource_group_name=self.resource_group,
-                                                                 server_name=self.name,
-                                                                 parameters=self.parameters)
+                response = self.postgresql_client.servers.begin_update(resource_group_name=self.resource_group,
+                                                                       server_name=self.name,
+                                                                       parameters=self.parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the PostgreSQL Server instance.')
             self.fail("Error creating the PostgreSQL Server instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -420,9 +419,9 @@ class AzureRMPostgreSqlServers(AzureRMModuleBase):
         '''
         self.log("Deleting the PostgreSQL Server instance {0}".format(self.name))
         try:
-            response = self.postgresql_client.servers.delete(resource_group_name=self.resource_group,
-                                                             server_name=self.name)
-        except CloudError as e:
+            response = self.postgresql_client.servers.begin_delete(resource_group_name=self.resource_group,
+                                                                   server_name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the PostgreSQL Server instance.')
             self.fail("Error deleting the PostgreSQL Server instance: {0}".format(str(e)))
 
@@ -442,7 +441,7 @@ class AzureRMPostgreSqlServers(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("PostgreSQL Server instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the PostgreSQL Server instance.')
         if found is True:
             return response.as_dict()

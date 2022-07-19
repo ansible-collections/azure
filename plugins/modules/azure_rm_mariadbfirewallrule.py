@@ -77,9 +77,8 @@ import time
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -128,6 +127,7 @@ class AzureRMMariaDbFirewallRule(AzureRMModuleBase):
 
         self.results = dict(changed=False)
         self.state = None
+        self.parameters = dict()
         self.to_do = Actions.NoAction
 
         super(AzureRMMariaDbFirewallRule, self).__init__(derived_arg_spec=self.module_arg_spec,
@@ -140,6 +140,8 @@ class AzureRMMariaDbFirewallRule(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
+                if key in ['start_ip_address', 'end_ip_address']:
+                    self.parameters[key] = kwargs[key]
 
         old_response = None
         response = None
@@ -210,15 +212,14 @@ class AzureRMMariaDbFirewallRule(AzureRMModuleBase):
         self.log("Creating / Updating the MariaDB firewall rule instance {0}".format(self.name))
 
         try:
-            response = self.mariadb_client.firewall_rules.create_or_update(resource_group_name=self.resource_group,
-                                                                           server_name=self.server_name,
-                                                                           firewall_rule_name=self.name,
-                                                                           start_ip_address=self.start_ip_address,
-                                                                           end_ip_address=self.end_ip_address)
+            response = self.mariadb_client.firewall_rules.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                 server_name=self.server_name,
+                                                                                 firewall_rule_name=self.name,
+                                                                                 parameters=self.parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the MariaDB firewall rule instance.')
             self.fail("Error creating the MariaDB firewall rule instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -231,10 +232,10 @@ class AzureRMMariaDbFirewallRule(AzureRMModuleBase):
         '''
         self.log("Deleting the MariaDB firewall rule instance {0}".format(self.name))
         try:
-            response = self.mariadb_client.firewall_rules.delete(resource_group_name=self.resource_group,
-                                                                 server_name=self.server_name,
-                                                                 firewall_rule_name=self.name)
-        except CloudError as e:
+            response = self.mariadb_client.firewall_rules.begin_delete(resource_group_name=self.resource_group,
+                                                                       server_name=self.server_name,
+                                                                       firewall_rule_name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the MariaDB firewall rule instance.')
             self.fail("Error deleting the MariaDB firewall rule instance: {0}".format(str(e)))
 
@@ -255,7 +256,7 @@ class AzureRMMariaDbFirewallRule(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("MariaDB firewall rule instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the MariaDB firewall rule instance.')
         if found is True:
             return response.as_dict()
