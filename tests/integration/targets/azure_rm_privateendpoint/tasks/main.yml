@@ -64,8 +64,9 @@
           - postgresqlServer
     subnet:
       id: "{{ subnet_output.state.id }}"
-    tags: 
+    tags:
       key1: value1
+    cert_validation_mode: ignore
   register: output
 
 - name: Assert status succeeded and results match expectations
