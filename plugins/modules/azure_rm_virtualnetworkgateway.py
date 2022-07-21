@@ -100,6 +100,14 @@ options:
             - Standard
             - Basic
             - HighPerformance
+    vpn_gateway_generation:
+        description:
+            - The generation for this VirtualNetworkGateway. Must be C(None) if C(gateway_type) is not VPN.
+        default: Generation1
+        choices:
+            - None
+            - Generation1
+            - Generation2
     bgp_settings:
         description:
             - Virtual network gateway's BGP speaker settings.
@@ -122,6 +130,20 @@ EXAMPLES = '''
       azure_rm_virtualnetworkgateway:
         resource_group: myResourceGroup
         name: myVirtualNetworkGateway
+        ip_configurations:
+          - name: testipconfig
+            private_ip_allocation_method: Dynamic
+            public_ip_address_name: testipaddr
+        virtual_network: myVirtualNetwork
+        tags:
+          common: "xyz"
+
+    - name: Create virtual network gateway Generation2
+      azure_rm_virtualnetworkgateway:
+        resource_group: myResourceGroup
+        name: myVirtualNetworkGateway
+        sku: vpn_gw2
+        vpn_gateway_generation: Generation2
         ip_configurations:
           - name: testipconfig
             private_ip_allocation_method: Dynamic
@@ -203,6 +225,7 @@ def vgw_to_dict(vgw):
         location=vgw.location,
         gateway_type=vgw.gateway_type,
         vpn_type=vgw.vpn_type,
+        vpn_gateway_generation=vgw.vpn_gateway_generation,
         enable_bgp=vgw.enable_bgp,
         tags=vgw.tags,
         provisioning_state=vgw.provisioning_state,
@@ -232,6 +255,7 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
             ip_configurations=dict(type='list', default=None, elements='dict', options=ip_configuration_spec),
             gateway_type=dict(type='str', default='vpn', choices=['vpn', 'express_route']),
             vpn_type=dict(type='str', default='route_based', choices=['route_based', 'policy_based']),
+            vpn_gateway_generation=dict(type='str', default='Generation1', choices=['None', 'Generation1', 'Generation2']),
             enable_bgp=dict(type='bool', default=False),
             sku=dict(default='VpnGw1', choices=['VpnGw1', 'VpnGw2', 'VpnGw3', 'Standard', 'Basic', 'HighPerformance']),
             bgp_settings=dict(type='dict', options=bgp_spec),
@@ -247,6 +271,7 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
         self.vpn_type = None
         self.enable_bgp = None
         self.sku = None
+        self.vpn_gateway_generation = None
         self.bgp_settings = None
 
         self.results = dict(
@@ -342,6 +367,7 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
                     ip_configurations=vgw_ip_configurations,
                     gateway_type=_snake_to_camel(self.gateway_type, True),
                     vpn_type=_snake_to_camel(self.vpn_type, True),
+                    vpn_gateway_generation=_snake_to_camel(self.vpn_gateway_generation, True),
                     enable_bgp=self.enable_bgp,
                     sku=vgw_sku,
                     bgp_settings=vgw_bgp_settings

@@ -98,7 +98,7 @@ AZURE_API_PROFILES = {
             virtual_machine_run_commands='2018-10-01'
         ),
         'ManagementGroupsClient': '2020-05-01',
-        'NetworkManagementClient': '2019-06-01',
+        'NetworkManagementClient': '2019-11-01',
         'ResourceManagementClient': '2017-05-10',
         'SearchManagementClient': '2020-08-01',
         'StorageManagementClient': '2021-06-01',

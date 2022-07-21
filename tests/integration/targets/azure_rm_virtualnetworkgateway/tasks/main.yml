@@ -4,6 +4,7 @@
   set_fact:
     vnetname: "vnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     vngname: "vng{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    pubipname: "testPublicIP{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Create virtual network gateway without bgp settings (check mode)
   check_mode: yes
@@ -13,7 +14,7 @@
     ip_configurations:
       - name: testipconfig
         private_ip_allocation_method: Dynamic
-        public_ip_address_name: testPublicIP
+        public_ip_address_name: "{{ pubipname }}"
     virtual_network: "{{ vnetname }}"
     tags:
       common: "xyz"
@@ -21,6 +22,25 @@
 
 - assert:
     that: output.changed
+
+- name: Create virtual network gateway Generation2 (check mode)
+  check_mode: yes
+  azure_rm_virtualnetworkgateway:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vngname }}"
+    sku: VpnGw2
+    vpn_gateway_generation: Generation2
+    ip_configurations:
+      - name: testipconfig
+        private_ip_allocation_method: Dynamic
+        public_ip_address_name: "{{ pubipname }}"
+    virtual_network: "{{ vnetname }}"
+    tags:
+      common: "xyz"
+
+- assert:
+    that: output.changed
+
 
 - name: long-running virtualnetworkgateway tests [run with `--tags long_run,untagged` to enable]
   tags: [long_run, never]
@@ -42,7 +62,7 @@
     azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}"
         allocation_method: Dynamic
-        name: testPublicIP
+        name: "{{ pubipname }}"
 
   - name: Create virtual network gateway without bgp settings
     azure_rm_virtualnetworkgateway:
@@ -67,7 +87,7 @@
       ip_configurations:
         - name: testipconfig
           private_ip_allocation_method: Dynamic
-          public_ip_address_name: testPublicIP
+          public_ip_address_name: "{{ pubipname }}"
       virtual_network: "{{ vnetname }}"
       tags:
         common: "xyz"
@@ -83,10 +103,76 @@
       ip_configurations:
         - name: testipconfig
           private_ip_allocation_method: Dynamic
-          public_ip_address_name: testPublicIP
+          public_ip_address_name: "{{ pubipname }}"
       virtual_network: "{{ vnetname }}"
       tags:
         common: "mno"
+    register: output
+  - assert:
+      that: output.changed
+
+  - name: Delete virtual network gateway
+    azure_rm_virtualnetworkgateway:
+      resource_group: "{{ resource_group }}"
+      name: "{{ vngname }}"
+      state: absent
+    register: output
+  - assert:
+      that: output.changed
+
+- name: long-running generation virtualnetworkgateway tests [run with `--tags long_run_gen,untagged` to enable]
+  tags: [long_run_gen, never]
+  block:
+  - name: Create virtual network
+    azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vnetname }}"
+        address_prefixes: "10.0.0.0/16"
+
+  - name: Add subnet
+    azure_rm_subnet:
+        resource_group: "{{ resource_group }}"
+        name: GatewaySubnet
+        address_prefix: "10.0.2.0/24"
+        virtual_network: "{{ vnetname }}"
+
+  - name: Create public IP address
+    azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}"
+        allocation_method: Dynamic
+        name: "{{ pubipname }}"
+
+  - name: Create virtual network gateway w/ sku and Generation2
+    azure_rm_virtualnetworkgateway:
+      resource_group: "{{ resource_group }}"
+      name: "{{ vngname }}"
+      sku: VpnGw2
+      vpn_gateway_generation: Generation2
+      ip_configurations:
+        - name: testipconfig
+          private_ip_allocation_method: Dynamic
+          public_ip_address_name: "{{ pubipname }}"
+      virtual_network: "{{ vnetname }}"
+      tags:
+        common: "xyz"
+
+  - assert:
+      that: output.changed
+
+  - name: Update virtual network gateway
+    azure_rm_virtualnetworkgateway:
+      resource_group: "{{ resource_group }}"
+      name: "{{ vngname }}"
+      sku: VpnGw2
+      vpn_gateway_generation: Generation2
+      ip_configurations:
+        - name: testipconfig
+          private_ip_allocation_method: Dynamic
+          public_ip_address_name: "{{ pubipname }}"
+      virtual_network: "{{ vnetname }}"
+      tags:
+        common: "mno"
+
     register: output
   - assert:
       that: output.changed
@@ -108,3 +194,25 @@
   register: output
 - assert:
     that: not output.changed
+
+# Clean up networking components after test
+- name: Delete subnet
+  azure_rm_subnet:
+    resource_group: "{{ resource_group }}"
+    name: GatewaySubnet
+    virtual_network: "{{ vnetname }}"
+    state: absent
+  
+
+- name: Delete public IP address
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    allocation_method: Dynamic
+    name: "{{ pubipname }}"
+    state: absent
+
+- name: Delete virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vnetname }}"
+    state: absent

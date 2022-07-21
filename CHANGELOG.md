@@ -60,7 +60,7 @@
   - azcollection: Install collection to local directory during development ([#763](https://github.com/ansible-collections/azure/pull/763))
 
 ### BREAKING CHANGES:
-  - azure_rm_virtualmachinescaleset: Change default value of `single_placement_group` from `True` to `Flase` ([#851](https://github.com/ansible-collections/azure/pull/851))
+  - azure_rm_virtualmachinescaleset: Change default value of `single_placement_group` from `True` to `False` ([#851](https://github.com/ansible-collections/azure/pull/851))
 
 ## v1.12.0 (2022-03-14)
 
