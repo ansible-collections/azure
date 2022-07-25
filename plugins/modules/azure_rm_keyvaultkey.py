@@ -24,6 +24,18 @@ options:
         description:
             - Name of the keyvault key.
         required: true
+    key_type:
+        description:
+            - The type of key to create. For valid values, see JsonWebKeyType. Possible values include: 'EC', 'EC-HSM', 'RSA', 'RSA-HSM', 'oct'.
+    key_size:
+        description:
+            - The key size in bits. For example: 2048, 3072, or 4096 for RSA.
+    key_attributes:
+        description:
+            - Possible values include: 'enabled', 'not_before', 'expires'.
+    curve:
+        description:
+            - Elliptic curve name. For valid values, see JsonWebKeyCurveName. Possible values include - 'P-256', 'P-384', 'P-521', 'P-256K'.
     byok_file:
         description:
             - BYOK file.
@@ -101,6 +113,10 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
         self.module_arg_spec = dict(
             key_name=dict(type='str', required=True),
             keyvault_uri=dict(type='str', no_log=True, required=True),
+            key_type=dict(type='str', default='RSA'),
+            key_size=dict(type='int'),
+            key_attributes=dict(type='str'),
+            curve=dict(type='str'),
             pem_file=dict(type='str'),
             pem_password=dict(type='str', no_log=True),
             byok_file=dict(type='str'),
@@ -114,6 +130,10 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
 
         self.key_name = None
         self.keyvault_uri = None
+        self.key_type = None
+        self.key_size = None
+        self.key_attributes = None
+        self.curve = None
         self.pem_file = None
         self.pem_password = None
         self.state = None
@@ -159,7 +179,8 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
 
             # Create key
             if self.state == 'present' and changed:
-                results['key_id'] = self.create_key(self.key_name, self.tags)
+                results['key_id'] = self.create_key(self.key_name, self.key_type, self.key_size, self.key_attributes,
+                                                    self.curve, self.tags)
                 self.results['state'] = results
                 self.results['state']['status'] = 'Created'
             # Delete key
@@ -223,9 +244,18 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
             key_id = KeyVaultId.parse_key_id(key_bundle.key.kid)
         return key_id.id
 
-    def create_key(self, name, tags, kty='RSA'):
+    def create_key(self, name, key_type, key_size, key_attributes, curve, tags):
         ''' Creates a key '''
-        key_bundle = self.client.create_key(vault_base_url=self.keyvault_uri, key_name=name, kty=kty, tags=tags)
+        key_args = locals()
+
+        print(key_args)
+
+        # Remove any vars that are set to 'None'
+        key_args_remove_none = {k: v for k, v in key_args.items() if v is not None}
+
+        print(key_args_remove_none)
+
+        key_bundle = self.client.create_key(vault_base_url=self.keyvault_uri, **key_args_remove_none)
         key_id = KeyVaultId.parse_key_id(key_bundle.key.kid)
         return key_id.id
 
