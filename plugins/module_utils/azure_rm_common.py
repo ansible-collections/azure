@@ -51,7 +51,7 @@ AZURE_COMMON_ARGS = dict(
     adfs_authority_url=dict(type='str', default=None),
     log_mode=dict(type='str', no_log=True),
     log_path=dict(type='str', no_log=True),
-    x509_certificate=dict(type='str', no_log=True),
+    x509_certificate=dict(type='path', no_log=True),
     thumbprint=dict(type='str', no_log=True),
 )
 
@@ -281,7 +281,7 @@ try:
     from azure.mgmt.eventhub import EventHubManagementClient
     from azure.mgmt.datafactory import DataFactoryManagementClient
     import azure.mgmt.datafactory.models as DataFactoryModel
-    from azure.identity._credentials import client_secret, user_password
+    from azure.identity._credentials import client_secret, user_password, certificate
 
 except ImportError as exc:
     Authentication = object
@@ -1559,6 +1559,10 @@ class AzureRMAuth(object):
                 self.credentials['client_id'],
                 self.credentials['tenant'])
 
+            self.azure_credential_track2 = certificate.CertificateCredential(tenant_id=self.credentials['tenant'],
+                                                                             client_id=self.credentials['client_id'],
+                                                                             certificate_path=self.credentials['x509_certificate'])
+
         elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
             tenant = self.credentials.get('tenant')
             if not tenant:
@@ -1758,13 +1762,16 @@ class AzureRMAuth(object):
 
         return AADTokenCredentials(token_response)
 
-    def acquire_token_with_client_certificate(self, authority, resource, x509_certificate, thumbprint, client_id, tenant):
+    def acquire_token_with_client_certificate(self, authority, resource, x509_certificate_path, thumbprint, client_id, tenant):
         authority_uri = authority
 
         if tenant is not None:
             authority_uri = authority + '/' + tenant
 
         context = AuthenticationContext(authority_uri)
+        x509_certificate = None
+        with open(x509_certificate_path, 'rb') as pem_file:
+            x509_certificate = pem_file.read()
         token_response = context.acquire_token_with_client_certificate(resource, client_id, x509_certificate, thumbprint)
 
         return AADTokenCredentials(token_response)

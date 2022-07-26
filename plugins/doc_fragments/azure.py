@@ -105,10 +105,10 @@ options:
         type: str
     x509_certificate:
         description:
-            - The X509 certificate used to create the service principal in PEM format.
+            - Path to the X509 certificate used to create the service principal in PEM format.
             - The certificate must be appended to the private key.
             - Use when authenticating with a Service Principal.
-        type: str
+        type: path
         version_added: '1.14.0'
     thumbprint:
         description:
