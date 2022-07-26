@@ -27,6 +27,7 @@ options:
     key_type:
         description:
             - The type of key to create. For valid values, see JsonWebKeyType. Possible values include EC, EC-HSM, RSA, RSA-HSM, oct
+        default: 'RSA'
     key_size:
         description:
             - The key size in bits. For example 2048, 3072, or 4096 for RSA.
