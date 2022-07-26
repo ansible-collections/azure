@@ -26,16 +26,25 @@ options:
         required: true
     key_type:
         description:
-            - The type of key to create. For valid values, see JsonWebKeyType. Possible values include: 'EC', 'EC-HSM', 'RSA', 'RSA-HSM', 'oct'.
+            - The type of key to create. For valid values, see JsonWebKeyType. Possible values include EC, EC-HSM, RSA, RSA-HSM, oct
     key_size:
         description:
-            - The key size in bits. For example: 2048, 3072, or 4096 for RSA.
+            - The key size in bits. For example 2048, 3072, or 4096 for RSA.
     key_attributes:
         description:
-            - Possible values include: 'enabled', 'not_before', 'expires'.
+            - The attributes of a key managed by the key vault service.
+        suboptions:
+            enabled:
+                description: bool
+            not_before:
+                description:
+                    - not valid before date in UTC ISO format without the Z at the end
+            expires:
+                description:
+                    - not valid after date in UTC ISO format without the Z at the end
     curve:
         description:
-            - Elliptic curve name. For valid values, see JsonWebKeyCurveName. Possible values include - 'P-256', 'P-384', 'P-521', 'P-256K'.
+            - Elliptic curve name. For valid values, see JsonWebKeyCurveName. Possible values include P-256, P-384, P-521, P-256K.
     byok_file:
         description:
             - BYOK file.
@@ -111,6 +120,7 @@ key_addribute_spec = dict(
     expires=dict(type='str', no_log=True, required=False)
 )
 
+
 class AzureRMKeyVaultKey(AzureRMModuleBase):
     ''' Module that creates or deletes keys in Azure KeyVault '''
 
@@ -121,7 +131,7 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
             keyvault_uri=dict(type='str', no_log=True, required=True),
             key_type=dict(type='str', default='RSA'),
             key_size=dict(type='int'),
-            key_attributes=dict(type='dict', options=key_addribute_spec),
+            key_attributes=dict(type='dict', no_log=True, options=key_addribute_spec),
             curve=dict(type='str'),
             pem_file=dict(type='str'),
             pem_password=dict(type='str', no_log=True),
@@ -265,7 +275,7 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
             key_attributes = KeyAttributes(k_enabled, k_not_before, k_expires)
 
         key_bundle = self.client.create_key(vault_base_url=self.keyvault_uri, key_name=name, kty=key_type, key_size=key_size,
-                key_attributes=key_attributes, curve=curve, tags=tags)
+                                            key_attributes=key_attributes, curve=curve, tags=tags)
         key_id = KeyVaultId.parse_key_id(key_bundle.key.kid)
         return key_id.id
 
