@@ -98,12 +98,18 @@ try:
     from azure.keyvault.models import KeyAttributes, JsonWebKey
     from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
     from azure.keyvault.models.key_vault_error import KeyVaultErrorException
+    from datetime import datetime
     from msrestazure.azure_active_directory import MSIAuthentication
     from OpenSSL import crypto
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
+key_addribute_spec = dict(
+    enabled=dict(type='bool', required=False),
+    not_before=dict(type='str', no_log=True, required=False),
+    expires=dict(type='str', no_log=True, required=False)
+)
 
 class AzureRMKeyVaultKey(AzureRMModuleBase):
     ''' Module that creates or deletes keys in Azure KeyVault '''
@@ -115,7 +121,7 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
             keyvault_uri=dict(type='str', no_log=True, required=True),
             key_type=dict(type='str', default='RSA'),
             key_size=dict(type='int'),
-            key_attributes=dict(type='str'),
+            key_attributes=dict(type='dict', options=key_addribute_spec),
             curve=dict(type='str'),
             pem_file=dict(type='str'),
             pem_password=dict(type='str', no_log=True),
@@ -246,16 +252,20 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
 
     def create_key(self, name, key_type, key_size, key_attributes, curve, tags):
         ''' Creates a key '''
-        key_args = locals()
 
-        print(key_args)
+        if key_attributes is not None:
+            k_enabled = key_attributes.get('enabled', True)
+            k_not_before = key_attributes.get('not_before', None)
+            k_expires = key_attributes.get('expires', None)
+            if k_not_before:
+                k_not_before = datetime.fromisoformat(k_not_before.replace('Z', '+00:00'))
+            if k_expires:
+                k_expires = datetime.fromisoformat(k_expires.replace('Z', '+00:00'))
 
-        # Remove any vars that are set to 'None'
-        key_args_remove_none = {k: v for k, v in key_args.items() if v is not None}
+            key_attributes = KeyAttributes(k_enabled, k_not_before, k_expires)
 
-        print(key_args_remove_none)
-
-        key_bundle = self.client.create_key(vault_base_url=self.keyvault_uri, **key_args_remove_none)
+        key_bundle = self.client.create_key(vault_base_url=self.keyvault_uri, key_name=name, kty=key_type, key_size=key_size,
+                key_attributes=key_attributes, curve=curve, tags=tags)
         key_id = KeyVaultId.parse_key_id(key_bundle.key.kid)
         return key_id.id
 

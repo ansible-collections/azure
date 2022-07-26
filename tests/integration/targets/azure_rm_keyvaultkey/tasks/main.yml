@@ -149,14 +149,32 @@
     key_name: testkeycurve
   register: output
 
-- assert:
-    that: output.changed
+- name: create a kevyault key with attributes
+  block:
+    - azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        key_name: testkeyattribute
+        key_attributes:
+          enabled: true
+          not_before: '2032-12-01T00:00:00Z'
+        tags:
+          testing: test
+          delete: on-exit
+      register: output
+    - assert:
+        that: output.changed
+  rescue:
+    - azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        state: absent
+        key_name: testkeyattributes
 
-- name: Delete instance of Key Vault
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}"
+- name: delete a kevyault key with attributes
+  azure_rm_keyvaultkey:
+    keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
     state: absent
+    key_name: testkeyattribute
+  register: output
 
 - assert:
     that: output.changed
