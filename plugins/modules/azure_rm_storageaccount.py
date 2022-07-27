@@ -48,6 +48,8 @@ options:
             - Standard_RAGRS
             - Standard_ZRS
             - Premium_ZRS
+            - Standard_RAGZRS
+            - Standard_GZRS
         aliases:
             - type
     custom_domain:
@@ -523,7 +525,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
 
         self.module_arg_spec = dict(
             account_type=dict(type='str',
-                              choices=['Premium_LRS', 'Standard_GRS', 'Standard_LRS', 'Standard_RAGRS', 'Standard_ZRS', 'Premium_ZRS'],
+                              choices=['Premium_LRS', 'Standard_GRS', 'Standard_LRS', 'Standard_RAGRS', 'Standard_ZRS', 'Premium_ZRS', 'Standard_RAGZRS', 'Standard_GZRS'],
                               aliases=['type']),
             custom_domain=dict(type='dict', aliases=['custom_dns_domain_suffix']),
             location=dict(type='str'),
