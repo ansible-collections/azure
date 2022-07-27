@@ -103,7 +103,7 @@ options:
         description:
             - Parent argument.
         type: str
-    x509_certificate:
+    x509_certificate_path:
         description:
             - Path to the X509 certificate used to create the service principal in PEM format.
             - The certificate must be appended to the private key.
@@ -112,9 +112,9 @@ options:
         version_added: '1.14.0'
     thumbprint:
         description:
-            - The thumbprint of the private key specified in I(x509_certificate).
+            - The thumbprint of the private key specified in I(x509_certificate_path).
             - Use when authenticating with a Service Principal.
-            - Required if I(x509_certificate) is defined.
+            - Required if I(x509_certificate_path) is defined.
         type: str
         version_added: '1.14.0'
 requirements:
