@@ -3,6 +3,7 @@
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     cert1_file: "cert1.txt"
     cert2_file: "cert2.txt"
+    cert3b64_file: "cert3b64.txt"
   run_once: yes
 - name: Set json query to only retrieve gateways from this test
   set_fact:
@@ -1828,6 +1829,676 @@
     that:
       - output.changed
 
+- name: Try to create v2 instance of Application Gateway with autoscale configuration and trusted root certificates
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway-v2-{{ rpfx }}"
+    sku:
+      name: standard_v2
+      tier: standard_v2
+    autoscale_configuration:
+      max_capacity: 2
+      min_capacity: 1
+    enable_http2: true
+    ssl_policy:
+      policy_type: "predefined"
+      policy_name: "ssl_policy20170401_s"
+    ssl_certificates:
+      - name: cert2
+        password: your-password
+        data: "{{ lookup('file', cert2_file) }}"
+    trusted_root_certificates:
+      - name: "rootCert3"
+        data: "{{ lookup('file', cert3b64_file) }}"
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - name: "public-inbound-ip"
+        public_ip_address: "appgateway-v2-{{ rpfx }}-pip"
+    frontend_ports:
+      - name: "inbound-http"
+        port: 80
+      - name: "inbound-https"
+        port: 443
+    backend_address_pools:
+      - name: test_backend_address_pool1
+        backend_addresses:
+          - ip_address: 10.0.0.1
+      - name: test_backend_address_pool2
+        backend_addresses:
+          - ip_address: 10.0.0.2
+    backend_http_settings_collection:
+      - name: "http-profile1"
+        port: 443
+        protocol: https
+        pick_host_name_from_backend_address: true
+        probe: "http-probe1"
+        cookie_based_affinity: "Disabled"
+        connection_draining:
+            drain_timeout_in_sec: 60
+            enabled: true
+        trusted_root_certificates:
+          - "rootCert3"
+      - name: "http-profile2"
+        port: 8080
+        protocol: http
+        pick_host_name_from_backend_address: true
+        probe: "http-probe2"
+        cookie_based_affinity: "Disabled"
+    http_listeners:
+      - name: "inbound-http"
+        protocol: "http"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-http"
+      - name: "inbound-traffic1"
+        protocol: "https"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-https"
+        host_name: "traffic1.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "cert2"
+      - name: "inbound-traffic2"
+        protocol: "https"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-https"
+        host_name: "traffic2.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "cert2"
+    url_path_maps:
+      - name: "path_mappings"
+        default_redirect_configuration: "redirect-traffic1"
+        default_rewrite_rule_set: "configure-headers"
+        path_rules:
+          - name: "path_rules"
+            backend_address_pool: "test_backend_address_pool1"
+            backend_http_settings: "http-profile1"
+            paths:
+              - "/abc"
+              - "/123/*"
+    request_routing_rules:
+      - name: "app-routing1"
+        rule_type: "basic"
+        http_listener: "inbound-traffic1"
+        backend_address_pool: "test_backend_address_pool2"
+        backend_http_settings: "http-profile1"
+        rewrite_rule_set: "configure-headers"
+      - name: "app-routing2"
+        rule_type: "path_based_routing"
+        http_listener: "inbound-traffic2"
+        url_path_map: "path_mappings"
+      - name: "redirect-routing"
+        rule_type: "basic"
+        http_listener: "inbound-http"
+        redirect_configuration: "redirect-http"
+    rewrite_rule_sets:
+      - name: "configure-headers"
+        rewrite_rules:
+          - name: "add-security-response-header"
+            rule_sequence: 1
+            action_set:
+              response_header_configurations:
+                - header_name: "Strict-Transport-Security"
+                  header_value: "max-age=31536000"
+          - name: "remove-backend-response-headers"
+            rule_sequence: 2
+            action_set:
+              response_header_configurations:
+                - header_name: "Server"
+                - header_name: "X-Powered-By"
+          - name: "set-custom-header-condition"
+            rule_sequence: 3
+            conditions:
+              - variable: "var_client_ip"
+                pattern: "1.1.1.1"
+              - variable: "http_req_Authorization"
+                pattern: "12345"
+                ignore_case: false
+            action_set:
+              request_header_configurations:
+                - header_name: "Foo"
+                  header_value: "Bar"
+    probes:
+        - name: "http-probe1"
+          interval: 30
+          path: "/abc"
+          protocol: "https"
+          pick_host_name_from_backend_http_settings: true
+          timeout: 30
+          unhealthy_threshold: 2
+        - name: "http-probe2"
+          interval: 30
+          path: "/xyz"
+          protocol: "http"
+          pick_host_name_from_backend_http_settings: true
+          timeout: 30
+          unhealthy_threshold: 2
+    redirect_configurations:
+      - name: "redirect-http"
+        redirect_type: "permanent"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        request_routing_rules:
+          - "redirect-routing"
+      - name: "redirect-traffic1"
+        redirect_type: "found"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        url_path_maps:
+          - "path_mappings"
+  register: output
+
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+
+
+- name: Try to create v2 instance of Application Gateway with autoscale configuration and trusted root certificates - no update
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway-v2-{{ rpfx }}"
+    sku:
+      name: standard_v2
+      tier: standard_v2
+    autoscale_configuration:
+      max_capacity: 2
+      min_capacity: 1
+    enable_http2: true
+    ssl_policy:
+      policy_type: "predefined"
+      policy_name: "ssl_policy20170401_s"
+    ssl_certificates:
+      - name: cert2
+        password: your-password
+        data: "{{ lookup('file', cert2_file) }}"
+    trusted_root_certificates:
+      - name: "rootCert3"
+        data: "{{ lookup('file', cert3b64_file) }}"
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - name: "public-inbound-ip"
+        public_ip_address: "appgateway-v2-{{ rpfx }}-pip"
+    frontend_ports:
+      - name: "inbound-http"
+        port: 80
+      - name: "inbound-https"
+        port: 443
+    backend_address_pools:
+      - name: test_backend_address_pool1
+        backend_addresses:
+          - ip_address: 10.0.0.1
+      - name: test_backend_address_pool2
+        backend_addresses:
+          - ip_address: 10.0.0.2
+    backend_http_settings_collection:
+      - name: "http-profile1"
+        port: 443
+        protocol: https
+        pick_host_name_from_backend_address: true
+        probe: "http-probe1"
+        cookie_based_affinity: "Disabled"
+        connection_draining:
+          drain_timeout_in_sec: 60
+          enabled: true
+        trusted_root_certificates:
+          - "rootCert3"
+      - name: "http-profile2"
+        port: 8080
+        protocol: http
+        pick_host_name_from_backend_address: true
+        probe: "http-probe2"
+        cookie_based_affinity: "Disabled"
+    http_listeners:
+      - name: "inbound-http"
+        protocol: "http"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-http"
+      - name: "inbound-traffic1"
+        protocol: "https"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-https"
+        host_name: "traffic1.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "cert2"
+      - name: "inbound-traffic2"
+        protocol: "https"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-https"
+        host_name: "traffic2.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "cert2"
+    url_path_maps:
+      - name: "path_mappings"
+        default_redirect_configuration: "redirect-traffic1"
+        default_rewrite_rule_set: "configure-headers"
+        path_rules:
+          - name: "path_rules"
+            backend_address_pool: "test_backend_address_pool1"
+            backend_http_settings: "http-profile1"
+            paths:
+              - "/abc"
+              - "/123/*"
+    request_routing_rules:
+      - name: "app-routing1"
+        rule_type: "basic"
+        http_listener: "inbound-traffic1"
+        backend_address_pool: "test_backend_address_pool2"
+        backend_http_settings: "http-profile1"
+        rewrite_rule_set: "configure-headers"
+      - name: "app-routing2"
+        rule_type: "path_based_routing"
+        http_listener: "inbound-traffic2"
+        url_path_map: "path_mappings"
+      - name: "redirect-routing"
+        rule_type: "basic"
+        http_listener: "inbound-http"
+        redirect_configuration: "redirect-http"
+    rewrite_rule_sets:
+      - name: "configure-headers"
+        rewrite_rules:
+          - name: "add-security-response-header"
+            rule_sequence: 1
+            action_set:
+              response_header_configurations:
+                - header_name: "Strict-Transport-Security"
+                  header_value: "max-age=31536000"
+          - name: "remove-backend-response-headers"
+            rule_sequence: 2
+            action_set:
+              response_header_configurations:
+                - header_name: "Server"
+                - header_name: "X-Powered-By"
+          - name: "set-custom-header-condition"
+            rule_sequence: 3
+            conditions:
+              - variable: "var_client_ip"
+                pattern: "1.1.1.1"
+              - variable: "http_req_Authorization"
+                pattern: "12345"
+                ignore_case: false
+            action_set:
+              request_header_configurations:
+                - header_name: "Foo"
+                  header_value: "Bar"
+    probes:
+      - name: "http-probe1"
+        interval: 30
+        path: "/abc"
+        protocol: "https"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+      - name: "http-probe2"
+        interval: 30
+        path: "/xyz"
+        protocol: "http"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+    redirect_configurations:
+      - name: "redirect-http"
+        redirect_type: "permanent"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        request_routing_rules:
+          - "redirect-routing"
+      - name: "redirect-traffic1"
+        redirect_type: "found"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        url_path_maps:
+          - "path_mappings"
+  register: output
+
+- name: Assert the resource instance is not updated
+  assert:
+    that:
+      - not output.changed
+
+- name: Configure public IP for waf_v2 gateway
+  azure_rm_publicipaddress:
+    name: "appgateway-waf-v2-{{ rpfx }}-pip"
+    resource_group: "{{ resource_group }}"
+    sku: "standard"
+    allocation_method: "static"
+
+- name: Try to create waf_v2 instance of Application Gateway with waf configuration
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway-waf-v2-{{ rpfx }}"
+    sku:
+      name: waf_v2
+      tier: waf_v2
+      capacity: 2
+    ssl_policy:
+      policy_type: "predefined"
+      policy_name: "ssl_policy20170401_s"
+    ssl_certificates:
+      - name: cert2
+        password: your-password
+        data: "{{ lookup('file', cert2_file) }}"
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - name: "public-inbound-ip"
+        public_ip_address: "appgateway-waf-v2-{{ rpfx }}-pip"
+    frontend_ports:
+      - name: "inbound-http"
+        port: 80
+      - name: "inbound-https"
+        port: 443
+    backend_address_pools:
+      - name: test_backend_address_pool1
+        backend_addresses:
+          - ip_address: 10.0.0.1
+      - name: test_backend_address_pool2
+        backend_addresses:
+          - ip_address: 10.0.0.2
+    backend_http_settings_collection:
+      - name: "http-profile1"
+        port: 443
+        protocol: https
+        pick_host_name_from_backend_address: true
+        probe: "http-probe1"
+        cookie_based_affinity: "Disabled"
+      - name: "http-profile2"
+        port: 8080
+        protocol: http
+        pick_host_name_from_backend_address: true
+        probe: "http-probe2"
+        cookie_based_affinity: "Disabled"
+    http_listeners:
+      - name: "inbound-http"
+        protocol: "http"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-http"
+      - name: "inbound-traffic1"
+        protocol: "https"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-https"
+        host_name: "traffic1.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "cert2"
+      - name: "inbound-traffic2"
+        protocol: "https"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-https"
+        host_name: "traffic2.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "cert2"
+    url_path_maps:
+      - name: "path_mappings"
+        default_redirect_configuration: "redirect-traffic1"
+        default_rewrite_rule_set: "configure-headers"
+        path_rules:
+          - name: "path_rules"
+            backend_address_pool: "test_backend_address_pool1"
+            backend_http_settings: "http-profile1"
+            paths:
+              - "/abc"
+              - "/123/*"
+    request_routing_rules:
+      - name: "app-routing1"
+        rule_type: "basic"
+        http_listener: "inbound-traffic1"
+        backend_address_pool: "test_backend_address_pool2"
+        backend_http_settings: "http-profile1"
+        rewrite_rule_set: "configure-headers"
+      - name: "app-routing2"
+        rule_type: "path_based_routing"
+        http_listener: "inbound-traffic2"
+        url_path_map: "path_mappings"
+      - name: "redirect-routing"
+        rule_type: "basic"
+        http_listener: "inbound-http"
+        redirect_configuration: "redirect-http"
+    rewrite_rule_sets:
+      - name: "configure-headers"
+        rewrite_rules:
+          - name: "add-security-response-header"
+            rule_sequence: 1
+            action_set:
+              response_header_configurations:
+                - header_name: "Strict-Transport-Security"
+                  header_value: "max-age=31536000"
+          - name: "remove-backend-response-headers"
+            rule_sequence: 2
+            action_set:
+              response_header_configurations:
+                - header_name: "Server"
+                - header_name: "X-Powered-By"
+          - name: "set-custom-header-condition"
+            rule_sequence: 3
+            conditions:
+              - variable: "var_client_ip"
+                pattern: "1.1.1.1"
+              - variable: "http_req_Authorization"
+                pattern: "12345"
+                ignore_case: false
+            action_set:
+              request_header_configurations:
+                - header_name: "Foo"
+                  header_value: "Bar"
+    probes:
+      - name: "http-probe1"
+        interval: 30
+        path: "/abc"
+        protocol: "https"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+      - name: "http-probe2"
+        interval: 30
+        path: "/xyz"
+        protocol: "http"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+    redirect_configurations:
+      - name: "redirect-http"
+        redirect_type: "permanent"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        request_routing_rules:
+          - "redirect-routing"
+      - name: "redirect-traffic1"
+        redirect_type: "found"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        url_path_maps:
+          - "path_mappings"
+    web_application_firewall_configuration:
+        enabled: true
+        firewall_mode: "Detection"
+        rule_set_type: "OWASP"
+        rule_set_version: "3.0"
+        request_body_check: true
+        max_request_body_size_in_kb: 128
+        file_upload_limit_in_mb: 100
+  register: output
+
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+
+- name: Try to create waf_v2 instance of Application Gateway with waf configuration - no update
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway-waf-v2-{{ rpfx }}"
+    sku:
+      name: waf_v2
+      tier: waf_v2
+      capacity: 2
+    ssl_policy:
+      policy_type: "predefined"
+      policy_name: "ssl_policy20170401_s"
+    ssl_certificates:
+      - name: cert2
+        password: your-password
+        data: "{{ lookup('file', cert2_file) }}"
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_output.state.id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - name: "public-inbound-ip"
+        public_ip_address: "appgateway-waf-v2-{{ rpfx }}-pip"
+    frontend_ports:
+      - name: "inbound-http"
+        port: 80
+      - name: "inbound-https"
+        port: 443
+    backend_address_pools:
+      - name: test_backend_address_pool1
+        backend_addresses:
+          - ip_address: 10.0.0.1
+      - name: test_backend_address_pool2
+        backend_addresses:
+          - ip_address: 10.0.0.2
+    backend_http_settings_collection:
+      - name: "http-profile1"
+        port: 443
+        protocol: https
+        pick_host_name_from_backend_address: true
+        probe: "http-probe1"
+        cookie_based_affinity: "Disabled"
+      - name: "http-profile2"
+        port: 8080
+        protocol: http
+        pick_host_name_from_backend_address: true
+        probe: "http-probe2"
+        cookie_based_affinity: "Disabled"
+    http_listeners:
+      - name: "inbound-http"
+        protocol: "http"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-http"
+      - name: "inbound-traffic1"
+        protocol: "https"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-https"
+        host_name: "traffic1.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "cert2"
+      - name: "inbound-traffic2"
+        protocol: "https"
+        frontend_ip_configuration: "public-inbound-ip"
+        frontend_port: "inbound-https"
+        host_name: "traffic2.example.com"
+        require_server_name_indication: true
+        ssl_certificate: "cert2"
+    url_path_maps:
+      - name: "path_mappings"
+        default_redirect_configuration: "redirect-traffic1"
+        default_rewrite_rule_set: "configure-headers"
+        path_rules:
+          - name: "path_rules"
+            backend_address_pool: "test_backend_address_pool1"
+            backend_http_settings: "http-profile1"
+            paths:
+              - "/abc"
+              - "/123/*"
+    request_routing_rules:
+      - name: "app-routing1"
+        rule_type: "basic"
+        http_listener: "inbound-traffic1"
+        backend_address_pool: "test_backend_address_pool2"
+        backend_http_settings: "http-profile1"
+        rewrite_rule_set: "configure-headers"
+      - name: "app-routing2"
+        rule_type: "path_based_routing"
+        http_listener: "inbound-traffic2"
+        url_path_map: "path_mappings"
+      - name: "redirect-routing"
+        rule_type: "basic"
+        http_listener: "inbound-http"
+        redirect_configuration: "redirect-http"
+    rewrite_rule_sets:
+      - name: "configure-headers"
+        rewrite_rules:
+          - name: "add-security-response-header"
+            rule_sequence: 1
+            action_set:
+              response_header_configurations:
+                - header_name: "Strict-Transport-Security"
+                  header_value: "max-age=31536000"
+          - name: "remove-backend-response-headers"
+            rule_sequence: 2
+            action_set:
+              response_header_configurations:
+                - header_name: "Server"
+                - header_name: "X-Powered-By"
+          - name: "set-custom-header-condition"
+            rule_sequence: 3
+            conditions:
+              - variable: "var_client_ip"
+                pattern: "1.1.1.1"
+              - variable: "http_req_Authorization"
+                pattern: "12345"
+                ignore_case: false
+            action_set:
+              request_header_configurations:
+                - header_name: "Foo"
+                  header_value: "Bar"
+    probes:
+      - name: "http-probe1"
+        interval: 30
+        path: "/abc"
+        protocol: "https"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+      - name: "http-probe2"
+        interval: 30
+        path: "/xyz"
+        protocol: "http"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+    redirect_configurations:
+      - name: "redirect-http"
+        redirect_type: "permanent"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        request_routing_rules:
+          - "redirect-routing"
+      - name: "redirect-traffic1"
+        redirect_type: "found"
+        target_listener: "inbound-traffic1"
+        include_path: true
+        include_query_string: true
+        url_path_maps:
+          - "path_mappings"
+    web_application_firewall_configuration:
+      enabled: true
+      firewall_mode: "Detection"
+      rule_set_type: "OWASP"
+      rule_set_version: "3.0"
+      request_body_check: true
+      max_request_body_size_in_kb: 128
+      file_upload_limit_in_mb: 100
+  register: output
+
+- name: Assert the resource instance is not updated
+  assert:
+    that:
+      - not output.changed
+
 - name: Delete instance of Application Gateway -- check mode
   azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
@@ -1906,9 +2577,31 @@
     that:
       - output.changed
 
+- name: Delete waf_v2 instance of Application Gateway
+  azure_rm_appgateway:
+    resource_group: "{{ resource_group }}"
+    name: "appgateway-waf-v2-{{ rpfx }}"
+    state: absent
+  register: output
+- name: Assert the state has changed
+  assert:
+    that:
+      - output.changed
+
 - name: Delete public IP for v2 gateway
   azure_rm_publicipaddress:
     name: "appgateway-v2-{{ rpfx }}-pip"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: output
+- name: Assert the state has changed
+  assert:
+    that:
+      - output.changed
+
+- name: Delete public IP for waf v2 gateway
+  azure_rm_publicipaddress:
+    name: "appgateway-waf-v2-{{ rpfx }}-pip"
     resource_group: "{{ resource_group }}"
     state: absent
   register: output
