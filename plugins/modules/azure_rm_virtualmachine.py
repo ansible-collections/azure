@@ -1282,7 +1282,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         self.fail("(PropertyChangeNotAllowed) Changing property 'windowsConfiguration.provisionVMAgent' is not allowed.")
 
                 if self.linux_config is not None and vm_dict['properties']['osProfile'].get('linuxConfiguration') is not None:
-                    if self.linux_config['disable_password_authentication'] != vm_dict['properties']['osProfile']['linuxConfiguration']['disablePasswordAuthentication']:
+                    if self.linux_config['disable_password_authentication'] != \
+                            vm_dict['properties']['osProfile']['linuxConfiguration']['disablePasswordAuthentication']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'linuxConfiguration.disablePasswordAuthentication' is not allowed.")
 
                 # Defaults for boot diagnostics
@@ -1506,9 +1507,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                     if self.os_type == 'Windows':
                         vm_resource.os_profile.windows_configuration = self.compute_models.WindowsConfiguration(
-                             win_rm=self.winrm,
-                             provision_vm_agent=self.windows_config['provision_vm_agent'] if self.windows_config is not None else True,
-                             enable_automatic_updates=self.windows_config['enable_automatic_updates'] if self.windows_config is not None else True,
+                            win_rm=self.winrm,
+                            provision_vm_agent=self.windows_config['provision_vm_agent'] if self.windows_config is not None else True,
+                            enable_automatic_updates=self.windows_config['enable_automatic_updates'] if self.windows_config is not None else True,
                         )
 
                     if self.boot_diagnostics_present:
