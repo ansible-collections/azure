@@ -1585,6 +1585,8 @@ class AzureRMAuth(object):
         return None
 
     def _get_msi_credentials(self, subscription_id=None, client_id=None, _cloud_environment=None, **kwargs):
+        # Get object `cloud_environment` from string `_cloud_environment`
+        cloud_environment = None
         if not _cloud_environment:
             cloud_environment = azure_cloud.AZURE_PUBLIC_CLOUD
         else:
@@ -1594,14 +1596,14 @@ class AzureRMAuth(object):
             if len(matched_clouds) == 1:
                 cloud_environment = matched_clouds[0]
             elif len(matched_clouds) > 1:
-                self.fail("Azure SDK failure: more than one cloud matched for cloud_environment name '{0}'".format(cloud_environment))
+                self.fail("Azure SDK failure: more than one cloud matched for cloud_environment name '{0}'".format(_cloud_environment))
             else:
-                if not urlparse.urlparse(cloud_environment).scheme:
+                if not urlparse.urlparse(_cloud_environment).scheme:
                     self.fail("cloud_environment must be an endpoint discovery URL or one of {0}".format([x.name for x in all_clouds]))
                 try:
-                    self._cloud_environment = azure_cloud.get_cloud_from_metadata_endpoint(cloud_environment)
-                except Exception as e:
-                    self.fail("cloud_environment {0} could not be resolved: {1}".format(cloud_environment, e.message), exception=traceback.format_exc())
+                    cloud_environment = azure_cloud.get_cloud_from_metadata_endpoint(_cloud_environment)
+                except Exception as exc:
+                    self.fail("cloud_environment {0} could not be resolved: {1}".format(_cloud_environment, str(exc)), exception=traceback.format_exc())
 
         credentials = MSIAuthentication(client_id=client_id, cloud_environment=cloud_environment)
         credential = MSIAuthenticationWrapper(client_id=client_id, cloud_environment=cloud_environment)
