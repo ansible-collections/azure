@@ -407,6 +407,28 @@ options:
                 description:
                     - Resource group where the storage account is located.
                 type: str
+    linux_config:
+        description:
+            - Specifies the Linux operating system settings on the virtual machine.
+        suboptions:
+            disable_password_authentication:
+                description:
+                    - Specifies whether password authentication should be disabled.
+                type: bool
+    windows_config:
+        description:
+            - Specifies Windows operating system settings on the virtual machine.
+        suboptions:
+            provision_vm_agent:
+                description:
+                    - Indicates whether virtual machine agent should be provisioned on the virtual machine.
+                type: bool
+                required: True
+            enable_automatic_updates:
+                description:
+                    - Indicates whether Automatic Updates is enabled for the Windows virtual machine.
+                type: bool
+                required: True
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -856,6 +878,17 @@ proximity_placement_group_spec = dict(
 )
 
 
+windows_configuration_spec = dict(
+    enable_automatic_updates=dict(type='bool', required=True),
+    provision_vm_agent=dict(type='bool', required=True),
+)
+
+
+linux_configuration_spec = dict(
+    disable_password_authentication=dict(type='bool')
+)
+
+
 class AzureRMVirtualMachine(AzureRMModuleBase):
 
     def __init__(self):
@@ -907,6 +940,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             winrm=dict(type='list'),
             boot_diagnostics=dict(type='dict'),
             ephemeral_os_disk=dict(type='bool'),
+            windows_config=dict(type='dict', options=windows_configuration_spec),
+            linux_config=dict(type='dict', options=linux_configuration_spec),
         )
 
         self.resource_group = None
@@ -955,6 +990,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.vm_identity = None
         self.boot_diagnostics = None
         self.ephemeral_os_disk = None
+        self.linux_config = None
+        self.windows_config = None
 
         self.results = dict(
             changed=False,
@@ -1237,6 +1274,17 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     differences.append('License Type')
                     changed = True
 
+                if self.windows_config is not None and vm_dict['properties']['osProfile'].get('windowsConfiguration') is not None:
+                    if self.windows_config['enable_automatic_updates'] != vm_dict['properties']['osProfile']['windowsConfiguration']['enableAutomaticUpdates']:
+                        self.fail("(PropertyChangeNotAllowed) Changing property 'windowsConfiguration.enableAutomaticUpdates' is not allowed.")
+
+                    if self.windows_config['provision_vm_agent'] != vm_dict['properties']['osProfile']['windowsConfiguration']['provisionVMAgent']:
+                        self.fail("(PropertyChangeNotAllowed) Changing property 'windowsConfiguration.provisionVMAgent' is not allowed.")
+
+                if self.linux_config is not None and vm_dict['properties']['osProfile'].get('linuxConfiguration') is not None:
+                    if self.linux_config['disable_password_authentication'] != vm_dict['properties']['osProfile']['linuxConfiguration']['disablePasswordAuthentication']:
+                        self.fail("(PropertyChangeNotAllowed) Changing property 'linuxConfiguration.disablePasswordAuthentication' is not allowed.")
+
                 # Defaults for boot diagnostics
                 if 'diagnosticsProfile' not in vm_dict['properties']:
                     vm_dict['properties']['diagnosticsProfile'] = {}
@@ -1452,16 +1500,16 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                     ]
                                 ))
 
-                        winrm = self.compute_models.WinRMConfiguration(
+                        self.winrm = self.compute_models.WinRMConfiguration(
                             listeners=winrm_listeners
                         )
 
-                        if not vm_resource.os_profile.windows_configuration:
-                            vm_resource.os_profile.windows_configuration = self.compute_models.WindowsConfiguration(
-                                win_rm=winrm
-                            )
-                        elif not vm_resource.os_profile.windows_configuration.win_rm:
-                            vm_resource.os_profile.windows_configuration.win_rm = winrm
+                    if self.os_type == 'Windows':
+                        vm_resource.os_profile.windows_configuration = self.compute_models.WindowsConfiguration(
+                             win_rm=self.winrm,
+                             provision_vm_agent=self.windows_config['provision_vm_agent'] if self.windows_config is not None else True,
+                             enable_automatic_updates=self.windows_config['enable_automatic_updates'] if self.windows_config is not None else True,
+                        )
 
                     if self.boot_diagnostics_present:
                         if self.boot_diagnostics['enabled']:
@@ -1482,7 +1530,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                     if self.os_type == 'Linux':
                         vm_resource.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
-                            disable_password_authentication=disable_ssh_password
+                            disable_password_authentication=self.linux_config['disable_password_authentication'] if self.linux_config is not None else False
                         )
                     if self.ssh_public_keys:
                         ssh_config = self.compute_models.SshConfiguration()
@@ -1671,13 +1719,32 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if vm_dict['properties'].get('osProfile', {}).get('adminPassword'):
                         vm_resource.os_profile.admin_password = vm_dict['properties']['osProfile']['adminPassword']
 
+                    # Add Windows configuration, if applicable
+                    windows_config = vm_dict['properties'].get('osProfile', {}).get('windowsConfiguration')
+                    if windows_config:
+                        if self.windows_config is not None:
+                            vm_resource.os_profile.windows_configuration = self.compute_models.WindowsConfiguration(
+                                provision_vm_agent=self.windows_config['provision_vm_agent'],
+                                enable_automatic_updates=self.windows_config['enable_automatic_updates']
+                            )
+                        else:
+                            vm_resource.os_profile.windows_configuration = self.compute_models.WindowsConfiguration(
+                                provision_vm_agent=windows_config.get('provisionVMAgent', True),
+                                enable_automatic_updates=windows_config.get('enableAutomaticUpdates', True)
+                            )
+
                     # Add linux configuration, if applicable
                     linux_config = vm_dict['properties'].get('osProfile', {}).get('linuxConfiguration')
                     if linux_config:
+                        if self.linux_config is not None:
+                            vm_resource.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
+                                disable_password_authentication=self.linux_config['disable_password_authentication']
+                            )
+                        else:
+                            vm_resource.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
+                                disable_password_authentication=linux_config.get('disablePasswordAuthentication', False)
+                            )
                         ssh_config = linux_config.get('ssh', None)
-                        vm_resource.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
-                            disable_password_authentication=linux_config.get('disablePasswordAuthentication', False)
-                        )
                         if ssh_config:
                             public_keys = ssh_config.get('publicKeys')
                             if public_keys:
