@@ -1531,8 +1531,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                     if self.os_type == 'Linux':
                         vm_resource.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
-                            disable_password_authentication=self.linux_config['disable_password_authentication'] if self.linux_config \
-                                    is not None else disable_ssh_password
+                            disable_password_authentication=self.linux_config['disable_password_authentication'] if self.linux_config else disable_ssh_password
                         )
                     if self.ssh_public_keys:
                         ssh_config = self.compute_models.SshConfiguration()
