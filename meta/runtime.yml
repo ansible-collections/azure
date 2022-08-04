@@ -246,7 +246,7 @@ action_groups:
   - azure.azcollection.azure_rm_virtualmachinescalesetextension
   - azure.azcollection.azure_rm_virtualmachinescalesetextension_info
   - azure.azcollection.azure_rm_virtualmachinescalesetinstance
-  - azure.azcollection.azure_rm_virtualmachinescalesetinstance_inpy
+  - azure.azcollection.azure_rm_virtualmachinescalesetinstance_info
   - azure.azcollection.azure_rm_virtualmachinesize_info
   - azure.azcollection.azure_rm_virtualnetwork
   - azure.azcollection.azure_rm_virtualnetwork_info
