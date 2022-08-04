@@ -24,6 +24,28 @@ options:
         description:
             - Name of the keyvault key.
         required: true
+    key_type:
+        description:
+            - The type of key to create. For valid values, see JsonWebKeyType. Possible values include EC, EC-HSM, RSA, RSA-HSM, oct
+        default: 'RSA'
+    key_size:
+        description:
+            - The key size in bits. For example 2048, 3072, or 4096 for RSA.
+    key_attributes:
+        description:
+            - The attributes of a key managed by the key vault service.
+        suboptions:
+            enabled:
+                description: bool
+            not_before:
+                description:
+                    - not valid before date in UTC ISO format without the Z at the end
+            expires:
+                description:
+                    - not valid after date in UTC ISO format without the Z at the end
+    curve:
+        description:
+            - Elliptic curve name. For valid values, see JsonWebKeyCurveName. Possible values include P-256, P-384, P-521, P-256K.
     byok_file:
         description:
             - BYOK file.
@@ -86,11 +108,18 @@ try:
     from azure.keyvault.models import KeyAttributes, JsonWebKey
     from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
     from azure.keyvault.models.key_vault_error import KeyVaultErrorException
+    from datetime import datetime
     from msrestazure.azure_active_directory import MSIAuthentication
     from OpenSSL import crypto
 except ImportError:
     # This is handled in azure_rm_common
     pass
+
+key_addribute_spec = dict(
+    enabled=dict(type='bool', required=False),
+    not_before=dict(type='str', no_log=True, required=False),
+    expires=dict(type='str', no_log=True, required=False)
+)
 
 
 class AzureRMKeyVaultKey(AzureRMModuleBase):
@@ -101,6 +130,10 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
         self.module_arg_spec = dict(
             key_name=dict(type='str', required=True),
             keyvault_uri=dict(type='str', no_log=True, required=True),
+            key_type=dict(type='str', default='RSA'),
+            key_size=dict(type='int'),
+            key_attributes=dict(type='dict', no_log=True, options=key_addribute_spec),
+            curve=dict(type='str'),
             pem_file=dict(type='str'),
             pem_password=dict(type='str', no_log=True),
             byok_file=dict(type='str'),
@@ -114,6 +147,10 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
 
         self.key_name = None
         self.keyvault_uri = None
+        self.key_type = None
+        self.key_size = None
+        self.key_attributes = None
+        self.curve = None
         self.pem_file = None
         self.pem_password = None
         self.state = None
@@ -159,7 +196,8 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
 
             # Create key
             if self.state == 'present' and changed:
-                results['key_id'] = self.create_key(self.key_name, self.tags)
+                results['key_id'] = self.create_key(self.key_name, self.key_type, self.key_size, self.key_attributes,
+                                                    self.curve, self.tags)
                 self.results['state'] = results
                 self.results['state']['status'] = 'Created'
             # Delete key
@@ -223,9 +261,22 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
             key_id = KeyVaultId.parse_key_id(key_bundle.key.kid)
         return key_id.id
 
-    def create_key(self, name, tags, kty='RSA'):
+    def create_key(self, name, key_type, key_size, key_attributes, curve, tags):
         ''' Creates a key '''
-        key_bundle = self.client.create_key(vault_base_url=self.keyvault_uri, key_name=name, kty=kty, tags=tags)
+
+        if key_attributes is not None:
+            k_enabled = key_attributes.get('enabled', True)
+            k_not_before = key_attributes.get('not_before', None)
+            k_expires = key_attributes.get('expires', None)
+            if k_not_before:
+                k_not_before = datetime.fromisoformat(k_not_before.replace('Z', '+00:00'))
+            if k_expires:
+                k_expires = datetime.fromisoformat(k_expires.replace('Z', '+00:00'))
+
+            key_attributes = KeyAttributes(k_enabled, k_not_before, k_expires)
+
+        key_bundle = self.client.create_key(vault_base_url=self.keyvault_uri, key_name=name, kty=key_type, key_size=key_size,
+                                            key_attributes=key_attributes, curve=curve, tags=tags)
         key_id = KeyVaultId.parse_key_id(key_bundle.key.kid)
         return key_id.id
 
