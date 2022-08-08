@@ -1072,7 +1072,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
 
         if self.encryption is not None:
             encryption_changed = False
-            if self.encryption.get('require_infrastructure_encryption') is not None and \
+            if self.encryption.get('require_infrastructure_encryption') and \
                     bool(self.encryption.get('require_infrastructure_encryption')) != bool(self.account_dict['encryption']['require_infrastructure_encryption']):
                 encryption_changed = True
 

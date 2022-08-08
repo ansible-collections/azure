@@ -541,7 +541,7 @@
     that:
       - output.storageaccounts | length == 1
       - output.storageaccounts[0].encryption.key_source == 'Microsoft.Storage'
-      - output.storageaccounts[0].encryption.re_infrastructure_encryption == false
+      - output.storageaccounts[0].encryption.require_infrastructure_encryption == false
       - output.storageaccounts[0].encryption.services ! length == 2
 
 - name: List storage accounts by resource group.
