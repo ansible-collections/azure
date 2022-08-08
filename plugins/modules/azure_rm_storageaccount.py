@@ -213,7 +213,7 @@ options:
                     - The absolute path of the custom 404 page.
                 type: str
     encryption:
-	description:
+        description:
             - The encryption settings on the storage account.
         type: dict
         suboptions:
@@ -1073,7 +1073,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         if self.encryption is not None:
             encryption_changed = False
             if self.encryption.get('require_infrastructure_encryption') is not None and \
-                bool(self.encryption.get('require_infrastructure_encryption')) != bool(self.account_dict['encryption']['require_infrastructure_encryption']):
+                    bool(self.encryption.get('require_infrastructure_encryption')) != bool(self.account_dict['encryption']['require_infrastructure_encryption']):
                 encryption_changed = True
 
             if self.encryption.get('key_source') != self.account_dict['encryption']['key_source']:
@@ -1141,6 +1141,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         minimum_tls_version=self.minimum_tls_version,
                                                                         public_network_access=self.public_network_access,
                                                                         allow_blob_public_access=self.allow_blob_public_access,
+                                                                        encryption=self.encryption,
                                                                         access_tier=self.access_tier)
         self.log(str(parameters))
         try:
