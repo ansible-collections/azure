@@ -542,7 +542,7 @@
       - output.storageaccounts | length == 1
       - output.storageaccounts[0].encryption.key_source == 'Microsoft.Storage'
       - not output.storageaccounts[0].encryption.require_infrastructure_encryption
-      - output.storageaccounts[0].encryption.services ! length == 2
+      - output.storageaccounts[0].encryption.services | length == 2
 
 - name: List storage accounts by resource group.
   azure_rm_storageaccount_info:
