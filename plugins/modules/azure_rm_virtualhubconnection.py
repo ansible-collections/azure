@@ -401,7 +401,7 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
 
         old_response = None
         response = None
-et by'
+
         old_response = self.get_resource()
 
         if not old_response:
