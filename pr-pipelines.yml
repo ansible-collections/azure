@@ -116,6 +116,7 @@ parameters:
     - "azure_rm_virtualwan"
     - "azure_rm_vpnsite"
     - "azure_rm_virtualhub"
+    - "azure_rm_virtualhubconnection"
     - "azure_rm_backupazurevm"
     - "azure_rm_recoveryservicesvault"
     - "azure_rm_vmbackuppolicy"
