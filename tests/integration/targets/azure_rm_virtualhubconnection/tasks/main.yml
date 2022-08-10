@@ -1,6 +1,5 @@
- - name: Set random parameter
-   set_fact:
-     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+ - set_fact:
+     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
  - name: Create virtual network
    azure_rm_virtualnetwork:

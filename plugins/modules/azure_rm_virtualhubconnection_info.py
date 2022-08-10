@@ -63,7 +63,7 @@ virtual_hub_connection:
                 - Resource ID.
             returned: always
             type: str
-            sample: "/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/virtualHubs/vhub/hubVirtualNetworkConnections/MyConnection
+            sample: "/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/virtualHubs/vhub/hubVirtualNetworkConnections/MyConnection"
         name:
             description:
                 - Resource name.
@@ -135,10 +135,10 @@ virtual_hub_connection:
                                 - The name of the Static Route.
                             type: list
                             returned: always
-                            suboptions:
+                            contains:
                                 address_prefixes:
                                     description:
-                                        -
+                                        - Space-separated list of all address prefixes.
                                     type: list
                                     returned: always
                                     sample: ["10.1.0.0/16", "10.2.0.0/16"]
