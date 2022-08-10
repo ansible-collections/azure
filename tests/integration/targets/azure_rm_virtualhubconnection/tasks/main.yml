@@ -12,7 +12,7 @@
  
  - name: Create subnet
    azure_rm_subnet:
-     name: "sub{{ rpfx }}"
+     name: testsubnet
      virtual_network_name: "vnet{{ rpfx }}"
      resource_group: "{{ resource_group }}"
      address_prefix_cidr: "10.1.0.0/24"
