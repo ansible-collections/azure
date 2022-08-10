@@ -387,8 +387,8 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
         self.to_do = Actions.NoAction
 
         super(AzureRMVirtualHubConnection, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                supports_check_mode=True,
-                                                supports_tags=False)
+                                                          supports_check_mode=True,
+                                                          supports_tags=False)
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
@@ -401,7 +401,7 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
 
         old_response = None
         response = None
-
+et by'
         old_response = self.get_resource()
 
         if not old_response:
