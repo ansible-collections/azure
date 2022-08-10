@@ -55,20 +55,10 @@ options:
             - The Routing Configuration indicating the associated and propagated route tables on this connection.
         type: dict
         suboptions:
-            associated_route_table:
-                description:
-                    - The resource id RouteTable associated with this RoutingConfiguration.
-                type: dict
-                suboptions:
-                    id:
-                        description:
-                            - The ID of RouteTable associated with this RoutingConfiguration.
-                        type: str
             propagated_route_tables:
                 description:
                     - The list of RouteTables to advertise the routes to.
-                type: list
-                elements: dict
+                type: dict
                 suboptions:
                     labels:
                         description:
@@ -77,7 +67,7 @@ options:
                         elements: str
                     ids:
                         description:
-                            -The list of resource ids of all the RouteTables.
+                            -The list of resource ids of all the virtual hub RouteTables.
                         type: list
                         elements: dict
                         suboptions:
@@ -88,19 +78,8 @@ options:
             vnet_routes:
                 description:
                     - List of routes that control routing from VirtualHub into a virtual network connection.
-                type: list
-                elements: dict
+                type: dict
                 suboptions:
-                    bgp_connections:
-                        description:
-                            - The list of references to HubBgpConnection objects.
-                        type: list
-                        elements: dict
-                        suboptions:
-                            id:
-                                description:
-                                    - The ID of the HubBgpConnection object.
-                                type: str
                     static_routes:
                         description:
                             - List of all Static Routes.
@@ -138,6 +117,41 @@ author:
 '''
 
 EXAMPLES = '''
+- name: Create virtual hub connection
+  azure_rm_virtualhubconnection:
+    resource_group: myRG
+    vhub_name: testhub
+    name: Myconnection
+    enable_internet_security: false
+    allow_remote_vnet_to_use_hub_vnet_gateways: true
+    allow_hub_to_remote_vnet_transit: true
+    remote_virtual_network:
+      id: /subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/testvnet
+    routing_configuration:
+      propagated_route_tables:
+        labels:
+          - labels1
+          - labels3
+        ids:
+          - id: /subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/virtualHubs/testhub01/hubRouteTables/testtable
+      vnet_routes:
+        static_routes:
+          - name: route1
+            address_prefixes:
+              - 10.1.0.0/16
+              - 10.2.0.0/16
+            next_hop_ip_address: 10.0.0.68
+          - name: route2
+            address_prefixes:
+              - 10.4.0.0/16
+            next_hop_ip_address: 10.0.0.65
+
+- name: Delete virtual hub connection
+  azure_rm_virtualhubconnection:
+    resource_group: myRG
+    vhub_name: testhub
+    name: Myconnection
+    state: absent
 
 '''
 
@@ -205,9 +219,9 @@ state:
                         ids:
                             description:
                                 - The list resource ID of propagated route tables.
-                            type: str
+                            type: list
                             returned: always
-                            sample: /subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/virtualHubs/testhub/hubRouteTables/rt_name
+                            sample: [{ id: '/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/virtualHubs/testhub/hubRouteTables/rt_name'}]
                         labels:
                             description:
                                 - Space-separated list of labels for propagated route tables.
@@ -225,7 +239,25 @@ state:
                                 - The name of the Static Route.
                             type: list
                             returned: always
-                            sample: []
+                            suboptions:
+                                address_prefixes:
+                                    description:
+                                        -
+                                    type: list
+                                    returned: always
+                                    sample: ["10.1.0.0/16", "10.2.0.0/16"]
+                                name:
+                                    description:
+                                        - The name of static router.
+                                    type: str
+                                    returned: always
+                                    sample: route1
+                                next_hop_ip_address:
+                                    description:
+                                        - The next hop ip address.
+                                    type: str
+                                    returned: always
+                                    sample: 10.0.0.65
         provisioning_state:
             description:
                 - The provisioning state of the virtual hub connection resource.
@@ -303,20 +335,13 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
                     id=dict(
                         type='str',
                     )
+                )
             ),
             routing_configuration=dict(
                 type='dict',
                 options=dict(
-                    associated_route_table=dict(
-                        type='dict',
-                        options=dict(
-                            id=dict(
-                                type='str',
-                            )
-                        ),
                     propagated_route_tables=dict(
-                        type='list',
-                        elements='dict',
+                        type='dict',
                         options=dict(
                             labels=dict(
                                 type='list',
@@ -334,24 +359,15 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
                         )
                     ),
                     vnet_routes=dict(
-                        type='list',
-                        elements: 'dict',
+                        type='dict',
                         options=dict(
                             static_routes=dict(
                                 type='list',
                                 elements='dict',
                                 options=static_routes_spec
-                            ),
-                            bgp_connections=dict(
-                                type='dict',
-                                options=dict(
-                                    id=dict(
-                                        type='str'
-                                    )
-                                )
                             )
                         )
-                    ),
+                    )
                 )
             ),
             state=dict(
@@ -359,8 +375,10 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
                 default='present',
                 choices=['present', 'absent']
             )
+        )
 
         self.resource_group = None
+        self.vhub_name = None
         self.name = None
         self.body = {}
 

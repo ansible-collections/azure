@@ -115,9 +115,9 @@ virtual_hub_connection:
                         ids:
                             description:
                                 - The list resource ID of propagated route tables.
-                            type: str
+                            type: list
                             returned: always
-                            sample: /subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/virtualHubs/testhub/hubRouteTables/rt_name
+                            sample: [{id: '/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/virtualHubs/testhub/hubRouteTables/rt_name'}]
                         labels:
                             description:
                                 - Space-separated list of labels for propagated route tables.
@@ -135,7 +135,25 @@ virtual_hub_connection:
                                 - The name of the Static Route.
                             type: list
                             returned: always
-                            sample: []
+                            suboptions:
+                                address_prefixes:
+                                    description:
+                                        -
+                                    type: list
+                                    returned: always
+                                    sample: ["10.1.0.0/16", "10.2.0.0/16"]
+                                name:
+                                    description:
+                                        - The name of static router.
+                                    type: str
+                                    returned: always
+                                    sample: route1
+                                next_hop_ip_address:
+                                    description:
+                                        - The next hop ip address.
+                                    type: str
+                                    returned: always
+                                    sample: 10.0.0.65
         provisioning_state:
             description:
                 - The provisioning state of the virtual hub connection resource.
