@@ -411,12 +411,33 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                modifiers = {}
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                self.results['modifiers'] = modifiers
-                self.results['compare'] = []
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
-                    self.to_do = Actions.Update
+                if self.body.get('enable_internet_security') is not None:
+                    if bool(self.body['enable_internet_security']) != bool(old_response['enable_internet_security']):
+                        self.to_do = Actions.Update
+                else:
+                    self.body['enable_internet_security'] = old_response['enable_internet_security']
+                if self.body.get('allow_remote_vnet_to_use_hub_vnet_gateways') is not None:
+                    if bool(self.body['allow_remote_vnet_to_use_hub_vnet_gateways']) != bool(old_response['allow_remote_vnet_to_use_hub_vnet_gateways']):
+                        self.to_do = Actions.Update
+                else:
+                    self.body['allow_remote_vnet_to_use_hub_vnet_gateways'] = old_response['allow_remote_vnet_to_use_hub_vnet_gateways']
+                if self.body.get('allow_hub_to_remote_vnet_transit') is not None:
+                    if bool(self.body['allow_hub_to_remote_vnet_transit']) != bool(old_response['allow_hub_to_remote_vnet_transit']):
+                        self.to_do = Actions.Update
+                else:
+                    self.body['allow_hub_to_remote_vnet_transit'] = old_response['allow_hub_to_remote_vnet_transit']
+
+                if self.body.get('routing_configuration') is not None:
+                    modifiers = {}
+                    self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
+                    self.results['modifiers'] = modifiers
+                    self.results['compare'] = []
+                    if not self.default_compare(modifiers, self.body['routing_configuration'], old_response['routing_configuration'], '', self.results):
+                        self.to_do = Actions.Update
+                    else:
+                        self.body['routing_configuration'] = old_response['routing_configuration']
+                else:
+                    self.body['routing_configuration'] = old_response['routing_configuration']
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.results['changed'] = True

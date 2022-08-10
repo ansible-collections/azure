@@ -49,7 +49,7 @@
     vhub_name: "vhub{{ rpfx }}"
     name: "connection{{ rpfx }}"
     enable_internet_security: false
-    allow_remote_vnet_to_use_hub_vnet_gateways: false
+    allow_remote_vnet_to_use_hub_vnet_gateways: true
     allow_hub_to_remote_vnet_transit: true
     remote_virtual_network:
       id: "{{ vnet_output.state.id }}"
@@ -83,7 +83,7 @@
     vhub_name: "vhub{{ rpfx }}"
     name: "connection{{ rpfx }}"
     enable_internet_security: false
-    allow_remote_vnet_to_use_hub_vnet_gateways: false
+    allow_remote_vnet_to_use_hub_vnet_gateways: true
     allow_hub_to_remote_vnet_transit: true
     remote_virtual_network:
       id: "{{ vnet_output.state.id }}"
@@ -111,6 +111,42 @@
     that:
       - not output.changed
 
+- name: Update virtual hub connection
+  azure_rm_virtualhubconnection:
+    resource_group: "{{ resource_group }}"
+    vhub_name: "vhub{{ rpfx }}"
+    name: "connection{{ rpfx }}"
+    enable_internet_security: true
+    allow_remote_vnet_to_use_hub_vnet_gateways: true
+    allow_hub_to_remote_vnet_transit: true
+    remote_virtual_network:
+      id: "{{ vnet_output.state.id }}"
+    routing_configuration:
+      propagated_route_tables:
+        labels:
+          - labels1
+          - labels2
+          - labels3
+      vnet_routes:
+        static_routes:
+          - name: route1
+            address_prefixes:
+              - 10.1.0.0/16
+              - 10.2.0.0/16
+              - 10.6.0.0/16
+              - 10.6.0.0/16
+            next_hop_ip_address: 10.0.0.68
+          - name: route2
+            address_prefixes:
+              - 10.4.0.0/16
+            next_hop_ip_address: 10.0.0.65
+  register: output
+
+- name: Assert the virtual hub connection no changed
+  assert:
+    that:
+      - not output.changed
+
 - name: Get virtual hub connection info
   azure_rm_virtualhubconnection_info:
     resource_group: "{{ resource_group }}"
@@ -123,7 +159,7 @@
     - output.virtual_hub_connection.allow_hub_to_remote_vnet_transit
     - not output.virtual_hub_connection.allow_remote_vnet_to_use_hub_vnet_gateways
     - not output.virtual_hub_connection.enable_internet_security
-    - output.virtual_hub_connection.routing_configuration.propagated_route_tables.labels | length == 2
+    - output.virtual_hub_connection.routing_configuration.propagated_route_tables.labels | length == 3
     - output.virtual_hub_connection.routing_configuration.vnet_routes.static_routes | length == 2
 
 - name: Delete the virtual hub connection
