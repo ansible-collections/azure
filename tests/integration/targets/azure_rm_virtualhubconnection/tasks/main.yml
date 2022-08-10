@@ -48,7 +48,7 @@
      vhub_name: "vhub{{ rpfx }}"
      name: "connection{{ rpfx }}"
      enable_internet_security: true
-     allow_remote_vnet_to_use_hub_vnet_gateways: true
+     allow_remote_vnet_to_use_hub_vnet_gateways: false
      allow_hub_to_remote_vnet_transit: true
      remote_virtual_network:
        id: "{{ vnet_output.state.id }}"
@@ -82,7 +82,7 @@
      vhub_name: "vhub{{ rpfx }}"
      name: "connection{{ rpfx }}"
      enable_internet_security: true
-     allow_remote_vnet_to_use_hub_vnet_gateways: true
+     allow_remote_vnet_to_use_hub_vnet_gateways: false
      allow_hub_to_remote_vnet_transit: true
      remote_virtual_network:
        id: "{{ vnet_output.state.id }}"
@@ -116,7 +116,7 @@
      vhub_name: "vhub{{ rpfx }}"
      name: "connection{{ rpfx }}"
      enable_internet_security: false
-     allow_remote_vnet_to_use_hub_vnet_gateways: true
+     allow_remote_vnet_to_use_hub_vnet_gateways: false
      allow_hub_to_remote_vnet_transit: true
      remote_virtual_network:
        id: "{{ vnet_output.state.id }}"
@@ -133,7 +133,7 @@
                - 10.1.0.0/16
                - 10.2.0.0/16
                - 10.6.0.0/16
-               - 10.6.0.0/16
+               - 10.7.0.0/16
              next_hop_ip_address: 10.0.0.68
            - name: route2
              address_prefixes:
@@ -144,7 +144,7 @@
  - name: Assert the virtual hub connection no changed
    assert:
      that:
-       - not output.changed
+       - output.changed
  
  - name: Get virtual hub connection info
    azure_rm_virtualhubconnection_info:
@@ -156,11 +156,11 @@
  - name: Assert fact returns
    assert:
      that:
-       - not output.virtual_hub_connection.allow_hub_to_remote_vnet_transit
-       - not output.virtual_hub_connection.allow_remote_vnet_to_use_hub_vnet_gateways
-       - not output.virtual_hub_connection.enable_internet_security
-       - output.virtual_hub_connection.routing_configuration.propagated_route_tables.labels | length == 3
-       - output.virtual_hub_connection.routing_configuration.vnet_routes.static_routes | length == 2
+       - output.virtual_hub_connection[0].allow_hub_to_remote_vnet_transit
+       - not output.virtual_hub_connection[0].allow_remote_vnet_to_use_hub_vnet_gateways
+       - not output.virtual_hub_connection[0].enable_internet_security
+       - output.virtual_hub_connection[0].routing_configuration.propagated_route_tables.labels | length == 3
+       - output.virtual_hub_connection[0].routing_configuration.vnet_routes.static_routes | length == 2
  
  - name: Delete the virtual hub connection
    azure_rm_virtualhubconnection:
