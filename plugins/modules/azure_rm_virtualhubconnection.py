@@ -44,13 +44,15 @@ options:
             - VirtualHub to RemoteVnet transit to enabled or not.
         type: bool
     remote_virtual_network:
+        description:
+            - ID of the remote VNet to connect to.
         type: dict
         suboptions:
             id:
                 description:
                     - The remote virtual network ID.
                 type: str
-    route_configuration:
+    routing_configuration:
         description:
             - The Routing Configuration indicating the associated and propagated route tables on this connection.
         type: dict
@@ -85,7 +87,7 @@ options:
                             - List of all Static Routes.
                         type: list
                         elements: dict
-                        suoptions:
+                        suboptions:
                             name:
                                 description:
                                     - The name of the StaticRoute that is unique within a VnetRoute.
