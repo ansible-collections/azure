@@ -156,7 +156,7 @@ subscriptions:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -232,7 +232,7 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
             response = self.management_groups_client.management_groups.get(group_id=mg_name,
                                                                            expand=expand,
                                                                            recurse=self.recurse)
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('No Management group {0} found.'.format(mg_name))
             response = None
 
@@ -246,7 +246,7 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
 
         try:
             response = self.management_groups_client.management_groups.list()
-        except CloudError:
+        except Exception:
             self.log('No Management groups found.')
             pass  # default to response of an empty list
 
