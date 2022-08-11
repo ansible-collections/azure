@@ -10,13 +10,6 @@
      resource_group: "{{ resource_group }}"
    register: vnet_output
  
- - name: Create subnet
-   azure_rm_subnet:
-     name: testsubnet
-     virtual_network_name: "vnet{{ rpfx }}"
-     resource_group: "{{ resource_group }}"
-     address_prefix_cidr: "10.1.0.0/24"
- 
  - name: Create a Virtual Wan
    azure_rm_virtualwan:
      resource_group: "{{ resource_group }}"
