@@ -27,7 +27,7 @@ jobs:
         toolMajorVersion: 'V2'
         suppressionsFile: 'CredScanSuppressions.json'
 
-    - task: PostAnalysis@1
+    - task: ms-codeanalysis.vss-microsoft-security-code-analysis-devops.build-task-postanalysis.PostAnalysis@1
       inputs:
         AllTools: false
         APIScan: false
