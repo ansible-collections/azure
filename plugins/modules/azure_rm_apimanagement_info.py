@@ -163,6 +163,7 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
                 self.body[key] = kwargs[key]
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if (self.resource_group is not None and
