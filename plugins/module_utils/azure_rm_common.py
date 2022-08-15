@@ -1692,7 +1692,7 @@ class AzureRMAuth(object):
         if auth_source == 'msi':
             self.log('Retrieving credentials from MSI')
             return self._get_msi_credentials(subscription_id=params.get('subscription_id'), client_id=params.get('client_id'),
-                                            _cloud_environment=params.get('cloud_environment'))
+                                             _cloud_environment=params.get('cloud_environment'))
 
         if auth_source == 'cli':
             if not HAS_AZURE_CLI_CORE:
