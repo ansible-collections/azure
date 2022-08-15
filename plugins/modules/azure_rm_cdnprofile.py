@@ -224,13 +224,12 @@ class AzureRMCdnprofile(AzureRMModuleBase):
         try:
             poller = self.cdn_client.profiles.begin_create(self.resource_group,
                                                            self.name,
-                                                           parameters,
-                                                          )
+                                                           parameters)
             response = self.get_poller_result(poller)
             return cdnprofile_to_dict(response)
         except Exception as exc:
             self.log('Error attempting to create Azure CDN profile instance.')
-            self.fail("Error creating Azure CDN profile instance: {0}}".format(exc))
+            self.fail("Error Creating Azure CDN profile instance: {0}".format(exc.message))
 
     def update_cdnprofile(self):
         '''
