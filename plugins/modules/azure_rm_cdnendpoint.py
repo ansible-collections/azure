@@ -359,7 +359,7 @@ class AzureRMCdnendpoint(AzureRMModuleBase):
             self.location = resource_group.location
 
         if self.query_string_caching_behavior:
-            self.query_string_caching_behavior = _snake_to_camel(self.query_string_caching_behavior)
+            self.query_string_caching_behavior = _snake_to_camel(self.query_string_caching_behavior, capitalize_first=True)
 
         response = self.get_cdnendpoint()
 
