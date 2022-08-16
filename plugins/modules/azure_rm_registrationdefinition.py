@@ -405,10 +405,6 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
         return self.results
 
     def create_update_resource(self):
-        import logging
-        logging.basicConfig(filename='tt.log', level=logging.INFO)
-        logging.info('pppppppppppppppppppppp')
-        logging.info(self.body)
 
         try:
             response = self.mgmt_client.registration_definitions.begin_create_or_update(
