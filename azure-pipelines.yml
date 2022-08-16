@@ -7,7 +7,7 @@ trigger:
 jobs:
 - job: CG
   pool:
-    vmImage: 'pool-ubuntu-2004'
+    name: pool-ubuntu-2004
 
   steps:
   - task: ComponentGovernanceComponentDetection@0

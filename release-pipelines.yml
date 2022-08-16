@@ -11,7 +11,7 @@ trigger:
 pr: none
 
 pool:
-  vmImage: 'pool-ubuntu-2004'
+  name: pool-ubuntu-2004
 
 steps:
 - script: |
