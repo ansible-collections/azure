@@ -240,10 +240,9 @@ state:
 import uuid
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.managedservices import ManagedServicesClient
     from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
+    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -368,7 +367,9 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
                                                     api_version='2019-09-01',
+                                                    is_track2=True,
                                                     suppress_subscription_id=True)
+
 
         old_response = self.get_resource()
 
@@ -404,16 +405,21 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
         return self.results
 
     def create_update_resource(self):
+        import logging
+        logging.basicConfig(filename='tt.log', level=logging.INFO)
+        logging.info('pppppppppppppppppppppp')
+        logging.info(self.body)
 
         try:
-            response = self.mgmt_client.registration_definitions.create_or_update(registration_definition_id=self.registration_definition_id,
-                                                                                  scope=self.scope,
-                                                                                  plan=self.body.get('plan', None),
-                                                                                  properties=self.body.get('properties', None),
-                                                                                  request_body=self.body)
+            response = self.mgmt_client.registration_definitions.begin_create_or_update(
+                                                                                        registration_definition_id=self.registration_definition_id,
+                                                                                        scope=self.scope,
+                                                                                        #plan=self.body.get('plan', None),
+                                                                                        #properties=self.body.get('properties', None),
+                                                                                        request_body=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the RegistrationDefinition instance.')
             self.fail('Error creating the RegistrationDefinition instance: {0}'.format(str(exc)))
         return response.as_dict()
@@ -422,7 +428,7 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
         try:
             response = self.mgmt_client.registration_definitions.delete(registration_definition_id=self.registration_definition_id,
                                                                         scope=self.scope)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the RegistrationDefinition instance.')
             self.fail('Error deleting the RegistrationDefinition instance: {0}'.format(str(e)))
 
