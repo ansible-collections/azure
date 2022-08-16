@@ -370,7 +370,6 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
                                                     is_track2=True,
                                                     suppress_subscription_id=True)
 
-
         old_response = self.get_resource()
 
         if not old_response:
@@ -408,11 +407,9 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
 
         try:
             response = self.mgmt_client.registration_definitions.begin_create_or_update(
-                                                                                        registration_definition_id=self.registration_definition_id,
-                                                                                        scope=self.scope,
-                                                                                        #plan=self.body.get('plan', None),
-                                                                                        #properties=self.body.get('properties', None),
-                                                                                        request_body=self.body)
+                                                                                         registration_definition_id=self.registration_definition_id,
+                                                                                         scope=self.scope,
+                                                                                         request_body=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
