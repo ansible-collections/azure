@@ -134,7 +134,7 @@ pr:
 - dev
 
 pool:
-  vmImage: 'ubuntu-20.04'
+  vmImage: 'pool-ubuntu-2004'
 
 jobs:
   - job: CreateResourceGroups
