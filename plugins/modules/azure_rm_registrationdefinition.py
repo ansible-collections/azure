@@ -407,9 +407,10 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
 
         try:
             response = self.mgmt_client.registration_definitions.begin_create_or_update(
-                                                                                         registration_definition_id=self.registration_definition_id,
-                                                                                         scope=self.scope,
-                                                                                         request_body=self.body)
+                registration_definition_id=self.registration_definition_id,
+                scope=self.scope,
+                request_body=self.body)
+
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
