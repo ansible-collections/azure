@@ -373,7 +373,7 @@ class AzureRMClusters(AzureRMModuleBase):
                     response = self.mgmt_client.clusters.begin_resize(resource_group_name=self.resource_group,
                                                                       cluster_name=self.name,
                                                                       role_name='workernode',
-                                                                      parameter={'target_instance_count': self.new_instance_count})
+                                                                      parameters={'target_instance_count': self.new_instance_count})
                     if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                         response = self.get_poller_result(response)
         except Exception as exc:
