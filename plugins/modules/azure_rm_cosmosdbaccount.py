@@ -142,7 +142,7 @@ options:
                 description:
                     - It can be a string containing resource id of a subnet.
                     - It can be a dictionary containing 'resource_group', 'virtual_network_name' and 'subnet_name'
-            ignore_missing_vnet_service_endpoint:
+            ignore_missing_v_net_service_endpoint:
                 description:
                     - Create Cosmos DB account without existing virtual network service endpoint.
                 type: bool
@@ -219,6 +219,7 @@ try:
     from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.cosmosdb import CosmosDBManagementClient
+    from ansible.module_utils.six import string_types
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -326,7 +327,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
                         type='str',
                         required=True
                     ),
-                    ignore_missing_vnet_service_endpoint=dict(
+                    ignore_missing_v_net_service_endpoint=dict(
                         type='bool'
                     )
                 )
@@ -566,6 +567,9 @@ def default_compare(new, old, path, result):
         if path == '/location' or path.endswith('location_name'):
             new = new.replace(' ', '').lower()
             old = new.replace(' ', '').lower()
+        if isinstance(old, string_types) and isinstance(new, string_types):
+            new = new.lower()
+            old = old.lower()
         if new == old:
             return True
         else:

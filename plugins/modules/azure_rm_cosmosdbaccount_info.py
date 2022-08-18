@@ -302,7 +302,7 @@ accounts:
                     type: str
                     sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNet
                              works/testvnet/subnets/testsubnet1"
-                ignore_missing_vnet_service_endpoint:
+                ignore_missing_v_net_service_endpoint:
                     description:
                         - Create Cosmos DB account without existing virtual network service endpoint.
                     type: bool
