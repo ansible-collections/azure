@@ -144,7 +144,6 @@ except ImportError:
     pass
 
 
-
 class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
     def __init__(self):
