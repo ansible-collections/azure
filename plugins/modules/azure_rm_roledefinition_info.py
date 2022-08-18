@@ -124,7 +124,6 @@ from ansible.module_utils._text import to_native
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
     from msrest.serialization import Model
     from azure.mgmt.authorization import AuthorizationManagementClient
 
@@ -198,6 +197,7 @@ class AzureRMRoleDefinitionInfo(AzureRMModuleBase):
         # get management client
         self._client = self.get_mgmt_svc_client(AuthorizationManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
+                                                is_track2=True,
                                                 api_version="2018-01-01-preview")
 
         if self.id:
@@ -242,7 +242,7 @@ class AzureRMRoleDefinitionInfo(AzureRMModuleBase):
                 if len(roles) > 0:
                     return [roledefinition_to_dict(r) for r in roles]
 
-        except CloudError as ex:
+        except Exception as ex:
             self.log("Didn't find role definition in scope {0}".format(self.scope))
 
         return response
@@ -267,7 +267,7 @@ class AzureRMRoleDefinitionInfo(AzureRMModuleBase):
                 else:
                     return [response]
 
-        except CloudError as ex:
+        except Exception as ex:
             self.log("Didn't find role definition by id {0}".format(self.id))
 
         return []
@@ -297,7 +297,7 @@ class AzureRMRoleDefinitionInfo(AzureRMModuleBase):
                 if len(roles) > 1:
                     self.fail("Found multiple Role Definitions with name: {0}".format(self.role_name))
 
-        except CloudError as ex:
+        except Exception as ex:
             self.log("Didn't find Role Definition by name {0}".format(self.role_name))
 
         return []
