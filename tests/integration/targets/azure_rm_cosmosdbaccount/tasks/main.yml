@@ -24,12 +24,6 @@
     virtual_network_name: "{{ vnname }}"
     resource_group: "{{ resource_group }}"
     address_prefix_cidr: "10.1.0.0/24"
-    service_endpoints:
-      - service: Microsoft.AzureCosmosDB
-        locations:
-          - eastus
-          - eastasia
-          - westus
 
 - name: Create instance of Database Account -- check mode
   azure_rm_cosmosdbaccount:
