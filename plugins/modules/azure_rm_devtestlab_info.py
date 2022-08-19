@@ -144,9 +144,9 @@ labs:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.devtestlabs import DevTestLabsClient
     from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -185,6 +185,7 @@ class AzureRMDevTestLabInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.resource_group is not None:
@@ -202,7 +203,7 @@ class AzureRMDevTestLabInfo(AzureRMModuleBase):
         try:
             response = self.mgmt_client.labs.list_by_resource_group(resource_group_name=self.resource_group)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Lab.')
 
         if response is not None:
@@ -218,7 +219,7 @@ class AzureRMDevTestLabInfo(AzureRMModuleBase):
         try:
             response = self.mgmt_client.labs.list_by_subscription()
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Lab.')
 
         if response is not None:
@@ -235,7 +236,7 @@ class AzureRMDevTestLabInfo(AzureRMModuleBase):
             response = self.mgmt_client.labs.get(resource_group_name=self.resource_group,
                                                  name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Lab.')
 
         if response and self.has_tags(response.tags, self.tags):

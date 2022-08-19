@@ -133,7 +133,7 @@ artifacts:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
     from msrest.serialization import Model
 except ImportError:
@@ -194,7 +194,7 @@ class AzureRMArtifactInfo(AzureRMModuleBase):
                                                       artifact_source_name=self.artifact_source_name,
                                                       name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Artifact.')
 
         if response:
@@ -210,7 +210,7 @@ class AzureRMArtifactInfo(AzureRMModuleBase):
                                                        lab_name=self.lab_name,
                                                        artifact_source_name=self.artifact_source_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Artifact.')
 
         if response is not None:

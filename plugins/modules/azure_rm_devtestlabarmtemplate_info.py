@@ -108,7 +108,7 @@ arm_templates:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
     from msrest.serialization import Model
 except ImportError:
@@ -156,6 +156,7 @@ class AzureRMDtlArmTemplateInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name:
@@ -173,7 +174,7 @@ class AzureRMDtlArmTemplateInfo(AzureRMModuleBase):
                                                            lab_name=self.lab_name,
                                                            artifact_source_name=self.artifact_source_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.fail('Could not get facts for DTL ARM Template.')
 
         if response is not None:
@@ -191,7 +192,7 @@ class AzureRMDtlArmTemplateInfo(AzureRMModuleBase):
                                                           artifact_source_name=self.artifact_source_name,
                                                           name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get facts for DTL ARM Template.')
 
         if response:

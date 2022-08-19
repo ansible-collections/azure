@@ -81,8 +81,8 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
     from msrest.serialization import Model
@@ -170,6 +170,7 @@ class AzureRMSchedule(AzureRMModuleBase):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -239,7 +240,7 @@ class AzureRMSchedule(AzureRMModuleBase):
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Schedule instance.')
             self.fail("Error creating the Schedule instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -255,7 +256,7 @@ class AzureRMSchedule(AzureRMModuleBase):
             response = self.mgmt_client.schedules.delete(resource_group_name=self.resource_group,
                                                          lab_name=self.lab_name,
                                                          name=self.name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Schedule instance.')
             self.fail("Error deleting the Schedule instance: {0}".format(str(e)))
 
@@ -276,7 +277,7 @@ class AzureRMSchedule(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Schedule instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Schedule instance.')
         if found is True:
             return response.as_dict()
