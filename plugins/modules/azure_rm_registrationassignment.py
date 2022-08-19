@@ -119,10 +119,9 @@ state:
 import uuid
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.managedservices import ManagedServicesClient
     from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
+    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -191,6 +190,7 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
                                                     api_version='2019-09-01',
+                                                    is_track2=True,
                                                     suppress_subscription_id=True)
 
         old_response = self.get_resource()
@@ -235,22 +235,21 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
 
     def create_update_resource(self):
         try:
-            response = self.mgmt_client.registration_assignments.create_or_update(scope=self.scope,
-                                                                                  registration_assignment_id=self.registration_assignment_id,
-                                                                                  properties=self.body.get('properties', None),
-                                                                                  request_body=self.body)
+            response = self.mgmt_client.registration_assignments.begin_create_or_update(scope=self.scope,
+                                                                                        registration_assignment_id=self.registration_assignment_id,
+                                                                                        request_body=self.body)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the RegistrationAssignment instance.')
             self.fail('Error creating the RegistrationAssignment instance: {0}'.format(str(exc)))
         return response.as_dict()
 
     def delete_resource(self):
         try:
-            response = self.mgmt_client.registration_assignments.delete(scope=self.scope,
-                                                                        registration_assignment_id=self.registration_assignment_id)
-        except CloudError as e:
+            response = self.mgmt_client.registration_assignments.begin_delete(scope=self.scope,
+                                                                              registration_assignment_id=self.registration_assignment_id)
+        except Exception as e:
             self.log('Error attempting to delete the RegistrationAssignment instance.')
             self.fail('Error deleting the RegistrationAssignment instance: {0}'.format(str(e)))
 
