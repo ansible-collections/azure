@@ -138,12 +138,10 @@ roleassignments:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 except ImportError:
     # This is handled in azure_rm_common
     pass
-
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 
 class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
@@ -216,7 +214,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
             response = [self.roleassignment_to_dict(a) for a in response]
             results = response
 
-        except CloudError as ex:
+        except Exception as ex:
             self.log("Didn't find role assignments id {0}".format(self.scope))
 
         return results
@@ -242,7 +240,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
             results = response
 
-        except CloudError as ex:
+        except Exception as ex:
             self.log("Didn't find role assignment {0} in scope {1}".format(self.name, self.scope))
 
         return results
@@ -275,7 +273,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
             results = response
 
-        except CloudError as ex:
+        except Exception as ex:
             self.log("Didn't find role assignments in subscription {0}.".format(self.subscription_id))
 
         return results
@@ -310,7 +308,7 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
             results = response
 
-        except CloudError as ex:
+        except Exception as ex:
             self.log("Didn't find role assignments at scope {0}".format(self.scope))
 
         return results
