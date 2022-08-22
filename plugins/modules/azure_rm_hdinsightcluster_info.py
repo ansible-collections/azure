@@ -183,7 +183,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.hdinsight import HDInsightManagementClient
     from msrest.serialization import Model
 except ImportError:
@@ -227,6 +227,7 @@ class AzureRMHDInsightclusterInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(HDInsightManagementClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name is not None:
@@ -244,7 +245,7 @@ class AzureRMHDInsightclusterInfo(AzureRMModuleBase):
             response = self.mgmt_client.clusters.get(resource_group_name=self.resource_group,
                                                      cluster_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for HDInsight Cluster.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -258,7 +259,7 @@ class AzureRMHDInsightclusterInfo(AzureRMModuleBase):
         try:
             response = self.mgmt_client.clusters.list_by_resource_group(resource_group_name=self.resource_group)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for HDInsight Cluster.')
 
         if response is not None:
@@ -274,7 +275,7 @@ class AzureRMHDInsightclusterInfo(AzureRMModuleBase):
         try:
             response = self.mgmt_client.clusters.list()
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for HDInsight Cluster.')
 
         if response is not None:
