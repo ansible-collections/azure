@@ -38,7 +38,7 @@ azure-nspkg==2.0.0
 azure-storage-blob==12.11.0
 msrest==0.6.21
 msrestazure==0.6.4
-azure-keyvault==4.2.0
+azure-keyvault==4.0.0
 azure-graphrbac==0.61.1
 azure-mgmt-cosmosdb==0.15.0
 azure-mgmt-hdinsight==9.0.0
