@@ -544,9 +544,9 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
             self.fail("Resource group create_or_update failed with status code: %s and message: %s" %
                       (exc.status_code, exc.message))
         try:
-            result = self.rm_client.deployments.create_or_update(self.resource_group,
-                                                                 self.name,
-                                                                 deploy_parameter)
+            result = self.rm_client.deployments.begin_create_or_update(self.resource_group,
+                                                                       self.name,
+                                                                       {'properties': deploy_parameter})
 
             deployment_result = None
             if self.wait_for_deployment_completion:
@@ -574,7 +574,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
         Destroy the targeted resource group
         """
         try:
-            result = self.rm_client.resource_groups.delete(self.resource_group)
+            result = self.rm_client.resource_groups.begin_delete(self.resource_group)
             result.wait()  # Blocking wait till the delete is finished
         except Exception as e:
             if e.status_code == 404 or e.status_code == 204:
