@@ -316,9 +316,14 @@ class AzureRMWebAppAccessRestriction(AzureRMModuleBase):
         return site_config
 
     def has_updates(self, site_config):
-        return (self.ip_security_restrictions != self.to_restriction_dict_list(site_config.ip_security_restrictions)
-                or self.scm_ip_security_restrictions != self.to_restriction_dict_list(site_config.scm_ip_security_restrictions)
-                or site_config.scm_ip_security_restrictions_use_main != self.scm_ip_security_restrictions_use_main)
+        if site_config.scm_ip_security_restrictions_use_main != self.scm_ip_security_restrictions_use_main:
+            return True
+        elif self.ip_security_restrictions and self.ip_security_restrictions != self.to_restriction_dict_list(site_config.ip_security_restrictions):
+            return True
+        elif self.scm_ip_security_restrictions and self.scm_ip_security_restrictions != self.to_restriction_dict_list(site_config.scm_ip_security_restrictions):
+            return True
+        else:
+            return False
 
     def has_access_restrictions(self, site_config):
         return site_config.ip_security_restrictions or site_config.scm_ip_security_restrictions
