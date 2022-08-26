@@ -238,8 +238,7 @@ EXAMPLES = '''
       key1: value1
     application_rule_collections:
       - priority: 110
-        action:
-          type: deny
+        action: deny
         rules:
           - name: rule1
             description: Deny inbound rule
@@ -254,8 +253,7 @@ EXAMPLES = '''
         name: apprulecoll
     nat_rule_collections:
       - priority: 112
-        action:
-          type: dnat
+        action: dnat
         rules:
           - name: DNAT-HTTPS-traffic
             description: D-NAT all outbound web traffic for inspection
@@ -272,8 +270,7 @@ EXAMPLES = '''
         name: natrulecoll
     network_rule_collections:
       - priority: 112
-        action:
-          type: deny
+        action: deny
         rules:
           - name: L4-traffic
             description: Block traffic based on source IPs and ports
