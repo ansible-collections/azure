@@ -160,7 +160,6 @@ state:
                     sample: ["postgresqlServer"]
 ``
             type: list
-            sample: ["management"]
         type:
             description:
                 - Resource type.
