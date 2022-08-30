@@ -159,7 +159,6 @@ state:
                     type: list
                     sample: ["postgresqlServer"]
 ``
-                - List of group_ids associated with private endpoint
             returned: always
             type: list
             sample: ["management"]
