@@ -158,8 +158,6 @@ state:
                     returned: always
                     type: list
                     sample: ["postgresqlServer"]
-``
-            type: list
         type:
             description:
                 - Resource type.
