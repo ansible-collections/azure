@@ -116,7 +116,6 @@ state:
             description:
                 - The resource id of the private endpoint to connect.
             returned: always
-            type: complex
             returned: always
             contains:
                 id:
