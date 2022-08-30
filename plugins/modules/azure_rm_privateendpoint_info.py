@@ -163,7 +163,7 @@ state:
                 - List of group_ids associated with private endpoint
             returned: always
             type: list
-            sample: "management"
+            sample: ["management"]
         type:
             description:
                 - Resource type.
