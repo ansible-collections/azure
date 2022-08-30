@@ -159,7 +159,6 @@ state:
                     type: list
                     sample: ["postgresqlServer"]
 ``
-            returned: always
             type: list
             sample: ["management"]
         type:
