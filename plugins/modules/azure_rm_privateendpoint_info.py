@@ -152,7 +152,13 @@ state:
                             type: str
                             returned: always
                             sample: "This is action_required string"
-        group_ids:
+                group_ids:
+                    description:
+                        - List of group_ids associated with private endpoint
+                    returned: always
+                    type: list
+                    sample: [""postgresqlServer"]
+``
             description:
                 - List of group_ids associated with private endpoint
             returned: always
