@@ -612,7 +612,7 @@ agent_pool_profile_spec = dict(
     os_type=dict(type='str', choices=['Linux', 'Windows']),
     orchestrator_version=dict(type='str', required=False),
     type=dict(type='str', choice=['VirtualMachineScaleSets', 'AvailabilitySet']),
-    mode=dict(type='str', choice=['System', 'User'], required=True),
+    mode=dict(type='str', choice=['System', 'User']),
     enable_auto_scaling=dict(type='bool'),
     max_count=dict(type='int'),
     node_labels=dict(type='dict'),
