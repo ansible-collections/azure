@@ -109,6 +109,10 @@ options:
                     - 'System'
                     - 'User'
                 type: str
+            orchestrator_version:
+                description:
+                    - Version of kubernetes running on the node pool.
+                type: str
             node_labels:
                 description:
                     - Agent pool node labels to be persisted across all nodes in agent pool.
@@ -549,6 +553,7 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         os_type=profile.os_type,
         type=profile.type,
         mode=profile.mode,
+        orchestrator_version=profile.orchestrator_version,
         enable_auto_scaling=profile.enable_auto_scaling,
         max_count=profile.max_count,
         node_labels=profile.node_labels,
@@ -605,8 +610,9 @@ agent_pool_profile_spec = dict(
     vnet_subnet_id=dict(type='str'),
     availability_zones=dict(type='list', elements='int', choices=[1, 2, 3]),
     os_type=dict(type='str', choices=['Linux', 'Windows']),
+    orchestrator_version=dict(type='str', required=False),
     type=dict(type='str', choice=['VirtualMachineScaleSets', 'AvailabilitySet']),
-    mode=dict(type='str', choice=['System', 'User'], requried=True),
+    mode=dict(type='str', choice=['System', 'User']),
     enable_auto_scaling=dict(type='bool'),
     max_count=dict(type='int'),
     node_labels=dict(type='dict'),
@@ -852,6 +858,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 os_disk_size_gb = profile_self.get('os_disk_size_gb') or profile_result['os_disk_size_gb']
                                 vnet_subnet_id = profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id'])
                                 count = profile_self['count']
+                                orchestrator_version = profile_self['orchestrator_version']
                                 vm_size = profile_self['vm_size']
                                 availability_zones = profile_self['availability_zones']
                                 enable_auto_scaling = profile_self['enable_auto_scaling']
@@ -1023,6 +1030,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                     max_count=profile["max_count"],
                     node_labels=profile["node_labels"],
                     min_count=profile["min_count"],
+                    orchestrator_version=profile["orchestrator_version"],
                     max_pods=profile["max_pods"],
                     enable_auto_scaling=profile["enable_auto_scaling"],
                     agent_pool_type=profile["type"],
