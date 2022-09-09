@@ -240,7 +240,7 @@ state:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 try:
-    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import ResourceNotFoundError, AzureError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -449,7 +449,7 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
                     def _is_disk_not_attached(vm_id, item):
                         managed_by = item['managed_by_extended']
                         return managed_by is None or vm_id not in managed_by
-                    # self.module.exit_json(test=[i for p, i in result])
+
                     disks = [(p, i) for p, i in result if _is_disk_not_attached(vm_name_id.id, i)]
                     if len(disks) > 0:
                         changed = True
@@ -501,8 +501,8 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
         try:
             poller = self.compute_client.virtual_machines.begin_create_or_update(resource_group, name, params)
             self.get_poller_result(poller)
-        except Exception as exc:
-            return exc
+        except AzureError as exc:
+            self.fail("Error updating virtual machine (attaching/detaching disks) {0}/{1} - {2}".format(resource_group, name, exc.message))
 
     def _get_vm(self, resource_group, name):
         try:
