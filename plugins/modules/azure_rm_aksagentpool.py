@@ -319,12 +319,6 @@ aks_agent_pools:
             type: str
             returned: always
             sample: null
-        dns_prefix:
-            description:
-                - DNS prefix specified when creating the managed cluster.
-            type: str
-            returned: awalys
-            sample: 'cosmos.com'
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -365,9 +359,9 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             os_disk_size_gb=dict(
                 type='int'
             ),
-            dns_prefix=dict(
-                type='str'
-            ),
+            #dns_prefix=dict(
+            #    type='str'
+            #),
             vnet_subnet_id=dict(
                 type='str'
             ),
@@ -422,7 +416,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
         self.vm_size = None
         self.mode = None
         self.os_disk_size_gb = None
-        self.dns_prefix = None
+        #self.dns_prefix = None
         self.storage_profiles = None
         self.vnet_subnet_id = None
         self.availability_zones = None
@@ -488,20 +482,22 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
         try:
             response = self.managedcluster_client.agent_pools.begin_create_or_update(self.resource_group, self.cluster_name, self.name, parameters)
             if isinstance(response, LROPoller):
-                self.get_poller_result(response)
+                response = self.get_poller_result(response)
             return self.to_dict(response)
         except Exception as exc:
             logging.info('mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm')
             logging.info(exc)
-            self.fail('Error when creating automation account {0}: {1}'.format(self.name, exc.message))
+            self.fail('Error when creating cluster node agent pool {0}: {1}'.format(self.name, exc))
 
     def delete_agentpool(self):
         try:
             return self.managedcluster_client.agent_pools.begin_delete(self.resource_group, self.cluster_name, self.name)
         except Exception as exc:
-            self.fail('Error when deleting cluster agent pool {0}: {1}'.format(self.name, exc.message))
+            self.fail('Error when deleting cluster agent pool {0}: {1}'.format(self.name, exc))
 
     def to_dict(self, agent_pool):
+        logging.info('mmmmmmmmmmmmmmmmmmmmmmmmmm')
+        logging.info(agent_pool)
         if not agent_pool:
             return None
         agent_pool_dict = dict(
@@ -532,7 +528,6 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             spot_max_price=agent_pool.spot_max_price,
             node_labels=agent_pool.node_labels,
             node_taints=agent_pool.node_taints,
-            dns_prefix=agent_pool.dns_prefix,
         )
 
         return agent_pool_dict 

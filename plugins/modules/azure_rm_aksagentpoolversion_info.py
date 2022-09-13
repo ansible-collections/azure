@@ -47,7 +47,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-azure_agentpool_versions:
+azure_orchestrator_version:
     description:
         - List of supported kubernetes versions.
     returned: always
@@ -69,7 +69,7 @@ class AzureRMAksAgentPoolVersion(AzureRMModuleBase):
 
         self.results = dict(
             changed=False,
-            azure_agentpool_versions=[]
+            azure_orchestrator_version=[]
         )
 
         self.resource_group = None
@@ -87,7 +87,7 @@ class AzureRMAksAgentPoolVersion(AzureRMModuleBase):
         for key in self.module_args:
             setattr(self, key, kwargs[key])
 
-        self.results['azure_agentpool_versions'] = self.get_all_versions()
+        self.results['azure_orchestrator_version'] = self.get_all_versions()
 
         return self.results
 
