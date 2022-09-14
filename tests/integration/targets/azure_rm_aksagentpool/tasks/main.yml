@@ -157,6 +157,7 @@
     resource_group: "{{ resource_group }}"
     cluster_name: "min{{ rpfx }}"
     name: default03
+    state: absent
 
 - name: Get cluster's node agent pool info
   azure_rm_aksagentpool_info:
