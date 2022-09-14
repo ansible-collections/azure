@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_aksagentpool.py
+module: azure_rm_aksagentpool
 version_added: '1.14.0'
 short_description: Manage node pools in Kubernetes kubernetes cluster
 description:
@@ -35,7 +35,8 @@ options:
     count:
         description:
             - Number of agents (VMs) to host docker containers.
-        type: str
+        type: int
+        required: True
     vm_size:
         description:
             - Size of agent VMs
@@ -44,11 +45,7 @@ options:
     os_disk_size_gb:
         description:
             - OS Disk Size in GB to be used to specify the disk size for every machine in this master/agent pool.
-        type: str
-    dns_prefix:
-        description:
-            - DNS prefix specified when creating the managed cluster.
-        type: str
+        type: int
     vnet_subnet_id:
         description:
             - VNet SubnetID specifies the VNet's subnet identifier.
@@ -57,7 +54,7 @@ options:
         description:
             - Availability zones for nodes. Must use VirtualMachineScaleSets AgentPoolType.
         type: list
-        elements: str
+        elements: int
         choices:
             - 1
             - 2
@@ -91,23 +88,23 @@ options:
     enable_auto_scaling:
         description:
             - Whether to enable auto-scaler.
-        type: str
+        type: bool
     max_count:
         description:
             - Maximum number of nodes for auto-scaling.
-        type: str
+        type: int
     node_labels:
         description:
             -  Agent pool node labels to be persisted across all nodes in agent pool.
-        type: str
+        type: dict
     min_count:
         description:
             - Minimum number of nodes for auto-scaling.
-        type: str
+        type: int
     max_pods:
         description:
             - Maximum number of pods that can run on a node.
-        type: str
+        type: int
     state:
         description:
             - State of the automation runbook. Use C(present) to create or update a automation runbook and use C(absent) to delete.
@@ -186,7 +183,7 @@ aks_agent_pools:
                 - Availability zones for nodes. Must use VirtualMachineScaleSets AgentPoolType.
             type: list
             returned: always
-            sample: ['1', '2']
+            sample: [1, 2]
         count:
             description:
                 - Number of agents (VMs) to host docker containers.
@@ -271,7 +268,7 @@ aks_agent_pools:
             type: str
             returned: always
             sample: Succeeded
-        scale_set_eviction_policy
+        scale_set_eviction_policy:
             description:
                 - ScaleSetEvictionPolicy to be used to specify eviction policy for Spot virtual machine scale set.
             type: str
@@ -373,28 +370,28 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
                 type='str',
             ),
             type_properties_type=dict(
-                    type='str',
-                    choice=['VirtualMachineScaleSets', 'AvailabilitySet']
+                type='str',
+                choices=['VirtualMachineScaleSets', 'AvailabilitySet']
             ),
             mode=dict(
-                    type='str',
-                    choice=['System', 'User'],
-                    required=True
+                type='str',
+                choices=['System', 'User'],
+                required=True
             ),
             enable_auto_scaling=dict(
-                    type='bool'
+                type='bool'
             ),
             max_count=dict(
-                    type='int'
+                type='int'
             ),
             node_labels=dict(
-                    type='dict'
+                type='dict'
             ),
             min_count=dict(
-                    type='int'
+                type='int'
             ),
             max_pods=dict(
-                    type='int'
+                type='int'
             ),
             state=dict(
                 type='str',
@@ -511,7 +508,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             node_image_version=agent_pool.node_image_version,
             upgrade_settings=agent_pool.upgrade_settings,
             provisioning_state=agent_pool.provisioning_state,
-            availability_zones=[ int(key) for key in agent_pool.availability_zones if agent_pool.availability_zones],
+            availability_zones=[int(key) for key in agent_pool.availability_zones if agent_pool.availability_zones],
             enable_node_public_ip=agent_pool.enable_node_public_ip,
             scale_set_priority=agent_pool.scale_set_priority,
             scale_set_eviction_policy=agent_pool.scale_set_eviction_policy,
@@ -520,7 +517,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             node_taints=agent_pool.node_taints,
         )
 
-        return agent_pool_dict 
+        return agent_pool_dict
 
 
 def main():

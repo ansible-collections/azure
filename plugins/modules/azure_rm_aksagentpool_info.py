@@ -41,16 +41,16 @@ author:
 '''
 
 EXAMPLES = '''
-- name: Get node agent pool by cluster name
-  azure_rm_aksagentpool_info:
-    resource_group: myRG
-    cluster_name: testcluster
+    - name: Get node agent pool by cluster name
+      azure_rm_aksagentpool_info:
+        resource_group: myRG
+        cluster_name: testcluster
 
-- name: Get node agent pool by name
-  azure_rm_aksagentpool_info:
-    resource_group: myRG
-    cluster_name: testcluster
-    name: default
+    - name: Get node agent pool by name
+      azure_rm_aksagentpool_info:
+        resource_group: myRG
+        cluster_name: testcluster
+        name: default
 
 '''
 
@@ -90,7 +90,7 @@ aks_agent_pools:
                 - Availability zones for nodes. Must use VirtualMachineScaleSets AgentPoolType.
             type: list
             returned: always
-            sample: ['1', '2']
+            sample: [1, 2]
         count:
             description:
                 - Number of agents (VMs) to host docker containers.
@@ -100,15 +100,15 @@ aks_agent_pools:
         enable_auto_scaling:
             description:
                 - Whether to enable auto-scaler.
-            type: str
+            type: bool
             returned: always
             sample: null
         enable_node_public_ip:
             description:
                 -  Enable public IP for nodes.
-            type: str
+            type: bool
             returned: always
-            sample: bool
+            sample: True
         max_count:
             description:
                 - Maximum number of nodes for auto-scaling.
@@ -144,7 +144,7 @@ aks_agent_pools:
                 - Agent pool node labels to be persisted across all nodes in agent pool.
             type: list
             returned: always
-            sample: ["release": "stable"]
+            sample: ["release":"stable"]
         node_taints:
             description:
                 - Taints added to new nodes during node pool create and scale.
@@ -159,7 +159,7 @@ aks_agent_pools:
             sample: 1.22.11
         os_disk_size_gb:
             description:
-                - OS Disk Size in GB to be used to specify the disk size for every machine in this master/agent pool.
+                - OS Disk Size in GB to be used to specify the disk size for every machine in this master agent pool.
             type: int
             returned: always
             sample: 128
@@ -175,7 +175,7 @@ aks_agent_pools:
             type: str
             returned: always
             sample: Succeeded
-        scale_set_eviction_policy
+        scale_set_eviction_policy:
             description:
                 - ScaleSetEvictionPolicy to be used to specify eviction policy for Spot virtual machine scale set.
             type: str
@@ -307,11 +307,11 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             enable_auto_scaling=agent_pool.enable_auto_scaling,
             type_properties_type=agent_pool.type_properties_type,
             mode=agent_pool.mode,
+            availability_zones=[int(key) for key in agent_pool.availability_zones if agent_pool.availability_zones],
             orchestrator_version=agent_pool.orchestrator_version,
             node_image_version=agent_pool.node_image_version,
             upgrade_settings=agent_pool.upgrade_settings,
             provisioning_state=agent_pool.provisioning_state,
-            availability_zones=agent_pool.availability_zones,
             enable_node_public_ip=agent_pool.enable_node_public_ip,
             scale_set_priority=agent_pool.scale_set_priority,
             scale_set_eviction_policy=agent_pool.scale_set_eviction_policy,

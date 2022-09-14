@@ -103,7 +103,7 @@ class AzureRMAksAgentPoolVersion(AzureRMModuleBase):
                 result.append(item.kubernetes_version)
             return result
         except Exception as exc:
-            self.fail('Error when getting Agentpool supported orchestrator version list for locatio',exc)
+            self.fail('Error when getting Agentpool supported orchestrator version list for locatio', exc)
 
 
 def main():

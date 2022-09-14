@@ -139,6 +139,7 @@
   azure_rm_aksagentpool_info:
     resource_group: "{{ resource_group }}"
     cluster_name: "min{{ rpfx }}"
+    name: default03
   register: output
 
 - name: Assert node agent configuration
