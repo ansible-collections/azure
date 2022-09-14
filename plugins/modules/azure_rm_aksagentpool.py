@@ -508,7 +508,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             node_image_version=agent_pool.node_image_version,
             upgrade_settings=agent_pool.upgrade_settings,
             provisioning_state=agent_pool.provisioning_state,
-            availability_zones=[int(key) for key in agent_pool.availability_zones if agent_pool.availability_zones],
+            availability_zones=[],
             enable_node_public_ip=agent_pool.enable_node_public_ip,
             scale_set_priority=agent_pool.scale_set_priority,
             scale_set_eviction_policy=agent_pool.scale_set_eviction_policy,
@@ -516,6 +516,10 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             node_labels=agent_pool.node_labels,
             node_taints=agent_pool.node_taints,
         )
+
+        if agent_pool.availability_zones is not None:
+            for key in agent_pool.availability_zones:
+                agent_pool_dict[availability_zones].append(int(key))
 
         return agent_pool_dict
 

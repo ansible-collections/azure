@@ -307,7 +307,7 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             enable_auto_scaling=agent_pool.enable_auto_scaling,
             type_properties_type=agent_pool.type_properties_type,
             mode=agent_pool.mode,
-            availability_zones=[int(key) for key in agent_pool.availability_zones if agent_pool.availability_zones],
+            availability_zones=[],
             orchestrator_version=agent_pool.orchestrator_version,
             node_image_version=agent_pool.node_image_version,
             upgrade_settings=agent_pool.upgrade_settings,
@@ -319,6 +319,10 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             node_labels=agent_pool.node_labels,
             node_taints=agent_pool.node_taints,
         )
+
+        if agent_pool.availability_zones is not None:
+            for key in agent_pool.availability_zones:
+                agent_pool_dict[availability_zones].append(int(key))
 
         return agent_pool_dict
 
