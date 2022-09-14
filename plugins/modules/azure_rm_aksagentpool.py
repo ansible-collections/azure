@@ -519,7 +519,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
 
         if agent_pool.availability_zones is not None:
             for key in agent_pool.availability_zones:
-                agent_pool_dict[availability_zones].append(int(key))
+                agent_pool_dict['availability_zones'].append(int(key))
 
         return agent_pool_dict
 
