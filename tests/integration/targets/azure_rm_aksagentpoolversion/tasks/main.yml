@@ -35,10 +35,10 @@
 - name: Get cluster's node agent pool info
   azure_rm_aksagentpool_info:
     resource_group: "{{ resource_group }}"
-    cluster_name: "min{{ rpfx }}" 
+    cluster_name: "min{{ rpfx }}"
   register: output
 
-- name: Assert node agent pool
+- name: Assert the cluster with one agent pool
   assert:
     that:
       - "output.aks_agent_pools | length == 1"
@@ -60,6 +60,9 @@
     mode: System
     node_labels: {"release":"stable"}
     max_pods: 42
+    enable_auto_scaling: True
+    min_count: 1
+    max_count: 10
     orchestrator_version: "{{ agentpool_version.azure_orchestrator_version[0] }}"
     availability_zones:
       - 1
@@ -71,10 +74,35 @@
     that:
       - output.changed
 
+- name: Add agent pool (Idempotent test)
+  azure_rm_aksagentpool:
+    resource_group: "{{ resource_group }}"
+    cluster_name: "min{{ rpfx }}"
+    name: default03
+    count: 2
+    vm_size: Standard_B2s
+    type_properties_type: VirtualMachineScaleSets
+    mode: System
+    node_labels: {"release":"stable"}
+    max_pods: 42
+    enable_auto_scaling: True
+    min_count: 1
+    max_count: 10
+    orchestrator_version: "{{ agentpool_version.azure_orchestrator_version[0] }}"
+    availability_zones:
+      - 1
+      - 2
+  register: output
+
+- name: Assert the node agent pool not changed
+  assert:
+    that:
+      - not output.changed
+
 - name: Get cluster's node agent pool info
   azure_rm_aksagentpool_info:
     resource_group: "{{ resource_group }}"
-    cluster_name: "min{{ rpfx }}" 
+    cluster_name: "min{{ rpfx }}"
   register: output
 
 - name: Assert node agent pool
@@ -87,20 +115,56 @@
     resource_group: "{{ resource_group }}"
     cluster_name: "min{{ rpfx }}"
     name: default03
-    count: 5
+    count: 6
     vm_size: Standard_B2s
     type_properties_type: VirtualMachineScaleSets
     mode: System
     node_labels: {"release":"stable"}
     max_pods: 42
+    enable_auto_scaling: True
+    min_count: 1
+    max_count: 10
     orchestrator_version: "{{ agentpool_version.azure_orchestrator_version[1] }}"
     availability_zones:
       - 1
       - 2
   register: output
 
-- name: Assert the node agent pool update
+- name: Assert the node agent pool udpated
   assert:
     that:
       - output.changed
 
+- name: Get cluster's node agent pool info
+  azure_rm_aksagentpool_info:
+    resource_group: "{{ resource_group }}"
+    cluster_name: "min{{ rpfx }}"
+  register: output
+
+- name: Assert node agent configuration
+  assert:
+    that:
+      - output.aks_agent_pools[0].availability_zones == [1, 2]
+      - output.aks_agent_pools[0].count == 6
+      - output.aks_agent_pools[0].min_count == 1
+      - output.aks_agent_pools[0].max_count == 10
+      - output.aks_agent_pools[0].type_properties_type == "VirtualMachineScaleSets"
+      - output.aks_agent_pools[0].max_pods == 42
+      - output.aks_agent_pools[0].orchestrator_version == agentpool_version.azure_orchestrator_version[1]
+
+- name: Delete node agent pool
+  azure_rm_aksagentpool:
+    resource_group: "{{ resource_group }}"
+    cluster_name: "min{{ rpfx }}"
+    name: default03
+
+- name: Get cluster's node agent pool info
+  azure_rm_aksagentpool_info:
+    resource_group: "{{ resource_group }}"
+    cluster_name: "min{{ rpfx }}"
+  register: output
+
+- name: Assert node agent pool
+  assert:
+    that:
+      - "output.aks_agent_pools | length == 1"

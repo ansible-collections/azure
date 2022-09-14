@@ -229,8 +229,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    import logging
-    logging.basicConfig(filename='mm.log', level=logging.INFO)
 except ImportError:
     pass
 
@@ -290,8 +288,6 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
         return result
 
     def to_dict(self, agent_pool):
-        logging.info('mmmmmmmmmmmmmmmmmmmmmmmmmmmm')
-        logging.info(agent_pool)
         if not agent_pool:
             return None
         agent_pool_dict = dict(
@@ -322,7 +318,6 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             spot_max_price=agent_pool.spot_max_price,
             node_labels=agent_pool.node_labels,
             node_taints=agent_pool.node_taints,
-            #dns_prefix=agent_pool.dns_prefix
         )
 
         return agent_pool_dict

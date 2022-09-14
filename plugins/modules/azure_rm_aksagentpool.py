@@ -326,8 +326,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    import logging
-    logging.basicConfig(filename='ll.log', level=logging.INFO)
 except ImportError:
     pass
 
@@ -359,9 +357,6 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             os_disk_size_gb=dict(
                 type='int'
             ),
-            #dns_prefix=dict(
-            #    type='str'
-            #),
             vnet_subnet_id=dict(
                 type='str'
             ),
@@ -416,7 +411,6 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
         self.vm_size = None
         self.mode = None
         self.os_disk_size_gb = None
-        #self.dns_prefix = None
         self.storage_profiles = None
         self.vnet_subnet_id = None
         self.availability_zones = None
@@ -468,7 +462,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
                 changed = True
 
         self.results['changed'] = changed
-        self.results['state'] = response
+        self.results['aks_agent_pools'] = response
         return self.results
 
     def get(self):
@@ -485,8 +479,6 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
                 response = self.get_poller_result(response)
             return self.to_dict(response)
         except Exception as exc:
-            logging.info('mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm')
-            logging.info(exc)
             self.fail('Error when creating cluster node agent pool {0}: {1}'.format(self.name, exc))
 
     def delete_agentpool(self):
@@ -496,8 +488,6 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             self.fail('Error when deleting cluster agent pool {0}: {1}'.format(self.name, exc))
 
     def to_dict(self, agent_pool):
-        logging.info('mmmmmmmmmmmmmmmmmmmmmmmmmm')
-        logging.info(agent_pool)
         if not agent_pool:
             return None
         agent_pool_dict = dict(
@@ -521,7 +511,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             node_image_version=agent_pool.node_image_version,
             upgrade_settings=agent_pool.upgrade_settings,
             provisioning_state=agent_pool.provisioning_state,
-            availability_zones=agent_pool.availability_zones,
+            availability_zones=[ int(key) for key in agent_pool.availability_zones if agent_pool.availability_zones],
             enable_node_public_ip=agent_pool.enable_node_public_ip,
             scale_set_priority=agent_pool.scale_set_priority,
             scale_set_eviction_policy=agent_pool.scale_set_eviction_policy,
