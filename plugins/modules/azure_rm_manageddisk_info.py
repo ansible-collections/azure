@@ -43,13 +43,6 @@ options:
         description:
             - Limit results to disks managed by the given VM fqid.
         type: str
-    managed_disks:
-        description:
-            - limit the results to a specific list of disks.
-            - managed disks should be specified with name and resource_group.
-        type: list
-        elements: dict
-
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -76,16 +69,6 @@ EXAMPLES = r'''
   azure_rm_manageddisk_info:
     tags:
     - testing
-
-- name: List disks specified with name and resource group
-  azure_rm_manageddisk_info:
-    managed_disks:
-    - name: disk1
-      resource_group: resource_group1
-    - name: disk2
-      resource_group: resource_group2
-    - name: disk3
-      resource_group: resource_group3
 '''
 
 RETURN = r'''
@@ -173,8 +156,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             resource_group=dict(type='str'),
             name=dict(type='str'),
             tags=dict(type='list', elements='str'),
-            managed_by=dict(type='str'),
-            managed_disks=dict(type='list', elements='dict'),
+            managed_by=dict(type='str')
         )
 
         self.results = dict(
@@ -187,7 +169,6 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
         self.name = None
         self.tags = None
         self.managed_by = None
-        self.managed_disks = None
 
         super(AzureRMManagedDiskInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                      supports_check_mode=True,
@@ -205,13 +186,6 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             self.results['ansible_info']['azure_managed_disk'] = self.get_disk()
         elif self.resource_group:
             self.results['ansible_info']['azure_managed_disk'] = self.list_disks_by_resource_group()
-        elif self.managed_disks:
-            results = []
-            for disk in self.managed_disks:
-                self.name = disk.get("name")
-                self.resource_group = disk.get("resource_group")
-                results += self.get_disk()
-            self.results['ansible_info']['azure_managed_disk'] = results
         else:
             self.results['ansible_info']['azure_managed_disk'] = self.list_disks()
 

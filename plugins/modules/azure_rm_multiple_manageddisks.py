@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_managedmultipledisk
+module: azure_rm_multiple_manageddisks
 
 version_added: "1.14.0"
 
@@ -18,12 +18,17 @@ short_description: Manage Multiple Azure Manage Disks
 
 description:
     - Create, update and delete one or more Azure Managed Disk.
+    - This module can be used also to attach/detach disks to/from one or more virtual machines.
 
 options:
     state:
         description:
-            - Assert the state of the managed disks. Use C(present) to create or update managed disks and C(absent) to delete a managed disks.
+            - Assert the state of the managed disks.
+            - Use C(present) to create or update managed disks and/or attach/detach managed disks to a list of
+              VMs depending on the value specified in I(managed_by_extended).
+            - Use C(absent) to detach/delete managed disks depending on the value specified in I(managed_by_extended).
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -37,13 +42,16 @@ options:
                 description:
                     - Name of a resource group where the managed disk exists or will be created.
                 required: true
+                type: str
             name:
                 description:
                     - Name of the managed disk.
                 required: true
+                type: str
             location:
                 description:
                     - Valid Azure location. Defaults to location of the resource group.
+                type: str
             storage_account_type:
                 description:
                     - Type of storage for the managed disk.
@@ -62,9 +70,11 @@ options:
                     - Premium_LRS
                     - Premium_ZRS
                     - UltraSSD_LRS
+                type: str
             create_option:
                 description:
                     - C(import) from a VHD file in I(source_uri) and C(copy) from previous managed disk I(source_uri).
+                type: str
                 choices:
                     - empty
                     - import
@@ -77,8 +87,10 @@ options:
             source_uri:
                 description:
                     - URI to a valid VHD file to be used or the resource ID of the managed disk to copy.
+                    - Required when I(create_option=import) or I(create_option=copy).
                 aliases:
                     - source_resource_uri
+                type: str
             os_type:
                 description:
                     - Type of Operating System.
@@ -89,10 +101,13 @@ options:
                 choices:
                     - linux
                     - windows
+                type: str
             disk_size_gb:
                 description:
                     - Size in GB of the managed disk to be created.
+                    - Required when I(create_option=empty).
                     - If I(create_option=copy) then the value must be greater than or equal to the source's size.
+                type: int
             max_shares:
                 description:
                     - The maximum number of VMs that can attach to the disk at the same time.
@@ -101,11 +116,13 @@ options:
             attach_caching:
                 description:
                     - Disk caching policy controlled by VM. Will be used when attached to the VM defined by C(managed_by).
-                    - If this option is different from the current caching policy, the managed disk will be deattached and attached with current caching option again.
+                    - If this option is different from the current caching policy, the managed disk will be deattached
+                      and attached with current caching option again.
                 choices:
                     - ''
                     - read_only
                     - read_write
+                type: str
             zone:
                 description:
                     - The Azure managed disk's zone.
@@ -115,6 +132,7 @@ options:
                     - 2
                     - 3
                     - ''
+                type: str
             lun:
                 description:
                     - The logical unit number for data disk.
@@ -122,7 +140,11 @@ options:
                 type: int
     managed_by_extended:
         description:
-            - List of name and resource group of the VMs that have the disk attached.
+            - List of name and resource group of the VMs to managed disks.
+            - When I(state=present), the disks will be attached to the list of VMs specified.
+            - When I(state=present), use I([]) to detach disks from all the VMs.
+            - When I(state=absent) and this parameter is defined, the disks will be detached from the list of VMs.
+            - When I(state=absent) and this parameter is not defined, the disks will be deleted.
         type: list
         elements: dict
         suboptions:
@@ -143,8 +165,8 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create managed operating system disks from page blob
-      azure_rm_manageddisk:
+    - name: Create managed operating system disks from page blob and attach them to a list of VMs
+      azure_rm_multiple_manageddisks:
         managed_disks:
             - name: mymanageddisk1
               location: eastus2
@@ -165,6 +187,55 @@ EXAMPLES = '''
         managed_by_extended:
             - resource_group: myResourceGroupTest
               name: TestVM
+
+    - name: Detach disks from the VMs specified in the list
+      azure_rm_multiple_manageddisks:
+        state: absent
+        managed_disks:
+            - name: mymanageddisk1
+              location: eastus2
+              resource_group: myResourceGroup
+              create_option: import
+              source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
+              storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
+              os_type: windows
+              storage_account_type: Premium_LRS
+            - name: mymanageddisk2
+              location: eastus2
+              resource_group: myResourceGroup
+              create_option: import
+              source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
+              storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
+              os_type: windows
+              storage_account_type: Premium_LRS
+        managed_by_extended:
+            - resource_group: myResourceGroupTest
+              name: TestVM1
+            - resource_group: myResourceGroupTest
+              name: TestVM2
+
+    - name: Detach managed disks from all VMs without deletion
+      azure_rm_multiple_manageddisks:
+        state: present
+        managed_disks:
+            - name: mymanageddisk1
+              location: eastus2
+              resource_group: myResourceGroup
+            - name: mymanageddisk2
+              location: eastus2
+              resource_group: myResourceGroup
+        managed_by_extended: []
+
+    - name: Detach managed disks from all VMs and delete them
+      azure_rm_multiple_manageddisks:
+        state: absent
+        managed_disks:
+            - name: mymanageddisk1
+              location: eastus2
+              resource_group: myResourceGroup
+            - name: mymanageddisk2
+              location: eastus2
+              resource_group: myResourceGroup
 '''
 
 RETURN = '''
@@ -239,8 +310,10 @@ state:
 
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible.module_utils.six import iteritems
 try:
     from azure.core.exceptions import ResourceNotFoundError, AzureError
+    from msrestazure.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -270,7 +343,7 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
     """Configuration class for an Azure RM Managed Disk resource"""
 
     def __init__(self):
-        
+
         managed_by_extended_spec = dict(
             resource_group=dict(type='str'),
             name=dict(type='str')
@@ -335,35 +408,40 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
                 type='list',
                 elements='dict',
                 options=managed_disks_spec,
-                aliases=['managed_by']
             ),
             managed_by_extended=dict(
                 type='list',
                 elements='dict',
                 options=managed_by_extended_spec,
-                aliases=['managed_by']
             ),
         )
-        # TODO: add this check for suboptions
-        # required_if = [
-        #     ('create_option', 'import', ['source_uri', 'storage_account_id']),
-        #     ('create_option', 'copy', ['source_uri']),
-        #     ('create_option', 'empty', ['disk_size_gb'])
-        # ]
         self.results = dict(
             changed=False,
             state=list())
 
         super(AzureRMManagedMultipleDisk, self).__init__(
             derived_arg_spec=self.module_arg_spec,
-            # required_if=required_if,
-            supports_check_mode=True,
-            # mutually_exclusive=mutually_exclusive,
             supports_tags=True)
 
-    def generate_disk_parameters(self, location, tags, zone=None, 
-                                storage_account_type=None, disk_size_gb=None, create_option=None,
-                                source_uri=None, storage_account_id=None, os_type=None, max_shares=None, **kwargs):
+    def validate_disks_parameter(self):
+        errors = []
+        create_option_reqs = [
+            ('import', ['source_uri', 'storage_account_id']),
+            ('copy', ['source_uri']),
+            ('empty', ['disk_size_gb'])
+        ]
+        for disk in self.managed_disks:
+            create_option = disk.get("create_option")
+            for req in create_option_reqs:
+                if create_option == req[0] and any((disk.get(opt) is None for opt in req[1])):
+                    errors.append("managed disk {0}/{1} has create_option set to {2} but not all required parameters ({3}) are set.".format(
+                                  disk.get("resource_group"), disk.get("name"), req[0], ",".join(req[1])))
+        if errors:
+            self.fail(msg="Some required options are missing from managed disks configuration.", errors=errors)
+
+    def generate_disk_parameters(self, location, tags, zone=None,
+                                 storage_account_type=None, disk_size_gb=None, create_option=None,
+                                 source_uri=None, storage_account_id=None, os_type=None, max_shares=None, **kwargs):
         disk_params = {}
         creation_data = {}
         disk_params['location'] = location
@@ -391,9 +469,7 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
         disk_params['creation_data'] = creation_data
         return disk_params
 
-
     def get_disk_instance(self, managed_disk):
-
         resource_group = self.get_resource_group(managed_disk.get("resource_group"))
         managed_disk["location"] = managed_disk.get("location") or resource_group.location
         disk_instance = self.get_managed_disk(resource_group=managed_disk.get("resource_group"), name=managed_disk.get("name"))
@@ -401,7 +477,6 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
             for key in ("create_option", 'source_uri', 'disk_size_gb', 'os_type', 'zone'):
                 if managed_disk.get(key) is None:
                     managed_disk[key] = disk_instance.get(key)
-        
         parameter = self.generate_disk_parameters(tags=self.tags, **managed_disk)
 
         return parameter, disk_instance
@@ -410,60 +485,116 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
         """Main module execution method"""
         self.tags = kwargs.get("tags")
 
-        result = list()
-        changed = False
         state = kwargs.get("state")
+        self.managed_disks = kwargs.get("managed_disks")
+        self.managed_by_extended = kwargs.get("managed_by_extended")
 
-        for disk in kwargs.get("managed_disks"):
-            parameter, disk_instance = self.get_disk_instance(disk)
+        self.validate_disks_parameter()
 
-            # Create disk
-            if state == 'present':
-                if disk_instance is None or self.is_different(zone=disk.get("zone"), max_shares=disk.get("max_shares"), found_disk=disk_instance, new_disk=parameter):
-                    changed = True
-                    if not self.check_mode:
-                        tmp = self.create_or_update_managed_disk(resource_group=disk.get("resource_group"), name=disk.get("name"), disk_params=parameter)
-                        result.append((disk, tmp))
-                    else:
-                        result = True
-                elif not self.check_mode:
-                    result.append((disk, disk_instance))
-                else:
-                    result = True
+        managed_vm_id = []
+        if self.managed_by_extended:
+            managed_vm_id = [self._get_vm(vm['resource_group'], vm['name']) for vm in self.managed_by_extended]
 
-            elif state == 'absent' and disk_instance:
-                changed = True
-                if not self.check_mode:
-                    self.delete_managed_disk(resource_group=disk.get("resource_group"), name=disk.get("name"), disk_instance=disk_instance)
-                result = True
-
-        # Mount the disk to multiple VM
         if state == "present":
-            if not self.check_mode:
-                for vm_item in kwargs.get("managed_by_extended"):
-                    try:
-                        vm_name_id = self.compute_client.virtual_machines.get(vm_item['resource_group'], vm_item['name'])
-                    except Exception as exc:
-                        self.fail("Fail to get virtual machine {0}/{1}: {2}".format(vm_item['resource_group'], vm_item['name'], str(exc)))
+            return self.create_or_attach_disks(managed_vm_id)
+        elif state == "absent":
+            return self.detach_or_delete_disks(managed_vm_id)
 
-                    def _is_disk_not_attached(vm_id, item):
-                        managed_by = item['managed_by_extended']
-                        return managed_by is None or vm_id not in managed_by
+    def compute_disks_result(self, disk_instances):
+        result = []
+        for params, disk in disk_instances:
+            disk_id = parse_resource_id(disk.get("id"))
+            result.append(self.get_managed_disk(resource_group=disk_id.get("resource_group"), name=disk_id.get("resource_name")))
+        return result
 
-                    disks = [(p, i) for p, i in result if _is_disk_not_attached(vm_name_id.id, i)]
-                    if len(disks) > 0:
-                        changed = True
-                        self.attach(vm_item['resource_group'], vm_item['name'], disks)
+    def create_or_attach_disks(self, managed_vm_id):
+        changed, disk_instances = False, []
+        for disk in self.managed_disks:
+            parameter, disk_instance = self.get_disk_instance(disk)
+            # create or update disk
+            if disk_instance is None or \
+               self.is_different(zone=disk.get("zone"), max_shares=disk.get("max_shares"), found_disk=disk_instance, new_disk=parameter):
+                changed = True
+                disk_instance = self.create_or_update_managed_disk(resource_group=disk.get("resource_group"), name=disk.get("name"), disk_params=parameter)
+            disk_instances.append((disk, disk_instance))
 
-                result = [self.get_managed_disk(resource_group=params.get("resource_group"), name=params.get("name")) for params, disk_instance in result]
+        if self.managed_by_extended is not None and len(self.managed_by_extended) > 0:
+            # Attach the disk to multiple VM
+            for vm in managed_vm_id:
+                disks = [(d, i) for d, i in disk_instances if not self._is_disk_attached_to_vm(vm.id, i)]
+                if len(disks) > 0:
+                    changed = True
+                    self.attach(vm, disks)
 
-        return dict(changed=changed, state=result)
+        elif self.managed_by_extended == []:
+            # Detach disks from all VMs attaching them
+            changed = self.detach_disks_from_all_vms(disk_instances) or changed
 
-    def attach(self, resource_group, vm_name, disks):
-        vm = self._get_vm(resource_group, vm_name)
+        return dict(changed=changed, state=self.compute_disks_result(disk_instances))
+
+    def detach_or_delete_disks(self, managed_vm_id):
+        changed, disk_instances = False, []
+        for disk in self.managed_disks:
+            params, disk_instance = self.get_disk_instance(disk)
+            if disk_instance is not None:
+                disk_instances.append((disk, disk_instance))
+
+        if self.managed_by_extended is not None and len(self.managed_by_extended) > 0:
+            # Detach the disk from list of VMs
+            disks_names = [d.get("name").lower() for p, d in disk_instances]
+            for vm in managed_vm_id:
+                disks = [d for p, d in disk_instances if self._is_disk_attached_to_vm(vm.id, d)]
+                if len(disks) > 0:
+                    changed = True
+                    self.detach_disks_from_vm(vm, disks_names)
+
+        elif self.managed_by_extended is None:
+            # Detach disks from all VMs attaching them
+            changed = self.detach_disks_from_all_vms(disk_instances)
+
+            # Delete existing disks
+            while disk_instances:
+                params, disk = disk_instances.pop(0)
+                changed = True
+                self.delete_managed_disk(disk.get("id"))
+
+        return dict(changed=changed, state=self.compute_disks_result(disk_instances))
+
+    def detach_disks_from_all_vms(self, disk_instances):
+        changed = False
+        # Detach disk to all VMs attaching it
+        unique_vm_id = []
+        for param, disk_instance in disk_instances:
+            managed_by_vm = disk_instance.get("managed_by")
+            managed_by_extended_vms = disk_instance.get("managed_by_extended") or []
+            if managed_by_vm is not None and managed_by_vm not in unique_vm_id:
+                unique_vm_id.append(managed_by_vm)
+            for vm_id in managed_by_extended_vms:
+                if vm_id not in unique_vm_id:
+                    unique_vm_id.append(vm_id)
+        if unique_vm_id:
+            disks_names = [instance.get("name").lower() for d, instance in disk_instances]
+            changed = True
+            for vm_id in unique_vm_id:
+                vm_name_id = parse_resource_id(vm_id)
+                vm_instance = self._get_vm(vm_name_id['resource_group'], vm_name_id['resource_name'])
+                self.detach_disks_from_vm(vm_instance, disks_names)
+        return changed
+
+    def _is_disk_attached_to_vm(self, vm_id, item):
+        managed_by = item['managed_by']
+        managed_by_extended = item['managed_by_extended']
+        if managed_by is not None and vm_id == managed_by:
+            return True
+        if managed_by_extended is not None and vm_id in managed_by_extended:
+            return True
+        return False
+
+    def attach(self, vm, disks):
+        vm_id = parse_resource_id(vm.id)
 
         # attach all disks to the virtual machine
-        for managed_disk, result in disks:
+        for managed_disk, disk_instance in disks:
             lun = managed_disk.get("lun")
             if lun is None:
                 luns = ([d.lun for d in vm.storage_profile.data_disks] if vm.storage_profile.data_disks else [])
@@ -477,25 +608,28 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
                         lun = item.lun
 
             # prepare the data disk
-            params = self.compute_models.ManagedDiskParameters(id=result.get('id'), storage_account_type=result.get('storage_account_type'))
+            params = self.compute_models.ManagedDiskParameters(id=disk_instance.get('id'), storage_account_type=disk_instance.get('storage_account_type'))
             attach_caching = managed_disk.get("attach_caching")
             caching_options = self.compute_models.CachingTypes[attach_caching] if attach_caching and attach_caching != '' else None
 
             # pylint: disable=missing-kwoa
             data_disk = self.compute_models.DataDisk(lun=lun,
-                                                    create_option=self.compute_models.DiskCreateOptionTypes.attach,
-                                                    managed_disk=params,
-                                                    caching=caching_options)
+                                                     create_option=self.compute_models.DiskCreateOptionTypes.attach,
+                                                     managed_disk=params,
+                                                     caching=caching_options)
             vm.storage_profile.data_disks.append(data_disk)
-        return self._update_vm(resource_group, vm_name, vm)
+        self._update_vm(vm_id["resource_group"], vm_id["resource_name"], vm)
+        return True
 
-    def detach(self, resource_group, vm_name, disk_name):
-        vm = self._get_vm(resource_group, vm_name)
-        leftovers = [d for d in vm.storage_profile.data_disks if d.name.lower() != disk_name.lower()]
-        if len(vm.storage_profile.data_disks) == len(leftovers):
-            self.fail("No disk with the name '{0}' was found".format(disk_name))
-        vm.storage_profile.data_disks = leftovers
-        self._update_vm(resource_group, vm_name, vm)
+    def detach_disks_from_vm(self, vm_instance, disks_names):
+        vm_data = parse_resource_id(vm_instance.id)
+        leftovers = [d for d in vm_instance.storage_profile.data_disks if d.name.lower() not in disks_names]
+        if len(vm_instance.storage_profile.data_disks) == len(leftovers):
+            self.fail("None of the following disks '{0}' are attached to the VM '{1}/{2}'.".format(
+                disks_names, vm_data["resource_group"], vm_data["resource_name"]
+            ))
+        vm_instance.storage_profile.data_disks = leftovers
+        self._update_vm(vm_data["resource_group"], vm_data["resource_name"], vm_instance)
 
     def _update_vm(self, resource_group, name, params):
         try:
@@ -508,7 +642,7 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
         try:
             return self.compute_client.virtual_machines.get(resource_group, name, expand='instanceview')
         except Exception as exc:
-            self.fail("Error getting virtual machine {0} - {1}".format(name, str(exc)))
+            self.fail("Error getting virtual machine {0}/{1} - {2}".format(resource_group, name, str(exc)))
 
     def create_or_update_managed_disk(self, resource_group, name, disk_params):
         try:
@@ -543,23 +677,10 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
                 resp = True
         return resp
 
-    def delete_managed_disk(self, resource_group, name, disk_instance):
+    def delete_managed_disk(self, disk_id):
         try:
-            def _parse_vm_id(d):
-                arr = d.split("/")
-                rg, name = None, None
-                for i, v in enumerate(arr):
-                    if v == "resourceGroups":
-                        rg = arr[i+1]
-                    elif v == "virtualMachines":
-                        name = arr[i+1]
-                    print(i)
-                return rg, name
-
-            if disk_instance.get("managed_by") is not None:
-                vm_resource_group, vm_name = _parse_vm_id(disk_instance.get("managed_by"))
-                self.detach(vm_resource_group, vm_name, name)
-                
+            disk = parse_resource_id(disk_id)
+            resource_group, name = disk.get("resource_group"), disk.get("resource_name")
             poller = self.compute_client.disks.begin_delete(resource_group, name)
             return self.get_poller_result(poller)
         except Exception as e:
