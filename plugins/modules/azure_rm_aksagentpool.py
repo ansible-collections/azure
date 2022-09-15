@@ -36,12 +36,10 @@ options:
         description:
             - Number of agents (VMs) to host docker containers.
         type: int
-        required: True
     vm_size:
         description:
             - Size of agent VMs
         type: str
-        required: True
     os_disk_size_gb:
         description:
             - OS Disk Size in GB to be used to specify the disk size for every machine in this master/agent pool.
@@ -81,7 +79,6 @@ options:
         description:
             - AgentPoolMode represents mode of an agent pool.
         type: str
-        required: True
         choices:
             - System
             - User
@@ -345,11 +342,9 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             ),
             count=dict(
                 type='int',
-                required=True
             ),
             vm_size=dict(
                 type='str',
-                required=True
             ),
             os_disk_size_gb=dict(
                 type='int'
@@ -376,7 +371,6 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             mode=dict(
                 type='str',
                 choices=['System', 'User'],
-                required=True
             ),
             enable_auto_scaling=dict(
                 type='bool'
