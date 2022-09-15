@@ -54,7 +54,7 @@
     resource_group: "{{ resource_group }}"
     cluster_name: "min{{ rpfx }}"
     name: default03
-    count: 2
+    count: 1
     vm_size: Standard_B2s
     type_properties_type: VirtualMachineScaleSets
     mode: System
@@ -79,7 +79,7 @@
     resource_group: "{{ resource_group }}"
     cluster_name: "min{{ rpfx }}"
     name: default03
-    count: 2
+    count: 1
     vm_size: Standard_B2s
     type_properties_type: VirtualMachineScaleSets
     mode: System
@@ -115,7 +115,7 @@
     resource_group: "{{ resource_group }}"
     cluster_name: "min{{ rpfx }}"
     name: default03
-    count: 6
+    count: 1
     vm_size: Standard_B2s
     type_properties_type: VirtualMachineScaleSets
     mode: System
@@ -146,7 +146,7 @@
   assert:
     that:
       - output.aks_agent_pools[0].availability_zones == [1, 2]
-      - output.aks_agent_pools[0].count == 6
+      - output.aks_agent_pools[0].count == 1
       - output.aks_agent_pools[0].min_count == 1
       - output.aks_agent_pools[0].max_count == 10
       - output.aks_agent_pools[0].type_properties_type == "VirtualMachineScaleSets"
