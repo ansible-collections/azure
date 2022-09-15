@@ -474,7 +474,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
 
     def delete_agentpool(self):
         try:
-            return self.managedcluster_client.agent_pools.begin_delete(self.resource_group, self.cluster_name, self.name)
+            response = self.managedcluster_client.agent_pools.begin_delete(self.resource_group, self.cluster_name, self.name)
         except Exception as exc:
             self.fail('Error when deleting cluster agent pool {0}: {1}'.format(self.name, exc))
 
