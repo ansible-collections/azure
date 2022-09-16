@@ -165,13 +165,7 @@
     name: default03
     state: absent
 
-- name: Get cluster's node agent pool info
-  azure_rm_aksagentpool_info:
-    resource_group: "{{ resource_group }}"
-    cluster_name: "min{{ rpfx }}"
-  register: output
-
-- name: Assert node agent pool
+- name: Assert the node agent pool has deleted
   assert:
     that:
-      - "output.aks_agent_pools | length == 1"
+      - output.changed
