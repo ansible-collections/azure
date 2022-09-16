@@ -164,6 +164,7 @@
     cluster_name: "min{{ rpfx }}"
     name: default03
     state: absent
+  register: output
 
 - name: Assert the node agent pool has deleted
   assert:
