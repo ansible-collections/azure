@@ -270,7 +270,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
     def _get_hosts(self):
         if os.environ.get('ANSIBLE_AZURE_VM_RESOURCE_GROUPS'):
-            for vm_rg in  os.environ['ANSIBLE_AZURE_VM_RESOURCE_GROUPS'].split(","):
+            for vm_rg in os.environ['ANSIBLE_AZURE_VM_RESOURCE_GROUPS'].split(","):
                 self._enqueue_vm_list(vm_rg)
         else:
             for vm_rg in self.get_option('include_vm_resource_groups'):
