@@ -193,7 +193,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.mgmt.keyvault import KeyVaultManagementClient
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -226,7 +226,7 @@ def keyvault_to_dict(vault):
         ) for policy in vault.properties.access_policies] if vault.properties.access_policies else None,
         sku=dict(
             family=vault.properties.sku.family,
-            name=vault.properties.sku.name.name
+            name=vault.properties.sku.name
         )
     )
 
@@ -261,6 +261,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
 
         self._client = self.get_mgmt_svc_client(KeyVaultManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
+                                                is_track2=True,
                                                 api_version="2019-09-01")
 
         if self.name:
@@ -291,7 +292,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
 
             if response and self.has_tags(response.tags, self.tags):
                 results.append(keyvault_to_dict(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log("Did not find the key vault {0}: {1}".format(self.name, str(e)))
         return results
 
@@ -312,7 +313,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
                         results.append(keyvault_to_dict(item))
-        except CloudError as e:
+        except Exception as e:
             self.log("Did not find key vaults in resource group {0} : {1}.".format(self.resource_group, str(e)))
         return results
 
@@ -334,7 +335,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
                     if self.has_tags(item.tags, self.tags):
                         source_id = item.id.split('/')
                         results.append(keyvault_to_dict(self._client.vaults.get(source_id[4], source_id[8])))
-        except CloudError as e:
+        except Exception as e:
             self.log("Did not find key vault in current subscription {0}.".format(str(e)))
         return results
 
