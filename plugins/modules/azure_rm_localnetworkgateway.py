@@ -17,12 +17,15 @@ author:
 options:
   resource_group:
     description: Name of a resource group where local network gateway exists or will be created.
+    type: str
     required: true
   name:
     description: Name of Local Network Gateway.
+    type: str
     required: true
   state:
     description: State of the Local Network Gateway. Use C(present) to create or update local network gateway and C(absent) to delete it.
+    type: str
     default: present
     choices: ["absent", "present"]
   location:
@@ -70,7 +73,7 @@ id:
         - Local Network Gateway resource ID.
     returned: always
     type: str
-    sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/LocalNetworkGateways/myLocalNetworkGateway"
+    sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myRG/providers/Microsoft.Network/LocalNetworkGateways/myLocalNWGateway"
 '''
 try:
     from azure.core.exceptions import ResourceNotFoundError
@@ -99,10 +102,11 @@ def lngw_to_dict(lngw):
     )
     return results
 
+
 class AzureRMLocalNetworkGateway(AzureRMModuleBase):
 
     def __init__(self):
-        
+
         self.module_arg_spec = dict(
             resource_group=dict(type='str', required=True),
             name=dict(type='str', required=True),
@@ -111,9 +115,9 @@ class AzureRMLocalNetworkGateway(AzureRMModuleBase):
             local_network_address_space=dict(type='list', elements='str'),
             gateway_ip_address=dict(type='str'),
             bgp_settings=dict(
-                type='dict', 
+                type='dict',
                 options=dict(
-                    asn=dict(type='str'), 
+                    asn=dict(type='str'),
                     bgp_peering_address=dict(type='str'),
                     peer_weight=dict(type='int'),
                 )
@@ -130,8 +134,10 @@ class AzureRMLocalNetworkGateway(AzureRMModuleBase):
             state=dict()
         )
 
-        super(AzureRMLocalNetworkGateway, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                           supports_check_mode=True)
+        super(AzureRMLocalNetworkGateway, self).__init__(
+            derived_arg_spec=self.module_arg_spec,
+            supports_check_mode=True
+        )
 
     def exec_module(self, **kwargs):
 
@@ -158,7 +164,7 @@ class AzureRMLocalNetworkGateway(AzureRMModuleBase):
             if self.state == 'present':
                 self.log("CHANGED: Local Network Gateway {0} does not exist but requested state is 'present'".format(self.name))
                 changed = True
-            
+
         if lngw:
             results = lngw_to_dict(lngw)
             if self.state == 'present':
@@ -171,25 +177,22 @@ class AzureRMLocalNetworkGateway(AzureRMModuleBase):
                     changed = True
                 if self.gateway_ip_address != results['gateway_ip_address']:
                     changed = True
-                lngw_addr = self.network_models.AddressSpace(
-                    address_prefixes=self.local_network_address_space,
-                )
-            
+
         self.results['changed'] = changed
         self.results['id'] = results.get('id')
 
         if self.check_mode:
             return self.results
-        
+
         if changed:
             if self.state == "present":
                 lngw_addr = self.network_models.AddressSpace(
                     address_prefixes=self.local_network_address_space,
                 )
                 lngw_bgp = self.network_models.BgpSettings(
-                        asn=self.bgp_settings['asn'],
-                        bgp_peering_address=self.bgp_settings['bgp_peering_address'],
-                        peer_weight=self.bgp_settings['peer_weight'],
+                    asn=self.bgp_settings['asn'],
+                    bgp_peering_address=self.bgp_settings['bgp_peering_address'],
+                    peer_weight=self.bgp_settings['peer_weight'],
                 ) if self.bgp_settings is not None else None
 
                 lngw = self.network_models.LocalNetworkGateway(
@@ -204,7 +207,7 @@ class AzureRMLocalNetworkGateway(AzureRMModuleBase):
 
             else:
                 results = self.delete_lngw()
-        
+
         if self.state == 'present':
             self.results['id'] = results['id']
         return self.results
@@ -216,7 +219,7 @@ class AzureRMLocalNetworkGateway(AzureRMModuleBase):
             return lngw_to_dict(new_lngw)
         except Exception as exc:
             self.fail("Error creating or updating local network gateway {0} - {1}".format(self.name, str(exc)))
-    
+
     def delete_lngw(self):
         try:
             poller = self.network_client.local_network_gateways.begin_delete(self.resource_group, self.name)
