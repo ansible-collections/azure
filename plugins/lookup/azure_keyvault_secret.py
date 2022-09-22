@@ -109,6 +109,7 @@ from ansible.utils.display import Display
 try:
     import requests
     import logging
+    import os
     from azure.common.credentials import ServicePrincipalCredentials
     from azure.keyvault import KeyVaultClient
     from msrest.exceptions import AuthenticationError, ClientRequestError
@@ -150,9 +151,9 @@ def lookup_secret_non_msi(terms, vault_url, kwargs):
     logging.getLogger('msrestazure.azure_active_directory').addHandler(logging.NullHandler())
     logging.getLogger('msrest.service_client').addHandler(logging.NullHandler())
 
-    client_id = kwargs.pop('client_id', None)
-    secret = kwargs.pop('secret', None)
-    tenant_id = kwargs.pop('tenant_id', None)
+    client_id = kwargs['client_id'] if kwargs.get('client_id') else os.environ.get('AZURE_CLIENT_ID')
+    secret = kwargs['secret'] if kwargs.get('secret') else os.environ.get('AZURE_SECRET')
+    tenant_id = kwargs['tenant_id'] if kwargs.get('tenant_id') else os.environ.get('AZURE_TENANT')
 
     try:
         credentials = ServicePrincipalCredentials(
