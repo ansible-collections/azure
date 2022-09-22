@@ -125,6 +125,11 @@ options:
         default: ReadOnly
         aliases:
             - disk_caching
+    os_disk_size_gb:
+        description:
+            - Specifies the size of the operating system disk in gigabytes.
+            - This can be used to overwrite the size of the disk in a virtual machine image.
+        type: int
     os_type:
         description:
             - Base type of operating system.
@@ -585,7 +590,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             terminate_event_timeout_minutes=dict(type='int'),
             ephemeral_os_disk=dict(type='bool'),
             orchestration_mode=dict(type='str', choices=['Uniform', 'Flexible']),
-            platform_fault_domain_count=dict(type='int', default=1)
+            platform_fault_domain_count=dict(type='int', default=1),
+            os_disk_size_gb=dict(type='int')
         )
 
         self.resource_group = None
@@ -626,6 +632,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         self.terminate_event_timeout_minutes = None
         self.ephemeral_os_disk = None
         self.orchestration_mode = None
+        self.os_disk_size_gb = None
 
         mutually_exclusive = [('load_balancer', 'application_gateway')]
         self.results = dict(
@@ -777,6 +784,10 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     self.fail('Ephemeral OS disk not updatable: virtual machine scale set ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
                 elif not self.ephemeral_os_disk and current_ephemeral is not None:
                     self.fail('Ephemeral OS disk not updatable: virtual machine scale set ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
+
+                if self.os_disk_size_gb and \
+                   self.os_disk_size_gb != vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']['diskSizeGB']:
+                    self.fail('VMSS OS disk size is not updatable: requested virtual machine OS disk size is {0}'.format(self.os_disk_size_gb))
 
                 if self.os_disk_caching and \
                    self.os_disk_caching != vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']['caching']:
@@ -977,6 +988,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                                     managed_disk=managed_disk,
                                     create_option=self.compute_models.DiskCreateOptionTypes.from_image,
                                     caching=self.os_disk_caching,
+                                    disk_size_gb=self.os_disk_size_gb,
                                     diff_disk_settings=self.compute_models.DiffDiskSettings(option='Local') if self.ephemeral_os_disk else None,
                                 ),
                                 image_reference=image_reference,
