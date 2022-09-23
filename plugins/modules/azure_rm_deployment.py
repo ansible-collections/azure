@@ -411,6 +411,7 @@ except ImportError as exc:
 try:
     from itertools import chain
     from azure.common.exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.resource.resources import ResourceManagementClient
     from azure.mgmt.network import NetworkManagementClient
 
