@@ -1602,10 +1602,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             plan_product = self.plan.get('product')
                             plan_publisher = self.plan.get('publisher')
                             term = self.marketplace_client.marketplace_agreements.get(
-                                publisher_id=plan_publisher, offer_id=plan_product, plan_id=plan_name)
+                                offer_type='virtualmachine', publisher_id=plan_publisher, offer_id=plan_product, plan_id=plan_name)
                             term.accepted = True
                             self.marketplace_client.marketplace_agreements.create(
-                                publisher_id=plan_publisher, offer_id=plan_product, plan_id=plan_name, parameters=term)
+                                offer_type='virtualmachine', publisher_id=plan_publisher, offer_id=plan_product, plan_id=plan_name, parameters=term)
                         except Exception as exc:
                             self.fail(("Error accepting terms for virtual machine {0} with plan {1}. " +
                                        "Only service admin/account admin users can purchase images " +
