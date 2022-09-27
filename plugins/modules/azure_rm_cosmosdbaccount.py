@@ -142,7 +142,7 @@ options:
                 description:
                     - It can be a string containing resource id of a subnet.
                     - It can be a dictionary containing 'resource_group', 'virtual_network_name' and 'subnet_name'
-            ignore_missing_vnet_service_endpoint:
+            ignore_missing_v_net_service_endpoint:
                 description:
                     - Create Cosmos DB account without existing virtual network service endpoint.
                 type: bool
@@ -215,10 +215,11 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.cosmosdb import CosmosDBManagementClient
+    from ansible.module_utils.six import string_types
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -326,7 +327,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
                         type='str',
                         required=True
                     ),
-                    ignore_missing_vnet_service_endpoint=dict(
+                    ignore_missing_v_net_service_endpoint=dict(
                         type='bool'
                     )
                 )
@@ -408,6 +409,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(CosmosDBManagementClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -469,13 +471,13 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
         self.log("Creating / Updating the Database Account instance {0}".format(self.name))
 
         try:
-            response = self.mgmt_client.database_accounts.create_or_update(resource_group_name=self.resource_group,
-                                                                           account_name=self.name,
-                                                                           create_update_parameters=self.parameters)
+            response = self.mgmt_client.database_accounts.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                 account_name=self.name,
+                                                                                 create_update_parameters=self.parameters)
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Database Account instance.')
             self.fail("Error creating the Database Account instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -488,12 +490,12 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
         '''
         self.log("Deleting the Database Account instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.database_accounts.delete(resource_group_name=self.resource_group,
-                                                                 account_name=self.name)
+            response = self.mgmt_client.database_accounts.begin_delete(resource_group_name=self.resource_group,
+                                                                       account_name=self.name)
 
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Database Account instance.')
             self.fail("Error deleting the Database Account instance: {0}".format(str(e)))
 
@@ -516,7 +518,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Database Account instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Database Account instance.')
         if found is True:
             return response.as_dict()
@@ -565,6 +567,9 @@ def default_compare(new, old, path, result):
         if path == '/location' or path.endswith('location_name'):
             new = new.replace(' ', '').lower()
             old = new.replace(' ', '').lower()
+        if isinstance(old, string_types) and isinstance(new, string_types):
+            new = new.lower()
+            old = old.lower()
         if new == old:
             return True
         else:

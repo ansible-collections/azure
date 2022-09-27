@@ -108,9 +108,8 @@ from ansible.module_utils._text import to_native
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
+    from azure.core.polling import LROPoller
     from msrest.serialization import Model
     from azure.mgmt.authorization import AuthorizationManagementClient
     from azure.mgmt.authorization.model import (RoleDefinition, Permission)
@@ -228,6 +227,7 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
         # get management client
         self._client = self.get_mgmt_svc_client(AuthorizationManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
+                                                is_track2=True,
                                                 api_version="2018-01-01-preview")
 
         self.scope = self.build_scope()
@@ -344,7 +344,7 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create role definition.')
             self.fail("Error creating role definition: {0}".format(str(exc)))
         return roledefinition_to_dict(response)
@@ -362,7 +362,7 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
                                                             role_definition_id=role_definition_id)
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the role definition.')
             self.fail("Error deleting the role definition: {0}".format(str(e)))
 
@@ -394,7 +394,7 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
                 if len(roles) > 1:
                     self.fail("Found multiple role definitions: {0}".format(roles))
 
-        except CloudError as ex:
+        except Exception as ex:
             self.log("Didn't find role definition {0}".format(self.name))
 
         return False

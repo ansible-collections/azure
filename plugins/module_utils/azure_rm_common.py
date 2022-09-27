@@ -88,7 +88,7 @@ class SDKProfile(object):  # pylint: disable=too-few-public-methods
 # For now, we have to copy from azure-cli
 AZURE_API_PROFILES = {
     'latest': {
-        'AuthorizationManagementClient': '2018-09-01-preview',
+        'AuthorizationManagementClient': '2020-04-01-preview',
         'ContainerInstanceManagementClient': '2018-02-01-preview',
         'ComputeManagementClient': dict(
             default_api_version='2018-10-01',
@@ -1012,12 +1012,13 @@ class AzureRMModuleBase(object):
         if not self._authorization_client:
             self._authorization_client = self.get_mgmt_svc_client(AuthorizationManagementClient,
                                                                   base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                  api_version='2018-09-01-preview')
+                                                                  is_track2=True,
+                                                                  api_version='2020-04-01-preview')
         return self._authorization_client
 
     @property
     def authorization_models(self):
-        return AuthorizationManagementClient.models('2018-09-01-preview')
+        return AuthorizationManagementClient.models('2020-04-01-preview')
 
     @property
     def subscription_client(self):
@@ -1607,9 +1608,29 @@ class AzureRMAuth(object):
 
         return None
 
-    def _get_msi_credentials(self, subscription_id=None, client_id=None, **kwargs):
-        credentials = MSIAuthentication(client_id=client_id)
-        credential = MSIAuthenticationWrapper(client_id=client_id)
+    def _get_msi_credentials(self, subscription_id=None, client_id=None, _cloud_environment=None, **kwargs):
+        # Get object `cloud_environment` from string `_cloud_environment`
+        cloud_environment = None
+        if not _cloud_environment:
+            cloud_environment = azure_cloud.AZURE_PUBLIC_CLOUD
+        else:
+            # try to look up "well-known" values via the name attribute on azure_cloud members
+            all_clouds = [x[1] for x in inspect.getmembers(azure_cloud) if isinstance(x[1], azure_cloud.Cloud)]
+            matched_clouds = [x for x in all_clouds if x.name == _cloud_environment]
+            if len(matched_clouds) == 1:
+                cloud_environment = matched_clouds[0]
+            elif len(matched_clouds) > 1:
+                self.fail("Azure SDK failure: more than one cloud matched for cloud_environment name '{0}'".format(_cloud_environment))
+            else:
+                if not urlparse.urlparse(_cloud_environment).scheme:
+                    self.fail("cloud_environment must be an endpoint discovery URL or one of {0}".format([x.name for x in all_clouds]))
+                try:
+                    cloud_environment = azure_cloud.get_cloud_from_metadata_endpoint(_cloud_environment)
+                except Exception as exc:
+                    self.fail("cloud_environment {0} could not be resolved: {1}".format(_cloud_environment, str(exc)), exception=traceback.format_exc())
+
+        credentials = MSIAuthentication(client_id=client_id, cloud_environment=cloud_environment)
+        credential = MSIAuthenticationWrapper(client_id=client_id, cloud_environment=cloud_environment)
         subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
             try:
@@ -1624,6 +1645,7 @@ class AzureRMAuth(object):
             'credentials': credentials,
             'credential': credential,
             'subscription_id': subscription_id,
+            'cloud_environment': cloud_environment,
             'auth_source': 'msi'
         }
 
@@ -1671,7 +1693,8 @@ class AzureRMAuth(object):
 
         if auth_source == 'msi':
             self.log('Retrieving credentials from MSI')
-            return self._get_msi_credentials(subscription_id=params.get('subscription_id'), client_id=params.get('client_id'))
+            return self._get_msi_credentials(subscription_id=params.get('subscription_id'), client_id=params.get('client_id'),
+                                             _cloud_environment=params.get('cloud_environment'))
 
         if auth_source == 'cli':
             if not HAS_AZURE_CLI_CORE:

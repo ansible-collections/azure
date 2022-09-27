@@ -194,9 +194,9 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.keyvault import KeyVaultManagementClient
-    from msrest.polling import LROPoller
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -343,6 +343,7 @@ class AzureRMVaults(AzureRMModuleBase):
 
         self.mgmt_client = self.get_mgmt_svc_client(KeyVaultManagementClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
+                                                    is_track2=True,
                                                     api_version="2019-09-01")
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -484,13 +485,13 @@ class AzureRMVaults(AzureRMModuleBase):
         self.log("Creating / Updating the Key Vault instance {0}".format(self.vault_name))
 
         try:
-            response = self.mgmt_client.vaults.create_or_update(resource_group_name=self.resource_group,
-                                                                vault_name=self.vault_name,
-                                                                parameters=self.parameters)
+            response = self.mgmt_client.vaults.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                      vault_name=self.vault_name,
+                                                                      parameters=self.parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Key Vault instance.')
             self.fail("Error creating the Key Vault instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -505,7 +506,7 @@ class AzureRMVaults(AzureRMModuleBase):
         try:
             response = self.mgmt_client.vaults.delete(resource_group_name=self.resource_group,
                                                       vault_name=self.vault_name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Key Vault instance.')
             self.fail("Error deleting the Key Vault instance: {0}".format(str(e)))
 
@@ -525,7 +526,7 @@ class AzureRMVaults(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Key Vault instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Key Vault instance.')
         if found is True:
             return response.as_dict()

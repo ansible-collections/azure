@@ -27,7 +27,7 @@
 
 - name: Create a RegistrationDefinition with scope
   azure_rm_registrationdefinition:
-    scope:  "{{ subscription_sec_id }}"
+    scope: "{{ subscription_sec_id }}"
     properties:
       description: test definition with scope
       authorizations:
