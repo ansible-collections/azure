@@ -115,8 +115,6 @@ cdnprofiles:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from azure.mgmt.cdn.models import ErrorResponseException
-    from azure.common import AzureHttpError
     from azure.mgmt.cdn import CdnManagementClient
 except Exception:
     # handled in azure_rm_common
@@ -189,7 +187,7 @@ class AzureRMCdnprofileInfo(AzureRMModuleBase):
         try:
             item = self.cdn_client.profiles.get(
                 self.resource_group, self.name)
-        except ErrorResponseException:
+        except Exception:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -205,7 +203,7 @@ class AzureRMCdnprofileInfo(AzureRMModuleBase):
         try:
             response = self.cdn_client.profiles.list_by_resource_group(
                 self.resource_group)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []
@@ -253,6 +251,7 @@ class AzureRMCdnprofileInfo(AzureRMModuleBase):
         if not self.cdn_client:
             self.cdn_client = self.get_mgmt_svc_client(CdnManagementClient,
                                                        base_url=self._cloud_environment.endpoints.resource_manager,
+                                                       is_track2=True,
                                                        api_version='2017-04-02')
         return self.cdn_client
 

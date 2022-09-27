@@ -88,7 +88,7 @@ class SDKProfile(object):  # pylint: disable=too-few-public-methods
 # For now, we have to copy from azure-cli
 AZURE_API_PROFILES = {
     'latest': {
-        'AuthorizationManagementClient': '2018-09-01-preview',
+        'AuthorizationManagementClient': '2020-04-01-preview',
         'ContainerInstanceManagementClient': '2018-02-01-preview',
         'ComputeManagementClient': dict(
             default_api_version='2018-10-01',
@@ -1012,12 +1012,13 @@ class AzureRMModuleBase(object):
         if not self._authorization_client:
             self._authorization_client = self.get_mgmt_svc_client(AuthorizationManagementClient,
                                                                   base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                  api_version='2018-09-01-preview')
+                                                                  is_track2=True,
+                                                                  api_version='2020-04-01-preview')
         return self._authorization_client
 
     @property
     def authorization_models(self):
-        return AuthorizationManagementClient.models('2018-09-01-preview')
+        return AuthorizationManagementClient.models('2020-04-01-preview')
 
     @property
     def subscription_client(self):
@@ -1692,7 +1693,7 @@ class AzureRMAuth(object):
         if auth_source == 'msi':
             self.log('Retrieving credentials from MSI')
             return self._get_msi_credentials(subscription_id=params.get('subscription_id'), client_id=params.get('client_id'),
-                                            _cloud_environment=params.get('cloud_environment'))
+                                             _cloud_environment=params.get('cloud_environment'))
 
         if auth_source == 'cli':
             if not HAS_AZURE_CLI_CORE:
