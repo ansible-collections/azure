@@ -17,8 +17,7 @@ readme: README.md
 # A list of the collection's content authors. Can be just the name or in the format 'Full Name <email> (url)
 # @nicks:irc/im.site#channel'
 authors:
-- Microsoft <haiyzhan@microsoft.com>
-- Microsoft <xuzhang3@microsoft.com>
+- Microsoft <ansible@microsoft.com>
 
 
 ### OPTIONAL but strongly recommended
