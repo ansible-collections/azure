@@ -508,15 +508,20 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
         return result
 
     def create_or_attach_disks(self, managed_vm_id):
-        changed, disk_instances = False, []
+        changed, disk_instances, disks_to_create = False, [], []
         for disk in self.managed_disks:
             parameter, disk_instance = self.get_disk_instance(disk)
             # create or update disk
-            if disk_instance is None or \
-               self.is_different(zone=disk.get("zone"), max_shares=disk.get("max_shares"), found_disk=disk_instance, new_disk=parameter):
-                changed = True
-                disk_instance = self.create_or_update_managed_disk(resource_group=disk.get("resource_group"), name=disk.get("name"), disk_params=parameter)
-            disk_instances.append((disk, disk_instance))
+            disk_info_to_compare = dict(zone=disk.get("zone"), max_shares=disk.get("max_shares"), found_disk=disk_instance, new_disk=parameter)
+            if disk_instance is None or self.is_different(**disk_info_to_compare):
+                disks_to_create.append((disk, parameter))
+            else:
+                disk_instances.append((disk, disk_instance))
+
+        if len(disks_to_create) > 0:
+            changed = True
+            result = self.create_or_update_disks(disks_to_create)
+            disk_instances += result
 
         if self.managed_by_extended is not None and len(self.managed_by_extended) > 0:
             # Attach the disk to multiple VM
@@ -539,6 +544,7 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
             if disk_instance is not None:
                 disk_instances.append((disk, disk_instance))
 
+        result = []
         if self.managed_by_extended is not None and len(self.managed_by_extended) > 0:
             # Detach the disk from list of VMs
             disks_names = [d.get("name").lower() for p, d in disk_instances]
@@ -547,18 +553,19 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
                 if len(disks) > 0:
                     changed = True
                     self.detach_disks_from_vm(vm, disks_names)
+            result = self.compute_disks_result(disk_instances)
 
         elif self.managed_by_extended is None:
             # Detach disks from all VMs attaching them
             changed = self.detach_disks_from_all_vms(disk_instances)
 
             # Delete existing disks
-            while disk_instances:
-                params, disk = disk_instances.pop(0)
+            if len(disk_instances) > 0:
+                disks_ids = [disk.get("id") for param, disk in disk_instances]
                 changed = True
-                self.delete_managed_disk(disk.get("id"))
+                self.delete_disks(disks_ids)
 
-        return dict(changed=changed, state=self.compute_disks_result(disk_instances))
+        return dict(changed=changed, state=result)
 
     def detach_disks_from_all_vms(self, disk_instances):
         changed = False
@@ -644,13 +651,21 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
         except Exception as exc:
             self.fail("Error getting virtual machine {0}/{1} - {2}".format(resource_group, name, str(exc)))
 
-    def create_or_update_managed_disk(self, resource_group, name, disk_params):
-        try:
-            poller = self.compute_client.disks.begin_create_or_update(resource_group, name, disk_params)
-            aux = self.get_poller_result(poller)
-            return managed_disk_to_dict(aux)
-        except Exception as e:
-            self.fail("Error creating the managed disk {0}/{1}: {2}".format(resource_group, name, str(e)))
+    def create_or_update_disks(self, disks_to_create):
+        pollers = []
+        for disk_info, disk in disks_to_create:
+            resource_group = disk_info.get("resource_group")
+            name = disk_info.get("name")
+            try:
+                poller = self.compute_client.disks.begin_create_or_update(resource_group, name, disk)
+                pollers.append(poller)
+            except Exception as e:
+                self.fail("Error creating the managed disk {0}/{1}: {2}".format(resource_group, name, str(e)))
+        disks_instances = self.get_multiple_pollers_results(pollers)
+        result = []
+        for i, instance in enumerate(disks_instances):
+            result.append((disks_to_create[i][0], managed_disk_to_dict(instance)))
+        return result
 
     # This method accounts for the difference in structure between the
     # Azure retrieved disk and the parameters for the new disk to be created.
@@ -677,14 +692,17 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
                 resp = True
         return resp
 
-    def delete_managed_disk(self, disk_id):
-        try:
-            disk = parse_resource_id(disk_id)
-            resource_group, name = disk.get("resource_group"), disk.get("resource_name")
-            poller = self.compute_client.disks.begin_delete(resource_group, name)
-            return self.get_poller_result(poller)
-        except Exception as e:
-            self.fail("Error deleting the managed disk {0}/{1}: {2}".format(resource_group, name, str(e)))
+    def delete_disks(self, ids):
+        pollers = []
+        for disk_id in ids:
+            try:
+                disk = parse_resource_id(disk_id)
+                resource_group, name = disk.get("resource_group"), disk.get("resource_name")
+                poller = self.compute_client.disks.begin_delete(resource_group, name)
+                pollers.append(poller)
+            except Exception as e:
+                self.fail("Error deleting the managed disk {0}/{1}: {2}".format(resource_group, name, str(e)))
+        return self.get_multiple_pollers_results(pollers)
 
     def get_managed_disk(self, resource_group, name):
         try:

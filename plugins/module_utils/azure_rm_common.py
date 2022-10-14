@@ -649,6 +649,30 @@ class AzureRMModuleBase(object):
             self.log(str(exc))
             raise
 
+    def get_multiple_pollers_results(self, pollers, wait=0.05):
+        '''
+        Consistent method of waiting on and retrieving results from multiple Azure's long poller
+
+        :param pollers list of Azure poller object
+        :param wait Period of time to wait for the long running operation to complete.
+        :return list of object resulting from the original request
+        '''
+
+        def _continue_polling():
+            return not all(poller.done() for poller in pollers)
+
+        try:
+            while _continue_polling():
+                for poller in pollers:
+                    if poller.done():
+                        continue
+                    self.log("Waiting for {0} sec".format(wait))
+                    poller.wait(timeout=wait)
+            return [poller.result() for poller in pollers]
+        except Exception as exc:
+            self.log(str(exc))
+            raise
+
     def check_provisioning_state(self, azure_object, requested_state='present'):
         '''
         Check an Azure object's provisioning state. If something did not complete the provisioning
