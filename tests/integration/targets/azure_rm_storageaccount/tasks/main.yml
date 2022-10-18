@@ -133,6 +133,29 @@
     that:
       - not output.changed
 
+- name: Create new storage account with Hierarchical Namespace enabled
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}02"
+    account_type: Standard_LRS
+    kind: StorageV2
+    is_hns_enabled: true
+  register: output
+- name: Assert output
+  assert:
+    that:
+      - output.changed
+
+- name: Gather facts of storage account
+  azure_rm_storageaccount_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}02"
+  register: output
+- assert:
+    that:
+      - "output.storageaccounts | length == 1"
+      - output.storageaccounts[0].is_hns_enabled == true
+
 - name: Create storage account with static website enabled
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
