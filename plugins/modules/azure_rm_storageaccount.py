@@ -75,6 +75,7 @@ options:
     is_hns_enabled:
         description:
             - Account HierarchicalNamespace enabled if sets to true.
+            - When I(is_hns_enabled=True), I(kind) cannot be C(Storage).
         type: bool
     access_tier:
         description:
