@@ -966,13 +966,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             self.results['changed'] = True
             self.account_dict['is_hns_enabled'] = self.is_hns_enabled
             if not self.check_mode:
-                try:
-                    parameters = self.storage_models.StorageAccountUpdateParameters(is_hns_enabled=self.is_hns_enabled)
-                    self.storage_client.storage_accounts.update(self.resource_group,
-                                                                self.name,
-                                                                parameters)
-                except Exception as exc:
-                    self.fail("Failed to update account type: {0}".format(str(exc)))
+                self.fail("The is_hns_enabled parameter not support to update, from {0} to {1}".format(bool(self.account_dict.get('is_hns_enabled')), self.is_hns_enabled))
 
         if self.https_only is not None and bool(self.https_only) != bool(self.account_dict.get('https_only')):
             self.results['changed'] = True
