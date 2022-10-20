@@ -712,7 +712,8 @@ options:
                         type: str
                     selector_match_operator:
                         description:
-                            - When match_variable is a collection, operate on the selector to specify which elements in the collection this exclusion applies to.
+                            - When match_variable is a collection, operate on the selector to specify
+                              which elements in the collection this exclusion applies to.
                         type: str
             file_upload_limit_in_mb:
                 description:
@@ -835,7 +836,7 @@ EXAMPLES = '''
         name: ag_frontend_port
     trusted_root_certificates:
       - name: "root_cert"
-        key_vault_secret_id: "https://kv/secret" 
+        key_vault_secret_id: "https://kv/secret"
     backend_address_pools:
       - backend_addresses:
           - ip_address: 10.0.0.4
@@ -1222,7 +1223,7 @@ EXAMPLES = '''
         include_query_string: true
         url_path_maps:
           - "path_mappings"
-          
+
 - name: Create instance of Application Gateway with autoscale configuration
   azure_rm_appgateway:
     resource_group: myResourceGroup
@@ -1263,7 +1264,7 @@ EXAMPLES = '''
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-        
+
 - name: Create instance of Application Gateway waf_v2 with waf configuration 
   azure_rm_appgateway:
     resource_group: myResourceGroup
@@ -1848,9 +1849,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             for j in range(len(item['trusted_root_certificates'])):
                                 id = item['trusted_root_certificates'][j]
                                 id = id if is_valid_resource_id(id) else trusted_root_certificate_id(self.subscription_id,
-                                                                                             kwargs['resource_group'],
-                                                                                             kwargs['name'],
-                                                                                             id)
+                                                                                                     kwargs['resource_group'],
+                                                                                                     kwargs['name'],
+                                                                                                     id)
                                 item['trusted_root_certificates'][j] = {'id': id}
                     self.parameters["backend_http_settings_collection"] = ev
                 elif key == "http_listeners":
@@ -1931,9 +1932,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                 if item2['rewrite_rule_set']:
                                     id = item2['rewrite_rule_set']
                                     id = id if is_valid_resource_id(id) else rewrite_rule_set_id(self.subscription_id,
-                                                                                                kwargs['resource_group'],
-                                                                                                kwargs['name'],
-                                                                                                id)
+                                                                                                 kwargs['resource_group'],
+                                                                                                 kwargs['name'],
+                                                                                                 id)
                                     item2['rewrite_rule_set'] = {'id': id}
                                 else:
                                     del item2['rewrite_rule_set']
@@ -1949,9 +1950,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                         if item['default_rewrite_rule_set']:
                             id = item['default_rewrite_rule_set']
                             id = id if is_valid_resource_id(id) else rewrite_rule_set_id(self.subscription_id,
-                                                                                        kwargs['resource_group'],
-                                                                                        kwargs['name'],
-                                                                                        id)
+                                                                                         kwargs['resource_group'],
+                                                                                         kwargs['name'],
+                                                                                         id)
                             item['default_rewrite_rule_set'] = {'id': id}
                         else:
                             del item['default_rewrite_rule_set']
@@ -2000,9 +2001,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                         if item.get('rewrite_rule_set'):
                             id = item.get('rewrite_rule_set')
                             id = id if is_valid_resource_id(id) else rewrite_rule_set_id(self.subscription_id,
-                                                                                        kwargs['resource_group'],
-                                                                                        kwargs['name'],
-                                                                                        id)
+                                                                                         kwargs['resource_group'],
+                                                                                         kwargs['name'],
+                                                                                         id)
                             item['rewrite_rule_set'] = {'id': id}
                         ev[i] = item
                     self.parameters["request_routing_rules"] = ev
@@ -2364,6 +2365,7 @@ def rewrite_rule_set_id(subscription_id, resource_group_name, appgateway_name, n
         name
     )
 
+
 def trusted_root_certificate_id(subscription_id, resource_group_name, appgateway_name, name):
     """Generate the id for a trusted root certificate in an application gateway"""
     return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/applicationGateways/{2}/trustedRootCertificates/{3}'.format(
@@ -2384,11 +2386,11 @@ def compare_dicts(old_params, new_params, param_name):
         return True
 
     diffs = recursive_diff(oldd, newd)
-    if diffs == None:
+    if diffs is None:
         return True
     else:
         actual_diffs = diffs[1]
-        return all(value == None or not value for value in actual_diffs.values())
+        return all(value is None or not value for value in actual_diffs.values())
 
 
 def compare_arrays(old_params, new_params, param_name):
