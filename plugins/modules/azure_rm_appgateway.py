@@ -1265,7 +1265,7 @@ EXAMPLES = '''
         http_listener: sample_http_listener
         name: rule1
 
-- name: Create instance of Application Gateway waf_v2 with waf configuration 
+- name: Create instance of Application Gateway waf_v2 with waf configuration
   azure_rm_appgateway:
     resource_group: myResourceGroup
     name: myAppGateway
