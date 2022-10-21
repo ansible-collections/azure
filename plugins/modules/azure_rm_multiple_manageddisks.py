@@ -310,7 +310,6 @@ state:
 
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.six import iteritems
 try:
     from azure.core.exceptions import ResourceNotFoundError, AzureError
     from msrestazure.tools import parse_resource_id

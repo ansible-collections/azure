@@ -56,7 +56,7 @@
         that:
           - create_idempotency is not changed
 
-    - name: Validate disks have been created
+    - name: Validate that disks have been created
       assert:
         that:
           - item.name in disk_names
@@ -93,10 +93,28 @@
             sku: 16.04-LTS
             version: latest
       with_items: "{{ virtual_machines }}"
-      register: vms
+      register: create_vms
+      async: 1000
+      poll: 0
+
+    - name: Wait for Virtual machine to be created
+      async_status:
+        jid: "{{ item.ansible_job_id }}"
+      register: wait_create_vm
+      until: wait_create_vm.finished
+      retries: 100
+      delay: 5
+      loop: "{{ create_vms.results }}"
+
+    - name: Get virtual machine info
+      azure_rm_virtualmachine_info:
+        resource_group: "{{ item.resource_group }}"
+        name: "{{ item.name }}"
+      register: vm_result
+      with_items: "{{ virtual_machines }}"
 
     - set_fact:
-        vm_ids: "{{ vms.results | map(attribute='ansible_facts.azure_vm.id') | list }}"
+        vm_ids: "{{ vm_result.results | map(attribute='vms') | flatten | map(attribute='id') | list }}"
 
     # Test attach disk on VMs
     - name: Attach existing disks to VMs
@@ -109,7 +127,7 @@
       assert:
         that:
           - attach_disks is changed
-          - azure_disks.state | length == 2
+          - attach_disks.state | length == 2
 
     - name: Retrieve managed disks info
       azure_rm_manageddisk_info:
