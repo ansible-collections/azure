@@ -525,11 +525,15 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
 
         if self.managed_by_extended is not None and len(self.managed_by_extended) > 0:
             # Attach the disk to multiple VM
+            attach_config = []
             for vm in managed_vm_id:
                 disks = [(d, i) for d, i in disk_instances if not self._is_disk_attached_to_vm(vm.id, i)]
                 if len(disks) > 0:
-                    changed = True
-                    self.attach(vm, disks)
+                    attach_config.append(self.create_attachment_configuration(vm, disks))
+
+            if len(attach_config) > 0:
+                changed = True
+                self.update_virtual_machines(attach_config)
 
         elif self.managed_by_extended == []:
             # Detach disks from all VMs attaching them
@@ -548,11 +552,15 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
         if self.managed_by_extended is not None and len(self.managed_by_extended) > 0:
             # Detach the disk from list of VMs
             disks_names = [d.get("name").lower() for p, d in disk_instances]
+            attach_config = []
             for vm in managed_vm_id:
                 disks = [d for p, d in disk_instances if self._is_disk_attached_to_vm(vm.id, d)]
                 if len(disks) > 0:
-                    changed = True
-                    self.detach_disks_from_vm(vm, disks_names)
+                    attach_config.append(self.create_detachment_configuration(vm, disks_names))
+
+            if len(attach_config) > 0:
+                changed = True
+                self.update_virtual_machines(attach_config)
             result = self.compute_disks_result(disk_instances)
 
         elif self.managed_by_extended is None:
@@ -582,10 +590,15 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
         if unique_vm_id:
             disks_names = [instance.get("name").lower() for d, instance in disk_instances]
             changed = True
+            attach_config = []
             for vm_id in unique_vm_id:
                 vm_name_id = parse_resource_id(vm_id)
                 vm_instance = self._get_vm(vm_name_id['resource_group'], vm_name_id['resource_name'])
-                self.detach_disks_from_vm(vm_instance, disks_names)
+                attach_config.append(self.create_detachment_configuration(vm_instance, disks_names))
+
+            if len(attach_config) > 0:
+                changed = True
+                self.update_virtual_machines(attach_config)
         return changed
 
     def _is_disk_attached_to_vm(self, vm_id, item):
@@ -597,7 +610,7 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
             return True
         return False
 
-    def attach(self, vm, disks):
+    def create_attachment_configuration(self, vm, disks):
         vm_id = parse_resource_id(vm.id)
 
         # attach all disks to the virtual machine
@@ -625,10 +638,9 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
                                                      managed_disk=params,
                                                      caching=caching_options)
             vm.storage_profile.data_disks.append(data_disk)
-        self._update_vm(vm_id["resource_group"], vm_id["resource_name"], vm)
-        return True
+        return vm_id["resource_group"], vm_id["resource_name"], vm
 
-    def detach_disks_from_vm(self, vm_instance, disks_names):
+    def create_detachment_configuration(self, vm_instance, disks_names):
         vm_data = parse_resource_id(vm_instance.id)
         leftovers = [d for d in vm_instance.storage_profile.data_disks if d.name.lower() not in disks_names]
         if len(vm_instance.storage_profile.data_disks) == len(leftovers):
@@ -636,14 +648,7 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
                 disks_names, vm_data["resource_group"], vm_data["resource_name"]
             ))
         vm_instance.storage_profile.data_disks = leftovers
-        self._update_vm(vm_data["resource_group"], vm_data["resource_name"], vm_instance)
-
-    def _update_vm(self, resource_group, name, params):
-        try:
-            poller = self.compute_client.virtual_machines.begin_create_or_update(resource_group, name, params)
-            self.get_poller_result(poller)
-        except AzureError as exc:
-            self.fail("Error updating virtual machine (attaching/detaching disks) {0}/{1} - {2}".format(resource_group, name, exc.message))
+        return vm_data["resource_group"], vm_data["resource_name"], vm_instance
 
     def _get_vm(self, resource_group, name):
         try:
@@ -702,6 +707,16 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
                 pollers.append(poller)
             except Exception as e:
                 self.fail("Error deleting the managed disk {0}/{1}: {2}".format(resource_group, name, str(e)))
+        return self.get_multiple_pollers_results(pollers)
+
+    def update_virtual_machines(self, config):
+        pollers = []
+        for resource_group, name, params in config:
+            try:
+                poller = self.compute_client.virtual_machines.begin_create_or_update(resource_group, name, params)
+                pollers.append(poller)
+            except AzureError as exc:
+                self.fail("Error updating virtual machine (attaching/detaching disks) {0}/{1} - {2}".format(resource_group, name, exc.message))
         return self.get_multiple_pollers_results(pollers)
 
     def get_managed_disk(self, resource_group, name):
