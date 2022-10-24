@@ -166,16 +166,21 @@
 #
 
 - name: create a keyvault key
-  azure_rm_keyvaultkey:
-    keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
-    key_name: testkey
-    tags:
-      testing: test
-      delete: on-exit
-  register: output
-
-- assert:
-    that: output.changed
+  block:
+    - azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        key_name: testkey
+        tags:
+          testing: test
+          delete: on-exit
+      register: output
+    - assert:
+        that: output.changed
+  rescue:
+    - azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        state: absent
+        key_name: testkey
 
 - name: Get key current version
   azure_rm_keyvaultkey_info:
