@@ -107,7 +107,6 @@ try:
     from azure.keyvault import KeyVaultClient, KeyVaultId, KeyVaultAuthentication
     from azure.keyvault.models import KeyAttributes, JsonWebKey
     from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
-    #from azure.keyvault.models.key_vault_error import KeyVaultErrorException
     from datetime import datetime
     from msrestazure.azure_active_directory import MSIAuthentication
     from OpenSSL import crypto
@@ -185,7 +184,6 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
                 changed = True
 
         except Exception:
-        #except KeyVaultErrorException:
             # Key doesn't exist
             if self.state == 'present':
                 changed = True
@@ -275,7 +273,6 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
                 k_expires = datetime.fromisoformat(k_expires.replace('Z', '+00:00'))
 
             key_attributes = KeyAttributes(enabled=k_enabled, not_before=k_not_before, expires=k_expires)
-            #key_attributes = KeyAttributes(k_enabled, k_not_before, k_expires)
 
         key_bundle = self.client.create_key(vault_base_url=self.keyvault_uri, key_name=name, kty=key_type, key_size=key_size,
                                             key_attributes=key_attributes, curve=curve, tags=tags)

@@ -164,7 +164,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.keyvault import KeyVaultClient, KeyVaultId, KeyVaultAuthentication
     from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
-    #from azure.keyvault.models.key_vault_error import KeyVaultErrorException
     from msrestazure.azure_active_directory import MSIAuthentication
 except ImportError:
     # This is handled in azure_rm_common
