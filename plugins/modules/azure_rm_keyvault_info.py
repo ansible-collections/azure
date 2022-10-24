@@ -262,7 +262,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
         self._client = self.get_mgmt_svc_client(KeyVaultManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
                                                 is_track2=True,
-                                                api_version="2019-09-01")
+                                                api_version="2021-10-01")
 
         if self.name:
             if self.resource_group:
