@@ -888,12 +888,11 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                         differences.append('custom_data')
                         changed = True
                         vmss_dict['properties']['virtualMachineProfile']['osProfile']['customData'] = self.custom_data
-                if self.orchestration_mode == "Flexible":
-                    if self.orchestration_mode != vmss_dict['properties'].get('orchestrationMode'):
-                        self.fail("The orchestration_mode parameter cannot be updated!")
+
+                if self.orchestration_mode and self.orchestration_mode != vmss_dict['properties'].get('orchestrationMode'):
+                    self.fail("The orchestration_mode parameter cannot be updated!")
                 else:
-                    if vmss_dict['properties'].get('orchestrationMode') is not None:
-                        self.fail("The orchestration_mode parameter cannot be updated!")
+                    self.orchestration_mode = vmss_dict['properties'].get('orchestrationMode')
 
                 if self.platform_fault_domain_count and self.platform_fault_domain_count != vmss_dict['properties'].get('platformFaultDomainCount'):
                     self.fail("The platform_fault_domain_count parameter cannot be updated!")
