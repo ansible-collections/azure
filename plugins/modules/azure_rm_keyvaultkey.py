@@ -274,7 +274,8 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
             if k_expires:
                 k_expires = datetime.fromisoformat(k_expires.replace('Z', '+00:00'))
 
-            key_attributes = KeyAttributes(k_enabled, k_not_before, k_expires)
+            key_attributes = KeyAttributes(enabled=k_enabled, not_before=k_not_before, expires=k_expires)
+            #key_attributes = KeyAttributes(k_enabled, k_not_before, k_expires)
 
         key_bundle = self.client.create_key(vault_base_url=self.keyvault_uri, key_name=name, kty=key_type, key_size=key_size,
                                             key_attributes=key_attributes, curve=curve, tags=tags)
