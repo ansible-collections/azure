@@ -362,12 +362,12 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
 
         results = []
         try:
-            if self.version == 'current':
-                response = self._client.get_key(vault_base_url=self.vault_uri,
-                                                key_name=self.name,
-                                                key_version='')
-            else:
-                response = self._client.get_key(vault_base_url=self.vault_uri,
+            #if self.version == 'current':
+            #    response = self._client.get_key(vault_base_url=self.vault_uri,
+            #                                    key_name=self.name,
+            #                                    key_version='')
+            #else:
+            response = self._client.get_key(vault_base_url=self.vault_uri,
                                                 key_name=self.name,
                                                 key_version=self.version)
 
