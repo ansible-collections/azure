@@ -391,12 +391,10 @@ class AzureRMVaults(AzureRMModuleBase):
                         (self.parameters['properties']['enable_soft_delete'] != old_response['properties'].get('enable_soft_delete', None))):
                     self.to_do = Actions.Update
                 elif (('soft_delete_retention_in_days' in self.parameters['properties']) and
-                        (self.parameters['properties']['soft_delete_retention_in_days'] != old_response['properties'].get(
-                                                                                                   'soft_delete_retention_in_days', None))):
+                        (self.parameters['properties']['soft_delete_retention_in_days'] != old_response['properties'].get('soft_delete_retention_in_days'))):
                     self.to_do = Actions.Update
                 elif (('enable_purge_protection' in self.parameters['properties']) and
-                      (self.parameters['properties']['enable_purge_protection'] != old_response['properties'].get('enable_purge_protection',
-                                                                                           None))):
+                      (self.parameters['properties']['enable_purge_protection'] != old_response['properties'].get('enable_purge_protection'))):
                     self.to_do = Actions.Update
                 elif ('create_mode' in self.parameters['properties']) and (self.parameters['properties']['create_mode'] == 'recover'):
                     self.to_do = Actions.Update
