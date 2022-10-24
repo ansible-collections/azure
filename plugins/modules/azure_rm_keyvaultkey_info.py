@@ -377,7 +377,6 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
 
         except Exception as e:
             self.log("Did not find the key vault key {0}: {1}".format(self.name, str(e)))
-            self.fail(" can't gek key info as {0} ".format(e))
         return results
 
     def get_key_versions(self):
