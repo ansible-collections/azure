@@ -107,7 +107,7 @@ try:
     from azure.keyvault import KeyVaultClient, KeyVaultId, KeyVaultAuthentication
     from azure.keyvault.models import KeyAttributes, JsonWebKey
     from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
-    from azure.keyvault.models.key_vault_error import KeyVaultErrorException
+    #from azure.keyvault.models.key_vault_error import KeyVaultErrorException
     from datetime import datetime
     from msrestazure.azure_active_directory import MSIAuthentication
     from OpenSSL import crypto
@@ -184,7 +184,8 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
             if self.state == 'absent':
                 changed = True
 
-        except KeyVaultErrorException:
+        except Exception:
+        #except KeyVaultErrorException:
             # Key doesn't exist
             if self.state == 'present':
                 changed = True
