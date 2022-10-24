@@ -889,7 +889,6 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                         changed = True
                         vmss_dict['properties']['virtualMachineProfile']['osProfile']['customData'] = self.custom_data
 
-
                 if self.orchestration_mode and self.orchestration_mode != vmss_dict['properties'].get('orchestrationMode'):
                     self.fail("The orchestration_mode parameter cannot be updated!")
                 else:
