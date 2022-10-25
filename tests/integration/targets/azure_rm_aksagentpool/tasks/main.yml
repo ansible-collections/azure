@@ -71,7 +71,7 @@
     enable_auto_scaling: True
     min_count: 1
     max_count: 10
-    orchestrator_version: "1.22.6"
+    orchestrator_version: "1.22.11"
     availability_zones:
       - 1
       - 2
@@ -96,7 +96,7 @@
     enable_auto_scaling: True
     min_count: 1
     max_count: 10
-    orchestrator_version: "1.22.6"
+    orchestrator_version: "1.22.11"
     availability_zones:
       - 1
       - 2
@@ -132,7 +132,7 @@
     enable_auto_scaling: True
     min_count: 1
     max_count: 10
-    orchestrator_version: "1.22.11"
+    orchestrator_version: "1.22.15"
     availability_zones:
       - 1
       - 2
