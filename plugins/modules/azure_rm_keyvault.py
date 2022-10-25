@@ -344,7 +344,7 @@ class AzureRMVaults(AzureRMModuleBase):
         self.mgmt_client = self.get_mgmt_svc_client(KeyVaultManagementClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
                                                     is_track2=True,
-                                                    api_version="2019-09-01")
+                                                    api_version="2021-10-01")
 
         resource_group = self.get_resource_group(self.resource_group)
 
@@ -377,28 +377,24 @@ class AzureRMVaults(AzureRMModuleBase):
                         (self.parameters['properties']['tenant_id'] != old_response['properties']['tenant_id'])):
                     self.to_do = Actions.Update
                 elif (('enabled_for_deployment' in self.parameters['properties']) and
-                        (self.parameters['properties']['enabled_for_deployment'] != getattr(old_response['properties'], 'enabled_for_deployment', None))):
+                        (self.parameters['properties']['enabled_for_deployment'] != old_response['properties'].get('enabled_for_deployment', None))):
                     self.to_do = Actions.Update
                 elif (('enabled_for_disk_encryption' in self.parameters['properties']) and
                         (self.parameters['properties']['enabled_for_disk_encryption'] !=
-                         getattr(old_response['properties'], 'enabled_for_disk_encryption', None))):
+                         old_response['properties'].get('enabled_for_disk_encryption', None))):
                     self.to_do = Actions.Update
                 elif (('enabled_for_template_deployment' in self.parameters['properties']) and
                         (self.parameters['properties']['enabled_for_template_deployment'] !=
-                         getattr(old_response['properties'], 'enabled_for_template_deployment', None))):
+                         old_response['properties'].get('enabled_for_template_deployment', None))):
                     self.to_do = Actions.Update
                 elif (('enable_soft_delete' in self.parameters['properties']) and
-                        (self.parameters['properties']['enable_soft_delete'] != getattr(old_response['properties'], 'enable_soft_delete', None))):
+                        (self.parameters['properties']['enable_soft_delete'] != old_response['properties'].get('enable_soft_delete', None))):
                     self.to_do = Actions.Update
                 elif (('soft_delete_retention_in_days' in self.parameters['properties']) and
-                        (self.parameters['properties']['soft_delete_retention_in_days'] != getattr(old_response['properties'],
-                                                                                                   'soft_delete_retention_in_days',
-                                                                                                   None))):
+                        (self.parameters['properties']['soft_delete_retention_in_days'] != old_response['properties'].get('soft_delete_retention_in_days'))):
                     self.to_do = Actions.Update
                 elif (('enable_purge_protection' in self.parameters['properties']) and
-                      (self.parameters['properties']['enable_purge_protection'] != getattr(old_response['properties'],
-                                                                                           'enable_purge_protection',
-                                                                                           None))):
+                      (self.parameters['properties']['enable_purge_protection'] != old_response['properties'].get('enable_purge_protection'))):
                     self.to_do = Actions.Update
                 elif ('create_mode' in self.parameters['properties']) and (self.parameters['properties']['create_mode'] == 'recover'):
                     self.to_do = Actions.Update

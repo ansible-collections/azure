@@ -93,10 +93,10 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.keyvault import KeyVaultClient, KeyVaultAuthentication, KeyVaultId
     from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
-    from azure.keyvault.models.key_vault_error import KeyVaultErrorException
     from msrestazure.azure_active_directory import MSIAuthentication
     import dateutil.parser
-    from azure.keyvault.models.secret_attributes import SecretAttributes
+    from azure.keyvault.models import SecretAttributes
+    # from azure.keyvault.models.secret_attributes import SecretAttributes
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -162,7 +162,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             elif self.secret_value and results['secret_value'] != self.secret_value:
                 changed = True
 
-        except KeyVaultErrorException:
+        except Exception:
             # Secret doesn't exist
             if self.state == 'present':
                 changed = True
