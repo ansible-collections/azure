@@ -49,6 +49,9 @@
     cluster_name: "min{{ rpfx }}"
   register: agentpool_version
 
+- debug:
+    var: agentpool_version
+
 - name: Assert the orchestrator version is not None
   assert:
     that:
