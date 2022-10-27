@@ -105,6 +105,7 @@
   - azure_rm_azurefirewall: Correct firewall action examples ([#962](https://github.com/ansible-collections/azure/pull/962))
   - azure_rm_webappaccessrestriction: Update azure_rm_webappaccessrestriction test case ([#964](https://github.com/ansible-collections/azure/pull/964))
   - galaxy.yml: Update authors ([#994](https://github.com/ansible-collections/azure/pull/994))
+  - azure_rm_common.py: [Feature] Enable certificate-based authentication with login with Service principal ([#902](https://github.com/ansible-collections/azure/pull/902))
 
 
 ## v1.13.0 (2022-05-27)
