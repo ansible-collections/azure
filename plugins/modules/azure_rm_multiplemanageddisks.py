@@ -338,7 +338,7 @@ def managed_disk_to_dict(managed_disk):
     )
 
 
-class AzureRMManagedMultipleDisk(AzureRMModuleBase):
+class AzureRMMultipleManagedDisk(AzureRMModuleBase):
     """Configuration class for an Azure RM Managed Disk resource"""
 
     def __init__(self):
@@ -418,7 +418,7 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
             changed=False,
             state=list())
 
-        super(AzureRMManagedMultipleDisk, self).__init__(
+        super(AzureRMMultipleManagedDisk, self).__init__(
             derived_arg_spec=self.module_arg_spec,
             supports_tags=True)
 
@@ -728,7 +728,7 @@ class AzureRMManagedMultipleDisk(AzureRMModuleBase):
 
 def main():
     """Main execution"""
-    AzureRMManagedMultipleDisk()
+    AzureRMMultipleManagedDisk()
 
 
 if __name__ == '__main__':

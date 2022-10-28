@@ -2,4 +2,4 @@ cloud/azure
 shippable/azure/group4
 destructive
 azure_rm_manageddisk_info
-azure_rm_managedmultipledisks
+azure_rm_multiplemanageddisks
