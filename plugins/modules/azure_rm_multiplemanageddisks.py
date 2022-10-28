@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_multiple_manageddisks
+module: azure_rm_multiplemanageddisks
 
 version_added: "1.14.0"
 
@@ -166,7 +166,7 @@ author:
 
 EXAMPLES = '''
     - name: Create managed operating system disks from page blob and attach them to a list of VMs
-      azure_rm_multiple_manageddisks:
+      azure_rm_multiplemanageddisks:
         managed_disks:
             - name: mymanageddisk1
               location: eastus2
@@ -189,7 +189,7 @@ EXAMPLES = '''
               name: TestVM
 
     - name: Detach disks from the VMs specified in the list
-      azure_rm_multiple_manageddisks:
+      azure_rm_multiplemanageddisks:
         state: absent
         managed_disks:
             - name: mymanageddisk1
@@ -215,7 +215,7 @@ EXAMPLES = '''
               name: TestVM2
 
     - name: Detach managed disks from all VMs without deletion
-      azure_rm_multiple_manageddisks:
+      azure_rm_multiplemanageddisks:
         state: present
         managed_disks:
             - name: mymanageddisk1
@@ -227,7 +227,7 @@ EXAMPLES = '''
         managed_by_extended: []
 
     - name: Detach managed disks from all VMs and delete them
-      azure_rm_multiple_manageddisks:
+      azure_rm_multiplemanageddisks:
         state: absent
         managed_disks:
             - name: mymanageddisk1
