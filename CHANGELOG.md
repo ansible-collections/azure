@@ -90,7 +90,7 @@
     - If the disk exists, obtain parameters not configured ([#876](https://github.com/ansible-collections/azure/pull/876))
     - Add required option(`storage_account_id`) when importing a disk image ([#877](https://github.com/ansible-collections/azure/pull/877))
   - azure_rm_deployment_info: Fix API breaking change, replace `list` with `list_by_resource_group` ([#857](https://github.com/ansible-collections/azure/pull/857))
-  - azure_rm_publicipaddress: Fix property get error.([#908](https://github.com/ansible-collections/azure/pull/908)
+  - azure_rm_publicipaddress: Fix property get error.([#908](https://github.com/ansible-collections/azure/pull/908))
   - azure_rm_keyvault*: Fixes `credential_scopes` for track2 authentication when connecting to non-Azure Public cloud environments ([#854](https://github.com/ansible-collections/azure/pull/854))
   - azure_rm_keyvault: Expose `soft_delete_retention_in_days` ([#906](https://github.com/ansible-collections/azure/pull/906))
   - azure_rm_virtualmachine: Remove `started` default value ([#915](https://github.com/ansible-collections/azure/pull/915))
