@@ -67,8 +67,7 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
     cert_validation_mode='AZURE_CERT_VALIDATION_MODE',
     adfs_authority_url='AZURE_ADFS_AUTHORITY_URL',
     x509_certificate_path='AZURE_X509_CERTIFICATE_PATH',
-    thumbprint='AZURE_THUMBPRINT',
-    auth_source='ANSIBLE_AZURE_AUTH_SOURCE'
+    thumbprint='AZURE_THUMBPRINT'
 )
 
 
@@ -1456,7 +1455,6 @@ class AzureRMAuth(object):
         self.is_ad_resource = is_ad_resource
 
         # authenticate
-        auth_source = auth_source or self._get_env('auth_source')
         self.credentials = self._get_credentials(
             auth_source=auth_source,
             profile=profile,
