@@ -119,7 +119,6 @@ try:
 except ImportError:
     from Queue import Queue, Empty
 
-from os import environ
 from collections import namedtuple
 from ansible import release
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable
