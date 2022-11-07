@@ -63,7 +63,7 @@
 - name: Get ad service principal info by object_id
   azure_rm_adserviceprincipal_info:
     tenant: "{{ tenant_id }}"
-    app_display_name: "{{ ad_info.ad_fact.app_display_name }}"
+    app_display_name: "{{ ad_fact.app_display_name }}"
   register: ad_info
 
 - assert:
