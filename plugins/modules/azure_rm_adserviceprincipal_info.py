@@ -35,6 +35,7 @@ options:
     app_display_name:
         description:
             - service principal's display name.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
