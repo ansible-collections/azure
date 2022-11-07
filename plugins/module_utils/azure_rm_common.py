@@ -67,7 +67,8 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
     cert_validation_mode='AZURE_CERT_VALIDATION_MODE',
     adfs_authority_url='AZURE_ADFS_AUTHORITY_URL',
     x509_certificate_path='AZURE_X509_CERTIFICATE_PATH',
-    thumbprint='AZURE_THUMBPRINT'
+    thumbprint='AZURE_THUMBPRINT',
+    auth_source='ANSIBLE_AZURE_AUTH_SOURCE'
 )
 
 
@@ -1455,6 +1456,7 @@ class AzureRMAuth(object):
         self.is_ad_resource = is_ad_resource
 
         # authenticate
+        auth_source = auth_source or self._get_env('auth_source')
         self.credentials = self._get_credentials(
             auth_source=auth_source,
             profile=profile,
@@ -1652,6 +1654,7 @@ class AzureRMAuth(object):
                 except Exception as exc:
                     self.fail("cloud_environment {0} could not be resolved: {1}".format(_cloud_environment, str(exc)), exception=traceback.format_exc())
 
+        client_id = client_id or self._get_env('client_id')
         credentials = MSIAuthentication(client_id=client_id, cloud_environment=cloud_environment)
         credential = MSIAuthenticationWrapper(client_id=client_id, cloud_environment=cloud_environment)
         subscription_id = subscription_id or self._get_env('subscription_id')
