@@ -157,9 +157,9 @@ state:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.eventhub.models import Eventhub, EHNamespace
-    from azure.mgmt.eventhub.models.sku import Sku
+    from azure.mgmt.eventhub.models import Sku
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -304,7 +304,7 @@ class AzureRMEventHub(AzureRMModuleBase):
                 sku=Sku(name=self.sku),
                 tags=self.tags
             )
-            result = self.event_hub_client.namespaces.create_or_update(
+            result = self.event_hub_client.namespaces.begin_create_or_update(
                 self.resource_group,
                 self.namespace_name,
                 namespace_params)
@@ -318,7 +318,7 @@ class AzureRMEventHub(AzureRMModuleBase):
                     self.resource_group,
                     self.namespace_name,
                 )
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to create namespace {0} in resource group {1}: {2}".format(
                 self.namespace_name, self.resource_group, str(ex)))
         return namespace_to_dict(namespace)
@@ -357,7 +357,7 @@ class AzureRMEventHub(AzureRMModuleBase):
         try:
             result = self.event_hub_client.event_hubs.delete(
                 self.resource_group, self.namespace_name, self.name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete event hub.')
             self.fail(
                 "Error deleting the event hub : {0}".format(str(e)))
@@ -370,9 +370,9 @@ class AzureRMEventHub(AzureRMModuleBase):
         '''
         self.log("Deleting the namespace {0}".format(self.namespace_name))
         try:
-            result = self.event_hub_client.namespaces.delete(
+            result = self.event_hub_client.namespaces.begin_delete(
                 self.resource_group, self.namespace_name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete namespace.')
             self.fail(
                 "Error deleting the namespace : {0}".format(str(e)))

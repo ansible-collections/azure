@@ -29,6 +29,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
     namespace:
         description:
             - Servicebus namespace name.
@@ -404,7 +406,7 @@ class AzureRMServiceBusInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             type=dict(type='str', required=True, choices=['namespace', 'topic', 'queue', 'subscription']),
             namespace=dict(type='str'),
             topic=dict(type='str'),
@@ -517,7 +519,7 @@ class AzureRMServiceBusInfo(AzureRMModuleBase):
                 return client.list_by_topic(self.resource_group, self.namespace, self.topic)
             else:
                 return client.list_by_namespace(self.resource_group, self.namespace)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list items - {0}".format(str(exc)))
         return []
 
@@ -528,7 +530,7 @@ class AzureRMServiceBusInfo(AzureRMModuleBase):
                 return []
             response = self.servicebus_client.namespaces.list()
             return [x for x in response if self.has_tags(x.tags, self.tags)]
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
         return []
 

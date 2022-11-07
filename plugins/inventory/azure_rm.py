@@ -6,7 +6,6 @@ __metaclass__ = type
 
 DOCUMENTATION = r'''
     name: azure_rm
-    plugin_type: inventory
     short_description: Azure Resource Manager inventory plugin
     extends_documentation_fragment:
       - azure.azcollection.azure
@@ -100,6 +99,8 @@ keyed_groups:
 exclude_host_filters:
 # excludes hosts in the eastus region
 - location in ['eastus']
+- tags['tagkey'] is defined and tags['tagkey'] == 'tagkey'
+- tags['tagkey2'] is defined and tags['tagkey2'] == 'tagkey2'
 # excludes hosts that are powered off
 - powerstate != 'running'
 '''
@@ -523,6 +524,11 @@ class AzureHost(object):
             av_zone = self._vm_model['zones']
 
         new_hostvars = dict(
+            network_interface=[],
+            mac_address=[],
+            network_interface_id=[],
+            security_group_id=[],
+            security_group=[],
             public_ipv4_addresses=[],
             public_dns_hostnames=[],
             private_ipv4_addresses=[],
@@ -567,12 +573,12 @@ class AzureHost(object):
                     if pip_fqdn:
                         new_hostvars['public_dns_hostnames'].append(pip_fqdn)
 
-            new_hostvars['mac_address'] = nic._nic_model['properties'].get('macAddress')
-            new_hostvars['network_interface'] = nic._nic_model['name']
-            new_hostvars['network_interface_id'] = nic._nic_model['id']
-            new_hostvars['security_group_id'] = nic._nic_model['properties']['networkSecurityGroup']['id'] \
+            new_hostvars['mac_address'].append(nic._nic_model['properties'].get('macAddress'))
+            new_hostvars['network_interface'].append(nic._nic_model['name'])
+            new_hostvars['network_interface_id'].append(nic._nic_model['id'])
+            new_hostvars['security_group_id'].append(nic._nic_model['properties']['networkSecurityGroup']['id']) \
                 if nic._nic_model['properties'].get('networkSecurityGroup') else None
-            new_hostvars['security_group'] = parse_resource_id(new_hostvars['security_group_id'])['resource_name'] \
+            new_hostvars['security_group'].append(parse_resource_id(nic._nic_model['properties']['networkSecurityGroup']['id'])['resource_name']) \
                 if nic._nic_model['properties'].get('networkSecurityGroup') else None
 
         # set image and os_disk

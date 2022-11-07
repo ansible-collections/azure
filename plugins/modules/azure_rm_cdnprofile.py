@@ -82,9 +82,9 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 import uuid
 
 try:
-    from azure.mgmt.cdn.models import Profile, Sku, ErrorResponseException
+    from azure.mgmt.cdn.models import Profile, Sku
     from azure.mgmt.cdn import CdnManagementClient
-except ImportError:
+except ImportError as ec:
     # This is handled in azure_rm_common
     pass
 
@@ -222,16 +222,14 @@ class AzureRMCdnprofile(AzureRMModuleBase):
         xid = str(uuid.uuid1())
 
         try:
-            poller = self.cdn_client.profiles.create(self.resource_group,
-                                                     self.name,
-                                                     parameters,
-                                                     custom_headers={'x-ms-client-request-id': xid}
-                                                     )
+            poller = self.cdn_client.profiles.begin_create(self.resource_group,
+                                                           self.name,
+                                                           parameters)
             response = self.get_poller_result(poller)
             return cdnprofile_to_dict(response)
-        except ErrorResponseException as exc:
+        except Exception as exc:
             self.log('Error attempting to create Azure CDN profile instance.')
-            self.fail("Error creating Azure CDN profile instance: {0}.\n Request id: {1}".format(exc.message, xid))
+            self.fail("Error Creating Azure CDN profile instance: {0}".format(exc.message))
 
     def update_cdnprofile(self):
         '''
@@ -242,10 +240,10 @@ class AzureRMCdnprofile(AzureRMModuleBase):
         self.log("Updating the Azure CDN profile instance {0}".format(self.name))
 
         try:
-            poller = self.cdn_client.profiles.update(self.resource_group, self.name, self.tags)
+            poller = self.cdn_client.profiles.begin_update(self.resource_group, self.name, {'tags': self.tags})
             response = self.get_poller_result(poller)
             return cdnprofile_to_dict(response)
-        except ErrorResponseException as exc:
+        except Exception as exc:
             self.log('Error attempting to update Azure CDN profile instance.')
             self.fail("Error updating Azure CDN profile instance: {0}".format(exc.message))
 
@@ -257,11 +255,11 @@ class AzureRMCdnprofile(AzureRMModuleBase):
         '''
         self.log("Deleting the CDN profile {0}".format(self.name))
         try:
-            poller = self.cdn_client.profiles.delete(
+            poller = self.cdn_client.profiles.begin_delete(
                 self.resource_group, self.name)
             self.get_poller_result(poller)
             return True
-        except ErrorResponseException as e:
+        except Exception as e:
             self.log('Error attempting to delete the CDN profile.')
             self.fail("Error deleting the CDN profile: {0}".format(e.message))
             return False
@@ -279,7 +277,7 @@ class AzureRMCdnprofile(AzureRMModuleBase):
             self.log("Response : {0}".format(response))
             self.log("CDN profile : {0} found".format(response.name))
             return cdnprofile_to_dict(response)
-        except ErrorResponseException:
+        except Exception:
             self.log('Did not find the CDN profile.')
             return False
 
@@ -287,6 +285,7 @@ class AzureRMCdnprofile(AzureRMModuleBase):
         if not self.cdn_client:
             self.cdn_client = self.get_mgmt_svc_client(CdnManagementClient,
                                                        base_url=self._cloud_environment.endpoints.resource_manager,
+                                                       is_track2=True,
                                                        api_version='2017-04-02')
         return self.cdn_client
 

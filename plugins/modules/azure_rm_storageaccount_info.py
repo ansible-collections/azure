@@ -32,6 +32,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
     show_connection_string:
         description:
             - Show the connection string for each of the storageaccount's endpoints.
@@ -148,6 +150,60 @@ storageaccounts:
                     returned: always
                     type: bool
                     sample: true
+        encryption:
+            description:
+                - The encryption settings on the storage account.
+            type: complex
+            returned: always
+            contains:
+                key_source:
+                    description:
+                        - The encryption keySource (provider).
+                    type: str
+                    returned: always
+                    sample: Microsoft.Storage
+                require_infrastructure_encryption:
+                    description:
+                        - A boolean indicating whether or not the service applies a secondary layer of encryption with platform managed keys for data at rest.
+                    type: bool
+                    returned: always
+                    sample: false
+                services:
+                    description:
+                        - List of services which support encryption.
+                    type: dict
+                    returned: always
+                    contains:
+                        file:
+                            description:
+                                - The encryption function of the file storage service.
+                            type: dict
+                            returned: always
+                            sample: {'enabled': true}
+                        table:
+                            description:
+                                - The encryption function of the table storage service.
+                            type: dict
+                            returned: always
+                            sample: {'enabled': true}
+                        queue:
+                            description:
+                                - The encryption function of the queue storage service.
+                            type: dict
+                            returned: always
+                            sample: {'enabled': true}
+                        blob:
+                            description:
+                                - The encryption function of the blob storage service.
+                            type: dict
+                            returned: always
+                            sample: {'enabled': true}
+        is_hns_enabled:
+            description:
+                - Account HierarchicalNamespace enabled if sets to true.
+            type: bool
+            returned: always
+            sample: true
         kind:
             description:
                 - The kind of storage.
@@ -166,6 +222,24 @@ storageaccounts:
             returned: always
             type: bool
             sample: false
+        minimum_tls_version:
+            description:
+                -  The minimum TLS version permitted on requests to storage.
+            returned: always
+            type: str
+            sample: TLS1_2
+        public_network_access:
+            description:
+                -  Public network access to Storage Account allowed or disallowed.
+            returned: always
+            type: str
+            sample: Enabled
+        allow_blob_public_access:
+            description:
+                -  Public access to all blobs or containers in the storage account allowed or disallowed.
+            returned: always
+            type: bool
+            sample: true
         network_acls:
             description:
                 - A set of firewall and virtual network rules
@@ -398,10 +472,35 @@ storageaccounts:
             returned: always
             type: dict
             sample: { "tag1": "abc" }
+        static_website:
+            description:
+                - Static website configuration for the storage account.
+            returned: always
+            version_added: "1.13.0"
+            type: complex
+            contains:
+                enabled:
+                    description:
+                        - Whether this account is hosting a static website.
+                    returned: always
+                    type: bool
+                    sample: true
+                index_document:
+                    description:
+                        - The default name of the index page under each directory.
+                    returned: always
+                    type: str
+                    sample: index.html
+                error_document404_path:
+                    description:
+                        - The absolute path of the custom 404 page.
+                    returned: always
+                    type: str
+                    sample: error.html
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -419,7 +518,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str', aliases=['resource_group_name']),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             show_connection_string=dict(type='bool'),
             show_blob_cors=dict(type='bool')
         )
@@ -475,7 +574,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         try:
             account = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name)
             return [account]
-        except CloudError:
+        except ResourceNotFoundError:
             pass
         return []
 
@@ -506,7 +605,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
     def format_to_dict(self, raw):
         return [self.account_obj_to_dict(item) for item in raw]
 
-    def account_obj_to_dict(self, account_obj, blob_service_props=None):
+    def account_obj_to_dict(self, account_obj):
         account_dict = dict(
             id=account_obj.id,
             name=account_obj.name,
@@ -524,7 +623,14 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             primary_location=account_obj.primary_location,
             https_only=account_obj.enable_https_traffic_only,
             minimum_tls_version=account_obj.minimum_tls_version,
-            allow_blob_public_access=account_obj.allow_blob_public_access
+            public_network_access=account_obj.public_network_access,
+            allow_blob_public_access=account_obj.allow_blob_public_access,
+            is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
+            static_website=dict(
+                enabled=False,
+                index_document=None,
+                error_document404_path=None,
+            ),
         )
 
         id_dict = self.parse_resource_to_dict(account_obj.id)
@@ -577,15 +683,40 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         account_dict['tags'] = None
         if account_obj.tags:
             account_dict['tags'] = account_obj.tags
-        blob_service_props = self.get_blob_service_props(account_dict['resource_group'], account_dict['name'])
-        if blob_service_props and blob_service_props.cors and blob_service_props.cors.cors_rules:
+        blob_mgmt_props = self.get_blob_mgmt_props(account_dict['resource_group'], account_dict['name'])
+        if blob_mgmt_props and blob_mgmt_props.cors and blob_mgmt_props.cors.cors_rules:
             account_dict['blob_cors'] = [dict(
                 allowed_origins=to_native(x.allowed_origins),
                 allowed_methods=to_native(x.allowed_methods),
                 max_age_in_seconds=x.max_age_in_seconds,
                 exposed_headers=to_native(x.exposed_headers),
                 allowed_headers=to_native(x.allowed_headers)
-            ) for x in blob_service_props.cors.cors_rules]
+            ) for x in blob_mgmt_props.cors.cors_rules]
+        blob_client_props = self.get_blob_client_props(account_dict['resource_group'], account_dict['name'], account_dict['kind'])
+        if blob_client_props and blob_client_props['static_website']:
+            static_website = blob_client_props['static_website']
+            account_dict['static_website'] = dict(
+                enabled=static_website.enabled,
+                index_document=static_website.index_document,
+                error_document404_path=static_website.error_document404_path,
+            )
+
+        account_dict['encryption'] = dict()
+        if account_obj.encryption:
+            account_dict['encryption']['require_infrastructure_encryption'] = account_obj.encryption.require_infrastructure_encryption
+            account_dict['encryption']['key_source'] = account_obj.encryption.key_source
+
+            if account_obj.encryption.services:
+                account_dict['encryption']['services'] = dict()
+
+                if account_obj.encryption.services.file:
+                    account_dict['encryption']['services']['file'] = dict(enabled=True)
+                if account_obj.encryption.services.table:
+                    account_dict['encryption']['services']['table'] = dict(enabled=True)
+                if account_obj.encryption.services.queue:
+                    account_dict['encryption']['services']['queue'] = dict(enabled=True)
+                if account_obj.encryption.services.blob:
+                    account_dict['encryption']['services']['blob'] = dict(enabled=True)
         return account_dict
 
     def format_endpoint_dict(self, name, key, endpoint, storagetype, protocol='https'):
@@ -600,12 +731,20 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                                          endpoint)
         return result
 
-    def get_blob_service_props(self, resource_group, name):
+    def get_blob_mgmt_props(self, resource_group, name):
         if not self.show_blob_cors:
             return None
         try:
-            blob_service_props = self.storage_client.blob_services.get_service_properties(resource_group, name)
-            return blob_service_props
+            return self.storage_client.blob_services.get_service_properties(resource_group, name)
+        except Exception:
+            pass
+        return None
+
+    def get_blob_client_props(self, resource_group, name, kind):
+        if kind == "FileStorage":
+            return None
+        try:
+            return self.get_blob_service_client(resource_group, name).get_service_properties()
         except Exception:
             pass
         return None

@@ -113,7 +113,7 @@ state:
         "region": null,
         "scale_unit": null,
         "service_bus_endpoint": "https://testnaedd3d22d3w.servicebus.windows.net:443/",
-        "sku": "Free",
+        "sku": { "name":"Free" },
         "tags": {
             "a": "b"
         },
@@ -125,9 +125,9 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.notificationhubs.models import NotificationHubCreateOrUpdateParameters, NamespaceCreateOrUpdateParameters
-    from azure.mgmt.notificationhubs.models.sku import Sku
+    from azure.mgmt.notificationhubs.models import Sku
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -205,13 +205,13 @@ class AzureNotificationHub(AzureRMModuleBase):
                 if update_tags:
                     changed = True
                 elif self.namespace_name and not self.name:
-                    if self.sku != results['sku'].lower():
+                    if self.sku != results['sku']['name'].lower():
                         changed = True
 
             elif self.state == 'absent':
                 changed = True
 
-        except CloudError:
+        except ResourceNotFoundError:
             # the notification hub does not exist so create it
             if self.state == 'present':
                 changed = True
@@ -269,7 +269,7 @@ class AzureNotificationHub(AzureRMModuleBase):
                     self.resource_group,
                     self.namespace_name,
                 )
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to create namespace {0} in resource group {1}: {2}".format(
                 self.namespace_name, self.resource_group, str(ex)))
         return namespace_to_dict(result)
@@ -292,7 +292,7 @@ class AzureNotificationHub(AzureRMModuleBase):
                 self.name,
                 params)
             self.log("Response : {0}".format(result))
-        except CloudError as ex:
+        except Exception as ex:
             self.fail("Failed to create notification hub {0} in resource group {1}: {2}".format(
                 self.name, self.resource_group, str(ex)))
         return notification_hub_to_dict(result)
@@ -306,7 +306,7 @@ class AzureNotificationHub(AzureRMModuleBase):
         try:
             result = self.notification_hub_client.notification_hubs.delete(
                 self.resource_group, self.namespace_name, self.name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete notification hub.')
             self.fail(
                 "Error deleting the notification hub : {0}".format(str(e)))
@@ -319,9 +319,9 @@ class AzureNotificationHub(AzureRMModuleBase):
         '''
         self.log("Deleting the namespace {0}".format(self.namespace_name))
         try:
-            result = self.notification_hub_client.namespaces.delete(
+            result = self.notification_hub_client.namespaces.begin_delete(
                 self.resource_group, self.namespace_name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete namespace.')
             self.fail(
                 "Error deleting the namespace : {0}".format(str(e)))
@@ -365,7 +365,7 @@ def namespace_to_dict(item):
         type=namespace.get('type', None),
         location=namespace.get(
             'location', '').replace(' ', '').lower(),
-        sku=namespace.get("sku").get("name"),
+        sku=namespace.get("sku"),
         tags=namespace.get('tags', None),
         provisioning_state=namespace.get(
             'provisioning_state', None),

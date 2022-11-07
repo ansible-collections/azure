@@ -29,11 +29,11 @@ options:
     tags:
         description:
             - Limit results by providing of tags. Format tags 'key:value'.
-        type: dict
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -49,6 +49,9 @@ EXAMPLES = '''
   - name: List Container Instances in a specified resource group name
     azure_rm_containerinstance_info:
       resource_group: myResourceGroup
+      tags:
+        - key
+        - key:value
 '''
 
 RETURN = '''
@@ -197,10 +200,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrestazure.azure_operation import AzureOperationPoller
-    from azure.mgmt.containerinstance import ContainerInstanceManagementClient
-    from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -218,7 +218,8 @@ class AzureRMContainerInstanceInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='dict'
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -231,7 +232,8 @@ class AzureRMContainerInstanceInfo(AzureRMModuleBase):
 
         super(AzureRMContainerInstanceInfo, self).__init__(self.module_arg_spec,
                                                            supports_check_mode=True,
-                                                           supports_tags=True)
+                                                           supports_tags=False,
+                                                           facts_module=True)
 
     def exec_module(self, **kwargs):
 
@@ -257,7 +259,7 @@ class AzureRMContainerInstanceInfo(AzureRMModuleBase):
             response = self.containerinstance_client.container_groups.get(resource_group_name=self.resource_group,
                                                                           container_group_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Container Instances.')
 
         if response is not None and self.has_tags(response.tags, self.tags):
@@ -271,7 +273,7 @@ class AzureRMContainerInstanceInfo(AzureRMModuleBase):
         try:
             response = self.containerinstance_client.container_groups.list_by_resource_group(resource_group_name=self.resource_group)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.fail('Could not list facts for Container Instances.')
 
         if response is not None:
@@ -287,7 +289,7 @@ class AzureRMContainerInstanceInfo(AzureRMModuleBase):
         try:
             response = self.containerinstance_client.container_groups.list()
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.fail('Could not list facts for Container Instances.')
 
         if response is not None:

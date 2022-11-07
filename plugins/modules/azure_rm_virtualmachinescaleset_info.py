@@ -28,7 +28,9 @@ options:
             - The resource group to search for the desired virtual machine scale set.
     tags:
         description:
-            - List of tags to be matched.
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
     format:
         description:
             - Format of the data returned.
@@ -240,13 +242,25 @@ vmss:
             returned: always
             type: dict
             sample: { "tag1": "abc" }
+        orchestrationMode:
+            description:
+                - The orchestration mode for the virtual machine scale set.
+            type: str
+            returned: always
+            sample: Flexible
+        platformFaultDomainCount:
+            description:
+                - Fault Domain count for each placement group.
+            type: int
+            returned: always
+            sample: 1
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 import re
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # handled in azure_rm_common
     pass
@@ -264,7 +278,7 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
         self.module_args = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             format=dict(
                 type='str',
                 choices=['curated',
@@ -356,14 +370,16 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
                     'vm_size': vmss['sku']['name'],
                     'capacity': vmss['sku']['capacity'],
                     'tier': vmss['sku']['tier'],
-                    'upgrade_policy': vmss['properties']['upgradePolicy']['mode'],
+                    'upgrade_policy': vmss['properties'].get('upgradePolicy'),
+                    'orchestrationMode': vmss['properties'].get('orchestrationMode'),
+                    'platformFaultDomainCount': vmss['properties'].get('platformFaultDomainCount'),
                     'admin_username': vmss['properties']['virtualMachineProfile']['osProfile']['adminUsername'],
                     'admin_password': vmss['properties']['virtualMachineProfile']['osProfile'].get('adminPassword'),
                     'ssh_password_enabled': ssh_password_enabled,
                     'image': vmss['properties']['virtualMachineProfile']['storageProfile']['imageReference'],
                     'os_disk_caching': vmss['properties']['virtualMachineProfile']['storageProfile']['osDisk']['caching'],
                     'os_type': 'Linux' if (vmss['properties']['virtualMachineProfile']['osProfile'].get('linuxConfiguration') is not None) else 'Windows',
-                    'overprovision': vmss['properties']['overprovision'],
+                    'overprovision': vmss['properties'].get('overprovision'),
                     'managed_disk_type': vmss['properties']['virtualMachineProfile']['storageProfile']['osDisk']['managedDisk']['storageAccountType'],
                     'data_disks': data_disks,
                     'virtual_network_name': virtual_network_name,
@@ -397,7 +413,7 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
 
         try:
             item = self.compute_client.virtual_machine_scale_sets.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -412,7 +428,7 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
 
         try:
             response = self.compute_client.virtual_machine_scale_sets.list(self.resource_group)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []

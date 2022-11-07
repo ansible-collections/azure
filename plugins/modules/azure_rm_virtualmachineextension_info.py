@@ -21,16 +21,21 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     virtual_machine_name:
         description:
             - The name of the virtual machine containing the extension.
         required: True
+        type: str
     name:
         description:
             - The name of the virtual machine extension.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -132,7 +137,7 @@ extensions:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -155,7 +160,8 @@ class AzureRMVirtualMachineExtensionInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -166,7 +172,7 @@ class AzureRMVirtualMachineExtensionInfo(AzureRMModuleBase):
         self.virtual_machine_name = None
         self.name = None
         self.tags = None
-        super(AzureRMVirtualMachineExtensionInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
+        super(AzureRMVirtualMachineExtensionInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_virtualmachineextension_facts'
@@ -192,7 +198,7 @@ class AzureRMVirtualMachineExtensionInfo(AzureRMModuleBase):
                                                                           vm_name=self.virtual_machine_name,
                                                                           vm_extension_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Virtual Machine Extension.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -207,7 +213,7 @@ class AzureRMVirtualMachineExtensionInfo(AzureRMModuleBase):
             response = self.compute_client.virtual_machine_extensions.list(resource_group_name=self.resource_group,
                                                                            vm_name=self.virtual_machine_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Virtual Machine Extension.')
 
         if response is not None and response.value is not None:
@@ -226,7 +232,7 @@ class AzureRMVirtualMachineExtensionInfo(AzureRMModuleBase):
             'location': d.get('location'),
             'name': d.get('name'),
             'publisher': d.get('publisher'),
-            'type': d.get('virtual_machine_extension_type'),
+            'type': d.get('type_properties_type'),
             'settings': d.get('settings'),
             'auto_upgrade_minor_version': d.get('auto_upgrade_minor_version'),
             'tags': d.get('tags', None),

@@ -1,0 +1,284 @@
+- name: Set Private Link Service Names
+  set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+    azure_subscription_id: f64d4ee8-be94-457d-ba26-3fa6b6506cef
+
+- name: Delete the private link service
+  azure_rm_privatelinkservice:
+    name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+
+- name: Create virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "vnet{{ rpfx }}"
+    address_prefixes_cidr:
+      - 10.1.0.0/16
+      - 172.100.0.0/16
+
+- name: Create a subnet
+  azure_rm_subnet:
+    resource_group: "{{ resource_group }}"
+    name: "sub{{ rpfx }}"
+    virtual_network_name: "vnet{{ rpfx }}"
+    address_prefix_cidr: "10.1.0.0/24"
+    private_link_service_network_policies: Disabled
+    private_endpoint_network_policies: Disabled
+  register: subnet_output
+
+- name: create public ip
+  azure_rm_publicipaddress:
+    resource_group: '{{ resource_group }}'
+    name: "pip{{ rpfx }}"
+    sku: Standard
+    allocation_method: Static
+
+- name: create load balancer with frontend_ip_configurations
+  azure_rm_loadbalancer:
+    resource_group: '{{ resource_group }}'
+    name: "lb{{ rpfx }}"
+    sku: Standard
+    frontend_ip_configurations:
+      - name: frontendipconf0
+        public_ip_address: "pip{{ rpfx }}"
+    backend_address_pools:
+      - name: backendaddrpool0
+    probes:
+      - name: prob0
+        port: 80
+    load_balancing_rules:
+      - name: lbrbalancingrule0
+        frontend_ip_configuration: frontendipconf0
+        backend_address_pool: backendaddrpool0
+        frontend_port: 80
+        backend_port: 80
+        probe: prob0
+    inbound_nat_rules:
+      - name: inboundnatrule0
+        backend_port: 8080
+        protocol: Tcp
+        frontend_port: 8080
+        frontend_ip_configuration: frontendipconf0
+  register: lb_output
+
+- name: Create private link service (Check mode test)
+  azure_rm_privatelinkservice:
+    name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    enable_proxy_protocol: True
+    fqdns:
+      - 'dns01.com'
+      - 'dns02.com'
+    visibility:
+       subscriptions:
+         - "{{ azure_subscription_id }}"
+    auto_approval:
+       subscriptions:
+         - "{{ azure_subscription_id }}"
+    load_balancer_frontend_ip_configurations:
+      - id: "{{ lb_output.state.frontend_ip_configurations[0].id }}"
+    ip_configurations:
+      - name: ip_configuration01
+        properties:
+          primary: True
+          private_ip_allocation_method: 'Dynamic'
+          private_ip_address_version: 'IPv4'
+          subnet:
+            id: "{{ subnet_output.state.id }}"
+    tags:
+      key1: value1
+  check_mode: True
+  register: output
+
+- assert:
+    that: output.changed
+
+- name: Create private link service
+  azure_rm_privatelinkservice:
+    name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    enable_proxy_protocol: True
+    fqdns:
+      - 'dns01.com'
+      - 'dns02.com'
+    visibility:
+       subscriptions:
+         - "{{ azure_subscription_id }}"
+    auto_approval:
+       subscriptions:
+         - "{{ azure_subscription_id }}"
+    load_balancer_frontend_ip_configurations:
+      - id: "{{ lb_output.state.frontend_ip_configurations[0].id }}"
+    ip_configurations:
+      - name: ip_configuration01
+        properties:
+          primary: True
+          private_ip_allocation_method: 'Dynamic'
+          private_ip_address_version: 'IPv4'
+          subnet:
+            id: "{{ subnet_output.state.id }}"
+    tags:
+      key1: value1
+  register: output
+
+- assert:
+    that: output.changed
+
+- name: Create private link service (Idempotent test)
+  azure_rm_privatelinkservice:
+    name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    enable_proxy_protocol: True
+    fqdns:
+      - 'dns01.com'
+      - 'dns02.com'
+    visibility:
+       subscriptions:
+         - "{{ azure_subscription_id }}"
+    auto_approval:
+       subscriptions:
+         - "{{ azure_subscription_id }}"
+    load_balancer_frontend_ip_configurations:
+      - id: "{{ lb_output.state.frontend_ip_configurations[0].id }}"
+    ip_configurations:
+      - name: ip_configuration01
+        properties:
+          primary: True
+          private_ip_allocation_method: 'Dynamic'
+          private_ip_address_version: 'IPv4'
+          subnet:
+            id: "{{ subnet_output.state.id }}"
+    tags:
+      key1: value1
+  register: output
+
+- assert:
+    that: not output.changed
+
+- name: Update private link service
+  azure_rm_privatelinkservice:
+    name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    enable_proxy_protocol: False
+    fqdns:
+      - 'dns03.com'
+      - 'dns04.com'
+    visibility:
+       subscriptions:
+         - "{{ azure_subscription_id }}"
+    auto_approval:
+       subscriptions:
+         - "{{ azure_subscription_id }}"
+    load_balancer_frontend_ip_configurations:
+      - id: "{{ lb_output.state.frontend_ip_configurations[0].id }}"
+    ip_configurations:
+      - name: ip_configuration01
+        properties:
+          primary: True
+          private_ip_allocation_method: 'Dynamic'
+          private_ip_address_version: 'IPv4'
+          subnet:
+            id: "{{ subnet_output.state.id }}"
+    tags:
+      key2: value2
+      key3: value3
+  register: output
+
+- assert:
+    that: output.changed
+
+- name: Get private link service info by name
+  azure_rm_privatelinkservice_info:
+    name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- assert:
+    that:
+      - output.link_service[0].tags | length == 3
+      - output.link_service[0].fqdns | length == 4
+      - output.link_service[0].enable_proxy_protocol == false
+
+- name: Create private endpoint
+  azure_rm_privateendpoint:
+    name: "pd{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    private_link_service_connections:
+      - name: private_connection_name
+        private_link_service_id: "{{ output.link_service[0].id }}"
+    subnet:
+      id: "{{ subnet_output.state.id }}"
+  register: output
+
+- name: Get private endpoint connection info
+  azure_rm_privateendpointconnection_info:
+    service_name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- assert:
+    that:
+      - output.endpoint_connection[0].private_link_service_connection_state.actions_required == "None"
+      - output.endpoint_connection[0].private_link_service_connection_state.description == "Approved"
+      - output.endpoint_connection[0].private_link_service_connection_state.status == "Approved"
+
+- name: Update private endpoint connection
+  azure_rm_privateendpointconnection:
+    name: "{{ output.endpoint_connection[0].name }}"
+    service_name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    connection_state:
+      status: "Rejected"
+      description: "Rejected"
+      actions_required: "actions required"
+  register: output
+
+- assert:
+    that: output.changed
+
+- name: Get private endpoint connection info by name
+  azure_rm_privateendpointconnection_info:
+    name: "{{ output.state.name }}"
+    service_name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- assert:
+    that:
+      - output.endpoint_connection[0].private_link_service_connection_state.actions_required == "actions required"
+      - output.endpoint_connection[0].private_link_service_connection_state.description == "Rejected"
+      - output.endpoint_connection[0].private_link_service_connection_state.status == "Rejected"
+
+- name: Delete private endpoint connection
+  azure_rm_privateendpointconnection:
+    name: "{{ output.endpoint_connection[0].name }}"
+    service_name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: output
+
+- assert:
+    that: output.changed
+
+- name: Delete private endpoint
+  azure_rm_privateendpoint:
+    name: "pd{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+
+- assert:
+    that: output.changed
+
+- name: Pause for 5 mimutes to waiting
+  shell: sleep 300
+
+- name: Delete private link service
+  azure_rm_privatelinkservice:
+    name: "lsp{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: output
+
+- assert:
+    that: output.changed

@@ -29,6 +29,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
     show_kubeconfig:
         description:
             - Show kubeconfig of the AKS cluster.
@@ -69,8 +71,7 @@ azure_aks:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # handled in azure_rm_common
     pass
@@ -86,7 +87,7 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
         self.module_args = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             show_kubeconfig=dict(type='str', choices=['user', 'admin']),
         )
 
@@ -134,7 +135,7 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
 
         try:
             item = self.managedcluster_client.managed_clusters.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -151,7 +152,7 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
 
         try:
             response = self.managedcluster_client.managed_clusters.list(self.resource_group)
-        except AzureHttpError as exc:
+        except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []

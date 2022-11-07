@@ -109,6 +109,10 @@ options:
                     - 'System'
                     - 'User'
                 type: str
+            orchestrator_version:
+                description:
+                    - Version of kubernetes running on the node pool.
+                type: str
             node_labels:
                 description:
                     - Agent pool node labels to be persisted across all nodes in agent pool.
@@ -121,6 +125,7 @@ options:
                 description:
                     - Availability zones for nodes. Must use VirtualMachineScaleSets AgentPoolType.
                 type: list
+                elements: int
                 choices:
                     - 1
                     - 2
@@ -206,6 +211,7 @@ options:
                     - Authorized IP Ranges to kubernetes API server.
                     - Cannot be enabled when using private cluster
                 type: list
+                elements: str
             enable_private_cluster:
                 description:
                     - Whether to create the cluster as a private cluster or not.
@@ -225,6 +231,16 @@ options:
                 description:
                     - The AAD tenant ID to use for authentication.
                     - If not specified, will use the tenant of the deployment subscription.
+            managed:
+                description:
+                    - Whether to enable manged AAD.
+                type: bool
+                default: false
+            admin_group_object_ids:
+                description:
+                    - AAD group object IDs that will have admin role of the cluster.
+                type: list
+                elements: str
     addon:
         description:
             - Profile of managed cluster add-on.
@@ -424,7 +440,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -537,6 +553,7 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         os_type=profile.os_type,
         type=profile.type,
         mode=profile.mode,
+        orchestrator_version=profile.orchestrator_version,
         enable_auto_scaling=profile.enable_auto_scaling,
         max_count=profile.max_count,
         node_labels=profile.node_labels,
@@ -593,8 +610,9 @@ agent_pool_profile_spec = dict(
     vnet_subnet_id=dict(type='str'),
     availability_zones=dict(type='list', elements='int', choices=[1, 2, 3]),
     os_type=dict(type='str', choices=['Linux', 'Windows']),
+    orchestrator_version=dict(type='str', required=False),
     type=dict(type='str', choice=['VirtualMachineScaleSets', 'AvailabilitySet']),
-    mode=dict(type='str', choice=['System', 'User'], requried=True),
+    mode=dict(type='str', choice=['System', 'User']),
     enable_auto_scaling=dict(type='bool'),
     max_count=dict(type='int'),
     node_labels=dict(type='dict'),
@@ -619,7 +637,9 @@ aad_profile_spec = dict(
     client_app_id=dict(type='str'),
     server_app_id=dict(type='str'),
     server_app_secret=dict(type='str', no_log=True),
-    tenant_id=dict(type='str')
+    tenant_id=dict(type='str'),
+    managed=dict(type='bool', default='false'),
+    admin_group_object_ids=dict(type='list', elements='str')
 )
 
 
@@ -798,8 +818,9 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                             self.log(("Api Server Access Diff - Origin {0} / Update {1}"
                                      .format(str(self.api_server_access_profile), str(response['api_server_access_profile']))))
                             self.fail("The enable_private_cluster of the api server access profile cannot be updated")
-                        elif len(self.api_server_access_profile.get('authorized_ip_ranges')) != \
-                                len(response['api_server_access_profile'].get('authorized_ip_ranges')):
+                        elif self.api_server_access_profile.get('authorized_ip_ranges') is not None and \
+                                len(self.api_server_access_profile.get('authorized_ip_ranges')) != \
+                                len(response['api_server_access_profile'].get('authorized_ip_ranges', [])):
                             self.log(("Api Server Access Diff - Origin {0} / Update {1}"
                                      .format(str(self.api_server_access_profile), str(response['api_server_access_profile']))))
                             to_be_updated = True
@@ -837,6 +858,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                 os_disk_size_gb = profile_self.get('os_disk_size_gb') or profile_result['os_disk_size_gb']
                                 vnet_subnet_id = profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id'])
                                 count = profile_self['count']
+                                orchestrator_version = profile_self['orchestrator_version']
                                 vm_size = profile_self['vm_size']
                                 availability_zones = profile_self['availability_zones']
                                 enable_auto_scaling = profile_self['enable_auto_scaling']
@@ -980,20 +1002,20 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         # self.log("agent_pool_profiles : {0}".format(parameters.agent_pool_profiles))
 
         try:
-            poller = self.managedcluster_client.managed_clusters.create_or_update(self.resource_group, self.name, parameters)
+            poller = self.managedcluster_client.managed_clusters.begin_create_or_update(self.resource_group, self.name, parameters)
             response = self.get_poller_result(poller)
             response.kube_config = self.get_aks_kubeconfig()
             return create_aks_dict(response)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the AKS instance.')
             self.fail("Error creating the AKS instance: {0}".format(exc.message))
 
     def update_aks_tags(self):
         try:
-            poller = self.managedcluster_client.managed_clusters.update_tags(self.resource_group, self.name, self.tags)
+            poller = self.managedcluster_client.managed_clusters.begin_update_tags(self.resource_group, self.name, self.tags)
             response = self.get_poller_result(poller)
             return response.tags
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error attempting to update AKS tags: {0}".format(exc.message))
 
     def create_update_agentpool(self, to_update_name_list):
@@ -1008,16 +1030,17 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                     max_count=profile["max_count"],
                     node_labels=profile["node_labels"],
                     min_count=profile["min_count"],
+                    orchestrator_version=profile["orchestrator_version"],
                     max_pods=profile["max_pods"],
                     enable_auto_scaling=profile["enable_auto_scaling"],
                     agent_pool_type=profile["type"],
                     mode=profile["mode"]
                 )
                 try:
-                    poller = self.managedcluster_client.agent_pools.create_or_update(self.resource_group, self.name, profile["name"], parameters)
+                    poller = self.managedcluster_client.agent_pools.begin_create_or_update(self.resource_group, self.name, profile["name"], parameters)
                     response = self.get_poller_result(poller)
                     response_all.append(response)
-                except CloudError as exc:
+                except Exception as exc:
                     self.fail("Error attempting to update AKS agentpool: {0}".format(exc.message))
         return create_agent_pool_profiles_dict(response_all)
 
@@ -1025,9 +1048,9 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         for name in to_delete_name_list:
             self.log("Deleting the AKS agentpool {0}".format(name))
             try:
-                poller = self.managedcluster_client.agent_pools.delete(self.resource_group, self.name, name)
+                poller = self.managedcluster_client.agent_pools.begin_delete(self.resource_group, self.name, name)
                 self.get_poller_result(poller)
-            except CloudError as exc:
+            except Exception as exc:
                 self.fail("Error attempting to update AKS agentpool: {0}".format(exc.message))
 
     def delete_aks(self):
@@ -1038,10 +1061,10 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         '''
         self.log("Deleting the AKS instance {0}".format(self.name))
         try:
-            poller = self.managedcluster_client.managed_clusters.delete(self.resource_group, self.name)
+            poller = self.managedcluster_client.managed_clusters.begin_delete(self.resource_group, self.name)
             self.get_poller_result(poller)
             return True
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the AKS instance.')
             self.fail("Error deleting the AKS instance: {0}".format(e.message))
             return False
@@ -1059,7 +1082,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             self.log("AKS instance : {0} found".format(response.name))
             response.kube_config = self.get_aks_kubeconfig()
             return create_aks_dict(response)
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Did not find the AKS instance.')
             return False
 

@@ -89,6 +89,15 @@ options:
             - ipv4
             - ipv6
         default: ipv4
+    zones:
+        description:
+            - A list of availability zones denoting the IP allocated for the resource needs to come from.
+        type: list
+        elements: str
+        choices:
+            - '1'
+            - '2'
+            - '3'
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -124,7 +133,7 @@ state:
         dns_settings:
             description:
                 - The FQDN of the DNS record associated with the public IP address.
-            returns: always
+            returned: always
             type: dict
             sample: {
             "domain_name_label": "ansible-b57dc95985712e45eb8b9c2e",
@@ -134,49 +143,49 @@ state:
         etag:
             description:
                 - A unique read-only string that changes whenever the resource is updated.
-            returns: always
+            returned: always
             type: str
             sample: "W/'1905ee13-7623-45b1-bc6b-4a12b2fb9d15'"
         idle_timeout_in_minutes:
             description:
                 - The idle timeout of the public IP address.
-            returns: always
+            returned: always
             type: int
             sample: 4
         ip_address:
             description:
                 - The Public IP Prefix this Public IP Address should be allocated from.
-            returns: always
+            returned: always
             type: str
             sample: 52.160.103.93
         location:
             description:
                 - Resource location.
-            returns: always
+            returned: always
             type: str
             example: eastus
         name:
             description:
                 - Name of the Public IP Address.
-            returns: always
+            returned: always
             type: str
             example: publicip002
         provisioning_state:
             description:
                 - The provisioning state of the Public IP resource.
-            returns: always
+            returned: always
             type: str
             example: Succeeded
         public_ip_allocation_method:
              description:
                  - The public IP allocation method.
-             returns: always
+             returned: always
              type: str
              sample: static
         public_ip_address_version:
              description:
                  - The public IP address version.
-             returns: always
+             returned: always
              type: str
              sample: ipv4
         sku:
@@ -188,7 +197,7 @@ state:
         tags:
             description:
                 - The resource tags.
-            returns: always
+            returned: always
             type: dict
             sample: {
                 "delete": "on-exit",
@@ -197,16 +206,22 @@ state:
         type:
             description:
                 - Type of the resource.
-            returns: always
+            returned: always
             type: str
             sample: "Microsoft.Network/publicIPAddresses"
+        zones:
+            description:
+                - A list of availability zones denoting the IP allocated for the resource needs to come from.
+            returned: always
+            type: list
+            sample: ['1', '2']
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils._text import to_native
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -225,7 +240,8 @@ def pip_to_dict(pip):
         idle_timeout_in_minutes=pip.idle_timeout_in_minutes,
         provisioning_state=pip.provisioning_state,
         etag=pip.etag,
-        sku=pip.sku.name
+        sku=pip.sku.name,
+        zones=pip.zones
     )
     if pip.dns_settings:
         result['dns_settings']['domain_name_label'] = pip.dns_settings.domain_name_label
@@ -256,7 +272,8 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
             domain_name=dict(type='str', aliases=['domain_name_label']),
             sku=dict(type='str', choices=['Basic', 'Standard', 'basic', 'standard']),
             ip_tags=dict(type='list', elements='dict', options=ip_tag_spec),
-            idle_timeout=dict(type='int')
+            idle_timeout=dict(type='int'),
+            zones=dict(type='list', elements='str', choices=['1', '2', '3'])
         )
 
         self.resource_group = None
@@ -264,6 +281,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
         self.location = None
         self.state = None
         self.tags = None
+        self.zones = None
         self.allocation_method = None
         self.domain_name = None
         self.sku = None
@@ -331,6 +349,11 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                     changed = True
                     results['idle_timeout_in_minutes'] = self.idle_timeout
 
+                if self.zones and self.zones != results['zones']:
+                    self.log("Zones defined do not same with existing zones")
+                    changed = False
+                    self.fail("ResourceAvailabilityZonesCannotBeModified: defines is {0}, existing is {1}".format(self.zones, results['zones']))
+
                 if str(self.ip_tags or []) != str(results.get('ip_tags') or []):
                     self.log("CHANGED: ip_tags")
                     changed = True
@@ -343,7 +366,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
             elif self.state == 'absent':
                 self.log("CHANGED: public ip {0} exists but requested state is 'absent'".format(self.name))
                 changed = True
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Public ip {0} does not exist'.format(self.name))
             if self.state == 'present':
                 self.log("CHANGED: pip {0} does not exist but requested state is 'present'".format(self.name))
@@ -364,10 +387,11 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                         public_ip_address_version=self.version,
                         public_ip_allocation_method=self.allocation_method,
                         sku=self.network_models.PublicIPAddressSku(name=self.sku) if self.sku else None,
-                        idle_timeout_in_minutes=self.idle_timeout if self.idle_timeout and self.idle_timeout > 0 else None
+                        idle_timeout_in_minutes=self.idle_timeout if self.idle_timeout and self.idle_timeout > 0 else None,
+                        zones=self.zones
                     )
                     if self.ip_tags:
-                        pip.ip_tags = [self.network_models.IpTag(ip_tag_type=x.type, tag=x.value) for x in self.ip_tags]
+                        pip.ip_tags = [self.network_models.IpTag(ip_tag_type=x['type'], tag=x['value']) for x in self.ip_tags]
                     if self.tags:
                         pip.tags = self.tags
                     if self.domain_name:
@@ -379,7 +403,9 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                     pip = self.network_models.PublicIPAddress(
                         location=results['location'],
                         public_ip_allocation_method=results['public_ip_allocation_method'],
-                        tags=results['tags']
+                        sku=self.network_models.PublicIPAddressSku(name=self.sku) if self.sku else None,
+                        tags=results['tags'],
+                        zones=results['zones']
                     )
                     if self.domain_name:
                         pip.dns_settings = self.network_models.PublicIPAddressDnsSettings(
@@ -394,7 +420,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
 
     def create_or_update_pip(self, pip):
         try:
-            poller = self.network_client.public_ip_addresses.create_or_update(self.resource_group, self.name, pip)
+            poller = self.network_client.public_ip_addresses.begin_create_or_update(self.resource_group, self.name, pip)
             pip = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating or updating {0} - {1}".format(self.name, str(exc)))
@@ -402,7 +428,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
 
     def delete_pip(self):
         try:
-            poller = self.network_client.public_ip_addresses.delete(self.resource_group, self.name)
+            poller = self.network_client.public_ip_addresses.begin_delete(self.resource_group, self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting {0} - {1}".format(self.name, str(exc)))

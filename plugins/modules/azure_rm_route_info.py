@@ -30,9 +30,13 @@ options:
         description:
             - The name of the route.
         type: str
+    tags:
+        description:
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 author:
     - GuopengLin (@t-glin)
     - Fred-Sun (@Fred-Sun)
@@ -111,7 +115,7 @@ routes:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.network import NetworkManagementClient
     from msrestazure.azure_operation import AzureOperationPoller
     from msrest.polling import LROPoller
@@ -133,6 +137,10 @@ class AzureRMRouteInfo(AzureRMModuleBase):
             ),
             name=dict(
                 type='str'
+            ),
+            tags=dict(
+                type='list',
+                elements='str'
             )
         )
 
@@ -145,18 +153,15 @@ class AzureRMRouteInfo(AzureRMModuleBase):
         self.state = None
         self.url = None
         self.status_code = [200]
+        self.tags = None
 
         self.mgmt_client = None
-        super(AzureRMRouteInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
+        super(AzureRMRouteInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
-
-        self.mgmt_client = self.get_mgmt_svc_client(NetworkManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2020-04-01')
 
         if (self.resource_group is not None and self.route_table_name is not None and self.name is not None):
             self.results['routes'] = self.format_item(self.get())
@@ -169,10 +174,10 @@ class AzureRMRouteInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.routes.get(resource_group_name=self.resource_group,
-                                                   route_table_name=self.route_table_name,
-                                                   route_name=self.name)
-        except CloudError as e:
+            response = self.network_client.routes.get(resource_group_name=self.resource_group,
+                                                      route_table_name=self.route_table_name,
+                                                      route_name=self.name)
+        except ResourceNotFoundError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response
@@ -181,9 +186,9 @@ class AzureRMRouteInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.mgmt_client.routes.list(resource_group_name=self.resource_group,
-                                                    route_table_name=self.route_table_name)
-        except CloudError as e:
+            response = self.network_client.routes.list(resource_group_name=self.resource_group,
+                                                       route_table_name=self.route_table_name)
+        except ResourceNotFoundError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return response

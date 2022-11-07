@@ -83,11 +83,38 @@ options:
             - allkeys_random
             - volatile_ttl
             - noeviction
+    minimum_tls_version:
+        description:
+            - Require clients to use a specified TLS version.
+        type: str
+        choices:
+            - "1.0"
+            - "1.1"
+            - "1.2"
+        version_added: "1.10.0"
+    public_network_access:
+        description:
+            - Whether or not public endpoint access is allowed for this cache.
+        type: str
+        default: Enabled
+        choices:
+            - Enabled
+            - Disabled
+        version_added: "1.10.0"
     notify_keyspace_events:
         description:
             - Allows clients to receive notifications when certain events occur.
             - Please see U(https://docs.microsoft.com/en-us/azure/redis-cache/cache-configure#advanced-settings) for more detail.
         type: str
+    redis_version:
+        description:
+            - The major version of Redis.
+        type: str
+        choices:
+            - "4"
+            - "6"
+        default: "4"
+        version_added: "1.10.0"
     shard_count:
         description:
             - The number of shards to be created when I(sku=premium).
@@ -161,41 +188,47 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create an Azure Cache for Redis
-    azure_rm_rediscache:
-        resource_group: myResourceGroup
-        name: myRedis
-        sku:
-          name: basic
-          size: C1
+- name: Create an Azure Cache for Redis
+  azure_rm_rediscache:
+    resource_group: myResourceGroup
+    name: myRedis
+    sku:
+        name: basic
+        size: C1
 
-  - name: Scale up the Azure Cache for Redis
-    azure_rm_rediscache:
-        resource_group: myResourceGroup
-        name: myRedis
-        sku:
-          name: standard
-          size: C1
-        tags:
-          testing: foo
+- name: Scale up the Azure Cache for Redis
+  azure_rm_rediscache:
+    resource_group: myResourceGroup
+    name: myRedis
+    sku:
+      name: standard
+      size: C1
+    tags:
+      testing: foo
 
-  - name: Force reboot the redis cache
-    azure_rm_rediscache:
-        resource_group: myResourceGroup
-        name: myRedisCache
-        reboot:
-          reboot_type: all
+- name: Force reboot the redis cache
+  azure_rm_rediscache:
+    resource_group: myResourceGroup
+    name: myRedisCache
+    reboot:
+      reboot_type: all
 
-  - name: Create Azure Cache for Redis with subnet
-    azure_rm_rediscache:
-        resource_group: myResourceGroup
-        name: myRedis
-        sku:
-          name: premium
-          size: P1
-        subnet: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVirt
-                 ualNetwork/subnets/mySubnet"
+- name: Create Azure Cache for Redis with subnet
+  azure_rm_rediscache:
+    resource_group: myResourceGroup
+    name: myRedis
+    sku:
+      name: premium
+      size: P1
+    subnet: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVirt
+                ualNetwork/subnets/mySubnet"
 
+- name: Regenerate primary Redis key
+  azure_rm_rediscache:
+    resource_group: myResourceGroup
+    name: myRedis
+    regenerate_key:
+      key_type: primary
 '''
 
 RETURN = '''
@@ -217,12 +250,13 @@ import time
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
-    from msrest.serialization import Model
+    from azure.core.polling import LROPoller
     from azure.mgmt.redis import RedisManagementClient
-    from azure.mgmt.redis.models import (RedisCreateParameters, RedisUpdateParameters, Sku)
+    from azure.mgmt.redis.models import (
+        RedisCreateParameters, RedisUpdateParameters, Sku, RedisRebootParameters, RedisRegenerateKeyParameters
+    )
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -269,6 +303,9 @@ def rediscache_to_dict(redis):
         ),
         enable_non_ssl_port=redis.enable_non_ssl_port,
         host_name=redis.host_name,
+        minimum_tls_version=redis.minimum_tls_version,
+        public_network_access=redis.public_network_access,
+        redis_version=redis.redis_version,
         shard_count=redis.shard_count,
         subnet=redis.subnet_id,
         static_ip=redis.static_ip,
@@ -348,9 +385,23 @@ class AzureRMRedisCaches(AzureRMModuleBase):
                     "noeviction"
                 ]
             ),
+            minimum_tls_version=dict(
+                type="str",
+                choices=["1.0", "1.1", "1.2"]
+            ),
             notify_keyspace_events=dict(
                 type='str',
                 no_log=True
+            ),
+            public_network_access=dict(
+                type="str",
+                default="Enabled",
+                choices=["Enabled", "Disabled"]
+            ),
+            redis_version=dict(
+                type="str",
+                default="4",
+                choices=["4", "6"]
             ),
             shard_count=dict(
                 type='int'
@@ -394,6 +445,9 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         self.size = None
         self.enable_non_ssl_port = False
         self.configuration_file_path = None
+        self.minimum_tls_version = None
+        self.public_network_access = None
+        self.redis_version = None
         self.shard_count = None
         self.static_ip = None
         self.subnet = None
@@ -438,7 +492,8 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         # get management client
         self._client = self.get_mgmt_svc_client(RedisManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
-                                                api_version='2018-03-01')
+                                                api_version='2018-03-01',
+                                                is_track2=True)
 
         # set location
         resource_group = self.get_resource_group(self.resource_group)
@@ -515,9 +570,11 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         if self.reboot:
             self.reboot['reboot_type'] = get_reboot_type(self.reboot['reboot_type'])
             self.force_reboot_rediscache()
+            self.results['changed'] = True
 
         if self.regenerate_key:
-            response = self.rergenerate_rediscache_key()
+            response = self.regenerate_rediscache_key()
+            self.results['changed'] = True
             self.results['keys'] = response
 
         return self.results
@@ -545,6 +602,14 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         if self.static_ip is not None and existing['static_ip'] != self.static_ip:
             self.log("static_ip diff: origin {0} / update {1}".format(existing['static_ip'], self.static_ip))
             return True
+        if self.minimum_tls_version is not None and existing['minimum_tls_version'] != self.minimum_tls_version:
+            self.log("minimum_tls_version diff: origin {0} / update {1}".format(existing['minimum_tls_version'], self.minimum_tls_version))
+            return True
+        if self.public_network_access is not None and existing['public_network_access'] != self.public_network_access:
+            self.log("public_network_access diff: origin {0} / update {1}".format(existing['public_network_access'], self.public_network_access))
+            return True
+        if self.redis_version is not None and existing['redis_version'][0] != self.redis_version[0]:
+            self.fail("Updating redis_version is not supported")
         for config in self.redis_configuration_properties:
             if getattr(self, config) is not None and existing.get(config, None) != getattr(self, config, None):
                 self.log("redis_configuration {0} diff: origin {1} / update {2}".format(config, existing.get(config, None), getattr(self, config, None)))
@@ -568,26 +633,29 @@ class AzureRMRedisCaches(AzureRMModuleBase):
 
             params = RedisCreateParameters(
                 location=self.location,
-                sku=Sku(self.sku['name'].title(), self.sku['size'][0], self.sku['size'][1:]),
+                sku=Sku(name=self.sku['name'].title(), family=self.sku['size'][0], capacity=self.sku['size'][1:]),
                 tags=self.tags,
                 redis_configuration=redis_config,
                 enable_non_ssl_port=self.enable_non_ssl_port,
                 tenant_settings=self.tenant_settings,
+                minimum_tls_version=self.minimum_tls_version,
+                public_network_access=self.public_network_access,
+                redis_version=self.redis_version,
                 shard_count=self.shard_count,
                 subnet_id=self.subnet,
                 static_ip=self.static_ip
             )
 
-            response = self._client.redis.create(resource_group_name=self.resource_group,
-                                                 name=self.name,
-                                                 parameters=params)
+            response = self._client.redis.begin_create(resource_group_name=self.resource_group,
+                                                       name=self.name,
+                                                       parameters=params)
+
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
             if self.wait_for_provisioning:
                 self.wait_for_redis_running()
-
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Azure Cache for Redis instance.')
             self.fail(
                 "Error creating the Azure Cache for Redis instance: {0}".format(str(exc)))
@@ -612,8 +680,11 @@ class AzureRMRedisCaches(AzureRMModuleBase):
                 redis_configuration=redis_config,
                 enable_non_ssl_port=self.enable_non_ssl_port,
                 tenant_settings=self.tenant_settings,
+                minimum_tls_version=self.minimum_tls_version,
+                public_network_access=self.public_network_access,
+                redis_version=self.redis_version,
                 shard_count=self.shard_count,
-                sku=Sku(self.sku['name'].title(), self.sku['size'][0], self.sku['size'][1:]),
+                sku=Sku(name=self.sku['name'].title(), family=self.sku['size'][0], capacity=self.sku['size'][1:]),
                 tags=self.tags
             )
 
@@ -626,7 +697,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             if self.wait_for_provisioning:
                 self.wait_for_redis_running()
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to update the Azure Cache for Redis instance.')
             self.fail(
                 "Error updating the Azure Cache for Redis instance: {0}".format(str(exc)))
@@ -640,9 +711,9 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         '''
         self.log("Deleting the Azure Cache for Redis instance {0}".format(self.name))
         try:
-            response = self._client.redis.delete(resource_group_name=self.resource_group,
-                                                 name=self.name)
-        except CloudError as e:
+            self._client.redis.begin_delete(resource_group_name=self.resource_group,
+                                            name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the Azure Cache for Redis instance.')
             self.fail(
                 "Error deleting the Azure Cache for Redis instance: {0}".format(str(e)))
@@ -665,8 +736,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             self.log("Response : {0}".format(response))
             self.log("Azure Cache for Redis instance : {0} found".format(response.name))
             return rediscache_to_dict(response)
-
-        except CloudError as ex:
+        except ResourceNotFoundError:
             self.log("Didn't find Azure Cache for Redis {0} in resource group {1}".format(
                 self.name, self.resource_group))
 
@@ -680,22 +750,25 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         '''
         self.log("Force reboot the redis cache instance {0}".format(self.name))
         try:
+            params = RedisRebootParameters(
+                reboot_type=self.reboot['reboot_type'],
+                shard_id=self.reboot.get('shard_id'),
+            )
             response = self._client.redis.force_reboot(resource_group_name=self.resource_group,
                                                        name=self.name,
-                                                       reboot_type=self.reboot['reboot_type'],
-                                                       shard_id=self.reboot.get('shard_id'))
+                                                       parameters=params)
             if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
             if self.wait_for_provisioning:
                 self.wait_for_redis_running()
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to force reboot the redis cache instance.')
             self.fail(
                 "Error force rebooting the redis cache instance: {0}".format(str(e)))
         return True
 
-    def rergenerate_rediscache_key(self):
+    def regenerate_rediscache_key(self):
         '''
         Regenerate key of redis cache instance in the specified subscription and resource group.
 
@@ -703,11 +776,14 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         '''
         self.log("Regenerate key of redis cache instance {0}".format(self.name))
         try:
+            params = RedisRegenerateKeyParameters(
+                key_type=self.regenerate_key['key_type'].title(),
+            )
             response = self._client.redis.regenerate_key(resource_group_name=self.resource_group,
                                                          name=self.name,
-                                                         key_type=self.regenerate_key['key_type'].title())
-            return response.to_dict()
-        except CloudError as e:
+                                                         parameters=params)
+            return response.as_dict()
+        except Exception as e:
             self.log('Error attempting to regenerate key of redis cache instance.')
             self.fail(
                 "Error regenerate key of redis cache instance: {0}".format(str(e)))
@@ -730,7 +806,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             self.log("Subnet found : {0}".format(response))
             return response.id
 
-        except CloudError as ex:
+        except ResourceNotFoundError as ex:
             self.log("Didn't find subnet {0} in resource group {1}".format(
                 self.subnet['name'], self.subnet['resource_group']))
 
@@ -763,7 +839,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
                 else:
                     return True
             self.fail("Azure Cache for Redis is not running after 60 mins.")
-        except CloudError as e:
+        except Exception as e:
             self.fail("Failed to get Azure Cache for Redis: {0}".format(str(e)))
 
 

@@ -1,6 +1,10 @@
 - name: Prepare random number
   set_fact:
     random_postfix: "{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    tenant_id: "{{ azure_tenant }}"
+    run_azuread_tests: false
+    azuread_group_name: "Test Security Group"
+    azuread_group_id: "00000000-0000-0000-0000-000000000000"
   run_once: yes
 
 - name: Create instance of SQL Server -- check mode
@@ -47,6 +51,101 @@
       - output.changed == false
       - output.state == 'Ready'
 
+- name: Create extended instance of SQL Server
+  azure_rm_sqlserver:
+    resource_group: "{{ resource_group }}"
+    name: "sqlsrv-extended-{{ random_postfix }}"
+    location: eastus
+    admin_username: mylogin2
+    admin_password: Password123!
+    minimal_tls_version: '1.2'
+    public_network_access: Disabled
+    restrict_outbound_network_access: Enabled
+    tags:
+      aaa: bbb
+  register: output
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+      - output.state == 'Ready'
+
+- name: Create extended instance of SQL Server - idempotent
+  azure_rm_sqlserver:
+    resource_group: "{{ resource_group }}"
+    name: "sqlsrv-extended-{{ random_postfix }}"
+    location: eastus
+    admin_username: mylogin2
+    admin_password: Password123!
+    minimal_tls_version: '1.2'
+    public_network_access: Disabled
+    restrict_outbound_network_access: Enabled
+    tags:
+      aaa: bbb
+  register: output
+- name: Assert the state has not changed
+  assert:
+    that:
+      - not output.changed
+      - output.state == 'Ready'
+
+- name: Update SQL admin password
+  azure_rm_sqlserver:
+    resource_group: "{{ resource_group }}"
+    name: "sqlsrv-extended-{{ random_postfix }}"
+    location: eastus
+    admin_password: Password123!321!
+    change_admin_password: true
+  register: output
+- name: Assert the state has changed
+  assert:
+    that:
+      - output.changed
+
+- name: Create instance of SQL Server with Azure AD admin
+  azure_rm_sqlserver:
+    resource_group: "{{ resource_group }}"
+    name: "sqlsrv-azuread-{{ random_postfix }}"
+    location: eastus
+    admin_username: sqllogin
+    admin_password: Password123!
+    administrators:
+      principal_type: Group
+      login: "{{ azuread_group_name }}"
+      sid: "{{ azuread_group_id }}"
+      tenant_id: "{{ tenant_id }}"
+      azure_ad_only_authentication: false
+  register: output
+  when: run_azuread_tests | bool
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+      - output.state == 'Ready'
+  when: run_azuread_tests | bool
+
+- name: Create instance of SQL Server with Azure AD admin - idempotent
+  azure_rm_sqlserver:
+    resource_group: "{{ resource_group }}"
+    name: "sqlsrv-azuread-{{ random_postfix }}"
+    location: eastus
+    admin_username: sqllogin
+    admin_password: Password123!
+    administrators:
+      principal_type: Group
+      login: "{{ azuread_group_name }}"
+      sid: "{{ azuread_group_id }}"
+      tenant_id: "{{ tenant_id }}"
+      azure_ad_only_authentication: false
+  register: output
+  when: run_azuread_tests | bool
+- name: Assert the state has not changed
+  assert:
+    that:
+      - not output.changed
+      - output.state == 'Ready'
+  when: run_azuread_tests | bool
+
 # azure_rm_sqlserver_facts tests
 
 - name: Gather facts SQL Server
@@ -67,6 +166,60 @@
       - output.servers.sqlsrv{{ random_postfix }}.state != None
       - output.servers.sqlsrv{{ random_postfix }}.fully_qualified_domain_name != None
       - output.servers.sqlsrv{{ random_postfix }}.tags.aaa == 'bbb'
+      - output.servers.sqlsrv{{ random_postfix }}.admin_username == 'mylogin'
+      - output.servers.sqlsrv{{ random_postfix }}.administrators == None
+
+- name: Gather facts for extended SQL Server
+  azure_rm_sqlserver_info:
+    resource_group: "{{ resource_group }}"
+    server_name: "sqlsrv-extended-{{ random_postfix }}"
+  register: output
+- name: Assert that facts are returned
+  assert:
+    that:
+      - output.changed == False
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].id != None
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].name == 'sqlsrv-extended-{{ random_postfix }}'
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].type != None
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].location != None
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].kind != None
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].version != None
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].state != None
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].fully_qualified_domain_name != None
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].tags.aaa == 'bbb'
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].minimal_tls_version == '1.2'
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].public_network_access == 'Disabled'
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].restrict_outbound_network_access == 'Enabled'
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].admin_username == 'mylogin2'
+      - output.servers['sqlsrv-extended-{{ random_postfix }}'].administrators == None
+
+- name: Gather facts for SQL Server with Azure AD admin
+  azure_rm_sqlserver_info:
+    resource_group: "{{ resource_group }}"
+    server_name: "sqlsrv-azuread-{{ random_postfix }}"
+  register: output
+  when: run_azuread_tests | bool
+- name: Assert that facts are returned
+  assert:
+    that:
+      - output.changed == False
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].id != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].name == 'sqlsrv-azuread-{{ random_postfix }}'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].type != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].location != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].kind != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].version != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].state != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].fully_qualified_domain_name != None
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].tags | length == 0
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].admin_username == 'sqllogin'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.administrator_type == 'ActiveDirectory'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.azure_ad_only_authentication == False
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.login == '{{ azuread_group_name }}'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.principal_type == 'Group'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.sid == '{{ azuread_group_id }}'
+      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.tenant_id == '{{ tenant_id }}'
+  when: run_azuread_tests | bool
 
 - name: Gather facts SQL Server - unexisting
   azure_rm_sqlserver_info:
@@ -142,6 +295,49 @@
     that:
       - output.changed == false
       - output.status == 'Online'
+
+# test database point in time restore
+- name: Gather facts SQL Database and wait for restore point
+  azure_rm_sqldatabase_info:
+    resource_group: "{{ resource_group }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: database{{ random_postfix }}
+  register: output
+  until: output.databases[0].earliest_restore_date != None
+  retries: 10
+  delay: 20
+- name: Assert that it can be restored from
+  assert:
+    that:
+      - output.databases[0].id != None
+      - output.databases[0].earliest_restore_date != None
+
+- name: Create second SQL Database, restoring from the previous Database
+  azure_rm_sqldatabase:
+    resource_group: "{{ resource_group }}"
+    create_mode: point_in_time_restore
+    restore_point_in_time: "{{ output.databases[0].earliest_restore_date }}"
+    source_database_id: "{{ output.databases[0].id }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: database{{ random_postfix }}PITR
+    location: eastus
+  register: output
+- name: Assert the state has changed
+  assert:
+    that:
+      - output.changed
+
+- name: Delete instance of SQL Database Point in time recovery
+  azure_rm_sqldatabase:
+    resource_group: "{{ resource_group }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: database{{ random_postfix }}PITR
+    state: absent
+  register: output
+- name: Assert the state has changed
+  assert:
+    that:
+      - output.changed
 
 # test database facter:
 - name: Create second SQL Database
@@ -540,3 +736,16 @@
   assert:
     that:
       - output.changed == false
+
+- name: Delete extended instance of SQL Server
+  azure_rm_sqlserver:
+    resource_group: "{{ resource_group }}"
+    name: "sqlsrv-extended-{{ random_postfix }}"
+    state: absent
+
+- name: Delete instance of SQL Server with Azure AD admin
+  azure_rm_sqlserver:
+    resource_group: "{{ resource_group }}"
+    name: "sqlsrv-azuread-{{ random_postfix }}"
+    state: absent
+  when: run_azuread_tests | bool

@@ -226,11 +226,10 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from azure.mgmt.sql import SqlManagementClient
+    import dateutil.parser
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
     from azure.mgmt.sql.models import Sku
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -308,10 +307,10 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 type='str'
             ),
             source_database_deletion_date=dict(
-                type='datetime'
+                type='str'
             ),
             restore_point_in_time=dict(
-                type='datetime'
+                type='str'
             ),
             recovery_services_recovery_point_resource_id=dict(
                 type='str'
@@ -360,7 +359,6 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 choices=['present', 'absent']
             )
         )
-        mutually_exclusive = ['sku', 'edition']
 
         self.resource_group = None
         self.server_name = None
@@ -393,9 +391,15 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                 elif key == "source_database_id":
                     self.parameters["source_database_id"] = kwargs[key]
                 elif key == "source_database_deletion_date":
-                    self.parameters["source_database_deletion_date"] = kwargs[key]
+                    try:
+                        self.parameters["source_database_deletion_date"] = dateutil.parser.parse(kwargs[key])
+                    except dateutil.parser._parser.ParserError:
+                        self.fail("Error parsing date from source_database_deletion_date: {0}".format(kwargs[key]))
                 elif key == "restore_point_in_time":
-                    self.parameters["restore_point_in_time"] = kwargs[key]
+                    try:
+                        self.parameters["restore_point_in_time"] = dateutil.parser.parse(kwargs[key])
+                    except dateutil.parser._parser.ParserError:
+                        self.fail("Error parsing date from restore_point_in_time: {0}".format(kwargs[key]))
                 elif key == "recovery_services_recovery_point_resource_id":
                     self.parameters["recovery_services_recovery_point_resource_id"] = kwargs[key]
                 elif key == "edition":
@@ -454,7 +458,7 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                         (self.parameters['max_size_bytes'] != old_response['max_size_bytes'])):
                     self.to_do = Actions.Update
                 if (('sku' in self.parameters) and
-                        (self.parameters['sku'] != old_response['sku'])):
+                        (self.parameters['sku'].as_dict() != old_response['sku'])):
                     self.to_do = Actions.Update
                 update_tags, newtags = self.update_tags(
                     old_response.get('tags', dict()))
@@ -511,14 +515,13 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
             "Creating / Updating the SQL Database instance {0}".format(self.name))
 
         try:
-            response = self.sql_client.databases.create_or_update(resource_group_name=self.resource_group,
-                                                                  server_name=self.server_name,
-                                                                  database_name=self.name,
-                                                                  parameters=self.parameters)
+            response = self.sql_client.databases.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                        server_name=self.server_name,
+                                                                        database_name=self.name,
+                                                                        parameters=self.parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
-
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the SQL Database instance.')
             self.fail(
                 "Error creating the SQL Database instance: {0}".format(str(exc)))
@@ -532,10 +535,12 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
         '''
         self.log("Deleting the SQL Database instance {0}".format(self.name))
         try:
-            response = self.sql_client.databases.delete(resource_group_name=self.resource_group,
-                                                        server_name=self.server_name,
-                                                        database_name=self.name)
-        except CloudError as e:
+            response = self.sql_client.databases.begin_delete(resource_group_name=self.resource_group,
+                                                              server_name=self.server_name,
+                                                              database_name=self.name)
+            if isinstance(response, LROPoller):
+                response = self.get_poller_result(response)
+        except Exception as e:
             self.log('Error attempting to delete the SQL Database instance.')
             self.fail(
                 "Error deleting the SQL Database instance: {0}".format(str(e)))
@@ -558,7 +563,7 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("SQL Database instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError:
             self.log('Did not find the SQL Database instance.')
         if found is True:
             return response.as_dict()

@@ -35,6 +35,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -147,6 +149,27 @@ rediscaches:
             returned: always
             type: str
             sample: testRedis.redis.cache.windows.net
+        minimum_tls_version:
+            description:
+                - The version TLS clients at which must connect.
+            returned: always
+            type: str
+            sample: 1.2
+            version_added: "1.10.0"
+        public_network_access:
+            description:
+                - Whether or not public endpoint access is allowed for this cache.
+            returned: always
+            type: str
+            sample: Enabled
+            version_added: "1.10.0"
+        redis_version:
+            description:
+                - The version of Redis.
+            returned: always
+            type: str
+            sample: 4.0.14
+            version_added: "1.10.0"
         shard_count:
             description:
                 - The number of shards on a Premium Cluster Cache.
@@ -187,9 +210,8 @@ rediscaches:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from azure.common import AzureHttpError
     from azure.mgmt.redis import RedisManagementClient
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # handled in azure_rm_common
     pass
@@ -212,7 +234,7 @@ class AzureRMRedisCacheInfo(AzureRMModuleBase):
                 type='bool',
                 default=False
             ),
-            tags=dict(type='list')
+            tags=dict(type='list', elements='str')
         )
 
         self.results = dict(
@@ -245,7 +267,8 @@ class AzureRMRedisCacheInfo(AzureRMModuleBase):
         # get management client
         self._client = self.get_mgmt_svc_client(RedisManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
-                                                api_version='2018-03-01')
+                                                api_version='2018-03-01',
+                                                is_track2=True)
 
         if self.name:
             self.results['rediscaches'] = self.get_item()
@@ -264,7 +287,7 @@ class AzureRMRedisCacheInfo(AzureRMModuleBase):
 
         try:
             item = self._client.redis.get(resource_group_name=self.resource_group, name=self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -279,7 +302,7 @@ class AzureRMRedisCacheInfo(AzureRMModuleBase):
 
         try:
             response = self._client.redis.list_by_resource_group(self.resource_group)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []
@@ -298,7 +321,7 @@ class AzureRMRedisCacheInfo(AzureRMModuleBase):
 
         try:
             item = self._client.redis.list_keys(resource_group_name=self.resource_group, name=self.name)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list redis keys of {0} - {1}".format(self.name, str(exc)))
 
         return item
@@ -317,6 +340,9 @@ class AzureRMRedisCacheInfo(AzureRMModuleBase):
             provisioning_state=rediscache.provisioning_state,
             configuration=rediscache.redis_configuration,
             tenant_settings=rediscache.tenant_settings,
+            minimum_tls_version=rediscache.minimum_tls_version,
+            public_network_access=rediscache.public_network_access,
+            redis_version=rediscache.redis_version,
             shard_count=rediscache.shard_count,
             enable_non_ssl_port=rediscache.enable_non_ssl_port,
             static_ip=rediscache.static_ip,

@@ -77,9 +77,8 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from azure.mgmt.rdbms.mysql import MariaDBManagementClient
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -188,15 +187,14 @@ class AzureRMMariaDbConfiguration(AzureRMModuleBase):
         self.log("Creating / Updating the Configuration instance {0}".format(self.name))
 
         try:
-            response = self.mariadb_client.configurations.create_or_update(resource_group_name=self.resource_group,
-                                                                           server_name=self.server_name,
-                                                                           configuration_name=self.name,
-                                                                           value=self.value,
-                                                                           source='user-override')
+            response = self.mariadb_client.configurations.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                 server_name=self.server_name,
+                                                                                 configuration_name=self.name,
+                                                                                 parameters={'value': self.value, 'source': 'user-override'})
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Configuration instance.')
             self.fail("Error creating the Configuration instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -204,11 +202,11 @@ class AzureRMMariaDbConfiguration(AzureRMModuleBase):
     def delete_configuration(self):
         self.log("Deleting the Configuration instance {0}".format(self.name))
         try:
-            response = self.mariadb_client.configurations.create_or_update(resource_group_name=self.resource_group,
-                                                                           server_name=self.server_name,
-                                                                           configuration_name=self.name,
-                                                                           source='system-default')
-        except CloudError as e:
+            response = self.mariadb_client.configurations.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                 server_name=self.server_name,
+                                                                                 configuration_name=self.name,
+                                                                                 parameters={'source': 'system-default'})
+        except Exception as e:
             self.log('Error attempting to delete the Configuration instance.')
             self.fail("Error deleting the Configuration instance: {0}".format(str(e)))
 
@@ -224,7 +222,7 @@ class AzureRMMariaDbConfiguration(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Configuration instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Configuration instance.')
         if found is True:
             return response.as_dict()

@@ -109,7 +109,7 @@ azure_vmimages:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -186,7 +186,7 @@ class AzureRMVirtualMachineImageInfo(AzureRMModuleBase):
                                                                        self.sku,
                                                                        top=1,
                                                                        orderby='name desc')
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if self.version == 'latest':
@@ -209,9 +209,7 @@ class AzureRMVirtualMachineImageInfo(AzureRMModuleBase):
                                                                        self.publisher,
                                                                        self.offer,
                                                                        self.sku,)
-        except CloudError:
-            pass
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list images: {0}".format(str(exc)))
 
         if response:
@@ -226,9 +224,7 @@ class AzureRMVirtualMachineImageInfo(AzureRMModuleBase):
         try:
             response = self.compute_client.virtual_machine_images.list_offers(self.location,
                                                                               self.publisher)
-        except CloudError:
-            pass
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list offers: {0}".format(str(exc)))
 
         if response:
@@ -242,9 +238,7 @@ class AzureRMVirtualMachineImageInfo(AzureRMModuleBase):
         results = []
         try:
             response = self.compute_client.virtual_machine_images.list_publishers(self.location)
-        except CloudError:
-            pass
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list publishers: {0}".format(str(exc)))
 
         if response:

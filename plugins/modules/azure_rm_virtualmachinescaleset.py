@@ -125,6 +125,11 @@ options:
         default: ReadOnly
         aliases:
             - disk_caching
+    os_disk_size_gb:
+        description:
+            - Specifies the size of the operating system disk in gigabytes.
+            - This can be used to overwrite the size of the disk in a virtual machine image.
+        type: int
     os_type:
         description:
             - Base type of operating system.
@@ -215,12 +220,11 @@ options:
         description:
             - Specifies whether the Virtual Machine Scale Set should be overprovisioned.
         type: bool
-        default: True
     single_placement_group:
         description:
             - When true this limits the scale set to a single placement group, of max size 100 virtual machines.
         type: bool
-        default: True
+        default: False
     plan:
         description:
             - Third-party billing plan for the VM.
@@ -263,7 +267,23 @@ options:
         description:
             - timeout time for termination notification event
             - in range between 5 and 15
-
+    platform_fault_domain_count:
+        description:
+            - Fault Domain count for each placement group.
+        type: int
+        default: 1
+    orchestration_mode:
+        description:
+            - Specifies the orchestration mode for the virtual machine scale set.
+            - When I(orchestration_mode=Flexible), I(public_ip_per_vm=True) must be set.
+            - When I(orchestration_mode=Flexible), I(platform_fault_domain_count) must be set.
+            - When I(orchestration_mode=Flexible), I(single_placement_group=False) must be set.
+            - When I(orchestration_mode=Flexible), it cannot be configured I(overprovision).
+            - When I(orchestration_mode=Flexible), it cannot be configured I(upgrade_policy) and configured when I(orchestration_mode=Uniform).
+        type: str
+        choices:
+            - Flexible
+            - Uniform
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -292,9 +312,9 @@ EXAMPLES = '''
         key_data: < insert your ssh public key here... >
     managed_disk_type: Standard_LRS
     image:
-      offer: CoreOS
-      publisher: CoreOS
-      sku: Stable
+      offer: 0001-com-ubuntu-server-focal
+      publisher: canonical
+      sku: 20_04-lts-gen2
       version: latest
     data_disks:
       - lun: 0
@@ -405,6 +425,8 @@ azure_vmss:
     sample: {
         "properties": {
             "overprovision": true,
+            "platformFaultDomainCount": 1,
+            "orchestrationMode": "Flexible",
              "scaleInPolicy": {
                     "rules": [
                         "NewestVM"
@@ -475,10 +497,10 @@ azure_vmss:
                         }
                     ],
                     "imageReference": {
-                        "offer": "CoreOS",
-                        "publisher": "CoreOS",
-                        "sku": "Stable",
-                        "version": "899.17.0"
+                        "offer": "0001-com-ubuntu-server-focal",
+                        "publisher": "canonical",
+                        "sku": "20_04-lts-gen2",
+                        "version": "20.04.202111210"
                     },
                     "osDisk": {
                         "caching": "ReadWrite",
@@ -504,7 +526,9 @@ import base64
 
 try:
     from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.tools import parse_resource_id
+    from azure.core.exceptions import ResourceNotFoundError
 
 except ImportError:
     # This is handled in azure_rm_common
@@ -555,8 +579,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             remove_on_absent=dict(type='list', default=['all']),
             enable_accelerated_networking=dict(type='bool'),
             security_group=dict(type='raw', aliases=['security_group_name']),
-            overprovision=dict(type='bool', default=True),
-            single_placement_group=dict(type='bool', default=True),
+            overprovision=dict(type='bool'),
+            single_placement_group=dict(type='bool', default=False),
             zones=dict(type='list'),
             custom_data=dict(type='str'),
             plan=dict(type='dict', options=dict(publisher=dict(type='str', required=True),
@@ -564,7 +588,10 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                       promotion_code=dict(type='str'))),
             scale_in_policy=dict(type='str', choices=['Default', 'OldestVM', 'NewestVM']),
             terminate_event_timeout_minutes=dict(type='int'),
-            ephemeral_os_disk=dict(type='bool')
+            ephemeral_os_disk=dict(type='bool'),
+            orchestration_mode=dict(type='str', choices=['Uniform', 'Flexible']),
+            platform_fault_domain_count=dict(type='int', default=1),
+            os_disk_size_gb=dict(type='int')
         )
 
         self.resource_group = None
@@ -598,13 +625,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         self.enable_accelerated_networking = None
         self.security_group = None
         self.overprovision = None
-        self.single_placement_group = None
         self.zones = None
         self.custom_data = None
         self.plan = None
         self.scale_in_policy = None
         self.terminate_event_timeout_minutes = None
         self.ephemeral_os_disk = None
+        self.orchestration_mode = None
+        self.os_disk_size_gb = None
 
         mutually_exclusive = [('load_balancer', 'application_gateway')]
         self.results = dict(
@@ -757,6 +785,10 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                 elif not self.ephemeral_os_disk and current_ephemeral is not None:
                     self.fail('Ephemeral OS disk not updatable: virtual machine scale set ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
 
+                if self.os_disk_size_gb and \
+                   self.os_disk_size_gb != vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']['diskSizeGB']:
+                    self.fail('VMSS OS disk size is not updatable: requested virtual machine OS disk size is {0}'.format(self.os_disk_size_gb))
+
                 if self.os_disk_caching and \
                    self.os_disk_caching != vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']['caching']:
                     self.log('CHANGED: virtual machine scale set {0} - OS disk caching'.format(self.name))
@@ -796,7 +828,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     differences.append('Tags')
                     changed = True
 
-                if bool(self.overprovision) != bool(vmss_dict['properties']['overprovision']):
+                if self.overprovision is not None and bool(self.overprovision) != bool(vmss_dict['properties'].get('overprovision')):
                     differences.append('overprovision')
                     changed = True
 
@@ -857,6 +889,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                         changed = True
                         vmss_dict['properties']['virtualMachineProfile']['osProfile']['customData'] = self.custom_data
 
+                if self.orchestration_mode and self.orchestration_mode != vmss_dict['properties'].get('orchestrationMode'):
+                    self.fail("The orchestration_mode parameter cannot be updated!")
+                else:
+                    self.orchestration_mode = vmss_dict['properties'].get('orchestrationMode')
+
+                if self.platform_fault_domain_count and self.platform_fault_domain_count != vmss_dict['properties'].get('platformFaultDomainCount'):
+                    self.fail("The platform_fault_domain_count parameter cannot be updated!")
+
                 self.differences = differences
 
             elif self.state == 'absent':
@@ -864,7 +904,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                 results = dict()
                 changed = True
 
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Virtual machine scale set {0} does not exist'.format(self.name))
             if self.state == 'present':
                 self.log("CHANGED: virtual machine scale set {0} does not exist but state is 'present'.".format(self.name))
@@ -928,9 +968,11 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                         overprovision=self.overprovision,
                         single_placement_group=self.single_placement_group,
                         tags=self.tags,
+                        orchestration_mode=self.orchestration_mode,
+                        platform_fault_domain_count=self.platform_fault_domain_count,
                         upgrade_policy=self.compute_models.UpgradePolicy(
                             mode=self.upgrade_policy
-                        ),
+                        ) if self.upgrade_policy is not None else None,
                         sku=self.compute_models.Sku(
                             name=self.vm_size,
                             capacity=self.capacity,
@@ -945,6 +987,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                                     managed_disk=managed_disk,
                                     create_option=self.compute_models.DiskCreateOptionTypes.from_image,
                                     caching=self.os_disk_caching,
+                                    disk_size_gb=self.os_disk_size_gb,
                                     diff_disk_settings=self.compute_models.DiffDiskSettings(option='Local') if self.ephemeral_os_disk else None,
                                 ),
                                 image_reference=image_reference,
@@ -970,7 +1013,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                                         enable_accelerated_networking=self.enable_accelerated_networking,
                                         network_security_group=self.security_group
                                     )
-                                ]
+                                ],
+                                network_api_version='2020-11-01' if self.orchestration_mode == 'Flexible' else None
                             )
                         ),
                         zones=self.zones
@@ -1051,6 +1095,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     vmss_resource = self.get_vmss()
                     vmss_resource.virtual_machine_profile.storage_profile.os_disk.caching = self.os_disk_caching
                     vmss_resource.sku.capacity = self.capacity
+                    vmss_resource.orchestration_mode = self.orchestration_mode
+                    vmss_resource.platform_fault_domain_count = self.platform_fault_domain_count
                     vmss_resource.overprovision = self.overprovision
                     vmss_resource.single_placement_group = self.single_placement_group
 
@@ -1117,14 +1163,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         try:
             vmss = self.compute_client.virtual_machine_scale_sets.get(self.resource_group, self.name)
             return vmss
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error getting virtual machine scale set {0} - {1}".format(self.name, str(exc)))
 
     def get_virtual_network(self, name):
         try:
             vnet = self.network_client.virtual_networks.get(self.virtual_network_resource_group, name)
             return vnet
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching virtual network {0} - {1}".format(name, str(exc)))
 
     def get_subnet(self, vnet_name, subnet_name):
@@ -1142,14 +1188,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         id_dict = parse_resource_id(id)
         try:
             return self.network_client.load_balancers.get(id_dict.get('resource_group', self.resource_group), id_dict.get('name'))
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching load balancer {0} - {1}".format(id, str(exc)))
 
     def get_application_gateway(self, id):
         id_dict = parse_resource_id(id)
         try:
             return self.network_client.application_gateways.get(id_dict.get('resource_group', self.resource_group), id_dict.get('name'))
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching application_gateway {0} - {1}".format(id, str(exc)))
 
     def serialize_vmss(self, vmss):
@@ -1173,10 +1219,10 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         self.log("Deleting virtual machine scale set {0}".format(self.name))
         self.results['actions'].append("Deleted virtual machine scale set {0}".format(self.name))
         try:
-            poller = self.compute_client.virtual_machine_scale_sets.delete(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machine_scale_sets.begin_delete(self.resource_group, self.name)
             # wait for the poller to finish
             self.get_poller_result(poller)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error deleting virtual machine scale set {0} - {1}".format(self.name, str(exc)))
 
         return True
@@ -1187,7 +1233,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                                                                        self.image['publisher'],
                                                                        self.image['offer'],
                                                                        self.image['sku'])
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching image {0} {1} {2} - {3}".format(self.image['publisher'],
                                                                       self.image['offer'],
                                                                       self.image['sku'],
@@ -1210,7 +1256,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                 vm_images = self.compute_client.images.list_by_resource_group(resource_group)
             else:
                 vm_images = self.compute_client.images.list()
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching custom images from subscription - {0}".format(str(exc)))
 
         for vm_image in vm_images:
@@ -1222,9 +1268,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
 
     def create_or_update_vmss(self, params):
         try:
-            poller = self.compute_client.virtual_machine_scale_sets.create_or_update(self.resource_group, self.name, params)
+            poller = self.compute_client.virtual_machine_scale_sets.begin_create_or_update(self.resource_group, self.name, params)
             self.get_poller_result(poller)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error creating or updating virtual machine {0} - {1}".format(self.name, str(exc)))
 
     def vm_size_is_valid(self):
@@ -1235,7 +1281,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         '''
         try:
             sizes = self.compute_client.virtual_machine_sizes.list(self.location)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error retrieving available machine sizes - {0}".format(str(exc)))
         for size in sizes:
             if size.name == self.vm_size:

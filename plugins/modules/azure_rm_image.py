@@ -20,10 +20,12 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the image.
         required: true
+        type: str
     source:
         description:
             - OS disk source from the same region.
@@ -32,23 +34,33 @@ options:
             - If source type is blob URI, the source should be the full URI of the blob in string type.
             - If you specify the I(type) in a dict, acceptable value contains C(disks), C(virtual_machines) and C(snapshots).
         type: raw
-        required: true
     data_disk_sources:
         description:
             - List of data disk sources, including unmanaged blob URI, managed disk id or name, or snapshot id or name.
         type: list
+        elements: str
     location:
         description:
             - Location of the image. Derived from I(resource_group) if not specified.
+        type: str
     os_type:
         description: The OS type of image.
         choices:
             - Windows
             - Linux
+        type: str
+    hyper_v_generation:
+        description:
+            - Specifies the HyperVGenerationType of the VirtualMachine created from the image.
+        type: str
+        choices:
+            - V1
+            - V2
     state:
         description:
             - Assert the state of the image. Use C(present) to create or update a image and C(absent) to delete an image.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -106,14 +118,14 @@ id:
         - Image resource path.
     type: str
     returned: success
-    example: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Compute/images/myImage"
+    sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Compute/images/myImage"
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
 
 try:
     from msrestazure.tools import parse_resource_id
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -129,8 +141,9 @@ class AzureRMImage(AzureRMModuleBase):
             state=dict(type='str', default='present', choices=['present', 'absent']),
             location=dict(type='str'),
             source=dict(type='raw'),
-            data_disk_sources=dict(type='list', default=[]),
-            os_type=dict(type='str', choices=['Windows', 'Linux'])
+            data_disk_sources=dict(type='list', elements='str', default=[]),
+            os_type=dict(type='str', choices=['Windows', 'Linux']),
+            hyper_v_generation=dict(type='str', choices=['V1', 'V2'])
         )
 
         self.results = dict(
@@ -149,6 +162,7 @@ class AzureRMImage(AzureRMModuleBase):
         self.source = None
         self.data_disk_sources = None
         self.os_type = None
+        self.hyper_v_generation = None
 
         super(AzureRMImage, self).__init__(self.module_arg_spec, supports_check_mode=True, required_if=required_if)
 
@@ -176,6 +190,11 @@ class AzureRMImage(AzureRMModuleBase):
             if update_tags:
                 changed = True
                 self.tags = tags
+            if self.hyper_v_generation and self.hyper_v_generation != image.hyper_v_generation:
+                self.log("Compare configure Check whether hyper_v_generation needs to be updated")
+                self.fail("The hyper_v_generation parameter cannot be updated to {0}".format(self.hyper_v_generation))
+            else:
+                self.hyper_v_generation = image.hyper_v_generation
             if self.state == 'absent':
                 changed = True
         # the image does not exist and create a new one
@@ -195,6 +214,7 @@ class AzureRMImage(AzureRMModuleBase):
                         self.fail('data_disk_sources is not allowed when capturing image from vm')
                     image_instance = self.image_models.Image(location=self.location,
                                                              source_virtual_machine=self.image_models.SubResource(id=vm.id),
+                                                             hyper_v_generation=self.hyper_v_generation,
                                                              tags=self.tags)
                 else:
                     if not self.os_type:
@@ -202,7 +222,12 @@ class AzureRMImage(AzureRMModuleBase):
                     os_disk = self.create_os_disk()
                     data_disks = self.create_data_disks()
                     storage_profile = self.image_models.ImageStorageProfile(os_disk=os_disk, data_disks=data_disks)
-                    image_instance = self.image_models.Image(location=self.location, storage_profile=storage_profile, tags=self.tags)
+                    image_instance = self.image_models.Image(
+                        location=self.location,
+                        storage_profile=storage_profile,
+                        hyper_v_generation=self.hyper_v_generation,
+                        tags=self.tags
+                    )
 
                 # finally make the change if not check mode
                 if not self.check_mode and image_instance:
@@ -328,18 +353,16 @@ class AzureRMImage(AzureRMModuleBase):
                 return get_method(resource_group, name, expand=expand)
             else:
                 return get_method(resource_group, name)
-        except CloudError as cloud_err:
+        except ResourceNotFoundError as cloud_err:
             # Return None iff the resource is not found
             if cloud_err.status_code == 404:
                 self.log('{0}'.format(str(cloud_err)))
                 return None
             self.fail('Error: failed to get resource {0} - {1}'.format(name, str(cloud_err)))
-        except Exception as exc:
-            self.fail('Error: failed to get resource {0} - {1}'.format(name, str(exc)))
 
     def create_image(self, image):
         try:
-            poller = self.image_client.images.create_or_update(self.resource_group, self.name, image)
+            poller = self.image_client.images.begin_create_or_update(self.resource_group, self.name, image)
             new_image = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating image {0} - {1}".format(self.name, str(exc)))
@@ -349,7 +372,7 @@ class AzureRMImage(AzureRMModuleBase):
     def delete_image(self):
         self.log('Deleting image {0}'.format(self.name))
         try:
-            poller = self.image_client.images.delete(self.resource_group, self.name)
+            poller = self.image_client.images.begin_delete(self.resource_group, self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting image {0} - {1}".format(self.name, str(exc)))

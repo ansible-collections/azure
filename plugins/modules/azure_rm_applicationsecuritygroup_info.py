@@ -26,6 +26,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -87,8 +89,7 @@ applicationsecuritygroups:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.azure_operation import AzureOperationPoller
 except ImportError:
     # This is handled in azure_rm_common
@@ -115,7 +116,7 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
             name=dict(
                 type='str'
             ),
-            tags=dict(type='list')
+            tags=dict(type='list', elements='str')
         )
 
         self.resource_group = None
@@ -126,7 +127,8 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
 
         super(AzureRMApplicationSecurityGroupInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                                   supports_check_mode=True,
-                                                                  supports_tags=False)
+                                                                  supports_tags=False,
+                                                                  facts_module=True)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
@@ -168,7 +170,7 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
 
             if response and self.has_tags(response.tags, self.tags):
                 results.append(applicationsecuritygroup_to_dict(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Did not find the Application Security Group instance.')
         return results
 
@@ -189,7 +191,7 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
                         results.append(applicationsecuritygroup_to_dict(item))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Application Security Group instance.')
         return results
 
@@ -210,7 +212,7 @@ class AzureRMApplicationSecurityGroupInfo(AzureRMModuleBase):
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
                         results.append(applicationsecuritygroup_to_dict(item))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Application Security Group instance.')
         return results
 

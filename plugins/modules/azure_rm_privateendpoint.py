@@ -60,21 +60,6 @@ options:
                     - The ID(s) of the group(s) obtained from the remote resource that this private endpoint should connect to.
                 type: list
                 elements: str
-    private_dns_zone_configs:
-        description:
-            - The Private DNS zones configurations.
-        type: list
-        elements: dict
-        suboptions:
-            name:
-                description:
-                    - The name of the private dns zone configs.
-                type: str
-            private_dns_zone_group:
-                description:
-                    - The resource ID of the Private DNS zones.
-                type: list
-                elements: str
     state:
         description:
             - State of the virtual network. Use C(present) to create or update and C(absent) to delete.
@@ -185,7 +170,7 @@ state:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -210,12 +195,6 @@ subnet_spec = dict(
 )
 
 
-private_dns_zone_configs_spec = dict(
-    name=dict(type='str'),
-    private_dns_zone_group=dict(type='list', elements='str')
-)
-
-
 class Actions:
     NoAction, Create, Update, Delete = range(4)
 
@@ -231,7 +210,6 @@ class AzureRMPrivateEndpoint(AzureRMModuleBaseExt):
             location=dict(type='str'),
             subnet=dict(type='dict', options=subnet_spec),
             private_link_service_connections=dict(type='list', elements='dict', options=private_service_connection_spec),
-            private_dns_zone_configs=dict(type='list', elements='dict', options=private_dns_zone_configs_spec)
         )
 
         self.resource_group = None
@@ -278,12 +256,6 @@ class AzureRMPrivateEndpoint(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                # modifiers = {}
-                # self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                # self.results['modifiers'] = modifiers
-                # self.results['compare'] = []
-                # if not self.default_compare(modifiers, self.body, old_response, '', self.results):
-                #    self.to_do = Actions.Update
                 update_tags, newtags = self.update_tags(old_response.get('tags', {}))
                 if update_tags:
                     self.body['tags'] = newtags
@@ -308,8 +280,8 @@ class AzureRMPrivateEndpoint(AzureRMModuleBaseExt):
 
     def create_update_resource_private_endpoint(self, privateendpoint):
         try:
-            poller = self.network_client.private_endpoints.create_or_update(resource_group_name=self.resource_group,
-                                                                            private_endpoint_name=self.name, parameters=privateendpoint)
+            poller = self.network_client.private_endpoints.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                  private_endpoint_name=self.name, parameters=privateendpoint)
             new_privateendpoint = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating or updating private endpoint {0} - {1}".format(self.name, str(exc)))
@@ -318,7 +290,7 @@ class AzureRMPrivateEndpoint(AzureRMModuleBaseExt):
 
     def delete_private_endpoint(self):
         try:
-            poller = self.network_client.private_endpoints.delete(self.resource_group, self.name)
+            poller = self.network_client.private_endpoints.begin_delete(self.resource_group, self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting private endpoint {0} - {1}".format(self.name, str(exc)))
@@ -331,7 +303,7 @@ class AzureRMPrivateEndpoint(AzureRMModuleBaseExt):
             results = self.private_endpoints_to_dict(private_endpoint)
             found = True
             self.log("Response : {0}".format(results))
-        except Exception:
+        except ResourceNotFoundError:
             self.log("Did not find the private endpoint resource")
         if found is True:
             return results

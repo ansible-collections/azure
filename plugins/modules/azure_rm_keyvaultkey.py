@@ -24,6 +24,28 @@ options:
         description:
             - Name of the keyvault key.
         required: true
+    key_type:
+        description:
+            - The type of key to create. For valid values, see JsonWebKeyType. Possible values include EC, EC-HSM, RSA, RSA-HSM, oct
+        default: 'RSA'
+    key_size:
+        description:
+            - The key size in bits. For example 2048, 3072, or 4096 for RSA.
+    key_attributes:
+        description:
+            - The attributes of a key managed by the key vault service.
+        suboptions:
+            enabled:
+                description: bool
+            not_before:
+                description:
+                    - not valid before date in UTC ISO format without the Z at the end
+            expires:
+                description:
+                    - not valid after date in UTC ISO format without the Z at the end
+    curve:
+        description:
+            - Elliptic curve name. For valid values, see JsonWebKeyCurveName. Possible values include P-256, P-384, P-521, P-256K.
     byok_file:
         description:
             - BYOK file.
@@ -84,13 +106,19 @@ try:
     import codecs
     from azure.keyvault import KeyVaultClient, KeyVaultId, KeyVaultAuthentication
     from azure.keyvault.models import KeyAttributes, JsonWebKey
-    from azure.common.credentials import ServicePrincipalCredentials
-    from azure.keyvault.models.key_vault_error import KeyVaultErrorException
+    from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
+    from datetime import datetime
     from msrestazure.azure_active_directory import MSIAuthentication
     from OpenSSL import crypto
 except ImportError:
     # This is handled in azure_rm_common
     pass
+
+key_addribute_spec = dict(
+    enabled=dict(type='bool', required=False),
+    not_before=dict(type='str', no_log=True, required=False),
+    expires=dict(type='str', no_log=True, required=False)
+)
 
 
 class AzureRMKeyVaultKey(AzureRMModuleBase):
@@ -101,6 +129,10 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
         self.module_arg_spec = dict(
             key_name=dict(type='str', required=True),
             keyvault_uri=dict(type='str', no_log=True, required=True),
+            key_type=dict(type='str', default='RSA'),
+            key_size=dict(type='int'),
+            key_attributes=dict(type='dict', no_log=True, options=key_addribute_spec),
+            curve=dict(type='str'),
             pem_file=dict(type='str'),
             pem_password=dict(type='str', no_log=True),
             byok_file=dict(type='str'),
@@ -114,6 +146,10 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
 
         self.key_name = None
         self.keyvault_uri = None
+        self.key_type = None
+        self.key_size = None
+        self.key_attributes = None
+        self.curve = None
         self.pem_file = None
         self.pem_password = None
         self.state = None
@@ -147,7 +183,7 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
             if self.state == 'absent':
                 changed = True
 
-        except KeyVaultErrorException:
+        except Exception:
             # Key doesn't exist
             if self.state == 'present':
                 changed = True
@@ -159,7 +195,8 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
 
             # Create key
             if self.state == 'present' and changed:
-                results['key_id'] = self.create_key(self.key_name, self.tags)
+                results['key_id'] = self.create_key(self.key_name, self.key_type, self.key_size, self.key_attributes,
+                                                    self.curve, self.tags)
                 self.results['state'] = results
                 self.results['state']['status'] = 'Created'
             # Delete key
@@ -176,15 +213,24 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
         return self.results
 
     def get_keyvault_client(self):
+        kv_url = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
         # Don't use MSI credentials if the auth_source isn't set to MSI.  The below will Always result in credentials when running on an Azure VM.
         if self.module.params['auth_source'] == 'msi':
             try:
                 self.log("Get KeyVaultClient from MSI")
-                resource = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
-                credentials = MSIAuthentication(resource="https://{0}".format(resource))
+                credentials = MSIAuthentication(resource="https://{0}".format(kv_url))
                 return KeyVaultClient(credentials)
             except Exception:
                 self.log("Get KeyVaultClient from service principal")
+        elif self.module.params['auth_source'] in ['auto', 'cli']:
+            try:
+                profile = get_cli_profile()
+                credentials, subscription_id, tenant = profile.get_login_credentials(
+                    subscription_id=self.credentials['subscription_id'], resource="https://{0}".format(kv_url))
+                return KeyVaultClient(credentials)
+            except Exception as exc:
+                self.log("Get KeyVaultClient from service principal")
+                # self.fail("Failed to load CLI profile {0}.".format(str(exc)))
 
         # Create KeyVault Client using KeyVault auth class and auth_callback
         def auth_callback(server, resource, scope):
@@ -200,7 +246,7 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
                 secret=self.credentials['secret'],
                 tenant=tenant,
                 cloud_environment=self._cloud_environment,
-                resource="https://vault.azure.net")
+                resource="https://{0}".format(kv_url))
 
             token = authcredential.token
             return token['token_type'], token['access_token']
@@ -214,9 +260,22 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
             key_id = KeyVaultId.parse_key_id(key_bundle.key.kid)
         return key_id.id
 
-    def create_key(self, name, tags, kty='RSA'):
+    def create_key(self, name, key_type, key_size, key_attributes, curve, tags):
         ''' Creates a key '''
-        key_bundle = self.client.create_key(vault_base_url=self.keyvault_uri, key_name=name, kty=kty, tags=tags)
+
+        if key_attributes is not None:
+            k_enabled = key_attributes.get('enabled', True)
+            k_not_before = key_attributes.get('not_before', None)
+            k_expires = key_attributes.get('expires', None)
+            if k_not_before:
+                k_not_before = datetime.fromisoformat(k_not_before.replace('Z', '+00:00'))
+            if k_expires:
+                k_expires = datetime.fromisoformat(k_expires.replace('Z', '+00:00'))
+
+            key_attributes = KeyAttributes(enabled=k_enabled, not_before=k_not_before, expires=k_expires)
+
+        key_bundle = self.client.create_key(vault_base_url=self.keyvault_uri, key_name=name, kty=key_type, key_size=key_size,
+                                            key_attributes=key_attributes, curve=curve, tags=tags)
         key_id = KeyVaultId.parse_key_id(key_bundle.key.kid)
         return key_id.id
 

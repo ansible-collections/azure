@@ -125,8 +125,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
     format_resource_id, normalize_location_name
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -190,7 +189,7 @@ class AzureRMProximityPlacementGroup(AzureRMModuleBase):
             elif self.state == 'absent':
                 changed = True
 
-        except CloudError:
+        except ResourceNotFoundError:
             if self.state == 'present':
                 changed = True
             else:
@@ -222,10 +221,9 @@ class AzureRMProximityPlacementGroup(AzureRMModuleBase):
     def create_or_update_placementgroup(self, proximity_placement_group):
         try:
             # create the placement group
-            response = self.compute_client.proximity_placement_groups.create_or_update(
-                resource_group_name=self.resource_group,
-                proximity_placement_group_name=self.name,
-                parameters=proximity_placement_group)
+            response = self.compute_client.proximity_placement_groups.create_or_update(resource_group_name=self.resource_group,
+                                                                                       proximity_placement_group_name=self.name,
+                                                                                       parameters=proximity_placement_group)
         except Exception as exc:
             self.fail("Error creating or updating proximity placement group {0} - {1}".format(self.name, str(exc)))
         return self.ppg_to_dict(response)

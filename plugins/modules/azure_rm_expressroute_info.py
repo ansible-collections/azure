@@ -24,11 +24,14 @@ options:
         description:
             - The name of the express route.
         type: str
-
+    tags:
+        description:
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Praveen Ghuge (@praveenghuge)
@@ -43,6 +46,8 @@ EXAMPLES = '''
     community.azure.azure_rm_expressroute_info:
       resource_group: myResourceGroup
       name: myExpressRoute
+      tags:
+        - key:value
 
 '''
 
@@ -92,7 +97,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.network import NetworkManagementClient
     from msrest.serialization import Model
 except ImportError:
@@ -109,6 +114,10 @@ class AzureExpressRouteInfo(AzureRMModuleBase):
             ),
             name=dict(
                 type='str'
+            ),
+            tags=dict(
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -119,7 +128,7 @@ class AzureExpressRouteInfo(AzureRMModuleBase):
         self.tags = None
 
         super(AzureExpressRouteInfo, self).__init__(
-            self.module_arg_spec, supports_check_mode=True, supports_tags=True)
+            self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 
@@ -143,7 +152,7 @@ class AzureExpressRouteInfo(AzureRMModuleBase):
             response = self.network_client.express_route_circuits.get(
                 self.resource_group, self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get info for express route. {0}').format(str(e))
 
         if response and self.has_tags(response.tags, self.tags):
@@ -156,7 +165,7 @@ class AzureExpressRouteInfo(AzureRMModuleBase):
             response = self.network_client.express_route_circuits.list(
                 self.resource_group)
 
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail(
                 "Failed to list for resource group {0} - {1}".format(self.resource_group, str(exc)))
 

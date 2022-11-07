@@ -67,7 +67,7 @@ state:
         "region": null,
         "scale_unit": null,
         "service_bus_endpoint": "https://testnaedd3d22d3w.servicebus.windows.net:443/",
-        "sku": "Free",
+        "sku": {"name":"Free"},
         "tags": {
             "a": "b"
         },
@@ -78,7 +78,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -138,7 +138,7 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
                 self.resource_group, self.namespace_name)
             self.log("Response : {0}".format(response))
 
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get info for namespace. {0}').format(
                 str(e))
 
@@ -154,7 +154,7 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
                 self.resource_group, self.namespace_name, self.name)
             self.log("Response : {0}".format(response))
 
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get info for notification hub. {0}').format(
                 str(e))
 
@@ -168,7 +168,7 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
             response = self.notification_hub_client.namespaces.list(
                 self.resource_group)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.fail(
                 "Failed to list for resource group {0} - {1}".format(self.resource_group, str(exc)))
 
@@ -188,7 +188,7 @@ class AzureNotificationHubInfo(AzureRMModuleBase):
             type=namespace.get('type', None),
             location=namespace.get(
                 'location', '').replace(' ', '').lower(),
-            sku=namespace.get("sku").get("name"),
+            sku=namespace.get("sku"),
             tags=namespace.get('tags', None),
             provisioning_state=namespace.get(
                 'provisioning_state', None),

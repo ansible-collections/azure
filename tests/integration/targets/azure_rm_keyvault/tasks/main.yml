@@ -18,6 +18,7 @@
     vault_name: "vault{{ rpfx }}"
     enabled_for_deployment: yes
     vault_tenant: "{{ tenant_id }}"
+    soft_delete_retention_in_days: 7
     sku:
       name: standard
       family: A
@@ -55,6 +56,7 @@
     vault_name: "vault{{ rpfx }}"
     enabled_for_deployment: yes
     vault_tenant: "{{ tenant_id }}"
+    soft_delete_retention_in_days: 7
     sku:
       name: standard
       family: A
@@ -82,6 +84,7 @@
     vault_name: "vault{{ rpfx }}"
     enabled_for_deployment: yes
     vault_tenant: "{{ tenant_id }}"
+    soft_delete_retention_in_days: 7
     sku:
       name: standard
       family: A
@@ -108,6 +111,7 @@
     vault_name: "vault{{ rpfx }}"
     enabled_for_deployment: yes
     vault_tenant: "{{ tenant_id }}"
+    soft_delete_retention_in_days: 7
     sku:
       name: standard
       family: A
@@ -156,6 +160,7 @@
       - facts['keyvaults'][0]['sku'] != None
       - facts['keyvaults'][0]['id'] != None
       - facts['keyvaults'][0]['enable_soft_delete'] == true
+      - facts['keyvaults'][0]['soft_delete_retention_in_days'] == 7
 #
 # azure_rm_keyvaultkey tests
 #

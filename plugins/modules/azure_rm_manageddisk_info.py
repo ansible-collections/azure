@@ -38,6 +38,7 @@ options:
             - Limit results by providing a list of tags.
             - Format tags as 'key' or 'key:value'.
         type: list
+        elements: str
     managed_by:
         description:
             - Limit results to disks managed by the given VM fqid.
@@ -45,7 +46,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Bruno Medina (@brusMX)
@@ -120,6 +120,18 @@ azure_managed_disk:
             description:
                 - Name of an existing virtual machine with which the disk is or will be associated, this VM should be in the same resource group.
             type: str
+            sample: "/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Compute/virtualMachines/testVM"
+        max_shares:
+            description:
+                - The maximum number of VMs that can attach to the disk at the same time.
+                - Value greater than one indicates a disk that can be mounted on multiple VMs at the same time.
+            type: int
+            sample: 3
+        managed_by_extended:
+            description:
+                - List ID of an existing virtual machine with which the disk is or will be associated.
+            type: list
+            sample: ["/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Compute/virtualMachines/testVM"]
         tags:
             description:
                 - Tags to assign to the managed disk.
@@ -130,7 +142,7 @@ azure_managed_disk:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # handled in azure_rm_common
     pass
@@ -143,7 +155,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(type='str'),
             name=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             managed_by=dict(type='str')
         )
 
@@ -161,7 +173,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
         super(AzureRMManagedDiskInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                      supports_check_mode=True,
                                                      facts_module=True,
-                                                     supports_tags=True)
+                                                     supports_tags=False)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
@@ -191,7 +203,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             if self.tags:
                 results = [disk for disk in results if self.has_tags(disk.tags, self.tags)]
             results = [self.managed_disk_to_dict(disk) for disk in results]
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Could not find disk {0} in resource group {1}'.format(self.name, self.resource_group))
 
         return results
@@ -207,7 +219,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             if self.tags:
                 results = [disk for disk in results if self.has_tags(disk.tags, self.tags)]
             results = [self.managed_disk_to_dict(disk) for disk in results]
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         return results
@@ -223,7 +235,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             if self.tags:
                 results = [disk for disk in results if self.has_tags(disk.tags, self.tags)]
             results = [self.managed_disk_to_dict(disk) for disk in results]
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail('Failed to list items by resource group - {0}'.format(str(exc)))
 
         return results
@@ -241,6 +253,8 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             os_type=managed_disk.os_type.lower() if managed_disk.os_type else None,
             storage_account_type=managed_disk.sku.name if managed_disk.sku else None,
             managed_by=managed_disk.managed_by,
+            max_shares=managed_disk.max_shares,
+            managed_by_extended=managed_disk.managed_by_extended,
             zone=managed_disk.zones[0] if managed_disk.zones and len(managed_disk.zones) > 0 else ''
         )
 

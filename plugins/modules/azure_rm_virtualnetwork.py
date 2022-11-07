@@ -163,7 +163,7 @@ state:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -307,7 +307,7 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
             elif self.state == 'absent':
                 self.log("CHANGED: vnet exists but requested state is 'absent'")
                 changed = True
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Vnet {0} does not exist'.format(self.name))
             if self.state == 'present':
                 self.log("CHANGED: vnet {0} does not exist but requested state is 'present'".format(self.name))
@@ -363,7 +363,7 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
 
     def create_or_update_vnet(self, vnet):
         try:
-            poller = self.network_client.virtual_networks.create_or_update(self.resource_group, self.name, vnet)
+            poller = self.network_client.virtual_networks.begin_create_or_update(self.resource_group, self.name, vnet)
             new_vnet = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating or updating virtual network {0} - {1}".format(self.name, str(exc)))
@@ -371,7 +371,7 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
 
     def delete_virtual_network(self):
         try:
-            poller = self.network_client.virtual_networks.delete(self.resource_group, self.name)
+            poller = self.network_client.virtual_networks.begin_delete(self.resource_group, self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting virtual network {0} - {1}".format(self.name, str(exc)))

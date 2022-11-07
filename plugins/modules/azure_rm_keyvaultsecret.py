@@ -92,11 +92,11 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.keyvault import KeyVaultClient, KeyVaultAuthentication, KeyVaultId
-    from azure.common.credentials import ServicePrincipalCredentials
-    from azure.keyvault.models.key_vault_error import KeyVaultErrorException
+    from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
     from msrestazure.azure_active_directory import MSIAuthentication
     import dateutil.parser
-    from azure.keyvault.models.secret_attributes import SecretAttributes
+    from azure.keyvault.models import SecretAttributes
+    # from azure.keyvault.models.secret_attributes import SecretAttributes
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -162,7 +162,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             elif self.secret_value and results['secret_value'] != self.secret_value:
                 changed = True
 
-        except KeyVaultErrorException:
+        except Exception:
             # Secret doesn't exist
             if self.state == 'present':
                 changed = True
@@ -198,15 +198,24 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         return self.results
 
     def get_keyvault_client(self):
+        kv_url = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
         # Don't use MSI credentials if the auth_source isn't set to MSI.  The below will Always result in credentials when running on an Azure VM.
         if self.module.params['auth_source'] == 'msi':
             try:
                 self.log("Get KeyVaultClient from MSI")
-                resource = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
-                credentials = MSIAuthentication(resource="https://{0}".format(resource))
+                credentials = MSIAuthentication(resource="https://{0}".format(kv_url))
                 return KeyVaultClient(credentials)
             except Exception:
                 self.log("Get KeyVaultClient from service principal")
+        elif self.module.params['auth_source'] in ['auto', 'cli']:
+            try:
+                profile = get_cli_profile()
+                credentials, subscription_id, tenant = profile.get_login_credentials(
+                    subscription_id=self.credentials['subscription_id'], resource="https://{0}".format(kv_url))
+                return KeyVaultClient(credentials)
+            except Exception as exc:
+                self.log("Get KeyVaultClient from service principal")
+                # self.fail("Failed to load CLI profile {0}.".format(str(exc)))
 
         # Create KeyVault Client using KeyVault auth class and auth_callback
         def auth_callback(server, resource, scope):
@@ -222,7 +231,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
                 secret=self.credentials['secret'],
                 tenant=tenant,
                 cloud_environment=self._cloud_environment,
-                resource="https://vault.azure.net")
+                resource="https://{0}".format(kv_url))
 
             token = authcredential.token
             return token['token_type'], token['access_token']

@@ -28,9 +28,14 @@ options:
         description:
             - Limit results by resource group.
         type: str
+    tags:
+        description:
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
+
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Fred-sun (@Fred-sun)
@@ -49,7 +54,7 @@ EXAMPLES = '''
     - name: Get all private endpoint under subscription
       azure_rm_virtualnetwork_info:
         tags:
-          key1: value1
+          - key1:value1
 '''
 
 RETURN = '''
@@ -111,8 +116,48 @@ state:
             description:
                 - The resource id of the private endpoint to connect.
             returned: always
-            type: list
-            sample: ["/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/privateEndpoints/point/privateLinkServiceConnections/point",]
+            type: complex
+            contains:
+                id:
+                    description:
+                        - The resource id of the private endpoint to connect.
+                    returned: always
+                    type: str
+                name:
+                    description:
+                        - The name of the private endpoint connection.
+                    returned: always
+                    type: str
+                connection_state:
+                    description:
+                        - State details of endpoint connection
+                    type: complex
+                    returned: always
+                    contains:
+                        description:
+                            description:
+                                - The reason for approval/rejection of the connection.
+                            returned: always
+                            type: str
+                            sample: "Auto Approved"
+                        status:
+                            description:
+                                - Indicates whether the connection has been Approved/Rejected/Removed by the owner of the service.
+                            returned: always
+                            type: str
+                            sample: Approved
+                        actions_required:
+                            description:
+                                - A message indicating if changes on the service provider require any updates on the consumer.
+                            type: str
+                            returned: always
+                            sample: "This is action_required string"
+                group_ids:
+                    description:
+                        - List of group_ids associated with private endpoint
+                    returned: always
+                    type: list
+                    sample: ["postgresqlServer"]
         type:
             description:
                 - Resource type.
@@ -122,7 +167,7 @@ state:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -137,6 +182,7 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
+            tags=dict(type='list', elements='str')
         )
 
         self.results = dict(
@@ -153,7 +199,7 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
 
         super(AzureRMPrivateEndpointInfo, self).__init__(self.module_arg_spec,
                                                          supports_check_mode=True,
-                                                         supports_tags=True,
+                                                         supports_tags=False,
                                                          facts_module=True)
 
     def exec_module(self, **kwargs):
@@ -176,7 +222,7 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
 
         try:
             item = self.network_client.private_endpoints.get(self.resource_group, self.name)
-        except Exception:
+        except ResourceNotFoundError:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
         format_item = self.privateendpoints_to_dict(item)
 
@@ -188,7 +234,7 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
         self.log('List items for resource group')
         try:
             response = self.network_client.private_endpoints.list(self.resource_group)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list for resource group {0} - {1}".format(self.resource_group, str(exc)))
 
         results = []
@@ -202,7 +248,7 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
         self.log('List all for items')
         try:
             response = self.network_client.private_endpoints.list_by_subscription()
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []
@@ -232,7 +278,16 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
         if privateendpoint.private_link_service_connections and len(privateendpoint.private_link_service_connections) > 0:
             results['private_link_service_connections'] = []
             for connections in privateendpoint.private_link_service_connections:
-                results['private_link_service_connections'].append(connections.id)
+                connection = {}
+                connection['connection_state'] = {}
+                connection['id'] = connections.id
+                connection['name'] = connections.name
+                connection['type'] = connections.type
+                connection['group_ids'] = connections.group_ids
+                connection['connection_state']['status'] = connections.private_link_service_connection_state.status
+                connection['connection_state']['description'] = connections.private_link_service_connection_state.description
+                connection['connection_state']['actions_required'] = connections.private_link_service_connection_state.actions_required
+                results['private_link_service_connections'].append(connection)
         if privateendpoint.manual_private_link_service_connections and len(privateendpoint.manual_private_link_service_connections) > 0:
             results['manual_private_link_service_connections'] = []
             for connections in privateendpoint.manual_private_link_service_connections:

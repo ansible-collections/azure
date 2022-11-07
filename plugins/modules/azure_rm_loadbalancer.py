@@ -68,6 +68,12 @@ options:
                 description:
                     - The reference of the subnet resource.
                     - Should be an existing subnet's resource id.
+            zones:
+                description:
+                    - list of availability zones denoting the IP allocated for the resource needs to come from.
+                    - This must be specified I(sku=Standard) and I(subnet) when setting zones.
+                type: list
+                elements: str
     backend_address_pools:
         description:
             - List of backend address pools.
@@ -207,6 +213,12 @@ options:
             enable_floating_ip:
                 description:
                     - Configures a virtual machine's endpoint for the floating IP capability required to configure a SQL AlwaysOn Availability Group.
+            disable_outbound_snat:
+                description:
+                    - Configure outbound source network address translation (SNAT).
+                    - The default behavior when omitted is equivalent to I(disable_outbound_snat=True).
+                    - True is equivalent to "(Recommended) Use outbound rules to provide backend pool members access to the internet" in portal.
+                    - False is equivalent to "Use default outbound access" in portal.
     inbound_nat_rules:
         description:
             - Collection of inbound NAT Rules used by a load balancer.
@@ -397,6 +409,7 @@ from ansible.module_utils._text import to_native
 try:
     from msrestazure.tools import parse_resource_id
     from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -418,6 +431,10 @@ frontend_ip_configuration_spec = dict(
     ),
     subnet=dict(
         type='str'
+    ),
+    zones=dict(
+        type='list',
+        elements='str'
     )
 )
 
@@ -558,7 +575,11 @@ load_balancing_rule_spec = dict(
     ),
     enable_floating_ip=dict(
         type='bool'
-    )
+    ),
+    disable_outbound_snat=dict(
+        type='bool',
+        default=None
+    ),
 )
 
 
@@ -765,17 +786,40 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                     frontend_port=self.frontend_port,
                     backend_port=self.backend_port,
                     idle_timeout=self.idle_timeout,
-                    enable_floating_ip=False
+                    enable_floating_ip=False,
                 )] if self.protocol else None
 
             # create new load balancer structure early, so it can be easily compared
-            frontend_ip_configurations_param = [self.network_models.FrontendIPConfiguration(
-                name=item.get('name'),
-                public_ip_address=self.get_public_ip_address_instance(item.get('public_ip_address')) if item.get('public_ip_address') else None,
-                private_ip_address=item.get('private_ip_address'),
-                private_ip_allocation_method=item.get('private_ip_allocation_method'),
-                subnet=self.network_models.Subnet(id=item.get('subnet')) if item.get('subnet') else None
-            ) for item in self.frontend_ip_configurations] if self.frontend_ip_configurations else None
+            if not load_balancer:
+                frontend_ip_configurations_param = [self.network_models.FrontendIPConfiguration(
+                    name=item.get('name'),
+                    public_ip_address=self.get_public_ip_address_instance(item.get('public_ip_address')) if item.get('public_ip_address') else None,
+                    private_ip_address=item.get('private_ip_address'),
+                    private_ip_allocation_method=item.get('private_ip_allocation_method'),
+                    zones=item.get('zones'),
+                    subnet=self.network_models.Subnet(
+                        id=item.get('subnet'),
+                        private_endpoint_network_policies=None,
+                        private_link_service_network_policies=None
+                    ) if item.get('subnet') else None
+                ) for item in self.frontend_ip_configurations] if self.frontend_ip_configurations else None
+            else:
+                old_front = load_balancer.frontend_ip_configurations
+                new_front = self.frontend_ip_configurations
+                frontend_ip_configurations_param = [self.network_models.FrontendIPConfiguration(
+                    name=new_front[index].get('name'),
+                    public_ip_address=self.get_public_ip_address_instance(
+                        new_front[index].get('public_ip_address')
+                    ) if new_front[index].get('public_ip_address') else None,
+                    private_ip_address=new_front[index].get('private_ip_address'),
+                    private_ip_allocation_method=new_front[index].get('private_ip_allocation_method'),
+                    zones=new_front[index].get('zones') if new_front[index].get('zones') else old_front[index].zones,
+                    subnet=self.network_models.Subnet(
+                        id=new_front[index].get('subnet'),
+                        private_endpoint_network_policies=None,
+                        private_link_service_network_policies=None
+                    ) if new_front[index].get('subnet') else None
+                ) for index in range(len(new_front))] if new_front else None
 
             backend_address_pools_param = [self.network_models.BackendAddressPool(
                 name=item.get('name')
@@ -835,7 +879,8 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                 frontend_port=item.get('frontend_port'),
                 backend_port=item.get('backend_port'),
                 idle_timeout_in_minutes=item.get('idle_timeout'),
-                enable_floating_ip=item.get('enable_floating_ip')
+                enable_floating_ip=item.get('enable_floating_ip'),
+                disable_outbound_snat=item.get('disable_outbound_snat'),
             ) for item in self.load_balancing_rules] if self.load_balancing_rules else None
 
             inbound_nat_rules_param = [self.network_models.InboundNatRule(
@@ -916,24 +961,24 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
         self.log('Fetching loadbalancer {0}'.format(self.name))
         try:
             return self.network_client.load_balancers.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             return None
 
     def delete_load_balancer(self):
         """Delete a load balancer"""
         self.log('Deleting loadbalancer {0}'.format(self.name))
         try:
-            poller = self.network_client.load_balancers.delete(self.resource_group, self.name)
+            poller = self.network_client.load_balancers.begin_delete(self.resource_group, self.name)
             return self.get_poller_result(poller)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error deleting loadbalancer {0} - {1}".format(self.name, str(exc)))
 
     def create_or_update_load_balancer(self, param):
         try:
-            poller = self.network_client.load_balancers.create_or_update(self.resource_group, self.name, param)
+            poller = self.network_client.load_balancers.begin_create_or_update(self.resource_group, self.name, param)
             new_lb = self.get_poller_result(poller)
             return new_lb
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error creating or updating load balancer {0} - {1}".format(self.name, str(exc)))
 
     def object_assign(self, patch, origin):

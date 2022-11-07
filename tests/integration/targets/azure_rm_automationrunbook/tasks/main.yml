@@ -1,0 +1,139 @@
+- name: Prepare random number
+  set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(10, True, '') }}"
+  run_once: yes
+
+- name: Create automation account
+  azure_rm_automationaccount:
+    name: "account-{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+
+- name: create automation runbook (check mode)
+  azure_rm_automationrunbook:
+    resource_group: "{{ resource_group }}"
+    automation_account_name: "account-{{ rpfx }}"
+    name: "runbook-{{ rpfx }}"
+    runbook_type: "Script"
+    description: "Fred test"
+  check_mode: yes
+
+- name: create automation runbook with default parameters
+  azure_rm_automationrunbook:
+    resource_group: "{{ resource_group }}"
+    automation_account_name: "account-{{ rpfx }}"
+    name: "runbook-{{ rpfx }}"
+    runbook_type: "Script"
+    description: "Fred test"
+  register: output
+
+- name: Assert the automation runbook is well created
+  assert:
+    that:
+      - output.changed
+
+- name: create automation runbook with default parameters (idempotent)
+  azure_rm_automationrunbook:
+    resource_group: "{{ resource_group }}"
+    automation_account_name: "account-{{ rpfx }}"
+    name: "runbook-{{ rpfx }}"
+    runbook_type: "Script"
+    description: "Fred test"
+  register: output
+
+- name: Assert the automation runbook is well created
+  assert:
+    that:
+      - not output.changed
+
+- name: Create automation runbook with more paramters 
+  azure_rm_automationrunbook:
+    resource_group: "{{ resource_group }}"
+    automation_account_name: "account-{{ rpfx }}"
+    name: "runbook-{{ rpfx }}-secondary"
+    runbook_type: "Script"
+    description: "test"
+    log_activity_trace: 2
+    log_progress: False
+    log_verbose: True
+    tags: 
+      key1: value1
+  register: output
+
+- name: Assert the automation runbook is well created
+  assert:
+    that:
+      - output.changed
+
+- name: Update automation runbook with more paramters 
+  azure_rm_automationrunbook:
+    resource_group: "{{ resource_group }}"
+    automation_account_name: "account-{{ rpfx }}"
+    name: "runbook-{{ rpfx }}-secondary"
+    runbook_type: "Script"
+    description: "update"
+    log_activity_trace: 3
+    log_progress: True
+    log_verbose: False
+    tags: 
+      key2: value2
+  register: output
+
+- name: Assert the automation runbook is well created
+  assert:
+    that:
+      - output.changed
+
+- name: Publish automation runbook 
+  azure_rm_automationrunbook:
+    resource_group: "{{ resource_group }}"
+    automation_account_name: "account-{{ rpfx }}"
+    name: "runbook-{{ rpfx }}-secondary"
+    publish: True
+  register: output
+
+- name: Assert the automation runbook is well published
+  assert:
+    that:
+      - output.changed
+
+- name: Get automation runbook
+  azure_rm_automationrunbook_info:
+    resource_group: "{{ resource_group }}"
+    automation_account_name: "account-{{ rpfx }}"
+    name: "runbook-{{ rpfx }}-secondary"
+  register: output
+
+- name: Assert the automation runbook is well created
+  assert:
+    that:
+      - output.automation_runbook[0].description == 'update'
+      - output.automation_runbook[0].log_activity_trace == 3
+      - output.automation_runbook[0].log_progress == true
+      - output.automation_runbook[0].log_verbose == false
+      - output.automation_runbook[0].tags | length == 2
+      - output.automation_runbook[0].state == 'Published'
+
+- name: Get all automation runbook
+  azure_rm_automationrunbook_info:
+    resource_group: "{{ resource_group }}"
+    automation_account_name: "account-{{ rpfx }}"
+  register: output
+
+- name: Assert the automation runbook is well created
+  assert:
+    that:
+      - output.automation_runbook | length == 2
+
+- name: delete automation runbook
+  azure_rm_automationrunbook:
+    resource_group: "{{ resource_group }}"
+    automation_account_name: "account-{{ rpfx }}"
+    name: "runbook-{{ rpfx }}"
+    state: absent
+
+- name: delete automation runbook
+  azure_rm_automationrunbook:
+    resource_group: "{{ resource_group }}"
+    automation_account_name: "account-{{ rpfx }}"
+    name: "runbook-{{ rpfx }}-secondary"
+    state: absent

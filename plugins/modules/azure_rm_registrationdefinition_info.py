@@ -194,6 +194,7 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
                                                     api_version='2019-09-01',
+                                                    is_track2=True,
                                                     suppress_subscription_id=True)
 
         if self.registration_definition_id is not None:

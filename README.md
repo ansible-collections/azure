@@ -7,22 +7,24 @@ This collection provides a series of Ansible modules and plugins for interacting
 
 Documentation of individual modules is [available in the Ansible docs site](https://docs.ansible.com/ansible/latest/collections/azure/azcollection/index.html#plugins-in-azure-azcollection)
 
+## Installation
+
+It is recommended to run ansible in [Virtualenv](https://virtualenv.pypa.io/en/latest/) 
+
 ## Requirements
 
 - ansible version >= 2.9
-
-## Installation
-
-To install Azure dependencies:
-
-```bash
-pip install -r requirements-azure.txt
-```
 
 To install Azure collection hosted in Galaxy:
 
 ```bash
 ansible-galaxy collection install azure.azcollection
+```
+
+Install dependencies required by the collection (adjust path to collection if necessary):
+
+```bash
+pip3 install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt
 ```
 
 To upgrade to the latest version of Azure collection:
@@ -44,7 +46,7 @@ To use a module from Azure collection, please reference the full namespace, coll
   tasks:
     - azure.azcollection.azure_rm_storageaccount:
         resource_group: myResourceGroup
-        name: myStorageAccount
+        name: mystorageaccount
         account_type: Standard_LRS
 ```
 
@@ -59,7 +61,7 @@ Or you can add full namepsace and collecton name in the `collections` element:
   tasks:
     - azure_rm_storageaccount:
         resource_group: myResourceGroup
-        name: myStorageAccount
+        name: mystorageaccount
         account_type: Standard_LRS
 ```
 
@@ -76,7 +78,7 @@ plugin: azure.azcollection.azure_rm
     include_vm_resource_groups:
     - ansible-inventory-test-rg
     auth_source: auto
-````
+```
 
 ## Contributing
 

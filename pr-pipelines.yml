@@ -7,14 +7,17 @@ parameters:
     - "2.7"
     - "3.6"
     - "3.8"
+    - "3.9"
+    - "3.10"
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
-  default: "2.10"
+  default: "2.12"
   values:
     - "2.9"
     - "2.10"
     - "2.11"
+    - "2.12"
     - "devel"
 - name: MODULE_NAME
   displayName: 'Test Module'
@@ -28,10 +31,12 @@ parameters:
     - "azure_rm_adgroup"
     - "azure_rm_aduser"
     - "azure_rm_aks"
+    - "azure_rm_aksagentpool"
     - "azure_rm_apimanagement"
     - "azure_rm_appgateway"
     - "azure_rm_appserviceplan"
     - "azure_rm_automationaccount"
+    - "azure_rm_automationrunbook"
     - "azure_rm_autoscale"
     - "azure_rm_availabilityset"
     - "azure_rm_azurefirewall"
@@ -41,6 +46,7 @@ parameters:
     - "azure_rm_cdnprofile"
     - "azure_rm_containerinstance"
     - "azure_rm_containerregistry"
+    - "azure_rm_containerregistrytag"
     - "azure_rm_cosmosdbaccount"
     - "azure_rm_datalakestore"
     - "azure_rm_ddosprotectionplan"
@@ -50,9 +56,11 @@ parameters:
     - "azure_rm_dnszone"
     - "azure_rm_eventhub"
     - "azure_rm_expressroute"
+    - "azure_rm_firewallpolicy"
     - "azure_rm_functionapp"
     - "azure_rm_gallery"
     - "azure_rm_hdinsightcluster"
+    - "azure_rm_hostgroup"
     - "azure_rm_image"
     - "azure_rm_iothub"
     - "azure_rm_ipgroup"
@@ -64,8 +72,10 @@ parameters:
     - "azure_rm_manageddisk"
     - "azure_rm_managementgroup"
     - "azure_rm_mariadbserver"
+    - "azure_rm_monitordiagnosticsetting"
     - "azure_rm_monitorlogprofile"
     - "azure_rm_mysqlserver"
+    - "azure_rm_natgateway"
     - "azure_rm_networkinterface"
     - "azure_rm_notificationhub"
     - "azure_rm_openshiftmanagedcluster"
@@ -73,6 +83,8 @@ parameters:
     - "azure_rm_privatednsrecordset"
     - "azure_rm_privatednszone"
     - "azure_rm_privateendpoint"
+    - "azure_rm_privateendpointdnszonegroup"
+    - "azure_rm_privatelinkservice"
     - "azure_rm_privatednszonelink"
     - "azure_rm_publicipaddress"
     - "azure_rm_proximityplacementgroup"
@@ -90,6 +102,7 @@ parameters:
     - "azure_rm_sqlserver"
     - "azure_rm_storageaccount"
     - "azure_rm_storageblob"
+    - "azure_rm_storageshare"
     - "azure_rm_subnet"
     - "azure_rm_subscription"
     - "azure_rm_trafficmanagerprofile"
@@ -104,6 +117,7 @@ parameters:
     - "azure_rm_virtualwan"
     - "azure_rm_vpnsite"
     - "azure_rm_virtualhub"
+    - "azure_rm_virtualhubconnection"
     - "azure_rm_backupazurevm"
     - "azure_rm_recoveryservicesvault"
     - "azure_rm_vmbackuppolicy"
@@ -111,6 +125,8 @@ parameters:
     - "azure_rm_webappvnetconnection"
     - "azure_rm_webappaccessrestriction"
     - "azure_rm_workspace"
+    - "azure_rm_datafactory"
+    - "azure_rm_bastionhost"
     - "inventory_azure"
     - "setup_azure"
 
@@ -120,7 +136,7 @@ pr:
 - dev
 
 pool:
-  vmImage: 'ubuntu-20.04'
+  name: pool-ubuntu-2004
 
 jobs:
   - job: CreateResourceGroups
@@ -145,7 +161,7 @@ jobs:
 
   - job: RunTests
     dependsOn: CreateResourceGroups
-    timeoutInMinutes: 90
+    timeoutInMinutes: 120
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]

@@ -21,12 +21,16 @@ options:
     resource_group:
         description:
             - Name of resource group.
+        type: str
     name:
         description:
             - Name of the image to filter from existing images.
+        type: str
     tags:
         description:
-            - List of tags to be matched.
+            -  Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -72,6 +76,7 @@ images:
                 - Name of the image.
             returned: always
             type: str
+            sample: foo
         resource_group:
             description:
                 - Resource group of the image.
@@ -87,6 +92,7 @@ images:
             description:
                 - Id of os disk for image.
             type: str
+            returned: always
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/disks/xx
         os_disk_caching:
             description:
@@ -103,6 +109,7 @@ images:
             description:
                 - Specifies the storage account type for the managed disk.
             type: str
+            returned: always
             sample: Standard_LRS
         os_type:
             description:
@@ -120,11 +127,20 @@ images:
             description:
                 - Resource id of source VM from which the image is created.
             type: str
+            returned: always
             sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/xx
         tags:
             description:
                 - Dictionary of tags associated with the image.
-            type: complex
+            type: dict
+            returned: always
+            sample: {"key1":"value1"}
+        hyper_v_generation:
+            description:
+                - The hypervisor generation of the Virtual Machine created from the image.
+            type: str
+            returned: always
+            sample: 'V1'
         data_disks:
             description:
                 - List of data disks associated with the image.
@@ -134,6 +150,8 @@ images:
                 caching:
                     description:
                         - Type of caching of data disk.
+                    type: str
+                    returned: always
                     sample: read_only
                 disk_size_gb:
                     description:
@@ -151,20 +169,25 @@ images:
                     description:
                         - Specifies the storage account type for the managed disk data disk.
                     type: str
+                    returned: always
                     sample: Standard_LRS
                 managed_disk_id:
                     description:
                         - Id of managed disk.
                     type: str
+                    returned: always
                     sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/disks/xx
                 blob_uri:
                     description:
                         - The virtual hard disk.
+                    type: str
+                    returned: always
+                    sample: null
 '''
 
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -182,7 +205,7 @@ class AzureRMImageInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(type='str'),
             name=dict(type='str'),
-            tags=dict(type='list')
+            tags=dict(type='list', elements='str')
         )
 
         self.results = dict(
@@ -231,7 +254,7 @@ class AzureRMImageInfo(AzureRMModuleBase):
         item = None
         try:
             item = self.image_client.images.get(resource_group, image_name)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail('Failed to list images - {0}'.format(str(exc)))
 
         result = [self.format_item(item)]
@@ -246,7 +269,7 @@ class AzureRMImageInfo(AzureRMModuleBase):
         response = None
         try:
             response = self.image_client.images.list_by_resource_group(resource_group)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list images: {0}".format(str(exc)))
 
         return [self.format_item(x) for x in response if self.has_tags(x.tags, self.tags)] if response else []
@@ -261,7 +284,7 @@ class AzureRMImageInfo(AzureRMModuleBase):
         results = []
         try:
             response = self.image_client.images.list()
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list all images: {0}".format(str(exc)))
 
         results = [self.format_item(x) for x in response if self.has_tags(x.tags, self.tags)] if response else []
@@ -291,7 +314,8 @@ class AzureRMImageInfo(AzureRMModuleBase):
             'os_disk': d['storage_profile']['os_disk']['managed_disk']['id'] if 'managed_disk' in d['storage_profile']['os_disk'].keys() else None,
             'os_blob_uri': d['storage_profile']['os_disk']['blob_uri'] if 'blob_uri' in d['storage_profile']['os_disk'].keys() else None,
             'provisioning_state': d['provisioning_state'],
-            'data_disks': d['storage_profile']['data_disks']
+            'data_disks': d['storage_profile']['data_disks'],
+            'hyper_v_generation': d.get('hyper_v_generation')
         }
         return d
 

@@ -30,6 +30,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -192,7 +194,7 @@ virtualnetworks:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -210,7 +212,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
         )
 
         self.results = dict(
@@ -257,7 +259,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
 
         try:
             item = self.network_client.virtual_networks.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -268,7 +270,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         self.log('List items for resource group')
         try:
             response = self.network_client.virtual_networks.list(self.resource_group)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list for resource group {0} - {1}".format(self.resource_group, str(exc)))
 
         results = []
@@ -281,7 +283,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         self.log('List all for items')
         try:
             response = self.network_client.virtual_networks.list_all()
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []

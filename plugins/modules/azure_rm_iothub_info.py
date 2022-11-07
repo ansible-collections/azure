@@ -33,6 +33,7 @@ options:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
         type: list
+        elements: str
     show_stats:
         description:
             - Show the statistics for IoT Hub.
@@ -395,9 +396,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from msrestazure.tools import parse_resource_id
-    from azure.common import AzureHttpError
 except Exception:
     # handled in azure_rm_common
     pass
@@ -411,7 +410,7 @@ class AzureRMIoTHubFacts(AzureRMModuleBase):
         self.module_args = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list'),
+            tags=dict(type='list', elements='str'),
             show_stats=dict(type='bool'),
             show_quota_metrics=dict(type='bool'),
             show_endpoint_health=dict(type='bool'),
@@ -482,7 +481,7 @@ class AzureRMIoTHubFacts(AzureRMModuleBase):
 
     def list_by_resource_group(self):
         try:
-            return self.IoThub_client.iot_hub_resource.list(self.resource_group)
+            return self.IoThub_client.iot_hub_resource.list_by_resource_group(self.resource_group)
         except Exception as exc:
             self.fail('Failed to list IoT Hub in resource group {0} - {1}'.format(self.resource_group, exc.message or str(exc)))
 

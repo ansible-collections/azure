@@ -60,12 +60,14 @@ options:
             - This is a only when I(type=private).
             - Each element can be the name or resource id, or a dict contains C(name), C(resource_group) information of the virtual network.
         type: list
+        elements: raw
     resolution_virtual_networks:
         description:
             - A list of references to virtual networks that resolve records in this DNS zone.
             - This is a only when I(type=private).
             - Each element can be the name or resource id, or a dict contains C(name), C(resource_group) information of the virtual network.
         type: list
+        elements: raw
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -117,7 +119,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils._text import to_native
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -206,7 +208,7 @@ class AzureRMDNSZone(AzureRMModuleBase):
             elif self.state == 'absent':
                 changed = True
 
-        except CloudError:
+        except ResourceNotFoundError:
             # the zone does not exist so create it
             if self.state == 'present':
                 changed = True
@@ -251,7 +253,7 @@ class AzureRMDNSZone(AzureRMModuleBase):
     def delete_zone(self):
         try:
             # delete the Zone
-            poller = self.dns_client.zones.delete(self.resource_group, self.name)
+            poller = self.dns_client.zones.begin_delete(self.resource_group, self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting zone {0} - {1}".format(self.name, exc.message or str(exc)))
@@ -280,7 +282,7 @@ def zone_to_dict(zone):
         number_of_record_sets=zone.number_of_record_sets,
         name_servers=zone.name_servers,
         tags=zone.tags,
-        type=zone.zone_type.value.lower(),
+        type=zone.zone_type.lower(),
         registration_virtual_networks=[to_native(x.id) for x in zone.registration_virtual_networks] if zone.registration_virtual_networks else None,
         resolution_virtual_networks=[to_native(x.id) for x in zone.resolution_virtual_networks] if zone.resolution_virtual_networks else None
     )

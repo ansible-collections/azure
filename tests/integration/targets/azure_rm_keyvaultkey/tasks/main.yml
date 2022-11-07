@@ -74,6 +74,108 @@
     key_name: testkey
   register: output
 
+- name: create a kevyault key of type EC
+  block:
+    - azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        key_name: testkeyEC
+        key_type: EC
+        tags:
+          testing: test
+          delete: on-exit
+      register: output
+    - assert:
+        that: output.changed
+  rescue:
+    - azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        state: absent
+        key_name: testkeyEC
+
+- name: delete a kevyault key of type EC
+  azure_rm_keyvaultkey:
+    keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+    state: absent
+    key_name: testkeyEC
+  register: output
+
+- name: create a kevyault key of size 4096
+  block:
+    - azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        key_name: testkey4096
+        key_size: 4096
+        tags:
+          testing: test
+          delete: on-exit
+      register: output
+    - assert:
+        that: output.changed
+  rescue:
+    - azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        state: absent
+        key_name: testkey4096
+
+- name: delete a kevyault key of size 4096
+  azure_rm_keyvaultkey:
+    keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+    state: absent
+    key_name: testkey4096
+  register: output
+
+- name: create a kevyault key with P-521 curve
+  block:
+    - azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        key_name: testkeycurve
+        curve: P-521
+        tags:
+          testing: test
+          delete: on-exit
+      register: output
+    - assert:
+        that: output.changed
+  rescue:
+    - azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        state: absent
+        key_name: testkeycurve
+
+- name: delete a kevyault key with P-521 curve
+  azure_rm_keyvaultkey:
+    keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+    state: absent
+    key_name: testkeycurve
+  register: output
+
+- name: create a kevyault key with attributes
+  block:
+    - azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        key_name: testkeyattribute
+        key_attributes:
+          enabled: true
+          not_before: '2032-12-01T00:00:00Z'
+        tags:
+          testing: test
+          delete: on-exit
+      register: output
+    - assert:
+        that: output.changed
+  rescue:
+    - azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        state: absent
+        key_name: testkeyattributes
+
+- name: delete a kevyault key with attributes
+  azure_rm_keyvaultkey:
+    keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+    state: absent
+    key_name: testkeyattribute
+  register: output
+
 - assert:
     that: output.changed
 

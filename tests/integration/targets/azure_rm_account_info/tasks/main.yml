@@ -1,0 +1,17 @@
+- name: Get facts for current logged in user
+  azure.azcollection.azure_rm_account_info:
+  register: result
+
+- assert:
+    that:
+      - result is not changed
+      - result is not failed
+      - "'account_info' in result"
+      - "'environmentName' in result.account_info"
+      - "'homeTenantId' in result.account_info"
+      - "'id' in result.account_info"
+      - "'managedByTenants' in result.account_info"
+      - "'name' in result.account_info"
+      - "'state' in result.account_info"
+      - "'tenantId' in result.account_info"
+      - "'user' in result.account_info"

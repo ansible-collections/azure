@@ -28,6 +28,17 @@
 - assert:
     that: results.changed
 
+- name: Create Namespace Hub
+  azure_rm_notificationhub:
+    location: eastus2
+    namespace_name: "{{ namespace_name }}"
+    resource_group: "{{ resource_group }}"
+    sku: "free"
+  register: results
+
+- assert:
+    that: results.changed
+
 - name: Create Notification Hub
   azure_rm_notificationhub:
     location: eastus2
@@ -140,4 +151,3 @@
 
 - assert:
     that: not results.changed
-    

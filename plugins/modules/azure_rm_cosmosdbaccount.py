@@ -79,11 +79,24 @@ options:
         description:
             - Database account offer type, for example I(Standard)
             - Required when I(state=present).
+    enable_free_tier:
+        description:
+            - If enabled the account is free-tier.
+        type: bool
+        default: false
+        version_added: "1.10.0"
     ip_range_filter:
         description:
-            - Cosmos DB Firewall support. This value specifies the set of IP addresses or IP address ranges.
+            - (deprecated) Cosmos DB Firewall support. This value specifies the set of IP addresses or IP address ranges.
             - In CIDR form to be included as the allowed list of client IPs for a given database account.
             - IP addresses/ranges must be comma separated and must not contain any spaces.
+            - This value has been deprecated, and will be removed in a later version. Use I(ip_rules) instead.
+    ip_rules:
+        description:
+            - The IP addresses or IP address ranges in CIDR form to be included as the allowed list of client IPs.
+        type: list
+        elements: str
+        version_added: "1.10.0"
     is_virtual_network_filter_enabled:
         description:
             - Flag to indicate whether to enable/disable Virtual Network ACL rules.
@@ -105,6 +118,21 @@ options:
         description:
             - Enable Gremlin.
         type: bool
+    mongo_version:
+        description:
+            - Server version for the MongoDB account, such as c(3.2) or c(4.0).
+            - Only used when c(kind) = i(mongo_db).
+        type: str
+        version_added: "1.10.0"
+    public_network_access:
+        description:
+            - Enables or disables public network access to server.
+        type: str
+        default: Enabled
+        choices:
+            - Enabled
+            - Disabled
+        version_added: "1.10.0"
     virtual_network_rules:
         description:
             - List of Virtual Network ACL rules configured for the Cosmos DB account.
@@ -114,11 +142,10 @@ options:
                 description:
                     - It can be a string containing resource id of a subnet.
                     - It can be a dictionary containing 'resource_group', 'virtual_network_name' and 'subnet_name'
-            ignore_missing_vnet_service_endpoint:
+            ignore_missing_v_net_service_endpoint:
                 description:
                     - Create Cosmos DB account without existing virtual network service endpoint.
                 type: bool
-
     enable_multiple_write_locations:
         description:
             - Enables the account to write in multiple locations
@@ -162,7 +189,8 @@ EXAMPLES = '''
         - name: southcentralus
           failover_priority: 0
       database_account_offer_type: Standard
-      ip_range_filter: 10.10.10.10
+      ip_rules:
+        - 10.10.10.10
       enable_multiple_write_locations: yes
       virtual_network_rules:
         - subnet: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVi
@@ -183,16 +211,15 @@ id:
              baseAccount"
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.azure_operation import AzureOperationPoller
-    from azure.mgmt.cosmosdb import CosmosDB
-    from msrest.serialization import Model
+    from azure.mgmt.cosmosdb import CosmosDBManagementClient
+    from ansible.module_utils.six import string_types
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -259,8 +286,16 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             database_account_offer_type=dict(
                 type='str'
             ),
+            enable_free_tier=dict(
+                type='bool',
+                default=False,
+            ),
             ip_range_filter=dict(
                 type='str'
+            ),
+            ip_rules=dict(
+                type='list',
+                elements='str',
             ),
             is_virtual_network_filter_enabled=dict(
                 type='bool'
@@ -277,6 +312,14 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             enable_gremlin=dict(
                 type='bool'
             ),
+            mongo_version=dict(
+                type='str'
+            ),
+            public_network_access=dict(
+                type='str',
+                default='Enabled',
+                choices=['Enabled', 'Disabled']
+            ),
             virtual_network_rules=dict(
                 type='list',
                 options=dict(
@@ -284,7 +327,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
                         type='str',
                         required=True
                     ),
-                    ignore_missing_vnet_service_endpoint=dict(
+                    ignore_missing_v_net_service_endpoint=dict(
                         type='bool'
                     )
                 )
@@ -329,6 +372,14 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
         elif kind == 'parse':
             self.parameters['kind'] = 'Parse'
 
+        ip_range_filter = self.parameters.pop('ip_range_filter', None)
+        ip_rules = self.parameters.pop('ip_rules', [])
+        if ip_range_filter:
+            self.parameters['ip_rules'] = [{"ip_address_or_range": ip} for ip in ip_range_filter.split(",")]
+        if ip_rules:
+            # overrides deprecated 'ip_range_filter' parameter
+            self.parameters['ip_rules'] = [{"ip_address_or_range": ip} for ip in ip_rules]
+
         dict_camelize(self.parameters, ['consistency_policy', 'default_consistency_level'], True)
         dict_rename(self.parameters, ['geo_rep_locations', 'name'], 'location_name')
         dict_rename(self.parameters, ['geo_rep_locations'], 'locations')
@@ -339,6 +390,11 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             self.parameters['capabilities'].append({'name': 'EnableTable'})
         if self.parameters.pop('enable_gremlin', False):
             self.parameters['capabilities'].append({'name': 'EnableGremlin'})
+
+        mongo_version = self.parameters.pop('mongo_version', None)
+        if kind == 'mongo_db' and mongo_version is not None:
+            self.parameters['api_properties'] = dict()
+            self.parameters['api_properties']['server_version'] = mongo_version
 
         for rule in self.parameters.get('virtual_network_rules', []):
             subnet = rule.pop('subnet')
@@ -352,7 +408,8 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
 
         response = None
 
-        self.mgmt_client = self.get_mgmt_svc_client(CosmosDB,
+        self.mgmt_client = self.get_mgmt_svc_client(CosmosDBManagementClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -414,13 +471,13 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
         self.log("Creating / Updating the Database Account instance {0}".format(self.name))
 
         try:
-            response = self.mgmt_client.database_accounts.create_or_update(resource_group_name=self.resource_group,
-                                                                           account_name=self.name,
-                                                                           create_update_parameters=self.parameters)
+            response = self.mgmt_client.database_accounts.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                 account_name=self.name,
+                                                                                 create_update_parameters=self.parameters)
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Database Account instance.')
             self.fail("Error creating the Database Account instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -433,13 +490,12 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
         '''
         self.log("Deleting the Database Account instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.database_accounts.delete(resource_group_name=self.resource_group,
-                                                                 account_name=self.name)
+            response = self.mgmt_client.database_accounts.begin_delete(resource_group_name=self.resource_group,
+                                                                       account_name=self.name)
 
-            # This currently doesn't work as there is a bug in SDK / Service
-            # if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
-            #     response = self.get_poller_result(response)
-        except CloudError as e:
+            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+                response = self.get_poller_result(response)
+        except Exception as e:
             self.log('Error attempting to delete the Database Account instance.')
             self.fail("Error deleting the Database Account instance: {0}".format(str(e)))
 
@@ -456,10 +512,13 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
         try:
             response = self.mgmt_client.database_accounts.get(resource_group_name=self.resource_group,
                                                               account_name=self.name)
+            if not response:
+                return False
+
             found = True
             self.log("Response : {0}".format(response))
             self.log("Database Account instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Database Account instance.')
         if found is True:
             return response.as_dict()
@@ -468,6 +527,9 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
 
 
 def default_compare(new, old, path, result):
+    '''
+    :return: false if differences are found between old and new.
+    '''
     if new is None:
         return True
     elif isinstance(new, dict):
@@ -505,6 +567,9 @@ def default_compare(new, old, path, result):
         if path == '/location' or path.endswith('location_name'):
             new = new.replace(' ', '').lower()
             old = new.replace(' ', '').lower()
+        if isinstance(old, string_types) and isinstance(new, string_types):
+            new = new.lower()
+            old = old.lower()
         if new == old:
             return True
         else:

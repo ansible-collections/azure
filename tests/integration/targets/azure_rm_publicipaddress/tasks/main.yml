@@ -35,11 +35,14 @@
       domain_name: "{{ domain_name }}-02"
       version: 'ipv6'
       sku: 'Standard'
+      zones:
+        - 1
   register: output
 
 - assert:
       that:
           - output.state.public_ip_address_version == 'ipv6'
+          - output.state.zones == ['1']
 
 - name: Should be idempotent
   azure_rm_publicipaddress:

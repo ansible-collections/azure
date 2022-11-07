@@ -101,6 +101,90 @@
     name: "vmforimage{{ rpfx }}"
     state: absent
 
+- name: Create VMSS with I(orchestration_mode=Flexible)
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    vm_size: Standard_A1_v2
+    admin_username: testuser
+    single_placement_group: False
+    platform_fault_domain_count: 1
+    public_ip_per_vm: True
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
+    managed_disk_type: Standard_LRS
+    orchestration_mode: Flexible
+    os_disk_caching: ReadWrite
+    image:
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
+      version: latest
+    data_disks:
+      - lun: 0
+        disk_size_gb: 64
+        caching: ReadWrite
+        managed_disk_type: Standard_LRS
+  register: results
+
+- name: Assert that VMSS can be created
+  assert:
+    that: results.changed
+
+- name: Create VMSS with I(orchestration_mode=Flexible) again --- Idempotent
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    vm_size: Standard_A1_v2
+    admin_username: testuser
+    single_placement_group: False
+    platform_fault_domain_count: 1
+    public_ip_per_vm: True
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
+    managed_disk_type: Standard_LRS
+    orchestration_mode: Flexible
+    os_disk_caching: ReadWrite
+    image:
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 18.04-LTS
+      version: latest
+    data_disks:
+      - lun: 0
+        disk_size_gb: 64
+        caching: ReadWrite
+        managed_disk_type: Standard_LRS
+  register: results
+
+- name: Assert that VMSS can be created
+  assert:
+    that: not results.changed
+
+- name: Retrieve scaleset VMSS fact
+  azure_rm_virtualmachinescaleset_info:
+    name: testVMSS{{ rpfx }}
+    resource_group: "{{ resource_group }}"
+  register: output_scaleset
+
+- assert:
+    that:
+      - output_scaleset.vmss[0].properties.orchestrationMode == "Flexible"
+
+- name: Delete VMSS
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    state: absent
+
 - name: Create VMSS with Spot Instance default value
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
@@ -109,6 +193,7 @@
     admin_username: testuser
     priority: Spot
     eviction_policy: Deallocate
+    single_placement_group: True
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
@@ -165,6 +250,7 @@
     tier: Standard
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
+    single_placement_group: True
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -208,6 +294,7 @@
     tier: Standard
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
+    single_placement_group: True
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -256,6 +343,7 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
+    single_placement_group: True
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -292,6 +380,7 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
+    single_placement_group: True
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -354,7 +443,7 @@
     capacity: "{{ body.capacity }}"
     virtual_network_name: "{{ body.virtual_network_name }}"
     subnet_name: "{{ body.subnet_name }}"
-    upgrade_policy: "{{ body.upgrade_policy }}"
+    upgrade_policy: "{{ body.upgrade_policy.mode }}"
     load_balancer: "{{ body.load_balancer }}"
     tier: "{{ body.tier }}"
     managed_disk_type: "{{ body.managed_disk_type }}"
@@ -362,6 +451,7 @@
     image: "{{ body.image }}"
     data_disks: "{{ body.data_disks }}"
     overprovision: "{{ body.overprovision }}"
+    single_placement_group: True
   register: results
 
 - name: Assert that nothing was changed
@@ -514,6 +604,7 @@
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
     enable_accelerated_networking: yes
+    single_placement_group: True
   register: results
   check_mode: yes
 
@@ -540,6 +631,7 @@
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
     enable_accelerated_networking: yes
+    single_placement_group: True
   register: results
 
 - name: Assert that VMSS ran
@@ -568,6 +660,7 @@
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
     enable_accelerated_networking: yes
+    single_placement_group: True
   register: results
 
 - name: Assert that nothing has changed
@@ -594,6 +687,7 @@
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
     enable_accelerated_networking: yes
+    single_placement_group: True
   register: results
 
 - name: Assert that something has changed
@@ -621,6 +715,7 @@
     security_group:
       name: testNetworkSecurityGroup2
       resource_group: "{{ resource_group_secondary }}"
+    single_placement_group: True
   register: results
 
 # disable for now
@@ -657,6 +752,7 @@
     security_group:
       name: testNetworkSecurityGroup2
       resource_group: "{{ resource_group_secondary }}"
+    single_placement_group: True
   register: results
 
 - assert:
@@ -685,6 +781,7 @@
     security_group:
       name: testNetworkSecurityGroup2
       resource_group: "{{ resource_group_secondary }}"
+    single_placement_group: True
   ignore_errors: yes
 
 - name: Delete VMSS
@@ -712,6 +809,7 @@
       version: latest
     upgrade_policy: Manual
     enable_accelerated_networking: yes
+    single_placement_group: True
   register: results
   ignore_errors: yes
 

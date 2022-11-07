@@ -26,10 +26,14 @@ options:
         description:
             - The name of the server.
         type: str
+    tags:
+        description:
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -45,6 +49,8 @@ EXAMPLES = '''
   - name: List instances of PostgreSQL Server
     azure_rm_postgresqlserver_info:
       resource_group: myResourceGroup
+      tags:
+        - key
 '''
 
 RETURN = '''
@@ -161,8 +167,7 @@ servers:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
+    from azure.core.exceptions import ResourceNotFoundError
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -181,7 +186,8 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='dict'
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -191,7 +197,7 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
         self.resource_group = None
         self.name = None
         self.tags = None
-        super(AzureRMPostgreSqlServersInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
+        super(AzureRMPostgreSqlServersInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_postgresqlserver_facts'
@@ -215,7 +221,7 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
             response = self.postgresql_client.servers.get(resource_group_name=self.resource_group,
                                                           server_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for PostgreSQL Server.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -229,7 +235,7 @@ class AzureRMPostgreSqlServersInfo(AzureRMModuleBase):
         try:
             response = self.postgresql_client.servers.list_by_resource_group(resource_group_name=self.resource_group)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for PostgreSQL Servers.')
 
         if response is not None:

@@ -34,6 +34,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -141,14 +143,18 @@ databases:
             returned: always
             type: bool
             sample: true
+        earliest_restore_date:
+            description:
+                - The earliest restore point available for the SQL Database.
+            returned: always
+            type: str
+            sample: '2021-09-01T00:59:59.000Z'
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.sql import SqlManagementClient
-    from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -173,7 +179,8 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -185,7 +192,7 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
         self.name = None
         self.elastic_pool_name = None
         self.tags = None
-        super(AzureRMSqlDatabaseInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
+        super(AzureRMSqlDatabaseInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_sqldatabase_facts'
@@ -211,7 +218,7 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
                                                      server_name=self.server_name,
                                                      database_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError:
             self.log('Could not get facts for Databases.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -227,7 +234,7 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
                                                                       server_name=self.server_name,
                                                                       elastic_pool_name=self.elastic_pool_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception:
             self.fail('Could not get facts for Databases.')
 
         if response is not None:
@@ -244,7 +251,7 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
             response = self.sql_client.databases.list_by_server(resource_group_name=self.resource_group,
                                                                 server_name=self.server_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception:
             self.fail('Could not get facts for Databases.')
 
         if response is not None:
@@ -270,7 +277,8 @@ class AzureRMSqlDatabaseInfo(AzureRMModuleBase):
             'kind': d.get('kind', None),
             'collation': d.get('collation', None),
             'status': d.get('status', None),
-            'zone_redundant': d.get('zone_redundant', None)
+            'zone_redundant': d.get('zone_redundant', None),
+            'earliest_restore_date': d.get('earliest_restore_date', None)
         }
         return d
 

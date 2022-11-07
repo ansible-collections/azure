@@ -34,6 +34,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -48,6 +50,9 @@ EXAMPLES = '''
     azure_rm_cdnendpoint_info:
       resource_group: myResourceGroup
       profile_name: myCDNProfile
+      tags:
+        - key
+        - key:value
 
   - name: Get facts of specific CDN endpoint
     azure_rm_cdnendpoint_info:
@@ -191,7 +196,10 @@ class AzureRMCdnEndpointInfo(AzureRMModuleBase):
                 type='str',
                 required=True
             ),
-            tags=dict(type='list')
+            tags=dict(
+                type='list',
+                elements='str'
+            )
         )
 
         self.results = dict(
@@ -222,6 +230,7 @@ class AzureRMCdnEndpointInfo(AzureRMModuleBase):
 
         self.cdn_client = self.get_mgmt_svc_client(CdnManagementClient,
                                                    base_url=self._cloud_environment.endpoints.resource_manager,
+                                                   is_track2=True,
                                                    api_version='2017-04-02')
 
         if self.name:
@@ -242,7 +251,7 @@ class AzureRMCdnEndpointInfo(AzureRMModuleBase):
         try:
             item = self.cdn_client.endpoints.get(
                 self.resource_group, self.profile_name, self.name)
-        except ErrorResponseException:
+        except Exception:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -258,7 +267,7 @@ class AzureRMCdnEndpointInfo(AzureRMModuleBase):
         try:
             response = self.cdn_client.endpoints.list_by_profile(
                 self.resource_group, self.profile_name)
-        except ErrorResponseException as exc:
+        except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []

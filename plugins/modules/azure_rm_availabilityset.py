@@ -152,8 +152,8 @@ changed:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from msrestazure.tools import parse_resource_id
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -286,6 +286,7 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
                     self.faildeploy('sku')
 
             if self.check_mode:
+                self.results['changed'] = to_be_updated
                 return self.results
 
             if to_be_updated:
@@ -293,8 +294,11 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
                 self.results['changed'] = True
 
         elif self.state == 'absent':
-            self.delete_availabilityset()
-            self.results['changed'] = True
+            response = self.get_availabilityset()
+            if response:
+                if not self.check_mode:
+                    self.delete_availabilityset()
+                self.results['changed'] = True
 
         return self.results
 
@@ -327,7 +331,7 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
                 sku=params_sku
             )
             response = self.compute_client.availability_sets.create_or_update(self.resource_group, self.name, params)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to create the availability set.')
             self.fail("Error creating the availability set: {0}".format(str(e)))
 
@@ -341,7 +345,7 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
         self.log("Deleting availabilityset {0}".format(self.name))
         try:
             response = self.compute_client.availability_sets.delete(self.resource_group, self.name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the availability set.')
             self.fail("Error deleting the availability set: {0}".format(str(e)))
 
@@ -357,7 +361,7 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
         try:
             response = self.compute_client.availability_sets.get(self.resource_group, self.name)
             found = True
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Availability set.')
         if found is True:
             return availability_set_to_dict(response)
@@ -367,7 +371,7 @@ class AzureRMAvailabilitySet(AzureRMModuleBase):
     def get_proximity_placement_group(self, resource_group, name):
         try:
             return self.compute_client.proximity_placement_groups.get(resource_group, name)
-        except Exception as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error fetching proximity placement group {0} - {1}".format(name, str(exc)))
 
 

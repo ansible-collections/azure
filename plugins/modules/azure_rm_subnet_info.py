@@ -180,13 +180,18 @@ subnets:
             returned: always
             type: str
             sample: Succeeded
+        nat_gateway:
+            description:
+                - ID of the associated NAT Gateway.
+            returned: when available
+            type: str
+            sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/natGateways/myGw"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.network import NetworkManagementClient
+    from azure.core.exceptions import ResourceNotFoundError
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -241,7 +246,7 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
                                                        virtual_network_name=self.virtual_network_name,
                                                        subnet_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get facts for Subnet.')
 
         if response is not None:
@@ -256,7 +261,7 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             response = self.network_client.subnets.get(resource_group_name=self.resource_group,
                                                        virtual_network_name=self.virtual_network_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get facts for Subnet.')
 
         if response is not None:
@@ -280,7 +285,8 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'service_endpoints': d.get('service_endpoints'),
             'private_endpoint_network_policies': d.get('private_endpoint_network_policies'),
             'private_link_service_network_policies': d.get('private_link_service_network_policies'),
-            'delegations': d.get('delegations')
+            'delegations': d.get('delegations'),
+            'nat_gateway': d.get('nat_gateway', {}).get('id')
         }
         return d
 

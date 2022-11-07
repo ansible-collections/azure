@@ -1,0 +1,173 @@
+- name: Set Bastion host name
+  set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+
+- name: create resource group
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
+
+- name: Create virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "vnet{{ rpfx }}"
+    address_prefixes_cidr:
+      - 10.1.0.0/16
+      - 172.100.0.0/16
+    dns_servers:
+      - 127.0.0.1
+
+- name: Create a subnet
+  azure_rm_subnet:
+    resource_group: "{{ resource_group }}"
+    name: AzureBastionSubnet
+    virtual_network_name: "vnet{{ rpfx }}"
+    address_prefix_cidr: "10.1.0.0/26"
+  register: subnet_output
+
+- name: Create public ip
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    name: "pip{{ rpfx }}"
+    allocation_method: Static
+    sku: Standard
+
+- name: Get public ip ID
+  azure_rm_publicipaddress_info:
+    resource_group: "{{ resource_group }}"
+    name: "pip{{ rpfx }}"
+  register: publicIP_output
+
+- name: Create bastion host (checkmode test)
+  azure_rm_bastionhost:
+    resource_group: "{{ resource_group }}"
+    name: "bh{{ rpfx }}"
+    ip_configurations:
+      - name: testip_configuration
+        subnet: 
+          id: "{{ subnet_output.state.id }}"
+        public_ip_address: 
+          id: "{{ publicIP_output.publicipaddresses[0].id }}"
+        private_ip_allocation_method: Dynamic
+    sku:
+      name: Standard
+    enable_tunneling: False
+    enable_shareable_link: False
+    enable_ip_connect: False
+    enable_file_copy: False
+    scale_units: 6
+    disable_copy_paste: False
+    tags:
+      key3: value3
+  check_mode: yes
+  register: output
+
+- name: Create bastion host
+  azure_rm_bastionhost:
+    resource_group: "{{ resource_group }}"
+    name: "bh{{ rpfx }}"
+    ip_configurations:
+      - name: testip_configuration
+        subnet: 
+          id: "{{ subnet_output.state.id }}"
+        public_ip_address: 
+          id: "{{ publicIP_output.publicipaddresses[0].id }}"
+        private_ip_allocation_method: Dynamic
+    sku:
+      name: Standard
+    enable_tunneling: False
+    enable_shareable_link: False
+    enable_ip_connect: False
+    enable_file_copy: False
+    scale_units: 6
+    disable_copy_paste: False
+    tags:
+      key3: value3
+  register: output
+
+- name: Assert the bastion host created
+  assert:
+    that:
+      - output.changed
+
+- name: Create bastion host (Idempotent Test)
+  azure_rm_bastionhost:
+    resource_group: "{{ resource_group }}"
+    name: "bh{{ rpfx }}"
+    ip_configurations:
+      - name: testip_configuration
+        subnet: 
+          id: "{{ subnet_output.state.id }}"
+        public_ip_address: 
+          id: "{{ publicIP_output.publicipaddresses[0].id }}"
+        private_ip_allocation_method: Dynamic
+    sku:
+      name: Standard
+    enable_tunneling: False
+    enable_shareable_link: False
+    enable_ip_connect: False
+    enable_file_copy: False
+    scale_units: 6
+    disable_copy_paste: False
+    tags:
+      key3: value3
+  register: output
+
+- name: Assert the bastion host no changed
+  assert:
+    that:
+      - not output.changed
+
+- name: Pause for 20 mimutes to Bastion host updating
+  shell: sleep 1200
+
+- name: Update bastion host
+  azure_rm_bastionhost:
+    resource_group: "{{ resource_group }}"
+    name: "bh{{ rpfx }}"
+    ip_configurations:
+      - name: testip_configuration
+        subnet: 
+          id: "{{ subnet_output.state.id }}"
+        public_ip_address: 
+          id: "{{ publicIP_output.publicipaddresses[0].id }}"
+        private_ip_allocation_method: Dynamic
+    sku:
+      name: Basic
+    enable_tunneling: True
+    enable_shareable_link: True
+    enable_ip_connect: True
+    enable_file_copy: True
+    scale_units: 8
+    disable_copy_paste: True
+    tags:
+      key2: value2
+  register: output
+
+- name: Assert the bastion host updated
+  assert:
+    that:
+      - output.changed
+
+- name: Get bastion host info
+  azure_rm_bastionhost_info:
+    resource_group: "{{ resource_group }}"
+    name: "bh{{ rpfx }}"
+  register: output
+  
+- name: Assert the bastion host is well create
+  assert:
+    that:
+      - output.bastion_host[0].disable_copy_paste == true
+      - output.bastion_host[0].enable_file_copy == true
+      - output.bastion_host[0].enable_ip_connect == true
+      - output.bastion_host[0].enable_shareable_link == true
+      - output.bastion_host[0].enable_tunneling == true
+      - output.bastion_host[0].scale_units == 8
+      - output.bastion_host[0].sku.name == 'Basic'
+
+- name: Delete bastion host
+  azure_rm_bastionhost:
+    resource_group: "{{ resource_group }}"
+    name: "bh{{ rpfx }}"
+    state: absent

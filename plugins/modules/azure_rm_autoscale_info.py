@@ -27,6 +27,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -45,6 +47,9 @@ EXAMPLES = '''
   - name: List instances of Auto Scale Setting
     azure_rm_autoscale_info:
       resource_group: myResourceGroup
+      tags:
+        - key
+        - key:value
 '''
 
 RETURN = '''
@@ -113,7 +118,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils._text import to_native
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -213,7 +217,8 @@ class AzureRMAutoScaleInfo(AzureRMModuleBase):
                 type='str'
             ),
             tags=dict(
-                type='list'
+                type='list',
+                elements='str'
             )
         )
         # store the results of the module operation
@@ -222,7 +227,7 @@ class AzureRMAutoScaleInfo(AzureRMModuleBase):
         self.name = None
         self.tags = None
 
-        super(AzureRMAutoScaleInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
+        super(AzureRMAutoScaleInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
 
@@ -242,8 +247,8 @@ class AzureRMAutoScaleInfo(AzureRMModuleBase):
     def get(self):
         result = []
         try:
-            instance = self.monitor_client.autoscale_settings.get(self.resource_group, self.name)
-            result = [auto_scale_to_dict(instance)]
+            instance = self.monitor_autoscale_settings_client.autoscale_settings.get(self.resource_group, self.name)
+            result = [auto_scale_to_dict(instance) if self.has_tags(instance.tags, self.tags) else None]
         except Exception as ex:
             self.log('Could not get facts for autoscale {0} - {1}.'.format(self.name, str(ex)))
         return result
@@ -251,7 +256,7 @@ class AzureRMAutoScaleInfo(AzureRMModuleBase):
     def list_by_resource_group(self):
         results = []
         try:
-            response = self.monitor_client.autoscale_settings.list_by_resource_group(self.resource_group)
+            response = self.monitor_autoscale_settings_client.autoscale_settings.list_by_resource_group(self.resource_group)
             results = [auto_scale_to_dict(item) for item in response if self.has_tags(item.tags, self.tags)]
         except Exception as ex:
             self.log('Could not get facts for autoscale {0} - {1}.'.format(self.name, str(ex)))

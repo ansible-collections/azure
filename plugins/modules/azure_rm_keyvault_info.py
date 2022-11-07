@@ -29,6 +29,7 @@ options:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
         type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -112,6 +113,12 @@ keyvaults:
             type: bool
             returned: always
             sample: False
+        soft_delete_retention_in_days:
+            description:
+                - Property specifying the number of days to retain deleted vaults.
+            type: int
+            returned: always
+            sample: 90
         tags:
             description:
                 - List of tags.
@@ -186,7 +193,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.mgmt.keyvault import KeyVaultManagementClient
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -203,6 +210,8 @@ def keyvault_to_dict(vault):
         enabled_for_disk_encryption=vault.properties.enabled_for_disk_encryption,
         enabled_for_template_deployment=vault.properties.enabled_for_template_deployment,
         enable_soft_delete=vault.properties.enable_soft_delete,
+        soft_delete_retention_in_days=vault.properties.soft_delete_retention_in_days
+        if vault.properties.soft_delete_retention_in_days else 90,
         enable_purge_protection=vault.properties.enable_purge_protection
         if vault.properties.enable_purge_protection else False,
         access_policies=[dict(
@@ -217,7 +226,7 @@ def keyvault_to_dict(vault):
         ) for policy in vault.properties.access_policies] if vault.properties.access_policies else None,
         sku=dict(
             family=vault.properties.sku.family,
-            name=vault.properties.sku.name.name
+            name=vault.properties.sku.name
         )
     )
 
@@ -228,7 +237,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(type='str'),
             name=dict(type='str'),
-            tags=dict(type='list')
+            tags=dict(type='list', elements='str')
         )
 
         self.resource_group = None
@@ -240,7 +249,8 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
 
         super(AzureRMKeyVaultInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                   supports_check_mode=True,
-                                                  supports_tags=False)
+                                                  supports_tags=False,
+                                                  facts_module=True)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
@@ -251,7 +261,8 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
 
         self._client = self.get_mgmt_svc_client(KeyVaultManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
-                                                api_version="2018-02-14")
+                                                is_track2=True,
+                                                api_version="2021-10-01")
 
         if self.name:
             if self.resource_group:
@@ -281,7 +292,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
 
             if response and self.has_tags(response.tags, self.tags):
                 results.append(keyvault_to_dict(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log("Did not find the key vault {0}: {1}".format(self.name, str(e)))
         return results
 
@@ -302,7 +313,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
                         results.append(keyvault_to_dict(item))
-        except CloudError as e:
+        except Exception as e:
             self.log("Did not find key vaults in resource group {0} : {1}.".format(self.resource_group, str(e)))
         return results
 
@@ -322,8 +333,9 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
             if response:
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
-                        results.append(keyvault_to_dict(item))
-        except CloudError as e:
+                        source_id = item.id.split('/')
+                        results.append(keyvault_to_dict(self._client.vaults.get(source_id[4], source_id[8])))
+        except Exception as e:
             self.log("Did not find key vault in current subscription {0}.".format(str(e)))
         return results
 

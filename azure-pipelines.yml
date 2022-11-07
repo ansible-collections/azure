@@ -7,7 +7,7 @@ trigger:
 jobs:
 - job: CG
   pool:
-    vmImage: 'ubuntu-latest'
+    name: pool-ubuntu-2004
 
   steps:
   - task: ComponentGovernanceComponentDetection@0
@@ -27,7 +27,7 @@ jobs:
         toolMajorVersion: 'V2'
         suppressionsFile: 'CredScanSuppressions.json'
 
-    - task: PostAnalysis@1
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
       inputs:
         AllTools: false
         APIScan: false

@@ -9,7 +9,7 @@ namespace: azure
 name: azcollection
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 1.10.0
+version: 1.14.0
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -17,7 +17,7 @@ readme: README.md
 # A list of the collection's content authors. Can be just the name or in the format 'Full Name <email> (url)
 # @nicks:irc/im.site#channel'
 authors:
-- Microsoft <haiyzhan@microsoft.com>
+- Microsoft <ansible@microsoft.com>
 
 
 ### OPTIONAL but strongly recommended
@@ -67,4 +67,5 @@ build_ignore:
 - 'azure-azcollection-*.tar.gz'
 - 'venv*'
 - '.vscode'
-- 'tests/staging'
+- 'ansible_collections'
+- 'ansible.cfg'

@@ -98,7 +98,7 @@ instances:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.compute import ComputeManagementClient
     from msrest.serialization import Model
 except ImportError:
@@ -160,7 +160,8 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(ComputeManagementClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2019-07-01')
+                                                    is_track2=True,
+                                                    api_version='2021-04-01')
 
         instances = self.get()
 
@@ -175,7 +176,7 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
                 for item in instances:
                     if not item.get('latest_model', None):
                         if not self.check_mode:
-                            self.apply_latest_model(item['instance_id'])
+                            self.apply_latest_model([item['instance_id']])
                         item['latest_model'] = True
                         self.results['changed'] = True
 
@@ -213,7 +214,7 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
                                                                           vm_scale_set_name=self.vmss_name,
                                                                           instance_id=self.instance_id)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Virtual Machine Scale Set VM.')
 
         if response:
@@ -223,47 +224,47 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
 
     def apply_latest_model(self, instance_id):
         try:
-            poller = self.compute_client.virtual_machine_scale_sets.update_instances(resource_group_name=self.resource_group,
-                                                                                     vm_scale_set_name=self.vmss_name,
-                                                                                     instance_ids=[instance_id])
+            poller = self.compute_client.virtual_machine_scale_sets.begin_update_instances(resource_group_name=self.resource_group,
+                                                                                           vm_scale_set_name=self.vmss_name,
+                                                                                           vm_instance_i_ds={'instance_ids': instance_id})
             self.get_poller_result(poller)
-        except CloudError as exc:
+        except Exception as exc:
             self.log("Error applying latest model {0} - {1}".format(self.vmss_name, str(exc)))
             self.fail("Error applying latest model {0} - {1}".format(self.vmss_name, str(exc)))
 
     def delete(self, instance_id):
         try:
-            self.mgmt_client.virtual_machine_scale_set_vms.delete(resource_group_name=self.resource_group,
-                                                                  vm_scale_set_name=self.vmss_name,
-                                                                  instance_id=instance_id)
-        except CloudError as e:
+            self.mgmt_client.virtual_machine_scale_set_vms.begin_delete(resource_group_name=self.resource_group,
+                                                                        vm_scale_set_name=self.vmss_name,
+                                                                        instance_id=instance_id)
+        except Exception as e:
             self.log('Could not delete instance of Virtual Machine Scale Set VM.')
             self.fail('Could not delete instance of Virtual Machine Scale Set VM.')
 
     def start(self, instance_id):
         try:
-            self.mgmt_client.virtual_machine_scale_set_vms.start(resource_group_name=self.resource_group,
-                                                                 vm_scale_set_name=self.vmss_name,
-                                                                 instance_id=instance_id)
-        except CloudError as e:
+            self.mgmt_client.virtual_machine_scale_set_vms.begin_start(resource_group_name=self.resource_group,
+                                                                       vm_scale_set_name=self.vmss_name,
+                                                                       instance_id=instance_id)
+        except Exception as e:
             self.log('Could not start instance of Virtual Machine Scale Set VM.')
             self.fail('Could not start instance of Virtual Machine Scale Set VM.')
 
     def stop(self, instance_id):
         try:
-            self.mgmt_client.virtual_machine_scale_set_vms.power_off(resource_group_name=self.resource_group,
-                                                                     vm_scale_set_name=self.vmss_name,
-                                                                     instance_id=instance_id)
-        except CloudError as e:
+            self.mgmt_client.virtual_machine_scale_set_vms.begin_power_off(resource_group_name=self.resource_group,
+                                                                           vm_scale_set_name=self.vmss_name,
+                                                                           instance_id=instance_id)
+        except Exception as e:
             self.log('Could not stop instance of Virtual Machine Scale Set VM.')
             self.fail('Could not stop instance of Virtual Machine Scale Set VM.')
 
     def deallocate(self, instance_id):
         try:
-            self.mgmt_client.virtual_machine_scale_set_vms.deallocate(resource_group_name=self.resource_group,
-                                                                      vm_scale_set_name=self.vmss_name,
-                                                                      instance_id=instance_id)
-        except CloudError as e:
+            self.mgmt_client.virtual_machine_scale_set_vms.begin_deallocate(resource_group_name=self.resource_group,
+                                                                            vm_scale_set_name=self.vmss_name,
+                                                                            instance_id=instance_id)
+        except Exception as e:
             self.log('Could not deallocate instance of Virtual Machine Scale Set VM.')
             self.fail('Could not deallocate instance of Virtual Machine Scale Set VM.')
 
@@ -279,12 +280,12 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
                                                                           vm_scale_set_name=self.vmss_name,
                                                                           instance_id=instance_id)
             instance.protection_policy = protection_policy
-            poller = self.mgmt_client.virtual_machine_scale_set_vms.update(resource_group_name=self.resource_group,
-                                                                           vm_scale_set_name=self.vmss_name,
-                                                                           instance_id=instance_id,
-                                                                           parameters=instance)
+            poller = self.mgmt_client.virtual_machine_scale_set_vms.begin_update(resource_group_name=self.resource_group,
+                                                                                 vm_scale_set_name=self.vmss_name,
+                                                                                 instance_id=instance_id,
+                                                                                 parameters=instance)
             self.get_poller_result(poller)
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not update instance protection policy.')
             self.fail('Could not update instance protection policy.')
 

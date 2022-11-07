@@ -316,9 +316,9 @@ class AzureRMWebAppAccessRestriction(AzureRMModuleBase):
         return site_config
 
     def has_updates(self, site_config):
-        return (self.ip_security_restrictions != self.to_restriction_dict_list(site_config.ip_security_restrictions)
-                or self.scm_ip_security_restrictions != self.to_restriction_dict_list(site_config.scm_ip_security_restrictions)
-                or site_config.scm_ip_security_restrictions_use_main != self.scm_ip_security_restrictions_use_main)
+        return (site_config.scm_ip_security_restrictions_use_main != self.scm_ip_security_restrictions_use_main or self.ip_security_restrictions and
+                self.ip_security_restrictions != self.to_restriction_dict_list(site_config.ip_security_restrictions) or self.scm_ip_security_restrictions and
+                self.scm_ip_security_restrictions != self.to_restriction_dict_list(site_config.scm_ip_security_restrictions))
 
     def has_access_restrictions(self, site_config):
         return site_config.ip_security_restrictions or site_config.scm_ip_security_restrictions
@@ -357,7 +357,18 @@ class AzureRMWebAppAccessRestriction(AzureRMModuleBase):
         )
 
     def to_restriction_dict_list(self, restriction_obj_list):
-        return [] if not restriction_obj_list else [self.to_restriction_dict(restriction) for restriction in restriction_obj_list]
+        restrictions = []
+        if restriction_obj_list:
+            for r in restriction_obj_list:
+                restriction = self.to_restriction_dict(r)
+                if not self.is_azure_default_restriction(restriction):
+                    restrictions.append(restriction)
+
+        return restrictions
+
+    def is_azure_default_restriction(self, restriction_obj):
+        return (restriction_obj["action"] == "Allow" and restriction_obj["ip_address"] == "Any" and restriction_obj["priority"] == 1) or \
+            (restriction_obj["action"] == "Deny" and restriction_obj["ip_address"] == "Any" and restriction_obj["priority"] == 2147483647)
 
     def to_restriction_dict(self, restriction_obj):
         return dict(

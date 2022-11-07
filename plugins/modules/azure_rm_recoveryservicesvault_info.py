@@ -102,12 +102,6 @@ import re
 import json
 import time
 
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
-
 
 class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
     def __init__(self):
@@ -191,7 +185,7 @@ class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as e:
+        except Exception as e:
             self.log('Error in fetching Azure Recovery Service Vault Details.')
             self.fail('Error in fetching Azure Recovery Service Vault Details {0}'.format(str(e)))
 

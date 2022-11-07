@@ -22,12 +22,16 @@ options:
     name:
         description:
             - Limit results to a specific availability set.
+        type: str
     resource_group:
         description:
             - The resource group to search for the desired availability set.
+        type: str
     tags:
         description:
-            - List of tags to be matched.
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -45,6 +49,9 @@ EXAMPLES = '''
     - name: Get facts for all availability sets in a specific resource group
       azure_rm_availabilityset_info:
         resource_group: myResourceGroup
+        tags:
+          - key
+          - key:value
 
 '''
 
@@ -104,7 +111,7 @@ azure_availabilityset:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # handled in azure_rm_common
     pass
@@ -120,7 +127,7 @@ class AzureRMAvailabilitySetInfo(AzureRMModuleBase):
         self.module_args = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list')
+            tags=dict(type='list', elements='str')
         )
 
         self.results = dict(
@@ -169,7 +176,7 @@ class AzureRMAvailabilitySetInfo(AzureRMModuleBase):
 
         try:
             item = self.compute_client.availability_sets.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -188,7 +195,7 @@ class AzureRMAvailabilitySetInfo(AzureRMModuleBase):
 
         try:
             response = self.compute_client.availability_sets.list(self.resource_group)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
         results = []

@@ -527,15 +527,14 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                 uri=self.template_link
             )
 
-        if self.append_tags and self.tags:
-            try:
-                # fetch the RG directly (instead of using the base helper) since we don't want to exit if it's missing
-                rg = self.rm_client.resource_groups.get(self.resource_group)
-                if rg.tags:
-                    self.tags = dict(self.tags, **rg.tags)
-            except CloudError:
-                # resource group does not exist
-                pass
+        try:
+            # fetch the RG directly (instead of using the base helper) since we don't want to exit if it's missing
+            rg = self.rm_client.resource_groups.get(self.resource_group)
+            if rg.tags:
+                update_tags, self.tags = self.update_tags(rg.tags)
+        except CloudError:
+            # resource group does not exist
+            pass
 
         params = self.rm_models.ResourceGroup(location=self.location, tags=self.tags)
 

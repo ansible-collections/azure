@@ -30,6 +30,8 @@ options:
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -48,6 +50,8 @@ EXAMPLES = '''
     - name: Get facts for all Public IPs within a resource groups
       azure_rm_publicipaddress_info:
         resource_group: myResourceGroup
+        tags:
+          - key:value
 '''
 
 RETURN = '''
@@ -177,10 +181,15 @@ publicipaddresses:
             returned: always
             type: str
             sample: Basic
+        zones:
+            description:
+                - A list of availability zones denoting the IP allocated for the resource needs to come from.
+            returned: always
+            type: list
+            sample: ['1', '2']
 '''
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -197,7 +206,7 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             resource_group=dict(type='str'),
-            tags=dict(type='list')
+            tags=dict(type='list', elements='str')
         )
 
         self.results = dict(
@@ -273,7 +282,8 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
             idle_timeout=pip.idle_timeout_in_minutes,
             provisioning_state=pip.provisioning_state,
             etag=pip.etag,
-            sku=pip.sku.name
+            sku=pip.sku.name,
+            zones=pip.zones
         )
         if pip.dns_settings:
             result['dns_settings']['domain_name_label'] = pip.dns_settings.domain_name_label
@@ -288,7 +298,7 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
         item = None
         try:
             item = self.network_client.public_ip_addresses.get(self.resource_group, self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
         return [item] if item else []
 
@@ -296,7 +306,7 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
         self.log('List items in resource groups')
         try:
             response = self.network_client.public_ip_addresses.list(self.resource_group)
-        except AzureHttpError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error listing items in resource groups {0} - {1}".format(self.resource_group, str(exc)))
         return response
 
@@ -304,7 +314,7 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
         self.log('List all items')
         try:
             response = self.network_client.public_ip_addresses.list_all()
-        except AzureHttpError as exc:
+        except ResourceNotFoundError as exc:
             self.fail("Error listing all items - {0}".format(str(exc)))
         return response
 

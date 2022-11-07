@@ -1,7 +1,11 @@
+- name: Set Container Instance Names
+  set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+
 - name: Create sample container instance
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
-    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    name: "aci{{ rpfx }}"
     os_type: linux
     ip_address: public
     location: eastus
@@ -28,7 +32,7 @@
 - name: Create sample container instance -- same parameters
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
-    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    name: "aci{{ rpfx }}"
     os_type: linux
     ip_address: public
     location: eastus
@@ -51,7 +55,7 @@
 - name: Create sample container instance -- force update
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
-    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    name: "aci{{ rpfx }}"
     os_type: linux
     ip_address: public
     location: eastus
@@ -76,7 +80,7 @@
 - name: Create second container instance for testing purposes
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
-    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+    name: "aci{{ rpfx }}sec"
     os_type: linux
     ip_address: public
     dns_name_label: mydnslabel{{ resource_group | hash('md5') | truncate(7, True, '') }}
@@ -99,7 +103,7 @@
 - name: Gather facts for single Container Instance
   azure_rm_containerinstance_info:
     resource_group: "{{ resource_group }}"
-    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+    name: "aci{{ rpfx }}sec"
   register: output 
 
 - debug:
@@ -146,7 +150,7 @@
 - name: Create sample container instance with volume
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
-    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}thi"
+    name: "aci{{ rpfx }}thi"
     os_type: linux
     ip_address: public
     location: eastus
@@ -185,7 +189,7 @@
 - name: Gather facts for Container Instance
   azure_rm_containerinstance_info:
     resource_group: "{{ resource_group }}"
-    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}thi"
+    name: "aci{{ rpfx }}thi"
   register: output
   ignore_errors: True
 
@@ -213,7 +217,7 @@
 - name: Remove container instance
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
-    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}thi"
+    name: "aci{{ rpfx }}thi"
     os_type: linux
     ip_address: public
     location: eastus
@@ -242,7 +246,7 @@
 - name: Remove container instance
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
-    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    name: "aci{{ rpfx }}"
     os_type: linux
     ip_address: public
     location: eastus
@@ -266,7 +270,7 @@
 - name: Remove container instance
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
-    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+    name: "aci{{ rpfx }}sec"
     os_type: linux
     ip_address: public
     location: eastus
@@ -284,7 +288,7 @@
 - name: Remove container instance again
   azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
-    name: "aci{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    name: "aci{{ rpfx }}"
     os_type: linux
     ip_address: public
     location: eastus
