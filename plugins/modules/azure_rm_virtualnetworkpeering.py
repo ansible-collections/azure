@@ -450,8 +450,7 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
                                                                         self.virtual_network['name'],
                                                                         self.name)
             self.log("Response : {0}".format(response))
-            #print(response)
-            # self.result['extra'] = response
+            
             return vnetpeering_to_dict(response)
         except ResourceNotFoundError:
             self.log('Did not find the Virtual Network Peering.')
