@@ -291,7 +291,6 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
             self.results['id'] = response['id']
             to_be_synced = self.check_sync(response)
         
-        #update_response = self.get_vnet_peering()
         if to_be_synced:
             self.results['changed'] = True
 
