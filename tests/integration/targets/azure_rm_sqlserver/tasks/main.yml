@@ -756,6 +756,7 @@
     zone_redundant: True
     tags:
       aaa1: bbb1
+  register: output
 
 - name: Assert the resource instance is well created
   assert:
