@@ -774,7 +774,7 @@
   assert:
     that:
       - output.changed == False
-      - output.elastic_pool.zone_redundant == True
+      - output.elastic_pool.zone_redundant == true
       - output.elastic_pool.tags | lenght == 2
 
 - name: Delete instance of SQL Elastic Pool
