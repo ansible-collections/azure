@@ -775,7 +775,7 @@
     that:
       - output.changed == False
       - output.elastic_pool[0].zone_redundant == true
-      - output.elastic_pool[0].tags | lenght == 2
+      - output.elastic_pool[0].tags | length == 2
 
 - name: Delete instance of SQL Elastic Pool
   azure_rm_sqlelasticpool:
