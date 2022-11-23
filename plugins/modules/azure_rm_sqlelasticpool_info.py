@@ -148,7 +148,7 @@ elastic_pool:
         max_size_bytes:
             description:
                 - The storage limit for the database elastic pool in bytes.
-            type: long
+            type: str
             returned: always
             sample: 34359738368
         per_database_settings:

@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_sqlelasicpool
+module: azure_rm_sqlelasticpool
 version_added: "1.14.0"
 short_description: Manage SQL Elastic Pool instance
 description:
@@ -46,25 +46,30 @@ options:
                 description:
                     - Name of the elastic pool SKU, typically, a letter + Number code, e.g. P3
                 required: True
+                type: str
             tier:
                 description:
                     - The tier or edition of the particular SKU, e.g. Basic, Premium
+                type: str
             capacity:
                 description:
                     - Capacity of the particular SKU.
+                type: int
             size:
                 description:
                     - Size of the particular SKU
+                type: str
             family:
                 description:
                     - If the service has different generations of hardware, for the same SKU, then that can be used here
+                type: str
     max_size_bytes:
         description:
             - The max size of the elasticpool expressed in bytes.
             - If not I(create_mode=default), this value is ignored.
             - To see possible values, query the capabilities API (/subscriptions/{subscriptionId}/providers/Microsoft.Sql/locations/{locationID}/capabilities).
               referred to by operationId:'Capabilities_ListByLocation'.
-        type: int
+        type: long
     zone_redundant:
         description:
             - Is this elasticpool is zone redundant? It means the replicas of this elasticpool will be spread across multiple availability zones.
@@ -223,7 +228,7 @@ elastic_pool:
         max_size_bytes:
             description:
                 - The storage limit for the database elastic pool in bytes.
-            type: long
+            type: str
             returned: always
             sample: 34359738368
         per_database_settings:
@@ -300,7 +305,7 @@ class AzureRMSqlElasticPool(AzureRMModuleBase):
                 options=sku_spec
             ),
             max_size_bytes=dict(
-                type='str'
+                type='long'
             ),
             zone_redundant=dict(
                 type='bool',
