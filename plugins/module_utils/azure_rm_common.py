@@ -8,6 +8,7 @@ __metaclass__ = type
 
 
 import os
+import sys
 import re
 import types
 import copy
@@ -874,7 +875,10 @@ class AzureRMModuleBase(object):
         self.log('Getting management service client {0}'.format(client_type.__name__))
         self.check_client_version(client_type)
 
-        client_argspec = inspect.getargspec(client_type.__init__)
+        if sys.version.startswith('3.11'):
+            client_argspec = inspect.getfullargspec(client_type.__init__)
+        else:
+            client_argspec = inspect.getargspec(client_type.__init__)
 
         if not base_url:
             # most things are resource_manager, don't make everyone specify
