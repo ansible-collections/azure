@@ -69,7 +69,7 @@ options:
             - If not I(create_mode=default), this value is ignored.
             - To see possible values, query the capabilities API (/subscriptions/{subscriptionId}/providers/Microsoft.Sql/locations/{locationID}/capabilities).
               referred to by operationId:'Capabilities_ListByLocation'.
-        type: long
+        type: str
     zone_redundant:
         description:
             - Is this elasticpool is zone redundant? It means the replicas of this elasticpool will be spread across multiple availability zones.
@@ -305,7 +305,7 @@ class AzureRMSqlElasticPool(AzureRMModuleBase):
                 options=sku_spec
             ),
             max_size_bytes=dict(
-                type='long'
+                type='str'
             ),
             zone_redundant=dict(
                 type='bool',
