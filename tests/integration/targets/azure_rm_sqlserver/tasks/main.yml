@@ -709,10 +709,6 @@
     server_name: sqlsrv{{ random_postfix }}
     name: EP{{ random_postfix }}
     zone_redundant: False
-    sku:
-      name: GP_Gen5
-      family: Gen5
-      capacity: 3
     tags:
       aaa: bbb
   check_mode: yes
@@ -728,10 +724,6 @@
     server_name: sqlsrv{{ random_postfix }}
     name: EP{{ random_postfix }}
     zone_redundant: False
-    sku:
-      name: GP_Gen5
-      family: Gen5
-      capacity: 3
     tags:
       aaa: bbb
   register: output
@@ -747,10 +739,6 @@
     server_name: sqlsrv{{ random_postfix }}
     name: EP{{ random_postfix }}
     zone_redundant: False
-    sku:
-      name: GP_Gen5
-      family: Gen5
-      capacity: 3
     tags:
       aaa: bbb
   register: output

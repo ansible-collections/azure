@@ -90,12 +90,12 @@ options:
             - Maintenance configuration id assigned to the elastic pool.
         type: str
     state:
-      description:
-        - Assert the state of the SQL Elastic Pool. Use C(present) to create or update an SQL Elastic Pool and C(absent) to delete it.
-      default: present
-      choices:
-        - absent
-        - present
+        description:
+            - Assert the state of the SQL Elastic Pool. Use C(present) to create or update an SQL Elastic Pool and C(absent) to delete it.
+        default: present
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -212,7 +212,8 @@ elastic_pool:
                 -  Maintenance configuration id assigned to the elastic pool.
             type: str
             returned: always
-            sample: /subscriptions/xxx-xxx/providers/Microsoft.Maintenance/publicMaintenanceConfigurations/SQL_Default        max_size_bytes:
+            sample: /subscriptions/xxx-xxx/providers/Microsoft.Maintenance/publicMaintenanceConfigurations/SQL_Default
+        max_size_bytes:
             description:
                 - The storage limit for the database elastic pool in bytes.
             type: long
@@ -301,7 +302,7 @@ class AzureRMSqlElasticPool(AzureRMModuleBase):
             per_elasticpool_settings=dict(
                 type='dict',
                 options=per_elasticpool_settings_spec
-            ), 
+            ),
             maintenance_configuration_id=dict(
                 type='str'
             ),
@@ -319,7 +320,7 @@ class AzureRMSqlElasticPool(AzureRMModuleBase):
 
         self.resource_group = None
         self.server_name = None
-        self.name = None 
+        self.name = None
         self.location = None
         self.sku = None
         self.max_size_bytes = None
@@ -368,7 +369,8 @@ class AzureRMSqlElasticPool(AzureRMModuleBase):
                     "Need to check if SQL Elastic Pool instance has to be deleted or may be updated")
                 if self.per_elasticpool_settings is not None and (self.body['per_elasticpool_settings'] != old_response['per_elasticpool_settings']):
                     self.to_do = Actions.Update
-                if self.maintenance_configuration_id is not None and (self.body['maintenance_configuration_id'] != old_response['maintenance_configuration_id']):
+                if self.maintenance_configuration_id is not None and
+                        (self.body['maintenance_configuration_id'] != old_response['maintenance_configuration_id']):
                     self.to_do = Actions.Update
                 if self.license_type is not None and (self.body['license_type'] != old_response['license_type']):
                     self.to_do = Actions.Update
@@ -464,7 +466,6 @@ class AzureRMSqlElasticPool(AzureRMModuleBase):
             self.log('Error attempting to create the SQL Elastic Pool instance.')
             self.fail(
                 "Error creating the SQL Elastic Pool instance: {0}".format(str(exc)))
-        #return response.as_dict()
         return self.format_item(response)
 
     def delete_elastic_pool(self):
@@ -534,7 +535,7 @@ class AzureRMSqlElasticPool(AzureRMModuleBase):
             d['per_database_settings']['min_capacity'] = item.per_database_settings.min_capacity
             d['per_database_settings']['max_capacity'] = item.per_database_settings.max_capacity
 
-        return d 
+        return d
 
 
 def main():
