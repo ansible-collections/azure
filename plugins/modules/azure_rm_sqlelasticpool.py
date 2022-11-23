@@ -22,20 +22,25 @@ options:
             - The name of the resource group that contains the resource.
             - You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the elastic pool to be operated on (updated or created).
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     sku:
         description:
             - The sku of the elastic pool. The Elastic PoolEditions enumeration contains all the valid sku.
+        type: dict
         suboptions:
             name:
                 description:
@@ -59,6 +64,7 @@ options:
             - If not I(create_mode=default), this value is ignored.
             - To see possible values, query the capabilities API (/subscriptions/{subscriptionId}/providers/Microsoft.Sql/locations/{locationID}/capabilities).
               referred to by operationId:'Capabilities_ListByLocation'.
+        type: int
     zone_redundant:
         description:
             - Is this elasticpool is zone redundant? It means the replicas of this elasticpool will be spread across multiple availability zones.
@@ -93,6 +99,7 @@ options:
         description:
             - Assert the state of the SQL Elastic Pool. Use C(present) to create or update an SQL Elastic Pool and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -369,8 +376,7 @@ class AzureRMSqlElasticPool(AzureRMModuleBase):
                     "Need to check if SQL Elastic Pool instance has to be deleted or may be updated")
                 if self.per_elasticpool_settings is not None and (self.body['per_elasticpool_settings'] != old_response['per_elasticpool_settings']):
                     self.to_do = Actions.Update
-                if self.maintenance_configuration_id is not None and
-                        (self.body['maintenance_configuration_id'] != old_response['maintenance_configuration_id']):
+                if self.maintenance_configuration_id and (self.body['maintenance_configuration_id'] != old_response['maintenance_configuration_id']):
                     self.to_do = Actions.Update
                 if self.license_type is not None and (self.body['license_type'] != old_response['license_type']):
                     self.to_do = Actions.Update

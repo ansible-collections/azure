@@ -21,14 +21,17 @@ options:
         description:
             - The name of the resource group that contains the resource.
             - You can obtain this value from the Azure Resource Manager API or the portal.
+        type: str
         required: True
     server_name:
         description:
             - The name of the server.
+        type: str
         required: True
     name:
         description:
             - The name of the elastic pool.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
