@@ -671,6 +671,7 @@ options:
         description:
             - Whether HTTP2 is enabled on the application gateway resource.
         type: bool
+        default: False
     web_application_firewall_configuration:
         version_added: "1.14.0"
         description:
