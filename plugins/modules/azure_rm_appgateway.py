@@ -740,7 +740,8 @@ options:
                 type: bool
             rule_set_type:
                 description:
-                    - The type of the web application firewall rule set. Possible values are: 'OWASP'.
+                    - The type of the web application firewall rule set.
+                    - Possible values are 'OWASP'.
                 type: str
                 choices:
                     - 'OWASP'
