@@ -102,6 +102,7 @@ peering_sync_level:
     description:
         - The Sync Level of the Peering
     type: str
+    returned: always
     sample: "FullyInSync"
 '''
 
@@ -290,14 +291,14 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
             response = self.create_or_update_vnet_peering()
             self.results['id'] = response['id']
             to_be_synced = self.check_sync(response)
-        
+
         if to_be_synced:
             self.results['changed'] = True
 
             if self.check_mode:
                 return self.results
             sync_response = self.sync_vnet_peering()
-            self.results['peering_sync_level']  = sync_response['peering_sync_level']
+            self.results['peering_sync_level'] = sync_response['peering_sync_level']
 
         return self.results
 
@@ -322,12 +323,12 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
         else:
             self.fail("remote_virtual_network could be a valid resource id, dict of name and resource_group, name of virtual network in same resource group.")
         return remote_vnet_id
-    
+
     def check_sync(self, exisiting_vnet_peering):
         if exisiting_vnet_peering['peering_sync_level'] == 'LocalNotInSync':
             return True
         return False
-        
+
     def check_update(self, exisiting_vnet_peering):
         if self.allow_forwarded_traffic != exisiting_vnet_peering['allow_forwarded_traffic']:
             return True
