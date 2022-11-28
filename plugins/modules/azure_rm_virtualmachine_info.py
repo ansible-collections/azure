@@ -271,6 +271,44 @@ vms:
             returned: always
             type: str
             sample: running
+        security_profile:
+            description:
+                - Specifies the Security related profile settings for the virtual machine.
+            type: complex
+            returned: always
+            contains:
+                encryption_at_host:
+                    description:
+                        - This property can be used by user in the request to enable or disable the Host Encryption for the virtual machine.
+                        - This will enable the encryption for all the disks including Resource/Temp disk at host itself.
+                    type: bool
+                    returned: always
+                    sample: True
+                security_type:
+                    description:
+                        - Specifies the SecurityType of the virtual machine.
+                        - It is set as TrustedLaunch to enable UefiSettings.
+                    type: str
+                    returned: always
+                    sample: TrustedLaunch
+                uefi_settings:
+                    description:
+                        - Specifies the security settings like secure boot and vTPM used while creating the virtual machine.
+                    type: complex
+                    returned: always
+                    contains:
+                        secure_boot_enabled:
+                            description:
+                                - Specifies whether secure boot should be enabled on the virtual machine.
+                            type: bool
+                            returned: always
+                            sample: True
+                        v_tpm_enabled:
+                            description:
+                                - Specifies whether vTPM should be enabled on the virtual machine.
+                            type: bool
+                            returned: always
+                            sample: True
 '''
 
 try:
@@ -417,6 +455,15 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                 break
 
         new_result = {}
+
+        if vm.security_profile is not None:
+            new_result['security_profile'] = dict()
+            new_result['security_profile']['encryption_at_host'] = vm.security_profile.encryption_at_host
+            new_result['security_profile']['security_type'] = vm.security_profile.security_type
+            new_result['security_profile']['uefi_settings'] = dict()
+            new_result['security_profile']['uefi_settings']['secure_boot_enabled'] = vm.security_profile.uefi_settings.secure_boot_enabled
+            new_result['security_profile']['uefi_settings']['v_tpm_enabled'] = vm.security_profile.uefi_settings.v_tpm_enabled
+
         new_result['power_state'] = power_state
         new_result['display_status'] = display_status
         new_result['provisioning_state'] = vm.provisioning_state

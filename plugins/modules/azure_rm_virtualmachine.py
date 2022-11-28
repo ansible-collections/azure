@@ -429,6 +429,36 @@ options:
                     - Indicates whether Automatic Updates is enabled for the Windows virtual machine.
                 type: bool
                 required: True
+    security_profile:
+        description:
+            - Specifies the Security related profile settings for the virtual machine.
+        type: dict
+        suboptions:
+            encryption_at_host:
+                description:
+                    - This property can be used by user in the request to enable or disable the Host Encryption for the virtual machine.
+                    - This will enable the encryption for all the disks including Resource/Temp disk at host itself.
+                type: bool
+            security_type:
+                description:
+                    - Specifies the SecurityType of the virtual machine.
+                    - It is set as TrustedLaunch to enable UefiSettings.
+                type: str
+                choices:
+                    - TrustedLaunch
+            uefi_settings:
+                description:
+                    - Specifies the security settings like secure boot and vTPM used while creating the virtual machine.
+                type: dict
+                suboptions:
+                    secure_boot_enabled:
+                        description:
+                            - Specifies whether secure boot should be enabled on the virtual machine.
+                        type: bool
+                    v_tpm_enabled:
+                        description:
+                            - Specifies whether vTPM should be enabled on the virtual machine.
+                        type: bool
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -651,6 +681,29 @@ EXAMPLES = '''
     admin_password: "{{ password }}"
     image: customimage001
     zones: [1]
+
+- name: Create a VM with security profile
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    vm_size: Standard_D4s_v3
+    managed_disk_type: Standard_LRS
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
+    security_profile:
+      uefi_settings:
+        secure_boot_enabled: True
+        v_tpm_enabled: True
+      encryption_at_host: True
+      security_type: TrustedLaunch
+    ssh_public_keys:
+      - path: /home/azureuser/.ssh/authorized_keys
+        key_data: "ssh-rsa *****"
+    image:
+      offer: 0001-com-ubuntu-server-jammy
+      publisher: Canonical
+      sku: 22_04-lts-gen2
+      version: latest
 
 - name: Remove a VM and all resources that were autocreated
   azure_rm_virtualmachine:
@@ -942,6 +995,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             ephemeral_os_disk=dict(type='bool'),
             windows_config=dict(type='dict', options=windows_configuration_spec),
             linux_config=dict(type='dict', options=linux_configuration_spec),
+            security_profile=dict(type='dict'),
         )
 
         self.resource_group = None
@@ -992,6 +1046,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.ephemeral_os_disk = None
         self.linux_config = None
         self.windows_config = None
+        self.self.security_profile = None
 
         self.results = dict(
             changed=False,
@@ -1273,6 +1328,35 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 if self.license_type is not None and vm_dict['properties'].get('licenseType') != self.license_type:
                     differences.append('License Type')
                     changed = True
+
+                if self.security_profile is not None:
+                    update_security_profile = False
+                    if 'securityProfile' not in vm_dict['properties'].keys():
+                        update_security_profile = True
+                        differences.append('security_profile')
+                    else:
+                        if self.security_profile.get('encryption_at_host') is not None:
+                            if bool(self.security_profile.get('encryption_at_host')) != bool(vm_dict['properties']['securityProfile']['encryptionAtHost']):
+                                update_security_profle = True
+                            else:
+                                self.security_profile['encryption_at_host'] = vm_dict['properties']['securityProfile']['encryptionAtHost']
+                        if self.security_profile.get('security_type') is not None:
+                            if self.security_profile.get('security_type') != vm_dict['properties']['securityProfile']['securityType']:
+                                update_security_profile = True
+                        if self.security_profile.get('uefi_settings') is not None:
+                            if self.security_profile['uefi_settings'].get('secure_boot_enabled') is not None:
+                                if bool(self.security_profile['uefi_settings']['secure_boot_enabled']) != bool(vm_dict['properties']['securityProfile']['uefiSettings']['secureBootEnabled']):
+                                    update_security_profile = True
+                            else:
+                                self.security_profile['uefi_settings']['secure_boot_enabled'] = vm_dict['properties']['securityProfile']['uefiSettings']['secureBootEnabled']
+                            if self.security_profile['uefi_settings'].get('v_tpm_enabled') is not None:
+                                if bool(self.security_profile['uefi_settings']['v_tpm_enabled']) != bool(vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']):
+                                    update_security_profile = True
+                            else:
+                                self.security_profile['uefi_settings']['v_tpm_enabled'] = vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']
+                        if update_security_profile:
+                            changed = True
+                            differences.append('security_profile')
 
                 if self.windows_config is not None and vm_dict['properties']['osProfile'].get('windowsConfiguration') is not None:
                     if self.windows_config['enable_automatic_updates'] != vm_dict['properties']['osProfile']['windowsConfiguration']['enableAutomaticUpdates']:
@@ -1611,6 +1695,20 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                        "Only service admin/account admin users can purchase images " +
                                        "from the marketplace. - {2}").format(self.name, self.plan, str(exc)))
 
+                    if self.security_profile is not None:
+                        uefi_settings_spec = None
+                        if self.security_profile.get('uefi_settings') is not None:
+                            uefi_settings_spec = self.compute_models.UefiSettings(
+                                    secure_boot_enabled=self.security_profile['uefi_settings'].get('secure_boot_enabled'),
+                                    v_tpm_enabled=self.security_profile['uefi_settings'].get('v_tpm_enabled'),
+                            )
+                        security_profile = self.compute_models.SecurityProfile(
+                                uefi_settings=uefi_settings_spec,
+                                encryption_at_host=self.security_profile.get('encryption_at_host'),
+                                security_type=self.security_profile.get('security_type'),
+                        )
+                        vm_resource.security_profile = security_profile
+
                     self.log("Create virtual machine with parameters:")
                     self.create_or_update_vm(vm_resource, 'all_autocreated' in self.remove_on_absent)
 
@@ -1778,6 +1876,20 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 managed_disk=data_disk_managed_disk,
                             ))
                         vm_resource.storage_profile.data_disks = data_disks
+
+                    if self.security_profile is not None:
+                        uefi_settings_spec = None
+                        if self.security_profile.get('uefi_settings') is not None:
+                            uefi_settings_spec = self.compute_models.UefiSettings(
+                                    secure_boot_enabled=self.security_profile['uefi_settings'].get('secure_boot_enabled'),
+                                    v_tpm_enabled=self.security_profile['uefi_settings'].get('v_tpm_enabled'),
+                            )
+                        security_profile = self.compute_models.SecurityProfile(
+                                uefi_settings=uefi_settings_spec,
+                                encryption_at_host=self.security_profile.get('encryption_at_host'),
+                                security_type=self.security_profile.get('security_type'),
+                        )
+                        vm_resource.security_profile = security_profile
 
                     self.log("Update virtual machine with parameters:")
                     self.create_or_update_vm(vm_resource, False)
