@@ -1046,7 +1046,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.ephemeral_os_disk = None
         self.linux_config = None
         self.windows_config = None
-        self.self.security_profile = None
+        self.security_profile = None
 
         self.results = dict(
             changed=False,
@@ -1345,15 +1345,19 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 update_security_profile = True
                         if self.security_profile.get('uefi_settings') is not None:
                             if self.security_profile['uefi_settings'].get('secure_boot_enabled') is not None:
-                                if bool(self.security_profile['uefi_settings']['secure_boot_enabled']) != bool(vm_dict['properties']['securityProfile']['uefiSettings']['secureBootEnabled']):
+                                if bool(self.security_profile['uefi_settings']['secure_boot_enabled']) != \
+                                        bool(vm_dict['properties']['securityProfile']['uefiSettings']['secureBootEnabled']):
                                     update_security_profile = True
                             else:
-                                self.security_profile['uefi_settings']['secure_boot_enabled'] = vm_dict['properties']['securityProfile']['uefiSettings']['secureBootEnabled']
+                                self.security_profile['uefi_settings']['secure_boot_enabled'] = \
+                                        vm_dict['properties']['securityProfile']['uefiSettings']['secureBootEnabled']
                             if self.security_profile['uefi_settings'].get('v_tpm_enabled') is not None:
-                                if bool(self.security_profile['uefi_settings']['v_tpm_enabled']) != bool(vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']):
+                                if bool(self.security_profile['uefi_settings']['v_tpm_enabled']) != \
+                                        bool(vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']):
                                     update_security_profile = True
                             else:
-                                self.security_profile['uefi_settings']['v_tpm_enabled'] = vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']
+                                self.security_profile['uefi_settings']['v_tpm_enabled'] = \
+                                        vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']
                         if update_security_profile:
                             changed = True
                             differences.append('security_profile')
@@ -1699,13 +1703,13 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         uefi_settings_spec = None
                         if self.security_profile.get('uefi_settings') is not None:
                             uefi_settings_spec = self.compute_models.UefiSettings(
-                                    secure_boot_enabled=self.security_profile['uefi_settings'].get('secure_boot_enabled'),
-                                    v_tpm_enabled=self.security_profile['uefi_settings'].get('v_tpm_enabled'),
+                                secure_boot_enabled=self.security_profile['uefi_settings'].get('secure_boot_enabled'),
+                                v_tpm_enabled=self.security_profile['uefi_settings'].get('v_tpm_enabled'),
                             )
                         security_profile = self.compute_models.SecurityProfile(
-                                uefi_settings=uefi_settings_spec,
-                                encryption_at_host=self.security_profile.get('encryption_at_host'),
-                                security_type=self.security_profile.get('security_type'),
+                            uefi_settings=uefi_settings_spec,
+                            encryption_at_host=self.security_profile.get('encryption_at_host'),
+                            security_type=self.security_profile.get('security_type'),
                         )
                         vm_resource.security_profile = security_profile
 
@@ -1881,13 +1885,13 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         uefi_settings_spec = None
                         if self.security_profile.get('uefi_settings') is not None:
                             uefi_settings_spec = self.compute_models.UefiSettings(
-                                    secure_boot_enabled=self.security_profile['uefi_settings'].get('secure_boot_enabled'),
-                                    v_tpm_enabled=self.security_profile['uefi_settings'].get('v_tpm_enabled'),
+                                secure_boot_enabled=self.security_profile['uefi_settings'].get('secure_boot_enabled'),
+                                v_tpm_enabled=self.security_profile['uefi_settings'].get('v_tpm_enabled'),
                             )
                         security_profile = self.compute_models.SecurityProfile(
-                                uefi_settings=uefi_settings_spec,
-                                encryption_at_host=self.security_profile.get('encryption_at_host'),
-                                security_type=self.security_profile.get('security_type'),
+                            uefi_settings=uefi_settings_spec,
+                            encryption_at_host=self.security_profile.get('encryption_at_host'),
+                            security_type=self.security_profile.get('security_type'),
                         )
                         vm_resource.security_profile = security_profile
 
