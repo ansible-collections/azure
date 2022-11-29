@@ -996,7 +996,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                                     bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['encryptionAtHost']):
                                 update_security_profle = True
                             else:
-                                self.security_profile['encryption_at_host'] = vmss_dict['properties']['virtualMachineProfile']['securityProfile']['encryptionAtHost']
+                                self.security_profile['encryption_at_host'] = \
+                                        vmss_dict['properties']['virtualMachineProfile']['securityProfile']['encryptionAtHost']
                         if self.security_profile.get('security_type') is not None:
                             if self.security_profile.get('security_type') != \
                                     vmss_dict['properties']['virtualMachineProfile']['securityProfile']['securityType']:
