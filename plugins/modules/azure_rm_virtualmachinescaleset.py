@@ -993,24 +993,25 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     else:
                         if self.security_profile.get('encryption_at_host') is not None:
                             if bool(self.security_profile.get('encryption_at_host')) != \
-                                bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['encryptionAtHost']):
+                                    bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['encryptionAtHost']):
                                 update_security_profle = True
                             else:
                                 self.security_profile['encryption_at_host'] = vmss_dict['properties']['virtualMachineProfile']['securityProfile']['encryptionAtHost']
                         if self.security_profile.get('security_type') is not None:
-                            if self.security_profile.get('security_type') != vmss_dict['properties']['virtualMachineProfile']['securityProfile']['securityType']:
+                            if self.security_profile.get('security_type') != \
+                                    vmss_dict['properties']['virtualMachineProfile']['securityProfile']['securityType']:
                                 update_security_profile = True
                         if self.security_profile.get('uefi_settings') is not None:
                             if self.security_profile['uefi_settings'].get('secure_boot_enabled') is not None:
                                 if bool(self.security_profile['uefi_settings']['secure_boot_enabled']) != \
-                                    bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['secureBootEnabled']):
+                                        bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['secureBootEnabled']):
                                     update_security_profile = True
                             else:
                                 self.security_profile['uefi_settings']['secure_boot_enabled'] = \
                                     vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['secureBootEnabled']
                             if self.security_profile['uefi_settings'].get('v_tpm_enabled') is not None:
                                 if bool(self.security_profile['uefi_settings']['v_tpm_enabled']) != \
-                                    bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['vTpmEnabled']):
+                                        bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['vTpmEnabled']):
                                     update_security_profile = True
                             else:
                                 self.security_profile['uefi_settings']['v_tpm_enabled'] = \
