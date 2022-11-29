@@ -4,7 +4,7 @@ async_subnet: "async-subnet"
 async_virtual_network_cidr: "172.10.0.0/16"
 async_subnet_cidr: "172.10.0.0/24"
 async_virtual_machine_prefix: "async-vm"
-async_number_virtual_machine: 5
+async_number_virtual_machine: 3
 async_number_disk_to_attach: 3
 
 shared_virtual_network: "shareddisk-vnet"
