@@ -1350,14 +1350,14 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                     update_security_profile = True
                             else:
                                 self.security_profile['uefi_settings']['secure_boot_enabled'] = \
-                                        vm_dict['properties']['securityProfile']['uefiSettings']['secureBootEnabled']
+                                    vm_dict['properties']['securityProfile']['uefiSettings']['secureBootEnabled']
                             if self.security_profile['uefi_settings'].get('v_tpm_enabled') is not None:
                                 if bool(self.security_profile['uefi_settings']['v_tpm_enabled']) != \
                                         bool(vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']):
                                     update_security_profile = True
                             else:
                                 self.security_profile['uefi_settings']['v_tpm_enabled'] = \
-                                        vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']
+                                    vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']
                         if update_security_profile:
                             changed = True
                             differences.append('security_profile')
