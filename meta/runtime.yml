@@ -149,6 +149,7 @@ action_groups:
   - azure.azcollection.azure_rm_monitordiagnosticsetting
   - azure.azcollection.azure_rm_monitordiagnosticsetting_info
   - azure.azcollection.azure_rm_monitorlogprofile
+  - azure.azcollection.azure_rm_multiplemanageddisks
   - azure.azcollection.azure_rm_mysqlconfiguration
   - azure.azcollection.azure_rm_mysqlconfiguration_info
   - azure.azcollection.azure_rm_mysqldatabase
