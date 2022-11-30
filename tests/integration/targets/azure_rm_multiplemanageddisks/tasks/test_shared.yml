@@ -1,4 +1,3 @@
-
 # Create managed disks with missing required parameters
 - name: Create managed disks with missing required parameters
   azure.azcollection.azure_rm_multiplemanageddisks:
