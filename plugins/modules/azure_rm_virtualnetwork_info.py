@@ -122,6 +122,12 @@ virtualnetworks:
                 returned: always
                 sample: Succeeded
                 type: str
+            flow_timeout_in_minutes:
+                description:
+                    - The FlowTimeout value (in minutes) for the Virtual Network.
+                type: int
+                returned: always
+                sample: 8
             name:
                 description:
                     - Name of the virtual network.
@@ -306,7 +312,8 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
             name=vnet.name,
             location=vnet.location,
             tags=vnet.tags,
-            provisioning_state=vnet.provisioning_state
+            provisioning_state=vnet.provisioning_state,
+            flow_timeout_in_minutes=vnet.flow_timeout_in_minutes
         )
         if vnet.dhcp_options and len(vnet.dhcp_options.dns_servers) > 0:
             results['dns_servers'] = []
