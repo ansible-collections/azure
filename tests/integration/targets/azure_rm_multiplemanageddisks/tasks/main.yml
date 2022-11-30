@@ -1,0 +1,2 @@
+- include_tasks: tasks/test_shared.yml
+- include_tasks: tasks/test_async.yml
