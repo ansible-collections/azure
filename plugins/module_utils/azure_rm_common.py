@@ -51,6 +51,8 @@ AZURE_COMMON_ARGS = dict(
     adfs_authority_url=dict(type='str', default=None),
     log_mode=dict(type='str', no_log=True),
     log_path=dict(type='str', no_log=True),
+    x509_certificate_path=dict(type='path', no_log=True),
+    thumbprint=dict(type='str', no_log=True),
 )
 
 AZURE_CREDENTIAL_ENV_MAPPING = dict(
@@ -63,7 +65,9 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
     password='AZURE_PASSWORD',
     cloud_environment='AZURE_CLOUD_ENVIRONMENT',
     cert_validation_mode='AZURE_CERT_VALIDATION_MODE',
-    adfs_authority_url='AZURE_ADFS_AUTHORITY_URL'
+    adfs_authority_url='AZURE_ADFS_AUTHORITY_URL',
+    x509_certificate_path='AZURE_X509_CERTIFICATE_PATH',
+    thumbprint='AZURE_THUMBPRINT'
 )
 
 
@@ -277,7 +281,7 @@ try:
     from azure.mgmt.eventhub import EventHubManagementClient
     from azure.mgmt.datafactory import DataFactoryManagementClient
     import azure.mgmt.datafactory.models as DataFactoryModel
-    from azure.identity._credentials import client_secret, user_password
+    from azure.identity._credentials import client_secret, user_password, certificate
 
 except ImportError as exc:
     Authentication = object
@@ -645,6 +649,30 @@ class AzureRMModuleBase(object):
             self.log(str(exc))
             raise
 
+    def get_multiple_pollers_results(self, pollers, wait=0.05):
+        '''
+        Consistent method of waiting on and retrieving results from multiple Azure's long poller
+
+        :param pollers list of Azure poller object
+        :param wait Period of time to wait for the long running operation to complete.
+        :return list of object resulting from the original request
+        '''
+
+        def _continue_polling():
+            return not all(poller.done() for poller in pollers)
+
+        try:
+            while _continue_polling():
+                for poller in pollers:
+                    if poller.done():
+                        continue
+                    self.log("Waiting for {0} sec".format(wait))
+                    poller.wait(timeout=wait)
+            return [poller.result() for poller in pollers]
+        except Exception as exc:
+            self.log(str(exc))
+            raise
+
     def check_provisioning_state(self, azure_object, requested_state='present'):
         '''
         Check an Azure object's provisioning state. If something did not complete the provisioning
@@ -875,6 +903,12 @@ class AzureRMModuleBase(object):
         if not base_url:
             # most things are resource_manager, don't make everyone specify
             base_url = self.azure_auth._cloud_environment.endpoints.resource_manager
+
+        # https://github.com/Azure/msrestazure-for-python/pull/169
+        # China's base_url doesn't end in a trailing slash, though others do,
+        # and we need a trailing slash when generating credential_scopes below.
+        if not base_url.endswith("/"):
+            base_url += "/"
 
         mgmt_subscription_id = self.azure_auth.subscription_id
         if self.module.params.get('subscription_id'):
@@ -1444,7 +1478,8 @@ class AzureRMAuth(object):
 
     def __init__(self, auth_source=None, profile=None, subscription_id=None, client_id=None, secret=None,
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
-                 api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False, **kwargs):
+                 api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False,
+                 x509_certificate_path=None, thumbprint=None, **kwargs):
 
         if fail_impl:
             self._fail_impl = fail_impl
@@ -1465,7 +1500,9 @@ class AzureRMAuth(object):
             cloud_environment=cloud_environment,
             cert_validation_mode=cert_validation_mode,
             api_profile=api_profile,
-            adfs_authority_url=adfs_authority_url)
+            adfs_authority_url=adfs_authority_url,
+            x509_certificate_path=x509_certificate_path,
+            thumbprint=thumbprint)
 
         if not self.credentials:
             if HAS_AZURE_CLI_CORE:
@@ -1542,6 +1579,23 @@ class AzureRMAuth(object):
             self.azure_credential_track2 = client_secret.ClientSecretCredential(client_id=self.credentials['client_id'],
                                                                                 client_secret=self.credentials['secret'],
                                                                                 tenant_id=self.credentials['tenant'])
+
+        elif self.credentials.get('client_id') is not None and \
+                self.credentials.get('tenant') is not None and \
+                self.credentials.get('thumbprint') is not None and \
+                self.credentials.get('x509_certificate_path') is not None:
+
+            self.azure_credentials = self.acquire_token_with_client_certificate(
+                self._adfs_authority_url,
+                self._cloud_environment.endpoints.active_directory_resource_id,
+                self.credentials['x509_certificate_path'],
+                self.credentials['thumbprint'],
+                self.credentials['client_id'],
+                self.credentials['tenant'])
+
+            self.azure_credential_track2 = certificate.CertificateCredential(tenant_id=self.credentials['tenant'],
+                                                                             client_id=self.credentials['client_id'],
+                                                                             certificate_path=self.credentials['x509_certificate_path'])
 
         elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
             tenant = self.credentials.get('tenant')
@@ -1761,6 +1815,20 @@ class AzureRMAuth(object):
 
         context = AuthenticationContext(authority_uri)
         token_response = context.acquire_token_with_username_password(resource, username, password, client_id)
+
+        return AADTokenCredentials(token_response)
+
+    def acquire_token_with_client_certificate(self, authority, resource, x509_certificate_path, thumbprint, client_id, tenant):
+        authority_uri = authority
+
+        if tenant is not None:
+            authority_uri = authority + '/' + tenant
+
+        context = AuthenticationContext(authority_uri)
+        x509_certificate = None
+        with open(x509_certificate_path, 'rb') as pem_file:
+            x509_certificate = pem_file.read()
+        token_response = context.acquire_token_with_client_certificate(resource, client_id, x509_certificate, thumbprint)
 
         return AADTokenCredentials(token_response)
 

@@ -198,6 +198,12 @@ storageaccounts:
                             type: dict
                             returned: always
                             sample: {'enabled': true}
+        is_hns_enabled:
+            description:
+                - Account HierarchicalNamespace enabled if sets to true.
+            type: bool
+            returned: always
+            sample: true
         kind:
             description:
                 - The kind of storage.
@@ -619,6 +625,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             minimum_tls_version=account_obj.minimum_tls_version,
             public_network_access=account_obj.public_network_access,
             allow_blob_public_access=account_obj.allow_blob_public_access,
+            is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
             static_website=dict(
                 enabled=False,
                 index_document=None,
