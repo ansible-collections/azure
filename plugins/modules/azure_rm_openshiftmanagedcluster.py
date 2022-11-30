@@ -93,9 +93,9 @@ options:
                     - Size of agent VMs (immutable).
                 type: str
                 choices:
-                    - Standard_D2s_v3
-                    - Standard_D4s_v3
                     - Standard_D8s_v3
+                    - Standard_D16s_v3
+                    - Standard_D32s_v3
             subnet_id:
                 description:
                     - The Azure resource ID of the master subnet (immutable).
@@ -117,7 +117,6 @@ options:
                     - The size of the worker Vms (immutable).
                 type: str
                 choices:
-                    - Standard_D2s_v3
                     - Standard_D4s_v3
                     - Standard_D8s_v3
             disk_size:
@@ -512,9 +511,9 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                         type='str',
                         updatable=False,
                         disposition='vmSize',
-                        choices=['Standard_D2s_v3',
-                                 'Standard_D4s_v3',
-                                 'Standard_D8s_v3'],
+                        choices=['Standard_D8s_v3',
+                                 'Standard_D16s_v3',
+                                 'Standard_D32s_v3'],
                         purgeIfNone=True
                     ),
                     subnet_id=dict(
@@ -546,8 +545,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                         type='str',
                         disposition='vmSize',
                         updatable=False,
-                        choices=['Standard_D2s_v3',
-                                 'Standard_D4s_v3',
+                        choices=['Standard_D4s_v3',
                                  'Standard_D8s_v3'],
                         purgeIfNone=True
                     ),
