@@ -904,6 +904,12 @@ class AzureRMModuleBase(object):
             # most things are resource_manager, don't make everyone specify
             base_url = self.azure_auth._cloud_environment.endpoints.resource_manager
 
+        # https://github.com/Azure/msrestazure-for-python/pull/169
+        # China's base_url doesn't end in a trailing slash, though others do,
+        # and we need a trailing slash when generating credential_scopes below.
+        if not base_url.endswith("/"):
+            base_url += "/"
+
         mgmt_subscription_id = self.azure_auth.subscription_id
         if self.module.params.get('subscription_id'):
             mgmt_subscription_id = self.module.params.get('subscription_id')
