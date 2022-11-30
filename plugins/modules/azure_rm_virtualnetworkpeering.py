@@ -374,7 +374,7 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
             allow_gateway_transit=self.allow_gateway_transit,
             allow_forwarded_traffic=self.allow_forwarded_traffic,
             use_remote_gateways=self.use_remote_gateways
-            )
+        )
 
         try:
             response = self.network_client.virtual_network_peerings.begin_create_or_update(self.resource_group,
@@ -387,7 +387,7 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
             return vnetpeering_to_dict(response)
         except Exception as exc:
             self.fail("Error creating Azure Virtual Network Peering: {0}.".format(exc.message))
-        
+
     def create_or_update_vnet_peering(self):
         '''
         Creates or Update Azure Virtual Network Peering.
@@ -409,7 +409,7 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
             allow_gateway_transit=self.allow_gateway_transit,
             allow_forwarded_traffic=self.allow_forwarded_traffic,
             use_remote_gateways=self.use_remote_gateways
-            )
+        )
 
         try:
             response = self.network_client.virtual_network_peerings.begin_create_or_update(self.resource_group,
