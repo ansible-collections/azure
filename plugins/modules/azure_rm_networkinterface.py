@@ -164,7 +164,6 @@ options:
                     - Whether the IP configuration is the primary one in the list.
                     - The first IP configuration default set to I(primary=True).
                 type: bool
-                default: False
             application_security_groups:
                 description:
                     - List of application security groups in which the IP configuration is included.
@@ -567,7 +566,7 @@ ip_configuration_spec = dict(
     public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
     load_balancer_backend_address_pools=dict(type='list'),
     application_gateway_backend_address_pools=dict(type='list'),
-    primary=dict(type='bool', default=False),
+    primary=dict(type='bool'),
     application_security_groups=dict(type='list', elements='raw')
 )
 
@@ -752,11 +751,23 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                 # construct two set with the same structure and then compare
                 # the list should contains:
                 # name, private_ip_address, public_ip_address_name, private_ip_allocation_method, subnet_name
-                ip_configuration_result = self.construct_ip_configuration_set(results['ip_configurations'])
-                ip_configuration_request = self.construct_ip_configuration_set(self.ip_configurations)
-                if ip_configuration_result != ip_configuration_request:
-                    self.log("CHANGED: network interface {0} ip configurations".format(self.name))
-                    changed = True
+                if len(self.ip_configurations) >0:
+                    ip_keys = self.ip_configurations[0].keys()
+                    for index in range(len(self.ip_configurations)):
+                        for item in results['ip_configurations']:
+                            if item is not None:
+                                if self.ip_configurations[index]['name'] == item['name']:
+                                    for key in ip_keys:
+                                        if self.ip_configurations[index].get(key) is not None:
+                                            if key == "public_ip_address_name":
+                                                if self.ip_configurations[index].get(key) != item['public_ip_address']['name']:
+                                                    changed = True
+                                            elif key == "public_ip_allocation_method":
+                                                pass
+                                            elif self.ip_configurations[index].get(key) != item.get(key):
+                                                changed = True
+                                        else:
+                                            self.ip_configurations[index][key] = item.get(key)
 
             elif self.state == 'absent':
                 self.log("CHANGED: network interface {0} exists but requested state is 'absent'".format(self.name))
