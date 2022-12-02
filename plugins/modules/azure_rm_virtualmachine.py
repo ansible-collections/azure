@@ -197,7 +197,7 @@ options:
             - disk_caching
     os_disk_size_gb:
         description:
-            - Type of OS disk size in GB.
+            - Size of OS disk in GB.
     os_type:
         description:
             - Base type of operating system.
