@@ -431,7 +431,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                     content_language=blob["content_settings"]["content_language"],
                     content_disposition=blob["content_settings"]["content_disposition"],
                     cache_control=blob["content_settings"]["cache_control"],
-                    content_md5=blob["content_settings"]["content_md5"],
+                    content_md5=blob["content_settings"]["content_md5"].hex() if blob["content_settings"]["content_md5"] else None,
                 )
             )
         return result
