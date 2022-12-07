@@ -458,8 +458,6 @@ sql_managed_instance:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
-    import logging
-    logging.basicConfig(filename='log.log', level=logging.INFO)
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
 except ImportError:
@@ -613,13 +611,7 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
         self.body['location'] = self.location
 
         sql_managed_instance = self.get()
-        logging.info('---------------[------------')
-        logging.info(sql_managed_instance)
-        logging.info('pppppppppppppppppppppppppppppppp')
         changed = False
-        logging.info(self.body)
-        logging.info('-----------')
-        logging.info(self.state)
         if self.state == 'present':
             if sql_managed_instance:
                 modifiers = {}
