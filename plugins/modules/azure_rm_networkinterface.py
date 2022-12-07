@@ -567,7 +567,6 @@ ip_configuration_spec = dict(
     load_balancer_backend_address_pools=dict(type='list'),
     application_gateway_backend_address_pools=dict(type='list'),
     primary=dict(type='bool'),
-    #primary=dict(type='bool', default=False),
     application_security_groups=dict(type='list', elements='raw')
 )
 
