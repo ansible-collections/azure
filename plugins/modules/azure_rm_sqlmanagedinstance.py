@@ -168,11 +168,29 @@ extends_documentation_fragment:
 author:
     - xuzhang3 (@xuzhang3)
     - Fred Sun (@Fred-sun)
-    
-
 '''
 
 EXAMPLES = '''
+- name: Create sql managed instance
+  azure_rm_sqlmanagedinstance:
+    resource_group: "{{ resource_group }}"
+    name: testmanagedinstance
+    subnet_id: subnet_id
+    sku:
+      name: GP_Gen5
+      tier: GeneralPurpose
+      family: Gen5
+      capacity: 5
+    administrator_login: azureuser
+    administrator_login_password: Ft@password0329test
+    storage_size_in_gb: 256
+    v_cores: 8
+
+- name: Delete sql managed instance
+  azure_rm_sqlmanagedinstance:
+    resource_group: "{{ resource_group }}"
+    name: testmanagedinstance
+    state: absent
 '''
 
 RETURN = '''
