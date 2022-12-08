@@ -1,6 +1,6 @@
 - name: Prepare random number
   set_fact:
-    random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    random_postfix: random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
@@ -77,9 +77,13 @@
     storage_size_in_gb: 256
     v_cores: 8
     tags:
-      key: value
-  check_mode: True
+      key0: value0
   register: output
+
+- name: Assert the resource instance is not exist
+  assert:
+    that:
+      - output.changed
 
 - name: Create sql managed instance
   azure_rm_sqlmanagedinstance:
@@ -96,45 +100,13 @@
     storage_size_in_gb: 256
     v_cores: 8
     tags:
-      key: value
+      key0: value0
   register: output
 
-- name: Create sql managed instance (Idempotent test)
-  azure_rm_sqlmanagedinstance:
-    resource_group: "{{ resource_group }}"
-    name: "{{ random_postfix }}"
-    subnet_id: "{{ subnet_output.state.id }}"
-    sku:
-      name: GP_Gen5
-      tier: GeneralPurpose
-      family: Gen5
-      capacity: 5
-    administrator_login: azureuser
-    administrator_login_password: Fredtest@password0329test
-    storage_size_in_gb: 256
-    v_cores: 8
-    tags:
-      key: value
-  register: output
-
-- name: Update sql managed instance
-  azure_rm_sqlmanagedinstance:
-    resource_group: "{{ resource_group }}"
-    name: "{{ random_postfix }}"
-    subnet_id: "{{ subnet_output.state.id }}"
-    sku:
-      name: GP_Gen5
-      tier: GeneralPurpose
-      family: Gen5
-      capacity: 5
-    administrator_login: azureuser
-    administrator_login_password: Fredtest@password0329test
-    storage_size_in_gb: 256
-    v_cores: 8
-    tags:
-      key1: value1
-      key2: value2
-  register: output
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
 
 - name: Get SQL managed instance by name
   azure_rm_sqlmanagedinstance_info:
@@ -142,5 +114,15 @@
     name: "{{ random_postfix }}"
   register: output
 
-- debug:
-    var: output
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.sql_managed_instance[0].tags | length == 1
+      - output.sql_managed_instance[0].storage_size_in_gb == 256
+      - output.sql_managed_instance[0].sku.name == 'GP_Gen5'
+
+- name: Delete sql managed instance
+  azure_rm_sqlmanagedinstance:
+    resource_group: "{{ resource_group }}"
+    name: "{{ random_postfix }}"
+    state: absent

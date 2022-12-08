@@ -112,7 +112,8 @@ options:
         description:
             - ID of the timezone.
             - Allowed values are timezones supported by Windows.
-            - Windows keeps details on supported timezones, including the id, in registry under KEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones.
+            - Windows keeps details on supported timezones.
+            - Including the id, in registry under "KEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones".
         type: str
     instance_pool_id:
         description:
@@ -623,7 +624,8 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
 
                 if changed:
                     if not self.check_mode:
-                        sql_managed_instance = self.update_sql_managed_instance(self.body)
+                        #sql_managed_instance = self.update_sql_managed_instance(self.body)
+                        sql_managed_instance = self.create_or_update(self.body)
             else:
                 changed = True
                 if not self.check_mode:
@@ -650,7 +652,12 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
             response = self.sql_client.managed_instances.begin_update(resource_group_name=self.resource_group,
                                                                       managed_instance_name=self.name,
                                                                       parameters=parameters)
-            return self.to_dict(self.get_poller_result(response))
+            try:
+                response = self.sql_client.managed_instances.get(resource_group_name=self.resource_group,
+                                                                 managed_instance_name=self.name)
+            except ResourceNotFoundError:
+                self.fail("The resource created failed, can't get the facts")
+            return self.to_dict(response)
         except Exception as exc:
             self.fail('Error when updating SQL managed instance {0}: {1}'.format(self.name, exc.message))
 
@@ -659,15 +666,20 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
             response = self.sql_client.managed_instances.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                 managed_instance_name=self.name,
                                                                                 parameters=parameters)
-            return self.to_dict(self.get_poller_result(response))
+            try:
+                response = self.sql_client.managed_instances.get(resource_group_name=self.resource_group,
+                                                                 managed_instance_name=self.name)
+            except ResourceNotFoundError:
+                self.fail("The resource created failed, can't get the facts")
+            return self.to_dict(response)
         except Exception as exc:
             self.fail('Error when creating SQL managed instance {0}: {1}'.format(self.name, exc))
 
     def delete_sql_managed_instance(self):
         try:
-            return self.sql_client.managed_instances.delete(self.resource_group, self.name)
+            response = self.sql_client.managed_instances.begin_delete(self.resource_group, self.name)
         except Exception as exc:
-            self.fail('Error when deleting SQL managed instance {0}: {1}'.format(self.name, exc.message))
+            self.fail('Error when deleting SQL managed instance {0}: {1}'.format(self.name, exc))
 
     def to_dict(self, item):
         if not item:
