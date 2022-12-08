@@ -60,13 +60,13 @@
     delegations:
       - name: 'mysqlinstance'
         serviceName: "Microsoft.Sql/managedInstances"
-  register: output
+  register: subnet_output
 
 - name: Create sql managed instance (Checkmode test)
   azure_rm_sqlmanagedinstance:
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
-    subnet_id: "{{ output.state.id }}"
+    subnet_id: "{{ subnet_output.state.id }}"
     sku:
       name: GP_Gen5
       tier: GeneralPurpose
@@ -85,7 +85,7 @@
   azure_rm_sqlmanagedinstance:
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
-    subnet_id: "{{ output.state.id }}"
+    subnet_id: "{{ subnet_output.state.id }}"
     sku:
       name: GP_Gen5
       tier: GeneralPurpose
@@ -103,7 +103,7 @@
   azure_rm_sqlmanagedinstance:
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
-    subnet_id: "{{ output.state.id }}"
+    subnet_id: "{{ subnet_output.state.id }}"
     sku:
       name: GP_Gen5
       tier: GeneralPurpose
@@ -121,7 +121,7 @@
   azure_rm_sqlmanagedinstance:
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
-    subnet_id: "{{ output.state.id }}"
+    subnet_id: "{{ subnet_output.state.id }}"
     sku:
       name: GP_Gen5
       tier: GeneralPurpose
