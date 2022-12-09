@@ -701,6 +701,95 @@
       - output.changed == False
       - output.rules | length == 0
 
+# azure_rm_sqlelasticpool test
+
+- name: Create instance of SQL Elastic Pool -- check mode
+  azure_rm_sqlelasticpool:
+    resource_group: "{{ resource_group }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: EP{{ random_postfix }}
+    zone_redundant: False
+    tags:
+      aaa: bbb
+  check_mode: yes
+  register: output
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+
+- name: Create instance of SQL Elastic Pool
+  azure_rm_sqlelasticpool:
+    resource_group: "{{ resource_group }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: EP{{ random_postfix }}
+    zone_redundant: False
+    tags:
+      aaa: bbb
+  register: output
+
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+
+- name: Create instance of SQL Elastic Pool -- Idempotent test
+  azure_rm_sqlelasticpool:
+    resource_group: "{{ resource_group }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: EP{{ random_postfix }}
+    zone_redundant: False
+    tags:
+      aaa: bbb
+  register: output
+
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - not output.changed
+
+- name: Update instance of SQL Elastic Pool
+  azure_rm_sqlelasticpool:
+    resource_group: "{{ resource_group }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: EP{{ random_postfix }}
+    zone_redundant: True
+    tags:
+      aaa1: bbb1
+  register: output
+
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+
+- name: Gather facts SQL Database
+  azure_rm_sqlelasticpool_info:
+    resource_group: "{{ resource_group }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: EP{{ random_postfix }}
+  register: output
+
+- name: Assert that facts are returned
+  assert:
+    that:
+      - output.changed == False
+      - output.elastic_pool[0].zone_redundant == true
+      - output.elastic_pool[0].tags | length == 2
+
+- name: Delete instance of SQL Elastic Pool
+  azure_rm_sqlelasticpool:
+    resource_group: "{{ resource_group }}"
+    server_name: sqlsrv{{ random_postfix }}
+    name: EP{{ random_postfix }}
+    state: absent
+  register: output
+
+- name: Assert the resource instance is deleted
+  assert:
+    that:
+      - output.changed
+
 # finalise & clean up azure_rm_sqlserver test
 
 - name: Delete instance of SQL Server -- check mode
