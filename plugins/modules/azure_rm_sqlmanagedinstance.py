@@ -64,7 +64,7 @@ options:
             type: str
         type:
             description:
-                -  The identity type.
+                - The identity type.
                 - Set this to C(SystemAssigned) in order to automatically create and assign an Azure Active Directory principal for the resource.
             type: str
         tenant_id:
@@ -113,7 +113,8 @@ options:
     storage_size_in_gb:
         description:
             - Storage size in GB.
-            - Minimum value: 32. Maximum value: 8192. Increments of 32 GB allowed only.
+            - Minimum value is C(32). Maximum value is C(8192).
+            - Increments of 32 GB allowed only.
         type: int
     collation:
         description:
@@ -168,7 +169,7 @@ options:
         type: str
     minimal_tls_version:
         description:
-            - Minimal TLS version. Allowed values: 'None', '1.0', '1.1', '1.2'.
+            - Minimal TLS version. Allowed values C(None), C(1.0), C(1.1), C(1.2).
         type: str
         choices:
             - 1.0
@@ -731,17 +732,17 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
             'type': d.get('type', None),
             'tags': d.get('tags', None),
             'identity': {
-                         'user_assigned_identities': d.get('identity', {}).get('user_assigned_identities', None),
-                         'principal_id': d.get('identity', {}).get('principal_id', None),
-                         'type': d.get('identity', {}).get('type', None),
-                         'tenant_id': d.get('identity', {}).get('tenant_id', None)
+                'user_assigned_identities': d.get('identity', {}).get('user_assigned_identities', None),
+                'principal_id': d.get('identity', {}).get('principal_id', None),
+                'type': d.get('identity', {}).get('type', None),
+                'tenant_id': d.get('identity', {}).get('tenant_id', None)
             },
             'sku': {
-                    'name': d.get('sku', {}).get('name', None),
-                    'size': d.get('sku', {}).get('size', None),
-                    'family': d.get('sku', {}).get('family', None),
-                    'tier': d.get('sku', {}).get('tier', None),
-                    'capacity': d.get('sku', {}).get('capacity', None)
+                'name': d.get('sku', {}).get('name', None),
+                'size': d.get('sku', {}).get('size', None),
+                'family': d.get('sku', {}).get('family', None),
+                'tier': d.get('sku', {}).get('tier', None),
+                'capacity': d.get('sku', {}).get('capacity', None)
             },
             'provisioning_state': d.get('provisioning_state', None),
             'managed_instance_create_mode': d.get('managed_instance_create_mode', None),

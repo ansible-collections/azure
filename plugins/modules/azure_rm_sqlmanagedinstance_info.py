@@ -418,18 +418,18 @@ class AzureRMSqManagedInstanceInfo(AzureRMModuleBase):
             'type': d.get('type', None),
             'tags': d.get('tags', None),
             'identity': {
-                         'user_assigned_identities': d.get('identity', {}).get('user_assigned_identities', None),
-                         'principal_id': d.get('identity', {}).get('principal_id', None),
-                         'type': d.get('identity', {}).get('type', None),
-                         'tenant_id': d.get('identity', {}).get('tenant_id', None)
-                        },
+                'user_assigned_identities': d.get('identity', {}).get('user_assigned_identities', None),
+                'principal_id': d.get('identity', {}).get('principal_id', None),
+                'type': d.get('identity', {}).get('type', None),
+                'tenant_id': d.get('identity', {}).get('tenant_id', None)
+            },
             'sku': {
-                    'name': d.get('sku', {}).get('name', None),
-                    'size': d.get('sku', {}).get('size', None),
-                    'family': d.get('sku', {}).get('family', None),
-                    'tier': d.get('sku', {}).get('tier', None),
-                    'capacity': d.get('sku', {}).get('capacity', None)
-                    },
+                'name': d.get('sku', {}).get('name', None),
+                'size': d.get('sku', {}).get('size', None),
+                'family': d.get('sku', {}).get('family', None),
+                'tier': d.get('sku', {}).get('tier', None),
+                'capacity': d.get('sku', {}).get('capacity', None)
+            },
             'provisioning_state': d.get('provisioning_state', None),
             'managed_instance_create_mode': d.get('managed_instance_create_mode', None),
             'fully_qualified_domain_name': d.get('fully_qualified_domain_name', None),
