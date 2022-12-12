@@ -32,45 +32,52 @@ options:
             - The location of the sql managed instance.
         type: str
     sku:
-        name:
-            description:
-                - The name of the SKU, typically, a letter add Number code.
-            type: str
-        tier:
-            description:
-                - The tier or edition of the particular SKU.
-            type: str
-        size:
-            description:
-                - Size of the particular SKU.
-            type: str
-        family:
-            description:
-                - If the service has different generations of hardware, for the same SKU, then that can be captured here.
-            type: str
-        capacity:
-            description:
-                - Capacity of the particular SKU.
-            type: str
-
+        description:
+            - An ARM Resource SKU.
+        type: dict
+        suboptions:
+            name:
+                description:
+                    - The name of the SKU, typically, a letter add Number code.
+                type: str
+            tier:
+                description:
+                    - The tier or edition of the particular SKU.
+                type: str
+            size:
+                description:
+                    - Size of the particular SKU.
+                type: str
+            family:
+                description:
+                    - If the service has different generations of hardware, for the same SKU, then that can be captured here.
+                type: str
+            capacity:
+                description:
+                    - Capacity of the particular SKU.
+                type: str
     identity:
-        user_assigned:
-            description:
-                -  The resource ids of the user assigned identities to use.
-            type: str
-        principal_id:
-            description:
-                -  The Azure Active Directory principal ID.
-            type: str
-        type:
-            description:
-                - The identity type.
-                - Set this to C(SystemAssigned) in order to automatically create and assign an Azure Active Directory principal for the resource.
-            type: str
-        tenant_id:
-            description:
-                - The Azure Active Directory tenant id.
-            type: str
+        description:
+            - Azure Active Directory identity configuration for a resource.
+        type: dict
+        suboptions:
+            user_assigned:
+                description:
+                    -  The resource ids of the user assigned identities to use.
+                type: str
+            principal_id:
+                description:
+                    -  The Azure Active Directory principal ID.
+                type: str
+            type:
+                description:
+                    - The identity type.
+                    - Set this to C(SystemAssigned) in order to automatically create and assign an Azure Active Directory principal for the resource.
+                type: str
+            tenant_id:
+                description:
+                    - The Azure Active Directory tenant id.
+                type: str
     managed_instance_create_mode:
         description:
             - Specifies the mode of database creation.
