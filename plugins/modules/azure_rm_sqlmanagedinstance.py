@@ -152,7 +152,6 @@ options:
             - ID of the timezone.
             - Allowed values are timezones supported by Windows.
             - Windows keeps details on supported timezones.
-            - Including the id, in registry under 'KEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones'.
         type: str
     instance_pool_id:
         description:

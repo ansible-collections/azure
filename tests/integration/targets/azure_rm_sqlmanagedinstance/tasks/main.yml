@@ -1,6 +1,6 @@
 - name: Prepare random number
   set_fact:
-    random_postfix: random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
@@ -67,6 +67,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
     subnet_id: "{{ subnet_output.state.id }}"
+    identity:
+      type: SystemAssigned
     sku:
       name: GP_Gen5
       tier: GeneralPurpose
@@ -90,6 +92,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
     subnet_id: "{{ subnet_output.state.id }}"
+    identity:
+      type: SystemAssigned
     sku:
       name: GP_Gen5
       tier: GeneralPurpose
