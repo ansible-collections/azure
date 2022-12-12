@@ -88,7 +88,7 @@ sql_managed_instance:
             sample: { 'taga':'aaa', 'tagb':'bbb' }
         identity:
             description:
-                - 
+                - Azure Active Directory identity configuration for a resource.
             returned: always
             type: complex
             contains:
@@ -158,157 +158,157 @@ sql_managed_instance:
             returned: always
             type: str
             sample: SQL_Latin1_General_CP1_CI_AS
-        administrator_login 
+        administrator_login:
             description:
                 - Administrator username for the managed instance.
             type: str
             returned: always
             sample: azureuser
-        administrators: 
+        administrators:
             description:
                 - The Azure Active Directory administrator of the server.
             type: str
             returned: always
             sample: null
-        dns_zone: 
+        dns_zone:
             description:
                 -The Dns Zone that the managed instance is in.
             type: str
             returned: always
             sample: 8a23abba54cd
-        dns_zone_partner: 
+        dns_zone_partner:
             description:
                 - The resource id of another managed instance whose DNS zone this managed instance will share after creation.
             type: str
             returned: always
             sample: null
-        fully_qualified_domain_name: 
+        fully_qualified_domain_name:
             description:
                 - The fully qualified domain name of the managed instance.
             type: str
             returned: always
             sample: fredsqlinstance.8a23abba54cd.database.windows.net
-        instance_pool_id: 
+        instance_pool_id:
             description:
                 - The Id of the instance pool this managed server belongs to.
             type: str
             returned: always
             sample: null
-        key_id: 
+        key_id:
             description:
                 - A CMK URI of the key to use for encryption.
             type: str
             returned: always
             sample: null
-        license_type: 
+        license_type:
             description:
                 - The license type.
             type: str
             returned: always
             sample: LicenseIncluded
-        maintenance_configuration_id: 
+        maintenance_configuration_id:
             description:
                 - Specifies maintenance configuration id to apply to this managed instance.
             type: str
             returned: always
             sample: /subscriptions/xxx-xxxx/providers/Microsoft.Maintenance/publicMaintenanceConfigurations/SQL_Default
-        managed_instance_create_mode: 
+        managed_instance_create_mode:
             description:
                 - Specifies the mode of database creation.
             type: str
             returned: always
             sample: null
-        minimal_tls_version: 
+        minimal_tls_version:
             description:
                 - Minimal TLS version. Allowed values: 'None', '1.0', '1.1', '1.2'.
             type: str
             returned: always
             sample: 1.2
-        primary_user_assigned_identity_id: 
+        primary_user_assigned_identity_id:
             description:
                 - The resource id of a user assigned identity to be used by default.
             type: str
             returned: always
             sample: null
-        private_endpoint_connections: 
+        private_endpoint_connections:
             description:
                 - List of private endpoint connections on a managed instance.
             type: list
             returned: always
             sample: []
-        provisioning_state: 
+        provisioning_state:
             description:
                 - The Status of the SQL managed instance.
             type: str
             returned: always
             sample: Successed
-        proxy_override: 
+        proxy_override:
             description:
                 - Connection type used for connecting to the instance.
             type: str
             returned: always
             sample: Proxy
-        public_data_endpoint_enabled: 
+        public_data_endpoint_enabled:
             description:
                 - Whether or not the public data endpoint is enabled.
             type: bool
             returned: always
             sample: false
-        restore_point_in_time: 
+        restore_point_in_time:
             description:
                 - Specifies the point in time (ISO8601 format) of the source database that will be restored to create the new database.
             type: str
             returned: always
             sample: null
-        source_managed_instance_id: 
+        source_managed_instance_id:
             description:
                 - The resource identifier of the source managed instance associated with create operation of this instance.
             type: str
             returned: always
             sample: null
-        state: 
+        state:
             description:
                 - The state of the managed instance.
             type: str
             returned: always
             sample: Ready
-        storage_account_type: 
+        storage_account_type:
             description:
                 - The storage account type used to store backups for this instance.
             type: str
             returned: always
             sample: GRS
-        storage_size_in_gb 
+        storage_size_in_gb:
             description:
                 - Storage size in GB. Minimum value: 32. Maximum value: 8192.
             type: int
             returned: always
             sample: 256
-        subnet_id: 
+        subnet_id:
             description:
                 - Subnet resource ID for the managed instance.
             type: str
             returned: always
             sample: /subscriptions/xxx-xxxx/resourceGroups/testRG/providers/Microsoft.Network/virtualNetworks/vnet-smi/subnets/sqi_sub
-        timezone_id: 
+        timezone_id:
             description:
                 -  Id of the timezone. Allowed values are timezones supported by Windows.
             type: str
             returned: always
             sample: UTC
-        type: 
+        type:
             description:
                 - The SQL managed instance type.
             type: str
             returned: always
             sample: "Microsoft.Sql/managedInstances"
-        v_cores: 
+        v_cores:
             description:
                 - The number of vCores. Allowed values: 8, 16, 24, 32, 40, 64, 80.
             type: int
             returned: always
             sample: 8
-        zone_redundant: 
+        zone_redundant:
             description:
                 - Whether or not the multi-az is enabled.
             type: bool
@@ -422,14 +422,14 @@ class AzureRMSqManagedInstanceInfo(AzureRMModuleBase):
                          'principal_id': d.get('identity', {}).get('principal_id', None),
                          'type': d.get('identity', {}).get('type', None),
                          'tenant_id': d.get('identity', {}).get('tenant_id', None)
-            },
+                        },
             'sku': {
                     'name': d.get('sku', {}).get('name', None),
                     'size': d.get('sku', {}).get('size', None),
                     'family': d.get('sku', {}).get('family', None),
                     'tier': d.get('sku', {}).get('tier', None),
                     'capacity': d.get('sku', {}).get('capacity', None)
-            },
+                    },
             'provisioning_state': d.get('provisioning_state', None),
             'managed_instance_create_mode': d.get('managed_instance_create_mode', None),
             'fully_qualified_domain_name': d.get('fully_qualified_domain_name', None),

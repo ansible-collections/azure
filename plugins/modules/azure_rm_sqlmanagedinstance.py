@@ -32,7 +32,45 @@ options:
             - The location of the sql managed instance.
         type: str
     sku:
+        name:
+            description:
+                - The name of the SKU, typically, a letter add Number code.
+            type: str
+        tier:
+            description:
+                - The tier or edition of the particular SKU.
+            type: str
+        size:
+            description:
+                - Size of the particular SKU.
+            type: str
+        family:
+            description:
+                - If the service has different generations of hardware, for the same SKU, then that can be captured here.
+            type: str
+        capacity:
+            description:
+                - Capacity of the particular SKU.
+            type: str
+
     identity:
+        user_assigned:
+            description:
+                -  The resource ids of the user assigned identities to use.
+            type: str
+        principal_id:
+            description:
+                -  The Azure Active Directory principal ID.
+            type: str
+        type:
+            description:
+                -  The identity type.
+                - Set this to C(SystemAssigned) in order to automatically create and assign an Azure Active Directory principal for the resource.
+            type: str
+        tenant_id:
+            description:
+                - The Azure Active Directory tenant id.
+            type: str
     managed_instance_create_mode:
         description:
             - Specifies the mode of database creation.
@@ -53,8 +91,9 @@ options:
     license_type:
         description:
             - The license type.
-            - Possible values are 'LicenseIncluded' (regular price inclusive of a new SQL license)
-              and 'BasePrice' (discounted AHB price for bringing your own SQL licenses).
+            - Possible values are C(LicenseIncluded) and C(BasePrice).
+            - Discounted AHB price for bringing your own SQL licenses.
+            - Regular price inclusive of a new SQL license.
         type: str
         choices:
             - LicenseIncluded
@@ -113,7 +152,7 @@ options:
             - ID of the timezone.
             - Allowed values are timezones supported by Windows.
             - Windows keeps details on supported timezones.
-            - Including the id, in registry under "KEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones".
+            - Including the id, in registry under 'KEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones'.
         type: str
     instance_pool_id:
         description:
@@ -465,7 +504,7 @@ except ImportError:
     pass
 
 
-sku_spec=dict(
+sku_spec = dict(
     name=dict(type='str'),
     tier=dict(type='str'),
     size=dict(type='str'),
@@ -474,7 +513,7 @@ sku_spec=dict(
 )
 
 
-identity_spec=dict(
+identity_spec = dict(
     user_assigned_identities=dict(type='str'),
     principal_id=dict(type='str'),
     type=dict(type='str'),
@@ -482,7 +521,7 @@ identity_spec=dict(
 )
 
 
-#class AzureRMSqlManagedInstance(AzureRMModuleBase):
+# class AzureRMSqlManagedInstance(AzureRMModuleBase):
 class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
     def __init__(self):
         # define user inputs into argument
@@ -624,7 +663,7 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
 
                 if changed:
                     if not self.check_mode:
-                        #sql_managed_instance = self.update_sql_managed_instance(self.body)
+                        # sql_managed_instance = self.update_sql_managed_instance(self.body)
                         sql_managed_instance = self.create_or_update(self.body)
             else:
                 changed = True
@@ -733,6 +772,7 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
             'administrators': d.get('administrators', None)
         }
         return d
+
 
 def main():
     AzureRMSqlManagedInstance()
