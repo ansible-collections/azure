@@ -54,7 +54,7 @@ options:
                 type: str
             capacity:
                 description:
-                    - Capacity of the particular SKU.
+                    - The capacity of the managed instance in integer number of vcores.
                 type: str
     identity:
         description:
@@ -228,6 +228,8 @@ EXAMPLES = '''
       tier: GeneralPurpose
       family: Gen5
       capacity: 5
+    identity:
+      type: SystemAssigned
     administrator_login: azureuser
     administrator_login_password: Ft@password0329test
     storage_size_in_gb: 256
@@ -559,7 +561,7 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
                 type='str'
             ),
             administrator_login=dict(
-                type='str'
+                type='str',
             ),
             administrator_login_password=dict(
                 type='str',

@@ -73,7 +73,7 @@
       name: GP_Gen5
       tier: GeneralPurpose
       family: Gen5
-      capacity: 5
+      capacity: 8
     administrator_login: azureuser
     administrator_login_password: Fredtest@password0329test
     storage_size_in_gb: 256
@@ -98,7 +98,7 @@
       name: GP_Gen5
       tier: GeneralPurpose
       family: Gen5
-      capacity: 5
+      capacity: 8
     administrator_login: azureuser
     administrator_login_password: Fredtest@password0329test
     storage_size_in_gb: 256
@@ -108,6 +108,56 @@
   register: output
 
 - name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+
+- name: Create sql managed instance (Idempotent test)
+  azure_rm_sqlmanagedinstance:
+    resource_group: "{{ resource_group }}"
+    name: "{{ random_postfix }}"
+    subnet_id: "{{ subnet_output.state.id }}"
+    identity:
+      type: SystemAssigned
+    sku:
+      name: GP_Gen5
+      tier: GeneralPurpose
+      family: Gen5
+      capacity: 8
+    administrator_login: azureuser
+    storage_size_in_gb: 256
+    v_cores: 8
+    tags:
+      key0: value0
+  register: output
+
+- name: Assert the resource instance no changed
+  assert:
+    that:
+      - not output.changed
+
+- name: Upgarde sql managed instance with tags
+  azure_rm_sqlmanagedinstance:
+    resource_group: "{{ resource_group }}"
+    name: "{{ random_postfix }}"
+    subnet_id: "{{ subnet_output.state.id }}"
+    identity:
+      type: SystemAssigned
+    sku:
+      name: GP_Gen5
+      tier: GeneralPurpose
+      family: Gen5
+      capacity: 8
+    administrator_login: azureuser
+    administrator_login_password: Fredtest@password0329test
+    storage_size_in_gb: 256
+    v_cores: 8
+    tags:
+      key0: value0
+      key1: value1
+  register: output
+
+- name: Assert the resource instance is update
   assert:
     that:
       - output.changed
