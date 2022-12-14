@@ -56,12 +56,16 @@ options:
                 description:
                     - The capacity of the managed instance in integer number of vcores.
                 type: str
+    administrators：
+        description:
+            - The Azure Active Directory administrator of the server.
+        type: str
     identity:
         description:
             - Azure Active Directory identity configuration for a resource.
         type: dict
         suboptions:
-            user_assigned:
+            user_assigned_identities:
                 description:
                     -  The resource ids of the user assigned identities to use.
                 type: str
@@ -568,10 +572,12 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
                 no_log=True,
             ),
             license_type=dict(
-                type='str'
+                type='str',
+                choices=['LicenseIncluded', 'BasePrice']
             ),
             v_cores=dict(
-                type='int'
+                type='int',
+                choices=[8, 16, 24, 32, 40, 64, 80]
             ),
             storage_size_in_gb=dict(
                 type='int'
@@ -595,7 +601,8 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
                 type='str'
             ),
             proxy_override=dict(
-                type='str'
+                type='str',
+                choices=['Proxy', 'Redirect', 'Default']
             ),
             timezone_id=dict(
                 type='str'
@@ -611,7 +618,8 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
                 elements='str'
             ),
             minimal_tls_version=dict(
-                type='str'
+                type='str',
+                choices=['1.0', '1.1', '1.2']
             ),
             storage_account_type=dict(
                 type='str'
