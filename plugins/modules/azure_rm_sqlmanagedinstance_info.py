@@ -58,7 +58,7 @@ EXAMPLES = '''
 RETURN = '''
 sql_managed_instance:
     description:
-        - A list of dictionaries containing facts for SQL Database.
+        - A list of dictionaries containing facts for SQL Managed Instance.
     returned: always
     type: complex
     contains:
@@ -220,7 +220,7 @@ sql_managed_instance:
             sample: null
         minimal_tls_version:
             description:
-                - Minimal TLS version. Allowed values: 'None', '1.0', '1.1', '1.2'.
+                - Minimal TLS version. Allowed values 'None', '1.0', '1.1', '1.2'.
             type: str
             returned: always
             sample: 1.2
@@ -280,7 +280,7 @@ sql_managed_instance:
             sample: GRS
         storage_size_in_gb:
             description:
-                - Storage size in GB. Minimum value: 32. Maximum value: 8192.
+                - Storage size in GB. Minimum value 32. Maximum value 8192.
             type: int
             returned: always
             sample: 256
@@ -304,7 +304,7 @@ sql_managed_instance:
             sample: "Microsoft.Sql/managedInstances"
         v_cores:
             description:
-                - The number of vCores. Allowed values: 8, 16, 24, 32, 40, 64, 80.
+                - The number of vCores. Allowed values 8, 16, 24, 32, 40, 64, 80.
             type: int
             returned: always
             sample: 8
