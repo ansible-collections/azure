@@ -183,6 +183,7 @@ options:
             - Minimal TLS version. Allowed values C(None), C(1.0), C(1.1), C(1.2).
         type: str
         choices:
+            - None
             - 1.0
             - 1.1
             - 1.2
