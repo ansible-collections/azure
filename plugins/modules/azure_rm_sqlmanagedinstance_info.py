@@ -94,13 +94,13 @@ sql_managed_instance:
             contains:
                 principal_id:
                     description:
-                        - The Azure Active Directory principal id.
+                        - The Azure Active Directory principal ID.
                     type: str
                     returned: always
                     sample: 895c-xxx-xxxbe
                 tenant_id:
                     description:
-                        - The Azure Active Directory tenant id.
+                        - The Azure Active Directory tenant ID.
                     type: str
                     returned: always
                     sample: 72fxxxxx-xxxx-xxxx-xxxx-xxxxxx11db47
@@ -190,7 +190,7 @@ sql_managed_instance:
             sample: fredsqlinstance.8a23abba54cd.database.windows.net
         instance_pool_id:
             description:
-                - The Id of the instance pool this managed server belongs to.
+                - The ID of the instance pool this managed server belongs to.
             type: str
             returned: always
             sample: null
@@ -208,7 +208,7 @@ sql_managed_instance:
             sample: LicenseIncluded
         maintenance_configuration_id:
             description:
-                - Specifies maintenance configuration id to apply to this managed instance.
+                - Specifies maintenance configuration ID to apply to this managed instance.
             type: str
             returned: always
             sample: /subscriptions/xxx-xxxx/providers/Microsoft.Maintenance/publicMaintenanceConfigurations/SQL_Default
@@ -226,7 +226,7 @@ sql_managed_instance:
             sample: 1.2
         primary_user_assigned_identity_id:
             description:
-                - The resource id of a user assigned identity to be used by default.
+                - The resource ID of a user assigned identity to be used by default.
             type: str
             returned: always
             sample: null
@@ -292,7 +292,7 @@ sql_managed_instance:
             sample: /subscriptions/xxx-xxxx/resourceGroups/testRG/providers/Microsoft.Network/virtualNetworks/vnet-smi/subnets/sqi_sub
         timezone_id:
             description:
-                -  Id of the timezone. Allowed values are timezones supported by Windows.
+                - ID of the timezone. Allowed values are timezones supported by Windows.
             type: str
             returned: always
             sample: UTC

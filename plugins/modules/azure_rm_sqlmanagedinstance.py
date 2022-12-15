@@ -56,7 +56,7 @@ options:
                 description:
                     - The capacity of the managed instance in integer number of vcores.
                 type: str
-    administrators：
+    administrators:
         description:
             - The Azure Active Directory administrator of the server.
         type: str
@@ -67,11 +67,11 @@ options:
         suboptions:
             user_assigned_identities:
                 description:
-                    -  The resource ids of the user assigned identities to use.
+                    - The resource ids of the user assigned identities to use.
                 type: str
             principal_id:
                 description:
-                    -  The Azure Active Directory principal ID.
+                    - The Azure Active Directory principal ID.
                 type: str
             type:
                 description:
@@ -137,7 +137,7 @@ options:
         type: str
     dns_zone_partner:
         description:
-            - The resource id of another managed instance whose DNS zone this managed instance will share after creation.
+            - The resource ID of another managed instance whose DNS zone this managed instance will share after creation.
         type: str
     public_data_endpoint_enabled:
         description:
@@ -167,7 +167,7 @@ options:
         type: str
     instance_pool_id:
         description:
-            - The Id of the instance pool this managed server belongs to.
+            - The ID of the instance pool this managed server belongs to.
         type: str
     private_endpoint_connections:
         description:
@@ -176,7 +176,7 @@ options:
         elements: str
     maintenance_configuration_id:
         description:
-            - Specifies maintenance configuration id to apply to this managed instance.
+            - Specifies maintenance configuration ID to apply to this managed instance.
         type: str
     minimal_tls_version:
         description:
@@ -285,13 +285,13 @@ sql_managed_instance:
             contains:
                 principal_id:
                     description:
-                        - The Azure Active Directory principal id.
+                        - The Azure Active Directory principal ID.
                     type: str
                     returned: always
                     sample: 895c-xxx-xxxbe
                 tenant_id:
                     description:
-                        - The Azure Active Directory tenant id.
+                        - The Azure Active Directory tenant ID.
                     type: str
                     returned: always
                     sample: 72fxxxxx-xxxx-xxxx-xxxx-xxxxxx11db47
@@ -369,7 +369,7 @@ sql_managed_instance:
             sample: 8a23abba54cd
         dns_zone_partner:
             description:
-                - The resource id of another managed instance whose DNS zone this managed instance will share after creation.
+                - The resource ID of another managed instance whose DNS zone this managed instance will share after creation.
             type: str
             returned: always
             sample: null
@@ -381,7 +381,7 @@ sql_managed_instance:
             sample: fredsqlinstance.8a23abba54cd.database.windows.net
         instance_pool_id:
             description:
-                - The Id of the instance pool this managed server belongs to.
+                - The ID of the instance pool this managed server belongs to.
             type: str
             returned: always
             sample: null
@@ -399,7 +399,7 @@ sql_managed_instance:
             sample: LicenseIncluded
         maintenance_configuration_id:
             description:
-                - Specifies maintenance configuration id to apply to this managed instance.
+                - Specifies maintenance configuration ID to apply to this managed instance.
             type: str
             returned: always
             sample: /subscriptions/xxx-xxxx/providers/Microsoft.Maintenance/publicMaintenanceConfigurations/SQL_Default
@@ -619,7 +619,7 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
             ),
             minimal_tls_version=dict(
                 type='str',
-                choices=['1.0', '1.1', '1.2']
+                choices=['None', '1.0', '1.1', '1.2']
             ),
             storage_account_type=dict(
                 type='str'
