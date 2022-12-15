@@ -221,6 +221,8 @@ action_groups:
   - azure.azcollection.azure_rm_sqlfirewallrule_info
   - azure.azcollection.azure_rm_sqlserver
   - azure.azcollection.azure_rm_sqlserver_info
+  - azure.azcollection.azure_rm_sqlmanagedinstance
+  - azure.azcollection.azure_rm_sqlmanagedinstance_info
   - azure.azcollection.azure_rm_storageaccount
   - azure.azcollection.azure_rm_storageaccount_info
   - azure.azcollection.azure_rm_storageblob
