@@ -898,7 +898,7 @@ class AzureRMModuleBase(object):
         self.log('Getting management service client {0}'.format(client_type.__name__))
         self.check_client_version(client_type)
 
-        client_argspec = inspect.getargspec(client_type.__init__)
+        client_argspec = inspect.signature(client_type.__init__)
 
         if not base_url:
             # most things are resource_manager, don't make everyone specify
@@ -934,12 +934,12 @@ class AzureRMModuleBase(object):
 
         # unversioned clients won't accept profile; only send it if necessary
         # clients without a version specified in the profile will use the default
-        if api_profile_dict and 'profile' in client_argspec.args:
+        if api_profile_dict and 'profile' in client_argspec.parameters:
             client_kwargs['profile'] = api_profile_dict
 
         # If the client doesn't accept api_version, it's unversioned.
         # If it does, favor explicitly-specified api_version, fall back to api_profile
-        if 'api_version' in client_argspec.args:
+        if 'api_version' in client_argspec.parameters:
             profile_default_version = api_profile_dict.get('default_api_version', None)
             if api_version or profile_default_version:
                 client_kwargs['api_version'] = api_version or profile_default_version
