@@ -314,11 +314,6 @@ RECORD_ARGSPECS = dict(
         retry_time=dict(type='int'),
         expire_time=dict(type='int'),
         minimum_ttl=dict(type='int')
-        # serial_number=dict(type='long'),
-        # refresh_time=dict(type='long'),
-        # retry_time=dict(type='long'),
-        # expire_time=dict(type='long'),
-        # minimum_ttl=dict(type='long')
     ),
     CAA=dict(
         value=dict(type='str', aliases=['entry']),
