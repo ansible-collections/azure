@@ -187,6 +187,21 @@ EXAMPLES = '''
     records:
     - entry: 'v=spf1 a -all'
 
+- name: Update SOA record
+  azure_rm_dnsrecordset:
+    resource_group: "{{ resource_group }}"
+    relative_name: "@"
+    zone_name: "{{ domain_name }}.com"
+    record_type: SOA
+    records:
+      - host: ns1-99.example.com.
+        email: azuredns-hostmaster99.example.com
+        serial_number: 99
+        refresh_time: 3699
+        retry_time: 399
+        expire_time: 2419299
+        minimum_ttl: 399
+
 '''
 
 RETURN = '''
