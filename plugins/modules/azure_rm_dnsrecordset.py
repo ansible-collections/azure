@@ -189,9 +189,9 @@ EXAMPLES = '''
 
 - name: Update SOA record
   azure_rm_dnsrecordset:
-    resource_group: "{{ resource_group }}"
+    resource_group: myResourceGroup
     relative_name: "@"
-    zone_name: "{{ domain_name }}.com"
+    zone_name: testing.com
     record_type: SOA
     records:
       - host: ns1-99.example.com.
