@@ -309,11 +309,16 @@ RECORD_ARGSPECS = dict(
     SOA=dict(
         host=dict(type='str', aliases=['entry']),
         email=dict(type='str'),
-        serial_number=dict(type='long'),
-        refresh_time=dict(type='long'),
-        retry_time=dict(type='long'),
-        expire_time=dict(type='long'),
-        minimum_ttl=dict(type='long')
+        serial_number=dict(type='int'),
+        refresh_time=dict(type='int'),
+        retry_time=dict(type='int'),
+        expire_time=dict(type='int'),
+        minimum_ttl=dict(type='int')
+        # serial_number=dict(type='long'),
+        # refresh_time=dict(type='long'),
+        # retry_time=dict(type='long'),
+        # expire_time=dict(type='long'),
+        # minimum_ttl=dict(type='long')
     ),
     CAA=dict(
         value=dict(type='str', aliases=['entry']),
