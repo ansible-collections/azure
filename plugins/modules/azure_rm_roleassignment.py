@@ -89,6 +89,7 @@ EXAMPLES = '''
     - name: Delete a role assignment
       azure_rm_roleassignment:
         id: /subscriptions/xxx-sub-guid-xxx/resourceGroups/rgname/providers/Microsoft.Authorization/roleAssignments/xxx-assign-guid-xxx"
+        state: absent
 
     - name: Delete a role assignment
       azure_rm_roleassignment:
@@ -96,6 +97,7 @@ EXAMPLES = '''
         assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         role_definition_id:
           "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        state: absent
 '''
 
 RETURN = '''
