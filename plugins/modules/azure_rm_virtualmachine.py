@@ -311,6 +311,11 @@ options:
             - If the subnet is in another resource group, specify the resource group with I(virtual_network_resource_group).
         aliases:
             - subnet
+    created_nsg:
+        description:
+            - Whether network security group created and attached to network interface or not.
+        type: bool
+        default: True
     remove_on_absent:
         description:
             - Associated resources to remove when removing a VM using I(state=absent).
@@ -927,6 +932,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             virtual_network_resource_group=dict(type='str'),
             virtual_network_name=dict(type='str', aliases=['virtual_network']),
             subnet_name=dict(type='str', aliases=['subnet']),
+            created_nsg=dict(type='bool', default=True),
             allocated=dict(type='bool', default=True),
             restarted=dict(type='bool', default=False),
             started=dict(type='bool'),
@@ -977,6 +983,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.virtual_network_resource_group = None
         self.virtual_network_name = None
         self.subnet_name = None
+        self.created_nsg = None
         self.allocated = None
         self.restarted = None
         self.started = None
@@ -2363,9 +2370,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             pip = self.network_models.PublicIPAddress(id=pip_facts.id, location=pip_facts.location, resource_guid=pip_facts.resource_guid, sku=sku)
             self.tags['_own_pip_'] = self.name + '01'
 
-        self.results['actions'].append('Created default security group {0}'.format(self.name + '01'))
-        group = self.create_default_securitygroup(self.resource_group, self.location, self.name + '01', self.os_type,
-                                                  self.open_ports)
         self.tags['_own_nsg_'] = self.name + '01'
 
         parameters = self.network_models.NetworkInterface(
@@ -2378,9 +2382,15 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         )
         parameters.ip_configurations[0].subnet = self.network_models.Subnet(id=subnet_id)
         parameters.ip_configurations[0].name = 'default'
-        parameters.network_security_group = self.network_models.NetworkSecurityGroup(id=group.id,
-                                                                                     location=group.location,
-                                                                                     resource_guid=group.resource_guid)
+
+        if self.created_nsg:
+            self.results['actions'].append('Created default security group {0}'.format(self.name + '01'))
+            group = self.create_default_securitygroup(self.resource_group, self.location, self.name + '01', self.os_type,
+                                                    self.open_ports)
+            parameters.network_security_group = self.network_models.NetworkSecurityGroup(id=group.id,
+                                                                                        location=group.location,
+                                                                                        resource_guid=group.resource_guid)
+
         parameters.ip_configurations[0].public_ip_address = pip
 
         self.log("Creating NIC {0}".format(network_interface_name))
