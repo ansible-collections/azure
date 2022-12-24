@@ -25,6 +25,7 @@
     recovery_vault_name: "{{ recovery_vault_name }}"
     resource_id: "{{ resource_id }}"
     backup_policy_id: "{{ backup_policy_id }}"
+    recovery_point_expiry_time: "2025-02-03T05:00:00Z"
     state: "backup"
   register: output
 
