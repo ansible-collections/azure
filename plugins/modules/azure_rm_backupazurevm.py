@@ -46,6 +46,7 @@ options:
             - This used if C(state) parameter is C(backup).
         required: false
         type: str
+        version_added: '1.15.0'
     state:
         description:
             - Assert the state of the protection item.
