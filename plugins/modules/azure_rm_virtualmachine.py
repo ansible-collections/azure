@@ -316,6 +316,7 @@ options:
             - Whether network security group created and attached to network interface or not.
         type: bool
         default: True
+        version_added: '1.15.0'
     remove_on_absent:
         description:
             - Associated resources to remove when removing a VM using I(state=absent).
