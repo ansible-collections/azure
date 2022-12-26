@@ -2387,10 +2387,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         if self.created_nsg:
             self.results['actions'].append('Created default security group {0}'.format(self.name + '01'))
             group = self.create_default_securitygroup(self.resource_group, self.location, self.name + '01', self.os_type,
-                                                    self.open_ports)
+                                                      self.open_ports)
             parameters.network_security_group = self.network_models.NetworkSecurityGroup(id=group.id,
-                                                                                        location=group.location,
-                                                                                        resource_guid=group.resource_guid)
+                                                                                         location=group.location,
+                                                                                         resource_guid=group.resource_guid)
 
         parameters.ip_configurations[0].public_ip_address = pip
 
