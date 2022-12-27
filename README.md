@@ -74,6 +74,7 @@ For existing Ansible roles, please also reference the full namespace, collection
 To use a pluign from Azure collection, please reference the full namespace, collection name, and plugins name that you want to use:
 
 ```yaml
+---
 plugin: azure.azcollection.azure_rm
 include_vm_resource_groups:
   - ansible-inventory-test-rg
