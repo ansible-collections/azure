@@ -50,7 +50,7 @@ To use a module from Azure collection, please reference the full namespace, coll
         account_type: Standard_LRS
 ```
 
-Or you can add full namepsace and collecton name in the `collections` element:
+Or you can add full namepsace and collection name in the `collections` element:
 
 ```yaml
 ---
