@@ -75,9 +75,9 @@ To use a pluign from Azure collection, please reference the full namespace, coll
 
 ```yaml
 plugin: azure.azcollection.azure_rm
-    include_vm_resource_groups:
-    - ansible-inventory-test-rg
-    auth_source: auto
+include_vm_resource_groups:
+  - ansible-inventory-test-rg
+auth_source: auto
 ```
 
 ## Contributing
