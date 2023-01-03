@@ -50,7 +50,7 @@ To use a module from Azure collection, please reference the full namespace, coll
         account_type: Standard_LRS
 ```
 
-Or you can add full namepsace and collecton name in the `collections` element:
+Or you can add full namepsace and collection name in the `collections` element:
 
 ```yaml
 ---
@@ -74,10 +74,11 @@ For existing Ansible roles, please also reference the full namespace, collection
 To use a pluign from Azure collection, please reference the full namespace, collection name, and plugins name that you want to use:
 
 ```yaml
+---
 plugin: azure.azcollection.azure_rm
-    include_vm_resource_groups:
-    - ansible-inventory-test-rg
-    auth_source: auto
+include_vm_resource_groups:
+  - ansible-inventory-test-rg
+auth_source: auto
 ```
 
 ## Contributing
