@@ -200,7 +200,7 @@
       - "{{ output.state.rules[0].source_address_prefixes | length }} == 3"
       - not output.state.rules[0].source_address_prefix
 
-- name: Create security group with source_address_prefixes(idempontent)
+- name: Create security group with source_address_prefixes(idempotent)
   azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ secgroupname }}"
