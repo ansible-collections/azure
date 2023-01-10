@@ -285,7 +285,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             self._process_queue_serial()
 
         constructable_config_strict = boolean(self.get_option('fail_on_template_errors'))
-        constructable_config_compose = self.get_option('hostvar_expressions')
+        if self.get_option('hostvar_expressions') is not None:
+            constructable_config_compose = self.get_option('hostvar_expressions')
+        else:
+            constructable_config_compose = self.get_option('compose')
         constructable_config_groups = self.get_option('conditional_groups')
         constructable_config_keyed_groups = self.get_option('keyed_groups')
 
