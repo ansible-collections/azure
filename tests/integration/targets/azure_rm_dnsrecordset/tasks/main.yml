@@ -178,6 +178,28 @@
     that:
       - results.changed
 
+- name: Update SOA record
+  azure_rm_dnsrecordset:
+    resource_group: "{{ resource_group }}"
+    relative_name: "@"
+    zone_name: "{{ domain_name }}.com"
+    record_type: SOA
+    state: present
+    records:
+      - host: ns1-99.example.com.
+        email: azuredns-hostmaster99.example.com
+        serial_number: 99
+        refresh_time: 3699
+        retry_time: 399
+        expire_time: 2419299
+        minimum_ttl: 399
+  register: results
+
+- name: Assert that SOA record set was created
+  assert:
+    that:
+      - results.changed
+
 - name: Delete DNS zone
   azure_rm_dnszone:
     resource_group: "{{ resource_group }}"
