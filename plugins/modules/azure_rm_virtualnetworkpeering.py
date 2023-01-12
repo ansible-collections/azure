@@ -98,6 +98,12 @@ id:
     type: str
     sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVirtualN
              etwork/virtualNetworkPeerings/myPeering"
+peering_sync_level:
+    description:
+        - The Sync Level of the Peering
+    type: str
+    returned: always
+    sample: "FullyInSync"
 '''
 
 try:
@@ -152,7 +158,8 @@ def vnetpeering_to_dict(vnetpeering):
         allow_gateway_transit=vnetpeering.allow_gateway_transit,
         allow_forwarded_traffic=vnetpeering.allow_forwarded_traffic,
         allow_virtual_network_access=vnetpeering.allow_virtual_network_access,
-        etag=vnetpeering.etag
+        etag=vnetpeering.etag,
+        peering_sync_level=vnetpeering.peering_sync_level
     )
     return results
 
@@ -220,6 +227,7 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         to_be_updated = False
+        to_be_synced = False
 
         resource_group = self.get_resource_group(self.resource_group)
 
@@ -248,6 +256,7 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
 
                 # check if update
                 to_be_updated = self.check_update(response)
+                to_be_synced = self.check_sync(response)
 
             else:
                 # not exists, create new vnet peering
@@ -281,6 +290,15 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
 
             response = self.create_or_update_vnet_peering()
             self.results['id'] = response['id']
+            to_be_synced = self.check_sync(response)
+
+        if to_be_synced:
+            self.results['changed'] = True
+
+            if self.check_mode:
+                return self.results
+            sync_response = self.sync_vnet_peering()
+            self.results['peering_sync_level'] = sync_response['peering_sync_level']
 
         return self.results
 
@@ -306,6 +324,11 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
             self.fail("remote_virtual_network could be a valid resource id, dict of name and resource_group, name of virtual network in same resource group.")
         return remote_vnet_id
 
+    def check_sync(self, exisiting_vnet_peering):
+        if exisiting_vnet_peering['peering_sync_level'] == 'LocalNotInSync':
+            return True
+        return False
+
     def check_update(self, exisiting_vnet_peering):
         if self.allow_forwarded_traffic != exisiting_vnet_peering['allow_forwarded_traffic']:
             return True
@@ -330,6 +353,41 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
             return results
         return False
 
+    def sync_vnet_peering(self):
+        '''
+        Creates or Update Azure Virtual Network Peering.
+
+        :return: deserialized Azure Virtual Network Peering instance state dictionary
+        '''
+        self.log("Creating or Updating the Azure Virtual Network Peering {0}".format(self.name))
+
+        vnet_id = format_resource_id(self.virtual_network['name'],
+                                     self.subscription_id,
+                                     'Microsoft.Network',
+                                     'virtualNetworks',
+                                     self.virtual_network['resource_group'])
+        peering = self.network_models.VirtualNetworkPeering(
+            id=vnet_id,
+            name=self.name,
+            remote_virtual_network=self.network_models.SubResource(id=self.remote_virtual_network),
+            allow_virtual_network_access=self.allow_virtual_network_access,
+            allow_gateway_transit=self.allow_gateway_transit,
+            allow_forwarded_traffic=self.allow_forwarded_traffic,
+            use_remote_gateways=self.use_remote_gateways
+        )
+
+        try:
+            response = self.network_client.virtual_network_peerings.begin_create_or_update(self.resource_group,
+                                                                                           self.virtual_network['name'],
+                                                                                           self.name,
+                                                                                           peering,
+                                                                                           sync_remote_address_space=True)
+            if isinstance(response, LROPoller):
+                response = self.get_poller_result(response)
+            return vnetpeering_to_dict(response)
+        except Exception as exc:
+            self.fail("Error creating Azure Virtual Network Peering: {0}.".format(exc.message))
+
     def create_or_update_vnet_peering(self):
         '''
         Creates or Update Azure Virtual Network Peering.
@@ -350,7 +408,8 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
             allow_virtual_network_access=self.allow_virtual_network_access,
             allow_gateway_transit=self.allow_gateway_transit,
             allow_forwarded_traffic=self.allow_forwarded_traffic,
-            use_remote_gateways=self.use_remote_gateways)
+            use_remote_gateways=self.use_remote_gateways
+        )
 
         try:
             response = self.network_client.virtual_network_peerings.begin_create_or_update(self.resource_group,
@@ -392,6 +451,7 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
                                                                         self.virtual_network['name'],
                                                                         self.name)
             self.log("Response : {0}".format(response))
+
             return vnetpeering_to_dict(response)
         except ResourceNotFoundError:
             self.log('Did not find the Virtual Network Peering.')
