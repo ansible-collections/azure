@@ -38,6 +38,7 @@ options:
             family:
                 description:
                     - SKU family name.
+                required: True
             name:
                 description:
                     - SKU name to specify whether the key vault is a standard vault or a premium vault.
@@ -172,6 +173,7 @@ EXAMPLES = '''
       vault_tenant: 72f98888-8666-4144-9199-2d7cd0111111
       sku:
         name: standard
+        family: A
       access_policies:
         - tenant_id: 72f98888-8666-4144-9199-2d7cd0111111
           object_id: 99998888-8666-4144-9199-2d7cd0111111
