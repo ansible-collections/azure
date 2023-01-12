@@ -168,6 +168,20 @@ EXAMPLES = '''
     records:
     - entry: 'v=spf1 a -all'
 
+- name: Update SOA record
+  azure_rm_privatednsrecordset:
+    resource_group: myResourceGroup
+    relative_name: "@"
+    zone_name: testing.com
+    record_type: SOA
+    records:
+      - host: azureprivatedns.net
+        email: azureprivatedns-host99.example.com
+        serial_number: 1
+        refresh_time: 3699
+        retry_time: 399
+        expire_time: 2419299
+        minimum_ttl: 399
 '''
 
 RETURN = '''
@@ -278,11 +292,11 @@ RECORD_ARGSPECS = dict(
     SOA=dict(
         host=dict(type='str', aliases=['entry']),
         email=dict(type='str'),
-        serial_number=dict(type='long'),
-        refresh_time=dict(type='long'),
-        retry_time=dict(type='long'),
-        expire_time=dict(type='long'),
-        minimum_ttl=dict(type='long')
+        serial_number=dict(type='int'),
+        refresh_time=dict(type='int'),
+        retry_time=dict(type='int'),
+        expire_time=dict(type='int'),
+        minimum_ttl=dict(type='int')
     )
 )
 

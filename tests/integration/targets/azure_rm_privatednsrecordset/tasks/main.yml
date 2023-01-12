@@ -230,6 +230,28 @@
       - results.dnsrecordsets[0].relative_name == "_txt.{{ domain_name }}.com"
       - results.dnsrecordsets[0].records | length > 0
 
+- name: Update SOA record
+  azure_rm_privatednsrecordset:
+    resource_group: "{{ resource_group }}"
+    relative_name: "@"
+    zone_name: "{{ domain_name }}.com"
+    record_type: SOA
+    state: present
+    records:
+      - host: azureprivatedns.net
+        email: azureprivatedns-host99.example.com
+        serial_number: 1
+        refresh_time: 3699
+        retry_time: 399
+        expire_time: 2419299
+        minimum_ttl: 399
+  register: results
+
+- name: Assert that SOA record set was created
+  assert:
+    that:
+      - results.changed
+
 - name: Delete DNS zone
   azure_rm_privatednszone:
     resource_group: "{{ resource_group }}"
