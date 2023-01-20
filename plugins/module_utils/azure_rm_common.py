@@ -103,7 +103,7 @@ AZURE_API_PROFILES = {
         ),
         'ManagementGroupsClient': '2020-05-01',
         'NetworkManagementClient': '2019-11-01',
-        'ResourceManagementClient': '2017-05-10',
+        'ResourceManagementClient': '2019-10-01',
         'SearchManagementClient': '2020-08-01',
         'StorageManagementClient': '2021-06-01',
         'SubscriptionClient': '2019-11-01',
@@ -1061,6 +1061,7 @@ class AzureRMModuleBase(object):
             self._subscription_client = self.get_mgmt_svc_client(SubscriptionClient,
                                                                  base_url=self._cloud_environment.endpoints.resource_manager,
                                                                  suppress_subscription_id=True,
+                                                                 is_track2=True,
                                                                  api_version='2019-11-01')
         return self._subscription_client
 
@@ -1099,13 +1100,14 @@ class AzureRMModuleBase(object):
         if not self._resource_client:
             self._resource_client = self.get_mgmt_svc_client(ResourceManagementClient,
                                                              base_url=self._cloud_environment.endpoints.resource_manager,
-                                                             api_version='2017-05-10')
+                                                             is_track2=True,
+                                                             api_version='2019-10-01')
         return self._resource_client
 
     @property
     def rm_models(self):
         self.log("Getting resource manager models")
-        return ResourceManagementClient.models("2017-05-10")
+        return ResourceManagementClient.models("2019-10-01")
 
     @property
     def image_client(self):
@@ -1368,6 +1370,7 @@ class AzureRMModuleBase(object):
         if not self._lock_client:
             self._lock_client = self.get_mgmt_svc_client(ManagementLockClient,
                                                          base_url=self._cloud_environment.endpoints.resource_manager,
+                                                         is_track2=True,
                                                          api_version='2016-09-01')
         return self._lock_client
 

@@ -98,7 +98,7 @@ id:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -170,19 +170,19 @@ class AzureRMLock(AzureRMModuleBase):
     def delete_lock(self, scope):
         try:
             return self.lock_client.management_locks.delete_by_scope(scope, self.name)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when deleting lock {0} for {1}: {2}'.format(self.name, scope, exc.message))
 
     def create_or_update_lock(self, scope, lock):
         try:
             return self.lock_client.management_locks.create_or_update_by_scope(scope, self.name, lock)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when creating or updating lock {0} for {1}: {2}'.format(self.name, scope, exc.message))
 
     def get_lock(self, scope):
         try:
             return self.lock_client.management_locks.get_by_scope(scope, self.name)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             if exc.status_code in [404]:
                 return None
             self.fail('Error when getting lock {0} for {1}: {2}'.format(self.name, scope, exc.message))

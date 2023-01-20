@@ -112,7 +112,7 @@ subscriptions:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -176,7 +176,7 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
 
         try:
             item = self.subscription_client.subscriptions.get(self.id)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         result = self.to_dict(item)
@@ -187,7 +187,7 @@ class AzureRMSubscriptionInfo(AzureRMModuleBase):
         self.log('List all items')
         try:
             response = self.subscription_client.subscriptions.list()
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []
