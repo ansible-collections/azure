@@ -20,6 +20,16 @@ else
     sudo apt install python"$2" -y
     sudo apt install python3-dateutil
     sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python"$2" 1
+    
+    if [ "$2" = "3.10" ]
+    then
+        sudo apt-get install python3.10-distutils
+    fi
+
+    if [ "$2" = "3.11" ]
+    then
+        sudo apt-get install python3.11-distutils
+    fi
 fi
 
 command -v pip
