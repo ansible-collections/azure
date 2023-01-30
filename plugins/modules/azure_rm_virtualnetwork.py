@@ -53,6 +53,10 @@ options:
             - Use with I(state=present) to remove existing DNS servers, reverting to default Azure servers. Mutually exclusive with DNS servers.
         type: bool
         default: 'no'
+    flow_timeout_in_minutes:
+        description:
+            - The FlowTimeout value (in minutes) for the Virtual Network.
+        type: int
     state:
         description:
             - State of the virtual network. Use C(present) to create or update and C(absent) to delete.
@@ -160,6 +164,12 @@ state:
             returned: always
             type: str
             sample: Microsoft.Network/virtualNetworks
+        flow_timeout_in_minutes:
+            description:
+                - The FlowTimeout value (in minutes) for the Virtual Network.
+            type: int
+            returned: always
+            sample: 8
 '''
 
 try:
@@ -184,6 +194,7 @@ def virtual_network_to_dict(vnet):
         type=vnet.type,
         tags=vnet.tags,
         provisioning_state=vnet.provisioning_state,
+        flow_timeout_in_minutes=vnet.flow_timeout_in_minutes,
         etag=vnet.etag
     )
     if vnet.dhcp_options and len(vnet.dhcp_options.dns_servers) > 0:
@@ -210,6 +221,7 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
             dns_servers=dict(type='list',),
             purge_address_prefixes=dict(type='bool', default=False, aliases=['purge']),
             purge_dns_servers=dict(type='bool', default=False),
+            flow_timeout_in_minutes=dict(type='int'),
         )
 
         mutually_exclusive = [
@@ -228,6 +240,7 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
         self.purge_address_prefixes = None
         self.dns_servers = None
         self.purge_dns_servers = None
+        self.flow_timeout_in_minutes = None
 
         self.results = dict(
             changed=False,
@@ -304,6 +317,13 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
                     self.log('CHANGED: purging existing DNS servers')
                     changed = True
                     results['dns_servers'] = []
+
+                if self.flow_timeout_in_minutes and self.flow_timeout_in_minutes != vnet.flow_timeout_in_minutes:
+                    self.log('CHANGED: Update flow_timeout_in_minutes')
+                    changed = True
+                    results['flow_timeout_in_minutes'] = self.flow_timeout_in_minutes
+                else:
+                    self.flow_timeout_in_minutes = vnet.flow_timeout_in_minutes
             elif self.state == 'absent':
                 self.log("CHANGED: vnet exists but requested state is 'absent'")
                 changed = True
@@ -328,6 +348,7 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
                         self.fail('Parameter error: address_prefixes_cidr required when creating a virtual network')
                     vnet_param = self.network_models.VirtualNetwork(
                         location=self.location,
+                        flow_timeout_in_minutes=self.flow_timeout_in_minutes,
                         address_space=self.network_models.AddressSpace(
                             address_prefixes=self.address_prefixes_cidr
                         )
@@ -354,6 +375,8 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
                         vnet_param.dhcp_options = self.network_models.DhcpOptions(
                             dns_servers=results['dns_servers']
                         )
+                    if self.flow_timeout_in_minutes:
+                        vnet_param.flow_timeout_in_minutes = self.flow_timeout_in_minutes
                     self.results['state'] = self.create_or_update_vnet(vnet_param)
             elif self.state == 'absent':
                 self.delete_virtual_network()
