@@ -31,6 +31,7 @@ parameters:
     - "azure_rm_adgroup"
     - "azure_rm_aduser"
     - "azure_rm_aks"
+    - "azure_rm_aksagentpool"
     - "azure_rm_apimanagement"
     - "azure_rm_appgateway"
     - "azure_rm_appserviceplan"
@@ -73,6 +74,7 @@ parameters:
     - "azure_rm_mariadbserver"
     - "azure_rm_monitordiagnosticsetting"
     - "azure_rm_monitorlogprofile"
+    - "azure_rm_multiplemanageddisks"
     - "azure_rm_mysqlserver"
     - "azure_rm_natgateway"
     - "azure_rm_networkinterface"
@@ -116,6 +118,7 @@ parameters:
     - "azure_rm_virtualwan"
     - "azure_rm_vpnsite"
     - "azure_rm_virtualhub"
+    - "azure_rm_virtualhubconnection"
     - "azure_rm_backupazurevm"
     - "azure_rm_recoveryservicesvault"
     - "azure_rm_vmbackuppolicy"
@@ -125,6 +128,7 @@ parameters:
     - "azure_rm_workspace"
     - "azure_rm_datafactory"
     - "azure_rm_bastionhost"
+    - "azure_rm_sqlmanagedinstance"
     - "inventory_azure"
     - "setup_azure"
 
@@ -134,7 +138,7 @@ pr:
 - dev
 
 pool:
-  vmImage: 'ubuntu-20.04'
+  name: pool-ubuntu-2004
 
 jobs:
   - job: CreateResourceGroups

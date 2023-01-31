@@ -378,7 +378,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                         client.upload_blob(data=data,
                                            blob_type=self.get_blob_type(self.blob_type),
                                            metadata=self.tags,
-                                           content_settings=_guess_content_type(src, content_settings))
+                                           content_settings=_guess_content_type(src, content_settings),
+                                           overwrite=self.force)
                 except Exception as exc:
                     self.fail("Error creating blob {0} - {1}".format(src, str(exc)))
             self.results['actions'].append('created blob from {0}'.format(src))
@@ -431,7 +432,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                     content_language=blob["content_settings"]["content_language"],
                     content_disposition=blob["content_settings"]["content_disposition"],
                     cache_control=blob["content_settings"]["cache_control"],
-                    content_md5=blob["content_settings"]["content_md5"],
+                    content_md5=blob["content_settings"]["content_md5"].hex() if blob["content_settings"]["content_md5"] else None,
                 )
             )
         return result

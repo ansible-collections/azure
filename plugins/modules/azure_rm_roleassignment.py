@@ -89,6 +89,7 @@ EXAMPLES = '''
     - name: Delete a role assignment
       azure_rm_roleassignment:
         id: /subscriptions/xxx-sub-guid-xxx/resourceGroups/rgname/providers/Microsoft.Authorization/roleAssignments/xxx-assign-guid-xxx"
+        state: absent
 
     - name: Delete a role assignment
       azure_rm_roleassignment:
@@ -96,6 +97,7 @@ EXAMPLES = '''
         assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         role_definition_id:
           "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        state: absent
 '''
 
 RETURN = '''
@@ -143,11 +145,9 @@ scope:
     sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
-import uuid
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-
 try:
-    from msrestazure.azure_exceptions import CloudError
+    import uuid
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 except ImportError:
     # This is handled in azure_rm_common
@@ -266,7 +266,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                                                                              role_assignment_name=self.name,
                                                                              parameters=parameters)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create role assignment.')
             self.fail("Error creating role assignment: {0}".format(str(exc)))
         return self.roleassignment_to_dict(response)
@@ -280,7 +280,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
         self.log("Deleting the role assignment {0}".format(self.name))
         try:
             response = self.authorization_client.role_assignments.delete_by_id(role_id=assignment_id)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the role assignment.')
             self.fail("Error deleting the role assignment: {0}".format(str(e)))
 
@@ -307,7 +307,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                                                                     != self.role_definition_id.split('/')[-1].lower()):
                     self.fail('State Mismatch Error: The assignment ID exists, but does not match the provided role.')
 
-            except CloudError as ex:
+            except Exception as ex:
                 self.log("Didn't find role assignments id {0}".format(self.id))
 
         elif self.name and self.scope:
@@ -321,7 +321,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                                                                     != self.role_definition_id.split('/')[-1].lower()):
                     self.fail('State Mismatch Error: The assignment name exists, but does not match the provided role.')
 
-            except CloudError as ex:
+            except Exception as ex:
                 self.log("Didn't find role assignment by name {0} at scope {1}".format(self.name, self.scope))
 
         else:
@@ -337,7 +337,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                     self.fail('If id or name are not supplied, then assignee_object_id and role_definition_id are required.')
                 if response:
                     role_assignment = response[0]
-            except CloudError as ex:
+            except Exception as ex:
                 self.log("Didn't find role assignments for subscription {0}".format(self.subscription_id))
 
         return role_assignment

@@ -72,6 +72,11 @@ options:
             - BlobStorage
             - BlockBlobStorage
             - FileStorage
+    is_hns_enabled:
+        description:
+            - Account HierarchicalNamespace enabled if sets to true.
+            - When I(is_hns_enabled=True), I(kind) cannot be C(Storage).
+        type: bool
     access_tier:
         description:
             - The access tier for this storage account. Required when I(kind=BlobStorage).
@@ -212,6 +217,64 @@ options:
                 description:
                     - The absolute path of the custom 404 page.
                 type: str
+    encryption:
+        description:
+            - The encryption settings on the storage account.
+        type: dict
+        suboptions:
+            services:
+                description:
+                    -  List of services which support encryption.
+                type: dict
+                suboptions:
+                    table:
+                        description:
+                            - The encryption function of the table storage service.
+                        type: dict
+                        suboptions:
+                            enabled:
+                                description:
+                                    - Whether to encrypt the table type.
+                                type: bool
+                    queue:
+                        description:
+                            - The encryption function of the queue storage service.
+                        type: dict
+                        suboptions:
+                            enabled:
+                                description:
+                                    - Whether to encrypt the queue type.
+                                type: bool
+                    file:
+                        description:
+                            - The encryption function of the file storage service.
+                        type: dict
+                        suboptions:
+                            enabled:
+                                description:
+                                    - Whether to encrypt the file type.
+                                type: bool
+                    blob:
+                        description:
+                            - The encryption function of the blob storage service.
+                        type: dict
+                        suboptions:
+                            enabled:
+                                description:
+                                    - Whether to encrypt the blob type.
+                                type: bool
+            key_source:
+                description:
+                    - The encryption keySource (provider).
+                type: str
+                default: Microsoft.Storage
+                choices:
+                    - Microsoft.Storage
+                    - Microsoft.Keyvault
+            require_infrastructure_encryption:
+                description:
+                    - A boolean indicating whether or not the service applies a secondary layer of encryption with platform managed keys for data at rest.
+                type: bool
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -316,12 +379,66 @@ state:
                     returned: always
                     type: bool
                     sample: true
+        encryption:
+            description:
+                - The encryption settings on the storage account.
+            type: complex
+            returned: always
+            contains:
+                key_source:
+                    description:
+                        - The encryption keySource (provider).
+                    type: str
+                    returned: always
+                    sample: Microsoft.Storage
+                require_infrastructure_encryption:
+                    description:
+                        - A boolean indicating whether or not the service applies a secondary layer of encryption with platform managed keys for data at rest.
+                    type: bool
+                    returned: always
+                    sample: false
+                services:
+                    description:
+                        - List of services which support encryption.
+                    type: dict
+                    returned: always
+                    contains:
+                        file:
+                            description:
+                                - The encryption function of the file storage service.
+                            type: dict
+                            returned: always
+                            sample: {'enabled': true}
+                        table:
+                            description:
+                                - The encryption function of the table storage service.
+                            type: dict
+                            returned: always
+                            sample: {'enabled': true}
+                        queue:
+                            description:
+                                - The encryption function of the queue storage service.
+                            type: dict
+                            returned: always
+                            sample: {'enabled': true}
+                        blob:
+                            description:
+                                - The encryption function of the blob storage service.
+                            type: dict
+                            returned: always
+                            sample: {'enabled': true}
         id:
             description:
                 - Resource ID.
             returned: always
             type: str
             sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/clh0003"
+        is_hns_enabled:
+            description:
+                - Account HierarchicalNamespace enabled if sets to true.
+            type: bool
+            returned: always
+            sample: true
         location:
             description:
                 - Valid Azure location. Defaults to location of the resource group.
@@ -500,6 +617,26 @@ static_website_spec = dict(
 )
 
 
+file_spec = dict(
+    enabled=dict(type='bool')
+)
+
+
+queue_spec = dict(
+    enabled=dict(type='bool')
+)
+
+
+table_spec = dict(
+    enabled=dict(type='bool')
+)
+
+
+blob_spec = dict(
+    enabled=dict(type='bool')
+)
+
+
 def compare_cors(cors1, cors2):
     if len(cors1) != len(cors2):
         return False
@@ -544,6 +681,35 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             network_acls=dict(type='dict'),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict'),
             static_website=dict(type='dict', options=static_website_spec),
+            is_hns_enabled=dict(type='bool'),
+            encryption=dict(
+                type='dict',
+                options=dict(
+                    services=dict(
+                        type='dict',
+                        options=dict(
+                            blob=dict(
+                                type='dict',
+                                options=blob_spec
+                            ),
+                            table=dict(
+                                type='dict',
+                                options=table_spec
+                            ),
+                            queue=dict(
+                                type='dict',
+                                options=queue_spec
+                            ),
+                            file=dict(
+                                type='dict',
+                                options=file_spec
+                            )
+                        )
+                    ),
+                    require_infrastructure_encryption=dict(type='bool'),
+                    key_source=dict(type='str', choices=["Microsoft.Storage", "Microsoft.Keyvault"], default='Microsoft.Storage')
+                )
+            )
         )
 
         self.results = dict(
@@ -569,6 +735,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.network_acls = None
         self.blob_cors = None
         self.static_website = None
+        self.encryption = None
+        self.is_hns_enabled = None
 
         super(AzureRMStorageAccount, self).__init__(self.module_arg_spec,
                                                     supports_check_mode=True)
@@ -667,6 +835,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             public_network_access=account_obj.public_network_access,
             allow_blob_public_access=account_obj.allow_blob_public_access,
             network_acls=account_obj.network_rule_set,
+            is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
             static_website=dict(
                 enabled=False,
                 index_document=None,
@@ -729,6 +898,20 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             if account_obj.network_rule_set.ip_rules:
                 for rule in account_obj.network_rule_set.ip_rules:
                     account_dict['network_acls']['ip_rules'].append(dict(value=rule.ip_address_or_range, action=rule.action))
+            account_dict['encryption'] = dict()
+            if account_obj.encryption:
+                account_dict['encryption']['require_infrastructure_encryption'] = account_obj.encryption.require_infrastructure_encryption
+                account_dict['encryption']['key_source'] = account_obj.encryption.key_source
+                if account_obj.encryption.services:
+                    account_dict['encryption']['services'] = dict()
+                    if account_obj.encryption.services.file:
+                        account_dict['encryption']['services']['file'] = dict(enabled=True)
+                    if account_obj.encryption.services.table:
+                        account_dict['encryption']['services']['table'] = dict(enabled=True)
+                    if account_obj.encryption.services.queue:
+                        account_dict['encryption']['services']['queue'] = dict(enabled=True)
+                    if account_obj.encryption.services.blob:
+                        account_dict['encryption']['services']['blob'] = dict(enabled=True)
 
         return account_dict
 
@@ -778,6 +961,13 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 if self.network_acls.get('ip_rules', None) is not None and self.account_dict['network_acls']['ip_rules'] == []:
                     self.results['changed'] = True
                     self.update_network_rule_set()
+
+        if self.is_hns_enabled is not None and bool(self.is_hns_enabled) != bool(self.account_dict.get('is_hns_enabled')):
+            self.results['changed'] = True
+            self.account_dict['is_hns_enabled'] = self.is_hns_enabled
+            if not self.check_mode:
+                self.fail("The is_hns_enabled parameter not support to update, from {0} to {1}".
+                          format(bool(self.account_dict.get('is_hns_enabled')), self.is_hns_enabled))
 
         if self.https_only is not None and bool(self.https_only) != bool(self.account_dict.get('https_only')):
             self.results['changed'] = True
@@ -901,6 +1091,28 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             self.account_dict['static_website'] = self.static_website
             self.update_static_website()
 
+        if self.encryption is not None:
+            encryption_changed = False
+            if self.encryption.get('require_infrastructure_encryption') and bool(self.encryption.get('require_infrastructure_encryption')) \
+                    != bool(self.account_dict['encryption']['require_infrastructure_encryption']):
+                encryption_changed = True
+
+            if self.encryption.get('key_source') != self.account_dict['encryption']['key_source']:
+                encryption_changed = True
+
+            if self.encryption.get('services') is not None:
+                if self.encryption.get('queue') is not None and self.account_dict['encryption']['services'].get('queue') is not None:
+                    encryption_changed = True
+                if self.encryption.get('file') is not None and self.account_dict['encryption']['services'].get('file') is not None:
+                    encryption_changed = True
+                if self.encryption.get('table') is not None and self.account_dict['encryption']['services'].get('table') is not None:
+                    encryption_changed = True
+                if self.encryption.get('blob') is not None and self.account_dict['encryption']['services'].get('blob') is not None:
+                    encryption_changed = True
+
+            if encryption_changed and not self.check_mode:
+                self.fail("The encryption can't update encryption, encryption info as {0}".format(self.account_dict['encryption']))
+
     def create_account(self):
         self.log("Creating account {0}".format(self.name))
 
@@ -926,6 +1138,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 minimum_tls_version=self.minimum_tls_version,
                 public_network_access=self.public_network_access,
                 allow_blob_public_access=self.allow_blob_public_access,
+                encryption=self.encryption,
+                is_hns_enabled=self.is_hns_enabled,
                 tags=dict()
             )
             if self.tags:
@@ -949,6 +1163,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         minimum_tls_version=self.minimum_tls_version,
                                                                         public_network_access=self.public_network_access,
                                                                         allow_blob_public_access=self.allow_blob_public_access,
+                                                                        encryption=self.encryption,
+                                                                        is_hns_enabled=self.is_hns_enabled,
                                                                         access_tier=self.access_tier)
         self.log(str(parameters))
         try:

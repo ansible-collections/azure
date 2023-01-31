@@ -21,6 +21,7 @@
     vault_tenant: "{{ tenant_id }}"
     sku:
       name: standard
+      family: A
     access_policies:
       - tenant_id: "{{ tenant_id }}"
         object_id: "{{ object_id }}"

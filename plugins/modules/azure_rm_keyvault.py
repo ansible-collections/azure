@@ -38,6 +38,7 @@ options:
             family:
                 description:
                     - SKU family name.
+                required: True
             name:
                 description:
                     - SKU name to specify whether the key vault is a standard vault or a premium vault.
@@ -172,6 +173,7 @@ EXAMPLES = '''
       vault_tenant: 72f98888-8666-4144-9199-2d7cd0111111
       sku:
         name: standard
+        family: A
       access_policies:
         - tenant_id: 72f98888-8666-4144-9199-2d7cd0111111
           object_id: 99998888-8666-4144-9199-2d7cd0111111
@@ -194,9 +196,9 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.keyvault import KeyVaultManagementClient
-    from msrest.polling import LROPoller
     from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
@@ -343,7 +345,8 @@ class AzureRMVaults(AzureRMModuleBase):
 
         self.mgmt_client = self.get_mgmt_svc_client(KeyVaultManagementClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version="2019-09-01")
+                                                    is_track2=True,
+                                                    api_version="2021-10-01")
 
         resource_group = self.get_resource_group(self.resource_group)
 
@@ -376,28 +379,24 @@ class AzureRMVaults(AzureRMModuleBase):
                         (self.parameters['properties']['tenant_id'] != old_response['properties']['tenant_id'])):
                     self.to_do = Actions.Update
                 elif (('enabled_for_deployment' in self.parameters['properties']) and
-                        (self.parameters['properties']['enabled_for_deployment'] != getattr(old_response['properties'], 'enabled_for_deployment', None))):
+                        (self.parameters['properties']['enabled_for_deployment'] != old_response['properties'].get('enabled_for_deployment', None))):
                     self.to_do = Actions.Update
                 elif (('enabled_for_disk_encryption' in self.parameters['properties']) and
                         (self.parameters['properties']['enabled_for_disk_encryption'] !=
-                         getattr(old_response['properties'], 'enabled_for_disk_encryption', None))):
+                         old_response['properties'].get('enabled_for_disk_encryption', None))):
                     self.to_do = Actions.Update
                 elif (('enabled_for_template_deployment' in self.parameters['properties']) and
                         (self.parameters['properties']['enabled_for_template_deployment'] !=
-                         getattr(old_response['properties'], 'enabled_for_template_deployment', None))):
+                         old_response['properties'].get('enabled_for_template_deployment', None))):
                     self.to_do = Actions.Update
                 elif (('enable_soft_delete' in self.parameters['properties']) and
-                        (self.parameters['properties']['enable_soft_delete'] != getattr(old_response['properties'], 'enable_soft_delete', None))):
+                        (self.parameters['properties']['enable_soft_delete'] != old_response['properties'].get('enable_soft_delete', None))):
                     self.to_do = Actions.Update
                 elif (('soft_delete_retention_in_days' in self.parameters['properties']) and
-                        (self.parameters['properties']['soft_delete_retention_in_days'] != getattr(old_response['properties'],
-                                                                                                   'soft_delete_retention_in_days',
-                                                                                                   None))):
+                        (self.parameters['properties']['soft_delete_retention_in_days'] != old_response['properties'].get('soft_delete_retention_in_days'))):
                     self.to_do = Actions.Update
                 elif (('enable_purge_protection' in self.parameters['properties']) and
-                      (self.parameters['properties']['enable_purge_protection'] != getattr(old_response['properties'],
-                                                                                           'enable_purge_protection',
-                                                                                           None))):
+                      (self.parameters['properties']['enable_purge_protection'] != old_response['properties'].get('enable_purge_protection'))):
                     self.to_do = Actions.Update
                 elif ('create_mode' in self.parameters['properties']) and (self.parameters['properties']['create_mode'] == 'recover'):
                     self.to_do = Actions.Update
@@ -484,13 +483,13 @@ class AzureRMVaults(AzureRMModuleBase):
         self.log("Creating / Updating the Key Vault instance {0}".format(self.vault_name))
 
         try:
-            response = self.mgmt_client.vaults.create_or_update(resource_group_name=self.resource_group,
-                                                                vault_name=self.vault_name,
-                                                                parameters=self.parameters)
+            response = self.mgmt_client.vaults.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                      vault_name=self.vault_name,
+                                                                      parameters=self.parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Key Vault instance.')
             self.fail("Error creating the Key Vault instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -505,7 +504,7 @@ class AzureRMVaults(AzureRMModuleBase):
         try:
             response = self.mgmt_client.vaults.delete(resource_group_name=self.resource_group,
                                                       vault_name=self.vault_name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Key Vault instance.')
             self.fail("Error deleting the Key Vault instance: {0}".format(str(e)))
 
@@ -525,7 +524,7 @@ class AzureRMVaults(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Key Vault instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Key Vault instance.')
         if found is True:
             return response.as_dict()

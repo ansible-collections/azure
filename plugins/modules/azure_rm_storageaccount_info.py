@@ -150,6 +150,60 @@ storageaccounts:
                     returned: always
                     type: bool
                     sample: true
+        encryption:
+            description:
+                - The encryption settings on the storage account.
+            type: complex
+            returned: always
+            contains:
+                key_source:
+                    description:
+                        - The encryption keySource (provider).
+                    type: str
+                    returned: always
+                    sample: Microsoft.Storage
+                require_infrastructure_encryption:
+                    description:
+                        - A boolean indicating whether or not the service applies a secondary layer of encryption with platform managed keys for data at rest.
+                    type: bool
+                    returned: always
+                    sample: false
+                services:
+                    description:
+                        - List of services which support encryption.
+                    type: dict
+                    returned: always
+                    contains:
+                        file:
+                            description:
+                                - The encryption function of the file storage service.
+                            type: dict
+                            returned: always
+                            sample: {'enabled': true}
+                        table:
+                            description:
+                                - The encryption function of the table storage service.
+                            type: dict
+                            returned: always
+                            sample: {'enabled': true}
+                        queue:
+                            description:
+                                - The encryption function of the queue storage service.
+                            type: dict
+                            returned: always
+                            sample: {'enabled': true}
+                        blob:
+                            description:
+                                - The encryption function of the blob storage service.
+                            type: dict
+                            returned: always
+                            sample: {'enabled': true}
+        is_hns_enabled:
+            description:
+                - Account HierarchicalNamespace enabled if sets to true.
+            type: bool
+            returned: always
+            sample: true
         kind:
             description:
                 - The kind of storage.
@@ -571,6 +625,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             minimum_tls_version=account_obj.minimum_tls_version,
             public_network_access=account_obj.public_network_access,
             allow_blob_public_access=account_obj.allow_blob_public_access,
+            is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
             static_website=dict(
                 enabled=False,
                 index_document=None,
@@ -645,6 +700,23 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 index_document=static_website.index_document,
                 error_document404_path=static_website.error_document404_path,
             )
+
+        account_dict['encryption'] = dict()
+        if account_obj.encryption:
+            account_dict['encryption']['require_infrastructure_encryption'] = account_obj.encryption.require_infrastructure_encryption
+            account_dict['encryption']['key_source'] = account_obj.encryption.key_source
+
+            if account_obj.encryption.services:
+                account_dict['encryption']['services'] = dict()
+
+                if account_obj.encryption.services.file:
+                    account_dict['encryption']['services']['file'] = dict(enabled=True)
+                if account_obj.encryption.services.table:
+                    account_dict['encryption']['services']['table'] = dict(enabled=True)
+                if account_obj.encryption.services.queue:
+                    account_dict['encryption']['services']['queue'] = dict(enabled=True)
+                if account_obj.encryption.services.blob:
+                    account_dict['encryption']['services']['blob'] = dict(enabled=True)
         return account_dict
 
     def format_endpoint_dict(self, name, key, endpoint, storagetype, protocol='https'):

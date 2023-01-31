@@ -29,6 +29,7 @@
     - "{{ storage_account_name_default }}02"
     - "{{ storage_account_name_default }}03"
     - "{{ storage_account_name_default }}04"
+    - "{{ storage_account_name_default }}06"
 
 - name: Create new storage account with defaults (omitted parameters)
   azure_rm_storageaccount:
@@ -132,6 +133,29 @@
   assert:
     that:
       - not output.changed
+
+- name: Create new storage account with Hierarchical Namespace enabled
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}06"
+    account_type: Standard_LRS
+    kind: StorageV2
+    is_hns_enabled: true
+  register: output
+- name: Assert output
+  assert:
+    that:
+      - output.changed
+
+- name: Gather facts of storage account
+  azure_rm_storageaccount_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}06"
+  register: output
+- assert:
+    that:
+      - "output.storageaccounts | length == 1"
+      - output.storageaccounts[0].is_hns_enabled == true
 
 - name: Create storage account with static website enabled
   azure_rm_storageaccount:
@@ -511,6 +535,39 @@
       - output.storageaccounts[0].static_website.index_document == None
       - output.storageaccounts[0].static_website.error_document404_path == None
 
+- name: Create new storage account with (require_infrastructure_encryption=false)
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}05"
+    account_type: Standard_RAGRS
+    encryption:
+      services:
+        blob:
+          enabled: true
+        file:
+          enabled: true
+      require_infrastructure_encryption: false
+      key_source: Microsoft.Storage
+  register: encryption_output
+
+- name: Assert storage account with (require_infrastructure_encryption=false) created
+  assert:
+    that:
+      - encryption_output.changed
+
+- name: Get account with (require_infrastructure_encryption=false)
+  azure_rm_storageaccount_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}05"
+  register: encryption_output
+
+- assert:
+    that:
+      - output.storageaccounts | length == 1
+      - output.storageaccounts[0].encryption.key_source == 'Microsoft.Storage'
+      - not output.storageaccounts[0].encryption.require_infrastructure_encryption
+      - output.storageaccounts[0].encryption.services | length == 2
+
 - name: List storage accounts by resource group.
   azure_rm_storageaccount_info:
     resource_group: "{{ resource_group }}"
@@ -532,3 +589,4 @@
     - "{{ storage_account_name_default }}02"
     - "{{ storage_account_name_default }}03"
     - "{{ storage_account_name_default }}04"
+    - "{{ storage_account_name_default }}05"

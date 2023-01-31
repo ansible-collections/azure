@@ -324,6 +324,25 @@ options:
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
+    trusted_root_certificates:
+        version_added: "1.14.0"
+        description:
+            - Trusted Root certificates of the application gateway resource.
+        type: list
+        elements: dict
+        suboptions:
+            name:
+                description:
+                    - Name of the trusted root certificate that is unique within an Application Gateway.
+                type: str
+            data:
+                description:
+                    - Certificate public data.
+                type: str
+            key_vault_secret_id:
+                description:
+                    - Secret Id of (base-64 encoded unencrypted pfx) 'Secret' or 'Certificate' object stored in KeyVault.
+                type: str
     frontend_ip_configurations:
         description:
             - Frontend IP addresses of the application gateway resource.
@@ -459,6 +478,20 @@ options:
                 choices:
                     - 'enabled'
                     - 'disabled'
+            connection_draining:
+                version_added: "1.14.0"
+                description:
+                    - Connection draining of the backend http settings resource.
+                type: dict
+                suboptions:
+                    drain_timeout_in_sec:
+                        description:
+                            - The number of seconds connection draining is active. Acceptable values are from 1 second to 3600 seconds.
+                        type: int
+                    enabled:
+                        description:
+                            - Whether connection draining is enabled or not.
+                        type: bool
             request_timeout:
                 description:
                     - Request timeout in seconds.
@@ -474,6 +507,13 @@ options:
                     id:
                         description:
                             - Resource ID.
+            trusted_root_certificates:
+                version_added: "1.14.0"
+                description:
+                    - Array of references to application gateway trusted root certificates.
+                    - Can be the name of the trusted root certificate or full resource ID.
+                type: list
+                elements: str
             host_name:
                 description:
                     - Host header to be sent to the backend servers.
@@ -612,6 +652,104 @@ options:
                     - Rewrite rule set for the path map.
                     - Can be the name of the rewrite rule set or full resource ID.
                 version_added: "1.11.0"
+    autoscale_configuration:
+        version_added: "1.14.0"
+        description:
+            - Autoscale configuration of the application gateway resource.
+        type: dict
+        suboptions:
+            max_capacity:
+                description:
+                    - Upper bound on number of Application Gateway capacity.
+                type: int
+            min_capacity:
+                description:
+                    - Lower bound on number of Application Gateway capacity.
+                type: int
+    enable_http2:
+        version_added: "1.14.0"
+        description:
+            - Whether HTTP2 is enabled on the application gateway resource.
+        type: bool
+        default: False
+    web_application_firewall_configuration:
+        version_added: "1.14.0"
+        description:
+            - Web application firewall configuration of the application gateway reosurce.
+        type: dict
+        suboptions:
+            disabled_rule_groups:
+                description:
+                    - The disabled rule groups.
+                type: list
+                elements: dict
+                suboptions:
+                    rule_group_name:
+                        description:
+                            - The name of the rule group that will be disabled.
+                        type: str
+                    rules:
+                        description:
+                            - The list of rules that will be disabled. If null, all rules of the rule group will be disabled.
+                        type: list
+                        elements: int
+            enabled:
+                description:
+                    - Whether the web application firewall is enabled or not.
+                type: bool
+            exclusions:
+                description:
+                    - The exclusion list.
+                type: list
+                elements: dict
+                suboptions:
+                    match_variable:
+                        description:
+                            - The variable to be excluded.
+                        type: str
+                    selector:
+                        description:
+                            - When match_variable is a collection, operator used to specify which elements in the collection this exclusion applies to.
+                        type: str
+                    selector_match_operator:
+                        description:
+                            - When match_variable is a collection, operate on the selector to specify
+                              which elements in the collection this exclusion applies to.
+                        type: str
+            file_upload_limit_in_mb:
+                description:
+                    - Maximum file upload size in Mb for WAF.
+                type: int
+            firewall_mode:
+                description:
+                    - Web application firewall mode.
+                type: str
+                choices:
+                    - 'Detection'
+                    - 'Prevention'
+            max_request_body_size:
+                description:
+                    - Maximum request body size for WAF.
+                type: int
+            max_request_body_size_in_kb:
+                description:
+                    - Maximum request body size in Kb for WAF.
+                type: int
+            request_body_check:
+                description:
+                    - Whether allow WAF to check request Body.
+                type: bool
+            rule_set_type:
+                description:
+                    - The type of the web application firewall rule set.
+                    - Possible values are 'OWASP'.
+                type: str
+                choices:
+                    - 'OWASP'
+            rule_set_version:
+                description:
+                    - The version of the rule set type.
+                type: str
     gateway_state:
         description:
             - Start or Stop the application gateway. When specified, no updates will occur to the gateway.
@@ -664,7 +802,57 @@ EXAMPLES = '''
       - port: 80
         protocol: http
         cookie_based_affinity: enabled
+        connection_draining:
+            drain_timeout_in_sec: 60
+            enabled: true
         name: sample_appgateway_http_settings
+    http_listeners:
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: ag_frontend_port
+        name: sample_http_listener
+    request_routing_rules:
+      - rule_type: Basic
+        backend_address_pool: test_backend_address_pool
+        backend_http_settings: sample_appgateway_http_settings
+        http_listener: sample_http_listener
+        name: rule1
+
+- name: Create instance of Application Gateway with custom trusted root certificate
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myAppGateway
+    sku:
+      name: standard_small
+      tier: standard
+      capacity: 2
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          id: "{{ subnet_id }}"
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - port: 90
+        name: ag_frontend_port
+    trusted_root_certificates:
+      - name: "root_cert"
+        key_vault_secret_id: "https://kv/secret"
+    backend_address_pools:
+      - backend_addresses:
+          - ip_address: 10.0.0.4
+        name: test_backend_address_pool
+    backend_http_settings_collection:
+      - port: 80
+        protocol: http
+        cookie_based_affinity: enabled
+        connection_draining:
+            drain_timeout_in_sec: 60
+            enabled: true
+        name: sample_appgateway_http_settings
+        trusted_root_certificates:
+          - "root_cert"
     http_listeners:
       - frontend_ip_configuration: sample_gateway_frontend_ip_config
         frontend_port: ag_frontend_port
@@ -1038,6 +1226,94 @@ EXAMPLES = '''
         url_path_maps:
           - "path_mappings"
 
+- name: Create instance of Application Gateway with autoscale configuration
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myAppGateway
+    sku:
+      name: standard_small
+      tier: standard
+    autoscale_configuration:
+      max_capacity: 2
+      min_capacity: 1
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          id: "{{ subnet_id }}"
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - port: 90
+        name: ag_frontend_port
+    backend_address_pools:
+      - backend_addresses:
+          - ip_address: 10.0.0.4
+        name: test_backend_address_pool
+    backend_http_settings_collection:
+      - port: 80
+        protocol: http
+        cookie_based_affinity: enabled
+        name: sample_appgateway_http_settings
+    http_listeners:
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: ag_frontend_port
+        name: sample_http_listener
+    request_routing_rules:
+      - rule_type: Basic
+        backend_address_pool: test_backend_address_pool
+        backend_http_settings: sample_appgateway_http_settings
+        http_listener: sample_http_listener
+        name: rule1
+
+- name: Create instance of Application Gateway waf_v2 with waf configuration
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myAppGateway
+    sku:
+      name: waf_v2
+      tier: waf_v2
+      capacity: 2
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - subnet:
+          id: "{{ subnet_id }}"
+        name: sample_gateway_frontend_ip_config
+    frontend_ports:
+      - port: 90
+        name: ag_frontend_port
+    backend_address_pools:
+      - backend_addresses:
+          - ip_address: 10.0.0.4
+        name: test_backend_address_pool
+    backend_http_settings_collection:
+      - port: 80
+        protocol: http
+        cookie_based_affinity: enabled
+        name: sample_appgateway_http_settings
+    http_listeners:
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: ag_frontend_port
+        name: sample_http_listener
+    request_routing_rules:
+      - rule_type: Basic
+        backend_address_pool: test_backend_address_pool
+        backend_http_settings: sample_appgateway_http_settings
+        http_listener: sample_http_listener
+        name: rule1
+    web_application_firewall_configuration:
+      - enabled: true
+        firewall_mode: Detection
+        rule_set_type: OWASP
+        rule_set_version: 3.0
+        request_body_check: true
+        max_request_body_size_in_kb: 128
+        file_upload_limit_in_mb: 100
+
 - name: Stop an Application Gateway instance
   azure_rm_appgateway:
     resource_group: myResourceGroup
@@ -1094,7 +1370,7 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from copy import deepcopy
 from ansible.module_utils.common.dict_transformations import (
-    _snake_to_camel, dict_merge,
+    _snake_to_camel, dict_merge, recursive_diff,
 )
 
 try:
@@ -1224,6 +1500,41 @@ url_path_maps_spec = dict(
     default_rewrite_rule_set=dict(type='str'),
 )
 
+autoscale_configuration_spec = dict(
+    max_capacity=dict(type='int'),
+    min_capacity=dict(type='int'),
+)
+
+waf_configuration_exclusions_spec = dict(
+    match_variable=dict(type='str'),
+    selector=dict(type='str'),
+    selector_match_operator=dict(type='str'),
+)
+
+waf_configuration_disabled_rule_groups_spec = dict(
+    rule_group_name=dict(type='str'),
+    rules=dict(type='list', elements='int', default=[]),
+)
+
+web_application_firewall_configuration_spec = dict(
+    enabled=dict(type='bool'),
+    firewall_mode=dict(type='str', choices=['Detection', 'Prevention']),
+    rule_set_type=dict(type='str', choices=['OWASP']),
+    rule_set_version=dict(type='str'),
+    request_body_check=dict(type='bool'),
+    max_request_body_size=dict(type='int'),
+    max_request_body_size_in_kb=dict(type='int'),
+    file_upload_limit_in_mb=dict(type='int'),
+    exclusions=dict(type='list', elements='dict', options=waf_configuration_exclusions_spec, default=[]),
+    disabled_rule_groups=dict(type='list', elements='dict', options=waf_configuration_disabled_rule_groups_spec, default=[]),
+)
+
+trusted_root_certificates_spec = dict(
+    name=dict(type='str'),
+    data=dict(type='str'),
+    key_vault_secret_id=dict(type='str', default='')
+)
+
 
 class AzureRMApplicationGateways(AzureRMModuleBase):
     """Configuration class for an Azure RM Application Gateway resource"""
@@ -1257,6 +1568,11 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             ),
             ssl_certificates=dict(
                 type='list'
+            ),
+            trusted_root_certificates=dict(
+                type='list',
+                elements='dict',
+                options=trusted_root_certificates_spec
             ),
             redirect_configurations=dict(
                 type='list',
@@ -1299,6 +1615,18 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             request_routing_rules=dict(
                 type='list'
             ),
+            autoscale_configuration=dict(
+                type='dict',
+                options=autoscale_configuration_spec,
+            ),
+            web_application_firewall_configuration=dict(
+                type='dict',
+                options=web_application_firewall_configuration_spec
+            ),
+            enable_http2=dict(
+                type='bool',
+                default=False
+            ),
             gateway_state=dict(
                 type='str',
                 choices=['started', 'stopped'],
@@ -1325,7 +1653,6 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
-
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
@@ -1414,6 +1741,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     self.parameters["authentication_certificates"] = kwargs[key]
                 elif key == "ssl_certificates":
                     self.parameters["ssl_certificates"] = kwargs[key]
+                elif key == "trusted_root_certificates":
+                    self.parameters["trusted_root_certificates"] = kwargs[key]
                 elif key == "redirect_configurations":
                     ev = kwargs[key]
                     for i in range(len(ev)):
@@ -1518,6 +1847,14 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                           kwargs['name'],
                                           item['probe'])
                             item['probe'] = {'id': id}
+                        if 'trusted_root_certificates' in item:
+                            for j in range(len(item['trusted_root_certificates'])):
+                                id = item['trusted_root_certificates'][j]
+                                id = id if is_valid_resource_id(id) else trusted_root_certificate_id(self.subscription_id,
+                                                                                                     kwargs['resource_group'],
+                                                                                                     kwargs['name'],
+                                                                                                     id)
+                                item['trusted_root_certificates'][j] = {'id': id}
                     self.parameters["backend_http_settings_collection"] = ev
                 elif key == "http_listeners":
                     ev = kwargs[key]
@@ -1596,10 +1933,10 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                     del item2['redirect_configuration']
                                 if item2['rewrite_rule_set']:
                                     id = item2['rewrite_rule_set']
-                                    id = id if is_valid_resource_id(id) else rerite_rule_set_id(self.subscription_id,
-                                                                                                kwargs['resource_group'],
-                                                                                                kwargs['name'],
-                                                                                                id)
+                                    id = id if is_valid_resource_id(id) else rewrite_rule_set_id(self.subscription_id,
+                                                                                                 kwargs['resource_group'],
+                                                                                                 kwargs['name'],
+                                                                                                 id)
                                     item2['rewrite_rule_set'] = {'id': id}
                                 else:
                                     del item2['rewrite_rule_set']
@@ -1614,10 +1951,10 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             del item['default_redirect_configuration']
                         if item['default_rewrite_rule_set']:
                             id = item['default_rewrite_rule_set']
-                            id = id if is_valid_resource_id(id) else rerite_rule_set_id(self.subscription_id,
-                                                                                        kwargs['resource_group'],
-                                                                                        kwargs['name'],
-                                                                                        id)
+                            id = id if is_valid_resource_id(id) else rewrite_rule_set_id(self.subscription_id,
+                                                                                         kwargs['resource_group'],
+                                                                                         kwargs['name'],
+                                                                                         id)
                             item['default_rewrite_rule_set'] = {'id': id}
                         else:
                             del item['default_rewrite_rule_set']
@@ -1665,17 +2002,22 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             item['url_path_map'] = {'id': id}
                         if item.get('rewrite_rule_set'):
                             id = item.get('rewrite_rule_set')
-                            id = id if is_valid_resource_id(id) else rerite_rule_set_id(self.subscription_id,
-                                                                                        kwargs['resource_group'],
-                                                                                        kwargs['name'],
-                                                                                        id)
+                            id = id if is_valid_resource_id(id) else rewrite_rule_set_id(self.subscription_id,
+                                                                                         kwargs['resource_group'],
+                                                                                         kwargs['name'],
+                                                                                         id)
                             item['rewrite_rule_set'] = {'id': id}
                         ev[i] = item
                     self.parameters["request_routing_rules"] = ev
                 elif key == "etag":
                     self.parameters["etag"] = kwargs[key]
+                elif key == "autoscale_configuration":
+                    self.parameters["autoscale_configuration"] = kwargs[key]
+                elif key == "web_application_firewall_configuration":
+                    self.parameters["web_application_firewall_configuration"] = kwargs[key]
+                elif key == "enable_http2":
+                    self.parameters["enable_http2"] = kwargs[key]
 
-        old_response = None
         response = None
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -1708,11 +2050,12 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                   (old_response['operational_state'] == 'Running' and self.gateway_state == 'started')):
                 self.to_do = Actions.NoAction
             elif (self.parameters['location'] != old_response['location'] or
+                    self.parameters['enable_http2'] != old_response['enable_http2'] or
                     self.parameters['sku']['name'] != old_response['sku']['name'] or
                     self.parameters['sku']['tier'] != old_response['sku']['tier'] or
-                    self.parameters['sku']['capacity'] != old_response['sku']['capacity'] or
+                    self.parameters['sku'].get('capacity', None) != old_response['sku'].get('capacity', None) or
                     not compare_arrays(old_response, self.parameters, 'authentication_certificates') or
-                    not compare_arrays(old_response, self.parameters, 'ssl_policy') or
+                    not compare_dicts(old_response, self.parameters, 'ssl_policy') or
                     not compare_arrays(old_response, self.parameters, 'gateway_ip_configurations') or
                     not compare_arrays(old_response, self.parameters, 'redirect_configurations') or
                     not compare_arrays(old_response, self.parameters, 'rewrite_rule_sets') or
@@ -1723,8 +2066,10 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     not compare_arrays(old_response, self.parameters, 'backend_http_settings_collection') or
                     not compare_arrays(old_response, self.parameters, 'request_routing_rules') or
                     not compare_arrays(old_response, self.parameters, 'http_listeners') or
-                    not compare_arrays(old_response, self.parameters, 'url_path_maps')):
-
+                    not compare_arrays(old_response, self.parameters, 'url_path_maps') or
+                    not compare_arrays(old_response, self.parameters, 'trusted_root_certificates') or
+                    not compare_dicts(old_response, self.parameters, 'autoscale_configuration') or
+                    not compare_dicts(old_response, self.parameters, 'web_application_firewall_configuration')):
                 self.to_do = Actions.Update
             else:
                 self.to_do = Actions.NoAction
@@ -2013,7 +2358,7 @@ def request_routing_rule_id(subscription_id, resource_group_name, appgateway_nam
     )
 
 
-def rerite_rule_set_id(subscription_id, resource_group_name, appgateway_name, name):
+def rewrite_rule_set_id(subscription_id, resource_group_name, appgateway_name, name):
     """Generate the id for a rewrite rule set in an application gateway"""
     return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/applicationGateways/{2}/rewriteRuleSets/{3}'.format(
         subscription_id,
@@ -2023,9 +2368,40 @@ def rerite_rule_set_id(subscription_id, resource_group_name, appgateway_name, na
     )
 
 
+def trusted_root_certificate_id(subscription_id, resource_group_name, appgateway_name, name):
+    """Generate the id for a trusted root certificate in an application gateway"""
+    return '/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/applicationGateways/{2}/trustedRootCertificates/{3}'.format(
+        subscription_id,
+        resource_group_name,
+        appgateway_name,
+        name
+    )
+
+
+def compare_dicts(old_params, new_params, param_name):
+    """Compare two dictionaries using recursive_diff method and assuming that null values coming from yaml input
+    are acting like absent values"""
+    oldd = old_params.get(param_name, {})
+    newd = new_params.get(param_name, {})
+
+    if oldd == {} and newd == {}:
+        return True
+
+    diffs = recursive_diff(oldd, newd)
+    if diffs is None:
+        return True
+    else:
+        actual_diffs = diffs[1]
+        return all(value is None or not value for value in actual_diffs.values())
+
+
 def compare_arrays(old_params, new_params, param_name):
-    old = old_params.get(param_name) or []
-    new = new_params.get(param_name) or []
+    '''Compare two arrays, including any nested properties on elements.'''
+    old = old_params.get(param_name, [])
+    new = new_params.get(param_name, [])
+
+    if old == [] and new == []:
+        return True
 
     oldd = array_to_dict(old)
     newd = array_to_dict(new)

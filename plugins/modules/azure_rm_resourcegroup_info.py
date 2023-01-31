@@ -127,7 +127,7 @@ resourcegroups:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -192,7 +192,7 @@ class AzureRMResourceGroupInfo(AzureRMModuleBase):
 
         try:
             item = self.rm_client.resource_groups.get(self.name)
-        except CloudError:
+        except ResourceNotFoundError:
             pass
 
         if item and self.has_tags(item.tags, self.tags):
@@ -204,7 +204,7 @@ class AzureRMResourceGroupInfo(AzureRMModuleBase):
         self.log('List all items')
         try:
             response = self.rm_client.resource_groups.list()
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list all items - {0}".format(str(exc)))
 
         results = []
@@ -222,7 +222,7 @@ class AzureRMResourceGroupInfo(AzureRMModuleBase):
                 results.append(response.next().as_dict())
         except StopIteration:
             pass
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when listing resources under resource group {0}: {1}'.format(name, exc.message or str(exc)))
         return results
 

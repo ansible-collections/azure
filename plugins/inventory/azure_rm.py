@@ -113,6 +113,7 @@ import hashlib
 import json
 import re
 import uuid
+import os
 
 try:
     from queue import Queue, Empty
@@ -268,8 +269,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         self._enqueue_get(url=url, api_version=self._compute_api_version, handler=self._on_vmss_page_response)
 
     def _get_hosts(self):
-        for vm_rg in self.get_option('include_vm_resource_groups'):
-            self._enqueue_vm_list(vm_rg)
+        if os.environ.get('ANSIBLE_AZURE_VM_RESOURCE_GROUPS'):
+            for vm_rg in os.environ['ANSIBLE_AZURE_VM_RESOURCE_GROUPS'].split(","):
+                self._enqueue_vm_list(vm_rg)
+        else:
+            for vm_rg in self.get_option('include_vm_resource_groups'):
+                self._enqueue_vm_list(vm_rg)
 
         for vmss_rg in self.get_option('include_vmss_resource_groups'):
             self._enqueue_vmss_list(vmss_rg)
@@ -280,7 +285,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             self._process_queue_serial()
 
         constructable_config_strict = boolean(self.get_option('fail_on_template_errors'))
-        constructable_config_compose = self.get_option('hostvar_expressions')
+        if self.get_option('hostvar_expressions') is not None:
+            constructable_config_compose = self.get_option('hostvar_expressions')
+        else:
+            constructable_config_compose = self.get_option('compose')
         constructable_config_groups = self.get_option('conditional_groups')
         constructable_config_keyed_groups = self.get_option('keyed_groups')
 

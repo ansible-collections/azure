@@ -813,7 +813,7 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                     ) if new_front[index].get('public_ip_address') else None,
                     private_ip_address=new_front[index].get('private_ip_address'),
                     private_ip_allocation_method=new_front[index].get('private_ip_allocation_method'),
-                    zones=new_front[index].get('zones') if new_front[index].get('zones') else old_front[index].zones,
+                    zones=new_front[index].get('zones') if new_front[index].get('zones') else None,
                     subnet=self.network_models.Subnet(
                         id=new_front[index].get('subnet'),
                         private_endpoint_network_policies=None,

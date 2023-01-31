@@ -486,7 +486,7 @@ def compare_rules(old_rule, rule):
         changed = True
     if rule.get('description', None) != old_rule['description']:
         changed = True
-    if rule['protocol'] != old_rule['protocol']:
+    if rule['protocol'].lower() != old_rule['protocol'].lower():
         changed = True
     if str(rule['source_port_range']) != str(old_rule['source_port_range']):
         changed = True

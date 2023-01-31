@@ -200,7 +200,7 @@
       - "{{ output.state.rules[0].source_address_prefixes | length }} == 3"
       - not output.state.rules[0].source_address_prefix
 
-- name: Create security group with source_address_prefixes(idempontent)
+- name: Create security group with source_address_prefixes(idempotent)
   azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ secgroupname }}"
@@ -248,6 +248,46 @@
     that:
       - output.changed
       - "{{ output.state.rules | length }} == 2"
+
+# Use azure_rm_resource module to create with uppercase protocol name
+- name: Create security group with uppercase protocol name
+  azure_rm_resource:
+    resource_group: "{{ resource_group }}"
+    provider: network
+    resource_type: networkSecurityGroups
+    resource_name: "{{ secgroupname }}"
+    api_version: 2022-07-01
+    body:
+      location: "{{ output.state.location }}"
+      properties:
+        securityRules:
+          - name: UPPER PROTOCOL NAME RULE
+            properties:
+              protocol: TCP  # UPPERCASE
+              access: Allow
+              sourceAddressPrefix: "*"
+              sourcePortRange: "*"
+              destinationAddressPrefix: "*"
+              destinationPortRange: 80
+              priority: 100
+              direction: Inbound
+
+- name: Create security group with capitalized protocol name(idempotent)
+  azure_rm_securitygroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ secgroupname }}"
+    rules:
+      - name: UPPER PROTOCOL NAME RULE
+        protocol: Tcp     # Capitalized
+        access: Allow
+        destination_port_range: 80
+        priority: 100
+        direction: Inbound
+  register: output
+- name: assert resource not updated
+  assert:
+    that:
+      - not output.changed
 
 - name: Create Application security group 1
   azure_rm_applicationsecuritygroup:
