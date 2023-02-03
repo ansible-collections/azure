@@ -126,11 +126,11 @@ options:
             zone:
                 description:
                     - The Azure managed disk's zone.
-                    - Allowed values are C(1), C(2), C(3) and C(' ').
+                    - Allowed values are C(1), C(2), C(3) and C('').
                 choices:
-                    - 1
-                    - 2
-                    - 3
+                    - '1'
+                    - '2'
+                    - '3'
                     - ''
                 type: str
             lun:

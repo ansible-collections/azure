@@ -1954,19 +1954,19 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         if 'all_autocreated' not in self.remove_on_absent:
             if self.remove_on_absent.intersection(set(['all', 'virtual_storage'])):
                 # store the attached vhd info so we can nuke it after the VM is gone
-                if(vm.storage_profile.os_disk.managed_disk):
+                if (vm.storage_profile.os_disk.managed_disk):
                     self.log('Storing managed disk ID for deletion')
                     managed_disk_ids.append(vm.storage_profile.os_disk.managed_disk.id)
-                elif(vm.storage_profile.os_disk.vhd):
+                elif (vm.storage_profile.os_disk.vhd):
                     self.log('Storing VHD URI for deletion')
                     vhd_uris.append(vm.storage_profile.os_disk.vhd.uri)
 
                 data_disks = vm.storage_profile.data_disks
                 for data_disk in data_disks:
                     if data_disk is not None:
-                        if(data_disk.vhd):
+                        if (data_disk.vhd):
                             vhd_uris.append(data_disk.vhd.uri)
-                        elif(data_disk.managed_disk):
+                        elif (data_disk.managed_disk):
                             managed_disk_ids.append(data_disk.managed_disk.id)
 
                 # FUTURE enable diff mode, move these there...
