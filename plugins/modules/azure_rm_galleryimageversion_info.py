@@ -239,13 +239,13 @@ class AzureRMGalleryImageVersionsInfo(AzureRMModuleBase):
                     self.query_parameters['skiptoken'] = skiptoken
 
                 response = self.mgmt_client.query(self.url,
-                                                'GET',
-                                                self.query_parameters,
-                                                self.header_parameters,
-                                                None,
-                                                [200, 404],
-                                                0,
-                                                0)
+                                                  'GET',
+                                                  self.query_parameters,
+                                                  self.header_parameters,
+                                                  None,
+                                                  [200, 404],
+                                                  0,
+                                                  0)
                 try:
                     response = json.loads(response.text)
                     if isinstance(response, dict):
