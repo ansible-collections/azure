@@ -264,4 +264,3 @@ plugins/modules/azure_rm_vmbackuppolicy.py validate-modules:parameter-list-no-el
 plugins/modules/azure_rm_privatednsrecordset.py validate-modules:invalid-ansiblemodule-schema
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang
-plugins/lookup/azure_keyvault_secret.py validate-modules:invalid-documentation
