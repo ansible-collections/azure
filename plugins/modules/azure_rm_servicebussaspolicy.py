@@ -187,8 +187,8 @@ class AzureRMServiceBusSASPolicy(AzureRMModuleBase):
         self.namespace = None
         self.queue = None
         self.topic = None
-        self.regenerate_primary_key = None
-        self.regenerate_secondary_key = None
+        self.regenerate_primary_key = False
+        self.regenerate_secondary_key = False
         self.rights = None
 
         self.results = dict(

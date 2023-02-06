@@ -9,6 +9,7 @@ parameters:
     - "3.8"
     - "3.9"
     - "3.10"
+    - "3.11"
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
@@ -18,6 +19,8 @@ parameters:
     - "2.10"
     - "2.11"
     - "2.12"
+    - "2.13"
+    - "2.14"
     - "devel"
 - name: MODULE_NAME
   displayName: 'Test Module'

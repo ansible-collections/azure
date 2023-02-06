@@ -183,10 +183,10 @@ options:
             - Minimal TLS version. Allowed values C(None), C(1.0), C(1.1), C(1.2).
         type: str
         choices:
-            - None
-            - 1.0
-            - 1.1
-            - 1.2
+            - 'None'
+            - '1.0'
+            - '1.1'
+            - '1.2'
     storage_account_type:
         description:
             - The storage account type used to store backups for this instance.

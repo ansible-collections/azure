@@ -358,7 +358,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                 daily_retention_schedule = self.recovery_services_backup_models.DailyRetentionSchedule(retention_times=schedule_run_times_as_datetimes,
                                                                                                        retention_duration=retention_duration)
 
-            if(self.weekly_retention_count):
+            if (self.weekly_retention_count):
                 retention_duration = self.recovery_services_backup_models.RetentionDuration(count=self.weekly_retention_count,
                                                                                             duration_type="Weeks")
                 weekly_retention_schedule = self.recovery_services_backup_models.WeeklyRetentionSchedule(days_of_the_week=self.schedule_days,
