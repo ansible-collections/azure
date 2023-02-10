@@ -20,7 +20,7 @@ options:
     include_vm_resource_groups:
         description: A list of resource group names to search for virtual machines. '\*' will include all resource
             groups in the subscription. Can also be set comma separated resource group names via the
-            ANSIBLE_AZURE_VM_RESOURCE_GROUPS environment variable.
+            C(ANSIBLE_AZURE_VM_RESOURCE_GROUPS) environment variable.
         default: ['*']
     include_vmss_resource_groups:
         description: A list of resource group names to search for virtual machine scale sets (VMSSs). '\*' will
