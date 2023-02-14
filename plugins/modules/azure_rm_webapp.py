@@ -763,7 +763,7 @@ class AzureRMWebApps(AzureRMModuleBase):
                 self.log('Web App instance deleted')
 
             else:
-                self.fail("Web app {0} not exists.".format(self.name))
+                self.log("Web app {0} not exists.".format(self.name))
 
         if to_be_updated:
             self.log('Need to Create/Update web app')
