@@ -23,7 +23,7 @@ description:
 options:
     name:
         description:
-            - Only show results for a specific security group.
+            - Only show results for a specific virtual network.
     resource_group:
         description:
             - Limit results by resource group. Required when filtering by name.
