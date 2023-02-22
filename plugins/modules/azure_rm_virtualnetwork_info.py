@@ -225,6 +225,8 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
             changed=False,
             virtualnetworks=[]
         )
+        
+        self.required_together = [('name', 'resource_group')]
 
         self.name = None
         self.resource_group = None
@@ -233,7 +235,8 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         super(AzureRMNetworkInterfaceInfo, self).__init__(self.module_arg_spec,
                                                           supports_check_mode=True,
                                                           supports_tags=False,
-                                                          facts_module=True)
+                                                          facts_module=True
+                                                          required_together=self.required_together)
 
     def exec_module(self, **kwargs):
         is_old_facts = self.module._name == 'azure_rm_virtualnetwork_facts'
