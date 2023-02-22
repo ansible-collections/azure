@@ -235,7 +235,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         super(AzureRMNetworkInterfaceInfo, self).__init__(self.module_arg_spec,
                                                           supports_check_mode=True,
                                                           supports_tags=False,
-                                                          facts_module=True
+                                                          facts_module=True,
                                                           required_together=self.required_together)
 
     def exec_module(self, **kwargs):
