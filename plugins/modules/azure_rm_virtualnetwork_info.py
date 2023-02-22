@@ -267,7 +267,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         results = []
 
         try:
-            item = self.network_client.virtual_networks.get(resource_group_name=self.resource_group, 
+            item = self.network_client.virtual_networks.get(resource_group_name=self.resource_group,
                                                             virtual_network_name=self.name)
         except ResourceNotFoundError:
             pass
