@@ -694,8 +694,8 @@ class AzureRMContainerInstance(AzureRMModuleBase):
         '''
         try:
             response = self.containerinstance_client.container_groups.update(resource_group_name=self.resource_group,
-                                                                                             container_group_name=self.name,
-                                                                                             resource=dict(tags=self.tags))
+                                                                             container_group_name=self.name,
+                                                                             resource=dict(tags=self.tags))
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
@@ -770,13 +770,17 @@ class AzureRMContainerInstance(AzureRMModuleBase):
                     ports.append(self.cgmodels.Port(port=port, protocol="TCP"))
                 ip_address = self.cgmodels.IpAddress(ports=ports, dns_name_label=self.dns_name_label, type=self.ip_address)
 
+        subnet_ids = None
+        if self.subnet_ids is not None:
+            subnet_ids = [self.cgmodels.ContainerGroupSubnetId(id=item) for item in self.subnet_ids]
+
         parameters = self.cgmodels.ContainerGroup(location=self.location,
                                                   containers=containers,
                                                   image_registry_credentials=registry_credentials,
                                                   restart_policy=_snake_to_camel(self.restart_policy, True) if self.restart_policy else None,
                                                   ip_address=ip_address,
                                                   os_type=self.os_type,
-                                                  subnet_ids=[self.cgmodels.ContainerGroupSubnetId(id=item) for item in self.subnet_ids]if self.subnet_ids else None,
+                                                  subnet_ids=subnet_ids,
                                                   volumes=self.volumes,
                                                   tags=self.tags)
 
