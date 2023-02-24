@@ -63,8 +63,8 @@ options:
         type: bool
     max_message_size_in_kb:
         description:
-            - The maximum size of the queue in megabytes, which is the size of memory allocated for the queue.
-            - Default is 1024.
+            - Maximum size (in KB) of the message payload that can be accepted by the queue.
+            - This property is only used in Premium today and default is 1024.
         type: int
     max_size_in_mb:
         description:
