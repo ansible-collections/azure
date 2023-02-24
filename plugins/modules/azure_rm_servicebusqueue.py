@@ -184,7 +184,7 @@ class AzureRMServiceBusQueue(AzureRMModuleBase):
             forward_to=dict(type='str'),
             lock_duration_in_seconds=dict(type='int'),
             max_delivery_count=dict(type='int'),
-            max_message_size_in_kb = dict(type='int'),
+            max_message_size_in_kb=dict(type='int'),
             max_size_in_mb=dict(type='int'),
             requires_duplicate_detection=dict(type='bool'),
             requires_session=dict(type='bool'),
