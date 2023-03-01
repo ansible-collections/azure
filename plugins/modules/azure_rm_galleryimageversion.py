@@ -521,6 +521,10 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
+                update_tags, newtags = self.update_tags(old_response.get('tags', dict()))
+                if update_tags:
+                    self.tags = newtags
+                    self.body['tags'] = self.tags
                 modifiers = {}
                 self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
                 self.results['modifiers'] = modifiers
