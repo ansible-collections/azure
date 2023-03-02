@@ -15,6 +15,7 @@
       testing: testing
       delete: on-exit
       foo: bar
+      test_key: test_value
     purge_rules: yes
     rules:
       - name: DenySSH
@@ -41,6 +42,7 @@
     tags:
       - testing
       - foo:bar
+      - test_key
   register: output
 - name: assert resource retrieved
   assert:
