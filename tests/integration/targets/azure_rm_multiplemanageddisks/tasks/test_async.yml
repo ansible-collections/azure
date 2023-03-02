@@ -31,6 +31,9 @@
   async: 1000
   poll: 0
 
+- name: Pause for 5 mimutes to VM Creating
+  shell: sleep 300
+
 - name: Retrieve running virtual machine
   azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"
