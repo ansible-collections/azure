@@ -263,7 +263,7 @@
       location: "{{ output.state.location }}"
       properties:
         securityRules:
-          - name: UPPER PROTOCOL NAME RULE
+          - name: Upper_Protocal
             properties:
               protocol: TCP  # UPPERCASE
               access: Allow
@@ -279,7 +279,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ secgroupname }}"
     rules:
-      - name: UPPER PROTOCOL NAME RULE
+      - name: Upper_Protocal
         protocol: Tcp     # Capitalized
         access: Allow
         destination_port_range: 80
