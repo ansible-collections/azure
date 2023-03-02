@@ -31,15 +31,6 @@
   async: 1000
   poll: 0
 
-- name: Wait for Virtual machine to be created
-  async_status:
-    jid: "{{ item.ansible_job_id }}"
-  register: wait_create_vm
-  until: wait_create_vm.finished
-  retries: 100
-  delay: 5
-  loop: "{{ create_vms.results }}"
-
 - name: Retrieve running virtual machine
   azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"
