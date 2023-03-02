@@ -525,6 +525,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                 if update_tags:
                     self.tags = newtags
                     self.body['tags'] = self.tags
+                    self.to_do = Actions.Update
                 modifiers = {}
                 self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
                 self.results['modifiers'] = modifiers
