@@ -102,7 +102,7 @@
   register: wait_create_vm
   until: wait_create_vm.finished
   retries: 100
-  delay: 10
+  delay: 5
   loop: "{{ create_vms.results }}"
 
 - name: Get virtual machine info
