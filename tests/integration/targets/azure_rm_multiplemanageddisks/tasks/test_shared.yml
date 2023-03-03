@@ -91,7 +91,7 @@
         publisher: Canonical
         sku: 16.04-LTS
         version: latest
-  loop: "{{ create_vms.results }}"
+  with_items: "{{ shared_virtual_machines }}"
   register: create_vms
 
 - name: Get virtual machine info
