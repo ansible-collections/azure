@@ -125,8 +125,9 @@
 - name: Attach existing disks to VMs
   azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks: "{{ shared_disks }}"
-    managed_by_extended: "{{ shared_virtual_machines }}"
+    managed_by_extended: "{{ item }}"
   register: attach_disks
+  with_items: "{{ shared_virtual_machines }}"
 
 - debug:
     var: attach_disks
