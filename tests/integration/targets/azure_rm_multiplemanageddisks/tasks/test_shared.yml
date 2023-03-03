@@ -67,21 +67,24 @@
 - name: Create virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
-    name: "{{ shared_virtual_network }}"
+    name: "{{ item.shared_virtual_network }}"
     address_prefixes: "{{ shared_virtual_network_cidr }}"
+  with_items: "{{ shared_virtual_machines }}"
 
 - name: Add subnet
   azure_rm_subnet:
     resource_group: "{{ resource_group }}"
-    name: "{{ shared_subnet }}"
+    name: "{{ item.shared_subnet }}"
     address_prefix: "{{ shared_subnet_cidr }}"
-    virtual_network: "{{ shared_virtual_network }}"
+    virtual_network: "{{ item.shared_virtual_network }}"
+  with_items: "{{ shared_virtual_machines }}"
 
 - name: Create virtual machines
   azure_rm_virtualmachine:
       resource_group: "{{ item.resource_group }}"
       name: "{{ item.name }}"
       vm_size: Standard_E2_v3
+      virtual_network: "{{ item.shared_virtual_network }}"
       managed_disk_type: Standard_LRS
       admin_username: adminuser
       admin_password: "!test123@"
@@ -93,6 +96,17 @@
         version: latest
   with_items: "{{ shared_virtual_machines }}"
   register: create_vms
+  async: 1000
+  poll: 0
+
+- name: Wait for Virtual machine to be created
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: wait_create_vm
+  until: wait_create_vm.finished
+  retries: 100
+  delay: 5
+  loop: "{{ create_vms.results }}"
 
 - name: Get virtual machine info
   azure_rm_virtualmachine_info:

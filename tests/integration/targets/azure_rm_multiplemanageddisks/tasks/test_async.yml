@@ -2,15 +2,17 @@
 - name: Create virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
-    name: "{{ async_virtual_network }}"
+    name: "{{ async_virtual_network }}-{{ item }}"
     address_prefixes: "{{ async_virtual_network_cidr }}"
+  with_items: "{{ shared_virtual_machines }}"
 
 - name: Add subnet
   azure_rm_subnet:
     resource_group: "{{ resource_group }}"
-    name: "{{ async_subnet }}"
+    name: "{{ async_subnet }}-{{ item }}"
     address_prefix: "{{ async_subnet_cidr }}"
-    virtual_network: "{{ async_virtual_network }}"
+    virtual_network: "{{ async_virtual_network }}-{{ item }}"
+  with_items: "{{ shared_virtual_machines }}"
 
 - name: Create virtual machines
   azure_rm_virtualmachine:
@@ -18,6 +20,7 @@
       name: "{{ async_virtual_machine_prefix }}-{{ item }}"
       vm_size: Standard_E2_v3
       managed_disk_type: Standard_LRS
+      virtual_network: "{{ async_virtual_network }}-{{ item }}"
       admin_username: adminuser
       admin_password: "!test123@"
       os_type: Linux
