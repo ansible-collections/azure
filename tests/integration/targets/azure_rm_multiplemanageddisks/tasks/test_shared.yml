@@ -118,6 +118,9 @@
 - set_fact:
     vm_ids: "{{ vm_result.results | map(attribute='vms') | flatten | map(attribute='id') | list }}"
 
+- name: Pause for 10 mimutes to delay
+  shell: sleep 600
+
 # Test attach disk on VMs
 - name: Attach existing disks to VMs
   azure.azcollection.azure_rm_multiplemanageddisks:

@@ -12,7 +12,6 @@
     name: "{{ async_subnet }}-{{ item }}"
     address_prefix: "{{ async_subnet_cidr }}"
     virtual_network: "{{ async_virtual_network }}-{{ item }}"
-  with_items: "{{ shared_virtual_machines }}"
   with_sequence: start=1 end="{{ async_number_virtual_machine }}"
 
 - name: Create virtual machines
