@@ -1,20 +1,20 @@
 # setup: create virtual machines to attach disks on
 - name: Create virtual network
   azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "{{ async_virtual_network }}"
     address_prefixes: "{{ async_virtual_network_cidr }}"
 
 - name: Add subnet
   azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "{{ async_subnet }}"
     address_prefix: "{{ async_subnet_cidr }}"
     virtual_network: "{{ async_virtual_network }}"
 
 - name: Create virtual machines
   azure_rm_virtualmachine:
-      resource_group: "{{ resource_group }}"
+      resource_group: "{{ resource_group_secondary }}"
       name: "{{ async_virtual_machine_prefix }}-{{ item }}"
       vm_size: Standard_E2_v3
       managed_disk_type: Standard_LRS
@@ -42,7 +42,7 @@
 
 - name: Retrieve running virtual machine
   azure_rm_virtualmachine_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
   register: _vms
 
 - set_fact:
