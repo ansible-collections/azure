@@ -94,7 +94,7 @@
   with_items: "{{ shared_virtual_machines }}"
   register: create_vms
   async: 1000
-  poll: 0
+  poll: 10
 
 - name: Wait for Virtual machine to be created
   async_status:

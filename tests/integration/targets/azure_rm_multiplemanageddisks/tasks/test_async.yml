@@ -29,7 +29,7 @@
   with_sequence: start=1 end="{{ async_number_virtual_machine }}"
   register: create_vms
   async: 1000
-  poll: 0
+  poll: 10
 
 - name: Wait for Virtual machine to be created
   async_status:
@@ -57,7 +57,7 @@
       - "{{ item.virtual_machine }}"
   register: azure_disks
   async: 1000
-  poll: 0
+  poll: 10
   with_items: "{{ attach_disk_config }}"
 
 - name: Wait for disks to be created and attached
@@ -92,7 +92,7 @@
     state: absent
   register: azure_disks
   async: 1000
-  poll: 0
+  poll: 5
   with_items: "{{ attach_disk_config }}"
 
 - name: Wait for disks to be created and attached
@@ -125,7 +125,7 @@
     state: absent
   register: azure_disks
   async: 1000
-  poll: 0
+  poll: 5
   with_items: "{{ attach_disk_config }}"
 
 - name: Wait for disks to be created and attached
