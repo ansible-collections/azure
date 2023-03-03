@@ -7,18 +7,16 @@ async_virtual_machine_prefix: "async-vm"
 async_number_virtual_machine: 3
 async_number_disk_to_attach: 3
 
+shared_virtual_network: "shareddisk-vnet"
+shared_subnet: "shareddisk-subnet"
 shared_virtual_network_cidr: "10.10.0.0/16"
 shared_subnet_cidr: "10.10.0.0/24"
 shared_virtual_machine_prefix: "shareddisk-vm"
 shared_virtual_machines:
   - name: "shareddisk-vm-1"
     resource_group: "{{ resource_group }}"
-    shared_virtual_network: "shareddisk-vnet"
-    shared_subnet: "shareddisk-subnet"
   - name: "shareddisk-vm-2"
     resource_group: "{{ resource_group }}"
-    shared_virtual_network: "shareddisk-vnet-2"
-    shared_subnet: "shareddisk-subnet-2"
 shared_disks:
   - resource_group: "{{ resource_group }}"
     name: "shareddisk-01"

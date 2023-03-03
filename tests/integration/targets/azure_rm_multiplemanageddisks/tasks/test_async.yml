@@ -4,7 +4,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ async_virtual_network }}-{{ item }}"
     address_prefixes: "{{ async_virtual_network_cidr }}"
-  with_items: "{{ shared_virtual_machines }}"
+  with_sequence: start=1 end="{{ async_number_virtual_machine }}"
 
 - name: Add subnet
   azure_rm_subnet:
@@ -13,6 +13,7 @@
     address_prefix: "{{ async_subnet_cidr }}"
     virtual_network: "{{ async_virtual_network }}-{{ item }}"
   with_items: "{{ shared_virtual_machines }}"
+  with_sequence: start=1 end="{{ async_number_virtual_machine }}"
 
 - name: Create virtual machines
   azure_rm_virtualmachine:

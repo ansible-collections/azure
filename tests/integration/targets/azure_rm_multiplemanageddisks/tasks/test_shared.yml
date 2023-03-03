@@ -67,16 +67,16 @@
 - name: Create virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
-    name: "{{ item.shared_virtual_network }}"
+    name: "vnet-{{ item.name }}"
     address_prefixes: "{{ shared_virtual_network_cidr }}"
   with_items: "{{ shared_virtual_machines }}"
 
 - name: Add subnet
   azure_rm_subnet:
     resource_group: "{{ resource_group }}"
-    name: "{{ item.shared_subnet }}"
+    name: "sub-{{ item.name }}"
     address_prefix: "{{ shared_subnet_cidr }}"
-    virtual_network: "{{ item.shared_virtual_network }}"
+    virtual_network: "vnet-{{ item.name }}"
   with_items: "{{ shared_virtual_machines }}"
 
 - name: Create virtual machines
@@ -84,7 +84,7 @@
       resource_group: "{{ item.resource_group }}"
       name: "{{ item.name }}"
       vm_size: Standard_E2_v3
-      virtual_network: "{{ item.shared_virtual_network }}"
+      virtual_network: "vnet-{{ item.name }}"
       managed_disk_type: Standard_LRS
       admin_username: adminuser
       admin_password: "!test123@"
