@@ -91,6 +91,7 @@
         publisher: Canonical
         sku: 16.04-LTS
         version: latest
+  loop: "{{ create_vms.results }}"
   register: create_vms
 
 - name: Get virtual machine info
