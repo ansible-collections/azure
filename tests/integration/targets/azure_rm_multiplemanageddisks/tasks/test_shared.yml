@@ -94,14 +94,14 @@
   with_items: "{{ shared_virtual_machines }}"
   register: create_vms
   async: 1000
-  poll: 10
+  poll: 0
 
 - name: Wait for Virtual machine to be created
   async_status:
     jid: "{{ item.ansible_job_id }}"
   register: wait_create_vm
   until: wait_create_vm.finished
-  retries: 100
+  retries: 1000
   delay: 5
   loop: "{{ create_vms.results }}"
 
