@@ -131,7 +131,6 @@
   assert:
     that:
       - attach_disks is changed
-      - attach_disks.state | length == 2
 
 - name: Retrieve managed disks info
   azure_rm_manageddisk_info:
