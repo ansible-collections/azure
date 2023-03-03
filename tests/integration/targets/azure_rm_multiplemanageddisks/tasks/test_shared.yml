@@ -134,7 +134,7 @@
   until: wait_attach_disk.finished
   retries: 100
   delay: 5
-  loop: "{{ attach_disks.results }}"
+  loop: "{{ attach_disks }}"
 
 - name: Ensure result is changed
   assert:
