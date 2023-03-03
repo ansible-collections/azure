@@ -118,19 +118,23 @@
 - set_fact:
     vm_ids: "{{ vm_result.results | map(attribute='vms') | flatten | map(attribute='id') | list }}"
 
-- name: Pause for 10 mimutes to delay
-  shell: sleep 600
-
 # Test attach disk on VMs
 - name: Attach existing disks to VMs
   azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks: "{{ shared_disks }}"
-    managed_by_extended: "{{ item }}"
+    managed_by_extended: "{{ shared_virtual_machines }}"
   register: attach_disks
-  with_items: "{{ shared_virtual_machines }}"
+  async: 1000
+  poll: 0
 
-- debug:
-    var: attach_disks
+- name: Wait for disk attach to Virtual machine
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: wait_attach_disk
+  until: wait_attach_disk.finished
+  retries: 100
+  delay: 5
+  loop: "{{ attach_disks.results }}"
 
 - name: Ensure result is changed
   assert:
