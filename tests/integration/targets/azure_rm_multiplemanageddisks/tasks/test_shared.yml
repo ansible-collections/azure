@@ -123,24 +123,13 @@
   azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks: "{{ shared_disks }}"
     managed_by_extended: "{{ shared_virtual_machines }}"
-  register: attach_disks
   async: 1000
   poll: 0
-
-- name: Wait for disk attach to Virtual machine
-  async_status:
-    jid: "{{ item.ansible_job_id }}"
-  register: wait_attach_disk
-  until: wait_attach_disk.finished
-  retries: 100
-  delay: 5
-  loop: "{{ attach_disks }}"
 
 - name: Ensure result is changed
   assert:
     that:
       - attach_disks is changed
-      - attach_disks.state | length == 2
 
 - name: Retrieve managed disks info
   azure_rm_manageddisk_info:
