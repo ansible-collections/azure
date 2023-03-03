@@ -358,12 +358,11 @@
     name: "{{ sg_name1 }}"
     state: absent
 
-- name: Delete all security groups
+- name: Delete security group
   azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
-    name: "{{ item.name }}"
+    name: "{{ secgroupname }}"
     state: absent
-  with_items: "{{ output_groups.securitygroups }}"
 
 - name: Should have no security groups remaining
   azure_rm_securitygroup_info:
