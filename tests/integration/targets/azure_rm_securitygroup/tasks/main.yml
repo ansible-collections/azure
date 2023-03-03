@@ -6,7 +6,6 @@
     sg_name1: "sgasg{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
 
-
 - name: Create security group
   azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
@@ -352,6 +351,12 @@
   assert:
     that:
       - not output.changed
+
+- name: Delete security group
+  azure_rm_securitygroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ sg_name1 }}"
+    state: absent
 
 - name: Delete all security groups
   azure_rm_securitygroup:
