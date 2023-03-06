@@ -145,6 +145,10 @@
 
 - debug:
     var: azure_disks
+
+
+- debug:
+    var: azure_disks.results | map(attribute='ansible_info') | list | map(attribute='azure_managed_disk') | flatten | list
 - name: Validate disks are attached to the VMs
   assert:
     that:
