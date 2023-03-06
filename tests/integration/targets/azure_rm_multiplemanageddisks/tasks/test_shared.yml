@@ -126,6 +126,8 @@
     managed_by_extended: "{{ shared_virtual_machines }}"
   register: attach_disks
   with_items: "{{ shared_disks }}"
+  async: 1000
+  poll: 0
 - debug:
     var: attach_disks
 - name: Ensure result is changed
