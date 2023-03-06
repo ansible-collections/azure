@@ -525,7 +525,9 @@ class AzureRMMultipleManagedDisk(AzureRMModuleBase):
         if self.managed_by_extended is not None and len(self.managed_by_extended) > 0:
             # Attach the disk to multiple VM
             attach_config = []
+            import time
             for vm in managed_vm_id:
+                time.sleep(5)
                 disks = [(d, i) for d, i in disk_instances if not self._is_disk_attached_to_vm(vm.id, i)]
                 if len(disks) > 0:
                     attach_config.append(self.create_attachment_configuration(vm, disks))
