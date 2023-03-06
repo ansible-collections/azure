@@ -14,16 +14,16 @@ shared_subnet_cidr: "10.10.0.0/24"
 shared_virtual_machine_prefix: "shareddisk-vm"
 shared_virtual_machines:
   - name: "shareddisk-vm-1"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
   - name: "shareddisk-vm-2"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
 shared_disks:
-  - resource_group: "{{ resource_group }}"
+  - resource_group: "{{ resource_group_secondary }}"
     name: "shareddisk-01"
     disk_size_gb: 4
     storage_account_type: StandardSSD_LRS
     max_shares: 3
-  - resource_group: "{{ resource_group }}"
+  - resource_group: "{{ resource_group_secondary }}"
     name: "shareddisk-02"
     disk_size_gb: 4
     storage_account_type: StandardSSD_LRS
