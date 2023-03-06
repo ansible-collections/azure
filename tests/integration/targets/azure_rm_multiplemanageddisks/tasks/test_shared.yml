@@ -128,6 +128,14 @@
   with_items: "{{ shared_disks }}"
   async: 1000
   poll: 0
+- name: Wait for Disk attach to Virtual machine
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: attach_disk
+  until: attach_disk.finished
+  retries: 100
+  delay: 5
+  loop: "{{ attach_disks.results }}"
 - debug:
     var: attach_disks
 - name: Ensure result is changed
