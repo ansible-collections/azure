@@ -2,15 +2,15 @@
 - name: Create managed disks with missing required parameters
   azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
-      - resource_group: "{{ resource_group }}"
+      - resource_group: "{{ resource_group_secondary }}"
         name: "disk-copy-without-source-uri"
         create_option: copy
         max_shares: 3
-      - resource_group: "{{ resource_group }}"
+      - resource_group: "{{ resource_group_secondary }}"
         name: "disk-import-without-storage-account"
         create_option: import
         max_shares: 3
-      - resource_group: "{{ resource_group }}"
+      - resource_group: "{{ resource_group_secondary }}"
         name: "disk-empty-without-disk-size"
         create_option: empty
         max_shares: 3
@@ -22,9 +22,9 @@
     that:
       - result is failed
       - 'result.msg == "Some required options are missing from managed disks configuration."'
-      - '"managed disk {{ resource_group }}/disk-copy-without-source-uri has create_option set to copy but not all required parameters (source_uri) are set." in result.errors'
-      - '"managed disk {{ resource_group }}/disk-import-without-storage-account has create_option set to import but not all required parameters (source_uri,storage_account_id) are set." in result.errors'
-      - '"managed disk {{ resource_group }}/disk-empty-without-disk-size has create_option set to empty but not all required parameters (disk_size_gb) are set." in result.errors'
+      - '"managed disk {{ resource_group_secondary }}/disk-copy-without-source-uri has create_option set to copy but not all required parameters (source_uri) are set." in result.errors'
+      - '"managed disk {{ resource_group_secondary }}/disk-import-without-storage-account has create_option set to import but not all required parameters (source_uri,storage_account_id) are set." in result.errors'
+      - '"managed disk {{ resource_group_secondary }}/disk-empty-without-disk-size has create_option set to empty but not all required parameters (disk_size_gb) are set." in result.errors'
 
 # Test managed disks creation
 - name: Create managed disks
@@ -66,22 +66,25 @@
 # setup: create virtual machines to attach disks on
 - name: Create virtual network
   azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: "{{ shared_virtual_network }}"
+    resource_group: "{{ resource_group_secondary }}"
+    name: "vnet-{{ item.name }}"
     address_prefixes: "{{ shared_virtual_network_cidr }}"
+  with_items: "{{ shared_virtual_machines }}"
 
 - name: Add subnet
   azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
-    name: "{{ shared_subnet }}"
+    resource_group: "{{ resource_group_secondary }}"
+    name: "sub-{{ item.name }}"
     address_prefix: "{{ shared_subnet_cidr }}"
-    virtual_network: "{{ shared_virtual_network }}"
+    virtual_network: "vnet-{{ item.name }}"
+  with_items: "{{ shared_virtual_machines }}"
 
 - name: Create virtual machines
   azure_rm_virtualmachine:
       resource_group: "{{ item.resource_group }}"
       name: "{{ item.name }}"
       vm_size: Standard_E2_v3
+      virtual_network: "vnet-{{ item.name }}"
       managed_disk_type: Standard_LRS
       admin_username: adminuser
       admin_password: "!test123@"
@@ -119,14 +122,16 @@
 - name: Attach existing disks to VMs
   azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks: "{{ shared_disks }}"
-    managed_by_extended: "{{ shared_virtual_machines }}"
+    managed_by_extended:
+      - "{{ item }}"
   register: attach_disks
+  with_items: "{{ shared_virtual_machines }}"
 
 - name: Ensure result is changed
   assert:
     that:
       - attach_disks is changed
-      - attach_disks.state | length == 2
+      - attach_disks.results | length == 2
 
 - name: Retrieve managed disks info
   azure_rm_manageddisk_info:
