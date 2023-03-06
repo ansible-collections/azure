@@ -134,6 +134,7 @@
   assert:
     that:
       - attach_disks is changed
+      - attach_disks.results | length == 2
 
 - name: Retrieve managed disks info
   azure_rm_manageddisk_info:
@@ -142,6 +143,8 @@
   register: azure_disks
   with_items: "{{ shared_disks }}"
 
+- debug:
+    var: azure_disks
 - name: Validate disks are attached to the VMs
   assert:
     that:
