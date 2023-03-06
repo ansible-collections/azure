@@ -123,6 +123,7 @@
   azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks: "{{ shared_disks }}"
     managed_by_extended: "{{ shared_virtual_machines }}"
+  register: attach_disks
   async: 1000
   poll: 0
 
@@ -130,6 +131,7 @@
   assert:
     that:
       - attach_disks is changed
+      - attach_disks.state | length == 2
 
 - name: Retrieve managed disks info
   azure_rm_manageddisk_info:
