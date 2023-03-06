@@ -29,6 +29,8 @@
         publisher: Canonical
         sku: 16.04-LTS
         version: latest
+      tags:
+        key: value
   with_sequence: start=1 end="{{ async_number_virtual_machine }}"
   register: create_vms
   async: 1000
@@ -46,6 +48,8 @@
 - name: Retrieve running virtual machine
   azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group_secondary }}"
+    tags:
+      - key
   register: _vms
 
 - set_fact:
