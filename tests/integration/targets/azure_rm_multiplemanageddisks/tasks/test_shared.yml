@@ -126,7 +126,8 @@
   register: attach_disks
   async: 1000
   poll: 0
-
+- debug:
+    var: attach_disks
 - name: Ensure result is changed
   assert:
     that:
