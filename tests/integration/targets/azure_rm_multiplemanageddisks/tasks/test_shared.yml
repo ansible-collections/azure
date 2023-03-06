@@ -121,11 +121,11 @@
 # Test attach disk on VMs
 - name: Attach existing disks to VMs
   azure.azcollection.azure_rm_multiplemanageddisks:
-    managed_disks:
+    managed_disks: "{{ shared_disks }}"
+    managed_by_extended:
       - "{{ item }}"
-    managed_by_extended: "{{ shared_virtual_machines }}"
   register: attach_disks
-  with_items: "{{ shared_disks }}"
+  with_items: "{{ shared_virtual_machines }}"
 
 - name: Ensure result is changed
   assert:
