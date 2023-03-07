@@ -313,6 +313,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError, AzureError
     from msrestazure.tools import parse_resource_id
+    import time
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -526,6 +527,7 @@ class AzureRMMultipleManagedDisk(AzureRMModuleBase):
             # Attach the disk to multiple VM
             attach_config = []
             for vm in managed_vm_id:
+                time.sleep(5)
                 disks = [(d, i) for d, i in disk_instances if not self._is_disk_attached_to_vm(vm.id, i)]
                 if len(disks) > 0:
                     attach_config.append(self.create_attachment_configuration(vm, disks))
