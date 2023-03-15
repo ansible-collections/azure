@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Haiyuan Zhang, <haiyzhan@microsoft.com>
+# Copyright (c) 2022 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -38,7 +38,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
-    haiyuan_zhang (@haiyuazhang)
+    xuzhang3 (@xuzhang3)    
     Fred-sun (@Fred-sun)
 '''
 
@@ -83,8 +83,30 @@ object_id:
     returned: always
     type: str
     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-
-
+spa:
+    descriptoin:
+        - Redirects the single page application(SPA) URI,
+    returnd: always
+    type: dcit
+    sample: {redirectUris:['https://spa.com']}
+web:
+    descriptoin:
+        - Redirects the Web URI,
+    returnd: always
+    type: dcit
+    sample: {redirectUris:['https://web.com']}
+public_client:
+    descriptoin:
+        - Redirects the public client/native URI.
+    returnd: always
+    type: dcit
+    sample: {redirectUris:['https://localhost']}
+sign_in_audience:
+    description:
+        - The service principal account type.
+    type: str
+    returned: always
+    sample: PersonalMicrosoftAccount
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
@@ -143,7 +165,11 @@ class AzureRMMSServicePrincipalInfo(AzureRMModuleBase):
                 app_id=object['appId'],
                 object_id=object['id'],
                 app_display_name=object['displayName'],
-                app_roles=object['appRoles']
+                app_roles=object['appRoles'],
+                sign_in_audience=object['signInAudience'],
+                web={'redirectUris': object['web']['redirectUris']},
+                public_client={'redirectUris': object['publicClient']['redirectUris']},
+                spa={'redirectUris': object['spa']['redirectUris']},
             )
 
 
