@@ -12,7 +12,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_msserviceprincipal
 
-version_added: "0.2.0"
+version_added: "1.15.0"
 
 short_description: Manage Azure Active Directory service principal
 
@@ -156,8 +156,6 @@ sign_in_audience:
     returned: always
     sample: PersonalMicrosoftAccount
 '''
-import logging
-logging.basicConfig(filename='mm.log', level=logging.INFO)
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 import json
 
@@ -233,8 +231,7 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
                         response = item
         except Exception as e:
             self.log("There is not service principal {0}".format(str(e)))
-
-        if response.get('error'):
+        if response is not None and response.get('error'):
             response = None
 
         if response is not None:
@@ -275,8 +272,6 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
             self.fail("Error deleting service principal {0}".format(str(e)))
 
     def to_dict(self, object):
-        logging.info('pppppp')
-        logging.info(object)
         if object is not None:
             return dict(
                 app_id=object['appId'],

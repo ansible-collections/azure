@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 module: azure_rm_msserviceprincipal_info
 
-version_added: "0.2.0"
+version_added: "1.15.0"
 
 short_description: Get Azure Active Directory service principal info
 
