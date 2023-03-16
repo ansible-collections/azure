@@ -1,5 +1,60 @@
 # Change Log
 
+## v1.15.0 (2023-03-15)
+
+### NEW MODULES
+  - azure_rm_multiplemanageddisks: New module to create/update/delete/attach multiple disks ([#936](https://github.com/ansible-collections/azure/pull/936))
+  - azure_rm_sqlelasticpool: Add azure_rm_sqlelasticpool.py to create Elastic Pool ([#1027](https://github.com/ansible-collections/azure/pull/1027))
+  - azure_rm_sqlelasticpool_info: Add azure_rm_sqlelasticpool_info.py to get Elastic Pool info ([#1027](https://github.com/ansible-collections/azure/pull/1027))
+  - azure_rm_sqlmanagedinstance: Add azure_rm_sqlmanagedinstance module ([#1039](https://github.com/ansible-collections/azure/pull/1039))
+  - azure_rm_sqlmanagedinstance_info: Add azure_rm_sqlmanagedinstance module ([#1039](https://github.com/ansible-collections/azure/pull/1039))
+
+### FEATURE ENHANCEMENT
+  - requirements-azure.txt: Upgrade azure-mgmt-apimanagement to 3.0.0 ([#943](https://github.com/ansible-collections/azure/pull/943))
+  - azure_rm_openshiftmanagedcluster: Add new choices to vm_size in azure_rm_openshiftmanagedcluster.py ([#979](https://github.com/ansible-collections/azure/pull/979))
+  - azure_rm_appgateway: Add new parameters to azure_rm_appgateway ([#990](https://github.com/ansible-collections/azure/pull/990))
+  - azure_rm.py: Add compose support in inventory/azure_rm.py ([#1065](https://github.com/ansible-collections/azure/pull/1065))
+  - azure_rm_backupazurevm: add option for recovery point expiry time ([#1057](https://github.com/ansible-collections/azure/pull/1057))
+  - runtime.yml: Keep action_groups and modules list consistent #([1042](https://github.com/ansible-collections/azure/pull/1042))
+  - azure_rm_virtualnetworkpeering: Add synchronizing of VNet peering when sync level is LocalNotInSync ([#1025](https://github.com/ansible-collections/azure/pull/1025))
+  - azure_rm_deployment: Upgrade azure-mgmt-resource to 21.1.0 ([#960](https://github.com/ansible-collections/azure/pull/960))
+  - azure_rm_deployment_info: Upgrade azure-mgmt-resource to 21.1.0 ([#960](https://github.com/ansible-collections/azure/pull/960))
+  - azure_rm_lock: Upgrade azure-mgmt-resource to 21.1.0 ([#960](https://github.com/ansible-collections/azure/pull/960))
+  - azure_rm_subscription: Upgrade azure-mgmt-resource to 21.1.0 ([#960](https://github.com/ansible-collections/azure/pull/960))
+  - azure_rm_subscription_info: Upgrade azure-mgmt-resource to 21.1.0 ([#960](https://github.com/ansible-collections/azure/pull/960))
+  - azure_rm_resourcegroup: Upgrade azure-mgmt-resource to 21.1.0 ([#960](https://github.com/ansible-collections/azure/pull/960))
+  - azure_rm_resourcegroup_info: Upgrade azure-mgmt-resource to 21.1.0 ([#960](https://github.com/ansible-collections/azure/pull/960))
+  - azure_rm_virtualmachine: Upgrade azure-mgmt-resource to 21.1.0 ([#960](https://github.com/ansible-collections/azure/pull/960))
+  - azure_rm_storageblob: Make batch_upload honour `force` attribute in azure_rm_storageblob ([#1018](https://github.com/ansible-collections/azure/pull/1018))
+  - azure_rm_virtualnetwork: Add `flow_timeout_in_minutes` to azure_rm_virtualnetwork ([#1036](https://github.com/ansible-collections/azure/pull/1036))
+  - azure_rm_virtualnetwork_info: Add `flow_timeout_in_minutes` to azure_rm_virtualnetwork ([#1036](https://github.com/ansible-collections/azure/pull/1036))
+  - requirements-azure.txt: Bump cryptography from 38.0.1 to 38.0.3 ([#1035](https://github.com/ansible-collections/azure/pull/1035))
+  - azure_rm_galleryimageversion_info: Read paginated response for gallery image versions ([#1073](https://github.com/ansible-collections/azure/pull/1073))
+  - azure_rm_virtualmachine: Add `security_profile` options to azure_rm_virtualmachine ([#1033](https://github.com/ansible-collections/azure/pull/1033))
+  - azure_rm_virtualmachine_info: Add `security_profile` options to azure_rm_virtualmachine ([#1033](https://github.com/ansible-collections/azure/pull/1033))
+
+### BUG FIXING
+  - azure_rm_deployment: Fix Ansible azure_rm_deployment module returns error but deployment in Azure was successful ([#986](https://github.com/ansible-collections/azure/pull/986))
+  - azure_rm.py: support for environment variable ANSIBLE_AZURE_VM_RESOURCE_GROUPS ([#975](https://github.com/ansible-collections/azure/pull/975))
+  - azure_rm_common.py: Ensure trailing slash on base_url ([#984](https://github.com/ansible-collections/azure/pull/984))
+  - azure_rm_virtualmachine: Correct spelling errors in documents ([#1012](https://github.com/ansible-collections/azure/pull/1012))
+  - azure_rm_storageblob: Format the md5 value returned by azure_rm_storageblob.py ([#1038](https://github.com/ansible-collections/azure/pull/1038))
+  - aure_rm_loadbalancer: The zone default value is None if not configured ([#1060](https://github.com/ansible-collections/azure/pull/1060))
+  - README.md: Correct spelling errors in documents ([#1059](https://github.com/ansible-collections/azure/pull/1059))
+  - azure_rm_securitygroup: Fixed idempotent error due to protocol ([#1064](https://github.com/ansible-collections/azure/pull/1064))
+  - azure_rm_roleassignment: Correct document case's config ([#1053](https://github.com/ansible-collections/azure/pull/1053))
+  - azure_rm_privatednsrecordset: Change the defined long type to int ([#1058](https://github.com/ansible-collections/azure/pull/1058))
+  - azure_rm_keyvault: Add the required restriction to the parameter ([#1054](https://github.com/ansible-collections/azure/pull/1054))
+  - azure_rm_dnsrecordset: Change the defined long type to int ([#1052](https://github.com/ansible-collections/azure/pull/1052))
+  - azure_rm_common.py: Add Ansible 2.14 and python 3.11 to CI ([#1074](https://github.com/ansible-collections/azure/pull/1074))
+  - azure_rm_backuppolicy: Add Ansible 2.14 and python 3.11 to CI ([#1074](https://github.com/ansible-collections/azure/pull/1074))
+  - azure_rm_manageddisk: Add Ansible 2.14 and python 3.11 to CI ([#1074](https://github.com/ansible-collections/azure/pull/1074))
+  - azure_rm_multiplemanageddisks: Add Ansible 2.14 and python 3.11 to CI ([#1074](https://github.com/ansible-collections/azure/pull/1074))
+  - azure_rm_sqlmanagedinstance: Add Ansible 2.14 and python 3.11 to CI ([#1074](https://github.com/ansible-collections/azure/pull/1074))
+  - azure_rm_servicebussaspolicy: Add Ansible 2.14 and python 3.11 to CI ([#1074](https://github.com/ansible-collections/azure/pull/1074))
+  - azure_rm_virtualmachine: Add Ansible 2.14 and python 3.11 to CI ([#1074](https://github.com/ansible-collections/azure/pull/1074))
+  - azure_rm_securitygroup: azure_rm_securitygroup is changed without actual changes when only capitalization differs ([#1096](https://github.com/ansible-collections/azure/pull/1096))
+
 ## v1.14.0 (2022-10-31)
 
 ### NEW MODULES
