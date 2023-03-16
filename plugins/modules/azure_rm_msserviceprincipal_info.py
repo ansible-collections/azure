@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2022 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+# Copyright (c) 2023 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 module: azure_rm_msserviceprincipal_info
 
-version_added: "1.15.0"
+version_added: "1.16.0"
 
 short_description: Get Azure Active Directory service principal info
 
@@ -38,8 +38,8 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
-    xuzhang3 (@xuzhang3)    
-    Fred-sun (@Fred-sun)
+    - xuzhang3 (@xuzhang3)    
+    - Fred-sun (@Fred-sun)
 '''
 
 EXAMPLES = '''

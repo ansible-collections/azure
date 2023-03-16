@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020 Cole Neubauer, (@coleneubauer)
+# Copyright (c) 2023 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 module: azure_rm_msuser_info
 
-version_added: "1.4.0"
+version_added: "1.16.0"
 
 short_description: Get Azure Microsoft Graph user info
 
@@ -56,8 +56,8 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
-    - Cole Neubauer(@coleneubauer)
-
+    - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 '''
 
 EXAMPLES = '''

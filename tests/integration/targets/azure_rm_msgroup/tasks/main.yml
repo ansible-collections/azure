@@ -1,0 +1,39 @@
+- set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+
+- name: create new microsoft groups
+  azure_rm_msgroup:
+    display_name: "{{ rpfx }}"
+    description: "For test group "
+    mail_nickname: msgrouptest
+    group_types:
+      - Unified
+    mail_enabled: True
+    security_enabled: True
+  register: create_output
+
+- assert:
+    that:
+      - create_output.changed
+
+- name: Get ad groups info by display_name
+  azure_rm_msgroup_info:
+    attribute_name: displayName
+    attribute_value: "{{ rpfx }}"
+  register: output
+
+- assert:
+    that:
+      - output.ms_groups[0].mail_enabled
+      - output.ms_groups[0].securityEnabled
+      - output.ms_groups[0].mail_nickname == "msgrouptest"
+
+- name: Delete microsoft groups
+  azure_rm_msgroup:
+    display_name: "{{ rpfx }}"
+    state: absent
+  register: output
+
+- assert:
+    that:
+      - output.changed

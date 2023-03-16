@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2022 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+# Copyright (c) 2023 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -12,7 +12,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_msserviceprincipal
 
-version_added: "1.15.0"
+version_added: "1.16.0"
 
 short_description: Manage Azure Active Directory service principal
 
@@ -226,9 +226,15 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
                 response = client.get('/applications/' + self.object_id).json()
             elif self.app_id is not None:
                 response = client.get('/applications/').json()['value']
+                flag = False
                 for item in response:
                     if item['appId'] == self.app_id:
+                        flag = True
                         response = item
+                        break
+                if not flag:
+                    response = None
+
         except Exception as e:
             self.log("There is not service principal {0}".format(str(e)))
         if response is not None and response.get('error'):

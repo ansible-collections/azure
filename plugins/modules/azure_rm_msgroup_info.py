@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2021 Cole Neubauer, (@coleneubauer)
+# Copyright (c) 2023 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -9,7 +9,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 module: azure_rm_msgroup_info
-version_added: "1.6.0"
+version_added: "1.16.0"
 short_description: Get Microsoft Graph group info
 description:
     - Get Microsoft Graph group info.
@@ -41,7 +41,8 @@ options:
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
-    - Cole Neubauer(@coleneubauer)
+    - xuzhang3 (@xuzhang3)
+    - Fred-sun (@Fred-sun)
 '''
 
 EXAMPLES = '''
@@ -78,18 +79,31 @@ securityEnabled:
     returned: always
     type: bool
     sample: False
-mail:
+mail_nickname:
     description:
-        - The primary email address of the group.
+        - The mail alias for the group.
     returned: always
     type: str
-    sample: group@contoso.com
+    sample: groupname
+mail_enabled:
+    description:
+        - Whether the group is mail-enabled. Must be false.
+        - This is because only pure security groups can be created using the Graph API.
+    returned: always
+    type: bool
+    sample: False
 description:
-        description:
-            - Description of the MS group.
-        type: str
-        returned: always
-        sample: test
+    description:
+        - Describe of the ad group.
+    type: str
+    returned: always
+    sample: For test
+group_type:
+    description:
+        - The Type of the ad group.
+    type: str
+    returned: always
+    sample: Microsoft 365
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
@@ -147,7 +161,8 @@ class AzureRMMSGroupInfo(AzureRMModuleBase):
             self.results['ms_groups'] = [self.group_to_dict(sp_item) for sp_item in ms_groups]
 
         except Exception as e:
-            self.fail("failed to get MS group info {0}".format(str(e)))
+            self.log("failed to get MS group info {0}".format(str(e)))
+            self.results['ms_groups'] = []
 
         return self.results
 
@@ -157,11 +172,12 @@ class AzureRMMSGroupInfo(AzureRMModuleBase):
             return dict(
                 object_id=object['id'],
                 displayName=object['displayName'],
-                mail=object['mail'],
                 securityEnabled=object['securityEnabled'],
-                description=object['description']
+                description=object['description'],
+                mail_nickname=object['mailNickname'],
+                mail_enabled=object['mailEnabled'],
+                group_type=object['groupTypes'],
             )
-
 
 def main():
     AzureRMMSGroupInfo()
