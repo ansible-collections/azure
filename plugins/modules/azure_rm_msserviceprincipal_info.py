@@ -38,7 +38,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
-    - xuzhang3 (@xuzhang3) 
+    - xuzhang3 (@xuzhang3)
     - Fred-sun (@Fred-sun)
 '''
 
