@@ -132,6 +132,9 @@ parameters:
     - "azure_rm_datafactory"
     - "azure_rm_bastionhost"
     - "azure_rm_sqlmanagedinstance"
+    - "azure_rm_msserviceprincipal"
+    - "azure_rm_msuser"
+    - "azure_rm_msgroup"
     - "inventory_azure"
     - "setup_azure"
 

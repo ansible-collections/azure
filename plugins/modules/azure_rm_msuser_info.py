@@ -56,8 +56,8 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
-    - azure.azcollection.azure
-    - azure.azcollection.azure_tags
+    - xuzhang3 (@xuzhang3)
+    - Fred-sun (@Fred-sun)
 '''
 
 EXAMPLES = '''
