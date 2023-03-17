@@ -24,7 +24,6 @@ options:
         description:
             - The application ID.
         type: str
-        required: True
     object_id:
         description:
             - It's service principal's object ID.
@@ -37,7 +36,7 @@ options:
         description:
             - Redirects the Web URI,
         type: dict
-        subopions:
+        suboptions:
             redirectUris:
                 description:
                     - The authentication response to this URI.
@@ -47,7 +46,7 @@ options:
         description:
             - Redirects the single page application(SPA) URI,
         type: dict
-        subopions:
+        suboptions:
             redirectUris:
                 description:
                     - The authentication response to this URI.
@@ -57,7 +56,7 @@ options:
         description:
             - Redirects the public client/native URI,
         type: dict
-        subopions:
+        suboptions:
             redirectUris:
                 description:
                     - The authentication response to this URI.
@@ -86,11 +85,10 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
-    xuzhang3 (@xuzhang3)
-    Fred-sun (@Fred-sun)
+    - xuzhang3 (@xuzhang3)
+    - Fred-sun (@Fred-sun)
 '''
 
 EXAMPLES = '''
@@ -132,23 +130,23 @@ object_id:
     type: str
     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 spa:
-    descriptoin:
+    description:
         - Redirects the single page application(SPA) URI,
-    returnd: always
-    type: dcit
-    sample: {redirectUris:['https://spa.com']}
+    returned: always
+    type: dict
+    sample: {'redirectUris':['https://spa.com']}
 web:
-    descriptoin:
+    description:
         - Redirects the Web URI,
-    returnd: always
-    type: dcit
-    sample: {redirectUris:['https://web.com']}
+    returned: always
+    type: dict
+    sample: {'redirectUris':['https://web.com']}
 public_client:
-    descriptoin:
+    description:
         - Redirects the public client/native URI.
-    returnd: always
-    type: dcit
-    sample: {redirectUris:['https://localhost']}
+    returned: always
+    type: dict
+    sample: {'redirectUris':['https://localhost']}
 sign_in_audience:
     description:
         - The service principal account type.
@@ -180,7 +178,11 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
             app_id=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             name=dict(type='str'),
-            sign_in_audience=dict(type='str', choices=['AzureADMyOrg','AzureADMultipleOrgs', 'AzureADandPersonalMicrosoftAccount', 'PersonalMicrosoftAccount']),
+            sign_in_audience=dict(
+                type='str',
+                choices=['AzureADMyOrg','AzureADMultipleOrgs', 'AzureADandPersonalMicrosoftAccount', 'PersonalMicrosoftAccount'],
+                default='AzureADMyOrg'
+            ),
             web=dict(type='dict', options=web_spec),
             spa=dict(type='dict', options=spa_spec),
             public_client=dict(type='dict', options=public_client_spec)

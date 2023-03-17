@@ -57,7 +57,7 @@ options:
             - Description of the groups.
         type: str
     group_types:
-        descriptioin:
+        description:
             - The type of the groups.
         type: list
         elements: str

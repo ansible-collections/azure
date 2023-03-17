@@ -30,7 +30,6 @@ options:
         description:
             - The object id for the user.
             - Updates or deletes the user who has this object ID.
-            - Mutually exclusive with I(user_principal_name), I(attribute_name), and I(odata_filter).
         type: str
     account_enabled:
         description:
@@ -67,7 +66,6 @@ options:
         description:
             - The principal name of the user.
             - Creates, updates, or deletes the user who has this principal name.
-            - Mutually exclusive with I(object_id), I(attribute_name), and I(odata_filter).
         type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -147,8 +145,9 @@ class AzureRMMSUser(AzureRMModuleBase):
             display_name=dict(type='str'),
             password_profile=dict(
                 type='dict',
+                no_log=True,
                 options=dict(
-                    Password=dict(type='str', no_log=True)
+                    Password=dict(type='str', no_log=True),
                 )
             ),
             mail_nickname=dict(type='str'),

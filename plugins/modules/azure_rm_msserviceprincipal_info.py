@@ -84,23 +84,23 @@ object_id:
     type: str
     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 spa:
-    descriptoin:
+    description:
         - Redirects the single page application(SPA) URI,
-    returnd: always
-    type: dcit
-    sample: {redirectUris:['https://spa.com']}
+    returned: always
+    type: dict
+    sample: {'redirectUris':['https://spa.com']}
 web:
-    descriptoin:
+    description:
         - Redirects the Web URI,
-    returnd: always
-    type: dcit
-    sample: {redirectUris:['https://web.com']}
+    returned: always
+    type: dict
+    sample: {'redirectUris':['https://web.com']}
 public_client:
-    descriptoin:
+    description:
         - Redirects the public client/native URI.
-    returnd: always
-    type: dcit
-    sample: {redirectUris:['https://localhost']}
+    returned: always
+    type: dict
+    sample: {'redirectUris':['https://localhost']}
 sign_in_audience:
     description:
         - The service principal account type.
