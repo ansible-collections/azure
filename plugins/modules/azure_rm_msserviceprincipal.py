@@ -17,7 +17,7 @@ version_added: "1.16.0"
 short_description: Manage Azure Active Directory service principal
 
 description:
-        - Manage Azure Active Directory service principal.
+    - Manage Azure Active Directory service principal.
 
 options:
     app_id:
@@ -118,7 +118,7 @@ app_id:
     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 app_role:
     description:
-        -  The collection of application roles that an application may declare.
+        - The collection of application roles that an application may declare.
         - These roles can be assigned to users, groups or service principals.
     returned: always
     type: list
@@ -170,9 +170,9 @@ web_spec = dict(
     redirectUris=dict(type='list', elements='str')
 )
 
+
 class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
     def __init__(self):
-
         self.module_arg_spec = dict(
             object_id=dict(type='str'),
             app_id=dict(type='str'),
@@ -180,7 +180,7 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
             name=dict(type='str'),
             sign_in_audience=dict(
                 type='str',
-                choices=['AzureADMyOrg','AzureADMultipleOrgs', 'AzureADandPersonalMicrosoftAccount', 'PersonalMicrosoftAccount'],
+                choices=['AzureADMyOrg', 'AzureADMultipleOrgs', 'AzureADandPersonalMicrosoftAccount', 'PersonalMicrosoftAccount'],
                 default='AzureADMyOrg'
             ),
             web=dict(type='dict', options=web_spec),
@@ -218,7 +218,7 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
             elif key == 'web':
                 self.body['web'] = kwargs[key]
             elif key == 'spa':
-               self.body['spa'] = kwargs[key]
+                self.body['spa'] = kwargs[key]
 
         client = self.get_msgraph_client()
         response = None
@@ -244,9 +244,9 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
 
         if response is not None:
             if self.state == 'present':
-                    changed = True
-                    client.delete('/applications/' + response['id'])
-                    response = self.create_resource(self.body)
+                changed = True
+                client.delete('/applications/' + response['id'])
+                response = self.create_resource(self.body)
             else:
                 changed = True
                 response = self.delete_resource(response['id'])
@@ -262,7 +262,6 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
 
         return self.results
 
-
     def create_resource(self, obj):
         client = self.get_msgraph_client()
         res = None
@@ -270,7 +269,7 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
             res = client.post('/applications/', data=json.dumps(obj), headers={'Content-Type': 'application/json'})
             return self.to_dict(res.json())
         except Exception as e:
-            self.fail("Error creating service principle, app id {0} - {1}".format(self.app_id, str(e))) 
+            self.fail("Error creating service principle, {0}".format(str(e)))
 
     def delete_resource(self, obj):
         client = self.get_msgraph_client()

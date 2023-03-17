@@ -38,7 +38,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
-    - xuzhang3 (@xuzhang3)    
+    - xuzhang3 (@xuzhang3) 
     - Fred-sun (@Fred-sun)
 '''
 
@@ -150,7 +150,7 @@ class AzureRMMSServicePrincipalInfo(AzureRMModuleBase):
                 for item in response:
                     if item['appId'] == self.app_id:
                         service_principals.append(item)
-            elif all:
+            elif self.all:
                 service_principals = client.get('/applications/').json()['value']
 
             self.results['service_principals'] = [self.to_dict(sp) for sp in service_principals]

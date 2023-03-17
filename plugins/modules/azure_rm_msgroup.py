@@ -134,6 +134,7 @@ group_type:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 import json
 
+
 class AzureRMMSGroup(AzureRMModuleBase):
     def __init__(self):
 
@@ -225,7 +226,7 @@ class AzureRMMSGroup(AzureRMModuleBase):
                 self.log("The ad groups is not exist")
 
         self.results['changed'] = changed
-        self.results['state'] =  response
+        self.results['state'] = response
 
         return self.results
 

@@ -134,9 +134,10 @@ givenName:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 import json
+
+
 class AzureRMMSUser(AzureRMModuleBase):
     def __init__(self):
-
         self.module_arg_spec = dict(
             user_principal_name=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent']),

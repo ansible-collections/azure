@@ -120,6 +120,7 @@ givenName:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
+
 class AzureRMMSUserInfo(AzureRMModuleBase):
     def __init__(self):
 

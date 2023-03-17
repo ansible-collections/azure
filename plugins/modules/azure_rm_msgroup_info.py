@@ -166,7 +166,6 @@ class AzureRMMSGroupInfo(AzureRMModuleBase):
 
         return self.results
 
-
     def group_to_dict(self, object):
         if object is not None:
             return dict(
@@ -178,6 +177,7 @@ class AzureRMMSGroupInfo(AzureRMModuleBase):
                 mail_enabled=object['mailEnabled'],
                 group_type=object['groupTypes'],
             )
+
 
 def main():
     AzureRMMSGroupInfo()
