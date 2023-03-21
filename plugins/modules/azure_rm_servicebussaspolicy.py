@@ -198,6 +198,7 @@ class AzureRMServiceBusSASPolicy(AzureRMModuleBase):
         super(AzureRMServiceBusSASPolicy, self).__init__(self.module_arg_spec,
                                                          mutually_exclusive=mutually_exclusive,
                                                          required_if=required_if,
+                                                         supports_tags=False,
                                                          supports_check_mode=True)
 
     def exec_module(self, **kwargs):
