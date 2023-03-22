@@ -919,9 +919,6 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                                    child_name_1=name)
         return val
 
-    def compare_ip_configure(self, old, new):
-        pass
-
     def construct_ip_configuration_set(self, raw):
         configurations = [dict(
             private_ip_allocation_method=to_native(item.get('private_ip_allocation_method')),
@@ -938,7 +935,6 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                                          if item.get('application_security_groups') else None),
             name=to_native(item.get('name'))
         ) for item in raw]
-        #return set(configurations)
         return configurations
 
 
