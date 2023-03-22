@@ -164,6 +164,7 @@ options:
                     - Whether the IP configuration is the primary one in the list.
                     - The first IP configuration default set to I(primary=True).
                 type: bool
+                default: False
             application_security_groups:
                 description:
                     - List of application security groups in which the IP configuration is included.
@@ -566,7 +567,7 @@ ip_configuration_spec = dict(
     public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
     load_balancer_backend_address_pools=dict(type='list'),
     application_gateway_backend_address_pools=dict(type='list'),
-    primary=dict(type='bool'),
+    primary=dict(type='bool', default=False),
     application_security_groups=dict(type='list', elements='raw')
 )
 
@@ -751,28 +752,20 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                 # construct two set with the same structure and then compare
                 # the list should contains:
                 # name, private_ip_address, public_ip_address_name, private_ip_allocation_method, subnet_name
-                if len(self.ip_configurations) > 0:
-                    if len(results['ip_configurations']) == 0:
+                ip_configuration_result = self.construct_ip_configuration_set(results['ip_configurations'])
+                ip_configuration_request = self.construct_ip_configuration_set(self.ip_configurations)
+                ip_configuration_result_name = [item['name'] for item in ip_configuration_result]
+                for item_request in ip_configuration_request:
+                    if item_request['name'] not in ip_configuration_result_name:
                         changed = True
+                        break
                     else:
-                        ip_keys = self.ip_configurations[0].keys()
-                        for index in range(len(self.ip_configurations)):
-                            for item in results['ip_configurations']:
-                                if self.ip_configurations[index]['name'] == item['name']:
-                                    for key in ip_keys:
-                                        if self.ip_configurations[index].get(key) is not None:
-                                            if key == "public_ip_address_name":
-                                                if item.get('public_ip_address') is not None:
-                                                    if self.ip_configurations[index].get(key) != item['public_ip_address']['name']:
-                                                        changed = True
-                                                else:
-                                                    changed = True
-                                            elif key == "public_ip_allocation_method":
-                                                pass
-                                            elif self.ip_configurations[index].get(key) != item.get(key):
-                                                changed = True
-                                            else:
-                                                self.ip_configurations[index][key] = item.get(key)
+                        for item_result in ip_configuration_result:
+                            if len(ip_configuration_request) == 1 and len(ip_configuration_result) == 1:
+                                item_request['primary'] = True
+                            if item_request['name'] == item_result['name'] and item_request != item_result:
+                                changed = True
+                                break
 
             elif self.state == 'absent':
                 self.log("CHANGED: network interface {0} exists but requested state is 'absent'".format(self.name))
@@ -926,8 +919,11 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                                    child_name_1=name)
         return val
 
+    def compare_ip_configure(self, old, new):
+        pass
+
     def construct_ip_configuration_set(self, raw):
-        configurations = [str(dict(
+        configurations = [dict(
             private_ip_allocation_method=to_native(item.get('private_ip_allocation_method')),
             public_ip_address_name=(to_native(item.get('public_ip_address').get('name'))
                                     if item.get('public_ip_address') else to_native(item.get('public_ip_address_name'))),
@@ -941,8 +937,9 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
             application_security_groups=(set([to_native(asg_id) for asg_id in item.get('application_security_groups')])
                                          if item.get('application_security_groups') else None),
             name=to_native(item.get('name'))
-        )) for item in raw]
-        return set(configurations)
+        ) for item in raw]
+        #return set(configurations)
+        return configurations
 
 
 def main():
