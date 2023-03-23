@@ -70,50 +70,9 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-azure_vmssnetworkinterfaces:
+vmss_networkinterfaces:
     description:
-        - List of network interface dicts in .
-    returned: always
-    type: list
-    example: [{
-        "dns_settings": {
-            "applied_dns_servers": [],
-            "dns_servers": [],
-            "internal_dns_name_label": null,
-            "internal_fqdn": null
-        },
-        "enable_ip_forwarding": false,
-        "etag": 'W/"59726bfc-08c4-44ed-b900-f6a559876a9d"',
-        "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Network/networkInterfaces/nic003",
-        "ip_configuration": {
-            "name": "default",
-            "private_ip_address": "10.10.0.4",
-            "private_ip_allocation_method": "Dynamic",
-            "public_ip_address": {
-                "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Network/publicIPAddresses/publicip001",
-                "name": "publicip001"
-            },
-            "subnet": {
-                "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Network/virtualNetworks/vnet001/subnets/subnet001",
-                "name": "subnet001",
-                "virtual_network_name": "vnet001"
-            }
-        },
-        "location": "westus",
-        "mac_address": null,
-        "name": "nic003",
-        "network_security_group": {
-            "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Network/networkSecurityGroups/secgroup001",
-            "name": "secgroup001"
-        },
-        "primary": null,
-        "provisioning_state": "Succeeded",
-        "tags": {},
-        "type": "Microsoft.Network/networkInterfaces"
-    }]
-networkinterfaces:
-    description:
-        - List of network interface dicts. Each dict contains parameters can be passed to M(azure.azcollection.azure_rm_networkinterface) module.
+        - List of network interface dicts. Each dict contains parameters can be passed to M(azure.azcollection.azure_rm_vmssnetworkinterface) module.
     type: list
     returned: always
     contains:
@@ -215,7 +174,6 @@ networkinterfaces:
 '''  # NOQA
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -223,7 +181,7 @@ except Exception:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, azure_id_to_dict
 
 
-AZURE_OBJECT_CLASS = 'NetworkInterface'
+AZURE_OBJECT_CLASS = 'VMSSNetworkInterface'
 
 
 def nic_to_dict(nic):
@@ -281,7 +239,7 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
             name=dict(type='str'),
             resource_group=dict(type='str', required=True),
             vmss_name=dict(type='str', required=True),
-            vm_index=dict(type='str', required=True),
+            vm_index=dict(type='str'),
         )
 
         self.results = dict(
@@ -303,6 +261,7 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
+        results = []
         if self.name is not None:
             if self.vm_index is not None:
                 results = self.get_item()
@@ -313,12 +272,6 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
         else:
             results = self.list_vmss()
 
-        imort logging
-        logging.basicConfig(filename='log.log', level=logging.INFO)
-        logging.info('-====================================')
-        logging.info(results)
-        logging.info('-====================================')
-        results = []
         self.results['vmss_networkinterfaces'] = self.to_dict_list(results)
         return self.results
 
@@ -355,13 +308,9 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
                                                                                                            resource_group_name=self.resource_group,
                                                                                                            virtual_machine_scale_set_name=self.vmss_name,
                                                                                                           )
-            response = self.network_client.network_interfaces.list_all()
             return [item for item in res]
         except Exception as exc:
             self.fail("Error listing all - {0}".format(str(exc)))
-
-    def serialize_nics(self, raws):
-        return [self.serialize_obj(item, AZURE_OBJECT_CLASS) for item in raws] if raws else []
 
     def to_dict_list(self, raws):
         return [nic_to_dict(item) for item in raws] if raws else []
