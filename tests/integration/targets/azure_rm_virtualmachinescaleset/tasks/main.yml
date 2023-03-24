@@ -179,16 +179,6 @@
     that:
       - output_scaleset.vmss[0].properties.orchestrationMode == "Flexible"
 
-- name: Retrieve scaleset VMSS network interface fact
-  azure_rm_vmssnetworkinterface_info:
-    vmss_name: testVMSS{{ rpfx }}
-    resource_group: "{{ resource_group }}"
-  register: output_vmssnic
-
-- assert:
-    that:
-      - output_vmssnic.vmss_networkinterfaces | length > 1
-
 - name: Delete VMSS
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"

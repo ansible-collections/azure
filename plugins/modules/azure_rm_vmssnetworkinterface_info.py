@@ -73,104 +73,186 @@ RETURN = '''
 vmss_networkinterfaces:
     description:
         - List of network interface dicts. Each dict contains parameters can be passed to M(azure.azcollection.azure_rm_vmssnetworkinterface) module.
-    type: list
+    type: complex
     returned: always
     contains:
         id:
             description:
                 - Id of the network interface.
+            returned: always
+            type: str
+            sample: "/subscriptions/xxx-xxx/resourceGroups/RG/providers/Microsoft.Compute/virtualMachineScaleSets/fredvmss/virtualMachines/1/networkInterfaces/nic01"
         resource_group:
             description:
                 - Name of a resource group where the network interface exists.
+            returned: always
+            type: str
+            sample: RG
         name:
             description:
                 - Name of the network interface.
+            type: str
+            returned: always
+            sample: nic01
         location:
             description:
                 - Azure location.
+            type: str
+            returned: always
+            sample: eastus
         virtual_network:
             description:
                 - An existing virtual network with which the network interface will be associated.
                 - It is a dict which contains I(name) and I(resource_group) of the virtual network.
+            type: dict
+            returned: always
+            sample: {"name": "vnet01", "resource_group": "RG"}
         subnet:
             description:
                 - Name of an existing subnet within the specified virtual network.
+            type: str
+            returned: always
+            sample: default
         tags:
             description:
                 - Tags of the network interface.
+            type: dict
+            returned: always
+            sample: {"key1": "value1"}
         ip_configurations:
             description:
                 - List of IP configurations, if contains multiple configurations.
+            type: complex
+            returned: always
             contains:
                 name:
                     description:
                         - Name of the IP configuration.
+                    type: str
+                    returned: always
+                    sample: defaultIpConfiguration
                 private_ip_address:
                     description:
                         - Private IP address for the IP configuration.
+                    type: str
+                    returned: always
+                    sample: 10.3.0.5
                 private_ip_allocation_method:
                     description:
                         - Private IP allocation method.
+                    returned: always
+                    type: str
+                    sample: Dynamic
                 public_ip_address:
                     description:
                         - Name of the public IP address. None for disable IP address.
+                    returned: always
+                    type: str
+                    sample: null
                 public_ip_allocation_method:
                     description:
                         - Public IP allocation method.
+                    returned: always
+                    type: str
+                    sample: null
                 load_balancer_backend_address_pools:
                     description:
                         - List of existing load-balancer backend address pools associated with the network interface.
+                    returned: always
+                    type: str
+                    sample: null
                 application_gateway_backend_address_pools:
                     description:
                         - List of existing application gateway backend address pools associated with the network interface.
-                    version_added: "1.10.0"
+                    returned: always
+                    type: str
+                    sample: null
                 primary:
                     description:
                         - Whether the IP configuration is the primary one in the list.
+                    returned: always
+                    type: bool
+                    sample: True
                 application_security_groups:
                     description:
                         - List of Application security groups.
+                    returned: always
+                    type: str
                     sample: /subscriptions/<subsid>/resourceGroups/<rg>/providers/Microsoft.Network/applicationSecurityGroups/myASG
         enable_accelerated_networking:
             description:
                 - Specifies whether the network interface should be created with the accelerated networking feature or not.
+            type: bool
+            returned: always
+            sample: True
         create_with_security_group:
             description:
                 - Specifies whether a default security group should be be created with the NIC. Only applies when creating a new NIC.
             type: bool
+            returned: always
+            sample: True
         security_group:
             description:
                 - A security group resource ID with which to associate the network interface.
+            type: str
+            returned: always
+            sample: /subscriptions/xxx-xxx/resourceGroups/RG/providers/Microsoft.Network/networkSecurityGroups/nic01
         enable_ip_forwarding:
             description:
                 - Whether to enable IP forwarding
+            type: bool
+            returned: always
+            sample: True
         dns_servers:
             description:
                 - Which DNS servers should the NIC lookup.
                 - List of IP addresses.
+            type: list
+            returned: always
+            sample: []
         mac_address:
             description:
                 - The MAC address of the network interface.
+            type: str
+            returned: always
+            sample: 00-0D-3A-17-EC-36
         provisioning_state:
             description:
                 - The provisioning state of the network interface.
+            type: str
+            returned: always
+            sample: Succeeded
         dns_settings:
             description:
                 - The DNS settings in network interface.
+            type: complex
+            returned: always
             contains:
                 dns_servers:
                     description:
                         - List of DNS servers IP addresses.
+                    returned: always
+                    type: list
+                    sample: []
                 applied_dns_servers:
                     description:
                         - If the VM that uses this NIC is part of an Availability Set, then this list will have the union of all DNS servers
                           from all NICs that are part of the Availability Set. This property is what is configured on each of those VMs.
+                    returned: always
+                    type: list
+                    sample: []
                 internal_dns_name_label:
                     description:
                         - Relative DNS name for this NIC used for internal communications between VMs in the same virtual network.
+                    returned: always
+                    type: str
+                    sample: null
                 internal_fqdn:
                     description:
                         - Fully qualified DNS name supporting internal communications between VMs in the same virtual network.
+                    returned: always
+                    type: str
+                    sample: null
 '''  # NOQA
 try:
     from azure.core.exceptions import ResourceNotFoundError
