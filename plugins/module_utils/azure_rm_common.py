@@ -1455,6 +1455,7 @@ class AzureRMModuleBase(object):
     def get_msgraph_client(self):
         return GraphClient(credential=self.azure_auth.azure_credential_track2)
 
+
 class AzureSASAuthentication(Authentication):
     """Simple SAS Authentication.
     An implementation of Authentication in
