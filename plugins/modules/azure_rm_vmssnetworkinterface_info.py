@@ -333,10 +333,10 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
         self.vm_index = None
 
         super(AzureRMVMSSNetworkInterfaceInfo, self).__init__(self.module_arg_spec,
-                                                          supports_check_mode=False,
-                                                          supports_tags=False,
-                                                          facts_module=True
-                                                          )
+                                                              supports_check_mode=True,
+                                                              supports_tags=False,
+                                                              facts_module=True
+                                                              )
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
@@ -360,8 +360,7 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
         res = None
         self.log("Get the specified network interface in a virtual machine scale set.")
         try:
-            res = self.network_client.network_interfaces.get_virtual_machine_scale_set_network_interface(
-                                                                                                         resource_group_name=self.resource_group,
+            res = self.network_client.network_interfaces.get_virtual_machine_scale_set_network_interface(resource_group_name=self.resource_group,
                                                                                                          virtual_machine_scale_set_name=self.vmss_name,
                                                                                                          virtualmachine_index=self.vm_index,
                                                                                                          network_interface_name=self.name
@@ -373,8 +372,7 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
 
     def list_vm_index(self):
         try:
-            res = self.network_client.network_interfaces.list_virtual_machine_scale_set_vm_network_interfaces(
-                                                                                                              resource_group_name=self.resource_group,
+            res = self.network_client.network_interfaces.list_virtual_machine_scale_set_vm_network_interfaces(resource_group_name=self.resource_group,
                                                                                                               virtual_machine_scale_set_name=self.vmss_name,
                                                                                                               virtualmachine_index=self.vm_index,
                                                                                                              )
@@ -385,10 +383,9 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
     def list_vmss(self):
         self.log('List all')
         try:
-            response = self.network_client.network_interfaces.list_virtual_machine_scale_set_network_interfaces(
-                                                                                                           resource_group_name=self.resource_group,
-                                                                                                           virtual_machine_scale_set_name=self.vmss_name,
-                                                                                                          )
+            response = self.network_client.network_interfaces.list_virtual_machine_scale_set_network_interfaces(resource_group_name=self.resource_group,
+                                                                                                                virtual_machine_scale_set_name=self.vmss_name,
+                                                                                                               )
             return list(response)
         except Exception as exc:
             self.fail("Error listing all - {0}".format(str(exc)))
