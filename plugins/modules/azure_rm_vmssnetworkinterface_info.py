@@ -32,7 +32,7 @@ options:
         required: True
     vm_index:
         description：
-            - The virtual machine index.
+            - The virtual machine index. Such as I(vm_index=0).
         type: str
     resource_group:
         description:
@@ -55,7 +55,7 @@ EXAMPLES = '''
         resource_group: myResourceGroup
         name: nic001
         vmss_name: testVMSS
-        vm_index: testVM
+        vm_index: 0
 
     - name: Get all network interface information in virtual machine scale set
       azure_rm_vmssnetworkinterface_info:
@@ -66,7 +66,7 @@ EXAMPLES = '''
       azure_rm_vmssnetworkinterface_info:
         resource_group: myResourceGroup
         vmss_name: testVMSS
-        vm_index: testVM
+        vm_index: 1
 '''
 
 RETURN = '''
@@ -304,11 +304,11 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
     def list_vmss(self):
         self.log('List all')
         try:
-            res = self.network_client.network_interfaces.list_virtual_machine_scale_set_network_interfaces(
+            response = self.network_client.network_interfaces.list_virtual_machine_scale_set_network_interfaces(
                                                                                                            resource_group_name=self.resource_group,
                                                                                                            virtual_machine_scale_set_name=self.vmss_name,
                                                                                                           )
-            return [item for item in res]
+            return [item for item in response]
         except Exception as exc:
             self.fail("Error listing all - {0}".format(str(exc)))
 
