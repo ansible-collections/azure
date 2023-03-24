@@ -7,17 +7,16 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_vmssnetworkinterface_info
 
 version_added: "1.15.0"
 
-short_description: Get information about network interface in virtual machine scale
+short_description: Get information about network interface in virtul machine scale
 
 description:
-    - Get information about network interface in virtual machine scale.
+    - Get information about network interface in virtual machine scale set.
 
 options:
     name:
@@ -31,8 +30,8 @@ options:
         type: str
         required: True
     vm_index:
-        description：
-            - The virtual machine index. Such as I(vm_index=0).
+        description:
+            - The virtual machine index, such as I(vm_index=0).
         type: str
     resource_group:
         description:
@@ -379,7 +378,7 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
                                                                                                               virtual_machine_scale_set_name=self.vmss_name,
                                                                                                               virtualmachine_index=self.vm_index,
                                                                                                              )
-            return [item for item in res]
+            return list(res)
         except Exception as exc:
             self.fail("Error listing by resource group {0} - {1}".format(self.resource_group, str(exc)))
 
@@ -390,7 +389,7 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
                                                                                                            resource_group_name=self.resource_group,
                                                                                                            virtual_machine_scale_set_name=self.vmss_name,
                                                                                                           )
-            return [item for item in response]
+            return list(response)
         except Exception as exc:
             self.fail("Error listing all - {0}".format(str(exc)))
 
