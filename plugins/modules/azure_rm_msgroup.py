@@ -205,7 +205,7 @@ class AzureRMMSGroup(AzureRMModuleBase):
                 if not flag:
                     response = None
         except Exception as e:
-            self.log("There is not ad groups {0}".format(str(e)))
+            self.log("There is not no group {0}".format(str(e)))
 
         if response is not None and response.get('error'):
             response = None
@@ -213,7 +213,7 @@ class AzureRMMSGroup(AzureRMModuleBase):
         if response is not None:
             if self.state == 'present':
                 changed = False
-                self.log("The ad groups already exist")
+                self.log("The group already exist")
             else:
                 changed = True
                 response = self.delete_resource(response['id'])
@@ -223,7 +223,7 @@ class AzureRMMSGroup(AzureRMModuleBase):
                 response = self.create_resource(self.body)
             else:
                 changed = False
-                self.log("The ad groups is not exist")
+                self.log("The group do not exist")
 
         self.results['changed'] = changed
         self.results['state'] = response
@@ -237,14 +237,14 @@ class AzureRMMSGroup(AzureRMModuleBase):
             res = client.post('/groups/', data=json.dumps(obj), headers={'Content-Type': 'application/json'})
             return self.group_to_dict(res.json())
         except Exception as e:
-            self.fail("Error creating ad group, {0}".format(str(e)))
+            self.fail("Error creating group, msg {0}".format(str(e)))
 
     def delete_resource(self, obj):
         client = self.get_msgraph_client()
         try:
             client.delete('/groups/' + obj)
         except Exception as e:
-            self.fail("Error deleting ad groups {0}".format(str(e)))
+            self.fail("Error deleting group {0}".format(str(e)))
 
     def group_to_dict(self, object):
         return dict(

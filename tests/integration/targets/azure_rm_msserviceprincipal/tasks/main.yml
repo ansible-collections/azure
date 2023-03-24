@@ -10,7 +10,7 @@
         - https://localhost
     spa:
       redirectUris:
-        - https://localhost11
+        - https://localhost1
     web:
       redirectUris:
         - https://localhost2

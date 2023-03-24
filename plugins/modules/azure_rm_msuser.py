@@ -126,7 +126,7 @@ surname:
     sample: '张'
 givenName:
     description:
-        - The given name for the user.
+        - The given name of the user.
     returned: always
     type: str
     sample: '旭'
@@ -238,7 +238,7 @@ class AzureRMMSUser(AzureRMModuleBase):
             else:
                 changed = False
                 response = None
-                self.log("The ad user account not exist")
+                self.log("The ad user account does not exist")
 
         self.results['state'] = self.user_to_dict(response)
         self.results['changed'] = changed

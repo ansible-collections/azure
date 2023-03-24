@@ -23,18 +23,17 @@ options:
         description:
             - The name of an attribute that you want to match to attribute_value.
             - If attribute_name is not a collection type it will return groups where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will return groups where attribute_value is in attribute_name.
+            - If attribute_name is a collection type it will return group where attribute_value is in attribute_name.
         type: str
     attribute_value:
         description:
             - The value to match attribute_name to.
             - If attribute_name is not a collection type it will return groups where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will groups users where attribute_value is in attribute_name.
+            - If attribute_name is a collection type it will group where attribute_value is in attribute_name.
         type: str
     all:
         description:
             - If True, will return all groups in tenant.
-            - If False will return no users.
             - It is recommended that you instead identify a subset of groups and use filter.
         default: False
         type: bool
@@ -75,7 +74,7 @@ displayName:
     sample: GroupName
 securityEnabled:
     description:
-        - Whether the group is security-enable.
+        - Whether the group is security enabled.
     returned: always
     type: bool
     sample: False
@@ -94,7 +93,7 @@ mail_enabled:
     sample: False
 description:
     description:
-        - Describe of the ad group.
+        - Descrition of the ad group.
     type: str
     returned: always
     sample: For test

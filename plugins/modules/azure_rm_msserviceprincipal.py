@@ -26,7 +26,7 @@ options:
         type: str
     object_id:
         description:
-            - It's service principal's object ID.
+            - The service principal's object ID.
         type: str
     name:
         description:
@@ -34,7 +34,7 @@ options:
         type: str
     web:
         description:
-            - Redirects the Web URI,
+            - Configure the redirect Web URI.
         type: dict
         suboptions:
             redirectUris:
@@ -44,7 +44,7 @@ options:
                 elements: str
     spa:
         description:
-            - Redirects the single page application(SPA) URI,
+            - Configure the redirection Single Page Application (SPA) URI.
         type: dict
         suboptions:
             redirectUris:
@@ -59,7 +59,7 @@ options:
         suboptions:
             redirectUris:
                 description:
-                    - The authentication response to this URI.
+                    - Configure the redirection public client/local URI.
                 type: list
                 elements: str
     sign_in_audience:
@@ -131,19 +131,19 @@ object_id:
     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 spa:
     description:
-        - Redirects the single page application(SPA) URI,
+        - The single page application(SPA) URI of Redirects.
     returned: always
     type: dict
     sample: {'redirectUris':['https://spa.com']}
 web:
     description:
-        - Redirects the Web URI,
+        - The WEB URI of Redirects.
     returned: always
     type: dict
     sample: {'redirectUris':['https://web.com']}
 public_client:
     description:
-        - Redirects the public client/native URI.
+        - The public client/native URI of Redirects.
     returned: always
     type: dict
     sample: {'redirectUris':['https://localhost']}
@@ -238,7 +238,7 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
                     response = None
 
         except Exception as e:
-            self.log("There is not service principal {0}".format(str(e)))
+            self.log("There is no service principal {0}".format(str(e)))
         if response is not None and response.get('error'):
             response = None
 
@@ -255,7 +255,7 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
                 response = self.create_resource(self.body)
                 changed = True
             else:
-                self.log("The Service principal is not exist")
+                self.log("The Service principal does not exist")
 
         self.results['changed'] = changed
         self.results['state'] = response

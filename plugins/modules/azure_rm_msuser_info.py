@@ -21,7 +21,7 @@ options:
     object_id:
         description:
             - The object id for the user.
-            - returns the user who has this object ID.
+            - returns the user who has this I(object_id).
             - Mutually exclusive with I(user_principal_name), I(attribute_name) and I(all).
         type: str
     user_principal_name:
@@ -74,7 +74,7 @@ EXAMPLES = '''
         attribute_name: mail
         attribute_value: foo@contoso.com
 
-    - name: Get all user in same tenant
+    - name: Get all users in same tenant
       azure.azcollection.azure_rm_msuser_info:
         all: True
 '''
@@ -177,7 +177,7 @@ class AzureRMMSUserInfo(AzureRMModuleBase):
             self.results['ms_users'] = [self.to_dict(user) for user in ms_user]
 
         except Exception as e:
-            self.fail("failed to get Microsoft Grpah user info {0}".format(str(e)))
+            self.fail("failed to get Microsoft Graph user info {0}".format(str(e)))
 
         return self.results
 

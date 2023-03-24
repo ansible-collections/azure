@@ -25,12 +25,11 @@ options:
         type: str
     object_id:
         description:
-            - It's service principal's object ID.
+            - The service principal's object ID.
         type: str
     all:
         description:
-            - If True, will return all applicatin in tenant.
-            - If False will return no application.
+            - If True, will return all applicatins in tenant.
             - Mutually exclusive with I(object_id) and I(app_id).
         type: bool
 
@@ -47,11 +46,11 @@ EXAMPLES = '''
     azure_rm_msserviceprincipal_info:
       object_id: "{{ object_id }}"
 
-  - name: get all MS sp info
+  - name: get all MS service principals info
     azure_rm_msserviceprincipal_info:
         all: True
 
-  - name: get MS sp info by App ID
+  - name: get Microsoft Graph Service Princiapl info by App ID
     azure_rm_msserviceprincipal_info:
       app_id: "{{ app_id }}"
 
@@ -72,32 +71,32 @@ app_id:
     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 app_roles:
     description:
-        -  The collection of application roles that an application may declare.
+        - The collection of application roles that an application may declare.
         - These roles can be assigned to users, groups or service principals.
     type: list
     returned: always
     sample: []
 object_id:
     description:
-        - It's service principal's object ID.
+        - The service principal's object ID.
     returned: always
     type: str
     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 spa:
     description:
-        - Redirects the single page application(SPA) URI,
+        - The single page application(SPA) URI of redirects.
     returned: always
     type: dict
     sample: {'redirectUris':['https://spa.com']}
 web:
     description:
-        - Redirects the Web URI,
+        - The Web URI of redirects.
     returned: always
     type: dict
     sample: {'redirectUris':['https://web.com']}
 public_client:
     description:
-        - Redirects the public client/native URI.
+        - The public client/native URI of redirects.
     returned: always
     type: dict
     sample: {'redirectUris':['https://localhost']}
