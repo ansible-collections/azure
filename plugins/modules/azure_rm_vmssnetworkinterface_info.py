@@ -363,8 +363,7 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
             res = self.network_client.network_interfaces.get_virtual_machine_scale_set_network_interface(resource_group_name=self.resource_group,
                                                                                                          virtual_machine_scale_set_name=self.vmss_name,
                                                                                                          virtualmachine_index=self.vm_index,
-                                                                                                         network_interface_name=self.name
-                                                                                                        )
+                                                                                                         network_interface_name=self.name)
         except ResourceNotFoundError:
             pass
 
@@ -374,8 +373,7 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
         try:
             res = self.network_client.network_interfaces.list_virtual_machine_scale_set_vm_network_interfaces(resource_group_name=self.resource_group,
                                                                                                               virtual_machine_scale_set_name=self.vmss_name,
-                                                                                                              virtualmachine_index=self.vm_index,
-                                                                                                             )
+                                                                                                              virtualmachine_index=self.vm_index)
             return list(res)
         except Exception as exc:
             self.fail("Error listing by resource group {0} - {1}".format(self.resource_group, str(exc)))
@@ -384,8 +382,7 @@ class AzureRMVMSSNetworkInterfaceInfo(AzureRMModuleBase):
         self.log('List all')
         try:
             response = self.network_client.network_interfaces.list_virtual_machine_scale_set_network_interfaces(resource_group_name=self.resource_group,
-                                                                                                                virtual_machine_scale_set_name=self.vmss_name,
-                                                                                                               )
+                                                                                                                virtual_machine_scale_set_name=self.vmss_name)
             return list(response)
         except Exception as exc:
             self.fail("Error listing all - {0}".format(str(exc)))
