@@ -205,7 +205,7 @@ class AzureRMMSGroup(AzureRMModuleBase):
                 if not flag:
                     response = None
         except Exception as e:
-            self.log("There is not no group {0}".format(str(e)))
+            self.log("There is no group {0}".format(str(e)))
 
         if response is not None and response.get('error'):
             response = None
