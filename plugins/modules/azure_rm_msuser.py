@@ -124,7 +124,7 @@ surname:
     type: str
     returned: always
     sample: '张'
-givenName:
+given_name:
     description:
         - The given name of the user.
     returned: always
@@ -271,7 +271,7 @@ class AzureRMMSUser(AzureRMModuleBase):
                 object_id=object['id'],
                 display_name=object['displayName'],
                 user_principal_name=object['userPrincipalName'],
-                give_name=object['givenName'],
+                given_name=object['givenName'],
                 surname=object['surname'],
                 mail=object['mail'],
             )
