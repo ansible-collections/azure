@@ -267,7 +267,11 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
         res = None
         try:
             res = client.post('/applications/', data=json.dumps(obj), headers={'Content-Type': 'application/json'})
-            return self.to_dict(res.json())
+
+            if res.json().get('error') is not None:
+                self.fail("Create ad service princiapl fail, Msg {0}".format(res.json().get('error')))
+            else:
+                return self.to_dict(res.json())
         except Exception as e:
             self.fail("Error creating service principle, {0}".format(str(e)))
 

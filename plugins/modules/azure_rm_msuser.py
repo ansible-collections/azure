@@ -250,7 +250,11 @@ class AzureRMMSUser(AzureRMModuleBase):
         res = None
         try:
             res = client.post('/users/', data=json.dumps(obj), headers={'Content-Type': 'application/json'})
-            return res.json()
+
+            if res.json().get('error') is not None:
+                self.fail("Create ad user fail, Msg {0}".format(res.json().get('error')))
+            else:
+                return res.json()
         except Exception as e:
             self.fail("Error creating ad user, {0}".format(str(e)))
 

@@ -235,7 +235,11 @@ class AzureRMMSGroup(AzureRMModuleBase):
         res = None
         try:
             res = client.post('/groups/', data=json.dumps(obj), headers={'Content-Type': 'application/json'})
-            return self.group_to_dict(res.json())
+
+            if res.json().get('error') is not None:
+                self.fail("Create ad group fail, Msg {0}".format(res.json().get('error')))
+            else:
+                return self.group_to_dict(res.json())
         except Exception as e:
             self.fail("Error creating group, msg {0}".format(str(e)))
 
