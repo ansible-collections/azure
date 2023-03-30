@@ -20,7 +20,7 @@ azure-mgmt-dns==8.0.0
 azure-mgmt-marketplaceordering==0.1.0
 azure-mgmt-monitor==3.0.0
 azure-mgmt-managedservices==6.0.0
-azure-mgmt-managementgroups==0.2.0
+azure-mgmt-managementgroups==1.0.0
 azure-mgmt-network==19.1.0
 azure-mgmt-nspkg==2.0.0
 azure-mgmt-privatedns==1.0.0
