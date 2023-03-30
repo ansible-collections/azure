@@ -228,7 +228,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
         self.body = {}
         self.body['properties'] = dict()
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2021-12-01'
+        self.query_parameters['api-version'] = '2019-03-01'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -329,7 +329,6 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
     def create_update_resource(self):
         # self.log('Creating / Updating the Snapshot instance {0}'.format(self.))
         try:
-            #self.fail(self.url)
             response = self.mgmt_client.query(url=self.url,
                                               method='PUT',
                                               query_parameters=self.query_parameters,
