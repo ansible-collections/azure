@@ -433,6 +433,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         resource_group = parse_resource_id(result['id']).get('resource_group')
         instance = None
         power_state = None
+        display_status = None
 
         try:
             instance = self.compute_client.virtual_machines.instance_view(resource_group, vm.name)

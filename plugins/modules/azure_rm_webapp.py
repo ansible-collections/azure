@@ -54,7 +54,7 @@ options:
                     - Supported framework list for Windows web app and Linux web app is different.
                     - Windows web apps support C(java), C(net_framework), C(php), C(python), and C(node) from June 2018.
                     - Windows web apps support multiple framework at the same time.
-                    - Linux web apps support C(java), C(ruby), C(php), C(dotnetcore), and C(node) from June 2018.
+                    - Linux web apps support C(java), C(ruby), C(php), C(python), C(dotnetcore), and C(node) from June 2018.
                     - Linux web apps support only one framework.
                     - Java framework is mutually exclusive with others.
                 choices:
@@ -70,7 +70,7 @@ options:
                     - Version of the framework. For Linux web app supported value, see U(https://aka.ms/linux-stacks) for more info.
                     - C(net_framework) supported value sample, C(v4.0) for .NET 4.6 and C(v3.0) for .NET 3.5.
                     - C(php) supported value sample, C(5.5), C(5.6), C(7.0).
-                    - C(python) supported value sample, C(5.5), C(5.6), C(7.0).
+                    - C(python) supported value sample, C(2.7), C(3.8), C(3.10).
                     - C(node) supported value sample, C(6.6), C(6.9).
                     - C(dotnetcore) supported value sample, C(1.0), C(1.1), C(1.2).
                     - C(ruby) supported value sample, C(2.3).
@@ -303,6 +303,19 @@ EXAMPLES = '''
             settings:
               java_container: "Tomcat"
               java_container_version: "8.5"
+
+    - name: Create a linux web app with python framework
+      azure_rm_webapp:
+        resource_group: myResourceGroup
+        name: myLinuxWebapp
+        plan:
+          resource_group: myAppServicePlan_rg
+          name: myAppServicePlan
+        app_settings:
+          testkey: testvalue
+        frameworks:
+          - name: "python"
+            version: "3.10"
 '''
 
 RETURN = '''
@@ -550,7 +563,7 @@ class AzureRMWebApps(AzureRMModuleBase):
         self.updatable_properties = ["client_affinity_enabled",
                                      "https_only"]
 
-        self.supported_linux_frameworks = ['ruby', 'php', 'dotnetcore', 'node', 'java']
+        self.supported_linux_frameworks = ['ruby', 'php', 'python', 'dotnetcore', 'node', 'java']
         self.supported_windows_frameworks = ['net_framework', 'php', 'python', 'node', 'java']
 
         super(AzureRMWebApps, self).__init__(derived_arg_spec=self.module_arg_spec,
@@ -763,7 +776,7 @@ class AzureRMWebApps(AzureRMModuleBase):
                 self.log('Web App instance deleted')
 
             else:
-                self.fail("Web app {0} not exists.".format(self.name))
+                self.log("Web app {0} not exists.".format(self.name))
 
         if to_be_updated:
             self.log('Need to Create/Update web app')

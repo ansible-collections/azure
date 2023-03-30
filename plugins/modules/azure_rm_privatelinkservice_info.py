@@ -45,16 +45,16 @@ author:
 
 EXAMPLES = '''
 - name: Get private link service info by name
-  azure_rm_privateelinkservice_info:
+  azure_rm_privatelinkservice_info:
     name: pn-service-name
     resource_group: myResourceGroup
 
 - name: Get all private link service by resource group
-  azure_rm_privateelinkservice_info:
+  azure_rm_privatelinkservice_info:
     resource_group: myResourceGroup
 
 - name: Get all private link service by subscription filter by tags
-  azure_rm_privateelinkservice_info:
+  azure_rm_privatelinkservice_info:
     tags:
       - key1
       - abc

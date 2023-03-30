@@ -135,6 +135,7 @@ parameters:
     - "azure_rm_msserviceprincipal"
     - "azure_rm_msuser"
     - "azure_rm_msgroup"
+    - "azure_rm_vmssnetworkinterface_info"
     - "inventory_azure"
     - "setup_azure"
 
