@@ -29,6 +29,12 @@ options:
         description:
             - Resource location.
         type: str
+    incremental:
+        description:
+            - Whether a snapshot is incremental.
+            - Incremental snapshots on the same disk occupy less space than full snapshots and can be diffed.
+        type: bool
+        default: False
     sku:
         description:
             - The snapshots SKU.
@@ -176,6 +182,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
                 choices=['Windows',
                          'Linux']
             ),
+            incremental=dict(type='bool', default=False),
             creation_data=dict(
                 type='dict',
                 disposition='/properties/creationData',
@@ -219,8 +226,9 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
         self.to_do = Actions.NoAction
 
         self.body = {}
+        self.body['properties'] = dict()
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2018-09-30'
+        self.query_parameters['api-version'] = '2021-12-01'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -233,7 +241,10 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                self.body[key] = kwargs[key]
+                if key == 'incremental':
+                    self.body['properties']['incremental'] = kwargs[key]
+                else:
+                    self.body[key] = kwargs[key]
 
         self.inflate_parameters(self.module_arg_spec, self.body, 0)
 
@@ -318,6 +329,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
     def create_update_resource(self):
         # self.log('Creating / Updating the Snapshot instance {0}'.format(self.))
         try:
+            #self.fail(self.url)
             response = self.mgmt_client.query(url=self.url,
                                               method='PUT',
                                               query_parameters=self.query_parameters,
