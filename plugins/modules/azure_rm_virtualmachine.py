@@ -184,6 +184,7 @@ options:
             - StandardSSD_ZRS
             - Premium_LRS
             - Premium_ZRS
+            - UltraSSD_LRS
     os_disk_name:
         description:
             - OS disk name.
@@ -236,6 +237,7 @@ options:
                     - StandardSSD_ZRS
                     - Premium_LRS
                     - Premium_ZRS
+                    - UltraSSD_LRS
             storage_account_name:
                 description:
                     - Name of an existing storage account that supports creation of VHD blobs.
@@ -974,7 +976,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             storage_blob_name=dict(type='str', aliases=['storage_blob']),
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite']),
             os_disk_size_gb=dict(type='int'),
-            managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS']),
+            managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
             os_disk_name=dict(type='str'),
             proximity_placement_group=dict(type='dict', options=proximity_placement_group_spec),
             os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
