@@ -148,6 +148,10 @@ options:
         choices:
             - Standard_LRS
             - Premium_LRS
+            - StandardSSD_LRS
+            - UltraSSD_LRS
+            - Premium_ZRS
+            - StandardSSD_ZRS
     data_disks:
         description:
             - Describes list of data disks.
@@ -165,6 +169,10 @@ options:
                 choices:
                     - Standard_LRS
                     - Premium_LRS
+                    - StandardSSD_LRS
+                    - UltraSSD_LRS
+                    - Premium_ZRS
+                    - StandardSSD_ZRS
             caching:
                 description:
                     - Type of data disk caching.
@@ -641,7 +649,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite'],
                                  default='ReadOnly'),
             os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
-            managed_disk_type=dict(type='str', choices=['Standard_LRS', 'Premium_LRS']),
+            managed_disk_type=dict(type='str', choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS']),
             data_disks=dict(type='list'),
             subnet_name=dict(type='str', aliases=['subnet']),
             public_ip_per_vm=dict(type='bool', default=False),
