@@ -111,6 +111,7 @@ options:
             - The major version of Redis.
         type: str
         choices:
+            - "4"
             - "6"
         default: "6"
         version_added: "1.10.0"
@@ -400,7 +401,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             redis_version=dict(
                 type="str",
                 default="6",
-                choices=["6"]
+                choices=["4", "6"]
             ),
             shard_count=dict(
                 type='int'
