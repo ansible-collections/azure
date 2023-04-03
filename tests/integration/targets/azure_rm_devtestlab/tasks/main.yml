@@ -5,7 +5,7 @@
 - name: Create a DevTest Lab (check mode)
   azure_rm_devtestlab:
     resource_group: "{{ resource_group }}"
-    name: mylab
+    name: "dev-{{ rpfx }}"
     storage_type: standard
     premium_data_disks: true
     tags:
