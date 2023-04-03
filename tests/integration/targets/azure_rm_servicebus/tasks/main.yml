@@ -7,12 +7,15 @@
   azure_rm_servicebus:
       name: "ns{{ rpfx }}"
       resource_group: "{{ resource_group }}"
+      tags:
+        key1: value1
   register: namespace
 
 - assert:
     that:
       - namespace.id
       - namespace.changed
+      - namespace.tags
 
 - name: Create a namespace (idempontent)
   azure_rm_servicebus:

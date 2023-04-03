@@ -30,7 +30,7 @@ options:
             - address_prefixes
     dns_servers:
         description:
-            - Custom list of DNS servers. Maximum length of two.
+            - Custom list of DNS servers.
             - The first server in the list will be treated as the Primary server. This is an explicit list.
             - Existing DNS servers will be replaced with the specified list.
             - Use the I(purge_dns_servers) option to remove all custom DNS servers and revert to default Azure servers.
