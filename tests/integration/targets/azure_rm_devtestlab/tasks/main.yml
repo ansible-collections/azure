@@ -1,6 +1,6 @@
 - name: Set devtest labe value
   set_fact:
-    devlab_name: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+    rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
 
 - name: Create a DevTest Lab (check mode)
   azure_rm_devtestlab:
