@@ -6,38 +6,39 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 DOCUMENTATION = """
-    lookup: azure_keyvault_secret
-    author:
-        - Hai Cao <t-haicao@microsoft.com>
-    version_added: '1.12.0'
-    requirements:
-        - requests
-        - azure
-        - msrest
-    short_description: Read secret from Azure Key Vault.
-    description:
-      - This lookup returns the content of secret saved in Azure Key Vault.
-      - When ansible host is MSI enabled Azure VM, user don't need provide any credential to access to Azure Key Vault.
-    options:
-        _terms:
-            description: Secret name, version can be included like secret_name/secret_version.
-            required: True
-        vault_url:
-            description: Url of Azure Key Vault.
-            required: True
-        client_id:
-            description: Client id of service principal that has access to the Azure Key Vault
-        secret:
-            description: Secret of the service principal.
-        tenant_id:
-            description: Tenant id of service principal.
-    notes:
-        - If version is not provided, this plugin will return the latest version of the secret.
-        - If ansible is running on Azure Virtual Machine with MSI enabled, client_id, secret and tenant isn't required.
-        - For enabling MSI on Azure VM, please refer to this doc https://docs.microsoft.com/en-us/azure/active-directory/managed-service-identity/
-        - After enabling MSI on Azure VM, remember to grant access of the Key Vault to the VM by adding a new Acess Policy in Azure Portal.
-        - If MSI is not enabled on ansible host, it's required to provide a valid service principal which has access to the key vault.
-        - To use a plugin from a collection, please reference the full namespace, collection name, and lookup plugin name that you want to use.
+---
+name: azure_keyvault_secret
+author:
+    - Hai Cao (@tk5eq) <t-haicao@microsoft.com>
+version_added: '1.12.0'
+requirements:
+    - requests
+    - azure
+    - msrest
+short_description: Read secret from Azure Key Vault.
+description:
+  - This lookup returns the content of secret saved in Azure Key Vault.
+  - When ansible host is MSI enabled Azure VM, user don't need provide any credential to access to Azure Key Vault.
+options:
+    _terms:
+        description: Secret name, version can be included like secret_name/secret_version.
+        required: True
+    vault_url:
+        description: Url of Azure Key Vault.
+        required: True
+    client_id:
+        description: Client id of service principal that has access to the Azure Key Vault
+    secret:
+        description: Secret of the service principal.
+    tenant_id:
+        description: Tenant id of service principal.
+notes:
+    - If version is not provided, this plugin will return the latest version of the secret.
+    - If ansible is running on Azure Virtual Machine with MSI enabled, client_id, secret and tenant isn't required.
+    - For enabling MSI on Azure VM, please refer to this doc https://docs.microsoft.com/en-us/azure/active-directory/managed-service-identity/
+    - After enabling MSI on Azure VM, remember to grant access of the Key Vault to the VM by adding a new Acess Policy in Azure Portal.
+    - If MSI is not enabled on ansible host, it's required to provide a valid service principal which has access to the key vault.
+    - To use a plugin from a collection, please reference the full namespace, collection name, and lookup plugin name that you want to use.
 """
 
 EXAMPLE = """
@@ -109,6 +110,7 @@ from ansible.utils.display import Display
 try:
     import requests
     import logging
+    import os
     from azure.common.credentials import ServicePrincipalCredentials
     from azure.keyvault import KeyVaultClient
     from msrest.exceptions import AuthenticationError, ClientRequestError
@@ -150,9 +152,9 @@ def lookup_secret_non_msi(terms, vault_url, kwargs):
     logging.getLogger('msrestazure.azure_active_directory').addHandler(logging.NullHandler())
     logging.getLogger('msrest.service_client').addHandler(logging.NullHandler())
 
-    client_id = kwargs.pop('client_id', None)
-    secret = kwargs.pop('secret', None)
-    tenant_id = kwargs.pop('tenant_id', None)
+    client_id = kwargs['client_id'] if kwargs.get('client_id') else os.environ.get('AZURE_CLIENT_ID')
+    secret = kwargs['secret'] if kwargs.get('secret') else os.environ.get('AZURE_SECRET')
+    tenant_id = kwargs['tenant_id'] if kwargs.get('tenant_id') else os.environ.get('AZURE_TENANT')
 
     try:
         credentials = ServicePrincipalCredentials(

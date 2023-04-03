@@ -66,7 +66,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -187,8 +186,8 @@ class AzureRMServiceBusSASPolicy(AzureRMModuleBase):
         self.namespace = None
         self.queue = None
         self.topic = None
-        self.regenerate_primary_key = None
-        self.regenerate_secondary_key = None
+        self.regenerate_primary_key = False
+        self.regenerate_secondary_key = False
         self.rights = None
 
         self.results = dict(
@@ -199,6 +198,7 @@ class AzureRMServiceBusSASPolicy(AzureRMModuleBase):
         super(AzureRMServiceBusSASPolicy, self).__init__(self.module_arg_spec,
                                                          mutually_exclusive=mutually_exclusive,
                                                          required_if=required_if,
+                                                         supports_tags=False,
                                                          supports_check_mode=True)
 
     def exec_module(self, **kwargs):

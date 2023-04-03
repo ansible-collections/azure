@@ -38,6 +38,10 @@ options:
             - Mutually exclusive with I(managed_resource_id).
             - If neither I(managed_resource_id) or I(resource_group) are specified, manage a lock for the current subscription.
         type: str
+    notes:
+        description:
+            - Notes about the lock. Maximum of 512 characters.
+        type: str
     state:
         description:
             - State of the lock.
@@ -79,6 +83,7 @@ EXAMPLES = '''
   azure_rm_lock:
       resource_group: myResourceGroup
       name: myLock
+      notes: description_lock
       level: read_only
 
 - name: Create a lock for a subscription
@@ -98,7 +103,7 @@ id:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -113,6 +118,7 @@ class AzureRMLock(AzureRMModuleBase):
             state=dict(type='str', default='present', choices=['present', 'absent']),
             resource_group=dict(type='str'),
             managed_resource_id=dict(type='str'),
+            notes=dict(type='str'),
             level=dict(type='str', choices=['can_not_delete', 'read_only'])
         )
 
@@ -131,6 +137,7 @@ class AzureRMLock(AzureRMModuleBase):
         self.state = None
         self.level = None
         self.resource_group = None
+        self.note = None
         self.managed_resource_id = None
 
         super(AzureRMLock, self).__init__(self.module_arg_spec,
@@ -152,11 +159,17 @@ class AzureRMLock(AzureRMModuleBase):
             lock_level = getattr(self.lock_models.LockLevel, self.level)
             if not lock:
                 changed = True
-                lock = self.lock_models.ManagementLockObject(level=lock_level)
-            elif lock.level != lock_level:
-                self.log('Lock level changed')
-                lock.level = lock_level
-                changed = True
+                lock = self.lock_models.ManagementLockObject(level=lock_level, notes=self.notes)
+            else:
+                if lock.level != lock_level:
+                    self.log('Lock level changed')
+                    lock.level = lock_level
+                    changed = True
+                if lock.notes != self.notes:
+                    self.log('Lock notes changed')
+                    lock.notes = self.notes
+                    changed = True
+
             if not self.check_mode:
                 lock = self.create_or_update_lock(scope, lock)
                 self.results['id'] = lock.id
@@ -170,19 +183,19 @@ class AzureRMLock(AzureRMModuleBase):
     def delete_lock(self, scope):
         try:
             return self.lock_client.management_locks.delete_by_scope(scope, self.name)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when deleting lock {0} for {1}: {2}'.format(self.name, scope, exc.message))
 
     def create_or_update_lock(self, scope, lock):
         try:
             return self.lock_client.management_locks.create_or_update_by_scope(scope, self.name, lock)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when creating or updating lock {0} for {1}: {2}'.format(self.name, scope, exc.message))
 
     def get_lock(self, scope):
         try:
             return self.lock_client.management_locks.get_by_scope(scope, self.name)
-        except CloudError as exc:
+        except ResourceNotFoundError as exc:
             if exc.status_code in [404]:
                 return None
             self.fail('Error when getting lock {0} for {1}: {2}'.format(self.name, scope, exc.message))

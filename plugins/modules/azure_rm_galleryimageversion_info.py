@@ -211,7 +211,9 @@ class AzureRMGalleryImageVersionsInfo(AzureRMModuleBase):
 
     def listbygalleryimage(self):
         response = None
-        results = {}
+        results = dict(
+            response=[]
+        )
         # prepare url
         self.url = ('/subscriptions' +
                     '/{{ subscription_id }}' +
@@ -230,20 +232,37 @@ class AzureRMGalleryImageVersionsInfo(AzureRMModuleBase):
         self.url = self.url.replace('{{ image_name }}', self.gallery_image_name)
 
         try:
-            response = self.mgmt_client.query(self.url,
-                                              'GET',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              None,
-                                              self.status_code,
-                                              600,
-                                              30)
-            results = json.loads(response.text)
+            skiptoken = None
+
+            while True:
+                if skiptoken:
+                    self.query_parameters['skiptoken'] = skiptoken
+
+                response = self.mgmt_client.query(self.url,
+                                                  'GET',
+                                                  self.query_parameters,
+                                                  self.header_parameters,
+                                                  None,
+                                                  [200, 404],
+                                                  0,
+                                                  0)
+                try:
+                    response = json.loads(response.text)
+                    if isinstance(response, dict):
+                        if response.get('value'):
+                            results['response'] = results['response'] + response['value']
+                            skiptoken = response.get('nextLink')
+                        else:
+                            results['response'] = results['response'] + [response]
+                except Exception as e:
+                    self.fail('Failed to parse response: ' + str(e))
+                if not skiptoken:
+                    break
             # self.log('Response : {0}'.format(response))
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
-        return [self.format_item(x) for x in results['value']] if results['value'] else []
+        return [self.format_item(x) for x in results['response']] if results['response'] else []
 
     def format_item(self, item):
         d = {

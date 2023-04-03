@@ -61,6 +61,18 @@
       version: latest
   register: vm_output
 
+- name: Query auto created security group before deleting
+  azure_rm_securitygroup_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}01"
+  register: nsg_result
+
+- name: Assert that security group were exist before deleting
+  assert:
+    that:
+      - nsg_result.securitygroups | length == 1
+      - nsg_result.securitygroups[0].network_interfaces | length == 1
+
 - name: Delete VM
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"

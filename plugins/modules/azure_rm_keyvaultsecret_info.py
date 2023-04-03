@@ -164,7 +164,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.keyvault import KeyVaultClient, KeyVaultId, KeyVaultAuthentication
     from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
-    from azure.keyvault.models.key_vault_error import KeyVaultErrorException
     from msrestazure.azure_active_directory import MSIAuthentication
 except ImportError:
     # This is handled in azure_rm_common
@@ -335,7 +334,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                 self.log("Response : {0}".format(response))
                 results.append(secretbundle_to_dict(response))
 
-        except KeyVaultErrorException as e:
+        except Exception as e:
             self.log("Did not find the key vault secret {0}: {1}".format(
                 self.name, str(e)))
         return results
@@ -358,7 +357,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
                         results.append(secretitem_to_dict(item))
-        except KeyVaultErrorException as e:
+        except Exception as e:
             self.log("Did not find secret versions {0} : {1}.".format(
                 self.name, str(e)))
         return results
@@ -380,7 +379,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
                         results.append(secretitem_to_dict(item))
-        except KeyVaultErrorException as e:
+        except Exception as e:
             self.log(
                 "Did not find key vault in current subscription {0}.".format(
                     str(e)))
@@ -403,7 +402,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                 self.log("Response : {0}".format(response))
                 results.append(deletedsecretbundle_to_dict(response))
 
-        except KeyVaultErrorException as e:
+        except Exception as e:
             self.log("Did not find the key vault secret {0}: {1}".format(
                 self.name, str(e)))
         return results
@@ -426,7 +425,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
                         results.append(deletedsecretitem_to_dict(item))
-        except KeyVaultErrorException as e:
+        except Exception as e:
             self.log(
                 "Did not find key vault in current subscription {0}.".format(
                     str(e)))

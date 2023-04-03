@@ -125,6 +125,11 @@ options:
         default: ReadOnly
         aliases:
             - disk_caching
+    os_disk_size_gb:
+        description:
+            - Specifies the size of the operating system disk in gigabytes.
+            - This can be used to overwrite the size of the disk in a virtual machine image.
+        type: int
     os_type:
         description:
             - Base type of operating system.
@@ -279,6 +284,37 @@ options:
         choices:
             - Flexible
             - Uniform
+    security_profile:
+        description:
+            - Specifies the Security related profile settings for the virtual machine sclaset.
+        type: dict
+        suboptions:
+            encryption_at_host:
+                description:
+                    - This property can be used by user in the request to enable or disable the Host Encryption for the virtual machine sclaset.
+                    - This will enable the encryption for all the disks including Resource/Temp disk at host itself.
+                type: bool
+            security_type:
+                description:
+                    - Specifies the SecurityType of the virtual machine sclaset.
+                    - It is set as TrustedLaunch to enable UefiSettings.
+                type: str
+                choices:
+                    - TrustedLaunch
+            uefi_settings:
+                description:
+                    - Specifies the security settings like secure boot and vTPM used while creating the virtual machine scalset.
+                type: dict
+                suboptions:
+                    secure_boot_enabled:
+                        description:
+                            - Specifies whether secure boot should be enabled on the virtual machine sclaset.
+                        type: bool
+                    v_tpm_enabled:
+                        description:
+                            - Specifies whether vTPM should be enabled on the virtual machine scalset.
+                        type: bool
+
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -408,6 +444,40 @@ EXAMPLES = '''
     managed_disk_type: Standard_LRS
     image: customimage001
 
+- name: Create VMSS with security group
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}
+    vm_size: Standard_D4s_v3
+    admin_username: testuser
+    single_placement_group: False
+    platform_fault_domain_count: 1
+    public_ip_per_vm: True
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa ****"
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
+    managed_disk_type: Standard_LRS
+    orchestration_mode: Flexible
+    os_disk_caching: ReadWrite
+    security_profile:
+      uefi_settings:
+        secure_boot_enabled: True
+        v_tpm_enabled: False
+      encryption_at_host: False
+      security_type: TrustedLaunch
+    image:
+      offer: 0001-com-ubuntu-server-jammy
+      publisher: Canonical
+      sku: 22_04-lts-gen2
+      version: latest
+    data_disks:
+      - lun: 0
+        disk_size_gb: 64
+        caching: ReadWrite
+        managed_disk_type: Standard_LRS
 '''
 
 RETURN = '''
@@ -497,6 +567,14 @@ azure_vmss:
                         "sku": "20_04-lts-gen2",
                         "version": "20.04.202111210"
                     },
+                    "securityProfile": {
+                        "encryptionAtHost": false,
+                        "securityType": "TrustedLaunch",
+                        "uefiSettings": {
+                            "secureBootEnabled": true,
+                            "vTpmEnabled": false
+                        }
+                    },
                     "osDisk": {
                         "caching": "ReadWrite",
                         "createOption": "fromImage",
@@ -585,7 +663,22 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             terminate_event_timeout_minutes=dict(type='int'),
             ephemeral_os_disk=dict(type='bool'),
             orchestration_mode=dict(type='str', choices=['Uniform', 'Flexible']),
-            platform_fault_domain_count=dict(type='int', default=1)
+            platform_fault_domain_count=dict(type='int', default=1),
+            os_disk_size_gb=dict(type='int'),
+            security_profile=dict(
+                type='dict',
+                options=dict(
+                    encryption_at_host=dict(type='bool'),
+                    security_type=dict(type='str', choices=['TrustedLaunch']),
+                    uefi_settings=dict(
+                        type='dict',
+                        options=dict(
+                            secure_boot_enabled=dict(type='bool'),
+                            v_tpm_enabled=dict(type='bool'),
+                        )
+                    )
+                )
+            ),
         )
 
         self.resource_group = None
@@ -626,6 +719,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         self.terminate_event_timeout_minutes = None
         self.ephemeral_os_disk = None
         self.orchestration_mode = None
+        self.os_disk_size_gb = None
+        self.security_profile = None
 
         mutually_exclusive = [('load_balancer', 'application_gateway')]
         self.results = dict(
@@ -778,6 +873,10 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                 elif not self.ephemeral_os_disk and current_ephemeral is not None:
                     self.fail('Ephemeral OS disk not updatable: virtual machine scale set ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
 
+                if self.os_disk_size_gb and \
+                   self.os_disk_size_gb != vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']['diskSizeGB']:
+                    self.fail('VMSS OS disk size is not updatable: requested virtual machine OS disk size is {0}'.format(self.os_disk_size_gb))
+
                 if self.os_disk_caching and \
                    self.os_disk_caching != vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']['caching']:
                     self.log('CHANGED: virtual machine scale set {0} - OS disk caching'.format(self.name))
@@ -877,15 +976,50 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                         differences.append('custom_data')
                         changed = True
                         vmss_dict['properties']['virtualMachineProfile']['osProfile']['customData'] = self.custom_data
-                if self.orchestration_mode == "Flexible":
-                    if self.orchestration_mode != vmss_dict['properties'].get('orchestrationMode'):
-                        self.fail("The orchestration_mode parameter cannot be updated!")
+
+                if self.orchestration_mode and self.orchestration_mode != vmss_dict['properties'].get('orchestrationMode'):
+                    self.fail("The orchestration_mode parameter cannot be updated!")
                 else:
-                    if vmss_dict['properties'].get('orchestrationMode') is not None:
-                        self.fail("The orchestration_mode parameter cannot be updated!")
+                    self.orchestration_mode = vmss_dict['properties'].get('orchestrationMode')
 
                 if self.platform_fault_domain_count and self.platform_fault_domain_count != vmss_dict['properties'].get('platformFaultDomainCount'):
                     self.fail("The platform_fault_domain_count parameter cannot be updated!")
+
+                if self.security_profile is not None:
+                    update_security_profile = False
+                    if 'securityProfile' not in vmss_dict['properties']['virtualMachineProfile'].keys():
+                        update_security_profile = True
+                        differences.append('security_profile')
+                    else:
+                        if self.security_profile.get('encryption_at_host') is not None:
+                            if bool(self.security_profile.get('encryption_at_host')) != \
+                                    bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['encryptionAtHost']):
+                                update_security_profle = True
+                            else:
+                                self.security_profile['encryption_at_host'] = \
+                                    vmss_dict['properties']['virtualMachineProfile']['securityProfile']['encryptionAtHost']
+                        if self.security_profile.get('security_type') is not None:
+                            if self.security_profile.get('security_type') != \
+                                    vmss_dict['properties']['virtualMachineProfile']['securityProfile']['securityType']:
+                                update_security_profile = True
+                        if self.security_profile.get('uefi_settings') is not None:
+                            if self.security_profile['uefi_settings'].get('secure_boot_enabled') is not None:
+                                if bool(self.security_profile['uefi_settings']['secure_boot_enabled']) != \
+                                        bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['secureBootEnabled']):
+                                    update_security_profile = True
+                            else:
+                                self.security_profile['uefi_settings']['secure_boot_enabled'] = \
+                                    vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['secureBootEnabled']
+                            if self.security_profile['uefi_settings'].get('v_tpm_enabled') is not None:
+                                if bool(self.security_profile['uefi_settings']['v_tpm_enabled']) != \
+                                        bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['vTpmEnabled']):
+                                    update_security_profile = True
+                            else:
+                                self.security_profile['uefi_settings']['v_tpm_enabled'] = \
+                                    vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['vTpmEnabled']
+                        if update_security_profile:
+                            changed = True
+                            differences.append('security_profile')
 
                 self.differences = differences
 
@@ -977,6 +1111,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                                     managed_disk=managed_disk,
                                     create_option=self.compute_models.DiskCreateOptionTypes.from_image,
                                     caching=self.os_disk_caching,
+                                    disk_size_gb=self.os_disk_size_gb,
                                     diff_disk_settings=self.compute_models.DiffDiskSettings(option='Local') if self.ephemeral_os_disk else None,
                                 ),
                                 image_reference=image_reference,
@@ -1074,6 +1209,20 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                                        "Only service admin/account admin users can purchase images " +
                                        "from the marketplace. - {2}").format(self.name, self.plan, str(exc)))
 
+                    if self.security_profile is not None:
+                        uefi_settings_spec = None
+                        if self.security_profile.get('uefi_settings') is not None:
+                            uefi_settings_spec = self.compute_models.UefiSettings(
+                                secure_boot_enabled=self.security_profile['uefi_settings'].get('secure_boot_enabled'),
+                                v_tpm_enabled=self.security_profile['uefi_settings'].get('v_tpm_enabled'),
+                            )
+                        security_profile = self.compute_models.SecurityProfile(
+                            uefi_settings=uefi_settings_spec,
+                            encryption_at_host=self.security_profile.get('encryption_at_host'),
+                            security_type=self.security_profile.get('security_type'),
+                        )
+                        vmss_resource.virtual_machine_profile.security_profile = security_profile
+
                     self.log("Create virtual machine with parameters:")
                     self.create_or_update_vmss(vmss_resource)
 
@@ -1119,6 +1268,20 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                             ))
                         vmss_resource.virtual_machine_profile.storage_profile.data_disks = data_disks
 
+                    if self.security_profile is not None:
+                        uefi_settings_spec = None
+                        if self.security_profile.get('uefi_settings') is not None:
+                            uefi_settings_spec = self.compute_models.UefiSettings(
+                                secure_boot_enabled=self.security_profile['uefi_settings'].get('secure_boot_enabled'),
+                                v_tpm_enabled=self.security_profile['uefi_settings'].get('v_tpm_enabled'),
+                            )
+                        security_profile = self.compute_models.SecurityProfile(
+                            uefi_settings=uefi_settings_spec,
+                            encryption_at_host=self.security_profile.get('encryption_at_host'),
+                            security_type=self.security_profile.get('security_type'),
+                        )
+                        vmss_resource.virtual_machine_profile.security_profile = security_profile
+
                     if self.scale_in_policy:
                         vmss_resource.scale_in_policy = self.gen_scale_in_policy()
 
@@ -1127,6 +1290,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
 
                     if image_reference is not None:
                         vmss_resource.virtual_machine_profile.storage_profile.image_reference = image_reference
+
                     self.log("Update virtual machine with parameters:")
                     self.create_or_update_vmss(vmss_resource)
 

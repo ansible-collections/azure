@@ -72,6 +72,11 @@ options:
             - BlobStorage
             - BlockBlobStorage
             - FileStorage
+    is_hns_enabled:
+        description:
+            - Account HierarchicalNamespace enabled if sets to true.
+            - When I(is_hns_enabled=True), I(kind) cannot be C(Storage).
+        type: bool
     access_tier:
         description:
             - The access tier for this storage account. Required when I(kind=BlobStorage).
@@ -428,6 +433,12 @@ state:
             returned: always
             type: str
             sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/clh0003"
+        is_hns_enabled:
+            description:
+                - Account HierarchicalNamespace enabled if sets to true.
+            type: bool
+            returned: always
+            sample: true
         location:
             description:
                 - Valid Azure location. Defaults to location of the resource group.
@@ -670,6 +681,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             network_acls=dict(type='dict'),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict'),
             static_website=dict(type='dict', options=static_website_spec),
+            is_hns_enabled=dict(type='bool'),
             encryption=dict(
                 type='dict',
                 options=dict(
@@ -724,6 +736,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.blob_cors = None
         self.static_website = None
         self.encryption = None
+        self.is_hns_enabled = None
 
         super(AzureRMStorageAccount, self).__init__(self.module_arg_spec,
                                                     supports_check_mode=True)
@@ -822,6 +835,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             public_network_access=account_obj.public_network_access,
             allow_blob_public_access=account_obj.allow_blob_public_access,
             network_acls=account_obj.network_rule_set,
+            is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
             static_website=dict(
                 enabled=False,
                 index_document=None,
@@ -947,6 +961,13 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 if self.network_acls.get('ip_rules', None) is not None and self.account_dict['network_acls']['ip_rules'] == []:
                     self.results['changed'] = True
                     self.update_network_rule_set()
+
+        if self.is_hns_enabled is not None and bool(self.is_hns_enabled) != bool(self.account_dict.get('is_hns_enabled')):
+            self.results['changed'] = True
+            self.account_dict['is_hns_enabled'] = self.is_hns_enabled
+            if not self.check_mode:
+                self.fail("The is_hns_enabled parameter not support to update, from {0} to {1}".
+                          format(bool(self.account_dict.get('is_hns_enabled')), self.is_hns_enabled))
 
         if self.https_only is not None and bool(self.https_only) != bool(self.account_dict.get('https_only')):
             self.results['changed'] = True
@@ -1118,6 +1139,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 public_network_access=self.public_network_access,
                 allow_blob_public_access=self.allow_blob_public_access,
                 encryption=self.encryption,
+                is_hns_enabled=self.is_hns_enabled,
                 tags=dict()
             )
             if self.tags:
@@ -1142,6 +1164,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         public_network_access=self.public_network_access,
                                                                         allow_blob_public_access=self.allow_blob_public_access,
                                                                         encryption=self.encryption,
+                                                                        is_hns_enabled=self.is_hns_enabled,
                                                                         access_tier=self.access_tier)
         self.log(str(parameters))
         try:

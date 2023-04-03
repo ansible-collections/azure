@@ -120,7 +120,7 @@ state:
 '''
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     pass
 
@@ -193,7 +193,7 @@ class AzureRMResourceGroup(AzureRMModuleBase):
                 if self.location and normalize_location_name(self.location) != results['location']:
                     self.fail("Resource group '{0}' already exists in location '{1}' and cannot be "
                               "moved.".format(self.name, results['location']))
-        except CloudError:
+        except ResourceNotFoundError:
             self.log('Resource group {0} does not exist'.format(self.name))
             if self.state == 'present':
                 self.log("CHANGED: resource group {0} does not exist but requested state is "
@@ -246,7 +246,7 @@ class AzureRMResourceGroup(AzureRMModuleBase):
 
     def delete_resource_group(self):
         try:
-            poller = self.rm_client.resource_groups.delete(self.name)
+            poller = self.rm_client.resource_groups.begin_delete(self.name)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error delete resource group {0} - {1}".format(self.name, str(exc)))

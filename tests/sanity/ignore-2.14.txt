@@ -168,17 +168,14 @@ plugins/modules/azure_rm_loadbalancer.py validate-modules:doc-elements-mismatch
 plugins/modules/azure_rm_loadbalancer.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_loganalyticsworkspace.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_loganalyticsworkspace_info.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_mariadbconfiguration_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_mariadbdatabase.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mariadbfirewallrule.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mariadbserver.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mysqlconfiguration.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_mysqlconfiguration_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_mysqldatabase.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mysqlfirewallrule.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_mysqlfirewallrule.py validate-modules:doc-required-mismatch
 plugins/modules/azure_rm_postgresqlconfiguration.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_postgresqlconfiguration_info.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_postgresqldatabase.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_postgresqlfirewallrule.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_rediscache.py validate-modules:parameter-type-not-in-doc
@@ -267,4 +264,3 @@ plugins/modules/azure_rm_vmbackuppolicy.py validate-modules:parameter-list-no-el
 plugins/modules/azure_rm_privatednsrecordset.py validate-modules:invalid-ansiblemodule-schema
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang
-plugins/lookup/azure_keyvault_secret.py validate-modules:invalid-documentation

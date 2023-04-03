@@ -22,6 +22,7 @@
 
 - name: Update virtual network with dns server
   azure_rm_virtualnetwork:
+    flow_timeout_in_minutes: 8
     name: "{{ vnetname }}"
     address_prefixes_cidr:
       - 10.1.0.0/16
@@ -39,6 +40,7 @@
 - assert:
     that:
       - "output.state.address_prefixes | length == 3"
+      - "output.state.flow_timeout_in_minutes == 8"
       - "output.state.dns_servers | length == 2"
       - "output.state.tags.delete == 'on-exit'"
       - "output.state.tags | length == 2"
@@ -63,6 +65,7 @@
       - "facts.virtualnetworks | length == 1"
       - "facts.virtualnetworks[0].dns_servers | length == 2"
       - "facts.virtualnetworks[0].address_prefixes | length == 3"
+      - "facts.virtualnetworks[0].flow_timeout_in_minutes == 8"
       - "facts.virtualnetworks[0].subnets | length == 1"
 
 - name: Gather facts by resource group, tags

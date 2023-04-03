@@ -1,0 +1,182 @@
+- name: Prepare random number
+  set_fact:
+    random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+
+- name: Create virtual network
+  azure_rm_virtualnetwork:
+    name: "{{ random_postfix }}"
+    address_prefixes_cidr:
+      - 10.1.0.0/16
+      - 172.100.0.0/16
+      - fdda:e69b:1587:495e::/64
+    dns_servers:
+      - 127.0.0.1
+      - 127.0.0.3
+    resource_group: "{{ resource_group }}"
+
+- name: Create a route table
+  azure_rm_routetable:
+    name: "{{ random_postfix }}"
+    resource_group: "{{ resource_group }}"
+    tags:
+      purpose: testing
+
+- name: Create security group
+  azure_rm_securitygroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ random_postfix }}"
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
+    purge_rules: yes
+    rules:
+      - name: DenySSH
+        protocol: Tcp
+        destination_port_range: 22
+        access: Deny
+        priority: 100
+        direction: Inbound
+      - name: AllowSSH
+        protocol: Tcp
+        source_address_prefix: 174.109.158.0/24
+        destination_port_range: 22
+        access: Allow
+        priority: 101
+        direction: Inbound
+
+- name: Add the subnet back
+  azure_rm_subnet:
+    name: foobar
+    virtual_network_name: "{{ random_postfix }}"
+    resource_group: "{{ resource_group }}"
+    address_prefix_cidr: "10.1.0.0/24"
+    security_group:
+      resource_gorup: "{{ resource_group }}"
+      name: "{{ random_postfix }}"
+    route_table:
+      name: "{{ random_postfix }}"
+      resource_group: "{{ resource_group }}"
+    delegations:
+      - name: 'mysqlinstance'
+        serviceName: "Microsoft.Sql/managedInstances"
+  register: subnet_output
+
+- name: Create sql managed instance (Checkmode test)
+  azure_rm_sqlmanagedinstance:
+    resource_group: "{{ resource_group }}"
+    name: "{{ random_postfix }}"
+    subnet_id: "{{ subnet_output.state.id }}"
+    identity:
+      type: SystemAssigned
+    sku:
+      name: GP_Gen5
+      tier: GeneralPurpose
+      family: Gen5
+      capacity: 8
+    administrator_login: azureuser
+    administrator_login_password: Fredtest@password0329test
+    storage_size_in_gb: 256
+    v_cores: 8
+    tags:
+      key0: value0
+  register: output
+
+- name: Assert the resource instance is not exist
+  assert:
+    that:
+      - output.changed
+
+- name: Create sql managed instance
+  azure_rm_sqlmanagedinstance:
+    resource_group: "{{ resource_group }}"
+    name: "{{ random_postfix }}"
+    subnet_id: "{{ subnet_output.state.id }}"
+    identity:
+      type: SystemAssigned
+    sku:
+      name: GP_Gen5
+      tier: GeneralPurpose
+      family: Gen5
+      capacity: 8
+    administrator_login: azureuser
+    administrator_login_password: Fredtest@password0329test
+    storage_size_in_gb: 256
+    v_cores: 8
+    tags:
+      key0: value0
+  register: output
+
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.changed
+
+- name: Create sql managed instance (Idempotent test)
+  azure_rm_sqlmanagedinstance:
+    resource_group: "{{ resource_group }}"
+    name: "{{ random_postfix }}"
+    subnet_id: "{{ subnet_output.state.id }}"
+    identity:
+      type: SystemAssigned
+    sku:
+      name: GP_Gen5
+      tier: GeneralPurpose
+      family: Gen5
+      capacity: 8
+    administrator_login: azureuser
+    storage_size_in_gb: 256
+    v_cores: 8
+    tags:
+      key0: value0
+  register: output
+
+- name: Assert the resource instance no changed
+  assert:
+    that:
+      - not output.changed
+
+- name: Upgarde sql managed instance with tags
+  azure_rm_sqlmanagedinstance:
+    resource_group: "{{ resource_group }}"
+    name: "{{ random_postfix }}"
+    subnet_id: "{{ subnet_output.state.id }}"
+    identity:
+      type: SystemAssigned
+    sku:
+      name: GP_Gen5
+      tier: GeneralPurpose
+      family: Gen5
+      capacity: 8
+    administrator_login: azureuser
+    administrator_login_password: Fredtest@password0329test
+    storage_size_in_gb: 256
+    v_cores: 8
+    tags:
+      key0: value0
+      key1: value1
+  register: output
+
+- name: Assert the resource instance is update
+  assert:
+    that:
+      - output.changed
+
+- name: Get SQL managed instance by name
+  azure_rm_sqlmanagedinstance_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ random_postfix }}"
+  register: output
+
+- name: Assert the resource instance is well created
+  assert:
+    that:
+      - output.sql_managed_instance[0].tags | length == 1
+      - output.sql_managed_instance[0].storage_size_in_gb == 256
+      - output.sql_managed_instance[0].sku.name == 'GP_Gen5'
+
+- name: Delete sql managed instance
+  azure_rm_sqlmanagedinstance:
+    resource_group: "{{ resource_group }}"
+    name: "{{ random_postfix }}"
+    state: absent

@@ -1,0 +1,160 @@
+# setup: create virtual machines to attach disks on
+- name: Create virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group_secondary }}"
+    name: "{{ async_virtual_network }}-{{ item }}"
+    address_prefixes: "{{ async_virtual_network_cidr }}"
+  with_sequence: start=1 end="{{ async_number_virtual_machine }}"
+
+- name: Add subnet
+  azure_rm_subnet:
+    resource_group: "{{ resource_group_secondary }}"
+    name: "{{ async_subnet }}-{{ item }}"
+    address_prefix: "{{ async_subnet_cidr }}"
+    virtual_network: "{{ async_virtual_network }}-{{ item }}"
+  with_sequence: start=1 end="{{ async_number_virtual_machine }}"
+
+- name: Create virtual machines
+  azure_rm_virtualmachine:
+      resource_group: "{{ resource_group_secondary }}"
+      name: "{{ async_virtual_machine_prefix }}-{{ item }}"
+      vm_size: Standard_E2_v3
+      managed_disk_type: Standard_LRS
+      virtual_network: "{{ async_virtual_network }}-{{ item }}"
+      admin_username: adminuser
+      admin_password: "!test123@"
+      os_type: Linux
+      image:
+        offer: UbuntuServer
+        publisher: Canonical
+        sku: 16.04-LTS
+        version: latest
+      tags:
+        key: value
+  with_sequence: start=1 end="{{ async_number_virtual_machine }}"
+  register: create_vms
+  async: 1000
+  poll: 0
+
+- name: Wait for Virtual machine to be created
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: wait_create_vm
+  until: wait_create_vm.finished
+  retries: 100
+  delay: 5
+  loop: "{{ create_vms.results }}"
+
+- name: Retrieve running virtual machine
+  azure_rm_virtualmachine_info:
+    resource_group: "{{ resource_group_secondary }}"
+    tags:
+      - key
+  register: _vms
+
+- set_fact:
+    attach_disk_config: "{{ lookup('template', 'disk_config.j2') | from_yaml }}"
+  vars:
+    virtual_machines: "{{ _vms.vms }}"
+
+- name: Create and Attach disks to virtual machine
+  azure.azcollection.azure_rm_multiplemanageddisks:
+    managed_disks: "{{ item.disks }}"
+    managed_by_extended:
+      - "{{ item.virtual_machine }}"
+  register: azure_disks
+  async: 1000
+  poll: 0
+  with_items: "{{ attach_disk_config }}"
+
+- name: Wait for disks to be created and attached
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: attach_disk
+  until: attach_disk.finished
+  retries: 100
+  delay: 5
+  loop: "{{ azure_disks.results }}"
+
+- name: Get disk info
+  azure_rm_manageddisk_info:
+    name: "{{ item.name }}"
+    resource_group: "{{ item.resource_group }}"
+  register: disks_info
+  with_items: "{{ attach_disk_config | map(attribute='disks') | flatten | list }}"
+
+- name: Validate that disks are attached to VMs
+  assert:
+    that:
+      - result.ansible_info.azure_managed_disk[0].managed_by
+  with_items: "{{ disks_info.results }}"
+  loop_control:
+    loop_var: result
+
+- name: Detach disks from virtual machine
+  azure.azcollection.azure_rm_multiplemanageddisks:
+    managed_disks: "{{ item.disks }}"
+    managed_by_extended:
+      - "{{ item.virtual_machine }}"
+    state: absent
+  register: azure_disks
+  async: 1000
+  poll: 0
+  with_items: "{{ attach_disk_config }}"
+
+- name: Wait for disks to be created and attached
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: attach_disk
+  until: attach_disk.finished
+  retries: 100
+  delay: 5
+  loop: "{{ azure_disks.results }}"
+
+- name: Get disk info
+  azure_rm_manageddisk_info:
+    name: "{{ item.name }}"
+    resource_group: "{{ item.resource_group }}"
+  register: disks_info
+  with_items: "{{ attach_disk_config | map(attribute='disks') | flatten | list }}"
+
+- name: Validate that disks are attached to VMs
+  assert:
+    that:
+      - not result.ansible_info.azure_managed_disk[0].managed_by
+  with_items: "{{ disks_info.results }}"
+  loop_control:
+    loop_var: result
+
+- name: Delete managed disks
+  azure.azcollection.azure_rm_multiplemanageddisks:
+    managed_disks: "{{ item.disks }}"
+    state: absent
+  register: azure_disks
+  async: 1000
+  poll: 0
+  with_items: "{{ attach_disk_config }}"
+
+- name: Wait for disks to be created and attached
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: attach_disk
+  until: attach_disk.finished
+  retries: 100
+  delay: 5
+  loop: "{{ azure_disks.results }}"
+
+- name: Get disk info
+  azure_rm_manageddisk_info:
+    name: "{{ item.name }}"
+    resource_group: "{{ item.resource_group }}"
+  register: disks_info
+  with_items: "{{ attach_disk_config | map(attribute='disks') | flatten | list }}"
+
+- name: Validate that disks are attached to VMs
+  assert:
+    that:
+      - result.ansible_info.azure_managed_disk == []
+  with_items: "{{ disks_info.results }}"
+  loop_control:
+    loop_var: result

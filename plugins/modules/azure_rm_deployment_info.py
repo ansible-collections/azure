@@ -121,7 +121,7 @@ deployments:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
     from msrest.serialization import Model
 except ImportError:
@@ -170,7 +170,7 @@ class AzureRMDeploymentInfo(AzureRMModuleBase):
         try:
             response = self.rm_client.deployments.get(self.resource_group, deployment_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Deployment.')
 
         if response:
@@ -184,7 +184,7 @@ class AzureRMDeploymentInfo(AzureRMModuleBase):
         try:
             response = self.rm_client.deployments.list_by_resource_group(self.resource_group)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Deployment.')
 
         if response is not None:

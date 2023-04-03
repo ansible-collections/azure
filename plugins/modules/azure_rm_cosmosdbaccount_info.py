@@ -302,7 +302,7 @@ accounts:
                     type: str
                     sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNet
                              works/testvnet/subnets/testsubnet1"
-                ignore_missing_vnet_service_endpoint:
+                ignore_missing_v_net_service_endpoint:
                     description:
                         - Create Cosmos DB account without existing virtual network service endpoint.
                     type: bool
@@ -378,7 +378,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.cosmosdb import CosmosDBManagementClient
 except ImportError:
     # This is handled in azure_rm_common
@@ -429,6 +429,7 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(CosmosDBManagementClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name is not None:
@@ -446,7 +447,7 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
             response = self.mgmt_client.database_accounts.get(resource_group_name=self.resource_group,
                                                               account_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Database Account.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -460,7 +461,7 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
         try:
             response = self.mgmt_client.database_accounts.list_by_resource_group(resource_group_name=self.resource_group)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Database Account.')
 
         if response is not None:
@@ -476,7 +477,7 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
         try:
             response = self.mgmt_client.database_accounts.list()
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Database Account.')
 
         if response is not None:

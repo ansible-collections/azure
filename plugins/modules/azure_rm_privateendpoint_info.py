@@ -116,8 +116,48 @@ state:
             description:
                 - The resource id of the private endpoint to connect.
             returned: always
-            type: list
-            sample: ["/subscriptions/xxx/resourceGroups/myRG/providers/Microsoft.Network/privateEndpoints/point/privateLinkServiceConnections/point",]
+            type: complex
+            contains:
+                id:
+                    description:
+                        - The resource id of the private endpoint to connect.
+                    returned: always
+                    type: str
+                name:
+                    description:
+                        - The name of the private endpoint connection.
+                    returned: always
+                    type: str
+                connection_state:
+                    description:
+                        - State details of endpoint connection
+                    type: complex
+                    returned: always
+                    contains:
+                        description:
+                            description:
+                                - The reason for approval/rejection of the connection.
+                            returned: always
+                            type: str
+                            sample: "Auto Approved"
+                        status:
+                            description:
+                                - Indicates whether the connection has been Approved/Rejected/Removed by the owner of the service.
+                            returned: always
+                            type: str
+                            sample: Approved
+                        actions_required:
+                            description:
+                                - A message indicating if changes on the service provider require any updates on the consumer.
+                            type: str
+                            returned: always
+                            sample: "This is action_required string"
+                group_ids:
+                    description:
+                        - List of group_ids associated with private endpoint
+                    returned: always
+                    type: list
+                    sample: ["postgresqlServer"]
         type:
             description:
                 - Resource type.
@@ -238,7 +278,16 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
         if privateendpoint.private_link_service_connections and len(privateendpoint.private_link_service_connections) > 0:
             results['private_link_service_connections'] = []
             for connections in privateendpoint.private_link_service_connections:
-                results['private_link_service_connections'].append(connections.id)
+                connection = {}
+                connection['connection_state'] = {}
+                connection['id'] = connections.id
+                connection['name'] = connections.name
+                connection['type'] = connections.type
+                connection['group_ids'] = connections.group_ids
+                connection['connection_state']['status'] = connections.private_link_service_connection_state.status
+                connection['connection_state']['description'] = connections.private_link_service_connection_state.description
+                connection['connection_state']['actions_required'] = connections.private_link_service_connection_state.actions_required
+                results['private_link_service_connections'].append(connection)
         if privateendpoint.manual_private_link_service_connections and len(privateendpoint.manual_private_link_service_connections) > 0:
             results['manual_private_link_service_connections'] = []
             for connections in privateendpoint.manual_private_link_service_connections:

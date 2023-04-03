@@ -2,9 +2,7 @@
 requires_ansible: '>=2.9.10'
 action_groups:
   all:
-  - azure.azcollection.azure_rm_adapplication
-  - azure.azcollection.azure_rm_adapplication_info
-  - azure.azcollection.azure_rm_adgroup
+  - azure.azcollection.azure_rm_account_info
   - azure.azcollection.azure_rm_adapplication
   - azure.azcollection.azure_rm_adapplication_info
   - azure.azcollection.azure_rm_adgroup
@@ -17,6 +15,9 @@ action_groups:
   - azure.azcollection.azure_rm_aduser_info
   - azure.azcollection.azure_rm_aks
   - azure.azcollection.azure_rm_aks_info
+  - azure.azcollection.azure_rm_aksagentpool
+  - azure.azcollection.azure_rm_aksagentpool_info
+  - azure.azcollection.azure_rm_aksagentpoolversion_info
   - azure.azcollection.azure_rm_aksupgrade_info
   - azure.azcollection.azure_rm_aksversion_info
   - azure.azcollection.azure_rm_apimanagement
@@ -43,6 +44,8 @@ action_groups:
   - azure.azcollection.azure_rm_backupazurevm_info
   - azure.azcollection.azure_rm_backuppolicy
   - azure.azcollection.azure_rm_backuppolicy_info
+  - azure.azcollection.azure_rm_bastionhost
+  - azure.azcollection.azure_rm_bastionhost_info
   - azure.azcollection.azure_rm_batchaccount
   - azure.azcollection.azure_rm_cdnendpoint
   - azure.azcollection.azure_rm_cdnendpoint_info
@@ -157,6 +160,8 @@ action_groups:
   - azure.azcollection.azure_rm_mysqlfirewallrule_info
   - azure.azcollection.azure_rm_mysqlserver
   - azure.azcollection.azure_rm_mysqlserver_info
+  - azure.azcollection.azure_rm_natgateway
+  - azure.azcollection.azure_rm_natgateway_info
   - azure.azcollection.azure_rm_networkinterface
   - azure.azcollection.azure_rm_networkinterface_info
   - azure.azcollection.azure_rm_notificationhub
@@ -179,8 +184,12 @@ action_groups:
   - azure.azcollection.azure_rm_privatednszonelink_info
   - azure.azcollection.azure_rm_privateendpoint
   - azure.azcollection.azure_rm_privateendpoint_info
+  - azure.azcollection.azure_rm_privateendpointconnection
+  - azure.azcollection.azure_rm_privateendpointconnection_info
   - azure.azcollection.azure_rm_privateendpointdnszonegroup
   - azure.azcollection.azure_rm_privateendpointdnszonegroup_info
+  - azure.azcollection.azure_rm_privatelinkservice
+  - azure.azcollection.azure_rm_privatelinkservice_info
   - azure.azcollection.azure_rm_proximityplacementgroup
   - azure.azcollection.azure_rm_proximityplacementgroup_info
   - azure.azcollection.azure_rm_publicipaddress
@@ -221,6 +230,8 @@ action_groups:
   - azure.azcollection.azure_rm_sqlfirewallrule_info
   - azure.azcollection.azure_rm_sqlserver
   - azure.azcollection.azure_rm_sqlserver_info
+  - azure.azcollection.azure_rm_sqlmanagedinstance
+  - azure.azcollection.azure_rm_sqlmanagedinstance_info
   - azure.azcollection.azure_rm_storageaccount
   - azure.azcollection.azure_rm_storageaccount_info
   - azure.azcollection.azure_rm_storageblob
@@ -236,6 +247,8 @@ action_groups:
   - azure.azcollection.azure_rm_trafficmanagerprofile_info
   - azure.azcollection.azure_rm_virtualhub
   - azure.azcollection.azure_rm_virtualhub_info
+  - azure.azcollection.azure_rm_virtualhubconnection
+  - azure.azcollection.azure_rm_virtualhubconnection_info
   - azure.azcollection.azure_rm_virtualmachine
   - azure.azcollection.azure_rm_virtualmachine_info
   - azure.azcollection.azure_rm_virtualmachineextension

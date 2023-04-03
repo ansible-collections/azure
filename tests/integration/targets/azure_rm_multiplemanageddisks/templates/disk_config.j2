@@ -1,0 +1,11 @@
+{% for i in range(virtual_machines|length) %}
+- disks:
+{% for d in range(async_number_disk_to_attach) %}
+    - disk_size_gb: 1
+      name: "{{ virtual_machines[i].name }}-disk-{{ d }}"
+      resource_group: "{{ resource_group_secondary }}"
+{% endfor %}
+  virtual_machine:
+    name: "{{ virtual_machines[i].name }}"
+    resource_group: "{{ resource_group_secondary }}"
+{% endfor %}
