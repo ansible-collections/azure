@@ -325,7 +325,7 @@ options:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
     trusted_root_certificates:
-        version_added: "1.14.0"
+        version_added: "1.15.0"
         description:
             - Trusted Root certificates of the application gateway resource.
         type: list
@@ -479,7 +479,7 @@ options:
                     - 'enabled'
                     - 'disabled'
             connection_draining:
-                version_added: "1.14.0"
+                version_added: "1.15.0"
                 description:
                     - Connection draining of the backend http settings resource.
                 type: dict
@@ -508,7 +508,7 @@ options:
                         description:
                             - Resource ID.
             trusted_root_certificates:
-                version_added: "1.14.0"
+                version_added: "1.15.0"
                 description:
                     - Array of references to application gateway trusted root certificates.
                     - Can be the name of the trusted root certificate or full resource ID.
@@ -653,7 +653,7 @@ options:
                     - Can be the name of the rewrite rule set or full resource ID.
                 version_added: "1.11.0"
     autoscale_configuration:
-        version_added: "1.14.0"
+        version_added: "1.15.0"
         description:
             - Autoscale configuration of the application gateway resource.
         type: dict
@@ -667,13 +667,13 @@ options:
                     - Lower bound on number of Application Gateway capacity.
                 type: int
     enable_http2:
-        version_added: "1.14.0"
+        version_added: "1.15.0"
         description:
             - Whether HTTP2 is enabled on the application gateway resource.
         type: bool
         default: False
     web_application_firewall_configuration:
-        version_added: "1.14.0"
+        version_added: "1.15.0"
         description:
             - Web application firewall configuration of the application gateway reosurce.
         type: dict
