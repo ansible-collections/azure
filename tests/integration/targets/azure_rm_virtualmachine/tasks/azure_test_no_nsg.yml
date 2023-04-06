@@ -1,48 +1,5 @@
 - include_tasks: setup.yml
 
-# # Tests possible when CI user acccount setup with required authority
-# - name: Create virtual machine with image and plan which requires acceptance of terms
-#   azure_rm_virtualmachine:
-#     resource_group: "{{ resource_group }}"
-#     name: testvm009
-#     vm_size: Standard_A0
-#     storage_account: "{{ storage_account }}"
-#     storage_container: testvm001
-#     storage_blob: testvm003.vhd
-#     admin_username: adminuser
-#     admin_password: Password123!
-#     short_hostname: testvm
-#     os_type: Linux
-#     availability_set: "{{ availability_set }}"
-#     image: "{{ image_paid }}"
-#     plan_paid: "{{ plan_paid }}"
-#   register: create_image_plan_result
-
-# - assert:
-#     that:
-#       - create_image_plan_result is changed
-#       - create_image_plan_result.ansible_facts.azure_vm.properties.storageProfile.imageReference.publisher == image_paid.publisher
-
-# - name: Should be idempotent with image and plan which requires acceptance of terms
-#   azure_rm_virtualmachine:
-#     resource_group: "{{ resource_group }}"
-#     name: testvm009
-#     vm_size: Standard_A0
-#     storage_account: "{{ storage_account }}"
-#     storage_container: testvm001
-#     storage_blob: testvm003.vhd
-#     admin_username: adminuser
-#     admin_password: Password123!
-#     short_hostname: testvm
-#     os_type: Linux
-#     availability_set: "{{ availability_set }}"
-#     image: "{{ image_paid }}"
-#     plan_paid: "{{ plan_paid }}"
-#   register: create_image_plan_again_result
-
-# - assert:
-#     that: create_image_plan_again is not changed
-
 - name: Create minimal VM with defaults
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
@@ -54,6 +11,7 @@
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     vm_size: Standard_B1ms
     virtual_network: "{{ network_name }}"
+    created_nsg: false
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -67,11 +25,10 @@
     name: "{{ vm_name }}01"
   register: nsg_result
 
-- name: Assert that security group were exist before deleting
+- name: Assert that security group were not exist before deleting
   assert:
     that:
-      - nsg_result.securitygroups | length == 1
-      - nsg_result.securitygroups[0].network_interfaces | length == 1
+      - nsg_result.securitygroups | length == 0
 
 - name: Delete VM
   azure_rm_virtualmachine:
@@ -86,12 +43,6 @@
     name: "{{ vm_name }}01"
   register: nic_result
 
-- name: Query auto created security group
-  azure_rm_securitygroup_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vm_name }}01"
-  register: nsg_result
-
 - name: Query auto created public IP
   azure_rm_publicipaddress_info:
     resource_group: "{{ resource_group }}"
@@ -103,7 +54,6 @@
     that:
       # what about the default storage group?
       - nic_result.networkinterfaces | length == 0
-      - nsg_result.securitygroups | length == 0
       - pip_result.publicipaddresses | length == 0
 
 - name: Destroy subnet

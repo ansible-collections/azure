@@ -113,7 +113,6 @@ options:
             - receive_disabled
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -221,6 +220,7 @@ class AzureRMServiceBusQueue(AzureRMModuleBase):
         )
 
         super(AzureRMServiceBusQueue, self).__init__(self.module_arg_spec,
+                                                     supports_tags=False,
                                                      supports_check_mode=True)
 
     def exec_module(self, **kwargs):

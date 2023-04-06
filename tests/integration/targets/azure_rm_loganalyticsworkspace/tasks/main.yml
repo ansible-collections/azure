@@ -50,7 +50,7 @@
       - output.retention_in_days == 30
       # - output.intelligence_packs | json_query('[?name == `Backup`].enabled') | first == true
       # - output.intelligence_packs | json_query('[?name == `Containers`].enabled') | first == true
-      - output.sku == 'pergb2018'
+      - output.sku == 'per_gb2018'
       - output.tags.key1 == 'value1'
 
 - name: Update Log Analytics Workspace
@@ -96,7 +96,7 @@
       - facts.workspaces[0].usages is defined
       - facts.workspaces[0].usages | length > 0
       - facts.workspaces[0].management_groups is defined
-      - facts.workspaces[0].sku == 'pergb2018'
+      - facts.workspaces[0].sku == 'per_gb2018'
 
 - name: Get Log Analytics workspace information (Show default information)
   azure_rm_loganalyticsworkspace_info:
@@ -113,7 +113,7 @@
       - facts.workspaces[0].shared_keys is not defined
       - facts.workspaces[0].usages is not defined
       - facts.workspaces[0].management_groups is not defined
-      - facts.workspaces[0].sku == 'pergb2018'
+      - facts.workspaces[0].sku == 'per_gb2018'
 
 - name: Create Log Analytics workspace (Test Idempotence)
   azure_rm_loganalyticsworkspace:

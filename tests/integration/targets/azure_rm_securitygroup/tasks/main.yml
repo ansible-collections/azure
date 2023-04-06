@@ -6,7 +6,6 @@
     sg_name1: "sgasg{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
 
-
 - name: Create security group
   azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
@@ -15,6 +14,7 @@
       testing: testing
       delete: on-exit
       foo: bar
+      testkey: testvalue
     purge_rules: yes
     rules:
       - name: DenySSH
@@ -41,6 +41,7 @@
     tags:
       - testing
       - foo:bar
+      - testkey
   register: output
 - name: assert resource retrieved
   assert:
@@ -261,7 +262,7 @@
       location: "{{ output.state.location }}"
       properties:
         securityRules:
-          - name: UPPER PROTOCOL NAME RULE
+          - name: Upper_Protocal
             properties:
               protocol: TCP  # UPPERCASE
               access: Allow
@@ -277,7 +278,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ secgroupname }}"
     rules:
-      - name: UPPER PROTOCOL NAME RULE
+      - name: Upper_Protocal
         protocol: Tcp     # Capitalized
         access: Allow
         destination_port_range: 80
@@ -351,30 +352,17 @@
     that:
       - not output.changed
 
-
 - name: Delete security group
   azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ sg_name1 }}"
     state: absent
 
-- name: Delete all security groups
+- name: Delete security group
   azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
-    name: "{{ item.name }}"
+    name: "{{ secgroupname }}"
     state: absent
-  with_items: "{{ output_groups.securitygroups }}"
-
-- name: Should have no security groups remaining
-  azure_rm_securitygroup_info:
-    resource_group: "{{ resource_group }}"
-    tags:
-      - testing:testing
-  register: output
-- name: assert resources removed
-  assert:
-    that:
-      - output.securitygroups | length == 0
 
 - name: Clean up Application security group 2
   azure_rm_applicationsecuritygroup:

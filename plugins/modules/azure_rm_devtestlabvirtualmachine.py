@@ -186,8 +186,8 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
     from msrest.serialization import Model
@@ -364,6 +364,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         old_response = self.get_virtualmachine()
@@ -458,14 +459,14 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Creating / Updating the Virtual Machine instance {0}".format(self.name))
 
         try:
-            response = self.mgmt_client.virtual_machines.create_or_update(resource_group_name=self.resource_group,
-                                                                          lab_name=self.lab_name,
-                                                                          name=self.name,
-                                                                          lab_virtual_machine=self.lab_virtual_machine)
+            response = self.mgmt_client.virtual_machines.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                lab_name=self.lab_name,
+                                                                                name=self.name,
+                                                                                lab_virtual_machine=self.lab_virtual_machine)
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Virtual Machine instance.')
             self.fail("Error creating the Virtual Machine instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -478,10 +479,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         '''
         self.log("Deleting the Virtual Machine instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.virtual_machines.delete(resource_group_name=self.resource_group,
-                                                                lab_name=self.lab_name,
-                                                                name=self.name)
-        except CloudError as e:
+            response = self.mgmt_client.virtual_machines.begin_delete(resource_group_name=self.resource_group,
+                                                                      lab_name=self.lab_name,
+                                                                      name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the Virtual Machine instance.')
             self.fail("Error deleting the Virtual Machine instance: {0}".format(str(e)))
 
@@ -505,7 +506,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Virtual Machine instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Virtual Machine instance.')
         if found is True:
             return response.as_dict()
@@ -525,7 +526,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             self.log("Response : {0}".format(response))
             self.log("DevTest Lab instance : {0} found".format(response.name))
             return response.as_dict()
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Did not find the DevTest Lab instance.')
             return False
 

@@ -1,23 +1,26 @@
 # setup: create virtual machines to attach disks on
 - name: Create virtual network
   azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: "{{ async_virtual_network }}"
+    resource_group: "{{ resource_group_secondary }}"
+    name: "{{ async_virtual_network }}-{{ item }}"
     address_prefixes: "{{ async_virtual_network_cidr }}"
+  with_sequence: start=1 end="{{ async_number_virtual_machine }}"
 
 - name: Add subnet
   azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
-    name: "{{ async_subnet }}"
+    resource_group: "{{ resource_group_secondary }}"
+    name: "{{ async_subnet }}-{{ item }}"
     address_prefix: "{{ async_subnet_cidr }}"
-    virtual_network: "{{ async_virtual_network }}"
+    virtual_network: "{{ async_virtual_network }}-{{ item }}"
+  with_sequence: start=1 end="{{ async_number_virtual_machine }}"
 
 - name: Create virtual machines
   azure_rm_virtualmachine:
-      resource_group: "{{ resource_group }}"
+      resource_group: "{{ resource_group_secondary }}"
       name: "{{ async_virtual_machine_prefix }}-{{ item }}"
       vm_size: Standard_E2_v3
       managed_disk_type: Standard_LRS
+      virtual_network: "{{ async_virtual_network }}-{{ item }}"
       admin_username: adminuser
       admin_password: "!test123@"
       os_type: Linux
@@ -26,6 +29,8 @@
         publisher: Canonical
         sku: 16.04-LTS
         version: latest
+      tags:
+        key: value
   with_sequence: start=1 end="{{ async_number_virtual_machine }}"
   register: create_vms
   async: 1000
@@ -42,7 +47,9 @@
 
 - name: Retrieve running virtual machine
   azure_rm_virtualmachine_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
+    tags:
+      - key
   register: _vms
 
 - set_fact:

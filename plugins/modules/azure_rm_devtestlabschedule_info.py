@@ -111,7 +111,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _camel_to_snake, _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
     from msrest.serialization import Model
 except ImportError:
@@ -158,6 +158,7 @@ class AzureRMDtlScheduleInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
         if self.name:
             self.results['schedules'] = self.get()
@@ -174,7 +175,7 @@ class AzureRMDtlScheduleInfo(AzureRMModuleBase):
                                                       lab_name=self.lab_name,
                                                       name=_snake_to_camel(self.name))
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Schedule.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -189,7 +190,7 @@ class AzureRMDtlScheduleInfo(AzureRMModuleBase):
             response = self.mgmt_client.schedules.list(resource_group_name=self.resource_group,
                                                        lab_name=self.lab_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Schedule.')
 
         if response is not None:

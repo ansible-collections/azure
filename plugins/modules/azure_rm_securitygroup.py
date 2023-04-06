@@ -463,7 +463,7 @@ def compare_rules_change(old_list, new_list, purge_list):
     changed = False
 
     for old_rule in old_list:
-        matched = next((x for x in new_list if x['name'] == old_rule['name']), [])
+        matched = next((x for x in new_list if x['name'].lower() == old_rule['name'].lower()), [])
         if matched:  # if the new one is in the old list, check whether it is updated
             changed = changed or compare_rules(old_rule, matched)
         elif not purge_list:  # keep this rule
@@ -472,8 +472,8 @@ def compare_rules_change(old_list, new_list, purge_list):
             changed = True
     # Compare new list and old list is the same? here only compare names
     if not changed:
-        new_names = [to_native(x['name']) for x in new_list]
-        old_names = [to_native(x['name']) for x in old_list]
+        new_names = [to_native(x['name'].lower()) for x in new_list]
+        old_names = [to_native(x['name'].lower()) for x in old_list]
         changed = (set(new_names) != set(old_names))
     return changed, new_list
 
@@ -482,7 +482,7 @@ def compare_rules(old_rule, rule):
     def compare_list_rule(old_rule, rule, key):
         return set(map(str, rule.get(key) or [])) != set(map(str, old_rule.get(key) or []))
     changed = False
-    if old_rule['name'] != rule['name']:
+    if old_rule['name'].lower() != rule['name'].lower():
         changed = True
     if rule.get('description', None) != old_rule['description']:
         changed = True

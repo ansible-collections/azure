@@ -94,8 +94,8 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
     from msrest.serialization import Model
@@ -199,6 +199,7 @@ class AzureRMDtlCustomImage(AzureRMModuleBase):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         old_response = self.get_customimage()
@@ -259,14 +260,14 @@ class AzureRMDtlCustomImage(AzureRMModuleBase):
         self.log("Creating / Updating the Custom Image instance {0}".format(self.name))
 
         try:
-            response = self.mgmt_client.custom_images.create_or_update(resource_group_name=self.resource_group,
-                                                                       lab_name=self.lab_name,
-                                                                       name=self.name,
-                                                                       custom_image=self.custom_image)
+            response = self.mgmt_client.custom_images.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                             lab_name=self.lab_name,
+                                                                             name=self.name,
+                                                                             custom_image=self.custom_image)
             if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Custom Image instance.')
             self.fail("Error creating the Custom Image instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -279,10 +280,10 @@ class AzureRMDtlCustomImage(AzureRMModuleBase):
         '''
         self.log("Deleting the Custom Image instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.custom_images.delete(resource_group_name=self.resource_group,
-                                                             lab_name=self.lab_name,
-                                                             name=self.name)
-        except CloudError as e:
+            response = self.mgmt_client.custom_images.begin_delete(resource_group_name=self.resource_group,
+                                                                   lab_name=self.lab_name,
+                                                                   name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the Custom Image instance.')
             self.fail("Error deleting the Custom Image instance: {0}".format(str(e)))
 
@@ -303,7 +304,7 @@ class AzureRMDtlCustomImage(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Custom Image instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Custom Image instance.')
         if found is True:
             return response.as_dict()

@@ -1076,6 +1076,7 @@ class AzureRMModuleBase(object):
             self._management_group_client = self.get_mgmt_svc_client(ManagementGroupsClient,
                                                                      base_url=self._cloud_environment.endpoints.resource_manager,
                                                                      suppress_subscription_id=True,
+                                                                     is_track2=True,
                                                                      api_version='2020-05-01')
         return self._management_group_client
 
@@ -1267,6 +1268,7 @@ class AzureRMModuleBase(object):
         self.log('Getting marketplace agreement client')
         if not self._marketplace_client:
             self._marketplace_client = self.get_mgmt_svc_client(MarketplaceOrderingAgreements,
+                                                                is_track2=True,
                                                                 base_url=self._cloud_environment.endpoints.resource_manager)
         return self._marketplace_client
 

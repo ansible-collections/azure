@@ -168,7 +168,7 @@ rediscaches:
                 - The version of Redis.
             returned: always
             type: str
-            sample: 4.0.14
+            sample: 6.0.14
             version_added: "1.10.0"
         shard_count:
             description:
