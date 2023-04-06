@@ -131,6 +131,7 @@ parameters:
     - "azure_rm_workspace"
     - "azure_rm_datafactory"
     - "azure_rm_bastionhost"
+    - "azure_rm_devtestlab"
     - "azure_rm_sqlmanagedinstance"
     - "azure_rm_vmssnetworkinterface_info"
     - "inventory_azure"
