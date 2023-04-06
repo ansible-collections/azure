@@ -91,6 +91,12 @@ vnetpeerings:
             returned: always
             type: str
             sample: Connected
+        peering_sync_level:
+            description:
+                - The Sync Level of the Peering
+            type: str
+            returned: always
+            sample: "FullyInSync"
         provisioning_state:
             description:
                 - The provisioning state of the resource.
@@ -148,7 +154,8 @@ def vnetpeering_to_dict(vnetpeering):
         use_remote_gateways=vnetpeering.use_remote_gateways,
         allow_gateway_transit=vnetpeering.allow_gateway_transit,
         allow_forwarded_traffic=vnetpeering.allow_forwarded_traffic,
-        allow_virtual_network_access=vnetpeering.allow_virtual_network_access
+        allow_virtual_network_access=vnetpeering.allow_virtual_network_access,
+        peering_sync_level=vnetpeering.peering_sync_level
     )
     return results
 
