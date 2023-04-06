@@ -100,6 +100,52 @@
             value: myvarvalue
   register: output
 
+- name: Create virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "vnet{{ rpfx }}"
+    address_prefixes_cidr:
+      - 10.1.0.0/16
+      - 172.100.0.0/16
+
+- name: Create a subnet
+  azure_rm_subnet:
+    resource_group: "{{ resource_group }}"
+    name: "sub{{ rpfx }}"
+    virtual_network_name: "vnet{{ rpfx }}"
+    address_prefix_cidr: "10.1.0.0/24"
+    private_link_service_network_policies: Disabled
+    private_endpoint_network_policies: Disabled
+    delegations:
+      - name: delegation_to_containerinsance
+        serviceName: 'Microsoft.ContainerInstance/containerGroups'
+  register: subnet_output
+
+- name: Create third container instance for subnet_ids
+  azure_rm_containerinstance:
+    resource_group: "{{ resource_group }}"
+    name: "aci{{ rpfx }}thi"
+    os_type: linux
+    ip_address: private
+    location: eastus
+    subnet_ids:
+      - "{{ subnet_output.state.id }}"
+    ports:
+      - 80
+    containers:
+      - name: mycontainer1
+        image: httpd
+        memory: 1.5
+        ports:
+          - 80
+          - 81
+  register: output
+
+- name: Assert the container instance is well created
+  assert:
+    that:
+      - output.changed
+
 - name: Gather facts for single Container Instance
   azure_rm_containerinstance_info:
     resource_group: "{{ resource_group }}"
