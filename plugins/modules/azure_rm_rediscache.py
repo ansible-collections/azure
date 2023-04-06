@@ -113,7 +113,7 @@ options:
         choices:
             - "4"
             - "6"
-        default: "4"
+        default: "6"
         version_added: "1.10.0"
     shard_count:
         description:
@@ -400,7 +400,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             ),
             redis_version=dict(
                 type="str",
-                default="4",
+                default="6",
                 choices=["4", "6"]
             ),
             shard_count=dict(
@@ -609,7 +609,8 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             self.log("public_network_access diff: origin {0} / update {1}".format(existing['public_network_access'], self.public_network_access))
             return True
         if self.redis_version is not None and existing['redis_version'][0] != self.redis_version[0]:
-            self.fail("Updating redis_version is not supported")
+            self.log("redis_version diff: origin {0} / update {1}".format(existing['redis_version'], self.redis_version))
+            return True
         for config in self.redis_configuration_properties:
             if getattr(self, config) is not None and existing.get(config, None) != getattr(self, config, None):
                 self.log("redis_configuration {0} diff: origin {1} / update {2}".format(config, existing.get(config, None), getattr(self, config, None)))
