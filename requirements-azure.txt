@@ -1,7 +1,7 @@
 packaging
 requests[security]
 xmltodict
-azure-cli==2.34.1
+azure-cli==2.33.1
 azure-cli-core==2.34.0
 azure-common==1.1.11
 azure-identity==1.7.0
