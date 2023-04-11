@@ -29,10 +29,12 @@ options:
     state:
         description:
             - State of the storage account. Use C(present) to create or update a storage account and use C(absent) to delete an account.
+            - C(failover) is used to failover the storage account to its secondary. This process can take up to a hour.
         default: present
         choices:
             - absent
             - present
+            - failover
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
@@ -500,6 +502,12 @@ state:
             returned: always
             type: str
             sample: Succeeded
+        failover_in_progress:
+            description:
+                - Status indicating the storage account is currently failing over to its secondary location.
+            returned: always
+            type: bool
+            sample: False
         resource_group:
             description:
                 - The resource group's name.
@@ -669,7 +677,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             location=dict(type='str'),
             name=dict(type='str', required=True),
             resource_group=dict(required=True, type='str', aliases=['resource_group_name']),
-            state=dict(default='present', choices=['present', 'absent']),
+            state=dict(default='present', choices=['present', 'absent', 'failover']),
             force_delete_nonempty=dict(type='bool', default=False, aliases=['force']),
             tags=dict(type='dict'),
             kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
@@ -783,6 +791,9 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         elif self.state == 'absent' and self.account_dict:
             self.delete_account()
             self.results['state'] = dict(Status='Deleted')
+        elif self.state == 'failover' and self.account_dict:
+            self.failover_account()
+            self.results['state'] = self.get_account()
 
         return self.results
 
@@ -820,6 +831,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             id=account_obj.id,
             name=account_obj.name,
             location=account_obj.location,
+            failover_in_progress=(account_obj.failover_in_progress
+                                  if account_obj.failover_in_progress is not None else False),
             resource_group=self.resource_group,
             type=account_obj.type,
             access_tier=account_obj.access_tier,
@@ -914,6 +927,30 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                         account_dict['encryption']['services']['blob'] = dict(enabled=True)
 
         return account_dict
+
+    def failover_account(self):
+
+        if str(self.account_dict['sku_name']) not in ["Standard_GZRS", "Standard_GRS", "Standard_RAGZRS", "Standard_RAGRS"]:
+            self.fail("Storage account SKU ({0}) does not support failover to a secondary region.".format(self.account_dict['sku_name']))
+        try:
+            account_obj = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name, expand='georeplicationstats')
+        except Exception as exc:
+            self.fail("Error occured while acquiring geo-replication status. {0}".format(str(exc)))
+
+        if account_obj.failover_in_progress:
+            self.fail("Storage account is already in process of failing over to secondary region.")
+
+        if not account_obj.geo_replication_stats.can_failover:
+            self.fail("Storage account is unable to failover.  Secondary region has status of {0}".format(account_obj.geo_replication_stats.status))
+
+        try:
+            poller = self.storage_client.storage_accounts.begin_failover(self.resource_group, self.name)
+            result = self.get_poller_result(poller)
+        except Exception as exc:
+            self.fail("Error occured while attempting a failover operation. {0}".format(str(exc)))
+
+        self.results['changed'] = True
+        return result
 
     def update_network_rule_set(self):
         if not self.check_mode:
