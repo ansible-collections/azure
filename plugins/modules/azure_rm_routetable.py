@@ -134,9 +134,13 @@ class AzureRMRouteTable(AzureRMModuleBase):
             if not self.check_mode:
                 self.delete_table()
         elif self.state == 'present':
+            routes = []
+            subnets = None
             if not result:
                 changed = True  # create new route table
             else:  # check update
+                routes = result.routes
+                subnets = result.subnets
                 update_tags, self.tags = self.update_tags(result.tags)
                 if update_tags:
                     changed = True
@@ -146,6 +150,8 @@ class AzureRMRouteTable(AzureRMModuleBase):
             if changed:
                 result = self.network_models.RouteTable(location=self.location,
                                                         tags=self.tags,
+                                                        routes=routes,
+                                                        subnets=subnets,
                                                         disable_bgp_route_propagation=self.disable_bgp_route_propagation)
                 if not self.check_mode:
                     result = self.create_or_update_table(result)
