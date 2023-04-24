@@ -26,15 +26,15 @@ options:
         type: str
     attribute_name:
         description:
-            - The name of an attribute that you want to match to attribute_value.
-            - If attribute_name is not a collection type it will return groups where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will return groups where attribute_value is in attribute_name.
+            - The name of an attribute that you want to match to I(attribute_value).
+            - If I(attribute_name) is not a collection type it will return groups where I(attribute_name) is equal to I(attribute_value).
+            - If I(attribute_name) is a collection type it will return groups where I(attribute_value) is in I(attribute_name).
         type: str
     attribute_value:
         description:
             - The value to match attribute_name to.
-            - If attribute_name is not a collection type it will return groups where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will groups users where attribute_value is in attribute_name.
+            - If I(attribute_name) is not a collection type it will return groups where I(attribute_name) is equal to I(attribute_value).
+            - If I(attribute_name) is a collection type it will groups users where I(attribute_value) is in I(attribute_name).
         type: str
     odata_filter:
         description:

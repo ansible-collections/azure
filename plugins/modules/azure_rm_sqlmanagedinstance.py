@@ -89,7 +89,7 @@ options:
     administrator_login:
         description:
             - Administrator username for the managed instance.
-            -  Can only be specified when the managed instance is being created (and is required for creation).
+            - Can only be specified when the managed instance is being created (and is required for creation).
         type: str
     administrator_login_password:
         description:

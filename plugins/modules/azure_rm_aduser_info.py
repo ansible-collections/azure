@@ -38,27 +38,27 @@ options:
     attribute_name:
         description:
             - The name of an attribute that you want to match to attribute_value.
-            - If attribute_name is not a collection type it will return users where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will return users where attribute_value is in attribute_name.
+            - If I(attribute_name) is not a collection type it will return users where I(attribute_name) is equal to I(attribute_value).
+            - If I(attribute_name) is a collection type it will return users where I(attribute_value) is in I(attribute_name).
             - Mutually exclusive with I(object_id), I(user_principal_name), I(odata_filter) and I(all).
             - Required together with I(attribute_value).
         type: str
     attribute_value:
         description:
             - The value to match attribute_name to.
-            - If attribute_name is not a collection type it will return users where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will return users where attribute_value is in attribute_name.
+            - If I(attribute_name) is not a collection type it will return users where I(attribute_name) is equal to I(attribute_value).
+            - If I(attribute_name) is a collection type it will return users where I(attribute_value) is in I(attribute_name).
             - Required together with I(attribute_name).
         type: str
     odata_filter:
         description:
-            - returns users based on the the OData filter passed into this parameter.
+            - Returns users based on the the OData filter passed into this parameter.
             - Mutually exclusive with I(object_id), I(attribute_name), I(user_principal_name) and I(all).
         type: str
     all:
         description:
-            - If True, will return all users in tenant.
-            - If False will return no users.
+            - If C(True), will return all users in tenant.
+            - If C(False) will return no users.
             - It is recommended that you instead identify a subset of users and use filter.
             - Mutually exclusive with I(object_id), I(attribute_name), I(odata_filter) and I(user_principal_name).
         type: bool

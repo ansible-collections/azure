@@ -12,7 +12,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_snapshot
 version_added: "0.1.2"
-short_description: Manage Azure Snapshot instance.
+short_description: Manage Azure Snapshot instance
 description:
     - Create, update and delete instance of Azure Snapshot.
 options:
@@ -74,11 +74,11 @@ options:
                     - Copy
             source_uri:
                 description:
-                    - If I(createOption=Import), this is the URI of a blob to be imported into a managed disk.
+                    - If I(create_option=Import), this is the URI of a blob to be imported into a managed disk.
                 type: str
             source_id:
                 description:
-                    - If I(createOption=Copy), this is the resource ID of a managed disk to be copied from.
+                    - If I(create_option=Copy), this is the resource ID of a managed disk to be copied from.
                 type: str
     state:
         description:

@@ -37,7 +37,7 @@ options:
     show_connection_string:
         description:
             - Show the connection string for each of the storageaccount's endpoints.
-            - For convenient usage, C(show_connection_string) will also show the access keys for each of the storageaccount's endpoints.
+            - For convenient usage, I(show_connection_string) will also show the access keys for each of the storageaccount's endpoints.
             - Note that it will cost a lot of time when list all storageaccount rather than query a single one.
         type: bool
     show_blob_cors:
