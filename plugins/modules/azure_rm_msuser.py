@@ -79,17 +79,17 @@ author:
 EXAMPLES = '''
     - name: Create a new ad user
       azure_rm_msuser:
-        user_principal_name: xiuxi.sun_qq.com#EXT#@824736848qq.onmicrosoft.com
+        user_principal_name: foo@test.com
         display_name: xiuxi.sun
         account_enabled: True
         mail_nickname: fred
         password_profile:
-          Password: Password@0329
-        mail: xiuxi.sun@qq.com
+          Password: Password***
+        mail: test@test.com
 
     - name: Delete microsoft groups
       azure_rm_msuser:
-        display_name: xiuxi.sun
+        display_name: foo.test
         state: absent
 '''
 
@@ -111,7 +111,7 @@ userPrincipalName:
         - The principal name of the user.
     returned: always
     type: str
-    sample: 824736848_qq.com#EXT#@824736848qq.onmicrosoft.com
+    sample: foo@test.com
 mail:
     description:
         - The primary email address of the user.
@@ -129,7 +129,7 @@ given_name:
         - The given name of the user.
     returned: always
     type: str
-    sample: '旭'
+    sample: xu
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
