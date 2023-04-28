@@ -97,25 +97,25 @@ userPrincipalName:
         - The principal name of the user.
     returned: always
     type: str
-    sample: 824736848_qq.com#EXT#@824736848qq.onmicrosoft.com
+    sample: foo@test.com
 mail:
     description:
         - The primary email address of the user.
     returned: always
     type: str
-    sample: 824736848qq.onmicrosoft.com
+    sample: test@test.com
 surname:
     description:
         - The user's surname (family name or last name).
     type: str
     returned: always
-    sample: '张'
+    sample: xu
 given_name:
     description:
         - The given name for the user.
     returned: always
     type: str
-    sample: '旭'
+    sample: xu
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
