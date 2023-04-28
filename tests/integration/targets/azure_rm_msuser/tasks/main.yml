@@ -1,12 +1,12 @@
 - name: Create a new ad user
   azure_rm_msuser:
-    user_principal_name: xiuxi.sun_qq.com#EXT#@824736848qq.onmicrosoft.com
-    display_name: xiuxi.sun
+    user_principal_name: foo@test.com
+    display_name: test.test
     account_enabled: True
     mail_nickname: fred
     password_profile:
-      Password: Password@0329
-    mail: xiuxi.sun@qq.com
+      Password: Password***
+    mail: test@test.com
   register: output
 
 - assert:
@@ -21,12 +21,12 @@
 
 - assert:
     that:
-      - output.ms_users[0].display_name == "xiuxi.sun"
-      - output.ms_users[0].mail == "xiuxi.sun@qq.com"
+      - output.ms_users[0].display_name == "test.test"
+      - output.ms_users[0].mail == "foo@test.com"
 
 - name: Delete microsoft groups
   azure_rm_msuser:
-    display_name: xiuxi.sun
+    display_name: test.test
     state: absent 
   register: output
 
