@@ -87,19 +87,19 @@ spa:
         - The single page application(SPA) URI of redirects.
     returned: always
     type: dict
-    sample: {'redirectUris':['https://spa.com']}
+    sample: {'redirect_uris':['https://spa.com']}
 web:
     description:
         - The Web URI of redirects.
     returned: always
     type: dict
-    sample: {'redirectUris':['https://web.com']}
+    sample: {'redirect_uris':['https://web.com']}
 public_client:
     description:
         - The public client/native URI of redirects.
     returned: always
     type: dict
-    sample: {'redirectUris':['https://localhost']}
+    sample: {'redirect_uris':['https://localhost']}
 sign_in_audience:
     description:
         - The service principal account type.
@@ -166,9 +166,9 @@ class AzureRMMSServicePrincipalInfo(AzureRMModuleBase):
                 app_display_name=object['displayName'],
                 app_roles=object['appRoles'],
                 sign_in_audience=object['signInAudience'],
-                web={'redirectUris': object['web']['redirectUris']},
-                public_client={'redirectUris': object['publicClient']['redirectUris']},
-                spa={'redirectUris': object['spa']['redirectUris']},
+                web={'redirect_uris': object['web']['redirectUris']},
+                public_client={'redirect_uris': object['publicClient']['redirectUris']},
+                spa={'redirect_uris': object['spa']['redirectUris']},
             )
 
 

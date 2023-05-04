@@ -6,13 +6,13 @@
     name: "{{ rpfx }}"
     sign_in_audience: AzureADandPersonalMicrosoftAccount
     public_client:
-      redirectUris:
+      redirect_uris:
         - https://localhost
     spa:
-      redirectUris:
+      redirect_uris:
         - https://localhost1
     web:
-      redirectUris:
+      redirect_uris:
         - https://localhost2
   register: create_output
     

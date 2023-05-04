@@ -37,7 +37,7 @@ options:
             - Configure the redirect Web URI.
         type: dict
         suboptions:
-            redirectUris:
+            redirect_uris:
                 description:
                     - The authentication response to this URI.
                 type: list
@@ -47,7 +47,7 @@ options:
             - Configure the redirection Single Page Application (SPA) URI.
         type: dict
         suboptions:
-            redirectUris:
+            redirect_uris:
                 description:
                     - The authentication response to this URI.
                 type: list
@@ -57,7 +57,7 @@ options:
             - Redirects the public client/native URI,
         type: dict
         suboptions:
-            redirectUris:
+            redirect_uris:
                 description:
                     - Configure the redirection public client/local URI.
                 type: list
@@ -99,7 +99,7 @@ EXAMPLES = '''
       name: test
       sign_in_audience: AzureADMyOrg
       web:
-        redirectUris:
+        redirect_uris:
             - https://localhost
 '''
 
@@ -134,19 +134,19 @@ spa:
         - The single page application(SPA) URI of Redirects.
     returned: always
     type: dict
-    sample: {'redirectUris':['https://spa.com']}
+    sample: {'redirect_uris':['https://spa.com']}
 web:
     description:
         - The WEB URI of Redirects.
     returned: always
     type: dict
-    sample: {'redirectUris':['https://web.com']}
+    sample: {'redirect_uris':['https://web.com']}
 public_client:
     description:
         - The public client/native URI of Redirects.
     returned: always
     type: dict
-    sample: {'redirectUris':['https://localhost']}
+    sample: {'redirect_uris':['https://localhost']}
 sign_in_audience:
     description:
         - The service principal account type.
@@ -159,15 +159,15 @@ import json
 
 
 spa_spec = dict(
-    redirectUris=dict(type='list', elements='str')
+    redirect_uris=dict(type='list', elements='str')
 )
 
 public_client_spec = dict(
-    redirectUris=dict(type='list', elements='str')
+    redirect_uris=dict(type='list', elements='str')
 )
 
 web_spec = dict(
-    redirectUris=dict(type='list', elements='str')
+    redirect_uris=dict(type='list', elements='str')
 )
 
 
@@ -214,11 +214,14 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
             elif key == 'sign_in_audience':
                 self.body['signInAudience'] = kwargs[key]
             elif key == 'public_client':
-                self.body['publicClient'] = kwargs[key]
+                self.body['publicClient'] = dict()
+                self.body['publicClient']['redirectUris'] = kwargs[key]['redirect_uris']
             elif key == 'web':
-                self.body['web'] = kwargs[key]
+                self.body['web'] = dict()
+                self.body['web']['redirectUris'] = kwargs[key]['redirect_uris']
             elif key == 'spa':
-                self.body['spa'] = kwargs[key]
+                self.body['spa'] = dict()
+                self.body['spa']['redirectUris'] = kwargs[key]['redirect_uris']
 
         client = self.get_msgraph_client()
         response = None
@@ -290,9 +293,9 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
                 app_display_name=object['displayName'],
                 app_roles=object['appRoles'],
                 sign_in_audience=object['signInAudience'],
-                web={'redirectUris': object['web']['redirectUris']},
-                public_client={'redirectUris': object['publicClient']['redirectUris']},
-                spa={'redirectUris': object['spa']['redirectUris']},
+                web={'redirect_uris': object['web']['redirectUris']},
+                public_client={'redirect_uris': object['publicClient']['redirectUris']},
+                spa={'redirect_uris': object['spa']['redirectUris']},
             )
 
 
