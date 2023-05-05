@@ -324,7 +324,7 @@ class AzureRMResourceInfo(AzureRMModuleBase):
             ),
             method=dict(
                 type='str',
-                default='PUT',
+                default='GET',
                 choices=["GET", "PUT", "POST", "HEAD", "PATCH", "DELETE", "MERGE"]
             ),
             api_version=dict(
