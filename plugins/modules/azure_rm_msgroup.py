@@ -59,8 +59,7 @@ options:
     group_types:
         description:
             - The type of the groups.
-        type: list
-        elements: str
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
@@ -74,8 +73,7 @@ EXAMPLES = '''
         display_name: testmsgroup
         description: "For test group "
         mail_nickname: msgrouptest
-        group_types:
-          - Unified
+        group_types: Unified
         mail_enabled: True
         security_enabled: True
 
@@ -142,7 +140,7 @@ class AzureRMMSGroup(AzureRMModuleBase):
             object_id=dict(type='str'),
             display_name=dict(type='str'),
             mail_nickname=dict(type='str'),
-            group_types=dict(type='list', elements='str'),
+            group_types=dict(type='str'),
             description=dict(type='str'),
             security_enabled=dict(type='bool', default=True),
             mail_enabled=dict(type='bool', default=False),
@@ -179,7 +177,7 @@ class AzureRMMSGroup(AzureRMModuleBase):
             elif key == 'description':
                 self.body['description'] = kwargs[key]
             elif key == 'group_types':
-                self.body['groupTypes'] = kwargs[key]
+                self.body['groupTypes'] = [kwargs[key]]
             elif key == 'security_enabled':
                 self.body['securityEnabled'] = kwargs[key]
             elif key == 'mail_enabled':
