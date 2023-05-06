@@ -215,13 +215,16 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
                 self.body['signInAudience'] = kwargs[key]
             elif key == 'public_client':
                 self.body['publicClient'] = dict()
-                self.body['publicClient']['redirectUris'] = kwargs[key]['redirect_uris']
+                if self.public_client is not None:
+                    self.body['publicClient']['redirectUris'] = kwargs[key]['redirect_uris']
             elif key == 'web':
                 self.body['web'] = dict()
-                self.body['web']['redirectUris'] = kwargs[key]['redirect_uris']
+                if self.web is not None:
+                    self.body['web']['redirectUris'] = kwargs[key]['redirect_uris']
             elif key == 'spa':
                 self.body['spa'] = dict()
-                self.body['spa']['redirectUris'] = kwargs[key]['redirect_uris']
+                if self.spa is not None:
+                    self.body['spa']['redirectUris'] = kwargs[key]['redirect_uris']
 
         client = self.get_msgraph_client()
         response = None
