@@ -229,11 +229,15 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
         try:
             if self.object_id is not None:
                 response = client.get('/applications/' + self.object_id).json()
-            elif self.app_id is not None:
+            else:
                 response = client.get('/applications/').json()['value']
                 flag = False
                 for item in response:
                     if item['appId'] == self.app_id:
+                        flag = True
+                        response = item
+                        break
+                    elif item['displayName'] == self.name:
                         flag = True
                         response = item
                         break
@@ -247,9 +251,8 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
 
         if response is not None:
             if self.state == 'present':
-                changed = True
-                client.delete('/applications/' + response['id'])
-                response = self.create_resource(self.body)
+                changed = False
+                self.log("The Service principal has existed")
             else:
                 changed = True
                 response = self.delete_resource(response['id'])

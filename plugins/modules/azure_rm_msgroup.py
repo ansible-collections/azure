@@ -60,6 +60,8 @@ options:
         description:
             - The type of the groups.
         type: str
+        choices:
+            - Unified
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
@@ -140,7 +142,7 @@ class AzureRMMSGroup(AzureRMModuleBase):
             object_id=dict(type='str'),
             display_name=dict(type='str'),
             mail_nickname=dict(type='str'),
-            group_types=dict(type='str'),
+            group_types=dict(type='str', choices=['Unified']),
             description=dict(type='str'),
             security_enabled=dict(type='bool', default=True),
             mail_enabled=dict(type='bool', default=False),
