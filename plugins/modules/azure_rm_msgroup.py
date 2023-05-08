@@ -213,9 +213,9 @@ class AzureRMMSGroup(AzureRMModuleBase):
         if response is not None:
             if self.state == 'present':
                 if (self.group_types is not None and [self.group_types] != response['groupTypes']) |\
-                    (self.mail_enabled is not None and bool(self.mail_enabled != response['mailEnabled'])) |\
-                    (self.description is not None and self.description != response['description']) |\
-                    (self.security_enabled is not None and bool(self.security_enabled != response['securityEnabled'])):
+                        (self.mail_enabled is not None and bool(self.mail_enabled != response['mailEnabled'])) |\
+                        (self.description is not None and self.description != response['description']) |\
+                        (self.security_enabled is not None and bool(self.security_enabled != response['securityEnabled'])):
 
                     changed = True
                     response = self.update_resource(response['id'], self.body)

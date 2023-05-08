@@ -264,9 +264,9 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
         if response is not None:
             if self.state == 'present':
                 if (self.sign_in_audience is not None and self.sign_in_audience != response['signInAudience']) |\
-                    (self.web is not None and self.web['redirect_uris'].sort() != response['web']['redirectUris'].sort()) |\
-                    (self.spa is not None and self.spa['redirect_uris'].sort() != response['spa']['redirectUris'].sort()) |\
-                    (self.public_client is not None and self.public_client['redirect_uris'].sort() != response['publicClient']['redirectUris'].sort()):
+                        (self.web is not None and self.web['redirect_uris'].sort() != response['web']['redirectUris'].sort()) |\
+                        (self.spa is not None and self.spa['redirect_uris'].sort() != response['spa']['redirectUris'].sort()) |\
+                        (self.public_client is not None and self.public_client['redirect_uris'].sort() != response['publicClient']['redirectUris'].sort()):
 
                     changed = True
                     response = self.update_resource(response['id'], self.body)
