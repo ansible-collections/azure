@@ -226,7 +226,8 @@ class AzureRMMSUser(AzureRMModuleBase):
 
         if response is not None:
             if self.state == 'present':
-                changed = False
+                changed = True
+                response = self.update_resource(response['id'], self.body)
                 self.log("The ad user account exist, don't recreate")
             else:
                 response = self.delete_resource(response['id'])
@@ -244,6 +245,21 @@ class AzureRMMSUser(AzureRMModuleBase):
         self.results['changed'] = changed
 
         return self.results
+
+    def update_resource(self, obj_id, obj):
+        client = self.get_msgraph_client()
+        res = None
+        url = '/users/' + obj_id
+        try:
+            res = client.patch(url, data=json.dumps(obj), headers={'Content-Type': 'application/json'})
+
+            if res.status_code == 204:
+                self.log("Update ad user success full")
+                return client.get(url).json()
+            else:
+                self.fail("Update ad user fail, Msg {0}".format(res.json().get('error')))
+        except Exception as e:
+            self.fail("Update ad user get exception, Exceptioin as: {0}".format(str(e)))
 
     def create_resource(self, obj):
         client = self.get_msgraph_client()

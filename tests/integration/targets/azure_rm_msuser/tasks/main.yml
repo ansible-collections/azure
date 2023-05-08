@@ -1,11 +1,11 @@
 - name: Create a new ad user
   azure_rm_msuser:
-    user_principal_name: foo@test.com
+    user_principal_name: xiuxi.sun_qq.com#EXT#@824736848qq.onmicrosoft.com
     display_name: test.test
     account_enabled: True
     mail_nickname: fred
     password_profile:
-      Password: Password***
+      Password: Password@0348
     mail: test@test.com
   register: output
 
@@ -16,13 +16,38 @@
 - name: Get ad user info
   azure_rm_msuser_info:
     attribute_name: displayName
-    attribute_value: xiuxi.sun
+    attribute_value: test.test
   register: output
 
 - assert:
     that:
       - output.ms_users[0].display_name == "test.test"
-      - output.ms_users[0].mail == "foo@test.com"
+      - output.ms_users[0].mail == "test@test.com"
+
+- name: Update ad user's mail info
+  azure_rm_msuser:
+    user_principal_name: xiuxi.sun_qq.com#EXT#@824736848qq.onmicrosoft.com
+    display_name: test.test
+    account_enabled: True
+    mail_nickname: fred
+    password_profile:
+      Password: Password@0348
+    mail: test2@test.com
+  register: output
+
+- assert:
+    that:
+      - output.changed
+
+- name: Get ad user info
+  azure_rm_msuser_info:
+    attribute_name: displayName
+    attribute_value: test.test
+  register: output
+
+- assert:
+    that:
+      - output.ms_users[0].mail == "test2@test.com"
 
 - name: Delete microsoft groups
   azure_rm_msuser:

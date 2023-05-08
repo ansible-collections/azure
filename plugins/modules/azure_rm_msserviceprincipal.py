@@ -52,6 +52,14 @@ options:
                     - The authentication response to this URI.
                 type: list
                 elements: str
+    update:
+        description:
+            - Whether to update the Service Principal information.
+            - We can update Service Principal with object_id and app_id.
+        type: str
+        choices:
+            - update_by_object_id
+            - update_by_app_id
     public_client:
         description:
             - Redirects the public client/native URI,
@@ -178,6 +186,7 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
             app_id=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             name=dict(type='str'),
+            update=dict(type='str', choices=['update_by_object_id', 'update_by_app_id']),
             sign_in_audience=dict(
                 type='str',
                 choices=['AzureADMyOrg', 'AzureADMultipleOrgs', 'AzureADandPersonalMicrosoftAccount', 'PersonalMicrosoftAccount'],
@@ -199,10 +208,14 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
 
         self.results = dict(changed=False)
         self.body = dict()
+        required_if = [
+            ('update', 'update_by_object_id', ['object_id']),
+            ('update', 'update_by_app_id', ['app_id'])]
 
         super(AzureRMMSServicePrincipal, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                         supports_check_mode=False,
-                                                        supports_tags=False
+                                                        supports_tags=False,
+                                                        required_if=required_if
                                                         )
 
     def exec_module(self, **kwargs):
@@ -240,10 +253,6 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
                         flag = True
                         response = item
                         break
-                    elif item['displayName'] == self.name:
-                        flag = True
-                        response = item
-                        break
                 if not flag:
                     response = None
 
@@ -254,8 +263,19 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
 
         if response is not None:
             if self.state == 'present':
-                changed = False
-                self.log("The Service principal has existed")
+                if self.sign_in_audience is not None and self.sign_in_audience != response['signInAudience']:
+                    changed = True
+                elif self.web is not None and self.web['redirect_uris'] != response['web']['redirectUris']:
+                    changed = True
+                elif self.spa is not None and self.spa['redirect_uris'] != response['spa']['redirectUris']:
+                    changed = True
+                elif self.public_client is not None and self.public_client['redirect_uris'] != response['publicClient']['redirectUris']:
+                    changed = True
+                if changed:
+                    response = self.update_resource(response['id'], self.body)
+                else:
+                    response = self.to_dict(response)
+                    self.log("The Service Principals has exsit, Don't need to update")
             else:
                 changed = True
                 response = self.delete_resource(response['id'])
@@ -270,6 +290,21 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
         self.results['state'] = response
 
         return self.results
+
+    def update_resource(self, obj_id, obj):
+        client = self.get_msgraph_client()
+        res = None
+        url = "/applications/" + obj_id
+        try:
+            res = client.patch(url, data=json.dumps(obj), headers={'Content-Type': 'application/json'})
+
+            if res.status_code == 204:
+                self.log("Update Service Principals success")
+                return self.to_dict(client.get(url).json())
+            else:
+                self.fail("Update ad Service Principal fail, Msg {0}".format(res))
+        except Exception as e:
+            self.fail("Update Service Principal encount Exception, Exception: {0}".format(str(e)))
 
     def create_resource(self, obj):
         client = self.get_msgraph_client()

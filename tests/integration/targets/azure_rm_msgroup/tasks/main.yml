@@ -4,8 +4,8 @@
 - name: create new microsoft groups
   azure_rm_msgroup:
     display_name: "{{ rpfx }}"
-    description: "For test group "
-    mail_nickname: msgrouptest
+    description: "For test group"
+    mail_nickname: msgroup01
     group_types: Unified
     mail_enabled: True
     security_enabled: True
@@ -25,7 +25,32 @@
     that:
       - output.ms_groups[0].mail_enabled
       - output.ms_groups[0].securityEnabled
-      - output.ms_groups[0].mail_nickname == "msgrouptest"
+      - output.ms_groups[0].mail_nickname == "msgroup01"
+      - output.ms_groups[0].description == "For test group"
+
+- name: Update Microsoft groups description
+  azure_rm_msgroup:
+    display_name: "{{ rpfx }}"
+    description: "For test group --- secondary"
+    mail_nickname: msgroup01
+    group_types: Unified
+    mail_enabled: True
+    security_enabled: True
+  register: update_output
+
+- assert:
+    that:
+      - update_output.changed
+
+- name: Get ad groups info by display_name
+  azure_rm_msgroup_info:
+    attribute_name: displayName
+    attribute_value: "{{ rpfx }}"
+  register: output
+
+- assert:
+    that:
+      - output.ms_groups[0].description == "For test group --- secondary"
 
 - name: Delete microsoft groups
   azure_rm_msgroup:

@@ -212,8 +212,17 @@ class AzureRMMSGroup(AzureRMModuleBase):
 
         if response is not None:
             if self.state == 'present':
-                changed = False
-                self.log("The group already exist")
+                if self.group_types is not None and [self.group_types] != response['groupTypes']:
+                    changed = True
+                elif self.security_enabled is not None and bool(self.security_enabled != response['securityEnabled']):
+                    changed = True
+                elif self.mail_enabled is not None and bool(self.mail_enabled != response['mailEnabled']):
+                    changed = True
+                elif self.description is not None and self.description != response['description']:
+                    changed = True
+                if changed:
+                    response = self.update_resource(response['id'], self.body)
+                    self.log("Update the ad group success")
             else:
                 changed = True
                 response = self.delete_resource(response['id'])
@@ -229,6 +238,21 @@ class AzureRMMSGroup(AzureRMModuleBase):
         self.results['state'] = response
 
         return self.results
+
+    def update_resource(self,obj_id, obj):
+        client = self.get_msgraph_client()
+        res = None
+        url = '/groups/' + obj_id
+        try:
+            res = client.patch(url, data=json.dumps(obj), headers={'Content-Type': 'application/json'})
+
+            if res.status_code == 204:
+                self.log("Update ad group success")
+                return self.group_to_dict(client.get(url).json())
+            else:
+                self.fail("Update ad group fail, Msg: {0}".format(res.json()))
+        except Exception as e:
+            self.fail("Update ad group encount Excetion, Exception {0}".format(e))
 
     def create_resource(self, obj):
         client = self.get_msgraph_client()
