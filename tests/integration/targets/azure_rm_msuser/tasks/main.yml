@@ -1,11 +1,11 @@
 - name: Create a new ad user
   azure_rm_msuser:
-    user_principal_name: xiuxi.sun_qq.com#EXT#@824736848qq.onmicrosoft.com
+    user_principal_name: foo@test.com
     display_name: test.test
     account_enabled: True
     mail_nickname: fred
     password_profile:
-      Password: Password@0348
+      Password: Password@****
     mail: test@test.com
   register: output
 
@@ -26,12 +26,12 @@
 
 - name: Update ad user's mail info
   azure_rm_msuser:
-    user_principal_name: xiuxi.sun_qq.com#EXT#@824736848qq.onmicrosoft.com
+    user_principal_name: foo@test.com
     display_name: test.test
     account_enabled: True
     mail_nickname: fred
     password_profile:
-      Password: Password@0348
+      Password: Password@****
     mail: test2@test.com
   register: output
 
