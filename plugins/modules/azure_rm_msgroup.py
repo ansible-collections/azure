@@ -239,7 +239,7 @@ class AzureRMMSGroup(AzureRMModuleBase):
 
         return self.results
 
-    def update_resource(self,obj_id, obj):
+    def update_resource(self, obj_id, obj):
         client = self.get_msgraph_client()
         res = None
         url = '/groups/' + obj_id
