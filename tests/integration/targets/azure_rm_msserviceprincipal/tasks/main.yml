@@ -62,8 +62,6 @@
     object_id: "{{ update_output.state.object_id }}"
   register: output
 
-- debug:
-    var: output.service_principals[0].public_client
 - assert:
     that:
       - output.service_principals[0].sign_in_audience == "PersonalMicrosoftAccount"

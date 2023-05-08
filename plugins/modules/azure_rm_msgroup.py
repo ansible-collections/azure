@@ -212,15 +212,12 @@ class AzureRMMSGroup(AzureRMModuleBase):
 
         if response is not None:
             if self.state == 'present':
-                if self.group_types is not None and [self.group_types] != response['groupTypes']:
+                if (self.group_types is not None and [self.group_types] != response['groupTypes']) |\
+                    (self.mail_enabled is not None and bool(self.mail_enabled != response['mailEnabled'])) |\
+                    (self.description is not None and self.description != response['description']) |\
+                    (self.security_enabled is not None and bool(self.security_enabled != response['securityEnabled'])):
+
                     changed = True
-                elif self.security_enabled is not None and bool(self.security_enabled != response['securityEnabled']):
-                    changed = True
-                elif self.mail_enabled is not None and bool(self.mail_enabled != response['mailEnabled']):
-                    changed = True
-                elif self.description is not None and self.description != response['description']:
-                    changed = True
-                if changed:
                     response = self.update_resource(response['id'], self.body)
                     self.log("Update the ad group success")
             else:

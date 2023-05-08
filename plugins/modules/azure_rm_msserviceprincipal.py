@@ -263,16 +263,14 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
 
         if response is not None:
             if self.state == 'present':
-                if self.sign_in_audience is not None and self.sign_in_audience != response['signInAudience']:
+                if (self.sign_in_audience is not None and self.sign_in_audience != response['signInAudience']) |\
+                    (self.web is not None and self.web['redirect_uris'].sort() != response['web']['redirectUris'].sort()) |\
+                    (self.spa is not None and self.spa['redirect_uris'].sort() != response['spa']['redirectUris'].sort()) |\
+                    (self.public_client is not None and self.public_client['redirect_uris'].sort() != response['publicClient']['redirectUris'].sort()):
+
                     changed = True
-                elif self.web is not None and self.web['redirect_uris'] != response['web']['redirectUris']:
-                    changed = True
-                elif self.spa is not None and self.spa['redirect_uris'] != response['spa']['redirectUris']:
-                    changed = True
-                elif self.public_client is not None and self.public_client['redirect_uris'] != response['publicClient']['redirectUris']:
-                    changed = True
-                if changed:
                     response = self.update_resource(response['id'], self.body)
+                    self.log("The Service Principals update success")
                 else:
                     response = self.to_dict(response)
                     self.log("The Service Principals has exsit, Don't need to update")
