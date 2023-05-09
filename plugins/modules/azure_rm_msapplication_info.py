@@ -9,14 +9,14 @@ __metaclass__ = type
 
 
 DOCUMENTATION = '''
-module: azure_rm_msserviceprincipal_info
+module: azure_rm_msapplication_info
 
 version_added: "1.16.0"
 
-short_description: Get Azure Active Directory service principal info
+short_description: Get Azure Active Directory application info
 
 description:
-    - Get Azure Active Directory service principal info.
+    - Get Azure Active Directory application info.
 
 options:
     app_id:
@@ -43,15 +43,15 @@ author:
 
 EXAMPLES = '''
   - name: get MS sp info by object_id
-    azure_rm_msserviceprincipal_info:
+    azure_rm_msapplication_info:
       object_id: "{{ object_id }}"
 
-  - name: get all MS service principals info
-    azure_rm_msserviceprincipal_info:
+  - name: get all MS application info
+    azure_rm_msapplication_info:
         all: True
 
-  - name: get Microsoft Graph Service Princiapl info by App ID
-    azure_rm_msserviceprincipal_info:
+  - name: get Microsoft Graph application info by App ID
+    azure_rm_msapplication_info:
       app_id: "{{ app_id }}"
 
 '''
@@ -78,7 +78,7 @@ app_roles:
     sample: []
 object_id:
     description:
-        - The service principal's object ID.
+        - The application's object ID.
     returned: always
     type: str
     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -102,7 +102,7 @@ public_client:
     sample: {'redirect_uris':['https://localhost']}
 sign_in_audience:
     description:
-        - The service principal account type.
+        - The application account type.
     type: str
     returned: always
     sample: PersonalMicrosoftAccount
@@ -111,7 +111,7 @@ sign_in_audience:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 
-class AzureRMMSServicePrincipalInfo(AzureRMModuleBase):
+class AzureRMMSApplicationInfo(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
@@ -127,11 +127,11 @@ class AzureRMMSServicePrincipalInfo(AzureRMModuleBase):
 
         mutually_exclusive = [['all', 'app_id', 'object_id']]
 
-        super(AzureRMMSServicePrincipalInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                            supports_check_mode=True,
-                                                            supports_tags=False,
-                                                            mutually_exclusive=mutually_exclusive,
-                                                            )
+        super(AzureRMMSApplicationInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                       supports_check_mode=True,
+                                                       supports_tags=False,
+                                                       mutually_exclusive=mutually_exclusive,
+                                                       )
 
     def exec_module(self, **kwargs):
 
@@ -152,9 +152,9 @@ class AzureRMMSServicePrincipalInfo(AzureRMModuleBase):
             elif self.all:
                 service_principals = client.get('/applications/').json()['value']
 
-            self.results['service_principals'] = [self.to_dict(sp) for sp in service_principals]
+            self.results['applications'] = [self.to_dict(sp) for sp in service_principals]
         except Exception as ge:
-            self.fail("failed to get service principal info {0}".format(str(ge)))
+            self.fail("failed to get application info {0}".format(str(ge)))
 
         return self.results
 
@@ -173,7 +173,7 @@ class AzureRMMSServicePrincipalInfo(AzureRMModuleBase):
 
 
 def main():
-    AzureRMMSServicePrincipalInfo()
+    AzureRMMSApplicationInfo()
 
 
 if __name__ == '__main__':

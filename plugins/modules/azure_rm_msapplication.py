@@ -10,14 +10,14 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_msserviceprincipal
+module: azure_rm_msapplication
 
 version_added: "1.16.0"
 
-short_description: Manage Azure Active Directory service principal
+short_description: Manage Azure Active Directory applicaiton
 
 description:
-    - Manage Azure Active Directory service principal.
+    - Manage Azure Active Directory application.
 
 options:
     app_id:
@@ -26,11 +26,11 @@ options:
         type: str
     object_id:
         description:
-            - The service principal's object ID.
+            - The application's object ID.
         type: str
     name:
         description:
-            - The display name of the service principal.
+            - The display name of the application.
         type: str
     web:
         description:
@@ -54,8 +54,8 @@ options:
                 elements: str
     update:
         description:
-            - Whether to update the Service Principal information.
-            - We can update Service Principal with object_id and app_id.
+            - Whether to update the application information.
+            - We can update application with object_id and app_id.
         type: str
         choices:
             - update_by_object_id
@@ -72,7 +72,7 @@ options:
                 elements: str
     sign_in_audience:
         description:
-            - The service principal account type.
+            - The application account type.
         type: str
         choices:
             - PersonalMicrosoftAccount
@@ -82,7 +82,7 @@ options:
         default: AzureADMyOrg
     state:
         description:
-            - Assert the state of Active Dirctory service principal.
+            - Assert the state of Active Dirctory application.
             - Use C(present) to create or update a Password and use C(absent) to delete.
             - If use I(state=absent), It must to be config C(app_id) or C(object_id).
         default: present
@@ -101,7 +101,7 @@ author:
 
 EXAMPLES = '''
   - name: create ad sp
-    azure_rm_msserviceprincipal:
+    azure_rm_msapplication:
       app_id: "{{ app_id }}"
       state: present
       name: test
@@ -133,7 +133,7 @@ app_role:
     sample: []
 object_id:
     description:
-        - Object ID of the associated service principal.
+        - Object ID of the associated application.
     returned: always
     type: str
     sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -157,7 +157,7 @@ public_client:
     sample: {'redirect_uris':['https://localhost']}
 sign_in_audience:
     description:
-        - The service principal account type.
+        - The application account type.
     type: str
     returned: always
     sample: PersonalMicrosoftAccount
@@ -179,7 +179,7 @@ web_spec = dict(
 )
 
 
-class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
+class AzureRMMSApplication(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
             object_id=dict(type='str'),
@@ -212,11 +212,11 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
             ('update', 'update_by_object_id', ['object_id']),
             ('update', 'update_by_app_id', ['app_id'])]
 
-        super(AzureRMMSServicePrincipal, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                        supports_check_mode=False,
-                                                        supports_tags=False,
-                                                        required_if=required_if
-                                                        )
+        super(AzureRMMSApplication, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                   supports_check_mode=False,
+                                                   supports_tags=False,
+                                                   required_if=required_if
+                                                   )
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
@@ -270,10 +270,10 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
 
                     changed = True
                     response = self.update_resource(response['id'], self.body)
-                    self.log("The Service Principals update success")
+                    self.log("The application update success")
                 else:
                     response = self.to_dict(response)
-                    self.log("The Service Principals has exsit, Don't need to update")
+                    self.log("The application has exsit, Don't need to update")
             else:
                 changed = True
                 response = self.delete_resource(response['id'])
@@ -282,7 +282,7 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
                 response = self.create_resource(self.body)
                 changed = True
             else:
-                self.log("The Service principal does not exist")
+                self.log("The application does not exist")
 
         self.results['changed'] = changed
         self.results['state'] = response
@@ -300,9 +300,9 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
                 self.log("Update Service Principals success")
                 return self.to_dict(client.get(url).json())
             else:
-                self.fail("Update ad Service Principal fail, Msg {0}".format(res))
+                self.fail("Update ad application fail, Msg {0}".format(res))
         except Exception as e:
-            self.fail("Update Service Principal encount Exception, Exception: {0}".format(str(e)))
+            self.fail("Update application encount Exception, Exception: {0}".format(str(e)))
 
     def create_resource(self, obj):
         client = self.get_msgraph_client()
@@ -311,18 +311,18 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
             res = client.post('/applications/', data=json.dumps(obj), headers={'Content-Type': 'application/json'})
 
             if res.json().get('error') is not None:
-                self.fail("Create ad service princiapl fail, Msg {0}".format(res.json().get('error')))
+                self.fail("Create ad application fail, Msg {0}".format(res.json().get('error')))
             else:
                 return self.to_dict(res.json())
         except Exception as e:
-            self.fail("Error creating service principle, {0}".format(str(e)))
+            self.fail("Error application principle, {0}".format(str(e)))
 
     def delete_resource(self, obj):
         client = self.get_msgraph_client()
         try:
             client.delete('/applications/' + obj)
         except Exception as e:
-            self.fail("Error deleting service principal {0}".format(str(e)))
+            self.fail("Error deleting application {0}".format(str(e)))
 
     def to_dict(self, object):
         if object is not None:
@@ -339,7 +339,7 @@ class AzureRMMSServicePrincipal(AzureRMModuleBaseExt):
 
 
 def main():
-    AzureRMMSServicePrincipal()
+    AzureRMMSApplication()
 
 
 if __name__ == '__main__':

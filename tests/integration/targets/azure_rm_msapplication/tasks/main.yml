@@ -2,7 +2,7 @@
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Create microsoft graph service principal
-  azure_rm_msserviceprincipal:
+  azure_rm_msapplication:
     name: "{{ rpfx }}"
     sign_in_audience: AzureADandPersonalMicrosoftAccount
     public_client:
@@ -21,20 +21,20 @@
       - create_output.changed
 
 - name: get microsoft graph service principal info by object_id
-  azure_rm_msserviceprincipal_info:
+  azure_rm_msapplication_info:
     object_id: "{{ create_output.state.object_id }}"
   register: output
 
 - assert:
     that:
-      - output.service_principals[0].app_display_name == "{{ rpfx }}"
-      - output.service_principals[0].sign_in_audience == "AzureADandPersonalMicrosoftAccount"
-      - output.service_principals[0].public_client.redirect_uris | length == 1
-      - output.service_principals[0].spa.redirect_uris | length == 1
-      - output.service_principals[0].web.redirect_uris | length == 1
+      - output.applications[0].app_display_name == "{{ rpfx }}"
+      - output.applications[0].sign_in_audience == "AzureADandPersonalMicrosoftAccount"
+      - output.applications[0].public_client.redirect_uris | length == 1
+      - output.applications[0].spa.redirect_uris | length == 1
+      - output.applications[0].web.redirect_uris | length == 1
 
 - name: Update microsoft graph service principal
-  azure_rm_msserviceprincipal:
+  azure_rm_msapplication:
     name: "{{ rpfx }}"
     sign_in_audience: PersonalMicrosoftAccount
     update: update_by_object_id
@@ -58,19 +58,19 @@
       - update_output.changed
 
 - name: get microsoft graph service principal info by object_id
-  azure_rm_msserviceprincipal_info:
+  azure_rm_msapplication_info:
     object_id: "{{ update_output.state.object_id }}"
   register: output
 
 - assert:
     that:
-      - output.service_principals[0].sign_in_audience == "PersonalMicrosoftAccount"
-      - output.service_principals[0].public_client.redirect_uris | length == 2
-      - output.service_principals[0].spa.redirect_uris | length == 2
-      - output.service_principals[0].web.redirect_uris | length == 2
+      - output.applications[0].sign_in_audience == "PersonalMicrosoftAccount"
+      - output.applications[0].public_client.redirect_uris | length == 2
+      - output.applications[0].spa.redirect_uris | length == 2
+      - output.applications[0].web.redirect_uris | length == 2
     
 - name: Delete microsoft graph service principal
-  azure_rm_msserviceprincipal:
+  azure_rm_msapplication:
     object_id: "{{ create_output.state.object_id }}"
     state: absent
   register: output
