@@ -14,7 +14,7 @@ module: azure_rm_sqlmanagedinstance_info
 version_added: "0.15.0"
 short_description: Get Azure SQL managed instance facts
 description:
-    - Get facts of Azure SQL manged instance facts
+    - Get facts of Azure SQL manged instance facts.
 
 options:
     resource_group:

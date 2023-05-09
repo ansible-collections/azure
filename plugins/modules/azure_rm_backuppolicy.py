@@ -86,15 +86,13 @@ options:
     schedule_weekly_frequency:
         description:
             - The amount of weeks between backups.
-            - Backup every schedule_weekly_frequency week(s)
-            - Azure will default behavior to running weekly if this is left blank
-            - Backup every schedule_weekly_frequency week(s).
+            - Backup every I(schedule_weekly_frequency) week(s).
             - Azure will default behavior to running weekly if this is left blank.
             - Does not apply to Daily frequency.
         type: int
     time_zone:
         description:
-            - Timezone to apply schedule_run_time.
+            - Timezone to apply I(schedule_run_time).
         default: UTC
         type: str
 extends_documentation_fragment:

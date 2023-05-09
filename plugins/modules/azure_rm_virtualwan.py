@@ -68,7 +68,7 @@ options:
         type: bool
     allow_vnet_to_vnet_traffic:
         description:
-            - True if Vnet to Vnet traffic is allowed.
+            - C(True) if Vnet to Vnet traffic is allowed.
         type: bool
     virtual_wan_type:
         description:

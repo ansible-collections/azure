@@ -96,17 +96,17 @@ options:
         type: str
     attribute_name:
         description:
-            - The name of an attribute that you want to match to attribute_value.
-            - If attribute_name is not a collection type it will update or delete the user where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will update or delete the user where attribute_value is in attribute_name.
+            - The name of an attribute that you want to match to I(attribute_value).
+            - If I(attribute_name) is not a collection type it will update or delete the user where I(attribute_name) is equal to I(attribute_value).
+            - If I(attribute_name) is a collection type it will update or delete the user where I(attribute_value) is in I(attribute_name).
             - Mutually exclusive with I(object_id), I(user_principal_name), and I(odata_filter).
             - Required together with I(attribute_value).
         type: str
     attribute_value:
         description:
-            - The value to match attribute_name to.
-            - If attribute_name is not a collection type it will update or delete the user where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will update or delete the user where attribute_value is in attribute_name.
+            - The value to match I(attribute_name) to.
+            - If I(attribute_name) is not a collection type it will update or delete the user where I(attribute_name) is equal to I(attribute_value).
+            - If I(attribute_name) is a collection type it will update or delete the user where I(attribute_value) is in I(attribute_name).
             - Required together with I(attribute_name).
         type: str
     odata_filter:
