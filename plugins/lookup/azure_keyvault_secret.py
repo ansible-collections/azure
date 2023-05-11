@@ -173,7 +173,7 @@ def lookup_secret_non_msi(terms, vault_url, kwargs):
         elif subscription_id is not None:
             profile = get_cli_profile()
             credentials, subscription_id, tenant = profile.get_login_credentials(
-                    subscription_id=subscription_id, resource="https://vault.azure.net")
+                subscription_id=subscription_id, resource="https://vault.azure.net")
         client = KeyVaultClient(credentials)
     except AuthenticationError:
         raise AnsibleError('Invalid credentials provided.')
