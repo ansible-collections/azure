@@ -32,6 +32,8 @@ options:
         description: Secret of the service principal.
     tenant_id:
         description: Tenant id of service principal.
+    subscription_id:
+        description: Your Azure subscription Id.
 notes:
     - If version is not provided, this plugin will return the latest version of the secret.
     - If ansible is running on Azure Virtual Machine with MSI enabled, client_id, secret and tenant isn't required.
@@ -42,6 +44,9 @@ notes:
 """
 
 EXAMPLE = """
+- name: Look up secret when azure cli login
+  debug:
+    msg: msg: "{{ lookup('azure.azcollection.azure_keyvault_secret', 'testsecret', vault_url=key_vault_uri, subscription_id=subscription_id)}}"
 - name: Look up secret when ansible host is MSI enabled Azure VM
   debug:
     msg: "the value of this secret is {{
@@ -110,8 +115,9 @@ from ansible.utils.display import Display
 try:
     import requests
     import logging
+    logging.basicConfig(filename='11.log', level=logging.INFO)
     import os
-    from azure.common.credentials import ServicePrincipalCredentials
+    from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
     from azure.keyvault import KeyVaultClient
     from msrest.exceptions import AuthenticationError, ClientRequestError
     from azure.keyvault.models.key_vault_error import KeyVaultErrorException
@@ -155,13 +161,19 @@ def lookup_secret_non_msi(terms, vault_url, kwargs):
     client_id = kwargs['client_id'] if kwargs.get('client_id') else os.environ.get('AZURE_CLIENT_ID')
     secret = kwargs['secret'] if kwargs.get('secret') else os.environ.get('AZURE_SECRET')
     tenant_id = kwargs['tenant_id'] if kwargs.get('tenant_id') else os.environ.get('AZURE_TENANT')
+    subscription_id = kwargs['subscription_id'] if kwargs.get('subscription_id') else os.environ.get('AZURE_SUBSCRIPTION_ID')
 
     try:
-        credentials = ServicePrincipalCredentials(
-            client_id=client_id,
-            secret=secret,
-            tenant=tenant_id
-        )
+        if client_id is not None and secret is not None and tenant_id is not None:
+            credentials = ServicePrincipalCredentials(
+                client_id=client_id,
+                secret=secret,
+                tenant=tenant_id
+            )
+        elif subscription_id is not None:
+            profile = get_cli_profile()
+            credentials, subscription_id, tenant = profile.get_login_credentials(
+                    subscription_id=subscription_id, resource="https://vault.azure.net")
         client = KeyVaultClient(credentials)
     except AuthenticationError:
         raise AnsibleError('Invalid credentials provided.')
