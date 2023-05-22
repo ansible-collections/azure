@@ -423,11 +423,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
                 status_code = r.get('httpStatusCode')
                 returned_name = r['name']
                 result = batch_response_handlers[returned_name]
-                if status_code != 200:
+                if status_code == 200:
                     # FUTURE: error-tolerant operation mode (eg, permissions)
-                    raise AnsibleError("a batched request failed with status code {0}, url {1}".format(status_code, result.url))
-                # FUTURE: store/handle errors from individual handlers
-                result.handler(r['content'], **result.handler_args)
+                    # FUTURE: store/handle errors from individual handlers
+                    result.handler(r['content'], **result.handler_args)
 
     def _send_batch(self, batched_requests):
         url = '/batch'
