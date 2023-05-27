@@ -1358,9 +1358,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     differences.append('License Type')
                     changed = True
 
-                if self.vm_identity is not None and vm_dict['identity']['type'] != self.vm_identity.get('type'):
-                    differences.append('Managed Identities')
-                    changed = True
+                if self.vm_identity is not None and ('identity' not in vm_dict or vm_dict['identity']['type'] != self.vm_identity.get('type')):
+                    if 'None' in self.vm_identity.get('type') and 'identity' not in vm_dict:
+                        pass
+                    else:
+                        differences.append('Managed Identities')
+                        changed = True
 
                 if self.security_profile is not None:
                     update_security_profile = False
@@ -1597,12 +1600,16 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         vm_resource.license_type = self.license_type
 
                     if self.vm_identity:
+                        if 'None' in self.vm_identity.get('type'):
+                            pass
                         if 'UserAssigned' in self.vm_identity.get('type') and self.vm_identity.get('user_assigned_identities') is not None:
                             user_assigned_identities_dict = { uami:dict() for uami in self.vm_identity.get('user_assigned_identities') }
                             vm_resource.identity = self.compute_models.VirtualMachineIdentity(
                                 type=self.vm_identity.get('type'),
                                 user_assigned_identities=user_assigned_identities_dict
                             )
+                        elif 'UserAssigned' in self.vm_identity.get('type') and self.vm_identity.get('user_assigned_identities') is None:
+                            self.fail("UserAssigned specified but no 'user_assigned_identities provided")
                         else:
                             vm_resource.identity = self.compute_models.VirtualMachineIdentity(
                                 type=self.vm_identity.get('type')
@@ -1845,13 +1852,15 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if self.license_type is not None:
                         vm_resource.license_type = self.license_type
 
-                    if self.vm_identity is not None and vm_dict['identity']['type'] != self.vm_identity.get('type'):
+                    if self.vm_identity is not None and ('identity' not in vm_dict or vm_dict['identity']['type'] != self.vm_identity.get('type')):
                         if 'UserAssigned' in self.vm_identity.get('type') and self.vm_identity.get('user_assigned_identities') is not None:
                             user_assigned_identities_dict = { uami:dict() for uami in self.vm_identity.get('user_assigned_identities') }
                             vm_resource.identity = self.compute_models.VirtualMachineIdentity(
                                 type=self.vm_identity.get('type'),
                                 user_assigned_identities=user_assigned_identities_dict
                             )
+                        elif 'UserAssigned' in self.vm_identity.get('type') and self.vm_identity.get('user_assigned_identities') is None:
+                            self.fail("UserAssigned specified but no 'user_assigned_identities provided")
                         else:
                             vm_resource.identity = self.compute_models.VirtualMachineIdentity(
                                 type=self.vm_identity.get('type')
