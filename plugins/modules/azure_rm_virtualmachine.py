@@ -372,8 +372,23 @@ options:
     vm_identity:
         description:
             - Identity for the VM.
-        choices:
-            - SystemAssigned
+        type: dict
+        suboptions:
+            type:
+                description:
+                    - Type of the managed identity
+                required: true
+                choices:
+                    - SystemAssigned
+                    - UserAssigned
+                    - SystemAssigned, UserAssigned
+                    - None
+                type: str
+            user_assigned_identities:
+                description:
+                    - List of the user assigned identities IDs associated to the VM
+                required: false
+                type: list
     winrm:
         description:
             - List of Windows Remote Management configurations of the VM.
@@ -949,6 +964,10 @@ linux_configuration_spec = dict(
     disable_password_authentication=dict(type='bool')
 )
 
+managed_identity_spec = dict(
+    type=dict(type='str',choices=['SystemAssigned','UserAssigned','SystemAssigned, UserAssigned','None'],required=True),
+    user_assigned_identities=dict(type=list),
+)
 
 class AzureRMVirtualMachine(AzureRMModuleBase):
 
@@ -998,7 +1017,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             zones=dict(type='list'),
             accept_terms=dict(type='bool', default=False),
             license_type=dict(type='str', choices=['Windows_Server', 'Windows_Client', 'RHEL_BYOS', 'SLES_BYOS']),
-            vm_identity=dict(type='str', choices=['SystemAssigned']),
+            vm_identity=dict(type='dict', options=managed_identity_spec),
             winrm=dict(type='list'),
             boot_diagnostics=dict(type='dict'),
             ephemeral_os_disk=dict(type='bool'),
@@ -1339,6 +1358,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     differences.append('License Type')
                     changed = True
 
+                if self.vm_identity is not None and vm_dict['identity']['type'] != self.vm_identity.get('type'):
+                    differences.append('Managed Identities')
+                    changed = True
+
                 if self.security_profile is not None:
                     update_security_profile = False
                     if 'securityProfile' not in vm_dict['properties'].keys():
@@ -1574,7 +1597,16 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         vm_resource.license_type = self.license_type
 
                     if self.vm_identity:
-                        vm_resource.identity = self.compute_models.VirtualMachineIdentity(type=self.vm_identity)
+                        if 'UserAssigned' in self.vm_identity.get('type') and self.vm_identity.get('user_assigned_identities') is not None:
+                            user_assigned_identities_dict = { uami:dict() for uami in self.vm_identity.get('user_assigned_identities') }
+                            vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                type=self.vm_identity.get('type'),
+                                user_assigned_identities=user_assigned_identities_dict
+                            )
+                        else:
+                            vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                type=self.vm_identity.get('type')
+                            )
 
                     if self.winrm:
                         winrm_listeners = list()
@@ -1812,6 +1844,18 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                     if self.license_type is not None:
                         vm_resource.license_type = self.license_type
+
+                    if self.vm_identity is not None and vm_dict['identity']['type'] != self.vm_identity.get('type'):
+                        if 'UserAssigned' in self.vm_identity.get('type') and self.vm_identity.get('user_assigned_identities') is not None:
+                            user_assigned_identities_dict = { uami:dict() for uami in self.vm_identity.get('user_assigned_identities') }
+                            vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                type=self.vm_identity.get('type'),
+                                user_assigned_identities=user_assigned_identities_dict
+                            )
+                        else:
+                            vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                type=self.vm_identity.get('type')
+                            )
 
                     if self.boot_diagnostics is not None:
                         vm_resource.diagnostics_profile = self.compute_models.DiagnosticsProfile(
