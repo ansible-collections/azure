@@ -1,5 +1,5 @@
 - name: Run Azure VM tests in parallel
-  hosts: all
+  hosts: azure_test_vm_identity
   gather_facts: no
   strategy: free
   tasks:

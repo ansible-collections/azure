@@ -21,6 +21,10 @@ all:
       network: 10.42.3.0/24
       subnet: 10.42.3.0/28
 
+    azure_test_vm_identity:
+      network: 10.42.3.0/24
+      subnet: 10.42.3.0/28
+
     azure_test_dual_nic:
       network: 10.42.4.0/24
       subnet: 10.42.4.0/28
