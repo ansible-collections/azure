@@ -76,6 +76,71 @@
       - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
       - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.userAssignedIdentities"
 
+- name: Append another UserAssigned
+  azure_rm_virtualmachine:
+    name: "{{ vm_name }}"
+    resource_group: "{{ resource_group }}"
+    vm_identity:
+      type: "SystemAssigned, UserAssigned"
+      user_assigned_identities:
+        id: 
+        - "{{ user_identity_2 }}"
+        append: true
+  register: vm_output
+
+- name: Assert appended user identity
+  assert:
+    that:      
+      - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
+      - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.userAssignedIdentities"
+      - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.userAssignedIdentities"
+
+- name: Force only one UserAssigned
+  azure_rm_virtualmachine:
+    name: "{{ vm_name }}"
+    resource_group: "{{ resource_group }}"
+    vm_identity:
+      type: "SystemAssigned, UserAssigned"
+      user_assigned_identities:
+        id: 
+        - "{{ user_identity_2 }}"
+        append: false
+  register: vm_output
+
+- name: Assert appended user identity
+  assert:
+    that:      
+      - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
+      - "\"{{ user_identity_1 }}\" not in vm_output.ansible_facts.azure_vm.identity.userAssignedIdentities"
+      - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.userAssignedIdentities"
+
+- name: Remove UserAssigned
+  azure_rm_virtualmachine:
+    name: "{{ vm_name }}"
+    resource_group: "{{ resource_group }}"
+    vm_identity:
+      type: "SystemAssigned"
+  register: vm_output
+
+- name: Assert removed user identities
+  assert:
+    that:      
+      - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned'
+      - "'userAssignedIdentities' not in vm_output.ansible_facts.azure_vm.identity"
+
+- name: Disable SystemAssigned
+  azure_rm_virtualmachine:
+    name: "{{ vm_name }}"
+    resource_group: "{{ resource_group }}"
+    vm_identity:
+      type: "None"
+  register: vm_output
+
+- name: Assert no managed identities
+  assert:
+    that:      
+      - "'identity' not in vm_output.ansible_facts.azure_vm"      
+
 - name: Delete VM
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"

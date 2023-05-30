@@ -1884,6 +1884,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             # If there are identities to append, merge the dicts
                             if vm_identity_user_assigned_append:
                                 user_assigned_identities_dict = { **user_assigned_identities_dict, **current_user_assigned_identities_dict}
+                                self.log(f"Current ids: {user_assigned_identities_dict}")
                             # Save the identity
                             vm_resource.identity = self.compute_models.VirtualMachineIdentity(
                                 type=self.vm_identity.get('type'),
