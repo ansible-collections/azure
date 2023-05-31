@@ -38,6 +38,18 @@ options:
     resource_name:
         description:
             - Resource name.
+    method:
+        description:
+            - The HTTP method of the request or response. It must be uppercase.
+        choices:
+            - GET
+            - PUT
+            - POST
+            - HEAD
+            - PATCH
+            - DELETE
+            - MERGE
+        default: "GET"
     subresource:
         description:
             - List of subresources.
@@ -310,6 +322,11 @@ class AzureRMResourceInfo(AzureRMModuleBase):
                 type='list',
                 default=[]
             ),
+            method=dict(
+                type='str',
+                default='GET',
+                choices=["GET", "PUT", "POST", "HEAD", "PATCH", "DELETE", "MERGE"]
+            ),
             api_version=dict(
                 type='str'
             )
@@ -377,7 +394,7 @@ class AzureRMResourceInfo(AzureRMModuleBase):
                     provider = self.url.split("/providers/")[1].split("/")[0]
                     resourceType = self.url.split(provider + "/")[1].split("/")[0]
                     url = "/subscriptions/" + self.subscription_id + "/providers/" + provider
-                    api_versions = json.loads(self.mgmt_client.query(url, "GET", {'api-version': '2015-01-01'}, None, None, [200], 0, 0).text)
+                    api_versions = json.loads(self.mgmt_client.query(url, self.method, {'api-version': '2015-01-01'}, None, None, [200], 0, 0).text)
                     for rt in api_versions['resourceTypes']:
                         if rt['resourceType'].lower() == resourceType.lower():
                             self.api_version = rt['apiVersions'][0]
@@ -402,7 +419,7 @@ class AzureRMResourceInfo(AzureRMModuleBase):
         while True:
             if skiptoken:
                 query_parameters['skiptoken'] = skiptoken
-            response = self.mgmt_client.query(self.url, "GET", query_parameters, header_parameters, None, [200, 404], 0, 0)
+            response = self.mgmt_client.query(self.url, self.method, query_parameters, header_parameters, None, [200, 404], 0, 0)
             try:
                 response = json.loads(response.text)
                 if isinstance(response, dict):
