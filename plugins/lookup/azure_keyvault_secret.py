@@ -45,6 +45,10 @@ notes:
 """
 
 EXAMPLE = """
+- name: Look up secret when azure cli login
+  debug:
+    msg: msg: "{{ lookup('azure.azcollection.azure_keyvault_secret', 'testsecret', vault_url=key_vault_uri)}}"
+
 - name: Look up secret when ansible host is MSI enabled Azure VM
   debug:
     msg: "the value of this secret is {{
