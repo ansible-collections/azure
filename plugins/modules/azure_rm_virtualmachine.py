@@ -1374,10 +1374,34 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     differences.append('License Type')
                     changed = True
 
-                if self.vm_identity is not None and ('identity' not in vm_dict or vm_dict['identity']['type'] != self.vm_identity.get('type')):
+                if self.vm_identity:
+                    update_vm_identity = False
+                    # If type set to None, and VM has no current identities, nothing to do
                     if 'None' in self.vm_identity.get('type') and 'identity' not in vm_dict:
                         pass
-                    else:
+                    # If type different to None, and VM has no current identities, update identities
+                    elif 'identity' not in vm_dict:
+                        update_vm_identity = True
+                    # If type in module args different from type of vm_dict, update identities
+                    elif vm_dict['identity']['type'] != self.vm_identity.get('type'):
+                        update_vm_identity = True
+                    # If new type contains 'UserAssigned'
+                    elif 'UserAssigned' in self.vm_identity.get('type'):
+                        # Create sets with current user identities and new user identities
+                        new_managed_identities = set(self.vm_identity.get('user_assigned_identities',{}).get('id',[]))
+                        current_managed_identities = set(vm_dict['identity']['userAssignedIdentities'].keys())
+                        # If new identities have to be appended to VM
+                        if self.vm_identity.get('user_assigned_identities',{}).get('append',False) == True:
+                            # and the union of identities is longer
+                            if len(current_managed_identities) != len(new_managed_identities.union(current_managed_identities)):
+                                #update identities
+                                update_vm_identity = True
+                        # If new identities have to overwrite current identities
+                        else:
+                            # Check if new identities are the same as current ones
+                            if current_managed_identities.difference(new_managed_identities) != set():
+                                update_vm_identity = True
+                    if update_vm_identity:
                         differences.append('Managed Identities')
                         changed = True
 
@@ -1866,9 +1890,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if self.license_type is not None:
                         vm_resource.license_type = self.license_type
 
-                    if self.vm_identity is not None and ('identity' not in vm_dict or vm_dict['identity']['type'] != self.vm_identity.get('type')):
+                    if self.vm_identity is not None:
                         # If 'append' is set to True save current user assigned managed identities to user later
-                        if self.vm_identity.get('user_assigned_identities',{}).get('append') is not None and self.vm_identity.get('user_assigned_identities',{}).get('append') == True:
+                        if self.vm_identity.get('user_assigned_identities',{}) is not None and self.vm_identity.get('user_assigned_identities',{}).get('append', False) == True:
                             if 'identity' in vm_dict:
                                 current_user_assigned_identities_dict = { uami:dict() for uami in vm_dict['identity']['userAssignedIdentities'].keys() }
                                 vm_identity_user_assigned_append = True
@@ -1876,15 +1900,15 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 # Nothing to append to
                                 vm_identity_user_assigned_append = False
                         else:
-                            # 'append' is False
+                            # 'append' is False or unset
                             vm_identity_user_assigned_append = False
                         # If there are identities in 'id' and 'UserAssgined' in type
                         if 'UserAssigned' in self.vm_identity.get('type') and self.vm_identity.get('user_assigned_identities',{}).get('id') is not None:
+                            self.log(f"Modifying User Assigned Identities")
                             user_assigned_identities_dict = { uami:dict() for uami in self.vm_identity.get('user_assigned_identities').get('id') }
                             # If there are identities to append, merge the dicts
                             if vm_identity_user_assigned_append:
                                 user_assigned_identities_dict = { **user_assigned_identities_dict, **current_user_assigned_identities_dict}
-                                self.log(f"Current ids: {user_assigned_identities_dict}")
                             # Save the identity
                             vm_resource.identity = self.compute_models.VirtualMachineIdentity(
                                 type=self.vm_identity.get('type'),

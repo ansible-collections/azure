@@ -60,6 +60,25 @@
       - vm_output.ansible_facts.azure_vm.identity.type == 'UserAssigned'
       - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.userAssignedIdentities"
 
+- name: Append another UserAssigned
+  azure_rm_virtualmachine:
+    name: "{{ vm_name }}"
+    resource_group: "{{ resource_group }}"
+    vm_identity:
+      type: "UserAssigned"
+      user_assigned_identities:
+        id: 
+        - "{{ user_identity_2 }}"
+        append: true
+  register: vm_output
+
+- name: Assert appended user identity
+  assert:
+    that:      
+      - vm_output.ansible_facts.azure_vm.identity.type == 'UserAssigned'
+      - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.userAssignedIdentities"
+      - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.userAssignedIdentities"
+
 - name: Add SystemAssigned
   azure_rm_virtualmachine:
     name: "{{ vm_name }}"
@@ -71,24 +90,6 @@
   register: vm_output
 
 - name: Assert System identity assigned
-  assert:
-    that:      
-      - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
-      - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.userAssignedIdentities"
-
-- name: Append another UserAssigned
-  azure_rm_virtualmachine:
-    name: "{{ vm_name }}"
-    resource_group: "{{ resource_group }}"
-    vm_identity:
-      type: "SystemAssigned, UserAssigned"
-      user_assigned_identities:
-        id: 
-        - "{{ user_identity_2 }}"
-        append: true
-  register: vm_output
-
-- name: Assert appended user identity
   assert:
     that:      
       - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
