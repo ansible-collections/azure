@@ -115,7 +115,6 @@ from ansible.utils.display import Display
 try:
     import requests
     import logging
-    logging.basicConfig(filename='11.log', level=logging.INFO)
     import os
     from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
     from azure.keyvault import KeyVaultClient
