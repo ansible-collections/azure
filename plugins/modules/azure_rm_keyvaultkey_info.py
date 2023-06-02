@@ -321,7 +321,10 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
                 return KeyVaultClient(credentials)
             except Exception:
                 self.log("Get KeyVaultClient from service principal")
-        elif self.module.params['auth_source'] in ['auto', 'cli']:
+        elif (self.module.params['auth_source'] == 'cli'
+                or (self.module.params['auth_source'] == 'auto'
+                    and self.credentials['client_id'] is None
+                    and self.credentials['secret'] is None)):
             try:
                 profile = get_cli_profile()
                 credentials, subscription_id, tenant = profile.get_login_credentials(
