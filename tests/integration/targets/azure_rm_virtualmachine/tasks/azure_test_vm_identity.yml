@@ -174,3 +174,9 @@
     resource_group: "{{ resource_group }}"
     name: "{{ network_name }}-identity"
     state: absent
+
+- name: Destroy SA of the machine
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_output.ansible_facts.azure_vm.tags._own_sa_ }}"
+    state: absent
