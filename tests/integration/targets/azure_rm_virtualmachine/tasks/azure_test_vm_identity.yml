@@ -20,6 +20,20 @@
     subnet: "{{ subnet_name }}"
     location: westeurope
 
+- name: Create User Managed Identities
+  azure_rm_resource:
+    resource_group: "{{ resource_group }}"
+    provider: ManagedIdentity
+    resource_type: userAssignedIdentities
+    resource_name: "{{ item }}"
+    api_version: "2023-01-31"
+    body:
+      location: westeurope
+    state: present
+  loop:
+    - "ansible-test-vm-identity"
+    - "ansible-test-vm-identity-2"
+
 - name: Set identities IDs to test. Identities ansible-test-vm-identity and ansible-test-vm-identity-2 have to be created previously
   set_fact:
     user_identity_1: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-vm-identity"
@@ -180,3 +194,15 @@
     resource_group: "{{ resource_group }}"
     name: "{{ vm_output.ansible_facts.azure_vm.tags._own_sa_ }}"
     state: absent
+
+- name: Destroy User Managed Identities
+  azure_rm_resource:
+    resource_group: "{{ resource_group }}"
+    provider: ManagedIdentity
+    resource_type: userAssignedIdentities
+    resource_name: "{{ item }}"
+    api_version: "2023-01-31"
+    state: absent
+  loop:
+    - "ansible-test-vm-identity"
+    - "ansible-test-vm-identity-2"
