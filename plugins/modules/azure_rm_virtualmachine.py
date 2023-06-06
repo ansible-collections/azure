@@ -1393,7 +1393,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         new_managed_identities = set(self.vm_identity.get('user_assigned_identities',{}).get('id',[]))
                         current_managed_identities = set(vm_dict['identity']['userAssignedIdentities'].keys())
                         # If new identities have to be appended to VM
-                        if self.vm_identity.get('user_assigned_identities',{}).get('append',False) == True:
+                        if self.vm_identity.get('user_assigned_identities',{}).get('append',False) is True:
                             # and the union of identities is longer
                             if len(current_managed_identities) != len(new_managed_identities.union(current_managed_identities)):
                                 #update identities
@@ -1898,7 +1898,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                     if self.vm_identity is not None:
                         # If 'append' is set to True save current user assigned managed identities to use later
-                        if self.vm_identity.get('user_assigned_identities',{}) is not None and self.vm_identity.get('user_assigned_identities',{}).get('append', False) == True:
+                        if self.vm_identity.get('user_assigned_identities',{}) is not None and self.vm_identity.get('user_assigned_identities',{}).get('append', False) is True:
                             if 'identity' in vm_dict and 'userAssignedIdentities' in vm_dict['identity']:
                                 current_user_assigned_identities_dict = { uami:dict() for uami in vm_dict['identity']['userAssignedIdentities'].keys() }
                                 vm_identity_user_assigned_append = True
@@ -1922,7 +1922,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         # If there are no identities in 'id' and 'UserAssigned' in type
                         elif 'UserAssigned' in self.vm_identity.get('type') and len(self.vm_identity.get('user_assigned_identities',{}).get('id',[])) == 0:
                             # Fail if append is False
-                            if vm_identity_user_assigned_append == False:
+                            if vm_identity_user_assigned_append is False:
                                 self.fail("UserAssigned specified but no User Assigned IDs provided and no UserAssigned identities are currently assigned to the VM")
                             # If append is true, user is changing from 'UserAssigned' to 'SystemAssigned, UserAssigned' and wants to keep current UserAssigned identities
                             else:
