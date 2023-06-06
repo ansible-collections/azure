@@ -1924,8 +1924,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         elif 'UserAssigned' in self.vm_identity.get('type') and len(self.vm_identity.get('user_assigned_identities', {}).get('id', [])) == 0:
                             # Fail if append is False
                             if vm_identity_user_assigned_append is False:
-                                self.fail("UserAssigned specified but no User Assigned IDs provided and no UserAssigned identities are currently assigned to the VM")
-                            # If append is true, user is changing from 'UserAssigned' to 'SystemAssigned, UserAssigned' and wants to keep current UserAssigned identities
+                                self.fail("UserAssigned specified but no User Assigned IDs provided" +
+                                          " and no UserAssigned identities are currently assigned to the VM")
+                            # If append is true, user is changing from 'UserAssigned' to 'SystemAssigned, UserAssigned'
+                            #  and wants to keep current UserAssigned identities
                             else:
                                 # Save current identities
                                 vm_resource.identity = self.compute_models.VirtualMachineIdentity(
