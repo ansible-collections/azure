@@ -16,7 +16,7 @@ pool:
 steps:
 - script: |
     pip install wheel
-    pip install ansible==v2.9.0
+    pip install ansible==v2.14.0
     ansible --version
   displayName: 'install ansible'
 
