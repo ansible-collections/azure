@@ -1899,7 +1899,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                     if self.vm_identity is not None:
                         # If 'append' is set to True save current user assigned managed identities to use later
-                        if (self.vm_identity.get('user_assigned_identities', {}) is not None 
+                        if (self.vm_identity.get('user_assigned_identities', {}) is not None
                                 and self.vm_identity.get('user_assigned_identities', {}).get('append', False) is True):
                             if 'identity' in vm_dict and 'userAssignedIdentities' in vm_dict['identity']:
                                 current_user_assigned_identities_dict = {uami: dict() for uami in vm_dict['identity']['userAssignedIdentities'].keys()}
