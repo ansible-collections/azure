@@ -40,6 +40,7 @@ options:
         description:
             - State of the SSH Public Key. Use C(present) to create or update and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
