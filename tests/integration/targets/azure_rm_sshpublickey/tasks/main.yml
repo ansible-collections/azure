@@ -1,0 +1,65 @@
+- name: Prepare random number
+  set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+ 
+- name: Create a new SSH Public Key
+  azure_rm_sshpublickey:
+    resource_group: "{{ resource_group }}"
+    name: sshpublic{{ rpfx }}
+    public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    tags: 
+      key1: value1
+      key2: value2
+  register: output
+
+- assert:
+    that:
+      - output.changed
+
+- name: Create a new SSH Public Key (Idempotent test)
+  azure_rm_sshpublickey:
+    resource_group: "{{ resource_group }}"
+    name: sshpublic{{ rpfx }}
+    public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    tags: 
+      key1: value1
+      key2: value2
+  register: output
+
+- assert:
+    that:
+      - not output.changed
+ 
+- name: Update SSH Public Key with tags and public key
+  azure_rm_sshpublickey:
+    resource_group: "{{ resource_group }}"
+    name: sshpublic{{ rpfx }}
+    public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDBdxN6iGt/BEv2FCPzJU2pbyKLNIiFQKbT7p/+Meh2Z/2/JcfRg1O/TuQoQSxFanxz/62iy1J5cOouE8DJa1EFvbq1yC2FafHE7rIVoQdgO9SDkIKOIapI0/EB1A9fh6Qkem5VM19zuyParA4Cc3s2eonzBX2zXza3SfpK97OJIMtMqy97eQzrhpx7XyrVyJsor3rlMAcq5EhG6I7O9rWN42vsKf5z8/0iwR5dbClVfEm0O3qcJxCZE748PxCMWnimjoP7RnCSSXd6KVsEDSx7f8e/Gvul6Yz46HzmhdFBfzPZxz+iOP77k4S1LwvE9EOE8o97MUTIncC+h43N2FLUgIraG/goKb2l1yRY+8yOzu+Hy/C6+Q88/eYgDFprFcUSlnxRpNxpqjlE/Ox6wcny6YXIq6BM5dAUfRMccpNH/k4tFWo6wBoLUDw1KEAc3Fv2/PmbNUFcSYTwXWHJbSHspDJNWOCQD1qcZZGX1bDZr3+RlEKUkScOfTpMFDUsCjM= xiuxi.sun@qq.com"
+    tags: 
+      key3: value3
+  register: output
+
+- assert:
+    that:
+      - output.changed
+
+- name: Get ssh public keys by name
+  azure_rm_sshpublickey_info:
+    resource_group: "{{ resource_group }}"
+    name: sshpublic{{ rpfx }}
+  register: output
+
+- assert:
+    that:
+      - output.ssh_keys[0].tags | length == 3
+
+- name: Delete a new SSH Public Key
+  azure_rm_sshpublickey:
+    resource_group: "{{ resource_group }}"
+    name: sshpublic{{ rpfx }}
+    state: absent
+  register: output
+
+- assert:
+    that:
+      - output.changed
