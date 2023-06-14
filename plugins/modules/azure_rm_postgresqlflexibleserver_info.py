@@ -110,7 +110,7 @@ servers:
             contains:
                 storage_size_gb:
                     descirption:
-                        - 
+                        - Max storage allowed for a server.
                     type: int
                     returned: always
                     sample: 128
@@ -340,7 +340,7 @@ class AzureRMPostgreSqlFlexibleServersInfo(AzureRMModuleBase):
         results = []
         try:
             response = self.postgresql_flexible_client.servers.get(resource_group_name=self.resource_group,
-                                                                  server_name=self.name)
+                                                                   server_name=self.name)
             self.log("Response : {0}".format(response))
         except ResourceNotFoundError:
             self.log('Could not get facts for PostgreSQL Flexible Server.')

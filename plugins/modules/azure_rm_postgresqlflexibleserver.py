@@ -187,6 +187,21 @@ options:
         choices:
             - present
             - absent
+    is_restart:
+        description:
+            - Whether to restart the Post gresql server.
+        type: bool
+        defaut: False
+    is_stop:
+        description:
+            - Whether to stop the Post gresql server.
+        type: bool
+        defaut: False
+    is_start:
+        description:
+            - Whether to start the Post gresql server.
+        type: bool
+        defaut: False
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -288,7 +303,7 @@ servers:
             contains:
                 storage_size_gb:
                     descirption:
-                        -
+                        - ax storage allowed for a server.
                     type: int
                     returned: always
                     sample: 128
@@ -312,7 +327,7 @@ servers:
             sample: postflexiblefredpgsqlflexible.postgres.database.azure.com
         availability_zone:
             description:
-                - availability zone information of the server.
+                - Availability zone information of the server.
             type: str
             returned: always
             sample: 1
@@ -484,7 +499,7 @@ sku_spec = dict(
 )
 
 
-maintenance_window_spec=dict(
+maintenance_window_spec = dict(
     custom_window=dict(type='str'),
     start_hour=dict(type='int'),
     start_minute=dict(type='int'),
@@ -492,26 +507,26 @@ maintenance_window_spec=dict(
 )
 
 
-high_availability_spec=dict(
+high_availability_spec = dict(
     mode=dict(type='str', choices=["Disabled", "ZoneRedundant"]),
     standby_availability_zone=dict(type='str')
 )
 
 
-network_spec=dict(
+network_spec = dict(
     delegated_subnet_resource_id=dict(type='str'),
     private_dns_zone_arm_resource_id=dict(type='str'),
     public_network_access=dict(type='str', choices=["Enabled", "Disabled"])
 )
 
 
-backup_spec=dict(
+backup_spec = dict(
     backup_retention_days=dict(type='int'),
     geo_redundant_backup=dict(type='str', choices=["Enabled", "Disabled"]),
-    )
+)
 
 
-storage_spec=dict(
+storage_spec = dict(
     storage_size_gb=dict(type='int')
 )
 
@@ -681,14 +696,16 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
 
                 if self.update_parameters.get('high_availability') is not None:
                     for key in self.update_parameters['high_availability'].keys():
-                        if self.update_parameters['high_availability'][key] is not None and self.update_parameters['high_availability'][key] != old_response['high_availability'].get(key):
+                        if (self.update_parameters['high_availability'][key] is not None) and\
+                                (self.update_parameters['high_availability'][key] != old_response['high_availability'].get(key)):
                             update_flag = True
                         else:
                             self.update_parameters['high_availability'][key] = old_response['high_availability'].get(key)
 
                 if self.update_parameters.get('maintenance_window') is not None:
                     for key in self.update_parameters['maintenance_window'].keys():
-                        if self.update_parameters['maintenance_window'][key] is not None and self.update_parameters['maintenance_window'][key] != old_response['maintenance_window'].get(key):
+                        if (self.update_parameters['maintenance_window'][key] is not None) and\
+                                (self.update_parameters['maintenance_window'][key] != old_response['maintenance_window'].get(key)):
                             update_flag = True
                         else:
                             self.update_parameters['maintenance_window'][key] = old_response['maintenance_window'].get(key)
@@ -787,6 +804,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
         except Exception as e:
             self.log('Error attempting to delete the PostgreSQL Flexible Server instance.')
             self.fail("Error deleting the PostgreSQL Flexible Server instance: {0}".format(str(e)))
+
     def stop_postgresqlflexibleserver(self):
         '''
         Stop PostgreSQL Flexible Server instance in the specified subscription and resource group.
@@ -800,6 +818,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
         except Exception as e:
             self.log('Error attempting to stop the PostgreSQL Flexible Server instance.')
             self.fail("Error stop the PostgreSQL Flexible Server instance: {0}".format(str(e)))
+
     def start_postgresqlflexibleserver(self):
         '''
         Start PostgreSQL Flexible Server instance in the specified subscription and resource group.
@@ -813,6 +832,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
         except Exception as e:
             self.log('Error attempting to start the PostgreSQL Flexible Server instance.')
             self.fail("Error starting the PostgreSQL Flexible Server instance: {0}".format(str(e)))
+
     def restart_postgresqlflexibleserver(self):
         '''
         Restart PostgreSQL Flexible Server instance in the specified subscription and resource group.
