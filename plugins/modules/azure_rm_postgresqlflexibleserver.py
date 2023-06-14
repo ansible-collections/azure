@@ -468,8 +468,6 @@ servers:
             sample: { tag1: abc }
 '''
 
-import logging
-logging.basicConfig(filename='log.log', level=logging.INFO)
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -488,8 +486,8 @@ sku_spec = dict(
 
 maintenance_window_spec=dict(
     custom_window=dict(type='str'),
-    start_hour=dict(type='str'),
-    start_minute=dict(type='str'),
+    start_hour=dict(type='int'),
+    start_minute=dict(type='int'),
     day_of_week=dict(type='int'),
 )
 
@@ -583,6 +581,18 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
                 default=None,
                 choices=[None, 'Default', 'Create', 'Update', 'PointInTimeRestore']
             ),
+            is_start=dict(
+                type='bool',
+                default=False,
+            ),
+            is_restart=dict(
+                type='bool',
+                default=False
+            ),
+            is_stop=dict(
+                type='bool',
+                default=False
+            ),
             source_server_resource_id=dict(
                 type='str'
             ),
@@ -598,6 +608,9 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
         self.parameters = dict()
         self.update_parameters = dict()
         self.tags = None
+        self.is_start = None
+        self.is_stop = None
+        self.is_restart = None
 
         self.results = dict(changed=False)
         self.state = None
@@ -614,7 +627,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
                 self.parameters[key] = kwargs[key]
-                for key in ['location', 'sku', 'administrator_login_password', 'storage', 'backup', 'high_availability', 'maintenance_window']:
+                for key in ['location', 'sku', 'administrator_login_password', 'storage', 'backup', 'high_availability', 'maintenance_window', 'create_mode']:
                     self.update_parameters[key] = kwargs[key]
 
         old_response = None
@@ -634,6 +647,12 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
             if self.state == 'present':
                 if not self.check_mode:
                     response = self.create_postgresqlflexibleserver(self.parameters)
+                    if self.is_stop:
+                        self.stop_postgresqlflexibleserver()
+                    elif self.is_start:
+                        self.start_postgresqlflexibleserver()
+                    elif self.is_restart:
+                        self.restart_postgresqlflexibleserver()
                 changed = True
             else:
                 self.log("PostgreSQL Flexible Server instance doesn't exist, Don't need to delete")
@@ -641,10 +660,40 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
             self.log("PostgreSQL Flexible Server instance already exists")
             if self.state == 'present':
                 update_flag = False
+                if self.update_parameters.get('sku') is not None:
+                    for key in self.update_parameters['sku'].keys():
+                        if self.update_parameters['sku'][key] is not None and self.update_parameters['sku'][key] != old_response['sku'].get(key):
+                            update_flag = True
+                        else:
+                            self.update_parameters['sku'][key] = old_response['sku'].get(key)
 
-                for key in self.update_parameters.keys():
-                    if self.update_parameters[key] != old_response[key]:
-                        update_flag = True
+                if self.update_parameters.get('storage') is not None and self.update_parameters['storage'] != old_response['storage']:
+                    update_flag = True
+                else:
+                    self.update_parameters['storage'] = old_response['storage']
+
+                if self.update_parameters.get('backup') is not None:
+                    for key in self.update_parameters['backup'].keys():
+                        if self.update_parameters['backup'][key] is not None and self.update_parameters['backup'][key] != old_response['backup'].get(key):
+                            update_flag = True
+                        else:
+                            self.update_parameters['backup'][key] = old_response['backup'].get(key)
+
+                if self.update_parameters.get('high_availability') is not None:
+                    for key in self.update_parameters['high_availability'].keys():
+                        if self.update_parameters['high_availability'][key] is not None and self.update_parameters['high_availability'][key] != old_response['high_availability'].get(key):
+                            update_flag = True
+                        else:
+                            self.update_parameters['high_availability'][key] = old_response['high_availability'].get(key)
+
+                if self.update_parameters.get('maintenance_window') is not None:
+                    for key in self.update_parameters['maintenance_window'].keys():
+                        if self.update_parameters['maintenance_window'][key] is not None and self.update_parameters['maintenance_window'][key] != old_response['maintenance_window'].get(key):
+                            update_flag = True
+                        else:
+                            self.update_parameters['maintenance_window'][key] = old_response['maintenance_window'].get(key)
+
+
                 update_tags, new_tags = self.update_tags(old_response['tags'])
                 self.update_parameters['tags'] = new_tags
                 if update_tags:
@@ -654,6 +703,29 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
                     changed = True
                     if not self.check_mode:
                         response = self.update_postgresqlflexibleserver(self.update_parameters)
+                    else:
+                        response = old_response
+                    if self.is_stop:
+                        self.stop_postgresqlflexibleserver()
+                        changed = True
+                    elif self.is_start:
+                        self.start_postgresqlflexibleserver()
+                        changed = True
+                    elif self.is_restart:
+                        self.restart_postgresqlflexibleserver()
+                        changed = True
+                else:
+                    if not self.check_mode:
+                        if self.is_stop:
+                            self.stop_postgresqlflexibleserver()
+                            changed = True
+                        elif self.is_start:
+                            self.start_postgresqlflexibleserver()
+                            changed = True
+                        elif self.is_restart:
+                            self.restart_postgresqlflexibleserver()
+                            changed = True
+                    response = old_response
             else:
                 self.log("PostgreSQL Flexible Server instance already exist, will be deleted")
                 changed = True
@@ -715,6 +787,45 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
         except Exception as e:
             self.log('Error attempting to delete the PostgreSQL Flexible Server instance.')
             self.fail("Error deleting the PostgreSQL Flexible Server instance: {0}".format(str(e)))
+    def stop_postgresqlflexibleserver(self):
+        '''
+        Stop PostgreSQL Flexible Server instance in the specified subscription and resource group.
+
+        :return: True
+        '''
+        self.log("Stop the PostgreSQL Flexible Server instance {0}".format(self.name))
+        try:
+            self.postgresql_flexible_client.servers.begin_stop(resource_group_name=self.resource_group,
+                                                               server_name=self.name)
+        except Exception as e:
+            self.log('Error attempting to stop the PostgreSQL Flexible Server instance.')
+            self.fail("Error stop the PostgreSQL Flexible Server instance: {0}".format(str(e)))
+    def start_postgresqlflexibleserver(self):
+        '''
+        Start PostgreSQL Flexible Server instance in the specified subscription and resource group.
+
+        :return: True
+        '''
+        self.log("Starting the PostgreSQL Flexible Server instance {0}".format(self.name))
+        try:
+            self.postgresql_flexible_client.servers.begin_start(resource_group_name=self.resource_group,
+                                                                server_name=self.name)
+        except Exception as e:
+            self.log('Error attempting to start the PostgreSQL Flexible Server instance.')
+            self.fail("Error starting the PostgreSQL Flexible Server instance: {0}".format(str(e)))
+    def restart_postgresqlflexibleserver(self):
+        '''
+        Restart PostgreSQL Flexible Server instance in the specified subscription and resource group.
+
+        :return: True
+        '''
+        self.log("Restarting the PostgreSQL Flexible Server instance {0}".format(self.name))
+        try:
+            self.postgresql_flexible_client.servers.begin_restart(resource_group_name=self.resource_group,
+                                                                  server_name=self.name)
+        except Exception as e:
+            self.log('Error attempting to restart the PostgreSQL Flexible Server instance.')
+            self.fail("Error restarting the PostgreSQL Flexible Server instance: {0}".format(str(e)))
 
     def get_postgresqlflexibleserver(self):
         '''

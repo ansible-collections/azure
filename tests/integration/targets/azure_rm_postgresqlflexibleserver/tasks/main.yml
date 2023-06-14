@@ -1,0 +1,183 @@
+- name: Prepare random number
+  set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+  run_once: yes
+
+- name: Create post gresql flexible server (check mode)
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ resource_group }}"
+    name: postflexible{{ rpfx }}
+    sku:
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: Fred@0329
+    version: 12
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup: 
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    network:
+      public_network_access: Disabled      
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 4
+      day_of_week: 3
+    availability_zone: 1
+    create_mode: Create
+  check_mode: yes
+
+- name: Create post gresql flexible server
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ resource_group }}"
+    name: postflexible{{ rpfx }}
+    sku:
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: Fred@0329
+    version: 12
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup: 
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    network:
+      public_network_access: Disabled      
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 4
+      day_of_week: 3
+    availability_zone: 1
+    create_mode: Create
+  register: output
+
+- name: Assert the post grep sql server create success
+  assert:
+    that:
+      - output.changed
+
+- name: Create post gresql flexible server (Idempotent Test)
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ resource_group }}"
+    name: postflexible{{ rpfx }}
+    sku:
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: Fred@0329
+    version: 12
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup: 
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    network:
+      public_network_access: Disabled      
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 4
+      day_of_week: 3
+    availability_zone: 1
+    create_mode: Create
+  register: output
+
+- name: Assert the post grep sql server create success
+  assert:
+    that:
+      - not output.changed
+
+- name: Update post gresql flexible server with multiple parameters
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ resource_group }}"
+    name: postflexible{{ rpfx }}
+    sku:
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: Fred@0329
+    version: 12
+    storage:
+      storage_size_gb: 256
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup: 
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    network:
+      public_network_access: Disabled      
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 10
+      start_minute: 6
+      day_of_week: 6
+    availability_zone: 1
+    create_mode: Create
+    tags:
+      key1: value1
+      key2: value2
+  register: output
+
+- name: Assert the post grep sql server update success
+  assert:
+    that:
+      - output.changed
+
+- name: Gather facts postgresql flexible Server
+  azure_rm_postgresqlflexibleserver_info:
+    resource_group: "{{ resource_group }}"
+    name: postflexible{{ rpfx }}
+  register: output
+
+- name: Assert the post gresql server is well created
+  assert:
+    that:
+      - output.servers[0].tags | length == 2
+      - output.servers[0].storage.storage_size_gb == 256
+      - output.servers[0].maintenance_window.custom_window == 'Enabled'
+      - output.servers[0].maintenance_window.day_of_week == 6
+      - output.servers[0].maintenance_window.start_hour == 10
+      - output.servers[0].maintenance_window.start_minute == 6
+
+- name: Stop the post gresql flexible server
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ resource_group }}"
+    name: postflexible{{ rpfx }}
+    is_stop: True
+  register: output
+
+- name: Assert the post grep sql server stop success
+  assert:
+    that:
+      - output.changed
+
+- name: start post gresql flexible server
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ resource_group }}"
+    name: postflexible{{ rpfx }}
+    is_start: True
+  register: output
+
+- name: Assert the post grep sql server start success
+  assert:
+    that:
+      - output.changed
+
+- name: Delete post gresql flexible server
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ resource_group }}"
+    name: postflexible{{ rpfx }}
+    state: absent
+  register: output
+
+
+- name: Assert the post gresql server is well deleted
+  assert:
+    that:
+      - output.changed
