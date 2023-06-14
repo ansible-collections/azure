@@ -250,7 +250,7 @@ servers:
                     description:
                         - The identity that created the resource.
                     type: str
-                    returned always
+                    returned: always
                     sample: null
                 created_by_type:
                     description:

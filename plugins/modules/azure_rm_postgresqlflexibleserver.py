@@ -57,7 +57,7 @@ options:
         suboptions:
             storage_size_gb:
                 descripition:
-                    - Max storage allowed for a server.
+                    - The storage size for the server.
                 type: int
     administrator_login:
         description:
@@ -191,17 +191,17 @@ options:
         description:
             - Whether to restart the Post gresql server.
         type: bool
-        defaut: False
+        default: False
     is_stop:
         description:
             - Whether to stop the Post gresql server.
         type: bool
-        defaut: False
+        default: False
     is_start:
         description:
             - Whether to start the Post gresql server.
         type: bool
-        defaut: False
+        default: False
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -443,7 +443,7 @@ servers:
                     description:
                         - The identity that created the resource.
                     type: str
-                    returned always
+                    returned: always
                     sample: null
                 created_by_type:
                     description:
@@ -709,7 +709,6 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
                             update_flag = True
                         else:
                             self.update_parameters['maintenance_window'][key] = old_response['maintenance_window'].get(key)
-
 
                 update_tags, new_tags = self.update_tags(old_response['tags'])
                 self.update_parameters['tags'] = new_tags
