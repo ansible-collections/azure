@@ -157,14 +157,17 @@
     that:
       - output.changed
 
-- name: start post gresql flexible server
+- name: Pause for 10 mimutes
+  shell: sleep 600
+
+- name: restart post gresql flexible server
   azure_rm_postgresqlflexibleserver:
     resource_group: "{{ resource_group }}"
     name: postflexible{{ rpfx }}
-    is_start: True
+    is_restart: True
   register: output
 
-- name: Assert the post grep sql server start success
+- name: Assert the post grep sql server restart success
   assert:
     that:
       - output.changed
