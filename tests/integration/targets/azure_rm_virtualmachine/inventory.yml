@@ -36,6 +36,10 @@ all:
       network: 10.42.6.0/24
       subnet: 10.42.6.0/28
 
+    azure_test_vm_identity:
+      network: 10.42.7.0/24
+      subnet: 10.42.7.0/28
+
   vars:
     ansible_connection: local
     ansible_python_interpreter: "{{ ansible_playbook_python }}"

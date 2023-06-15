@@ -372,8 +372,36 @@ options:
     vm_identity:
         description:
             - Identity for the VM.
-        choices:
-            - SystemAssigned
+        type: dict
+        suboptions:
+            type:
+                description:
+                    - Type of the managed identity
+                required: true
+                choices:
+                    - SystemAssigned
+                    - UserAssigned
+                    - SystemAssigned, UserAssigned
+                    - None
+                type: str
+            user_assigned_identities:
+                description:
+                    - User Assigned Managed Identities and its options
+                required: false
+                type: dict
+                suboptions:
+                    id:
+                        description:
+                            - List of the user assigned identities IDs associated to the VM
+                        required: false
+                        type: list
+                        default: []
+                    append:
+                        description:
+                            - If the list of identities has to be appended to current identities (true) or if it has to replace current identities (false)
+                        required: false
+                        type: bool
+                        default: True
     winrm:
         description:
             - List of Windows Remote Management configurations of the VM.
@@ -949,6 +977,16 @@ linux_configuration_spec = dict(
     disable_password_authentication=dict(type='bool')
 )
 
+user_assigned_identities_spec = dict(
+    id=dict(type='list', default=[]),
+    append=dict(type='bool', default=True)
+)
+
+managed_identity_spec = dict(
+    type=dict(type='str', choices=['SystemAssigned', 'UserAssigned', 'SystemAssigned, UserAssigned', 'None'], required=True),
+    user_assigned_identities=dict(type='dict', options=user_assigned_identities_spec, default={}),
+)
+
 
 class AzureRMVirtualMachine(AzureRMModuleBase):
 
@@ -998,7 +1036,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             zones=dict(type='list'),
             accept_terms=dict(type='bool', default=False),
             license_type=dict(type='str', choices=['Windows_Server', 'Windows_Client', 'RHEL_BYOS', 'SLES_BYOS']),
-            vm_identity=dict(type='str', choices=['SystemAssigned']),
+            vm_identity=dict(type='dict', options=managed_identity_spec),
             winrm=dict(type='list'),
             boot_diagnostics=dict(type='dict'),
             ephemeral_os_disk=dict(type='bool'),
@@ -1339,6 +1377,37 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     differences.append('License Type')
                     changed = True
 
+                if self.vm_identity:
+                    update_vm_identity = False
+                    # If type set to None, and VM has no current identities, nothing to do
+                    if 'None' in self.vm_identity.get('type') and 'identity' not in vm_dict:
+                        pass
+                    # If type different to None, and VM has no current identities, update identities
+                    elif 'identity' not in vm_dict:
+                        update_vm_identity = True
+                    # If type in module args different from type of vm_dict, update identities
+                    elif vm_dict['identity']['type'] != self.vm_identity.get('type'):
+                        update_vm_identity = True
+                    # If type in module args contains 'UserAssigned'
+                    elif 'UserAssigned' in self.vm_identity.get('type'):
+                        # Create sets with current user identities and module args identities
+                        new_managed_identities = set(self.vm_identity.get('user_assigned_identities', {}).get('id', []))
+                        current_managed_identities = set(vm_dict['identity']['userAssignedIdentities'].keys())
+                        # If new identities have to be appended to VM
+                        if self.vm_identity.get('user_assigned_identities', {}).get('append', False) is True:
+                            # and the union of identities is longer
+                            if len(current_managed_identities) != len(new_managed_identities.union(current_managed_identities)):
+                                # update identities
+                                update_vm_identity = True
+                        # If new identities have to overwrite current identities
+                        else:
+                            # Check if module args identities are different as current ones
+                            if current_managed_identities.difference(new_managed_identities) != set():
+                                update_vm_identity = True
+                    if update_vm_identity:
+                        differences.append('Managed Identities')
+                        changed = True
+
                 if self.security_profile is not None:
                     update_security_profile = False
                     if 'securityProfile' not in vm_dict['properties'].keys():
@@ -1574,7 +1643,22 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         vm_resource.license_type = self.license_type
 
                     if self.vm_identity:
-                        vm_resource.identity = self.compute_models.VirtualMachineIdentity(type=self.vm_identity)
+                        # If UserAssigned in module args and ids specified
+                        if 'UserAssigned' in self.vm_identity.get('type') and len(self.vm_identity.get('user_assigned_identities', {}).get('id', [])) != 0:
+                            user_assigned_identities_dict = {uami: dict() for uami in self.vm_identity.get('user_assigned_identities').get('id')}
+                            # Append identities to the model
+                            vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                type=self.vm_identity.get('type'),
+                                user_assigned_identities=user_assigned_identities_dict
+                            )
+                        # If UserAssigned in module args, but ids are not specified
+                        elif 'UserAssigned' in self.vm_identity.get('type') and len(self.vm_identity.get('user_assigned_identities', {}).get('id', [])) == 0:
+                            self.fail("UserAssigned specified but no User Identity IDs provided")
+                        # In any other case ('SystemAssigned' or 'None') apply the configuration to the model
+                        else:
+                            vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                type=self.vm_identity.get('type')
+                            )
 
                     if self.winrm:
                         winrm_listeners = list()
@@ -1812,6 +1896,50 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                     if self.license_type is not None:
                         vm_resource.license_type = self.license_type
+
+                    if self.vm_identity is not None:
+                        # If 'append' is set to True save current user assigned managed identities to use later
+                        if (self.vm_identity.get('user_assigned_identities', {}) is not None
+                                and self.vm_identity.get('user_assigned_identities', {}).get('append', False) is True):
+                            if 'identity' in vm_dict and 'userAssignedIdentities' in vm_dict['identity']:
+                                current_user_assigned_identities_dict = {uami: dict() for uami in vm_dict['identity']['userAssignedIdentities'].keys()}
+                                vm_identity_user_assigned_append = True
+                            else:
+                                # Nothing to append to
+                                vm_identity_user_assigned_append = False
+                        else:
+                            # 'append' is False or unset
+                            vm_identity_user_assigned_append = False
+                        # If there are identities in 'id' and 'UserAssigned' in type
+                        if 'UserAssigned' in self.vm_identity.get('type') and len(self.vm_identity.get('user_assigned_identities', {}).get('id', [])) != 0:
+                            user_assigned_identities_dict = {uami: dict() for uami in self.vm_identity.get('user_assigned_identities').get('id')}
+                            # If there are identities to append, merge the dicts
+                            if vm_identity_user_assigned_append:
+                                user_assigned_identities_dict = {**user_assigned_identities_dict, **current_user_assigned_identities_dict}
+                            # Save the identity
+                            vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                type=self.vm_identity.get('type'),
+                                user_assigned_identities=user_assigned_identities_dict
+                            )
+                        # If there are no identities in 'id' and 'UserAssigned' in type
+                        elif 'UserAssigned' in self.vm_identity.get('type') and len(self.vm_identity.get('user_assigned_identities', {}).get('id', [])) == 0:
+                            # Fail if append is False
+                            if vm_identity_user_assigned_append is False:
+                                self.fail("UserAssigned specified but no User Assigned IDs provided" +
+                                          " and no UserAssigned identities are currently assigned to the VM")
+                            # If append is true, user is changing from 'UserAssigned' to 'SystemAssigned, UserAssigned'
+                            #  and wants to keep current UserAssigned identities
+                            else:
+                                # Save current identities
+                                vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                    type=self.vm_identity.get('type'),
+                                    user_assigned_identities=current_user_assigned_identities_dict
+                                )
+                        # Set 'SystemAssigned' or 'None'
+                        else:
+                            vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                type=self.vm_identity.get('type')
+                            )
 
                     if self.boot_diagnostics is not None:
                         vm_resource.diagnostics_profile = self.compute_models.DiagnosticsProfile(
