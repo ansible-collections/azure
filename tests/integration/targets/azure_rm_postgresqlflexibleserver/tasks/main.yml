@@ -145,6 +145,69 @@
       - output.servers[0].maintenance_window.start_hour == 10
       - output.servers[0].maintenance_window.start_minute == 6
 
+- name: Create a post gresql flexible database(check mode)
+  azure_rm_postgresqlflexibledatabase:
+    resource_group: "{{ resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: database{{ rpfx }}
+    collation: en_US.utf8
+    charset: UTF8
+    check_mode: True
+
+- name: Create a post gresql flexible database
+  azure_rm_postgresqlflexibledatabase:
+    resource_group: "{{ resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: database{{ rpfx }}
+    collation: en_US.utf8
+    charset: UTF8
+  register: output
+
+- name: Assert the post gresql flexible database created success
+  assert:
+    that:
+      - output.changed
+
+- name: Create a post gresql flexible database(Idempotent test)
+  azure_rm_postgresqlflexibledatabase:
+    resource_group: "{{ resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: database{{ rpfx }}
+    collation: en_US.utf8
+    charset: UTF8
+  register: output
+
+- name: Assert the post gresql flexible database no changed
+  assert:
+    that:
+      - not output.changed
+
+- name: Get the post gresql flexibe database facts
+  azure_rm_postgresqlflexibledatabase_info:
+    resource_group: "{{ resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: database{{ rpfx }}
+  register: output
+
+- name: Assert the post gresql flexible database facts
+  assert:
+    that:
+      - output.databases[0].collation == 'en_US.utf8'
+      - output.databases[0].charset == 'UTF8'
+
+- name: Delete the post gresql flexibe database
+  azure_rm_postgresqlflexibledatabase:
+    resource_group: "{{ resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: database{{ rpfx }}
+    state: absent
+  register: output
+
+- name: Assert the post gresql flexible database deleted
+  assert:
+    that:
+      - output.changed
+
 - name: Stop the post gresql flexible server
   azure_rm_postgresqlflexibleserver:
     resource_group: "{{ resource_group }}"

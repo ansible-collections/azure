@@ -74,9 +74,9 @@ options:
             - PostgreSQL Server version.
         type: str
         choices:
-            - 11
-            - 12
-            - 13
+            - '11'
+            - '12'
+            - '13'
     fully_qualified_domain_name:
         description:
             - The fully qualified domain name of a server.
