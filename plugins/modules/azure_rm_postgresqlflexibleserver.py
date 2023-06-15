@@ -168,12 +168,10 @@ options:
             - The mode to create a new PostgreSQL server.
         type: str
         choices:
-            - None
             - Default
             - Create
             - Update
             - PointInTimeRestore
-        default: None
     source_server_resource_id:
         description:
             - The source server resource ID to restore from.
@@ -321,9 +319,9 @@ servers:
             type: str
             sample: "12"
             choices:
-                - 11
-                - 12
-                - 13
+                - '11'
+                - '12'
+                - '13'
         fully_qualified_domain_name:
             description:
                 - The fully qualified domain name of the flexible server.
@@ -551,7 +549,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
             ),
             sku=dict(
                 type='dict',
-                optionis=sku_spec
+                options=sku_spec
             ),
             location=dict(
                 type='str'
@@ -598,8 +596,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBase):
             ),
             create_mode=dict(
                 type='str',
-                default=None,
-                choices=[None, 'Default', 'Create', 'Update', 'PointInTimeRestore']
+                choices=['Default', 'Create', 'Update', 'PointInTimeRestore']
             ),
             is_start=dict(
                 type='bool',
