@@ -41,6 +41,7 @@ options:
             tier:
                 description:
                     - The tier of the particular
+                type: str
                 choices:
                     - Burstable
                     - GeneralPurpose
@@ -56,7 +57,7 @@ options:
         type: dict
         suboptions:
             storage_size_gb:
-                descripition:
+                description:
                     - The storage size for the server.
                 type: int
     administrator_login:
@@ -302,7 +303,7 @@ servers:
             type: complex
             contains:
                 storage_size_gb:
-                    descirption:
+                    description:
                         - ax storage allowed for a server.
                     type: int
                     returned: always
@@ -319,6 +320,10 @@ servers:
             returned: always
             type: str
             sample: "12"
+            choices:
+                - 11
+                - 12
+                - 13
         fully_qualified_domain_name:
             description:
                 - The fully qualified domain name of the flexible server.
@@ -436,7 +441,7 @@ servers:
         system_data:
             description:
                 - The system metadata relating to this resource.
-            type: comple
+            type: complex
             returned: always
             contains:
                 created_by:

@@ -109,7 +109,7 @@ servers:
             type: complex
             contains:
                 storage_size_gb:
-                    descirption:
+                    description:
                         - Max storage allowed for a server.
                     type: int
                     returned: always
@@ -243,7 +243,7 @@ servers:
         system_data:
             description:
                 - The system metadata relating to this resource.
-            type: comple
+            type: complex
             returned: always
             contains:
                 created_by:
