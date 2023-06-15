@@ -150,7 +150,7 @@ class AzureRMPostgreSqlFlexibleDatabaseInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             resource_group=dict(
                 type='str',
-                requried=True
+                required=True
             ),
             server_name=dict(
                 type='str',
@@ -167,7 +167,7 @@ class AzureRMPostgreSqlFlexibleDatabaseInfo(AzureRMModuleBase):
         self.resource_group = None
         self.name = None
         self.server_name = None
-        super(AzureRMPostgreSqlFlexibleDatabaseInfo, self).__init__(self.module_arg_spec, supports_check_mode=False, supports_tags=False, facts_module=True)
+        super(AzureRMPostgreSqlFlexibleDatabaseInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:

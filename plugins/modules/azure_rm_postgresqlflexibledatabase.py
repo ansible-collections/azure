@@ -21,14 +21,17 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the database.
         required: True
+        type: str
     charset:
         description:
             - The charset of the database.
@@ -41,6 +44,7 @@ options:
         description:
             - Assert the state of the PostgreSQL Flexible database. Use C(present) to create or update a database and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -158,8 +162,8 @@ class AzureRMPostgreSqlFlexibleDatabases(AzureRMModuleBase):
         self.state = None
 
         super(AzureRMPostgreSqlFlexibleDatabases, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                         supports_check_mode=True,
-                                                         supports_tags=False)
+                                                                 supports_check_mode=True,
+                                                                 supports_tags=False)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
