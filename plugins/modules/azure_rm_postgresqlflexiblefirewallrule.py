@@ -21,24 +21,31 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the PostgreSQL flexible firewall rule.
         required: True
+        type: str
     start_ip_address:
         description:
             - The start IP address of the PostgreSQL flexible firewall rule. Must be IPv4 format.
+        type: str
     end_ip_address:
         description:
             - The end IP address of the PostgreSQL flexible firewall rule. Must be IPv4 format.
+        type: str
     state:
         description:
-            - Assert the state of the PostgreSQL flexible firewall rule. Use C(present) to create or update a PostgreSQL flexible firewall rule and C(absent) to delete it.
+            - Assert the state of the PostgreSQL flexible firewall rule.
+            - Use C(present) to create or update a PostgreSQL flexible firewall rule and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
