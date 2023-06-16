@@ -152,7 +152,7 @@
     name: database{{ rpfx }}
     collation: en_US.utf8
     charset: UTF8
-    check_mode: True
+  check_mode: yes
 
 - name: Create a post gresql flexible database
   azure_rm_postgresqlflexibledatabase:
@@ -204,6 +204,83 @@
   register: output
 
 - name: Assert the post gresql flexible database deleted
+  assert:
+    that:
+      - output.changed
+
+- name: Create a post gresql flexible firwall rule (Check mode)
+  azure_rm_postgresqlflexiblefirewallrule:
+    resource_group: "{{ resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: firewall{{ rpfx }}
+    start_ip_address: 10.0.0.15
+    end_ip_address: 10.0.0.20
+  check_mode: yes
+
+- name: Create the post gresql flexible firwall rule
+  azure_rm_postgresqlflexiblefirewallrule:
+    resource_group: "{{ resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: firewall{{ rpfx }}
+    start_ip_address: 10.0.0.15
+    end_ip_address: 10.0.0.20
+  register: output
+
+- name: Assert the post grepsql flexible firewall rule created well
+  assert:
+    that:
+      - output.changed
+
+- name: Create the post gresql flexible firwall rule (Idempotent test)
+  azure_rm_postgresqlflexiblefirewallrule:
+    resource_group: "{{ resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: firewall{{ rpfx }}
+    start_ip_address: 10.0.0.15
+    end_ip_address: 10.0.0.20
+  register: output
+
+- name: Assert the post grepsql flexible firewall rule support idempotent test
+  assert:
+    that:
+      - not output.changed
+
+- name: Update the post gresql flexible firwall rule
+  azure_rm_postgresqlflexiblefirewallrule:
+    resource_group: "{{ resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: firewall{{ rpfx }}
+    start_ip_address: 10.0.0.16
+    end_ip_address: 10.0.0.18
+  register: output
+
+- name: Assert the post grepsql flexible server update well
+  assert:
+    that:
+      - output.changed
+
+- name: Get the post gresql flexible firwall rule facts
+  azure_rm_postgresqlflexiblefirewallrule_info:
+    resource_group: "{{ resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: firewall{{ rpfx }}
+  register: output
+
+- name: Assert the post gresql flexible firewall rule facts
+  assert:
+    that:
+      - output.firewall_rules[0].start_ip_address == '10.0.0.16'
+      - output.firewall_rules[0].end_ip_address == '10.0.0.18'
+
+- name: Delete the post gresql flexible firwall rule
+  azure_rm_postgresqlflexiblefirewallrule:
+    resource_group: "{{ resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: firewall{{ rpfx }}
+    state: absent
+  register: output
+
+- name: Assert the post grepsql flexible server delete well
   assert:
     that:
       - output.changed
