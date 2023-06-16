@@ -83,7 +83,7 @@ settings:
             description:
                 - Name of the server's resource group.
             type: str
-            returnd: always
+            returned: always
             sample: testRG
         value:
             description:
