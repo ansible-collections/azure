@@ -285,6 +285,17 @@
     that:
       - output.changed
 
+- name: list the post gresql flexible config facts
+  azure_rm_postgresqlflexibleconfiguration_info:
+    resource_group: "{{ resource_group }}"
+    server_name: postflexible{{ rpfx }}
+  register: output
+
+- name: Assert the post gresql flexible server configuration
+  assert:
+    that:
+      - output.settings | length > 0
+
 - name: Stop the post gresql flexible server
   azure_rm_postgresqlflexibleserver:
     resource_group: "{{ resource_group }}"
