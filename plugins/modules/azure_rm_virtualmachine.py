@@ -1416,7 +1416,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     else:
                         if self.security_profile.get('encryption_at_host') is not None:
                             if bool(self.security_profile.get('encryption_at_host')) != bool(vm_dict['properties']['securityProfile']['encryptionAtHost']):
-                                update_security_profle = True
+                                update_security_profile = True
                             else:
                                 self.security_profile['encryption_at_host'] = vm_dict['properties']['securityProfile']['encryptionAtHost']
                         if self.security_profile.get('security_type') is not None:
