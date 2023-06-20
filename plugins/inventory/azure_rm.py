@@ -295,22 +295,25 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         constructable_hostnames = self.get_option('hostnames')
 
         for h in self._hosts:
-            # FUTURE: track hostnames to warn if a hostname is repeated (can happen for legacy and for composed inventory_hostname)
-            inventory_hostname = self._get_hostname(h, hostnames=constructable_hostnames, strict=constructable_config_strict)
-            if self._filter_host(inventory_hostname, h.hostvars):
-                continue
-            self.inventory.add_host(inventory_hostname)
-            # FUTURE: configurable default IP list? can already do this via hostvar_expressions
-            self.inventory.set_variable(inventory_hostname, "ansible_host",
-                                        next(chain(h.hostvars['public_ipv4_addresses'], h.hostvars['private_ipv4_addresses']), None))
-            for k, v in iteritems(h.hostvars):
-                # FUTURE: configurable hostvar prefix? Makes docs harder...
-                self.inventory.set_variable(inventory_hostname, k, v)
+            try:
+                # FUTURE: track hostnames to warn if a hostname is repeated (can happen for legacy and for composed inventory_hostname)
+                inventory_hostname = self._get_hostname(h, hostnames=constructable_hostnames, strict=constructable_config_strict)
+                if self._filter_host(inventory_hostname, h.hostvars):
+                    continue
+                self.inventory.add_host(inventory_hostname)
+                # FUTURE: configurable default IP list? can already do this via hostvar_expressions
+                self.inventory.set_variable(inventory_hostname, "ansible_host",
+                                            next(chain(h.hostvars['public_ipv4_addresses'], h.hostvars['private_ipv4_addresses']), None))
+                for k, v in iteritems(h.hostvars):
+                    # FUTURE: configurable hostvar prefix? Makes docs harder...
+                    self.inventory.set_variable(inventory_hostname, k, v)
 
-            # constructable delegation
-            self._set_composite_vars(constructable_config_compose, h.hostvars, inventory_hostname, strict=constructable_config_strict)
-            self._add_host_to_composed_groups(constructable_config_groups, h.hostvars, inventory_hostname, strict=constructable_config_strict)
-            self._add_host_to_keyed_groups(constructable_config_keyed_groups, h.hostvars, inventory_hostname, strict=constructable_config_strict)
+                # constructable delegation
+                self._set_composite_vars(constructable_config_compose, h.hostvars, inventory_hostname, strict=constructable_config_strict)
+                self._add_host_to_composed_groups(constructable_config_groups, h.hostvars, inventory_hostname, strict=constructable_config_strict)
+                self._add_host_to_keyed_groups(constructable_config_keyed_groups, h.hostvars, inventory_hostname, strict=constructable_config_strict)
+            except Exception:
+                pass
 
     # FUTURE: fix underlying inventory stuff to allow us to quickly access known groupvars from reconciled host
     def _filter_host(self, inventory_hostname, hostvars):
