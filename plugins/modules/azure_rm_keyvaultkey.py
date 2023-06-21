@@ -102,6 +102,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
+    from azure.keyvault.keys import KeyClient
     import re
     import codecs
     from azure.keyvault import KeyVaultClient, KeyVaultId, KeyVaultAuthentication
@@ -213,55 +214,59 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
         return self.results
 
     def get_keyvault_client(self):
-        kv_url = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
-        # Don't use MSI credentials if the auth_source isn't set to MSI.  The below will Always result in credentials when running on an Azure VM.
-        if self.module.params['auth_source'] == 'msi':
-            try:
-                self.log("Get KeyVaultClient from MSI")
-                credentials = MSIAuthentication(resource="https://{0}".format(kv_url))
-                return KeyVaultClient(credentials)
-            except Exception:
-                self.log("Get KeyVaultClient from service principal")
-        elif (self.module.params['auth_source'] == 'cli'
-                or (self.module.params['auth_source'] == 'auto'
-                    and self.credentials['client_id'] is None
-                    and self.credentials['secret'] is None)):
-            try:
-                profile = get_cli_profile()
-                credentials, subscription_id, tenant = profile.get_login_credentials(
-                    subscription_id=self.credentials['subscription_id'], resource="https://{0}".format(kv_url))
-                return KeyVaultClient(credentials)
-            except Exception as exc:
-                self.log("Get KeyVaultClient from service principal")
-                # self.fail("Failed to load CLI profile {0}.".format(str(exc)))
-
-        # Create KeyVault Client using KeyVault auth class and auth_callback
-        def auth_callback(server, resource, scope):
-            if self.credentials['client_id'] is None or self.credentials['secret'] is None:
-                self.fail('Please specify client_id, secret and tenant to access azure Key Vault.')
-
-            tenant = self.credentials.get('tenant')
-            if not self.credentials['tenant']:
-                tenant = "common"
-
-            authcredential = ServicePrincipalCredentials(
-                client_id=self.credentials['client_id'],
-                secret=self.credentials['secret'],
-                tenant=tenant,
-                cloud_environment=self._cloud_environment,
-                resource="https://{0}".format(kv_url))
-
-            token = authcredential.token
-            return token['token_type'], token['access_token']
-
-        return KeyVaultClient(KeyVaultAuthentication(auth_callback))
+        return KeyClient(vault_url=self.vault_uri, credential=self.azure_auth.azure_credential_track2)
+#        kv_url = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
+#        # Don't use MSI credentials if the auth_source isn't set to MSI.  The below will Always result in credentials when running on an Azure VM.
+#        if self.module.params['auth_source'] == 'msi':
+#            try:
+#                self.log("Get KeyVaultClient from MSI")
+#                credentials = MSIAuthentication(resource="https://{0}".format(kv_url))
+#                return KeyVaultClient(credentials)
+#            except Exception:
+#                self.log("Get KeyVaultClient from service principal")
+#        elif (self.module.params['auth_source'] == 'cli'
+#                or (self.module.params['auth_source'] == 'auto'
+#                    and self.credentials['client_id'] is None
+#                    and self.credentials['secret'] is None)):
+#            try:
+#                profile = get_cli_profile()
+#                credentials, subscription_id, tenant = profile.get_login_credentials(
+#                    subscription_id=self.credentials['subscription_id'], resource="https://{0}".format(kv_url))
+#                return KeyVaultClient(credentials)
+#            except Exception as exc:
+#                self.log("Get KeyVaultClient from service principal")
+#                # self.fail("Failed to load CLI profile {0}.".format(str(exc)))
+#
+#        # Create KeyVault Client using KeyVault auth class and auth_callback
+#        def auth_callback(server, resource, scope):
+#            if self.credentials['client_id'] is None or self.credentials['secret'] is None:
+#                self.fail('Please specify client_id, secret and tenant to access azure Key Vault.')
+#
+#            tenant = self.credentials.get('tenant')
+#            if not self.credentials['tenant']:
+#                tenant = "common"
+#
+#            authcredential = ServicePrincipalCredentials(
+#                client_id=self.credentials['client_id'],
+#                secret=self.credentials['secret'],
+#                tenant=tenant,
+#                cloud_environment=self._cloud_environment,
+#                resource="https://{0}".format(kv_url))
+#
+#            token = authcredential.token
+#            return token['token_type'], token['access_token']
+#
+#        return KeyVaultClient(KeyVaultAuthentication(auth_callback))
 
     def get_key(self, name, version=''):
         ''' Gets an existing key '''
-        key_bundle = self.client.get_key(self.keyvault_uri, name, version)
+        try:
+            key_bundle = self.client.get_key(name, version)
+        except Exception as ec:
+            self.log("The key is not exist")
+
         if key_bundle:
-            key_id = KeyVaultId.parse_key_id(key_bundle.key.kid)
-        return key_id.id
+            return key_bundle.id
 
     def create_key(self, name, key_type, key_size, key_attributes, curve, tags):
         ''' Creates a key '''
@@ -275,91 +280,88 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
             if k_expires:
                 k_expires = datetime.fromisoformat(k_expires.replace('Z', '+00:00'))
 
-            key_attributes = KeyAttributes(enabled=k_enabled, not_before=k_not_before, expires=k_expires)
+            key_attributes = self.client._get_attributes(enabled=k_enabled, not_before=k_not_before, expires=k_expires)
 
-        key_bundle = self.client.create_key(vault_base_url=self.keyvault_uri, key_name=name, kty=key_type, key_size=key_size,
+        key_bundle = self.client.create_key(name=name, key_type=key_type, ktv=key_type, key_size=key_size,
                                             key_attributes=key_attributes, curve=curve, tags=tags)
-        key_id = KeyVaultId.parse_key_id(key_bundle.key.kid)
-        return key_id.id
+        return key_bundle.id
 
     def delete_key(self, name):
         ''' Deletes a key '''
-        deleted_key = self.client.delete_key(self.keyvault_uri, name)
-        key_id = KeyVaultId.parse_key_id(deleted_key.key.kid)
-        return key_id.id
+        deleted_key = self.client.begin_delete_key(name)
+        return delete_key.id
 
-    def import_key(self, key_name, destination=None, key_ops=None, disabled=False, expires=None,
-                   not_before=None, tags=None, pem_file=None, pem_password=None, byok_file=None):
-        """ Import a private key. Supports importing base64 encoded private keys from PEM files.
-            Supports importing BYOK keys into HSM for premium KeyVaults. """
+#    def import_key(self, key_name, destination=None, key_ops=None, disabled=False, expires=None,
+#                   not_before=None, tags=None, pem_file=None, pem_password=None, byok_file=None):
+#        """ Import a private key. Supports importing base64 encoded private keys from PEM files.
+#            Supports importing BYOK keys into HSM for premium KeyVaults. """
+#
+#        def _to_bytes(hex_string):
+#            # zero pads and decodes a hex string
+#            if len(hex_string) % 2:
+#                hex_string = '{0}'.format(hex_string)
+#            return codecs.decode(hex_string, 'hex_codec')
+#
+#        def _set_rsa_parameters(dest, src):
+#            # map OpenSSL parameter names to JsonWebKey property names
+#            conversion_dict = {
+#                'modulus': 'n',
+#                'publicExponent': 'e',
+#                'privateExponent': 'd',
+#                'prime1': 'p',
+#                'prime2': 'q',
+#                'exponent1': 'dp',
+#                'exponent2': 'dq',
+#                'coefficient': 'qi'
+#            }
+#            # regex: looks for matches that fit the following patterns:
+#            #   integerPattern: 65537 (0x10001)
+#            #   hexPattern:
+#            #      00:a0:91:4d:00:23:4a:c6:83:b2:1b:4c:15:d5:be:
+#            #      d8:87:bd:c9:59:c2:e5:7a:f5:4a:e7:34:e8:f0:07:
+#            # The desired match should always be the first component of the match
+#            regex = re.compile(r'([^:\s]*(:[^\:)]+\))|([^:\s]*(:\s*[0-9A-Fa-f]{2})+))')
+#            # regex2: extracts the hex string from a format like: 65537 (0x10001)
+#            regex2 = re.compile(r'(?<=\(0x{1})([0-9A-Fa-f]*)(?=\))')
+#
+#            key_params = crypto.dump_privatekey(crypto.FILETYPE_TEXT, src).decode('utf-8')
+#            for match in regex.findall(key_params):
+#                comps = match[0].split(':', 1)
+#                name = conversion_dict.get(comps[0], None)
+#                if name:
+#                    value = comps[1].replace(' ', '').replace('\n', '').replace(':', '')
+#                    try:
+#                        value = _to_bytes(value)
+#                    except Exception:  # pylint:disable=broad-except
+#                        # if decoding fails it is because of an integer pattern. Extract the hex
+#                        # string and retry
+#                        value = _to_bytes(regex2.findall(value)[0])
+#                    setattr(dest, name, value)
+#
+#        key_attrs = self.client._get_attributes(not disabled, not_before, expires)
+#        key_obj = JsonWebKey(key_ops=key_ops)
+#        if pem_file:
+#            key_obj.kty = 'RSA'
+#            with open(pem_file, 'r') as f:
+#                pem_data = f.read()
+#            # load private key and prompt for password if encrypted
+#            try:
+#                pem_password = str(pem_password).encode() if pem_password else None
+#                # despite documentation saying password should be a string, it needs to actually
+#                # be UTF-8 encoded bytes
+#                pkey = crypto.load_privatekey(crypto.FILETYPE_PEM, pem_data, pem_password)
+#            except crypto.Error:
+#                pass  # wrong password
+#            except TypeError:
+#                pass  # no pass provided
+#            _set_rsa_parameters(key_obj, pkey)
+#        elif byok_file:
+#            with open(byok_file, 'rb') as f:
+#                byok_data = f.read()
+#            key_obj.kty = 'RSA-HSM'
+#            key_obj.t = byok_data
 
-        def _to_bytes(hex_string):
-            # zero pads and decodes a hex string
-            if len(hex_string) % 2:
-                hex_string = '{0}'.format(hex_string)
-            return codecs.decode(hex_string, 'hex_codec')
-
-        def _set_rsa_parameters(dest, src):
-            # map OpenSSL parameter names to JsonWebKey property names
-            conversion_dict = {
-                'modulus': 'n',
-                'publicExponent': 'e',
-                'privateExponent': 'd',
-                'prime1': 'p',
-                'prime2': 'q',
-                'exponent1': 'dp',
-                'exponent2': 'dq',
-                'coefficient': 'qi'
-            }
-            # regex: looks for matches that fit the following patterns:
-            #   integerPattern: 65537 (0x10001)
-            #   hexPattern:
-            #      00:a0:91:4d:00:23:4a:c6:83:b2:1b:4c:15:d5:be:
-            #      d8:87:bd:c9:59:c2:e5:7a:f5:4a:e7:34:e8:f0:07:
-            # The desired match should always be the first component of the match
-            regex = re.compile(r'([^:\s]*(:[^\:)]+\))|([^:\s]*(:\s*[0-9A-Fa-f]{2})+))')
-            # regex2: extracts the hex string from a format like: 65537 (0x10001)
-            regex2 = re.compile(r'(?<=\(0x{1})([0-9A-Fa-f]*)(?=\))')
-
-            key_params = crypto.dump_privatekey(crypto.FILETYPE_TEXT, src).decode('utf-8')
-            for match in regex.findall(key_params):
-                comps = match[0].split(':', 1)
-                name = conversion_dict.get(comps[0], None)
-                if name:
-                    value = comps[1].replace(' ', '').replace('\n', '').replace(':', '')
-                    try:
-                        value = _to_bytes(value)
-                    except Exception:  # pylint:disable=broad-except
-                        # if decoding fails it is because of an integer pattern. Extract the hex
-                        # string and retry
-                        value = _to_bytes(regex2.findall(value)[0])
-                    setattr(dest, name, value)
-
-        key_attrs = KeyAttributes(not disabled, not_before, expires)
-        key_obj = JsonWebKey(key_ops=key_ops)
-        if pem_file:
-            key_obj.kty = 'RSA'
-            with open(pem_file, 'r') as f:
-                pem_data = f.read()
-            # load private key and prompt for password if encrypted
-            try:
-                pem_password = str(pem_password).encode() if pem_password else None
-                # despite documentation saying password should be a string, it needs to actually
-                # be UTF-8 encoded bytes
-                pkey = crypto.load_privatekey(crypto.FILETYPE_PEM, pem_data, pem_password)
-            except crypto.Error:
-                pass  # wrong password
-            except TypeError:
-                pass  # no pass provided
-            _set_rsa_parameters(key_obj, pkey)
-        elif byok_file:
-            with open(byok_file, 'rb') as f:
-                byok_data = f.read()
-            key_obj.kty = 'RSA-HSM'
-            key_obj.t = byok_data
-
-        return self.client.import_key(
-            self.keyvault_uri, key_name, key_obj, destination == 'hsm', key_attrs, tags)
+#        return self.client.import_key(name=key_name, tags = tags, key_attributes=key_attrs,    key_obj, destination == 'hsm', key_attrs, tags)
 
 
 def main():
