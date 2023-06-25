@@ -92,12 +92,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.keyvault.secrets import SecretClient
-    #from azure.keyvault import KeyVaultClient, KeyVaultAuthentication, KeyVaultId
-    #from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
-    #from msrestazure.azure_active_directory import MSIAuthentication
     import dateutil.parser
-    #from azure.keyvault.models import SecretAttributes
-    # from azure.keyvault.models.secret_attributes import SecretAttributes
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -204,21 +199,27 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
     def get_secret(self, name, version=''):
         ''' Gets an existing secret '''
         secret_bundle = self.client.get_secret(name=name, versino=version)
-        if secret_bundle:
 
+        if secret_bundle:
             secret_id = secret_bundle._properties._id
             return dict(secret_id=secret_id.id, secret_value=secret_bundle._value)
         return None
 
     def create_update_secret(self, name, secret, tags, content_type, valid_from, expiry):
         ''' Creates/Updates a secret '''
-        secret_bundle = self.client.set_secret(name=name, value=secret, tags=tags, content_type=content_type, expires_on=expiry, not_before=valid_from)
+        secret_bundle = self.client.set_secret(name=name,
+                                               value=secret,
+                                               tags=tags,
+                                               content_type=content_type,
+                                               expires_on=expiry,
+                                               not_before=valid_from
+                                              )
         return secret_bundle._properties._id
 
     def delete_secret(self, name):
         ''' Deletes a secret '''
         deleted_secret = self.client.begin_delete_secret(name)
-        return deleted_secret.properties._vault_id
+        return deleted_secret.properties._id
 
 
 def main():

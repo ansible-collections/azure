@@ -163,9 +163,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.keyvault.secrets import SecretClient
-    #from azure.keyvault import KeyVaultClient, KeyVaultId, KeyVaultAuthentication
-    #from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
-    #from msrestazure.azure_active_directory import MSIAuthentication
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -187,7 +184,7 @@ def secretbundle_to_dict(bundle):
 
 
 def deletedsecretbundle_to_dict(bundle):
-    secretbundle = secretbundle_to_dict(bundle)
+    secretbundle = secretbundle_to_dict(bundle.properties)
     secretbundle['recovery_id'] = bundle._recovery_id,
     secretbundle['scheduled_purge_date'] = bundle._scheduled_purge_date,
     secretbundle['deleted_date'] = bundle._deleted_date
@@ -195,7 +192,7 @@ def deletedsecretbundle_to_dict(bundle):
 
 
 def secretitem_to_dict(secretitem):
-    return dict(sid=secretitem.id,
+    return dict(sid=secretitem._id,
                 version=secretitem._key_id,
                 tags=secretitem._tags,
                 attributes=dict(
@@ -208,7 +205,7 @@ def secretitem_to_dict(secretitem):
 
 
 def deletedsecretitem_to_dict(secretitem):
-    item = secretitem_to_dict(secretitem)
+    item = secretitem_to_dict(secretitem.properties)
     item['recovery_id'] = secretitem._recovery_id,
     item['scheduled_purge_date'] = secretitem._scheduled_purge_date,
     item['deleted_date'] = secretitem._deleted_date
@@ -279,13 +276,9 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
         results = []
         try:
             if self.version == 'current':
-                response = self._client.get_secret(
-                    name=self.name,
-                    version='')
+                response = self._client.get_secret(name=self.name, version='')
             else:
-                response = self._client.get_secret(
-                    name=self.name,
-                    version=self.version)
+                response = self._client.get_secret(name=self.name, version=self.version)
 
             if response:
                 response = secretbundle_to_dict(response)
