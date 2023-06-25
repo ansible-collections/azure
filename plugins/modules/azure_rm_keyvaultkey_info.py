@@ -191,8 +191,6 @@ keyvaults:
 
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-import logging
-logging.basicConfig(filename='log.log', level=logging.INFO)
 
 try:
     from azure.keyvault.keys import KeyClient
@@ -203,15 +201,15 @@ except ImportError:
 
 def keybundle_to_dict(bundle):
     return dict(
-        tags=bundle.properties._tags,
-        managed=bundle.properties._managed,
+        tags=bundle.properties.tags,
+        managed=bundle.properties.managed,
         attributes=dict(
-            enabled=bundle.properties._attributes.enabled,
-            not_before=bundle.properties._attributes.not_before,
-            expires=bundle.properties._attributes.expires,
-            created=bundle.properties._attributes.created,
-            updated=bundle.properties._attributes.updated,
-            recovery_level=bundle.properties._attributes.recovery_level
+            enabled=bundle.properties.enabled,
+            not_before=bundle.properties.not_before,
+            expires=bundle.properties.expires_on,
+            created=bundle.properties.created_on,
+            updated=bundle.properties.updated_on,
+            recovery_level=bundle.properties.recovery_level
         ),
         kid=bundle.id,
         version=bundle.properties.version,
@@ -227,33 +225,96 @@ def keybundle_to_dict(bundle):
     )
 
 
+def delete_keybundle_to_dict(bundle):
+    return dict(
+        tags=bundle._tags,
+        managed=bundle._managed,
+        attributes=dict(
+            enabled=bundle.enabled,
+            not_before=bundle.not_before,
+            expires=bundle.expires_on,
+            created=bundle.created_on,
+            updated=bundle.updated_on,
+            recovery_level=bundle.recovery_level
+        ),
+        kid=bundle._id,
+        version=bundle.version,
+    )
+
+
+def delete_properties_to_dict(bundle):
+    return dict(
+        tags=bundle.tags,
+        managed=bundle.managed,
+        attributes=dict(
+            enabled=bundle.enabled,
+            not_before=bundle.not_before,
+            expires=bundle.expires_on,
+            created=bundle.created_on,
+            updated=bundle.updated_on,
+            recovery_level=bundle.recovery_level
+        ),
+        kid=bundle.id,
+        version=bundle.version,
+    )
+
+
 def deletedkeybundle_to_dict(bundle):
-    keybundle = keybundle_to_dict(bundle.properties)
-    keybundle['recovery_id'] = bundle.recovery_id,
-    keybundle['scheduled_purge_date'] = bundle.scheduled_purge_date,
+    keybundle = delete_properties_to_dict(bundle.properties)
+    keybundle['type'] = bundle.key_type
+    keybundle['permitted_operations'] = bundle.key_operations
+    keybundle['recovery_id'] = bundle.recovery_id
+    keybundle['scheduled_purge_date'] = bundle.scheduled_purge_date
     keybundle['deleted_date'] = bundle.deleted_date
+    keybundle['key'] = dict(
+            n=bundle.key.n if hasattr(bundle.key, 'n') else None,
+            e=bundle.key.e if hasattr(bundle.key, 'e') else None,
+            crv=bundle.key.crv if hasattr(bundle.key, 'crv') else None,
+            x=bundle.key.x if hasattr(bundle.key, 'x') else None,
+            y=bundle.key.y if hasattr(bundle.key, 'y') else None
+        )
+    keybundle['id']=bundle.id,
     return keybundle
 
 
 def keyitem_to_dict(keyitem):
     return dict(
-        kid=keyitem.id,
-        version=keyitem.properties.version,
-        tags=keyitem.properties._tags,
-        manged=keyitem.properties._managed,
+        kid=keyitem._id,
+        version=keyitem.version,
+        tags=keyitem._tags,
+        manged=keyitem._managed,
         attributes=dict(
-            enabled=keyitem.properties._attributes.enabled,
-            not_before=keyitem.properties._attributes.not_before,
-            expires=keyitem.properties._attributes.expires,
-            created=keyitem.properties._attributes.created,
-            updated=keyitem.properties._attributes.updated,
-            recovery_level=keyitem.properties._attributes.recovery_level
+            enabled=keyitem.enabled,
+            not_before=keyitem.not_before,
+            expires=keyitem.expires_on,
+            created=keyitem.created_on,
+            updated=keyitem.updated_on,
+            recovery_level=keyitem.recovery_level
+        )
+    )
+
+
+def delete_item_to_dict(bundle):
+    return dict(
+        tags=bundle.properties._tags,
+        kid=bundle.properties.id,
+        version=bundle.properties.version,
+        managed=bundle.properties.managed,
+        attributes=dict(
+            enabled=bundle.properties.enabled,
+            not_before=bundle.properties.not_before,
+            expires=bundle.properties.expires_on,
+            created=bundle.properties.created_on,
+            updated=bundle.properties.updated_on,
+            recovery_level=bundle.properties.recovery_level
+
+
         )
     )
 
 
 def deletedkeyitem_to_dict(keyitem):
-    item = keyitem_to_dict(keyitem)
+    item = delete_item_to_dict(keyitem)
     item['recovery_id'] = keyitem.recovery_id,
     item['scheduled_purge_date'] = keyitem.scheduled_purge_date,
     item['deleted_date'] = keyitem.deleted_date
@@ -338,6 +399,7 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
                     results.append(response)
 
         except Exception as e:
+            self.fail(e)
             self.log("Did not find the key vault key {0}: {1}".format(self.name, str(e)))
         return results
 
@@ -400,7 +462,7 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
 
             if response:
                 response = deletedkeybundle_to_dict(response)
-                if self.has_tags(response.tags, self.tags):
+                if self.has_tags(response['tags'], self.tags):
                     self.log("Response : {0}".format(response))
                     results.append(response)
 
