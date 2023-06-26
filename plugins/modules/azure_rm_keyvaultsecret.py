@@ -158,7 +158,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             elif self.secret_value and results['secret_value'] != self.secret_value:
                 changed = True
 
-        except Exception:
+        except Exception as ec:
             # Secret doesn't exist
             if self.state == 'present':
                 changed = True
@@ -194,15 +194,14 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         return self.results
 
     def get_keyvault_client(self):
-        return SecretClient(vault_url=self.vault_uri, credential=self.azure_auth.azure_credential_track2)
+        return SecretClient(vault_url=self.keyvault_uri, credential=self.azure_auth.azure_credential_track2)
 
     def get_secret(self, name, version=''):
         ''' Gets an existing secret '''
-        secret_bundle = self.client.get_secret(name=name, versino=version)
+        secret_bundle = self.client.get_secret(name=name, version=version)
 
         if secret_bundle:
-            secret_id = secret_bundle._properties._id
-            return dict(secret_id=secret_id.id, secret_value=secret_bundle._value)
+            return dict(secret_id=secret_bundle.id, secret_value=secret_bundle.value)
         return None
 
     def create_update_secret(self, name, secret, tags, content_type, valid_from, expiry):
@@ -219,7 +218,8 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
     def delete_secret(self, name):
         ''' Deletes a secret '''
         deleted_secret = self.client.begin_delete_secret(name)
-        return deleted_secret.properties._id
+        result = self.get_poller_result(deleted_secret)
+        return result.properties._id
 
 
 def main():
