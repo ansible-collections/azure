@@ -278,6 +278,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
         return self.results
 
     def get_keyvault_client(self):
+
         return SecretClient(vault_url=self.vault_uri, credential=self.azure_auth.azure_credential_track2)
 
     def get_secret(self):

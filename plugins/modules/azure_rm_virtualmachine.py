@@ -53,8 +53,15 @@ options:
     started:
         description:
             - Whether the VM is started or stopped.
-            - Set to (true) with I(state=present) to start the VM.
+            - Set to C(true) with I(state=present) to start the VM.
             - Set to C(false) to stop the VM.
+        type: bool
+    force:
+        description:
+            - Use more force during stop of VM
+            - Set to C(true) with I(started=false) to stop the VM forcefully (hard poweroff -- skip_shutdown)
+            - Set to C(false) to power off gracefully
+        default: false
         type: bool
     allocated:
         description:
@@ -1030,6 +1037,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             allocated=dict(type='bool', default=True),
             restarted=dict(type='bool', default=False),
             started=dict(type='bool'),
+            force=dict(type='bool', default=False),
             generalized=dict(type='bool', default=False),
             data_disks=dict(type='list'),
             plan=dict(type='dict'),
@@ -2134,10 +2142,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         return result
 
     def power_off_vm(self):
-        self.log("Powered off virtual machine {0}".format(self.name))
-        self.results['actions'].append("Powered off virtual machine {0}".format(self.name))
+        self.log("Powered off virtual machine {0} - Skip_Shutdown {1}".format(self.name, self.force))
+        self.results['actions'].append("Powered off virtual machine {0} - Skip_Shutdown {1}".format(self.name, self.force))
         try:
-            poller = self.compute_client.virtual_machines.begin_power_off(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machines.begin_power_off(self.resource_group, self.name, skip_shutdown=self.force)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error powering off virtual machine {0} - {1}".format(self.name, str(exc)))
