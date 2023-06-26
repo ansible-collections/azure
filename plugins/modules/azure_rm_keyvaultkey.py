@@ -211,11 +211,7 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
 
     def get_key(self, name, version=''):
         ''' Gets an existing key '''
-        key_bundle = None
-        try:
-            key_bundle = self.client.get_key(name, version)
-        except Exception as ec:
-            self.log("The key is not exist, exception {0}".format(ec))
+        key_bundle = self.client.get_key(name, version)
 
         if key_bundle:
             return key_bundle.id
@@ -231,6 +227,10 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
                 k_not_before = datetime.fromisoformat(k_not_before.replace('Z', '+00:00'))
             if k_expires:
                 k_expires = datetime.fromisoformat(k_expires.replace('Z', '+00:00'))
+        else:
+            k_enabled = True
+            k_not_before = None
+            k_expires = None
 
         key_bundle = self.client.create_key(name=name,
             key_type=self.key_type,
@@ -246,7 +246,8 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
     def delete_key(self, name):
         ''' Deletes a key '''
         deleted_key = self.client.begin_delete_key(name)
-        return deleted_key.properties._id
+        result = self.get_poller_result(deleted_key)
+        return result.properties._id
 
 
 def main():
