@@ -233,14 +233,13 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
             k_expires = None
 
         key_bundle = self.client.create_key(name=name,
-            key_type=self.key_type,
-            size=self.key_size,
-            curve=self.curve,
-            tags=self.tags,
-            enabled=k_enabled,
-            not_before=k_not_before,
-            expires_on=k_expires
-        )
+                                            key_type=self.key_type,
+                                            size=self.key_size,
+                                            curve=self.curve,
+                                            tags=self.tags,
+                                            enabled=k_enabled,
+                                            not_before=k_not_before,
+                                            expires_on=k_expires)
         return key_bundle._properties._id
 
     def delete_key(self, name):

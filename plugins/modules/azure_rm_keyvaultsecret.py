@@ -212,8 +212,7 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
                                                tags=tags,
                                                content_type=content_type,
                                                expires_on=expiry,
-                                               not_before=valid_from
-                                              )
+                                               not_before=valid_from)
         return secret_bundle._properties._id
 
     def delete_secret(self, name):

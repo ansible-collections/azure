@@ -267,12 +267,11 @@ def deletedkeybundle_to_dict(bundle):
     keybundle['scheduled_purge_date'] = bundle.scheduled_purge_date
     keybundle['deleted_date'] = bundle.deleted_date
     keybundle['key'] = dict(
-            n=bundle.key.n if hasattr(bundle.key, 'n') else None,
-            e=bundle.key.e if hasattr(bundle.key, 'e') else None,
-            crv=bundle.key.crv if hasattr(bundle.key, 'crv') else None,
-            x=bundle.key.x if hasattr(bundle.key, 'x') else None,
-            y=bundle.key.y if hasattr(bundle.key, 'y') else None
-        )
+                            n=bundle.key.n if hasattr(bundle.key, 'n') else None,
+                            e=bundle.key.e if hasattr(bundle.key, 'e') else None,
+                            crv=bundle.key.crv if hasattr(bundle.key, 'crv') else None,
+                            x=bundle.key.x if hasattr(bundle.key, 'x') else None,
+                            y=bundle.key.y if hasattr(bundle.key, 'y') else None)
     keybundle['id']=bundle.id,
     return keybundle
 
@@ -435,7 +434,6 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
 
         results = []
         try:
-            #response = self._client.get_keys(vault_base_url=self.vault_uri)
             response = self._client.list_properties_of_keys()
             self.log("Response : {0}".format(response))
 
