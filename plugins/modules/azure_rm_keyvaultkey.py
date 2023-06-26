@@ -207,7 +207,7 @@ class AzureRMKeyVaultKey(AzureRMModuleBase):
 
     def get_keyvault_client(self):
 
-        return KeyClient(vault_url=self.vault_uri, credential=self.azure_auth.azure_credential_track2)
+        return KeyClient(vault_url=self.keyvault_uri, credential=self.azure_auth.azure_credential_track2)
 
     def get_key(self, name, version=''):
         ''' Gets an existing key '''

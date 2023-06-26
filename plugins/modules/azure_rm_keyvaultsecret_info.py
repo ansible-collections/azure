@@ -178,13 +178,28 @@ def secretbundle_to_dict(bundle):
                     updated=bundle._properties._attributes.updated,
                     recovery_level=bundle._properties._attributes.recovery_level),
                 sid=bundle._properties._id,
-                version==bundle._properties._key_id,
+                version=bundle._properties.version,
                 content_type=bundle._properties._content_type,
                 secret=bundle._value)
 
 
+def deleted_bundle_to_dict(bundle):
+    return dict(tags=bundle.tags,
+                attributes=dict(
+                    enabled=bundle.enabled,
+                    not_before=bundle.not_before,
+                    expires=bundle.expires_on,
+                    created=bundle.created_on,
+                    updated=bundle.updated_on,
+                    recovery_level=bundle.recovery_level),
+                sid=bundle.id,
+                version=bundle.key_id,
+                content_type=bundle.content_type,
+                secret=bundle.version)
+
+
 def deletedsecretbundle_to_dict(bundle):
-    secretbundle = secretbundle_to_dict(bundle.properties)
+    secretbundle = deleted_bundle_to_dict(bundle.properties)
     secretbundle['recovery_id'] = bundle._recovery_id,
     secretbundle['scheduled_purge_date'] = bundle._scheduled_purge_date,
     secretbundle['deleted_date'] = bundle._deleted_date
@@ -193,7 +208,7 @@ def deletedsecretbundle_to_dict(bundle):
 
 def secretitem_to_dict(secretitem):
     return dict(sid=secretitem._id,
-                version=secretitem._key_id,
+                version=secretitem.version,
                 tags=secretitem._tags,
                 attributes=dict(
                     enabled=secretitem._attributes.enabled,
