@@ -209,8 +209,8 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
                 self.log("Get KeyVaultClient from service principal")
         elif (self.module.params['auth_source'] == 'cli'
                 or (self.module.params['auth_source'] == 'auto'
-                    and self.credentials['client_id'] is None
-                    and self.credentials['secret'] is None)):
+                    and self.credentials.get('client_id') is None
+                    and self.credentials.get('secret') is None)):
             try:
                 profile = get_cli_profile()
                 credentials, subscription_id, tenant = profile.get_login_credentials(
