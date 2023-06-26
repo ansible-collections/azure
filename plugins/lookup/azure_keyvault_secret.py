@@ -108,18 +108,16 @@ RETURN = """
   _raw:
     description: secret content string
 """
-
 from ansible.errors import AnsibleError, AnsibleParserError
 from ansible.plugins.lookup import LookupBase
 from ansible.utils.display import Display
 try:
     import requests
+    from azure.keyvault.secrets import SecretClient
     import logging
     import os
-    from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
-    from azure.keyvault import KeyVaultClient
-    from msrest.exceptions import AuthenticationError, ClientRequestError
-    from azure.keyvault.models.key_vault_error import KeyVaultErrorException
+    from azure.common.credentials import get_cli_profile
+    from azure.identity._credentials.client_secret import ClientSecretCredential
 except ImportError:
     pass
 
@@ -164,27 +162,25 @@ def lookup_secret_non_msi(terms, vault_url, kwargs):
 
     try:
         if client_id is not None and secret is not None and tenant_id is not None:
-            credentials = ServicePrincipalCredentials(
+            credentials = ClientSecretCredential(
                 client_id=client_id,
-                secret=secret,
-                tenant=tenant_id
+                client_secret=secret,
+                tenant_id=tenant_id
             )
         elif subscription_id is not None:
             profile = get_cli_profile()
             credentials, subscription_id, tenant = profile.get_login_credentials(
                 subscription_id=subscription_id, resource="https://vault.azure.net")
-        client = KeyVaultClient(credentials)
-    except AuthenticationError:
-        raise AnsibleError('Invalid credentials provided.')
+        client = SecretClient(vault_url=vault_url, credential=credentials)
+    except Exception as ec:
+        raise AnsibleError('Invalid credentials provided. excption as {0}'.format(ec))
 
     ret = []
     for term in terms:
         try:
-            secret_val = client.get_secret(vault_url, term, '').value
+            secret_val = client.get_secret(term, '').value
             ret.append(secret_val)
-        except ClientRequestError:
-            raise AnsibleError('Error occurred in request')
-        except KeyVaultErrorException:
+        except Exception:
             raise AnsibleError('Failed to fetch secret ' + term + '.')
     return ret
 
