@@ -456,7 +456,7 @@ class AzureRMMultipleManagedDisk(AzureRMModuleBase):
         if create_option == 'import':
             creation_data['create_option'] = self.compute_models.DiskCreateOption.import_enum
             creation_data['source_uri'] = source_uri
-            creation_data['source_account_id'] = storage_account_id
+            creation_data['storage_account_id'] = storage_account_id
         elif create_option == 'copy':
             creation_data['create_option'] = self.compute_models.DiskCreateOption.copy
             creation_data['source_resource_id'] = source_uri
