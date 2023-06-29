@@ -31,6 +31,9 @@
       auto_storage_account:
         name: "{{ storage_account_name }}"
       pool_allocation_mode: batch_service
+      tags:
+        - key1: value1
+        - key2: value2
   register: output
 
 - name: Assert the resource was created
@@ -46,12 +49,27 @@
       auto_storage_account:
         name: "{{ storage_account_name }}"
       pool_allocation_mode: batch_service
+      tags:
+        - key1: value1
+        - key2: value2
   register: output
 
 - name: Assert the resource was created
   assert:
     that:
       - not output.changed
+
+- name: Get Batch Account facts
+  azure_rm_batchaccount_info:
+      resource_group: "{{ resource_group }}"
+      name: "{{ batch_account_name }}"
+  register: output
+
+- name: Assert the facts
+  assert:
+    that:
+      - output.batch_account[0] | length == 1
+      - output.batch_account[0].tags | length == 2
 
 - name: Delete Batch Account
   azure_rm_batchaccount:

@@ -71,23 +71,21 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.batch import BatchManagementClient
-    import logging
-    logging.basicConfig(filename='log.log', level=logging.INFO)
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
 
-class AzureRMBatchAccount(AzureRMModuleBaseExt):
+class AzureRMBatchAccountInfo(AzureRMModuleBaseExt):
     """Configuration class for an Azure RM Batch Account resource"""
 
     def __init__(self):
         self.module_arg_spec = dict(
             resource_group=dict(
-                required=True,
+                type='str',
             ),
             name=dict(
-                required=True,
+                type='str',
             ),
             tags=dict(
                 type='list',
@@ -102,16 +100,15 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
         self.results = dict(changed=False)
         self.mgmt_client = None
 
-        super(AzureRMBatchAccount, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                  supports_check_mode=True,
-                                                  supports_tags=False)
+        super(AzureRMBatchAccountInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                      supports_check_mode=True,
+                                                      supports_tags=False)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
 
-        for key in list(self.module_arg_spec.keys()):
-            if hasattr(self, key):
-                setattr(self, key, kwargs[key])
+        for key in list(self.module_arg_spec.keys()) + ['tags']:
+            setattr(self, key, kwargs[key])
 
         response = []
 
@@ -126,29 +123,35 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
         else:
             response = self.list_all()
 
-        self.results['batch_account'] = [self.format_item(item) for item in response if item and self.has_tags(item.get('tags'], self.tags)]
+        self.results['batch_account'] = [self.format_item(item) for item in response if item and self.has_tags(item.get('tags'), self.tags)]
             
         return self.results
 
     def list_by_resourcegroup(self):
         self.log("List all Batch Account in the rsource group {0}".format(self.resource_group))
+        result = []
+        response = []
         try:
-            response = self.mgmt_client.batch_account.list_by_resourcegroup(resource_group_name=self.resource_group)
+            response = self.mgmt_client.batch_account.list_by_resource_group(resource_group_name=self.resource_group)
             self.log("Response : {0}".format(response))
         except Exception as e:
             self.log('Did not find the Batch Account instance. Exception as {0}'.format(e))
-            return
-        return response.as_dict()
+        for item in response:
+            result.append(item.as_dict())
+        return result
 
     def list_all(self):
         self.log("List all Batch Account in the same subscritpion")
+        result = []
+        response = []
         try:
             response = self.mgmt_client.batch_account.list()
             self.log("Response : {0}".format(response))
         except Exception as e:
             self.log('Did not find the Batch Account instance.')
-            return
-        return response.as_dict()
+        for item in response:
+            result.append(item.as_dict())
+        return result
 
     def get_batchaccount(self):
         '''
@@ -167,8 +170,6 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
         return response.as_dict()
 
     def format_item(self, item):
-        logging.info(item)
-        logging.info('mmmmmmmmmmmmmmmmmmmmmmmmmmmmmm')
         result = {
             'id': item['id'],
             'name': item['name'],
@@ -189,7 +190,7 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
 
 def main():
     """Main execution"""
-    AzureRMBatchAccount()
+    AzureRMBatchAccountInfo()
 
 
 if __name__ == '__main__':
