@@ -215,7 +215,8 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(BatchManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager)
+                                                    base_url=self._cloud_environment.endpoints.resource_manager,
+                                                    is_track2=True)
 
         old_response = self.get_batchaccount()
 
@@ -275,9 +276,9 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
 
         try:
             if self.to_do == Actions.Create:
-                response = self.mgmt_client.batch_account.create(resource_group_name=self.resource_group,
-                                                                 account_name=self.name,
-                                                                 parameters=self.batch_account)
+                response = self.mgmt_client.batch_account.begin_create(resource_group_name=self.resource_group,
+                                                                       account_name=self.name,
+                                                                       parameters=self.batch_account)
             else:
                 response = self.mgmt_client.batch_account.update(resource_group_name=self.resource_group,
                                                                  account_name=self.name,
@@ -298,8 +299,8 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
         '''
         self.log("Deleting the Batch Account instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.batch_account.delete(resource_group_name=self.resource_group,
-                                                             account_name=self.name)
+            response = self.mgmt_client.batch_account.begin_delete(resource_group_name=self.resource_group,
+                                                                   account_name=self.name)
         except CloudError as e:
             self.log('Error attempting to delete the Batch Account instance.')
             self.fail("Error deleting the Batch Account instance: {0}".format(str(e)))
