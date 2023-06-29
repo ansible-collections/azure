@@ -6,7 +6,7 @@ azure-common==1.1.11
 azure-identity==1.7.0
 azure-mgmt-authorization==2.0.0
 azure-mgmt-apimanagement==3.0.0
-azure-mgmt-batch==16.0.0
+azure-mgmt-batch==15.0.0
 azure-mgmt-cdn==11.0.0
 azure-mgmt-compute==26.1.0
 azure-mgmt-containerinstance==9.0.0
