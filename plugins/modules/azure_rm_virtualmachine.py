@@ -443,6 +443,7 @@ options:
             storage_account:
                 description:
                     - The name of an existing storage account to use for boot diagnostics.
+                    - special string "managed" means the stroage account gets set to None, which means creates is a managed boot diagnostic storage account
                     - If not specified, uses I(storage_account_name) defined one level up.
                     - If storage account is not specified anywhere, and C(enabled) is C(true), a default storage account is created for boot diagnostics data.
                 required: false
@@ -1477,9 +1478,13 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         current_boot_diagnostics['enabled'] = self.boot_diagnostics['enabled']
                         boot_diagnostics_changed = True
 
-                    boot_diagnostics_storage_account = self.get_boot_diagnostics_storage_account(
-                        limited=not self.boot_diagnostics['enabled'], vm_dict=vm_dict)
-                    boot_diagnostics_blob = boot_diagnostics_storage_account.primary_endpoints.blob if boot_diagnostics_storage_account else None
+                    if self.boot_diagnostics['storage_account'] == 'managed':
+                        boot_diagnostics_blob = None
+                    else:
+                        boot_diagnostics_storage_account = self.get_boot_diagnostics_storage_account(
+                            limited=not self.boot_diagnostics['enabled'], vm_dict=vm_dict)
+                        boot_diagnostics_blob = boot_diagnostics_storage_account.primary_endpoints.blob if boot_diagnostics_storage_account else None
+                    
                     if current_boot_diagnostics.get('storageUri') != boot_diagnostics_blob:
                         current_boot_diagnostics['storageUri'] = boot_diagnostics_blob
                         boot_diagnostics_changed = True
