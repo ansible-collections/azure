@@ -1955,10 +1955,14 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             )
 
                     if self.boot_diagnostics is not None:
+                        storage_uri = None
+                        # storageUri is undefined if boot diagnostics is disabled
+                        if 'storageUri' in vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']:
+                            storage_uri = vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']['storageUri']
                         vm_resource.diagnostics_profile = self.compute_models.DiagnosticsProfile(
                             boot_diagnostics=self.compute_models.BootDiagnostics(
                                 enabled=vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']['enabled'],
-                                storage_uri=vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']['storageUri']))
+                                storage_uri=storage_uri))
 
                     if vm_dict.get('tags'):
                         vm_resource.tags = vm_dict['tags']
