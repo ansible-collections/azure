@@ -1424,7 +1424,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     else:
                         if self.security_profile.get('encryption_at_host') is not None:
                             if bool(self.security_profile.get('encryption_at_host')) != bool(vm_dict['properties']['securityProfile']['encryptionAtHost']):
-                                update_security_profle = True
+                                update_security_profile = True
                             else:
                                 self.security_profile['encryption_at_host'] = vm_dict['properties']['securityProfile']['encryptionAtHost']
                         if self.security_profile.get('security_type') is not None:
@@ -1445,9 +1445,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             else:
                                 self.security_profile['uefi_settings']['v_tpm_enabled'] = \
                                     vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']
-                        if update_security_profile:
-                            changed = True
-                            differences.append('security_profile')
+                    if update_security_profile:
+                        changed = True
+                        differences.append('security_profile')
 
                 if self.windows_config is not None and vm_dict['properties']['osProfile'].get('windowsConfiguration') is not None:
                     if self.windows_config['enable_automatic_updates'] != vm_dict['properties']['osProfile']['windowsConfiguration']['enableAutomaticUpdates']:
