@@ -19,11 +19,10 @@ options:
     resource_group:
         description:
             - The name of the resource group in which to create the Batch Account.
-        required: true
+        type: str
     name:
         description:
             - The name of the Batch Account.
-        required: true
         type: str
     tags:
         description:
