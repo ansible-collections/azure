@@ -68,7 +68,7 @@
 - name: Assert the facts
   assert:
     that:
-      - output.batch_account[0] | length == 1
+      - output.batch_account | length == 1
       - output.batch_account[0].tags | length == 2
 
 - name: Delete Batch Account

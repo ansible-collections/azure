@@ -123,7 +123,7 @@ class AzureRMBatchAccountInfo(AzureRMModuleBaseExt):
             response = self.list_all()
 
         self.results['batch_account'] = [self.format_item(item) for item in response if item and self.has_tags(item.get('tags'), self.tags)]
-            
+
         return self.results
 
     def list_by_resourcegroup(self):
