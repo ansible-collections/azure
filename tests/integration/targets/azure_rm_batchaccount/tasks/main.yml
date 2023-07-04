@@ -32,8 +32,8 @@
         name: "{{ storage_account_name }}"
       pool_allocation_mode: batch_service
       tags:
-        - key1: value1
-        - key2: value2
+        key1: value1
+        key2: value2
   register: output
 
 - name: Assert the resource was created
@@ -50,8 +50,8 @@
         name: "{{ storage_account_name }}"
       pool_allocation_mode: batch_service
       tags:
-        - key1: value1
-        - key2: value2
+        key1: value1
+        key2: value2
   register: output
 
 - name: Assert the resource was created
@@ -75,10 +75,6 @@
   azure_rm_batchaccount:
       resource_group: "{{ resource_group }}"
       name: "{{ batch_account_name }}"
-      location: eastus
-      auto_storage_account:
-        name: "{{ storage_account_name }}"
-      pool_allocation_mode: batch_service
       state: absent
   register: output
 
