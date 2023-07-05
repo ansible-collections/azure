@@ -468,7 +468,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                 if vm.security_profile.uefi_settings.secure_boot_enabled is not None:
                     new_result['security_profile']['uefi_settings']['secure_boot_enabled'] = vm.security_profile.uefi_settings.secure_boot_enabled
                 if vm.security_profile.uefi_settings.v_tpm_enabled is not None:
-                   new_result['security_profile']['uefi_settings']['v_tpm_enabled'] = vm.security_profile.uefi_settings.v_tpm_enabled
+                    new_result['security_profile']['uefi_settings']['v_tpm_enabled'] = vm.security_profile.uefi_settings.v_tpm_enabled
 
         new_result['power_state'] = power_state
         new_result['display_status'] = display_status
