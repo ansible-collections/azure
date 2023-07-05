@@ -1484,7 +1484,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         boot_diagnostics_storage_account = self.get_boot_diagnostics_storage_account(
                             limited=not self.boot_diagnostics['enabled'], vm_dict=vm_dict)
                         boot_diagnostics_blob = boot_diagnostics_storage_account.primary_endpoints.blob if boot_diagnostics_storage_account else None
-                    
                     if current_boot_diagnostics.get('storageUri') != boot_diagnostics_blob:
                         current_boot_diagnostics['storageUri'] = boot_diagnostics_blob
                         boot_diagnostics_changed = True
