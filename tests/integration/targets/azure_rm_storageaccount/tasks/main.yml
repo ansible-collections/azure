@@ -253,6 +253,7 @@
         - value: '9.9.9.9'
           action: Allow
     resource_group: "{{ resource_group }}"
+    large_file_shares_state: Enabled
     tags:
       test: test
       galaxy: galaxy
@@ -269,6 +270,7 @@
       - explicit_output.state.network_acls.bypass == "AzureServices"
       - explicit_output.state.network_acls.default_action == "Deny"
       - explicit_output.state.network_acls.ip_rules | length == 1
+      - explicit_output.state.large_file_shares_state == 'Enabled'
 
 - name: Update existing storage account (idempotence)
   azure_rm_storageaccount:
@@ -301,6 +303,7 @@
         - value: '9.9.9.9'
           action: Allow
     resource_group: "{{ resource_group }}"
+    large_file_shares_state: Enabled
     tags:
       test: test
       galaxy: galaxy
@@ -326,6 +329,7 @@
       - output.state.sku_name == explicit_output.state.sku_name
       - output.state.sku_tier == explicit_output.state.sku_tier
       - output.state.tags == explicit_output.state.tags
+      - output.state.large_file_shares_state == explicit_output.state.large_file_shares_state
 
 - name: Update existing storage account with parameters omitted
   azure_rm_storageaccount:
@@ -353,6 +357,7 @@
       - output.state.sku_name == explicit_output.state.sku_name
       - output.state.sku_tier == explicit_output.state.sku_tier
       - output.state.tags == explicit_output.state.tags
+      - output.state.large_file_shares_state == explicit_output.state.large_file_shares_state
 
 - name: Update existing storage account with parameters defined
   azure_rm_storageaccount:
