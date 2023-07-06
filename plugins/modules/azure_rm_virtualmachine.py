@@ -440,15 +440,23 @@ options:
                     - Flag indicating if boot diagnostics are enabled.
                 required: true
                 type: bool
+            type:
+                description:
+                    - Should the storage account be managed by azure or a custom storage account
+                required: false
+                type: str
+                choices:
+                    - managed
             storage_account:
                 description:
+                    - Only used if I(type) is not set
                     - The name of an existing storage account to use for boot diagnostics.
-                    - special string "managed" means the stroage account gets set to None, which means creates is a managed boot diagnostic storage account
                     - If not specified, uses I(storage_account_name) defined one level up.
                     - If storage account is not specified anywhere, and C(enabled) is C(true), a default storage account is created for boot diagnostics data.
                 required: false
             resource_group:
                 description:
+                    - Only used if I(type) is not set
                     - Resource group where the storage account is located.
                 type: str
     linux_config:
@@ -604,6 +612,7 @@ EXAMPLES = '''
     storage_blob: osdisk.vhd
     boot_diagnostics:
       enabled: yes
+      type: managed
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: canonical
@@ -1478,7 +1487,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         current_boot_diagnostics['enabled'] = self.boot_diagnostics['enabled']
                         boot_diagnostics_changed = True
 
-                    if self.boot_diagnostics['storage_account'] == 'managed':
+                    if self.boot_diagnostics['type'] == 'managed':
                         boot_diagnostics_blob = None
                     else:
                         boot_diagnostics_storage_account = self.get_boot_diagnostics_storage_account(
