@@ -1487,7 +1487,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         current_boot_diagnostics['enabled'] = self.boot_diagnostics['enabled']
                         boot_diagnostics_changed = True
 
-                    if self.boot_diagnostics['type'] == 'managed':
+                    if 'type' in self.boot_diagnostics and self.boot_diagnostics['type'] == 'managed':
                         boot_diagnostics_blob = None
                     else:
                         boot_diagnostics_storage_account = self.get_boot_diagnostics_storage_account(
