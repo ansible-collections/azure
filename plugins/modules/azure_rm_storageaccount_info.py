@@ -609,7 +609,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         account = None
         try:
             expand = None
-            if(self.show_georeplication_stats):
+            if (self.show_georeplication_stats):
                 expand = 'georeplicationstats'
             account = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name, expand=expand)
             return [account]

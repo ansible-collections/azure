@@ -2,7 +2,7 @@ parameters:
 - name: PYTHON_VER
   displayName: 'Python Version'
   type: string
-  default: "3.8"
+  default: "3.9"
   values:
     - "2.7"
     - "3.6"
@@ -13,7 +13,7 @@ parameters:
 - name: ANSIBLE_VER
   displayName: 'Ansible Version'
   type: string
-  default: "2.12"
+  default: "2.14"
   values:
     - "2.9"
     - "2.10"
@@ -21,6 +21,7 @@ parameters:
     - "2.12"
     - "2.13"
     - "2.14"
+    - "2.15"
     - "devel"
 - name: MODULE_NAME
   displayName: 'Test Module'

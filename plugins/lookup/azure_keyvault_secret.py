@@ -116,12 +116,14 @@ from ansible.plugins.lookup import LookupBase
 from ansible.utils.display import Display
 try:
     import requests
+    from azure.keyvault.secrets import SecretClient
     import logging
     from azure.common.exceptions import ClientRequestError
     from msrest.exceptions import ClientRequestError
     from azure.keyvault.models import KeyVaultErrorException
     from azure.identity import DefaultAzureCredential, ClientSecretCredential
     from azure.keyvault.secrets import SecretClient
+
 except ImportError:
     pass
 
@@ -180,9 +182,7 @@ def lookup_secret_non_msi(terms, vault_url, kwargs):
         try:
             secret_val = client.get_secret(term).value
             ret.append(secret_val)
-        except ClientRequestError:
-            raise AnsibleError('Error occurred in request')
-        except KeyVaultErrorException:
+        except Exception:
             raise AnsibleError('Failed to fetch secret ' + term + '.')
     return ret
 

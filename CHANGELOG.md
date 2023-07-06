@@ -1,5 +1,58 @@
 # Change Log
 
+## v1.16.0 (2023-5-31)
+
+### NEW MODULES
+  - azure_rm_vmssnetworkinterface_info: Add VMSS networkinterface to get VMSS network interface info ([#1125](https://github.com/ansible-collections/azure/pull/1125))
+
+### FEATURE ENHANCEMENT
+  - azure_rm_managementgroup: Upgrade azure-mgmt-managements to 1.0.0 ([#1117](https://github.com/ansible-collections/azure/pull/1117))
+  - azure_rm_managementgroup_info: Upgrade azure-mgmt-managements to 1.0.0 ([#1117](https://github.com/ansible-collections/azure/pull/1117))
+  - azure_rm_servicebus: Support tags to azure_rm_servicebus.py ([#1114](https://github.com/ansible-collections/azure/pull/1114))
+  - azure_rm_servicebusqueue: Add `max_message_size_in_kb` to azure_rm_servicebusqueue ([#1092](https://github.com/ansible-collections/azure/pull/1092))
+  - azure_rm_servicebustopic: Add `max_message_size_in_kb` to azure_rm_servicebusqueue ([#1092](https://github.com/ansible-collections/azure/pull/1092))
+  - plugins/doc_fragments/azure_rm: Update the description of `include_vm_resource_groups` ([#1077](https://github.com/ansible-collections/azure/pull/1077))
+  - azure_rm_galleryimageversion: Fix append tags for azure_rm_galleryimageversion ([#1100](https://github.com/ansible-collections/azure/pull/1100))
+  - azure_rm_lock: Add support for `notes` ([#1097](https://github.com/ansible-collections/azure/pull/1097))
+  - azure_rm_devtestlab: Upgrade azure-mgmt-devtestlabs to 9.0.0 ([#958](https://github.com/ansible-collections/azure/pull/958))
+  - azure_rm_virtualmachine:
+    - Upgrade azure-mgmt-marketplaceordering to 1.1.0 ([#940](https://github.com/ansible-collections/azure/pull/940))
+    - Add support for new `managed_disk_type` type `UltraSSD_LRS` ([#1136](https://github.com/ansible-collections/azure/pull/1136))
+  - azure_rm_virtualmachinescaleset:
+    - Upgrade azure-mgmt-marketplaceordering to 1.1.0 ([#940](https://github.com/ansible-collections/azure/pull/940))
+    - Add support for new `managed_disk_type` type `UltraSSD_LRS` ([#1136](https://github.com/ansible-collections/azure/pull/1136))
+  - azure_rm_virtualnetworkpeering_info: Add support for `peering_sync_level` ([#1085](https://github.com/ansible-collections/azure/pull/1085))
+  - azure_rm_containerinstance: Add support for `subnet_ids` ([#1090](https://github.com/ansible-collections/azure/pull/1090))
+  - azure_rm_containerinstance_info: Add support for `subnet_ids` ([#1090](https://github.com/ansible-collections/azure/pull/1090))
+  - azure_rm_storageaccount: Add support for failover ([#1141](https://github.com/ansible-collections/azure/pull/1141))
+
+
+### BUG FIXING
+  - azure_rm_loganalyticsworkspace: Fix test cases ([#1129](https://github.com/ansible-collections/azure/pull/1129))
+  - azure_rm_virtualmachine_info: Ensure `display_status` is initialised before it is used ([#1123](https://github.com/ansible-collections/azure/pull/1123))
+  - azure_rm_webapp:
+    - Add support for creating with `python` ([#1128](https://github.com/ansible-collections/azure/pull/1128))
+    - Fix azure_rm_webapp fails when state is `absent` ([#1079](https://github.com/ansible-collections/azure/pull/1079))
+  - azure_rm_virtualmachine: Add option to choose whether or not to create a network security group ([#1056](https://github.com/ansible-collections/azure/pull/1056))
+  - azure_rm_networkinterace: Fix idempotent failure ([#1037](https://github.com/ansible-collections/azure/pull/1037))
+  - azure_rm_virtualnetwork: Update documentation of `azure_rm_virtualnetwork` to reflect that the `dns_servers` limit on length is no longer 2 ([#1082](https://github.com/ansible-collections/azure/pull/1082))
+  - azure_rm_rediscache: Remove references to Redis 4 and support upgrading to Redis 6 ([#1132](https://github.com/ansible-collections/azure/pull/1132))
+  - azure_rm_virtualnetwork_info: Update documentation in azure_rm_virtualnetwork_info and include a small change to match other patterns for getting network info. ([#1087](https://github.com/ansible-collections/azure/pull/1087))
+  - azure_rm_snapshot: Add supprot for `incremental` ([#1135](https://github.com/ansible-collections/azure/pull/1135))
+  - azure_rm_appgateway: Fix `version_added` in module document ([#1139](https://github.com/ansible-collections/azure/pull/1139))
+  - azure_rm_*: Documentation fixes ([#1151](https://github.com/ansible-collections/azure/pull/1151))
+  - azure_rm_devtestlab/aliases: Disable `azure_rm_devtestlab` test ([#1144](https://github.com/ansible-collections/azure/pull/1144))
+  - inventory/azure_rm: **inventory** - Ignore response status code other than 200 ([#1166](https://github.com/ansible-collections/azure/pull/1166))
+  - azure_rm_keyvaultkey: Use creds in module args when auth_source is auto ([#1010](https://github.com/ansible-collections/azure/pull/1010))
+  - azure_rm_keyvaultkey_info: Use creds in module args when `auth_source` is `auto` ([#1010](https://github.com/ansible-collections/azure/pull/1010))
+  - azure_rm_keyvaultsecret: Use creds in module args when `auth_source` is `auto` ([#1010](https://github.com/ansible-collections/azure/pull/1010))
+  - azure_rm_keyvaultsecret_info: Use creds in module args when `auth_source` is `auto` ([#1010](https://github.com/ansible-collections/azure/pull/1010))
+  - azure_rm_routetable: Fix route table updates delete all existing routes in the route table ([#1146](https://github.com/ansible-collections/azure/pull/1146))
+  - azure_rm_cdnendpoint: Fix failed to clear CND endpoint ([#1154](https://github.com/ansible-collections/azure/pull/1154))
+  - azure_rm_resource_info: Add support for `method` ([#1158](https://github.com/ansible-collections/azure/pull/1158))
+  - azure_keyvault_secret: Add support for azure cli credential ([#1161](https://github.com/ansible-collections/azure/pull/1161))
+  - requirements-azure.txt：Update dependency to resolve upstream issue ([#1169](https://github.com/ansible-collections/azure/pull/1169))
+
 ## v1.15.0 (2023-03-15)
 
 ### NEW MODULES
