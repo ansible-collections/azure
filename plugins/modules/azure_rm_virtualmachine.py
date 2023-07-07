@@ -1619,7 +1619,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                                         promotion_code=self.plan.get('promotion_code'))
 
                     # do this before creating vm_resource as it can modify tags
-                    if self.boot_diagnostics_present and self.boot_diagnostics['enabled']:
+                    if self.boot_diagnostics_present and self.boot_diagnostics['enabled'] and self.boot_diagnostics.get('type') != 'managed':
                         boot_diag_storage_account = self.get_boot_diagnostics_storage_account()
 
                     vm_resource = self.compute_models.VirtualMachine(
@@ -1716,7 +1716,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         )
 
                     if self.boot_diagnostics_present:
-                        if self.boot_diagnostics['enabled']:
+                        if self.boot_diagnostics['enabled'] and self.boot_diagnostics.get('type') != 'managed':
                             storage_uri = boot_diag_storage_account.primary_endpoints.blob
                         else:
                             storage_uri = None
