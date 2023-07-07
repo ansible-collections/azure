@@ -80,6 +80,7 @@ hostvar_expressions:
 # change how inventory_hostname is generated. Each item is a jinja2 expression similar to hostvar_expressions.
 hostnames:
   - tags.vm_name
+  - default_inventory_hostname + ".domain.tld" # Transfer to fqdn if you use shortnames for VMs
   - default  # special var that uses the default hashed name
 
 # places hosts in dynamically-created groups based on a variable value.
