@@ -443,21 +443,22 @@ options:
             type:
                 description:
                     - Should the storage account be managed by azure or a custom storage account
+                    - It is mutually exclusive with suboption I(storage_account)
                 required: false
                 type: str
                 choices:
                     - managed
             storage_account:
                 description:
-                    - Only used if I(type) is not set
                     - The name of an existing storage account to use for boot diagnostics.
                     - If not specified, uses I(storage_account_name) defined one level up.
                     - If storage account is not specified anywhere, and C(enabled) is C(true), a default storage account is created for boot diagnostics data.
+                    - It is mutually exclusive with I(type)
                 required: false
             resource_group:
                 description:
-                    - Only used if I(type) is not set
                     - Resource group where the storage account is located.
+                    - It is mutually exclusive with I(type)
                 type: str
     linux_config:
         description:
@@ -1121,7 +1122,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             ansible_facts=dict(azure_vm=None)
         )
 
+        mutually_exclusive = [] # [ ('boot_diagnostics.type', 'boot_diagnostics.storage_account'), ('boot_diagnostics.type', 'boot_diagnostics.resource_group') ] TODO: Figure out how thos works on suboptions
+
         super(AzureRMVirtualMachine, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                    mutually_exclusive=mutually_exclusive,
                                                     supports_check_mode=True)
 
     @property
