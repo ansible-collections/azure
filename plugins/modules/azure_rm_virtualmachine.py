@@ -1057,7 +1057,16 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             license_type=dict(type='str', choices=['Windows_Server', 'Windows_Client', 'RHEL_BYOS', 'SLES_BYOS']),
             vm_identity=dict(type='dict', options=managed_identity_spec),
             winrm=dict(type='list'),
-            boot_diagnostics=dict(type='dict'),
+            boot_diagnostics=dict(
+                type='dict',
+                options=dict(
+                    enabled=dict(type='bool', default=False),
+                    type=dict(type='str', choices=['managed']),
+                    storage_account=dict(type='str'),
+                    resource_group=dict(type='str'),
+                ),
+                mutually_exclusive=[('type', 'storage_account'), ('type', 'resource_group')],
+            ),
             ephemeral_os_disk=dict(type='bool'),
             windows_config=dict(type='dict', options=windows_configuration_spec),
             linux_config=dict(type='dict', options=linux_configuration_spec),
@@ -1122,10 +1131,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             ansible_facts=dict(azure_vm=None)
         )
 
-        mutually_exclusive = [] # [ ('boot_diagnostics.type', 'boot_diagnostics.storage_account'), ('boot_diagnostics.type', 'boot_diagnostics.resource_group') ] TODO: Figure out how thos works on suboptions
-
         super(AzureRMVirtualMachine, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                    mutually_exclusive=mutually_exclusive,
                                                     supports_check_mode=True)
 
     @property
