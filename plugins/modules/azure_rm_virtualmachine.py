@@ -431,6 +431,7 @@ options:
                     - The certificate store on the VM to which the certificate should be added.
                     - The specified certificate store is implicitly in the LocalMachine account.
     boot_diagnostics:
+        type: dict
         description:
             - Manage boot diagnostics settings for a VM.
             - Boot diagnostics includes a serial console and remote console screenshots.
@@ -438,12 +439,11 @@ options:
             enabled:
                 description:
                     - Flag indicating if boot diagnostics are enabled.
-                required: true
                 type: bool
             type:
                 description:
                     - Should the storage account be managed by azure or a custom storage account
-                    - It is mutually exclusive with suboption I(storage_account)
+                    - It is mutually exclusive with suboption I(storage_account) and I(resource_group)
                 required: false
                 type: str
                 choices:
@@ -454,6 +454,7 @@ options:
                     - If not specified, uses I(storage_account_name) defined one level up.
                     - If storage account is not specified anywhere, and C(enabled) is C(true), a default storage account is created for boot diagnostics data.
                     - It is mutually exclusive with I(type)
+                type: str
                 required: false
             resource_group:
                 description:
