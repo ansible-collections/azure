@@ -1060,7 +1060,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             boot_diagnostics=dict(
                 type='dict',
                 options=dict(
-                    enabled=dict(type='bool', default=False),
+                    enabled=dict(type='bool'),
                     type=dict(type='str', choices=['managed']),
                     storage_account=dict(type='str'),
                     resource_group=dict(type='str'),
