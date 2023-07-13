@@ -1137,7 +1137,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
     @property
     def boot_diagnostics_present(self):
-        return self.boot_diagnostics is not None and 'enabled' in self.boot_diagnostics
+        return self.boot_diagnostics is not None and self.boot_diagnostics.get('enabled') is not None
 
     def get_boot_diagnostics_storage_account(self, limited=False, vm_dict=None):
         """
@@ -1162,8 +1162,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
           - if not there, None
         """
         bsa = None
-        if 'storage_account' in self.boot_diagnostics:
-            if 'resource_group' in self.boot_diagnostics:
+        if self.boot_diagnostics is not None and self.boot_diagnostics.get('storage_account') is not None:
+            if self.boot_diagnostics.get('resource_group') is not None:
                 bsa = self.get_storage_account(self.boot_diagnostics['resource_group'], self.boot_diagnostics['storage_account'])
             else:
                 bsa = self.get_storage_account(self.resource_group, self.boot_diagnostics['storage_account'])
@@ -1498,7 +1498,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         current_boot_diagnostics['enabled'] = self.boot_diagnostics['enabled']
                         boot_diagnostics_changed = True
 
-                    if 'type' in self.boot_diagnostics and self.boot_diagnostics['type'] == 'managed':
+                    if self.boot_diagnostics.get('type') is not None and self.boot_diagnostics['type'] == 'managed':
                         boot_diagnostics_blob = None
                     else:
                         boot_diagnostics_storage_account = self.get_boot_diagnostics_storage_account(
