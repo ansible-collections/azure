@@ -431,6 +431,7 @@ options:
                     - The certificate store on the VM to which the certificate should be added.
                     - The specified certificate store is implicitly in the LocalMachine account.
     boot_diagnostics:
+        type: dict
         description:
             - Manage boot diagnostics settings for a VM.
             - Boot diagnostics includes a serial console and remote console screenshots.
@@ -438,17 +439,27 @@ options:
             enabled:
                 description:
                     - Flag indicating if boot diagnostics are enabled.
-                required: true
                 type: bool
+            type:
+                description:
+                    - Should the storage account be managed by azure or a custom storage account
+                    - It is mutually exclusive with suboption I(storage_account) and I(resource_group)
+                required: false
+                type: str
+                choices:
+                    - managed
             storage_account:
                 description:
                     - The name of an existing storage account to use for boot diagnostics.
                     - If not specified, uses I(storage_account_name) defined one level up.
                     - If storage account is not specified anywhere, and C(enabled) is C(true), a default storage account is created for boot diagnostics data.
+                    - It is mutually exclusive with I(type)
+                type: str
                 required: false
             resource_group:
                 description:
                     - Resource group where the storage account is located.
+                    - It is mutually exclusive with I(type)
                 type: str
     linux_config:
         description:
@@ -603,6 +614,7 @@ EXAMPLES = '''
     storage_blob: osdisk.vhd
     boot_diagnostics:
       enabled: yes
+      type: managed
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: canonical
@@ -1046,7 +1058,16 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             license_type=dict(type='str', choices=['Windows_Server', 'Windows_Client', 'RHEL_BYOS', 'SLES_BYOS']),
             vm_identity=dict(type='dict', options=managed_identity_spec),
             winrm=dict(type='list'),
-            boot_diagnostics=dict(type='dict'),
+            boot_diagnostics=dict(
+                type='dict',
+                options=dict(
+                    enabled=dict(type='bool'),
+                    type=dict(type='str', choices=['managed']),
+                    storage_account=dict(type='str'),
+                    resource_group=dict(type='str'),
+                ),
+                mutually_exclusive=[('type', 'storage_account'), ('type', 'resource_group')],
+            ),
             ephemeral_os_disk=dict(type='bool'),
             windows_config=dict(type='dict', options=windows_configuration_spec),
             linux_config=dict(type='dict', options=linux_configuration_spec),
@@ -1116,7 +1137,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
     @property
     def boot_diagnostics_present(self):
-        return self.boot_diagnostics is not None and 'enabled' in self.boot_diagnostics
+        return self.boot_diagnostics is not None and self.boot_diagnostics.get('enabled') is not None
 
     def get_boot_diagnostics_storage_account(self, limited=False, vm_dict=None):
         """
@@ -1141,8 +1162,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
           - if not there, None
         """
         bsa = None
-        if 'storage_account' in self.boot_diagnostics:
-            if 'resource_group' in self.boot_diagnostics:
+        if self.boot_diagnostics is not None and self.boot_diagnostics.get('storage_account') is not None:
+            if self.boot_diagnostics.get('resource_group') is not None:
                 bsa = self.get_storage_account(self.boot_diagnostics['resource_group'], self.boot_diagnostics['storage_account'])
             else:
                 bsa = self.get_storage_account(self.resource_group, self.boot_diagnostics['storage_account'])
@@ -1477,9 +1498,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         current_boot_diagnostics['enabled'] = self.boot_diagnostics['enabled']
                         boot_diagnostics_changed = True
 
-                    boot_diagnostics_storage_account = self.get_boot_diagnostics_storage_account(
-                        limited=not self.boot_diagnostics['enabled'], vm_dict=vm_dict)
-                    boot_diagnostics_blob = boot_diagnostics_storage_account.primary_endpoints.blob if boot_diagnostics_storage_account else None
+                    if self.boot_diagnostics.get('type') is not None and self.boot_diagnostics['type'] == 'managed':
+                        boot_diagnostics_blob = None
+                    else:
+                        boot_diagnostics_storage_account = self.get_boot_diagnostics_storage_account(
+                            limited=not self.boot_diagnostics['enabled'], vm_dict=vm_dict)
+                        boot_diagnostics_blob = boot_diagnostics_storage_account.primary_endpoints.blob if boot_diagnostics_storage_account else None
                     if current_boot_diagnostics.get('storageUri') != boot_diagnostics_blob:
                         current_boot_diagnostics['storageUri'] = boot_diagnostics_blob
                         boot_diagnostics_changed = True
@@ -1606,7 +1630,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                                         promotion_code=self.plan.get('promotion_code'))
 
                     # do this before creating vm_resource as it can modify tags
-                    if self.boot_diagnostics_present and self.boot_diagnostics['enabled']:
+                    if self.boot_diagnostics_present and self.boot_diagnostics['enabled'] and self.boot_diagnostics.get('type') != 'managed':
                         boot_diag_storage_account = self.get_boot_diagnostics_storage_account()
 
                     vm_resource = self.compute_models.VirtualMachine(
@@ -1703,7 +1727,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         )
 
                     if self.boot_diagnostics_present:
-                        if self.boot_diagnostics['enabled']:
+                        if self.boot_diagnostics['enabled'] and self.boot_diagnostics.get('type') != 'managed':
                             storage_uri = boot_diag_storage_account.primary_endpoints.blob
                         else:
                             storage_uri = None
@@ -1950,10 +1974,14 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             )
 
                     if self.boot_diagnostics is not None:
+                        storage_uri = None
+                        # storageUri is undefined if boot diagnostics is disabled
+                        if 'storageUri' in vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']:
+                            storage_uri = vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']['storageUri']
                         vm_resource.diagnostics_profile = self.compute_models.DiagnosticsProfile(
                             boot_diagnostics=self.compute_models.BootDiagnostics(
                                 enabled=vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']['enabled'],
-                                storage_uri=vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']['storageUri']))
+                                storage_uri=storage_uri))
 
                     if vm_dict.get('tags'):
                         vm_resource.tags = vm_dict['tags']
