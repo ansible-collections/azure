@@ -535,6 +535,8 @@ class AzureHost(object):
             security_group_id=[],
             security_group=[],
             public_ipv4_addresses=[],
+            public_ip_id=[],
+            public_ip_name=[],
             public_dns_hostnames=[],
             private_ipv4_addresses=[],
             id=self._vm_model['id'],
@@ -569,10 +571,10 @@ class AzureHost(object):
                     new_hostvars['private_ipv4_addresses'].append(private_ip)
                 pip_id = ipc['properties'].get('publicIPAddress', {}).get('id')
                 if pip_id:
-                    new_hostvars['public_ip_id'] = pip_id
+                    new_hostvars['public_ip_id'].append(pip_id)
 
                     pip = nic.public_ips[pip_id]
-                    new_hostvars['public_ip_name'] = pip._pip_model['name']
+                    new_hostvars['public_ip_name'].append(pip._pip_model['name'])
                     new_hostvars['public_ipv4_addresses'].append(pip._pip_model['properties'].get('ipAddress', None))
                     pip_fqdn = pip._pip_model['properties'].get('dnsSettings', {}).get('fqdn')
                     if pip_fqdn:
