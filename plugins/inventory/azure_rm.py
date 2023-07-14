@@ -566,19 +566,22 @@ class AzureHost(object):
         for nic in sorted(self.nics, key=lambda n: n.is_primary, reverse=True):
             # and from the primary IP config per NIC first
             for ipc in sorted(nic._nic_model['properties']['ipConfigurations'], key=lambda i: i['properties'].get('primary', False), reverse=True):
-                private_ip = ipc['properties'].get('privateIPAddress')
-                if private_ip:
-                    new_hostvars['private_ipv4_addresses'].append(private_ip)
-                pip_id = ipc['properties'].get('publicIPAddress', {}).get('id')
-                if pip_id:
-                    new_hostvars['public_ip_id'].append(pip_id)
+                try:
+                    private_ip = ipc['properties'].get('privateIPAddress')
+                    if private_ip:
+                        new_hostvars['private_ipv4_addresses'].append(private_ip)
+                    pip_id = ipc['properties'].get('publicIPAddress', {}).get('id')
+                    if pip_id:
+                        new_hostvars['public_ip_id'].append(pip_id)
 
-                    pip = nic.public_ips[pip_id]
-                    new_hostvars['public_ip_name'].append(pip._pip_model['name'])
-                    new_hostvars['public_ipv4_addresses'].append(pip._pip_model['properties'].get('ipAddress', None))
-                    pip_fqdn = pip._pip_model['properties'].get('dnsSettings', {}).get('fqdn')
-                    if pip_fqdn:
-                        new_hostvars['public_dns_hostnames'].append(pip_fqdn)
+                        pip = nic.public_ips[pip_id]
+                        new_hostvars['public_ip_name'].append(pip._pip_model['name'])
+                        new_hostvars['public_ipv4_addresses'].append(pip._pip_model['properties'].get('ipAddress', None))
+                        pip_fqdn = pip._pip_model['properties'].get('dnsSettings', {}).get('fqdn')
+                        if pip_fqdn:
+                            new_hostvars['public_dns_hostnames'].append(pip_fqdn)
+                except Exception:
+                    continue
 
             new_hostvars['mac_address'].append(nic._nic_model['properties'].get('macAddress'))
             new_hostvars['network_interface'].append(nic._nic_model['name'])
