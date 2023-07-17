@@ -1,7 +1,7 @@
 ---
 - name: Set storage account name
   set_fact:
-      storage_account: "sb{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+      storage_account: "s{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create storage account
   azure_rm_storageaccount:
@@ -110,15 +110,15 @@
 - name: Create secondary storage account
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
-    name: "{{ storage_account }}02"
+    name: "{{ storage_account }}2"
     account_type: Premium_LRS
     kind: FileStorage
 
 - name: Create share with enabled protocols
   azure_rm_storageshare:
-    name: "{{ share_name }}02"
+    name: "{{ share_name }}2"
     resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}02"
+    account_name: "{{ storage_account }}2"
     access_tier: Premium
     root_squash: RootSquash
     enabled_protocols: NFS
@@ -131,9 +131,9 @@
 
 - name: Get share details
   azure_rm_storageshare_info:
-    name: "{{ share_name }}02"
+    name: "{{ share_name }}2"
     resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}02"
+    account_name: "{{ storage_account }}2"
   register: share_facts
 
 - name: Assert the facts
@@ -151,9 +151,9 @@
 
 - name: Delete share
   azure_rm_storageshare:
-    name: "{{ share_name }}02"
+    name: "{{ share_name }}2"
     resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}02"
+    account_name: "{{ storage_account }}2"
     state: absent
   register: delete_output
 
@@ -170,5 +170,5 @@
 - name: Delete storage account
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
-    name: "{{ storage_account }}02"
+    name: "{{ storage_account }}2"
     state: absent
