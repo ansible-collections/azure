@@ -113,7 +113,6 @@
     name: "{{ storage_account }}02"
     account_type: Premium_LRS
     kind: FileStorage
-    large_file_shares_state: Enabled
 
 - name: Create share with enabled protocols
   azure_rm_storageshare:
