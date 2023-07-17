@@ -96,6 +96,15 @@ EXAMPLES = '''
       key1: value1
       key2: value2
 
+- name: Create share with enalbed protocols
+  azure_rm_storageshare:
+    name: "{{ share_name }}"
+    resource_group: "{{ resource_group }}"
+    account_name: "{{ storage_account }}"
+    access_tier: "{{ access_tier }}"
+    root_squash: RootSquash
+    enabled_protocols: NFS
+
 - name: Delete storage share
   azure_rm_storageshare:
     name: testShare
