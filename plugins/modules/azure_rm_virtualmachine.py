@@ -203,6 +203,15 @@ options:
             - ReadWrite
         aliases:
             - disk_caching
+    os_disk_encryption_set:
+        description:
+            - Disk encryption set for the OS disk.
+        type: dict
+        suboptions:
+            id:
+                description:
+                    - The ID of the disk encryption set the OS should be encrypted with.
+                type: str
     os_disk_size_gb:
         description:
             - Size of OS disk in GB.
@@ -275,6 +284,9 @@ options:
                     - ReadOnly
                     - ReadWrite
                 default: ReadOnly
+            disk_encryption_set_id:
+                description:
+                    - Disk encryption set ID that the data disk should be encrypted with.
     public_ip_allocation_method:
         description:
             - Allocation method for the public IP of the VM.
@@ -1035,6 +1047,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite']),
             os_disk_size_gb=dict(type='int'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
+            os_disk_encryption_set=dict(type='raw'),
             os_disk_name=dict(type='str'),
             proximity_placement_group=dict(type='dict', options=proximity_placement_group_spec),
             os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
@@ -1097,6 +1110,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.os_disk_caching = None
         self.os_disk_size_gb = None
         self.managed_disk_type = None
+        self.os_disk_encryption_set = None
         self.os_disk_name = None
         self.proximity_placement_group = None
         self.network_interface_names = None
@@ -1618,7 +1632,11 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     # os disk
                     if self.managed_disk_type:
                         vhd = None
-                        managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=self.managed_disk_type)
+                        if self.os_disk_encryption_set:
+                            managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=self.managed_disk_type,
+                                                                                     disk_encryption_set=self.compute_models.DiskEncryptionSetParameters(id=self.os_disk_encryption_set['id']))
+                        else:
+                            managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=self.managed_disk_type)
                     elif custom_image:
                         vhd = None
                         managed_disk = None
@@ -1790,7 +1808,11 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 data_disk_vhd = self.compute_models.VirtualHardDisk(uri=data_disk_requested_vhd_uri)
                             else:
                                 data_disk_vhd = None
-                                data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=data_disk['managed_disk_type'])
+                                if data_disk.get('disk_encryption_set_id'):
+                                    data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=data_disk['managed_disk_type'],
+                                                                                                       disk_encryption_set=self.compute_models.DiskEncryptionSetParameters(id=data_disk['disk_encryption_set_id']['id']))
+                                else:
+                                    data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=data_disk['managed_disk_type'])
                                 disk_name = self.name + "-datadisk-" + str(count)
                                 count += 1
 
@@ -1860,7 +1882,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     else:
                         vhd = None
                         managed_disk = self.compute_models.ManagedDiskParameters(
-                            storage_account_type=vm_dict['storage_profile']['os_disk']['managed_disk'].get('storage_account_type')
+                            storage_account_type=vm_dict['storage_profile']['os_disk']['managed_disk'].get('storage_account_type'),
+                            disk_encryption_set=vm_dict['storage_profile']['os_disk']['managed_disk'].get('disk_encryption_set')
                         )
 
                     proximity_placement_group_resource = None
@@ -2041,7 +2064,11 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         for data_disk in vm_dict['storage_profile']['data_disks']:
                             if data_disk.get('managed_disk'):
                                 managed_disk_type = data_disk['managed_disk'].get('storage_account_type')
-                                data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=managed_disk_type)
+                                if data_disk.get('disk_encryption_set_id'):
+                                    data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=managed_disk_type,
+                                                                                                       disk_encryption_set=self.compute_models.DiskEncryptionSetParameters(id=data_disk['disk_encryption_set_id']['id']))
+                                else:
+                                    data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=managed_disk_type)
                                 data_disk_vhd = None
                             else:
                                 data_disk_vhd = data_disk['vhd']['uri']
