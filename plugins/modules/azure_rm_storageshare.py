@@ -289,7 +289,7 @@ class AzureRMStorageShare(AzureRMModuleBase):
         return ((self.access_tier is not None) and (self.access_tier != old_response.get('access_tier')) or
                 (self.quota is not None) and (self.quota != old_response.get('share_quota')) or
                 (self.metadata is not None) and (self.metadata != old_response.get('metadata')) or
-                (self.root_squash is not None) and (self.root_squash !=old_response.get('root_squash')) or
+                (self.root_squash is not None) and (self.root_squash != old_response.get('root_squash')) or
                 (self.enabled_protocols is not None) and (self.enabled_protocols != old_response.get('enabled_protocols')))
 
     def get_share(self):
@@ -359,7 +359,7 @@ class AzureRMStorageShare(AzureRMModuleBase):
             access_tier=self.access_tier if self.access_tier else old_responce.get('access_tier'),
             share_quota=self.quota if self.quota else old_responce.get('share_quota'),
             metadata=self.metadata if self.metadata else old_responce.get('metadata'),
-            enabled_protocols=self.enabled_protocols if self.enabled_protocols else oold_responce.get('enabled_protocols'),
+            enabled_protocols=self.enabled_protocols if self.enabled_protocols else old_responce.get('enabled_protocols'),
             root_squash=self.root_squash if self.root_squash else old_responce.get('self.root_squash')
         )
         try:

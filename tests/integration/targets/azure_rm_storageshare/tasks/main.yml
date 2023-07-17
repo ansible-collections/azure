@@ -107,11 +107,54 @@
       - share_facts.storageshares.id is defined
       - share_facts.storageshares.etag is defined
 
+- name: Create secondary storage account
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account }}02"
+    account_type: Premium_LRS
+    kind: FileStorage
+    large_file_shares_state: Enabled
+
+- name: Create share with enabled protocols
+  azure_rm_storageshare:
+    name: "{{ share_name }}02"
+    resource_group: "{{ resource_group }}"
+    account_name: "{{ storage_account }}02"
+    access_tier: Premium
+    root_squash: RootSquash
+    enabled_protocols: NFS
+  register: create_output
+
+- name: Assert create success
+  assert:
+    that:
+      - create_output.changed
+
+- name: Get share details
+  azure_rm_storageshare_info:
+    name: "{{ share_name }}02"
+    resource_group: "{{ resource_group }}"
+    account_name: "{{ storage_account }}02"
+  register: share_facts
+
+- name: Assert the facts
+  assert:
+    that:
+      - share_facts.storageshares.root_squash == 'RootSquash'
+      - share_facts.storageshares.enabled_protocols == 'NFS'
+
 - name: Delete share
   azure_rm_storageshare:
     name: "{{ share_name }}"
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
+    state: absent
+
+- name: Delete share
+  azure_rm_storageshare:
+    name: "{{ share_name }}02"
+    resource_group: "{{ resource_group }}"
+    account_name: "{{ storage_account }}02"
     state: absent
   register: delete_output
 
@@ -123,4 +166,10 @@
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
+    state: absent
+
+- name: Delete storage account
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account }}02"
     state: absent
