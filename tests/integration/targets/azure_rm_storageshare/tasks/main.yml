@@ -113,7 +113,7 @@
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
     state: absent
-  register: delete_ouptut
+  register: delete_output
 
 - name: Pause for 3 minutes to waiting delete
   pause:
