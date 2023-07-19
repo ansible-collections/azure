@@ -206,7 +206,7 @@ options:
     os_disk_encryption_set:
         description:
             - Disk encryption set for the OS disk.
-        type: dict
+        type: raw
         suboptions:
             id:
                 description:
@@ -1630,8 +1630,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if self.managed_disk_type:
                         vhd = None
                         if self.os_disk_encryption_set:
+                            os_disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(id=self.os_disk_encryption_set['id'])
                             managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=self.managed_disk_type,
-                                                                                     disk_encryption_set=self.compute_models.DiskEncryptionSetParameters(id=self.os_disk_encryption_set['id']))
+                                                                                     disk_encryption_set=os_disk_encryption_set)
                         else:
                             managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=self.managed_disk_type)
                     elif custom_image:
@@ -1806,8 +1807,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             else:
                                 data_disk_vhd = None
                                 if data_disk.get('disk_encryption_set_id'):
+                                    data_disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(id=data_disk['disk_encryption_set_id']['id'])
                                     data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=data_disk['managed_disk_type'],
-                                                                                                       disk_encryption_set=self.compute_models.DiskEncryptionSetParameters(id=data_disk['disk_encryption_set_id']['id']))
+                                                                                                       disk_encryption_set=data_disk_encryption_set)
                                 else:
                                     data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=data_disk['managed_disk_type'])
                                 disk_name = self.name + "-datadisk-" + str(count)
@@ -2062,8 +2064,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             if data_disk.get('managedDisk'):
                                 managed_disk_type = data_disk['managedDisk'].get('storageAccountType')
                                 if data_disk.get('disk_encryption_set_id'):
+                                    data_disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(id=data_disk['disk_encryption_set_id']['id'])
                                     data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=managed_disk_type,
-                                                                                                       disk_encryption_set=self.compute_models.DiskEncryptionSetParameters(id=data_disk['disk_encryption_set_id']['id']))
+                                                                                                       disk_encryption_set=data_disk_encryption_set)
                                 else:
                                     data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=managed_disk_type)
                                 data_disk_vhd = None
