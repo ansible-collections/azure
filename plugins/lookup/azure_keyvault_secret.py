@@ -39,7 +39,8 @@ notes:
     - For enabling MSI on Azure VM, please refer to this doc https://docs.microsoft.com/en-us/azure/active-directory/managed-service-identity/
     - After enabling MSI on Azure VM, remember to grant access of the Key Vault to the VM by adding a new Acess Policy in Azure Portal.
     - If MSI is not enabled on ansible host, it's required to provide a valid service principal which has access to the key vault.
-    - To authenticate via service principal, pass client_id, secret and tenant_id or set environment variables AZURE_CLIENT_ID, AZURE_CLIENT_SECRET and AZURE_TENANT_ID.
+    - To authenticate via service principal, pass client_id, secret and tenant_id or set environment variables
+      AZURE_CLIENT_ID, AZURE_CLIENT_SECRET and AZURE_TENANT_ID.
     - Authentication via C(az login) is also supported.
     - To use a plugin from a collection, please reference the full namespace, collection name, and lookup plugin name that you want to use.
 """
@@ -120,7 +121,6 @@ try:
     import logging
     from azure.common.exceptions import ClientRequestError
     from msrest.exceptions import ClientRequestError
-    from azure.keyvault.models import KeyVaultErrorException
     from azure.identity import DefaultAzureCredential, ClientSecretCredential
     from azure.keyvault.secrets import SecretClient
 
