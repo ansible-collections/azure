@@ -35,6 +35,7 @@ EXAMPLES = '''
 # vmid: the VM's internal SMBIOS ID, eg: '36bca69d-c365-4584-8c06-a62f4a1dc5d2'
 # vmss: if the VM is a member of a scaleset (vmss), a dictionary including the id and name of the parent scaleset
 # availability_zone: availability zone in which VM is deployed, eg '1','2','3'
+# creation_time: datetime object of when the VM was created, eg '2023-07-21T09:30:30.4710164+00:00'
 #
 # The following host variables are sometimes availble:
 # computer_name: the Operating System's hostname. Will not be available if azure agent is not available and picking it up.
@@ -180,7 +181,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         self._filters = None
 
         # FUTURE: use API profiles with defaults
-        self._compute_api_version = '2017-03-30'
+        self._compute_api_version = '2021-11-01'
         self._network_api_version = '2015-06-15'
 
         self._default_header_parameters = {'Content-Type': 'application/json; charset=utf-8'}
@@ -558,6 +559,7 @@ class AzureHost(object):
             plan=self._vm_model['properties']['plan']['name'] if self._vm_model['properties'].get('plan') else None,
             resource_group=parse_resource_id(self._vm_model['id']).get('resource_group').lower(),
             default_inventory_hostname=self.default_inventory_hostname,
+            creation_time=self._vm_model['properties']['timeCreated'],
         )
 
         # set nic-related values from the primary NIC first
