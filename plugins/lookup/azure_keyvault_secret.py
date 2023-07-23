@@ -116,9 +116,9 @@ from ansible.errors import AnsibleError
 from ansible.plugins.lookup import LookupBase
 from ansible.utils.display import Display
 try:
+    import logging
     import requests
     from azure.keyvault.secrets import SecretClient
-    import logging
     from azure.common.exceptions import ClientRequestError
     from msrest.exceptions import ClientRequestError
     from azure.identity import DefaultAzureCredential, ClientSecretCredential
