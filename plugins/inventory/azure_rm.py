@@ -572,9 +572,9 @@ class AzureHost(object):
                     if pip_id and pip_id in nic.public_ips:
                         pip = nic.public_ips[pip_id]
                         new_hostvars['public_ip_address'].append({
-                            'id':pip_id,
-                            'name':pip._pip_model['name'],
-                            'ipv4_address':pip._pip_model['properties'].get('ipAddress', None),
+                            'id': pip_id,
+                            'name': pip._pip_model['name'],
+                            'ipv4_address': pip._pip_model['properties'].get('ipAddress', None),
                         })
                         pip_fqdn = pip._pip_model['properties'].get('dnsSettings', {}).get('fqdn')
                         if pip_fqdn:
