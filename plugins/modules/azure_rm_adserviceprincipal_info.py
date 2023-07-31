@@ -128,7 +128,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
             elif self.app_id:
                 service_principals = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id)))
             elif self.app_display_name:
-                service_principals = list(client.service_principals.list(filter="appDisplayName eq '%s'" % self.app_display_name))
+                service_principals = list(client.service_principals.list(filter="DisplayName eq '%s'" % self.app_display_name))
             else:
                 service_principals = list(client.service_principals.list())
 
