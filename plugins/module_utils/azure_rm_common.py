@@ -1024,7 +1024,10 @@ class AzureRMModuleBase(object):
 
     @property
     def subscription_id(self):
-        return self.azure_auth.subscription_id
+        if self.module.params.get('subscription_id') is not None:
+            return self.module.params.get('subscription_id')
+        else:
+            return self.azure_auth.subscription_id
 
     @property
     def storage_client(self):
