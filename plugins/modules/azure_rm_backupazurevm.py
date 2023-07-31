@@ -185,9 +185,12 @@ class BackupAzureVM(AzureRMModuleBaseExt):
     def get_api_version(self):
         return '2019-05-13' if self.state == 'create' or self.state == 'update' or self.state == 'delete' or self.state == 'stop' else '2016-12-01'
 
-    def get_url(self):
+    def get_url(self):        
+        sub_id = self.subscription_id
+        if self.module.params.get('subscription_id'):
+            sub_id = self.module.params.get('subscription_id')
         if self.state == 'create' or self.state == 'update' or self.state == 'delete' or self.state == 'stop':
-            return '/subscriptions' + '/' + self.subscription_id \
+            return '/subscriptions' + '/' + sub_id \
                    + '/resourceGroups' + '/' + self.resource_group + '/providers' \
                    + '/Microsoft.RecoveryServices' + '/vaults' + '/' \
                    + self.recovery_vault_name \
@@ -197,7 +200,7 @@ class BackupAzureVM(AzureRMModuleBaseExt):
                    + 'vm;iaasvmcontainerv2;' + self.parse_resource_to_dict(self.resource_id)['resource_group'] + ';' \
                    + self.parse_resource_to_dict(self.resource_id)['name']
         if self.state == 'backup':
-            return '/subscriptions' + '/' + self.subscription_id \
+            return '/subscriptions' + '/' + sub_id \
                    + '/resourceGroups' + '/' + self.resource_group + '/providers' \
                    + '/Microsoft.RecoveryServices' + '/vaults' + '/' \
                    + self.recovery_vault_name \
