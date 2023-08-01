@@ -185,7 +185,7 @@ class BackupAzureVM(AzureRMModuleBaseExt):
     def get_api_version(self):
         return '2019-05-13' if self.state == 'create' or self.state == 'update' or self.state == 'delete' or self.state == 'stop' else '2016-12-01'
 
-    def get_url(self):      
+    def get_url(self):
         sub_id = self.subscription_id
         if self.module.params.get('subscription_id'):
             sub_id = self.module.params.get('subscription_id')
