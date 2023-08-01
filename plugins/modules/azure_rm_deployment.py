@@ -495,7 +495,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
         else:
             try:
                 if self.get_resource_group(self.resource_group):
-                    self.destroy_resource_group()
+                    self.destroy_deployment_resource()
                     self.results['changed'] = True
                     self.results['msg'] = "deployment deleted"
             except Exception:
@@ -569,12 +569,12 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
 
         return deployment_result
 
-    def destroy_resource_group(self):
+    def destroy_deployment_resource(self):
         """
         Destroy the targeted resource group
         """
         try:
-            result = self.rm_client.resource_groups.begin_delete(self.resource_group)
+            result = self.rm_client.deployments.begin_delete(self.resource_group, self.name)
             result.wait()  # Blocking wait till the delete is finished
         except Exception as e:
             if e.status_code == 404 or e.status_code == 204:
