@@ -106,6 +106,50 @@
 - assert:
       that: output['clusters'] | length >= 1
 
+- name: Fetch kubeconfig file to register
+  azure_rm_openshiftmanagedclusterkubeconfig_info:
+    name: "{{ cluster_name }}"
+    resource_group: "{{ resource_group }}"
+  register: kubeconfig_reg
+
+- name: Assert the kubeconfig file facts
+  ansible.builtin.assert:
+    that: kubeconfig_reg['kubeconfig'] | length >= 1
+
+- name: Fetch kubeconfig file with specific name
+  azure_rm_openshiftmanagedclusterkubeconfig_info:
+    name: "{{ cluster_name }}"
+    resource_group: "{{ resource_group }}"
+    path: "/home/testuser/{{ cluster_name }}"
+
+- name: Check for created named kubeconfig file
+  ansible.builtin.stat:
+    path: "/home/testuser/{{ cluster_name }}"
+  register: named_kubeconf_file
+
+- name: Assert kubeconfig file creation with specific name
+  ansible.builtin.assert:
+    that:
+      - named_kubeconf_file.stat.exists
+      - named_kubeconf_file.stat.size != 0
+
+- name: Fetch kubeconfig file with default name (kubeconfig)
+  azure_rm_openshiftmanagedclusterkubeconfig_info:
+    name: "{{ cluster_name }}"
+    resource_group: "{{ resource_group }}"
+    path: "/home/testuser/"
+
+- name: Check for created default kubeconfig file
+  ansible.builtin.stat:
+    path: "/home/testuser/kubeconfig"
+  register: default_kubeconf_file
+
+- name: Assert kubeconfig file creation with default name
+  ansible.builtin.assert:
+    that:
+      - default_kubeconf_file.stat.exists
+      - default_kubeconf_file.stat.size != 0
+
 - name: Delete openshift cluster
   azure_rm_openshiftmanagedcluster:
     resource_group: "{{ resource_group }}"
