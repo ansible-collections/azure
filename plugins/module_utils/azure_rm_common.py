@@ -52,6 +52,8 @@ AZURE_COMMON_ARGS = dict(
     log_mode=dict(type='str', no_log=True),
     log_path=dict(type='str', no_log=True),
     x509_certificate_path=dict(type='path', no_log=True),
+    x509_private_key_path=dict(type='path', no_log=True),
+    private_key_passphrase=dict(type='str', no_log=True),
     thumbprint=dict(type='str', no_log=True),
 )
 
@@ -67,6 +69,8 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
     cert_validation_mode='AZURE_CERT_VALIDATION_MODE',
     adfs_authority_url='AZURE_ADFS_AUTHORITY_URL',
     x509_certificate_path='AZURE_X509_CERTIFICATE_PATH',
+    x509_private_key_path='AZURE_X509_PRIVATE_KEY_PATH',
+    private_key_passphrase='AZURE_PRIVATE_KEY_PASSPHRASE',
     thumbprint='AZURE_THUMBPRINT'
 )
 
@@ -252,7 +256,7 @@ try:
     from azure.mgmt.marketplaceordering import MarketplaceOrderingAgreements
     from azure.mgmt.trafficmanager import TrafficManagerManagementClient
     from azure.storage.blob import BlobServiceClient
-    from adal.authentication_context import AuthenticationContext
+    from msal.application import ClientApplication, ConfidentialClientApplication
     from azure.mgmt.authorization import AuthorizationManagementClient
     from azure.mgmt.sql import SqlManagementClient
     from azure.mgmt.servicebus import ServiceBusManagementClient
@@ -1481,7 +1485,7 @@ class AzureRMAuth(object):
     def __init__(self, auth_source=None, profile=None, subscription_id=None, client_id=None, secret=None,
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
                  api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False,
-                 x509_certificate_path=None, thumbprint=None, **kwargs):
+                 x509_private_key_path=None, x509_certificate_path=None, private_key_passphrase=None, thumbprint=None, **kwargs):
 
         if fail_impl:
             self._fail_impl = fail_impl
@@ -1504,6 +1508,8 @@ class AzureRMAuth(object):
             api_profile=api_profile,
             adfs_authority_url=adfs_authority_url,
             x509_certificate_path=x509_certificate_path,
+            x509_private_key_path=x509_private_key_path,
+            private_key_passphrase=private_key_passphrase,
             thumbprint=thumbprint)
 
         if not self.credentials:
@@ -1585,12 +1591,15 @@ class AzureRMAuth(object):
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None and \
                 self.credentials.get('thumbprint') is not None and \
+                self.credentials.get('private_key_passphrase') is not None and \
+                self.credentials.get('x509_private_key_path') is not None and \
                 self.credentials.get('x509_certificate_path') is not None:
 
             self.azure_credentials = self.acquire_token_with_client_certificate(
                 self._adfs_authority_url,
-                self._cloud_environment.endpoints.active_directory_resource_id,
                 self.credentials['x509_certificate_path'],
+                self.credentials['x509_private_key_path'],
+                self.credentials['private_key_passphrase'],
                 self.credentials['thumbprint'],
                 self.credentials['client_id'],
                 self.credentials['tenant'])
@@ -1624,7 +1633,6 @@ class AzureRMAuth(object):
 
             self.azure_credentials = self.acquire_token_with_username_password(
                 self._adfs_authority_url,
-                self._cloud_environment.endpoints.active_directory_resource_id,
                 self.credentials['ad_user'],
                 self.credentials['password'],
                 self.credentials['client_id'],
@@ -1809,28 +1817,36 @@ class AzureRMAuth(object):
 
         return None
 
-    def acquire_token_with_username_password(self, authority, resource, username, password, client_id, tenant):
+    def acquire_token_with_username_password(self, authority, username, password, client_id, tenant):
         authority_uri = authority
 
         if tenant is not None:
             authority_uri = authority + '/' + tenant
 
-        context = AuthenticationContext(authority_uri)
-        token_response = context.acquire_token_with_username_password(resource, username, password, client_id)
+        context = ClientApplication(client_id=client_id, authority=authority_uri)
+        scopes = ['https://graph.microsoft.com/.default']
+        token_response = context.acquire_token_by_username_password(username, password, scopes)
 
         return AADTokenCredentials(token_response)
 
-    def acquire_token_with_client_certificate(self, authority, resource, x509_certificate_path, thumbprint, client_id, tenant):
+    def acquire_token_with_client_certificate(self, authority, x509_certificate_path, x509_private_key_path, private_key_passphrase, thumbprint, client_id, tenant):
         authority_uri = authority
 
         if tenant is not None:
             authority_uri = authority + '/' + tenant
 
-        context = AuthenticationContext(authority_uri)
+        scopes = ['https://graph.microsoft.com/.default']
+        x509_private_key = None
+        with open(x509_private_key_path, 'r') as pem_file:
+            x509_private_key = pem_file.read()
         x509_certificate = None
-        with open(x509_certificate_path, 'rb') as pem_file:
+        with open(x509_certificate_path, 'r') as pem_file:
             x509_certificate = pem_file.read()
-        token_response = context.acquire_token_with_client_certificate(resource, client_id, x509_certificate, thumbprint)
+
+        client_credential = {"public_certificate": x509_certificate, "thumbprint": thumbprint, "passphrase": private_key_passphrase, "private_key": x509_private_key}
+        context = ConfidentialClientApplication(client_id=client_id, authority=authority_uri, client_credential=client_credential)
+
+        token_response = context.acquire_token_for_client(scopes=scopes)
 
         return AADTokenCredentials(token_response)
 

@@ -110,6 +110,17 @@ options:
             - Use when authenticating with a Service Principal.
         type: path
         version_added: '1.14.0'
+    x509_private_key_path:
+        description:
+            - Path to the X509 private key used to create the service principal in PEM format.
+            - Use when authenticating with a Certififacte.
+        type: path
+        version_added: '1.16.0'
+    passphrase:
+        description:
+            - It's encryption password  when  the private_key is encrypted.
+        type: str
+        version_added: '1.16.0'
     thumbprint:
         description:
             - The thumbprint of the private key specified in I(x509_certificate_path).
