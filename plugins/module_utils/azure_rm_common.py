@@ -1637,6 +1637,10 @@ class AzureRMAuth(object):
                 self.credentials['password'],
                 self.credentials['client_id'],
                 self.credentials['tenant'])
+            self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
+                                                                                    password=self.credentials['password'],
+                                                                                    tenant_id=self.credentials.get('tenant'),
+                                                                                    client_id=self.credentials.get('client_id'))
 
         else:
             self.fail("Failed to authenticate with provided credentials. Some attributes were missing. "
@@ -1824,7 +1828,7 @@ class AzureRMAuth(object):
             authority_uri = authority + '/' + tenant
 
         context = ClientApplication(client_id=client_id, authority=authority_uri)
-        scopes = ['https://graph.microsoft.com/.default']
+        scopes = ['https://management.azure.com/.default']
         token_response = context.acquire_token_by_username_password(username, password, scopes)
 
         return AADTokenCredentials(token_response)
@@ -1835,13 +1839,15 @@ class AzureRMAuth(object):
         if tenant is not None:
             authority_uri = authority + '/' + tenant
 
-        scopes = ['https://graph.microsoft.com/.default']
+        scopes = ['https://management.azure.com/.default']
         x509_private_key = None
         with open(x509_private_key_path, 'r') as pem_file:
             x509_private_key = pem_file.read()
         x509_certificate = None
         with open(x509_certificate_path, 'r') as pem_file:
             x509_certificate = pem_file.read()
+        if private_key_passphrase in [None, "''", '""']:
+            private_key_passphrase = ''
 
         client_credential = {"public_certificate": x509_certificate, "thumbprint": thumbprint, "passphrase": private_key_passphrase, "private_key": x509_private_key}
         context = ConfidentialClientApplication(client_id=client_id, authority=authority_uri, client_credential=client_credential)
