@@ -1828,28 +1828,34 @@ class AzureRMAuth(object):
             authority_uri = authority + '/' + tenant
 
         context = ClientApplication(client_id=client_id, authority=authority_uri)
-        scopes = ['https://management.azure.com/.default']
+        base_url = self._cloud_environment.endpoints.resource_manager
+        if not base_url.endswith("/"):
+            base_url += "/"
+        scopes = [base_url + ".default"]
         token_response = context.acquire_token_by_username_password(username, password, scopes)
 
         return AADTokenCredentials(token_response)
 
-    def acquire_token_with_client_certificate(self, authority, x509_certificate_path, x509_private_key_path, private_key_passphrase, thumbprint, client_id, tenant):
+    def acquire_token_with_client_certificate(self, authority, x509_certificate_path, x509_private_key_path, passphrase, thumbprint, client_id, tenant):
         authority_uri = authority
 
         if tenant is not None:
             authority_uri = authority + '/' + tenant
 
-        scopes = ['https://management.azure.com/.default']
         x509_private_key = None
         with open(x509_private_key_path, 'r') as pem_file:
             x509_private_key = pem_file.read()
         x509_certificate = None
         with open(x509_certificate_path, 'r') as pem_file:
             x509_certificate = pem_file.read()
-        if private_key_passphrase in [None, "''", '""']:
-            private_key_passphrase = ''
+        if passphrase in [None, "''", '""']:
+            passphrase = ''
 
-        client_credential = {"public_certificate": x509_certificate, "thumbprint": thumbprint, "passphrase": private_key_passphrase, "private_key": x509_private_key}
+        base_url = self._cloud_environment.endpoints.resource_manager
+        if not base_url.endswith("/"):
+            base_url += "/"
+        scopes = [base_url + ".default"]
+        client_credential = {"public_certificate": x509_certificate, "thumbprint": thumbprint, "passphrase": passphrase, "private_key": x509_private_key}
         context = ConfidentialClientApplication(client_id=client_id, authority=authority_uri, client_credential=client_credential)
 
         token_response = context.acquire_token_for_client(scopes=scopes)
