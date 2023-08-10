@@ -116,11 +116,6 @@ options:
             - Use when authenticating with a Certififacte.
         type: path
         version_added: '1.16.0'
-    private_key_passphrase:
-        description:
-            - It's encryption password  when  the private_key is encrypted.
-        type: str
-        version_added: '1.16.0'
     thumbprint:
         description:
             - The thumbprint of the private key specified in I(x509_certificate_path).
