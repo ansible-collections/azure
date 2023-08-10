@@ -116,7 +116,7 @@ options:
             - Use when authenticating with a Certififacte.
         type: path
         version_added: '1.16.0'
-    passphrase:
+    private_key_passphrase:
         description:
             - It's encryption password  when  the private_key is encrypted.
         type: str
