@@ -52,7 +52,6 @@ AZURE_COMMON_ARGS = dict(
     log_mode=dict(type='str', no_log=True),
     log_path=dict(type='str', no_log=True),
     x509_certificate_path=dict(type='path', no_log=True),
-    x509_private_key_path=dict(type='path', no_log=True),
     thumbprint=dict(type='str', no_log=True),
 )
 
@@ -68,7 +67,6 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
     cert_validation_mode='AZURE_CERT_VALIDATION_MODE',
     adfs_authority_url='AZURE_ADFS_AUTHORITY_URL',
     x509_certificate_path='AZURE_X509_CERTIFICATE_PATH',
-    x509_private_key_path='AZURE_X509_PRIVATE_KEY_PATH',
     thumbprint='AZURE_THUMBPRINT'
 )
 
@@ -1483,7 +1481,7 @@ class AzureRMAuth(object):
     def __init__(self, auth_source=None, profile=None, subscription_id=None, client_id=None, secret=None,
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
                  api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False,
-                 x509_private_key_path=None, x509_certificate_path=None, thumbprint=None, **kwargs):
+                 x509_certificate_path=None, thumbprint=None, **kwargs):
 
         if fail_impl:
             self._fail_impl = fail_impl
@@ -1506,7 +1504,6 @@ class AzureRMAuth(object):
             api_profile=api_profile,
             adfs_authority_url=adfs_authority_url,
             x509_certificate_path=x509_certificate_path,
-            x509_private_key_path=x509_private_key_path,
             thumbprint=thumbprint)
 
         if not self.credentials:
@@ -1588,12 +1585,11 @@ class AzureRMAuth(object):
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None and \
                 self.credentials.get('thumbprint') is not None and \
-                self.credentials.get('x509_private_key_path') is not None and \
                 self.credentials.get('x509_certificate_path') is not None:
 
             self.azure_credentials = self.acquire_token_with_client_certificate(
                 self._adfs_authority_url,
-                self.credentials['x509_private_key_path'],
+                self.credentials['x509_certificate_path'],
                 self.credentials['thumbprint'],
                 self.credentials['client_id'],
                 self.credentials['tenant'])
