@@ -961,11 +961,9 @@ class AzureRMModuleBase(object):
 
         if not is_track2:
             client.config = self.add_user_agent(client.config)
-            if self.azure_auth._cert_validation_mode == 'ignore':
-                client.config.session_configuration_callback = self._validation_ignore_callback
-        else:
-            if self.azure_auth._cert_validation_mode == 'ignore':
-                client._config.session_configuration_callback = self._validation_ignore_callback
+
+        if self.azure_auth._cert_validation_mode == 'ignore':
+            client.config.session_configuration_callback = self._validation_ignore_callback
 
         return client
 

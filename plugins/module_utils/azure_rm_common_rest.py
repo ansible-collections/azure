@@ -14,9 +14,11 @@ except Exception:
 try:
     from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_configuration import AzureConfiguration
-    from msrest.service_client import ServiceClient
-    from msrest.pipeline import ClientRawResponse
-    from msrest.polling import LROPoller
+    from azure.core._pipeline_client import PipelineClient
+    from azure.core.configuration import Configuration, ConnectionConfiguration
+    from azure.core.polling import LROPoller
+    from azure.core.pipeline import PipelineResponse
+    from azure.core.pipeline.policies import BearerTokenCredentialPolicy
     from msrestazure.polling.arm_polling import ARMPolling
     import uuid
     import json
@@ -27,30 +29,31 @@ except ImportError:
 ANSIBLE_USER_AGENT = 'Ansible/{0}'.format(ANSIBLE_VERSION)
 
 
-class GenericRestClientConfiguration(AzureConfiguration):
+class GenericRestClientConfiguration(Configuration):
 
-    def __init__(self, credentials, subscription_id, base_url=None):
+    def __init__(self, credential, subscription_id, credential_scopes=None, base_url=None):
 
-        if credentials is None:
+        if credential is None:
             raise ValueError("Parameter 'credentials' must not be None.")
         if subscription_id is None:
             raise ValueError("Parameter 'subscription_id' must not be None.")
         if not base_url:
             base_url = 'https://management.azure.com'
+        if not credential_scopes:
+            credential_scopes = 'https://management.azure.com/.default'
 
-        super(GenericRestClientConfiguration, self).__init__(base_url)
+        super(GenericRestClientConfiguration, self).__init__()
 
-        self.add_user_agent(ANSIBLE_USER_AGENT)
-
-        self.credentials = credentials
+        self.credentials = credential
         self.subscription_id = subscription_id
+        self.authentication_policy = BearerTokenCredentialPolicy(credential, credential_scopes)
 
 
 class GenericRestClient(object):
 
-    def __init__(self, credentials, subscription_id, base_url=None):
-        self.config = GenericRestClientConfiguration(credentials, subscription_id, base_url)
-        self._client = ServiceClient(self.config.credentials, self.config)
+    def __init__(self, credential, subscription_id, base_url=None, credential_scopes=None):
+        self.config = GenericRestClientConfiguration(credential, subscription_id, credential_scopes[0])
+        self._client = PipelineClient(base_url, config=self.config)
         self.models = None
 
     def query(self, url, method, query_parameters, header_parameters, body, expected_status_codes, polling_timeout, polling_interval):
@@ -65,21 +68,21 @@ class GenericRestClient(object):
         header_parameters['x-ms-client-request-id'] = str(uuid.uuid1())
 
         if method == 'GET':
-            request = self._client.get(url, query_parameters)
+            request = self._client.get(url, query_parameters, header_parameters, body)
         elif method == 'PUT':
-            request = self._client.put(url, query_parameters)
+            request = self._client.put(url, query_parameters, header_parameters, body)
         elif method == 'POST':
-            request = self._client.post(url, query_parameters)
+            request = self._client.post(url, query_parameters, header_parameters, body)
         elif method == 'HEAD':
-            request = self._client.head(url, query_parameters)
+            request = self._client.head(url, query_parameters, header_parameters, body)
         elif method == 'PATCH':
-            request = self._client.patch(url, query_parameters)
+            request = self._client.patch(url, query_parameters, header_parameters, body)
         elif method == 'DELETE':
-            request = self._client.delete(url, query_parameters)
+            request = self._client.delete(url, query_parameters, header_parameters, body)
         elif method == 'MERGE':
-            request = self._client.merge(url, query_parameters)
+            request = self._client.merge(url, query_parameters, header_parameters, body)
 
-        response = self._client.send(request, header_parameters, body, **operation_config)
+        response = self._client.send_request(request, **operation_config)
 
         if response.status_code not in expected_status_codes:
             exp = CloudError(response)

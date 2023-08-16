@@ -216,7 +216,6 @@ from ansible.module_utils.common.dict_transformations import dict_merge
 
 try:
     from msrestazure.azure_exceptions import CloudError
-    from msrest.service_client import ServiceClient
     from msrestazure.tools import resource_id, is_valid_resource_id
     import json
 
@@ -309,6 +308,7 @@ class AzureRMResource(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.state == 'absent':
@@ -400,9 +400,9 @@ class AzureRMResource(AzureRMModuleBase):
                                               self.polling_interval)
             if self.state == 'present':
                 try:
-                    response = json.loads(response.text)
+                    response = json.loads(response.body())
                 except Exception:
-                    response = response.text
+                    response = response.body()
             else:
                 response = None
 

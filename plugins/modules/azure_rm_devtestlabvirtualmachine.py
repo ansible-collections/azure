@@ -190,7 +190,6 @@ try:
     from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

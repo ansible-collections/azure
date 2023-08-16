@@ -145,7 +145,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common

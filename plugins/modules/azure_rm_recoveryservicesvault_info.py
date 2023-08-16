@@ -162,6 +162,7 @@ class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         changed = True
@@ -190,9 +191,9 @@ class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
             self.fail('Error in fetching Azure Recovery Service Vault Details {0}'.format(str(e)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.body()}
 
         return response
 

@@ -197,6 +197,7 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -291,9 +292,9 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
             self.fail('Error creating the ApiManagementService instance: {0}'.format(str(exc)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.body()}
             pass
 
         return response
@@ -332,7 +333,7 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
         except CloudError as e:
             self.log('Did not find the ApiManagementService instance.')
         if found is True:
-            return json.loads(response.text)
+            return json.loads(response.body())
 
         return False
 

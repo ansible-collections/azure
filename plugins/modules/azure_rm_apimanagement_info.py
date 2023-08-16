@@ -163,6 +163,7 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
                 self.body[key] = kwargs[key]
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if (self.resource_group is not None and
@@ -213,7 +214,7 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
         except CloudError as e:
             self.log('Could not get the information.{0}'.format(e))
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
             return None
 
@@ -236,7 +237,7 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
         except CloudError as e:
             self.log('Could not get info for the given api tags {0}'.format(e))
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
             return None
 
@@ -256,7 +257,7 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except CloudError as e:
             self.log('Could not get info for a given services.{0}'.format(e))
         try:

@@ -117,7 +117,6 @@ try:
     from msrestazure.azure_exceptions import CloudError
     from msrest.polling import LROPoller
     from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.serialization import Model
     from azure.mgmt.batch import BatchManagementClient
 except ImportError:
     # This is handled in azure_rm_common

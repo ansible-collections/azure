@@ -571,6 +571,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -666,9 +667,9 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             self.fail('Error creating the AzureFirewall instance: {0}'.format(str(exc)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.body()}
 
         return response
 
@@ -701,7 +702,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             found = True
             self.log("Response : {0}".format(response))
             # self.log("AzureFirewall instance : {0} found".format(response.name))
