@@ -92,7 +92,7 @@ class GenericRestClient(object):
             def get_long_running_output(response):
                 return response
             poller = LROPoller(self._client,
-                               ClientRawResponse(None, response),
+                               PipelineResponse(None, response),
                                get_long_running_output,
                                ARMPolling(polling_interval, **operation_config))
             response = self.get_poller_result(poller, polling_timeout)
