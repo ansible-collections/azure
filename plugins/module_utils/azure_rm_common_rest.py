@@ -12,10 +12,9 @@ except Exception:
     ANSIBLE_VERSION = 'unknown'
 
 try:
+    from azure.core.configuration import Configuration
     from msrestazure.azure_exceptions import CloudError
-    from msrestazure.azure_configuration import AzureConfiguration
     from azure.core._pipeline_client import PipelineClient
-    from azure.core.configuration import Configuration, ConnectionConfiguration
     from azure.core.polling import LROPoller
     from azure.core.pipeline import PipelineResponse
     from azure.core.pipeline.policies import BearerTokenCredentialPolicy
@@ -24,7 +23,7 @@ try:
     import json
 except ImportError:
     # This is handled in azure_rm_common
-    AzureConfiguration = object
+    pass
 
 ANSIBLE_USER_AGENT = 'Ansible/{0}'.format(ANSIBLE_VERSION)
 
