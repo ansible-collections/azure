@@ -12,7 +12,6 @@ except Exception:
     ANSIBLE_VERSION = 'unknown'
 
 try:
-    from azure.core.configuration import Configuration
     from msrestazure.azure_exceptions import CloudError
     from azure.core._pipeline_client import PipelineClient
     from azure.core.polling import LROPoller
@@ -21,9 +20,10 @@ try:
     from msrestazure.polling.arm_polling import ARMPolling
     import uuid
     import json
+    from azure.core.configuration import Configuration
 except ImportError:
     # This is handled in azure_rm_common
-    pass
+    Configuration = object
 
 ANSIBLE_USER_AGENT = 'Ansible/{0}'.format(ANSIBLE_VERSION)
 
