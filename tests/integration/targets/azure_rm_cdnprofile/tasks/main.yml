@@ -9,7 +9,7 @@
   azure_rm_cdnprofile:
       resource_group: "{{ resource_group }}"
       name: "{{ cdnprofilename }}"
-      sku: standard_akamai
+      sku: standard_verizon
       tags:
           testing: testing
           delete: on-exit
@@ -29,7 +29,7 @@
   azure_rm_cdnprofile:
       resource_group: "{{ resource_group }}"
       name: "{{ cdnprofilename }}"
-      sku: standard_akamai
+      sku: standard_verizon
       tags:
           testing: testing
           delete: on-exit
@@ -52,14 +52,14 @@
   assert:
       that:
         - "fact.cdnprofiles | length == 1"
-        - fact.cdnprofiles[0].sku == 'Standard_Akamai'
+        - fact.cdnprofiles[0].sku == 'Standard_Version'
         - fact.cdnprofiles[0].tags.foo == 'bar'
 
 - name: Create a CDN profile (idempotent)
   azure_rm_cdnprofile:
       resource_group: "{{ resource_group }}"
       name: "{{ cdnprofilename }}"
-      sku: standard_akamai
+      sku: standard_verizon
       tags:
           testing: testing
           delete: on-exit
@@ -75,7 +75,7 @@
   azure_rm_cdnprofile:
       resource_group: "{{ resource_group }}"
       name: "{{ cdnprofilename }}"
-      sku: standard_akamai
+      sku: standard_verizon
       tags:
           testing: testing
           delete: on-exit
@@ -105,7 +105,7 @@
   assert:
       that:
         - "fact.cdnprofiles | length == 1"
-        - fact.cdnprofiles[0].sku == 'Standard_Akamai'
+        - fact.cdnprofiles[0].sku == 'Standard_Version'
         - fact.cdnprofiles[0].tags.foo == 'bar'
         - fact.cdnprofiles[0].tags.baz == 'qux'
 
