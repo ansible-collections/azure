@@ -17,7 +17,7 @@ try:
     from azure.core.polling import LROPoller
     from azure.core.pipeline import PipelineResponse
     from azure.core.pipeline.policies import BearerTokenCredentialPolicy
-    from msrestazure.polling.arm_polling import ARMPolling
+    from azure.mgmt.core.polling.arm_polling import ARMPolling
     import uuid
     import json
     from azure.core.configuration import Configuration
@@ -91,7 +91,7 @@ class GenericRestClient(object):
             def get_long_running_output(response):
                 return response
             poller = LROPoller(self._client,
-                               PipelineResponse(None, response),
+                               PipelineResponse(None, response, None),
                                get_long_running_output,
                                ARMPolling(polling_interval, **operation_config))
             response = self.get_poller_result(poller, polling_timeout)

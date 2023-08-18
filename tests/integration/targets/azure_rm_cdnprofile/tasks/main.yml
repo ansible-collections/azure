@@ -52,7 +52,7 @@
   assert:
       that:
         - "fact.cdnprofiles | length == 1"
-        - fact.cdnprofiles[0].sku == 'Standard_Version'
+        - fact.cdnprofiles[0].sku == 'Standard_Verizon'
         - fact.cdnprofiles[0].tags.foo == 'bar'
 
 - name: Create a CDN profile (idempotent)
@@ -105,7 +105,7 @@
   assert:
       that:
         - "fact.cdnprofiles | length == 1"
-        - fact.cdnprofiles[0].sku == 'Standard_Version'
+        - fact.cdnprofiles[0].sku == 'Standard_Verizon'
         - fact.cdnprofiles[0].tags.foo == 'bar'
         - fact.cdnprofiles[0].tags.baz == 'qux'
 
