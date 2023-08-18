@@ -276,7 +276,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         try:
             response = json.loads(response.body())
         except Exception:
-            response = {'text': response.context['deserialized_data']}
+            pass
         return response
 
     def get_resource(self):
