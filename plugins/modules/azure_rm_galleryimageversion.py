@@ -582,7 +582,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
         try:
             response = json.loads(response.body())
         except Exception:
-            response = {'text': response.body()}
+            response = {'text': response.context['deserialized_data']}
 
         while response['properties']['provisioningState'] == 'Creating':
             time.sleep(60)

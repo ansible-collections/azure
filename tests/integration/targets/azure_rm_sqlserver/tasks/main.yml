@@ -305,7 +305,7 @@
   register: output
   until: output.databases[0].earliest_restore_date != None
   retries: 10
-  delay: 30
+  delay: 60
 - name: Assert that it can be restored from
   assert:
     that:

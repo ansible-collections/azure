@@ -161,7 +161,7 @@ class BackupAzureVMInfo(AzureRMModuleBaseExt):
         try:
             response = json.loads(response.body())
         except Exception:
-            response = {'text': response.body()}
+            response = {'text': response.context['deserialized_data']}
 
         return response
 

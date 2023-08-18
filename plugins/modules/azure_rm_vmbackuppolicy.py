@@ -400,7 +400,7 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
         try:
             response = json.loads(response.body())
         except Exception:
-            response = {'text': response.body()}
+            response = {'text': response.context['deserialized_data']}
 
         return response
 
@@ -424,7 +424,7 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
         try:
             response = json.loads(response.body())
         except Exception:
-            response = {'text': response.body()}
+            response = {'text': response.context['deserialized_data']}
         return response
 
     def get_resource(self):
