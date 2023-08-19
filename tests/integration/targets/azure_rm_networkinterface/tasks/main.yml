@@ -536,8 +536,8 @@
     resource_group: "{{ resource_group_secondary }}"
     name: "appgateway{{ rpfx }}"
     sku:
-      name: standard_small
-      tier: standard
+      name: standard_v2
+      tier: standard_v2
       capacity: 2
     gateway_ip_configurations:
       - subnet:
