@@ -523,6 +523,14 @@
     address_prefix_cidr: 10.10.1.0/24
   register: appgw_subnet_output
 
+- name: Create public IP addresses
+  azure_rm_publicipaddress:
+    name: my-appgw-pip
+    resource_group: "{{ resource_group_secondary }}"
+    sku: 'standard'
+    allocation_method: 'static'
+    version: 'ipv4'
+
 - name: Create application gateway to connect NIC to
   azure_rm_appgateway:
     resource_group: "{{ resource_group_secondary }}"
@@ -536,9 +544,8 @@
           id: "{{ appgw_subnet_output.state.id }}"
         name: app_gateway_ip_config
     frontend_ip_configurations:
-      - subnet:
-          id: "{{ appgw_subnet_output.state.id }}"
-        name: sample_gateway_frontend_ip_config
+      - name: sample_gateway_frontend_ip_config
+        public_ip_address: my-appgw-pip
     frontend_ports:
       - port: 80
         name: http_frontend_port

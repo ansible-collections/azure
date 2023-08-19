@@ -421,12 +421,6 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
             self.log('Error attempting to delete Azure Backup policy.')
             self.fail('Error attempting to delete Azure Backup policy: {0}'.format(str(e)))
 
-        try:
-            response = json.loads(response.body())
-        except Exception:
-            pass
-        return response
-
     def get_resource(self):
         # self.log('Fetch Backup Policy Details {0}'.format(self.))
         found = False
