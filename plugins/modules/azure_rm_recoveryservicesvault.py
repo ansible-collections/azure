@@ -273,12 +273,6 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
             self.log('Error attempting to delete Azure Recovery Service Vault.')
             self.fail('Error while deleting Azure Recovery Service Vault: {0}'.format(str(e)))
 
-        try:
-            response = json.loads(response.body())
-        except Exception:
-            pass
-        return response
-
     def get_resource(self):
         # self.log('Get Recovery Service Vault Name {0}'.format(self.))
         found = False

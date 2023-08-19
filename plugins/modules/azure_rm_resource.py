@@ -354,7 +354,7 @@ class AzureRMResource(AzureRMModuleBase):
                     provider = self.url.split("/providers/")[1].split("/")[0]
                     resourceType = self.url.split(provider + "/")[1].split("/")[0]
                     url = "/subscriptions/" + self.subscription_id + "/providers/" + provider
-                    api_versions = json.loads(self.mgmt_client.query(url, "GET", {'api-version': '2015-01-01'}, None, None, [200], 0, 0).text)
+                    api_versions = json.loads(self.mgmt_client.query(url, "GET", {'api-version': '2015-01-01'}, None, None, [200], 0, 0).body())
                     for rt in api_versions['resourceTypes']:
                         if rt['resourceType'].lower() == resourceType.lower():
                             self.api_version = rt['apiVersions'][0]
@@ -398,7 +398,7 @@ class AzureRMResource(AzureRMModuleBase):
                                               self.status_code,
                                               self.polling_timeout,
                                               self.polling_interval)
-            if self.state == 'present':
+            if self.state == 'present' and self.method != 'DELETE':
                 try:
                     response = json.loads(response.body())
                 except Exception:
