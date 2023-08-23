@@ -1,6 +1,6 @@
 # Change Log
 
-## v1.17.0 (2023-8-21)
+## v1.17.0 (2023-8-23)
 
 ### FEATURE ENHANCEMENT
   - azure_rm_virtualmachine:
