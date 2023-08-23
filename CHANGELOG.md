@@ -20,6 +20,7 @@
   - azure_rm_batchaccount_info: Upgrade `azure-mgmt-batch` to v17.0.0 ([#1202](https://github.com/ansible-collections/azure/pull/1202))
   - pr-pipelines.yml: Update test Ansible version to v2.14.0 ([#1182](https://github.com/ansible-collections/azure/pull/1182))
   - runtime.yml: Keep action_groups and modules list consistent for v1.15.0 and v1.16.0 ([#1188](https://github.com/ansible-collections/azure/pull/1188))
+  - azure_rm_aks_info: Support to list all managed cluster ([#1229](https://github.com/ansible-collections/azure/pull/1229))
 
 ### BUG FIXING
   - azure_rm_virtualmachine:
@@ -43,7 +44,7 @@
   - azure_rm_mmultipleanageddisk: `source_account_id` should be ~~~~`storage_account_id` ([#1187](https://github.com/ansible-collections/azure/pull/1187))
   - azure_rm_virtualmachine_info: Fix the issue when `security_profile` not returned  ([#1205](https://github.com/ansible-collections/azure/pull/1205))
   - azure_rm_backupazurevm: Use the module configured `subscrtion_id` if available ([#1225](https://github.com/ansible-collections/azure/pull/1225))
-
+  - azure_keyvault_secret: Removed subscription_id from azure_keyvault_secret lookup when using az cli auth ([#1175](https://github.com/ansible-collections/azure/pull/1175))
 
 ## v1.16.0 (2023-5-31)
 
