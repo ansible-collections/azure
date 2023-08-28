@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_sshpublickey
-version_added: "1.16.0"
+version_added: "1.18.0"
 short_description: Manage ssh public key with vm
 description:
     - Create, update or delete the vm public key.
@@ -60,7 +60,7 @@ EXAMPLES = '''
       azure_rm_sshpublickey:
         resource_group: myResourceGroup
         name: mySshPublicKey
-        public_key: "ssh-rsa ****************************@qq.com"
+        public_key: "ssh-rsa ****************************@test.com"
         tags:
             testing: testing
             delete: on-exit
@@ -115,7 +115,7 @@ state:
                 - SSH public key used to authenticate to a virtual machine through ssh.
             returned: always
             type: str
-            sample: "ssh-rsa **************@qq.com"
+            sample: "ssh-rsa **************@test.com"
 '''
 
 try:

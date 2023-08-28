@@ -12,7 +12,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_sshpublickey_info
 
-version_added: "1.16.0"
+version_added: "1.18.0"
 
 short_description: Get Ssh Public Key with VM facts
 
@@ -97,7 +97,7 @@ ssh_keys:
                 - SSH public key used to authenticate to a virtual machine through ssh.
             returned: always
             type: str
-            sample: "ssh-rsa **************@qq.com"
+            sample: "ssh-rsa **************@test.com"
 '''
 
 try:
