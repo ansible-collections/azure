@@ -260,7 +260,7 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
         return results
 
     def to_dict(self, azure_object):
-        if azure_object.type == '/providers/Microsoft.Management/managementGroups':
+        if azure_object.type == 'Microsoft.Management/managementGroups':
             return_dict = dict(
                 display_name=azure_object.display_name,
                 id=azure_object.id,
