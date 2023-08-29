@@ -69,7 +69,7 @@ options:
     scm_ip_security_restrictions:
         description:
             - >-
-                The web app's SCM access restrictions. If C(scm_ip_security_restrictions_use_main) is set to C(true),
+                The web app's SCM access restrictions. If I(scm_ip_security_restrictions_use_main) is set to C(true),
                 the SCM restrictions will be configured but not used.
         type: list
         elements: dict
@@ -104,7 +104,7 @@ options:
         description:
             - >-
                 Set to C(true) to have the HTTP access restrictions also apply to the SCM site.
-                If C(scm_ip_security_restrictions) are also applied, they will configured but not used.
+                If I(scm_ip_security_restrictions) are also applied, they will configured but not used.
         default: false
         type: bool
 

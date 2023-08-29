@@ -37,13 +37,18 @@ options:
     show_connection_string:
         description:
             - Show the connection string for each of the storageaccount's endpoints.
-            - For convenient usage, C(show_connection_string) will also show the access keys for each of the storageaccount's endpoints.
+            - For convenient usage, I(show_connection_string) will also show the access keys for each of the storageaccount's endpoints.
             - Note that it will cost a lot of time when list all storageaccount rather than query a single one.
         type: bool
     show_blob_cors:
         description:
             - Show the blob CORS settings for each blob related to the storage account.
             - Querying all storage accounts will take a long time.
+        type: bool
+    show_georeplication_stats:
+        description:
+            - Show the Geo Replication Stats for each storage account.
+            - Using this option on an account that does not support georeplication will cause a delay in getting results.
         type: bool
 
 extends_documentation_fragment:
@@ -273,6 +278,12 @@ storageaccounts:
             returned: always
             type: str
             sample: Succeeded
+        failover_in_progress:
+            description:
+                - Status indicating the storage account is currently failing over to its secondary location.
+            returned: always
+            type: bool
+            sample: False
         secondary_location:
             description:
                 - The location of the geo-replicated secondary for the storage account.
@@ -466,6 +477,29 @@ storageaccounts:
                     description:
                         - The account key for the secondary_endpoints
                     sample: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        georeplication_stats:
+            description:
+                - Parameters related to the status of geo-replication.
+                - This will be null on accounts that don't support geo-replication.
+            returned: always
+            type: complex
+            contains:
+                can_failover:
+                    description:
+                        - Property indicating if fail over is supported by the account.
+                    type: bool
+                    sample: true
+                last_sync_time:
+                    description:
+                        - Writes to the primary before this time are guaranteed to be replicated to the secondary.
+                    type: str
+                    sample: "2023-04-10T21:22:15+00:00"
+                sync_status:
+                    description:
+                        - Property showing status of the secondary region.
+                        - Known values are "Live", "Bootstrap", and "Unavailable".
+                    type: str
+                    sample: Live
         tags:
             description:
                 - Resource tags.
@@ -520,7 +554,8 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             resource_group=dict(type='str', aliases=['resource_group_name']),
             tags=dict(type='list', elements='str'),
             show_connection_string=dict(type='bool'),
-            show_blob_cors=dict(type='bool')
+            show_blob_cors=dict(type='bool'),
+            show_georeplication_stats=dict(type='bool')
         )
 
         self.results = dict(
@@ -533,6 +568,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         self.tags = None
         self.show_connection_string = None
         self.show_blob_cors = None
+        self.show_georeplication_stats = None
 
         super(AzureRMStorageAccountInfo, self).__init__(self.module_arg_spec,
                                                         supports_check_mode=True,
@@ -572,10 +608,22 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         self.log('Get properties for account {0}'.format(self.name))
         account = None
         try:
-            account = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name)
+            expand = None
+            if (self.show_georeplication_stats):
+                expand = 'georeplicationstats'
+            account = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name, expand=expand)
             return [account]
-        except ResourceNotFoundError:
-            pass
+        except Exception as exc:
+
+            # Several errors are passed as generic HTTP errors. Catch the error and pass back the basic account information
+            # if the account doesn't support replication or replication stats are not available.
+            if "InvalidAccountType" in str(exc) or "LastSyncTimeUnavailable" in str(exc):
+                account = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name)
+                return [account]
+
+            if "AuthorizationFailed" in str(exc):
+                self.fail("Error authenticating with the Azure storage API. {0}".format(str(exc)))
+
         return []
 
     def list_resource_group(self):
@@ -610,6 +658,8 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             id=account_obj.id,
             name=account_obj.name,
             location=account_obj.location,
+            failover_in_progress=(account_obj.failover_in_progress
+                                  if account_obj.failover_in_progress is not None else False),
             access_tier=(account_obj.access_tier
                          if account_obj.access_tier is not None else None),
             account_type=account_obj.sku.name,
@@ -632,6 +682,14 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 error_document404_path=None,
             ),
         )
+
+        account_dict['geo_replication_stats'] = None
+        if account_obj.geo_replication_stats is not None:
+            account_dict['geo_replication_stats'] = dict(
+                status=account_obj.geo_replication_stats.status,
+                can_failover=account_obj.geo_replication_stats.can_failover,
+                last_sync_time=account_obj.geo_replication_stats.last_sync_time
+            )
 
         id_dict = self.parse_resource_to_dict(account_obj.id)
         account_dict['resource_group'] = id_dict.get('resource_group')

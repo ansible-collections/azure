@@ -586,12 +586,12 @@ class AzureRMCdnendpoint(AzureRMModuleBase):
             poller = self.cdn_client.endpoints.begin_purge_content(self.resource_group,
                                                                    self.profile_name,
                                                                    self.name,
-                                                                   content_paths=self.purge_content_paths)
+                                                                   content_file_paths=dict(content_paths=self.purge_content_paths))
             response = self.get_poller_result(poller)
             self.log("Response : {0}".format(response))
             return self.get_cdnendpoint()
         except Exception as e:
-            self.log('Fail to purge the Azure CDN endpoint.')
+            self.fail('Fail to purge the Azure CDN endpoint.')
             return False
 
     def stop_cdnendpoint(self):

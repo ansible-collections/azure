@@ -68,7 +68,7 @@ options:
         version_added: "1.11.0"
     change_admin_password:
         description:
-            - Whether or not the c(admin_password) should be updated for an existing server. If true, the password is the only value which will be updated.
+            - Whether or not the I(admin_password) should be updated for an existing server. If C(true), the password is the only value which will be updated.
         type: bool
         default: false
         version_added: "1.11.0"

@@ -225,7 +225,6 @@ plugins/modules/azure_rm_trafficmanagerprofile.py validate-modules:undocumented-
 plugins/modules/azure_rm_trafficmanagerprofile.py validate-modules:doc-default-does-not-match-spec
 plugins/modules/azure_rm_trafficmanagerprofile_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualnetwork.py validate-modules:parameter-type-not-in-doc
-plugins/modules/azure_rm_virtualnetwork.py validate-modules:parameter-list-no-elements
 plugins/modules/azure_rm_virtualnetwork_info.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualnetworkpeering.py validate-modules:parameter-type-not-in-doc
 plugins/modules/azure_rm_virtualnetworkpeering.py validate-modules:doc-required-mismatch

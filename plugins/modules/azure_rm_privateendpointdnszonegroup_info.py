@@ -44,7 +44,7 @@ author:
 '''
 
 EXAMPLES = '''
-- name: Get specific DNS zone groups for a private endpoing
+- name: Get specific DNS zone groups for a private endpoint
   azure_rm_privateendpointdnszonegroup_info:
     name: "my-zone-group"
     private_endpoint: "my-private-endpoint"

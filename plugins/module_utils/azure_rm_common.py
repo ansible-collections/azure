@@ -252,7 +252,7 @@ try:
     from azure.mgmt.marketplaceordering import MarketplaceOrderingAgreements
     from azure.mgmt.trafficmanager import TrafficManagerManagementClient
     from azure.storage.blob import BlobServiceClient
-    from adal.authentication_context import AuthenticationContext
+    from msal.application import ClientApplication, ConfidentialClientApplication
     from azure.mgmt.authorization import AuthorizationManagementClient
     from azure.mgmt.sql import SqlManagementClient
     from azure.mgmt.servicebus import ServiceBusManagementClient
@@ -1076,6 +1076,7 @@ class AzureRMModuleBase(object):
             self._management_group_client = self.get_mgmt_svc_client(ManagementGroupsClient,
                                                                      base_url=self._cloud_environment.endpoints.resource_manager,
                                                                      suppress_subscription_id=True,
+                                                                     is_track2=True,
                                                                      api_version='2020-05-01')
         return self._management_group_client
 
@@ -1267,6 +1268,7 @@ class AzureRMModuleBase(object):
         self.log('Getting marketplace agreement client')
         if not self._marketplace_client:
             self._marketplace_client = self.get_mgmt_svc_client(MarketplaceOrderingAgreements,
+                                                                is_track2=True,
                                                                 base_url=self._cloud_environment.endpoints.resource_manager)
         return self._marketplace_client
 
@@ -1587,7 +1589,6 @@ class AzureRMAuth(object):
 
             self.azure_credentials = self.acquire_token_with_client_certificate(
                 self._adfs_authority_url,
-                self._cloud_environment.endpoints.active_directory_resource_id,
                 self.credentials['x509_certificate_path'],
                 self.credentials['thumbprint'],
                 self.credentials['client_id'],
@@ -1596,6 +1597,22 @@ class AzureRMAuth(object):
             self.azure_credential_track2 = certificate.CertificateCredential(tenant_id=self.credentials['tenant'],
                                                                              client_id=self.credentials['client_id'],
                                                                              certificate_path=self.credentials['x509_certificate_path'])
+
+        elif self.credentials.get('ad_user') is not None and \
+                self.credentials.get('password') is not None and \
+                self.credentials.get('client_id') is not None and \
+                self.credentials.get('tenant') is not None:
+
+            self.azure_credentials = self.acquire_token_with_username_password(
+                self._adfs_authority_url,
+                self.credentials['ad_user'],
+                self.credentials['password'],
+                self.credentials['client_id'],
+                self.credentials['tenant'])
+            self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
+                                                                                    password=self.credentials['password'],
+                                                                                    tenant_id=self.credentials.get('tenant'),
+                                                                                    client_id=self.credentials.get('client_id'))
 
         elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
             tenant = self.credentials.get('tenant')
@@ -1614,19 +1631,6 @@ class AzureRMAuth(object):
                                                                                     password=self.credentials['password'],
                                                                                     tenant_id=self.credentials.get('tenant', 'organizations'),
                                                                                     client_id=client_id)
-
-        elif self.credentials.get('ad_user') is not None and \
-                self.credentials.get('password') is not None and \
-                self.credentials.get('client_id') is not None and \
-                self.credentials.get('tenant') is not None:
-
-            self.azure_credentials = self.acquire_token_with_username_password(
-                self._adfs_authority_url,
-                self._cloud_environment.endpoints.active_directory_resource_id,
-                self.credentials['ad_user'],
-                self.credentials['password'],
-                self.credentials['client_id'],
-                self.credentials['tenant'])
 
         else:
             self.fail("Failed to authenticate with provided credentials. Some attributes were missing. "
@@ -1807,28 +1811,39 @@ class AzureRMAuth(object):
 
         return None
 
-    def acquire_token_with_username_password(self, authority, resource, username, password, client_id, tenant):
+    def acquire_token_with_username_password(self, authority, username, password, client_id, tenant):
         authority_uri = authority
 
         if tenant is not None:
             authority_uri = authority + '/' + tenant
 
-        context = AuthenticationContext(authority_uri)
-        token_response = context.acquire_token_with_username_password(resource, username, password, client_id)
+        context = ClientApplication(client_id=client_id, authority=authority_uri)
+        base_url = self._cloud_environment.endpoints.resource_manager
+        if not base_url.endswith("/"):
+            base_url += "/"
+        scopes = [base_url + ".default"]
+        token_response = context.acquire_token_by_username_password(username, password, scopes)
 
         return AADTokenCredentials(token_response)
 
-    def acquire_token_with_client_certificate(self, authority, resource, x509_certificate_path, thumbprint, client_id, tenant):
+    def acquire_token_with_client_certificate(self, authority, x509_private_key_path, thumbprint, client_id, tenant):
         authority_uri = authority
 
         if tenant is not None:
             authority_uri = authority + '/' + tenant
 
-        context = AuthenticationContext(authority_uri)
-        x509_certificate = None
-        with open(x509_certificate_path, 'rb') as pem_file:
-            x509_certificate = pem_file.read()
-        token_response = context.acquire_token_with_client_certificate(resource, client_id, x509_certificate, thumbprint)
+        x509_private_key = None
+        with open(x509_private_key_path, 'r') as pem_file:
+            x509_private_key = pem_file.read()
+
+        base_url = self._cloud_environment.endpoints.resource_manager
+        if not base_url.endswith("/"):
+            base_url += "/"
+        scopes = [base_url + ".default"]
+        client_credential = {"thumbprint": thumbprint, "private_key": x509_private_key}
+        context = ConfidentialClientApplication(client_id=client_id, authority=authority_uri, client_credential=client_credential)
+
+        token_response = context.acquire_token_for_client(scopes=scopes)
 
         return AADTokenCredentials(token_response)
 

@@ -754,9 +754,18 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                 # name, private_ip_address, public_ip_address_name, private_ip_allocation_method, subnet_name
                 ip_configuration_result = self.construct_ip_configuration_set(results['ip_configurations'])
                 ip_configuration_request = self.construct_ip_configuration_set(self.ip_configurations)
-                if ip_configuration_result != ip_configuration_request:
-                    self.log("CHANGED: network interface {0} ip configurations".format(self.name))
-                    changed = True
+                ip_configuration_result_name = [item['name'] for item in ip_configuration_result]
+                for item_request in ip_configuration_request:
+                    if item_request['name'] not in ip_configuration_result_name:
+                        changed = True
+                        break
+                    else:
+                        for item_result in ip_configuration_result:
+                            if len(ip_configuration_request) == 1 and len(ip_configuration_result) == 1:
+                                item_request['primary'] = True
+                            if item_request['name'] == item_result['name'] and item_request != item_result:
+                                changed = True
+                                break
 
             elif self.state == 'absent':
                 self.log("CHANGED: network interface {0} exists but requested state is 'absent'".format(self.name))
@@ -911,7 +920,7 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
         return val
 
     def construct_ip_configuration_set(self, raw):
-        configurations = [str(dict(
+        configurations = [dict(
             private_ip_allocation_method=to_native(item.get('private_ip_allocation_method')),
             public_ip_address_name=(to_native(item.get('public_ip_address').get('name'))
                                     if item.get('public_ip_address') else to_native(item.get('public_ip_address_name'))),
@@ -925,8 +934,8 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
             application_security_groups=(set([to_native(asg_id) for asg_id in item.get('application_security_groups')])
                                          if item.get('application_security_groups') else None),
             name=to_native(item.get('name'))
-        )) for item in raw]
-        return set(configurations)
+        ) for item in raw]
+        return configurations
 
 
 def main():

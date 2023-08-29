@@ -152,6 +152,7 @@ action_groups:
   - azure.azcollection.azure_rm_monitordiagnosticsetting
   - azure.azcollection.azure_rm_monitordiagnosticsetting_info
   - azure.azcollection.azure_rm_monitorlogprofile
+  - azure.azcollection.azure_rm_multiplemanageddisks
   - azure.azcollection.azure_rm_mysqlconfiguration
   - azure.azcollection.azure_rm_mysqlconfiguration_info
   - azure.azcollection.azure_rm_mysqldatabase
@@ -226,6 +227,8 @@ action_groups:
   - azure.azcollection.azure_rm_snapshot
   - azure.azcollection.azure_rm_sqldatabase
   - azure.azcollection.azure_rm_sqldatabase_info
+  - azure.azcollection.azure_rm_sqlelasticpool
+  - azure.azcollection.azure_rm_sqlelasticpool_info
   - azure.azcollection.azure_rm_sqlfirewallrule
   - azure.azcollection.azure_rm_sqlfirewallrule_info
   - azure.azcollection.azure_rm_sqlserver
@@ -270,6 +273,7 @@ action_groups:
   - azure.azcollection.azure_rm_virtualwan_info
   - azure.azcollection.azure_rm_vmbackuppolicy
   - azure.azcollection.azure_rm_vmbackuppolicy_info
+  - azure.azcollection.azure_rm_vmssnetworkinterface_info
   - azure.azcollection.azure_rm_vpnsite
   - azure.azcollection.azure_rm_vpnsite_info
   - azure.azcollection.azure_rm_vpnsitelink_info

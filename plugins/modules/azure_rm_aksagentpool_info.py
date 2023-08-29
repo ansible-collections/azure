@@ -14,7 +14,7 @@ module: azure_rm_aksagentpool_info
 version_added: '1.14.0'
 short_description: Show the details for a node pool in the managed Kubernetes cluster
 description:
-    - Get the details for a node pool in the managed Kubernetes cluster
+    - Get the details for a node pool in the managed Kubernetes cluster.
 
 options:
     resource_group:

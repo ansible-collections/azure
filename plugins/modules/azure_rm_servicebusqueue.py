@@ -82,6 +82,11 @@ options:
             - The maximum delivery count.
             - A message is automatically deadlettered after this number of deliveries.
         type: int
+    max_message_size_in_kb:
+        description:
+            - Maximum size (in KB) of the message payload that can be accepted by the queue.
+            - This property is only used in Premium today and default is 1024.
+        type: int
     max_size_in_mb:
         description:
             - The maximum size of the queue in megabytes, which is the size of memory allocated for the queue.
@@ -108,7 +113,6 @@ options:
             - receive_disabled
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -179,6 +183,7 @@ class AzureRMServiceBusQueue(AzureRMModuleBase):
             forward_to=dict(type='str'),
             lock_duration_in_seconds=dict(type='int'),
             max_delivery_count=dict(type='int'),
+            max_message_size_in_kb=dict(type='int'),
             max_size_in_mb=dict(type='int'),
             requires_duplicate_detection=dict(type='bool'),
             requires_session=dict(type='bool'),
@@ -207,6 +212,7 @@ class AzureRMServiceBusQueue(AzureRMModuleBase):
         self.requires_duplicate_detection = None
         self.status = None
         self.requires_session = None
+        self.max_message_size_in_kb = None
 
         self.results = dict(
             changed=False,
@@ -214,6 +220,7 @@ class AzureRMServiceBusQueue(AzureRMModuleBase):
         )
 
         super(AzureRMServiceBusQueue, self).__init__(self.module_arg_spec,
+                                                     supports_tags=False,
                                                      supports_check_mode=True)
 
     def exec_module(self, **kwargs):
@@ -234,6 +241,7 @@ class AzureRMServiceBusQueue(AzureRMModuleBase):
                 forward_dead_lettered_messages_to=self.forward_dead_lettered_messages_to,
                 forward_to=self.forward_to,
                 max_delivery_count=self.max_delivery_count,
+                max_message_size_in_kilobytes=self.max_message_size_in_kb,
                 max_size_in_megabytes=self.max_size_in_mb,
                 requires_session=self.requires_session,
                 requires_duplicate_detection=self.requires_duplicate_detection
@@ -270,6 +278,7 @@ class AzureRMServiceBusQueue(AzureRMModuleBase):
         return self.results
 
     def create_or_update(self, param):
+
         try:
             client = self._get_client()
             return client.create_or_update(self.resource_group, self.namespace, self.name, param)
@@ -317,6 +326,8 @@ class AzureRMServiceBusQueue(AzureRMModuleBase):
                 result[attribute] = to_native(value)
             elif attribute == 'max_size_in_megabytes':
                 result['max_size_in_mb'] = value
+            elif attribute == 'max_size_in_kilobytes':
+                result['max_size_in_kb'] = value
             else:
                 result[attribute] = value
         return result

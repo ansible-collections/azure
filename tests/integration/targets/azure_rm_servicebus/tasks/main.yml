@@ -7,12 +7,16 @@
   azure_rm_servicebus:
       name: "ns{{ rpfx }}"
       resource_group: "{{ resource_group }}"
+      sku: premium
+      tags:
+        key1: value1
   register: namespace
 
 - assert:
     that:
       - namespace.id
       - namespace.changed
+      - namespace.tags
 
 - name: Create a namespace (idempontent)
   azure_rm_servicebus:
@@ -29,6 +33,8 @@
       name: "queue{{ rpfx }}"
       namespace: "ns{{ rpfx }}"
       resource_group: "{{ resource_group }}"
+      max_message_size_in_kb: 2048
+      max_size_in_mb: 2048
   register: queue
 
 - assert:
@@ -42,6 +48,8 @@
       resource_group: "{{ resource_group }}"
       namespace: "ns{{ rpfx }}"
       duplicate_detection_time_in_seconds: 600
+      max_message_size_in_kb: 2048
+      max_size_in_mb: 2048
   check_mode: yes
   register: output
 
@@ -55,6 +63,8 @@
       resource_group: "{{ resource_group }}"
       namespace: "ns{{ rpfx }}"
       duplicate_detection_time_in_seconds: 600
+      max_message_size_in_kb: 2048
+      max_size_in_mb: 2048
   register: output
 
 - assert:
@@ -69,6 +79,8 @@
       resource_group: "{{ resource_group }}"
       namespace: "ns{{ rpfx }}"
       duplicate_detection_time_in_seconds: 600
+      max_message_size_in_kb: 2048
+      max_size_in_mb: 2048
   register: output
 
 - assert:
