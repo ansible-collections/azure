@@ -108,6 +108,8 @@ EXAMPLES = '''
     name: Testing
     hub_policy_name: iothubowner
     hub_policy_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
 - name: Create Azure IoT Edge device
   azure_rm_iotdevice:
@@ -115,6 +117,8 @@ EXAMPLES = '''
     name: Testing
     hub_policy_name: iothubowner
     hub_policy_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     edge_enabled: yes
 
 - name: Create Azure IoT Hub device with device twin properties and tag
@@ -123,6 +127,8 @@ EXAMPLES = '''
     name: Testing
     hub_policy_name: iothubowner
     hub_policy_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     twin_tags:
         location:
             country: US
@@ -469,10 +475,12 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             etag=item.etag,
             generationId=item.generation_id,
             lastActivityTime=item.last_activity_time,
-            status=item.status,
-            statusReason=item.status_reason,
             statusUpdatedTime=item.status_updated_time
         )
+        if hasattr(item, 'status_reason'):
+            format_item['status_reason'] = item.status_reason
+        if hasattr(item, 'status'):
+            format_item['status'] = item.status
         if hasattr(item, 'modules'):
             format_item['modules'] = item.modules
         if item.authentication:

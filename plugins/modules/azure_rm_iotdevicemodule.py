@@ -103,6 +103,8 @@ EXAMPLES = '''
     device: mydevice
     hub_policy_name: iothubowner
     hub_policy_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
 - name: Create Azure IoT Edge device module
   azure_rm_iotdevice:
@@ -111,6 +113,8 @@ EXAMPLES = '''
     name: Testing
     hub_policy_name: iothubowner
     hub_policy_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     edge_enabled: yes
 
 - name: Create Azure IoT Hub device module with module twin properties and tag
@@ -120,6 +124,8 @@ EXAMPLES = '''
     device: mydevice
     hub_policy_name: iothubowner
     hub_policy_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     twin_tags:
         location:
             country: US

@@ -66,7 +66,6 @@ EXAMPLES = '''
 
 - name: Query all device modules in an IoT Hub
   azure_rm_iotdevice_info:
-      query: "SELECT * FROM devices.modules"
       hub: MyIoTHub
       hub_policy_name: registryRead
       hub_policy_key: XXXXXXXXXXXXXXXXXXXX
