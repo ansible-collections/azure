@@ -1465,7 +1465,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                     update_security_profile = True
                             else:
                                 self.security_profile['uefi_settings']['v_tpm_enabled'] = \
-                                    vm_dict[]['security_profile']['uefi_settings']['v_tpm_enabled']
+                                    vm_dict['security_profile']['uefi_settings']['v_tpm_enabled']
                     if update_security_profile:
                         changed = True
                         differences.append('security_profile')

@@ -147,7 +147,7 @@
       that:
         - "fact.aks | length == 1"
         - fact.aks[0].id == output.id
-        - fact.aks[0].properties.agent_pool_profiles[0].node_labels | length == 2
+        - fact.aks[0].agent_pool_profiles[0].node_labels | length == 2
 
  - name: Get AKS upgrade versions
    azure_rm_aksupgrade_info:
