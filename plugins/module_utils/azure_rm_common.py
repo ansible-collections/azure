@@ -221,13 +221,6 @@ except ImportError:
     HAS_PACKAGING_VERSION = False
     HAS_PACKAGING_VERSION_EXC = traceback.format_exc()
 
-# NB: packaging issue sometimes cause msrestazure not to be installed, check it separately
-try:
-    from msrest.serialization import Serializer
-except ImportError:
-    HAS_MSRESTAZURE_EXC = traceback.format_exc()
-    HAS_MSRESTAZURE = False
-
 try:
     from enum import Enum
     from msrestazure.azure_active_directory import AADTokenCredentials
@@ -268,9 +261,7 @@ try:
     import azure.mgmt.automation.models as AutomationModel
     from azure.mgmt.iothub import IotHubClient
     from azure.mgmt.iothub import models as IoTHubModels
-    from msrest.service_client import ServiceClient
     from msrestazure import AzureConfiguration
-    from msrest.authentication import Authentication
     from azure.mgmt.resource.locks import ManagementLockClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
     import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
@@ -619,18 +610,7 @@ class AzureRMModuleBase(object):
         :param enum_modules: List of module names to build enum dependencies from.
         :return: serialized result
         '''
-        enum_modules = [] if enum_modules is None else enum_modules
-
-        dependencies = dict()
-        if enum_modules:
-            for module_name in enum_modules:
-                mod = importlib.import_module(module_name)
-                for mod_class_name, mod_class_obj in inspect.getmembers(mod, predicate=inspect.isclass):
-                    dependencies[mod_class_name] = mod_class_obj
-            self.log("dependencies: ")
-            self.log(str(dependencies))
-        serializer = Serializer(classes=dependencies)
-        return serializer.body(obj, class_name, keep_readonly=True)
+        return obj.as_dict()
 
     def get_poller_result(self, poller, wait=5):
         '''
@@ -997,13 +977,6 @@ class AzureRMModuleBase(object):
         if policy:
             result['skn'] = policy
         return 'SharedAccessSignature ' + urlencode(result)
-
-    def get_data_svc_client(self, **kwags):
-        url = kwags.get('base_url', None)
-        config = AzureConfiguration(base_url='https://{0}'.format(url))
-        config.credentials = AzureSASAuthentication(token=self.generate_sas_token(**kwags))
-        config = self.add_user_agent(config)
-        return ServiceClient(creds=config.credentials, config=config)
 
     def get_subnet_detail(self, subnet_id):
         vnet_detail = subnet_id.split('/Microsoft.Network/virtualNetworks/')[1].split('/subnets/')
@@ -1452,23 +1425,6 @@ class AzureRMModuleBase(object):
     @property
     def datafactory_model(self):
         return DataFactoryModel
-
-
-class AzureSASAuthentication(Authentication):
-    """Simple SAS Authentication.
-    An implementation of Authentication in
-    https://github.com/Azure/msrest-for-python/blob/0732bc90bdb290e5f58c675ffdd7dbfa9acefc93/msrest/authentication.py
-
-    :param str token: SAS token
-    """
-    def __init__(self, token):
-        self.token = token
-
-    def signed_session(self):
-        session = super(AzureSASAuthentication, self).signed_session()
-        session.headers['Authorization'] = self.token
-        return session
-
 
 class AzureRMAuthException(Exception):
     pass

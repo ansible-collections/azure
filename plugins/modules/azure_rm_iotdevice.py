@@ -372,11 +372,13 @@ class AzureRMIoTDevice(AzureRMModuleBase):
     def update_device(self, device):
         try:
             if self.auth_method == 'sas':
-                response = self.mgmt_client.update_device_with_sas(self.name, device['etag'], self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
+                response = self.mgmt_client.update_device_with_sas(self.name,
+                                                                   device['etag'], self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
             elif self.auth_method == 'self_signed':
                 response = self.mgmt_client.update_device_with_certificate_authority(self.name, self.status, iot_edge=self.edge_enabled)
             elif self.auth_method == 'certificate_authority':
-                response = self.mgmt_client.update_device_with_x509(self.name, device['etag'], self.primary_thumbprint, self.secondary_thumbprint, self.status, iot_edge=self.edge_enabled)
+                response = self.mgmt_client.update_device_with_x509(self.name,
+                                                                    device['etag'], self.primary_thumbprint, self.secondary_thumbprint, self.status, iot_edge=self.edge_enabled)
 
             return self.format_item(response)
         except Exception as exc:
@@ -389,7 +391,8 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             elif self.auth_method == 'self_signed':
                 response = self.mgmt_client.create_device_with_certificate_authority(self.name, self.status, iot_edge=self.edge_enabled)
             elif self.auth_method == 'certificate_authority':
-                response = self.mgmt_client.create_device_with_x509(self.name, self.primary_thumbprint, self.secondary_thumbprint, self.status, iot_edge=self.edge_enabled)
+                response = self.mgmt_client.create_device_with_x509(self.name,
+                                                                    self.primary_thumbprint, self.secondary_thumbprint, self.status, iot_edge=self.edge_enabled)
 
             return self.format_item(response)
         except Exception as exc:
@@ -486,7 +489,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
         if item.authentication:
             format_item['authentication']['symmetricKey'] = dict()
             format_item['authentication']['symmetricKey']['primaryKey'] = item.authentication.symmetric_key.primary_key
-            format_item['authentication']['symmetricKey']['secondaryKey'] =  item.authentication.symmetric_key.secondary_key
+            format_item['authentication']['symmetricKey']['secondaryKey'] = item.authentication.symmetric_key.secondary_key
 
             format_item['authentication']['type'] = item.authentication.type
             format_item['authentication']["x509Thumbprint"] = dict()
@@ -496,6 +499,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             format_item['capabilities']["iotEdge"] = item.capabilities.iot_edge
 
         return format_item
+
 
 def main():
     AzureRMIoTDevice()

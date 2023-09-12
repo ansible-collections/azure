@@ -293,7 +293,8 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
             elif self.auth_method == 'self_signed':
                 response = self.mgmt_client.update_module_with_certificate_authority(self.device, self.name, self.managed_by, self.etag)
             elif self.auth_method == 'certificate_authority':
-                response = self.mgmt_client.update_module_with_x509(self.device, self.name, self.managed_by, self.etag, self.primary_thumbprint, self.secondary_thumbprint)
+                response = self.mgmt_client.update_module_with_x509(self.device,
+                                                                    self.name, self.managed_by, self.etag, self.primary_thumbprint, self.secondary_thumbprint)
 
             return self.format_module(response)
         except Exception as exc:
@@ -309,7 +310,8 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
             elif self.auth_method == 'self_signed':
                 response = self.mgmt_client.create_module_with_certificate_authority(self.device, self.name, self.managed_by)
             elif self.auth_method == 'certificate_authority':
-                response = self.mgmt_client.create_module_with_x509(self.device_id, self.name, self.managed_by, self.primary_thumbprint, self.secondary_thumbprint)
+                response = self.mgmt_client.create_module_with_x509(self.device_id,
+                                                                    self.name, self.managed_by, self.primary_thumbprint, self.secondary_thumbprint)
 
             return self.format_module(response)
         except Exception as exc:
@@ -361,7 +363,7 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
         if item.authentication:
             format_item['authentication']['symmetricKey'] = dict()
             format_item['authentication']['symmetricKey']['primaryKey'] = item.authentication.symmetric_key.primary_key
-            format_item['authentication']['symmetricKey']['secondaryKey'] =  item.authentication.symmetric_key.secondary_key
+            format_item['authentication']['symmetricKey']['secondaryKey'] = item.authentication.symmetric_key.secondary_key
 
             format_item['authentication']['type'] = item.authentication.type
             format_item['authentication']["x509Thumbprint"] = dict()
@@ -390,6 +392,7 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
             format_twin['properties']['reported'] = item.properties.reported
 
         return format_twin
+
 
 def main():
     AzureRMIoTDeviceModule()

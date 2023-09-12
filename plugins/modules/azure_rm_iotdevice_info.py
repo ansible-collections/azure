@@ -255,7 +255,7 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
 
             response = [self.format_item(item) for item in response]
             if self.top is not None:
-                return response[self.top-1]
+                return response[self.top - 1]
             else:
                 return response
         except Exception as exc:
@@ -282,7 +282,7 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
         if item.authentication:
             format_item['authentication']['symmetricKey'] = dict()
             format_item['authentication']['symmetricKey']['primaryKey'] = item.authentication.symmetric_key.primary_key
-            format_item['authentication']['symmetricKey']['secondaryKey'] =  item.authentication.symmetric_key.secondary_key
+            format_item['authentication']['symmetricKey']['secondaryKey'] = item.authentication.symmetric_key.secondary_key
 
             format_item['authentication']['type'] = item.authentication.type
             format_item['authentication']["x509Thumbprint"] = dict()
@@ -313,7 +313,7 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
         if item.authentication:
             format_item['authentication']['symmetricKey'] = dict()
             format_item['authentication']['symmetricKey']['primaryKey'] = item.authentication.symmetric_key.primary_key
-            format_item['authentication']['symmetricKey']['secondaryKey'] =  item.authentication.symmetric_key.secondary_key
+            format_item['authentication']['symmetricKey']['secondaryKey'] = item.authentication.symmetric_key.secondary_key
 
             format_item['authentication']['type'] = item.authentication.type
             format_item['authentication']["x509Thumbprint"] = dict()
@@ -323,7 +323,6 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
             format_item['capabilities']["iotEdge"] = item.capabilities.iot_edge
 
         return format_item
-
 
 
 def main():
