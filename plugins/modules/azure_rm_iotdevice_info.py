@@ -305,9 +305,10 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
             generationId=item.generation_id,
             lastActivityTime=item.last_activity_time,
             status=item.status,
-            statusReason=item.status_reason,
-            statusUpdatedTime=item.status_updated_time
+            statusReason=item.status_reason
         )
+        if hasattr(item, 'status_updated_time'):
+            format_item['statusUpdatedTime'] = item.status_updated_time
         if hasattr(item, 'modules'):
             format_item['modules'] = item.modules
         if item.authentication:

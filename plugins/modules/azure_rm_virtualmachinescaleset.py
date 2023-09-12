@@ -862,18 +862,18 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             if self.state == 'present':
                 differences = []
                 results = vmss_dict
-                current_osdisk = vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']
-                current_ephemeral = current_osdisk.get('diffDiskSettings', None)
-                current_properties = vmss_dict['properties']['virtualMachineProfile']
+                current_osdisk = vmss_dict['virtual_machine_profile']['storage_profile']['os_disk']
+                current_ephemeral = current_osdisk.get('diff_disk_settings', None)
+                current_properties = vmss_dict['virtual_machine_profile']
 
                 if self.priority and self.priority != current_properties.get('priority', 'None'):
                     self.fail('VM Priority is not updatable: requested virtual machine priority is {0}'.format(self.priority))
                 if self.eviction_policy and \
-                   self.eviction_policy != current_properties.get('evictionPolicy', None):
+                   self.eviction_policy != current_properties.get('eviction_policy', None):
                     self.fail('VM Eviction Policy is not updatable: requested virtual machine eviction policy is {0}'.format(self.eviction_policy))
                 if self.max_price and \
-                   vmss_dict['properties']['virtualMachineProfile'].get('billingProfile', None) and \
-                   self.max_price != vmss_dict['properties']['virtualMachineProfile']['billingProfile'].get('maxPrice', None):
+                   vmss_dict['virtual_machine_profile'].get('billing_profile', None) and \
+                   self.max_price != vmss_dict['virtual_machine_profile']['billing_profile'].get('max_price', None):
                     self.fail('VM Maximum Price is not updatable: requested virtual machine maximum price is {0}'.format(self.max_price))
 
                 if self.ephemeral_os_disk and current_ephemeral is None:
@@ -882,15 +882,15 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     self.fail('Ephemeral OS disk not updatable: virtual machine scale set ephemeral OS disk is {0}'.format(self.ephemeral_os_disk))
 
                 if self.os_disk_size_gb and \
-                   self.os_disk_size_gb != vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']['diskSizeGB']:
+                   self.os_disk_size_gb != vmss_dict['virtual_machine_profile']['storage_profile']['os_disk']['disk_size_gb']:
                     self.fail('VMSS OS disk size is not updatable: requested virtual machine OS disk size is {0}'.format(self.os_disk_size_gb))
 
                 if self.os_disk_caching and \
-                   self.os_disk_caching != vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']['caching']:
+                   self.os_disk_caching != vmss_dict['virtual_machine_profile']['storage_profile']['os_disk']['caching']:
                     self.log('CHANGED: virtual machine scale set {0} - OS disk caching'.format(self.name))
                     differences.append('OS Disk caching')
                     changed = True
-                    vmss_dict['properties']['virtualMachineProfile']['storageProfile']['osDisk']['caching'] = self.os_disk_caching
+                    vmss_dict['virtual_machine_profile']['storage_profile']['os_disk']['caching'] = self.os_disk_caching
 
                 if self.capacity and \
                    self.capacity != vmss_dict['sku']['capacity']:
@@ -900,35 +900,35 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     vmss_dict['sku']['capacity'] = self.capacity
 
                 if self.data_disks and \
-                   len(self.data_disks) != len(vmss_dict['properties']['virtualMachineProfile']['storageProfile'].get('dataDisks', [])):
+                   len(self.data_disks) != len(vmss_dict['virtual_machine_profile']['storage_profile'].get('data_disks', [])):
                     self.log('CHANGED: virtual machine scale set {0} - Data Disks'.format(self.name))
                     differences.append('Data Disks')
                     changed = True
 
                 if self.upgrade_policy and \
-                   self.upgrade_policy != vmss_dict['properties']['upgradePolicy']['mode']:
+                   self.upgrade_policy != vmss_dict['upgrade_policy']['mode']:
                     self.log('CHANGED: virtual machine scale set {0} - Upgrade Policy'.format(self.name))
                     differences.append('Upgrade Policy')
                     changed = True
-                    vmss_dict['properties']['upgradePolicy']['mode'] = self.upgrade_policy
+                    vmss_dict['upgrade_policy']['mode'] = self.upgrade_policy
 
                 if image_reference and \
-                   image_reference.as_dict() != vmss_dict['properties']['virtualMachineProfile']['storageProfile']['imageReference']:
+                   image_reference.as_dict() != vmss_dict['virtual_machine_profile']['storage_profile']['image_reference']:
                     self.log('CHANGED: virtual machine scale set {0} - Image'.format(self.name))
                     differences.append('Image')
                     changed = True
-                    vmss_dict['properties']['virtualMachineProfile']['storageProfile']['imageReference'] = image_reference.as_dict()
+                    vmss_dict['virtual_machine_profile']['storage_profile']['image_reference'] = image_reference.as_dict()
 
                 update_tags, vmss_dict['tags'] = self.update_tags(vmss_dict.get('tags', dict()))
                 if update_tags:
                     differences.append('Tags')
                     changed = True
 
-                if self.overprovision is not None and bool(self.overprovision) != bool(vmss_dict['properties'].get('overprovision')):
+                if self.overprovision is not None and bool(self.overprovision) != bool(vmss_dict.get('over_provision')):
                     differences.append('overprovision')
                     changed = True
 
-                if bool(self.single_placement_group) != bool(vmss_dict['properties']['singlePlacementGroup']):
+                if bool(self.single_placement_group) != bool(vmss_dict['single_placement_group']):
                     differences.append('single_placement_group')
                     changed = True
 
@@ -944,26 +944,26 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     if timeout < 5 or timeout > 15:
                         self.fail("terminate_event_timeout_minutes should >= 5 and <= 15")
                     iso_8601_format = "PT" + str(timeout) + "M"
-                    old = vmss_dict['properties']['virtualMachineProfile'].get('scheduledEventsProfile', {}).\
-                        get('terminateNotificationProfile', {}).get('notBeforeTimeout', "")
+                    old = vmss_dict['virtual_machine_profile'].get('scheduled_events_profile', {}).\
+                        get('terminate_notification_profile', {}).get('not_before_timeout', "")
                     if old != iso_8601_format:
                         differences.append('terminateNotification')
                         changed = True
-                        vmss_dict['properties']['virtualMachineProfile'].setdefault('scheduledEventsProfile', {})['terminateNotificationProfile'] = {
+                        vmss_dict['virtual_machine_profile'].setdefault('scheduled_events_profile', {})['terminateNotificationProfile'] = {
                             'notBeforeTimeout': iso_8601_format,
                             "enable": 'true'
                         }
 
-                if self.scale_in_policy and self.scale_in_policy != vmss_dict['properties'].get('scaleInPolicy', {}).get('rules', [""])[0]:
+                if self.scale_in_policy and self.scale_in_policy != vmss_dict.get('scale_in_policy', {}).get('rules', [""])[0]:
                     self.log("CHANGED: virtual machine sale sets {0} scale in policy".format(self.name))
                     differences.append('scaleInPolicy')
                     changed = True
-                    vmss_dict['properties'].setdefault('scaleInPolicy', {})['rules'] = [self.scale_in_policy]
+                    vmss_dict.setdefault('scale_in_policy', {})['rules'] = [self.scale_in_policy]
 
-                nicConfigs = vmss_dict['properties']['virtualMachineProfile']['networkProfile']['networkInterfaceConfigurations']
+                nicConfigs = vmss_dict['virtualMachine_profile']['network_profile']['network_interface_configurations']
 
-                backend_address_pool = nicConfigs[0]['properties']['ipConfigurations'][0]['properties'].get('loadBalancerBackendAddressPools', [])
-                backend_address_pool += nicConfigs[0]['properties']['ipConfigurations'][0]['properties'].get('applicationGatewayBackendAddressPools', [])
+                backend_address_pool = nicConfigs[0]['ip_configurations'][0].get('load_balancer_backend_address_pools', [])
+                backend_address_pool += nicConfigs[0]['ip_configurations'][0].get('application_gateway_backend_address_pools', [])
                 lb_or_ag_id = None
                 if (len(nicConfigs) != 1 or len(backend_address_pool) != 1):
                     support_lb_change = False  # Currently not support for the vmss contains more than one loadbalancer
@@ -980,51 +980,51 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                         changed = True
 
                 if self.custom_data:
-                    if self.custom_data != vmss_dict['properties']['virtualMachineProfile']['osProfile'].get('customData'):
+                    if self.custom_data != vmss_dict['virtual,machine_profile']['os_profile'].get('custom_data'):
                         differences.append('custom_data')
                         changed = True
-                        vmss_dict['properties']['virtualMachineProfile']['osProfile']['customData'] = self.custom_data
+                        vmss_dict['virtual_machine_profile']['os_profile']['custom_data'] = self.custom_data
 
-                if self.orchestration_mode and self.orchestration_mode != vmss_dict['properties'].get('orchestrationMode'):
+                if self.orchestration_mode and self.orchestration_mode != vmss_dict.get('orchestration_mode'):
                     self.fail("The orchestration_mode parameter cannot be updated!")
                 else:
-                    self.orchestration_mode = vmss_dict['properties'].get('orchestrationMode')
+                    self.orchestration_mode = vmss_dict.get('orchestration_mode')
 
-                if self.platform_fault_domain_count and self.platform_fault_domain_count != vmss_dict['properties'].get('platformFaultDomainCount'):
+                if self.platform_fault_domain_count and self.platform_fault_domain_count != vmss_dict.get('platform_fault_domain_count'):
                     self.fail("The platform_fault_domain_count parameter cannot be updated!")
 
                 if self.security_profile is not None:
                     update_security_profile = False
-                    if 'securityProfile' not in vmss_dict['properties']['virtualMachineProfile'].keys():
+                    if 'securityProfile' not in vmss_dict['virtual_machine_profile'].keys():
                         update_security_profile = True
                         differences.append('security_profile')
                     else:
                         if self.security_profile.get('encryption_at_host') is not None:
                             if bool(self.security_profile.get('encryption_at_host')) != \
-                                    bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['encryptionAtHost']):
+                                    bool(vmss_dict['virtual_machine_profile']['security_profile']['encryption_at_host']):
                                 update_security_profle = True
                             else:
                                 self.security_profile['encryption_at_host'] = \
-                                    vmss_dict['properties']['virtualMachineProfile']['securityProfile']['encryptionAtHost']
+                                    vmss_dict['virtual_machine_profile']['security_profile']['encryption_at_host']
                         if self.security_profile.get('security_type') is not None:
                             if self.security_profile.get('security_type') != \
-                                    vmss_dict['properties']['virtualMachineProfile']['securityProfile']['securityType']:
+                                    vmss_dict['virtual_machine_profile']['security_profile']['security_type']:
                                 update_security_profile = True
                         if self.security_profile.get('uefi_settings') is not None:
                             if self.security_profile['uefi_settings'].get('secure_boot_enabled') is not None:
                                 if bool(self.security_profile['uefi_settings']['secure_boot_enabled']) != \
-                                        bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['secureBootEnabled']):
+                                        bool(vmss_dict['virtual_machine_profile']['security_profile']['uefi_settings']['secure_boot_nabled']):
                                     update_security_profile = True
                             else:
                                 self.security_profile['uefi_settings']['secure_boot_enabled'] = \
-                                    vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['secureBootEnabled']
+                                    vmss_dict['virtual_machine_profile']['security_profile']['uefi_settings']['secure_boot_enabled']
                             if self.security_profile['uefi_settings'].get('v_tpm_enabled') is not None:
                                 if bool(self.security_profile['uefi_settings']['v_tpm_enabled']) != \
-                                        bool(vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['vTpmEnabled']):
+                                        bool(vmss_dict['virtual_machine_profile']['security_profile']['uefi_settings']['v_tpm_enabled']):
                                     update_security_profile = True
                             else:
                                 self.security_profile['uefi_settings']['v_tpm_enabled'] = \
-                                    vmss_dict['properties']['virtualMachineProfile']['securityProfile']['uefiSettings']['vTpmEnabled']
+                                    vmss_dict['virtual_machine_profile']['security_profile']['uefi_settings']['v_tpm_enabled']
                         if update_security_profile:
                             changed = True
                             differences.append('security_profile')
