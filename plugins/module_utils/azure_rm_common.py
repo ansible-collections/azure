@@ -1426,6 +1426,7 @@ class AzureRMModuleBase(object):
     def datafactory_model(self):
         return DataFactoryModel
 
+
 class AzureRMAuthException(Exception):
     pass
 

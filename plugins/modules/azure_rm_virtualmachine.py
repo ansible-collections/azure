@@ -1302,18 +1302,18 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 differences = []
                 current_nics = []
                 results = vm_dict
-                current_osdisk = vm_dict['properties']['storageProfile']['osDisk']
-                current_ephemeral = current_osdisk.get('diffDiskSettings', None)
-                current_properties = vm_dict['properties']
+                current_osdisk = vm_dict['storage_profile']['os_disk']
+                current_ephemeral = current_osdisk.get('diff_disk_ettings', None)
+                current_properties = vm_dict
 
                 if self.priority and self.priority != current_properties.get('priority', 'None'):
                     self.fail('VM Priority is not updatable: requested virtual machine priority is {0}'.format(self.priority))
                 if self.eviction_policy and \
-                   self.eviction_policy != current_properties.get('evictionPolicy', None):
+                   self.eviction_policy != current_properties.get('eviction_policy', None):
                     self.fail('VM Eviction Policy is not updatable: requested virtual machine eviction policy is {0}'.format(self.eviction_policy))
                 if self.max_price and \
-                   vm_dict['properties'].get('billingProfile', None) and \
-                   self.max_price != vm_dict['properties']['billingProfile'].get('maxPrice', None):
+                   vm_dict.get('billing_profile', None) and \
+                   self.max_price != vm_dict['billing_profile'].get('max_price', None):
                     self.fail('VM Maximum Price is not updatable: requested virtual machine maximum price is {0}'.format(self.max_price))
 
                 if self.ephemeral_os_disk and current_ephemeral is None:
@@ -1323,7 +1323,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                 # Try to determine if the VM needs to be updated
                 if self.network_interface_names:
-                    for nic in vm_dict['properties']['networkProfile']['networkInterfaces']:
+                    for nic in vm_dict['network_profile']['network_interfaces']:
                         current_nics.append(nic['id'])
 
                     if set(current_nics) != set(network_interfaces):
@@ -1331,47 +1331,47 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         differences.append('Network Interfaces')
                         updated_nics = [dict(id=id, primary=(i == 0))
                                         for i, id in enumerate(network_interfaces)]
-                        vm_dict['properties']['networkProfile']['networkInterfaces'] = updated_nics
+                        vm_dict['network_profile']['network_interfaces'] = updated_nics
                         changed = True
 
                 if self.os_disk_caching and \
-                   self.os_disk_caching != vm_dict['properties']['storageProfile']['osDisk']['caching']:
+                   self.os_disk_caching != vm_dict['storage_profile']['os_disk']['caching']:
                     self.log('CHANGED: virtual machine {0} - OS disk caching'.format(self.name))
                     differences.append('OS Disk caching')
                     changed = True
-                    vm_dict['properties']['storageProfile']['osDisk']['caching'] = self.os_disk_caching
+                    vm_dict['storage_profile']['os_disk']['caching'] = self.os_disk_caching
 
                 if self.os_disk_name and \
-                   self.os_disk_name != vm_dict['properties']['storageProfile']['osDisk']['name']:
+                   self.os_disk_name != vm_dict['storage_profile']['os_disk']['name']:
                     self.log('CHANGED: virtual machine {0} - OS disk name'.format(self.name))
                     differences.append('OS Disk name')
                     changed = True
-                    vm_dict['properties']['storageProfile']['osDisk']['name'] = self.os_disk_name
+                    vm_dict['storage_profile']['os_disk']['name'] = self.os_disk_name
 
                 if self.os_disk_size_gb and \
-                   self.os_disk_size_gb != vm_dict['properties']['storageProfile']['osDisk'].get('diskSizeGB'):
+                   self.os_disk_size_gb != vm_dict['storage_profile']['os_disk'].get('disk_size_gb'):
                     self.log('CHANGED: virtual machine {0} - OS disk size '.format(self.name))
                     differences.append('OS Disk size')
                     changed = True
-                    vm_dict['properties']['storageProfile']['osDisk']['diskSizeGB'] = self.os_disk_size_gb
+                    vm_dict['storage_profile']['os_disk']['disk_size_gb'] = self.os_disk_size_gb
 
                 if self.vm_size and \
-                   self.vm_size != vm_dict['properties']['hardwareProfile']['vmSize']:
+                   self.vm_size != vm_dict['hardware_profile']['vm_size']:
                     self.log('CHANGED: virtual machine {0} - size '.format(self.name))
                     differences.append('VM size')
                     changed = True
-                    vm_dict['properties']['hardwareProfile']['vmSize'] = self.vm_size
+                    vm_dict['hardware_profile']['vm_size'] = self.vm_size
 
                 update_tags, vm_dict['tags'] = self.update_tags(vm_dict.get('tags', dict()))
                 if update_tags:
                     differences.append('Tags')
                     changed = True
 
-                if self.short_hostname and self.short_hostname != vm_dict['properties']['osProfile']['computerName']:
+                if self.short_hostname and self.short_hostname != vm_dict['os_profile']['computer_name']:
                     self.log('CHANGED: virtual machine {0} - short hostname'.format(self.name))
                     differences.append('Short Hostname')
                     changed = True
-                    vm_dict['properties']['osProfile']['computerName'] = self.short_hostname
+                    vm_dict['os_orofile']['computer_name'] = self.short_hostname
 
                 if self.started and vm_dict['powerstate'] not in ['starting', 'running'] and self.allocated:
                     self.log("CHANGED: virtual machine {0} not running and requested state 'running'".format(self.name))
@@ -1402,7 +1402,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     differences.append('Zones')
                     changed = True
 
-                if self.license_type is not None and vm_dict['properties'].get('licenseType') != self.license_type:
+                if self.license_type is not None and vm_dict.get('licenseType') != self.license_type:
                     differences.append('License Type')
                     changed = True
 
@@ -1439,59 +1439,59 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                 if self.security_profile is not None:
                     update_security_profile = False
-                    if 'securityProfile' not in vm_dict['properties'].keys():
+                    if 'securityProfile' not in vm_dict.keys():
                         update_security_profile = True
                         differences.append('security_profile')
                     else:
                         if self.security_profile.get('encryption_at_host') is not None:
-                            if bool(self.security_profile.get('encryption_at_host')) != bool(vm_dict['properties']['securityProfile']['encryptionAtHost']):
+                            if bool(self.security_profile.get('encryption_at_host')) != bool(vm_dict['security_profile']['encryption_at_host']):
                                 update_security_profile = True
                             else:
-                                self.security_profile['encryption_at_host'] = vm_dict['properties']['securityProfile']['encryptionAtHost']
+                                self.security_profile['encryption_at_host'] = vm_dict['security_profile']['encryption_at_host']
                         if self.security_profile.get('security_type') is not None:
-                            if self.security_profile.get('security_type') != vm_dict['properties']['securityProfile']['securityType']:
+                            if self.security_profile.get('security_type') != vm_dict['security_profile']['security_type']:
                                 update_security_profile = True
                         if self.security_profile.get('uefi_settings') is not None:
                             if self.security_profile['uefi_settings'].get('secure_boot_enabled') is not None:
                                 if bool(self.security_profile['uefi_settings']['secure_boot_enabled']) != \
-                                        bool(vm_dict['properties']['securityProfile']['uefiSettings']['secureBootEnabled']):
+                                        bool(vm_dict['security_profile']['uefi_settings']['secure_boot_enabled']):
                                     update_security_profile = True
                             else:
                                 self.security_profile['uefi_settings']['secure_boot_enabled'] = \
-                                    vm_dict['properties']['securityProfile']['uefiSettings']['secureBootEnabled']
+                                    vm_dict['security_profile']['uefi_settings']['secure_soot_enabled']
                             if self.security_profile['uefi_settings'].get('v_tpm_enabled') is not None:
                                 if bool(self.security_profile['uefi_settings']['v_tpm_enabled']) != \
-                                        bool(vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']):
+                                        bool(vm_dict['security_profile']['uefi_settings']['v_tpm_enabled']):
                                     update_security_profile = True
                             else:
                                 self.security_profile['uefi_settings']['v_tpm_enabled'] = \
-                                    vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']
+                                    vm_dict[]['security_profile']['uefi_settings']['v_tpm_enabled']
                     if update_security_profile:
                         changed = True
                         differences.append('security_profile')
 
-                if self.windows_config is not None and vm_dict['properties']['osProfile'].get('windowsConfiguration') is not None:
-                    if self.windows_config['enable_automatic_updates'] != vm_dict['properties']['osProfile']['windowsConfiguration']['enableAutomaticUpdates']:
+                if self.windows_config is not None and vm_dict['os_profile'].get('windows_configuration') is not None:
+                    if self.windows_config['enable_automatic_updates'] != vm_dict['os_profile']['windows_configuration']['enable_automatic_updates']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'windowsConfiguration.enableAutomaticUpdates' is not allowed.")
 
-                    if self.windows_config['provision_vm_agent'] != vm_dict['properties']['osProfile']['windowsConfiguration']['provisionVMAgent']:
+                    if self.windows_config['provision_vm_agent'] != vm_dict['os_profile']['windows_configuration']['provision_vm_agent']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'windowsConfiguration.provisionVMAgent' is not allowed.")
 
-                if self.linux_config is not None and vm_dict['properties']['osProfile'].get('linuxConfiguration') is not None:
+                if self.linux_config is not None and vm_dict['os_profile'].get('linux_configuration') is not None:
                     if self.linux_config['disable_password_authentication'] != \
-                            vm_dict['properties']['osProfile']['linuxConfiguration']['disablePasswordAuthentication']:
+                            vm_dict['os_profile']['linux_configuration']['disable_password_authentication']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'linuxConfiguration.disablePasswordAuthentication' is not allowed.")
 
                 # Defaults for boot diagnostics
-                if 'diagnosticsProfile' not in vm_dict['properties']:
-                    vm_dict['properties']['diagnosticsProfile'] = {}
-                if 'bootDiagnostics' not in vm_dict['properties']['diagnosticsProfile']:
-                    vm_dict['properties']['diagnosticsProfile']['bootDiagnostics'] = {
+                if 'diagnostics_profile' not in vm_dict:
+                    vm_dict['diagnostics_profile'] = {}
+                if 'boot_diagnostics' not in vm_dict['diagnostics_profile']:
+                    vm_dict['diagnostics_profile']['boot_diagnostics'] = {
                         'enabled': False,
                         'storageUri': None
                     }
                 if self.boot_diagnostics_present:
-                    current_boot_diagnostics = vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']
+                    current_boot_diagnostics = vm_dict['diagnostics_profile']['boot_diagnostics']
                     boot_diagnostics_changed = False
 
                     if self.boot_diagnostics['enabled'] != current_boot_diagnostics['enabled']:
