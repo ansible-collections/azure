@@ -1481,6 +1481,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if self.linux_config['disable_password_authentication'] != \
                             vm_dict['os_profile']['linux_configuration']['disable_password_authentication']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'linuxConfiguration.disablePasswordAuthentication' is not allowed.")
+                else:
+                    self.linux_config = vm_dict['os_profile'].get('linux_configuration')
 
                 # Defaults for boot diagnostics
                 if 'diagnostics_profile' not in vm_dict:
@@ -1848,43 +1850,43 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     self.log("Update virtual machine {0}".format(self.name))
                     self.results['actions'].append('Updated VM {0}'.format(self.name))
                     nics = [self.compute_models.NetworkInterfaceReference(id=interface['id'], primary=(i == 0))
-                            for i, interface in enumerate(vm_dict['properties']['networkProfile']['networkInterfaces'])]
+                            for i, interface in enumerate(vm_dict['network_profile']['network_interfaces'])]
 
                     # os disk
-                    if not vm_dict['properties']['storageProfile']['osDisk'].get('managedDisk'):
+                    if not vm_dict['storage_profile']['os_disk'].get('managedDisk'):
                         managed_disk = None
-                        vhd = self.compute_models.VirtualHardDisk(uri=vm_dict['properties']['storageProfile']['osDisk'].get('vhd', {}).get('uri'))
+                        vhd = self.compute_models.VirtualHardDisk(uri=vm_dict['storage_profile']['os_disk'].get('vhd', {}).get('uri'))
                     else:
                         vhd = None
                         managed_disk = self.compute_models.ManagedDiskParameters(
-                            storage_account_type=vm_dict['properties']['storageProfile']['osDisk']['managedDisk'].get('storageAccountType')
+                            storage_account_type=vm_dict['storage_profile']['os_disk']['managed_disk'].get('storage_account_type')
                         )
 
                     proximity_placement_group_resource = None
                     try:
-                        proximity_placement_group_resource = self.compute_models.SubResource(id=vm_dict['properties']['proximityPlacementGroup'].get('id'))
+                        proximity_placement_group_resource = self.compute_models.SubResource(id=vm_dict['proximity_placement_group'].get('id'))
                     except Exception:
                         # pass if the proximity Placement Group
                         pass
 
                     availability_set_resource = None
                     try:
-                        availability_set_resource = self.compute_models.SubResource(id=vm_dict['properties']['availabilitySet'].get('id'))
+                        availability_set_resource = self.compute_models.SubResource(id=vm_dict['availability_set'].get('id'))
                     except Exception:
                         # pass if the availability set is not set
                         pass
 
-                    if 'imageReference' in vm_dict['properties']['storageProfile'].keys():
-                        if 'id' in vm_dict['properties']['storageProfile']['imageReference'].keys():
+                    if 'imageReference' in vm_dict['storage_profile'].keys():
+                        if 'id' in vm_dict['storage_profile']['image_reference'].keys():
                             image_reference = self.compute_models.ImageReference(
-                                id=vm_dict['properties']['storageProfile']['imageReference']['id']
+                                id=vm_dict['storage_profile']['image_reference']['id']
                             )
                         else:
                             image_reference = self.compute_models.ImageReference(
-                                publisher=vm_dict['properties']['storageProfile']['imageReference'].get('publisher'),
-                                offer=vm_dict['properties']['storageProfile']['imageReference'].get('offer'),
-                                sku=vm_dict['properties']['storageProfile']['imageReference'].get('sku'),
-                                version=vm_dict['properties']['storageProfile']['imageReference'].get('version')
+                                publisher=vm_dict['storage_profile']['image_reference'].get('publisher'),
+                                offer=vm_dict['storage_profile']['image_reference'].get('offer'),
+                                sku=vm_dict['storage_profile']['image_reference'].get('sku'),
+                                version=vm_dict['storage_profile']['image_reference'].get('version')
                             )
                     else:
                         image_reference = None
@@ -1893,10 +1895,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if self.zones is not None and vm_dict['zones'] != self.zones:
                         self.fail("You can't change the Availability Zone of a virtual machine (have: {0}, want: {1})".format(vm_dict['zones'], self.zones))
 
-                    if 'osProfile' in vm_dict['properties']:
+                    if 'os_profile' in vm_dict:
                         os_profile = self.compute_models.OSProfile(
-                            admin_username=vm_dict['properties'].get('osProfile', {}).get('adminUsername'),
-                            computer_name=vm_dict['properties'].get('osProfile', {}).get('computerName')
+                            admin_username=vm_dict.get('os_profile', {}).get('admin_username'),
+                            computer_name=vm_dict.get('os_profile', {}).get('computer_name')
                         )
                     else:
                         os_profile = None
@@ -1905,17 +1907,17 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         location=vm_dict['location'],
                         os_profile=os_profile,
                         hardware_profile=self.compute_models.HardwareProfile(
-                            vm_size=vm_dict['properties']['hardwareProfile'].get('vmSize')
+                            vm_size=vm_dict['hardware_profile'].get('vm_size')
                         ),
                         storage_profile=self.compute_models.StorageProfile(
                             os_disk=self.compute_models.OSDisk(
-                                name=vm_dict['properties']['storageProfile']['osDisk'].get('name'),
+                                name=vm_dict['storage_profile']['os_disk'].get('name'),
                                 vhd=vhd,
                                 managed_disk=managed_disk,
-                                create_option=vm_dict['properties']['storageProfile']['osDisk'].get('createOption'),
-                                os_type=vm_dict['properties']['storageProfile']['osDisk'].get('osType'),
-                                caching=vm_dict['properties']['storageProfile']['osDisk'].get('caching'),
-                                disk_size_gb=vm_dict['properties']['storageProfile']['osDisk'].get('diskSizeGB')
+                                create_option=vm_dict['storage_profile']['os_disk'].get('create_option'),
+                                os_type=vm_dict['storage_profile']['os_disk'].get('os_type'),
+                                caching=vm_dict['storage_profile']['os_disk'].get('caching'),
+                                disk_size_gb=vm_dict['storage_profile']['os_disk'].get('disk_size_gb')
                             ),
                             image_reference=image_reference
                         ),
@@ -1933,8 +1935,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         # If 'append' is set to True save current user assigned managed identities to use later
                         if (self.vm_identity.get('user_assigned_identities', {}) is not None
                                 and self.vm_identity.get('user_assigned_identities', {}).get('append', False) is True):
-                            if 'identity' in vm_dict and 'userAssignedIdentities' in vm_dict['identity']:
-                                current_user_assigned_identities_dict = {uami: dict() for uami in vm_dict['identity']['userAssignedIdentities'].keys()}
+                            if 'identity' in vm_dict and 'user_assigned_identities' in vm_dict['identity']:
+                                current_user_assigned_identities_dict = {uami: dict() for uami in vm_dict['identity']['user_assigned_identities'].keys()}
                                 vm_identity_user_assigned_append = True
                             else:
                                 # Nothing to append to
@@ -1976,28 +1978,28 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if self.boot_diagnostics is not None:
                         storage_uri = None
                         # storageUri is undefined if boot diagnostics is disabled
-                        if 'storageUri' in vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']:
-                            storage_uri = vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']['storageUri']
+                        if 'storage_uri' in vm_dict['diagnostics_profile']['boot_diagnostics']:
+                            storage_uri = vm_dict['diagnostics_profile']['boot_diagnostics']['storage_uri']
                         vm_resource.diagnostics_profile = self.compute_models.DiagnosticsProfile(
                             boot_diagnostics=self.compute_models.BootDiagnostics(
-                                enabled=vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']['enabled'],
+                                enabled=vm_dict['diagnostics_profile']['boot_diagnostics']['enabled'],
                                 storage_uri=storage_uri))
 
                     if vm_dict.get('tags'):
                         vm_resource.tags = vm_dict['tags']
 
                     # Add custom_data, if provided
-                    if vm_dict['properties'].get('osProfile', {}).get('customData'):
-                        custom_data = vm_dict['properties']['osProfile']['customData']
+                    if vm_dict.get('os_profile', {}).get('custom_data'):
+                        custom_data = vm_dict['os_profile']['custom_data']
                         # Azure SDK (erroneously?) wants native string type for this
                         vm_resource.os_profile.custom_data = to_native(base64.b64encode(to_bytes(custom_data)))
 
                     # Add admin password, if one provided
-                    if vm_dict['properties'].get('osProfile', {}).get('adminPassword'):
-                        vm_resource.os_profile.admin_password = vm_dict['properties']['osProfile']['adminPassword']
+                    if vm_dict.get('os_profile', {}).get('admin_password'):
+                        vm_resource.os_profile.admin_password = vm_dict['os_profile']['admin_password']
 
                     # Add Windows configuration, if applicable
-                    windows_config = vm_dict['properties'].get('osProfile', {}).get('windowsConfiguration')
+                    windows_config = vm_dict.get('os_profile', {}).get('windows_configuration')
                     if windows_config:
                         if self.windows_config is not None:
                             vm_resource.os_profile.windows_configuration = self.compute_models.WindowsConfiguration(
@@ -2011,7 +2013,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             )
 
                     # Add linux configuration, if applicable
-                    linux_config = vm_dict['properties'].get('osProfile', {}).get('linuxConfiguration')
+                    linux_config = vm_dict.get('os_profile', {}).get('linux_configuration')
                     if linux_config:
                         if self.linux_config is not None:
                             vm_resource.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
@@ -2032,12 +2034,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                     )
 
                     # data disk
-                    if vm_dict['properties']['storageProfile'].get('dataDisks'):
+                    if vm_dict['storage_profile'].get('data_disks'):
                         data_disks = []
 
-                        for data_disk in vm_dict['properties']['storageProfile']['dataDisks']:
-                            if data_disk.get('managedDisk'):
-                                managed_disk_type = data_disk['managedDisk'].get('storageAccountType')
+                        for data_disk in vm_dict['storage_profile']['data_disks']:
+                            if data_disk.get('managed_disk'):
+                                managed_disk_type = data_disk['managed_disk'].get('storage_account_type')
                                 data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=managed_disk_type)
                                 data_disk_vhd = None
                             else:
@@ -2049,8 +2051,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 name=data_disk.get('name'),
                                 vhd=data_disk_vhd,
                                 caching=data_disk.get('caching'),
-                                create_option=data_disk.get('createOption'),
-                                disk_size_gb=int(data_disk.get('diskSizeGB', 0)) or None,
+                                create_option=data_disk.get('create_option'),
+                                disk_size_gb=int(data_disk.get('disk_size_gb', 0)) or None,
                                 managed_disk=data_disk_managed_disk,
                             ))
                         vm_resource.storage_profile.data_disks = data_disks
@@ -2144,16 +2146,16 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         for interface in vm.network_profile.network_interfaces:
             int_dict = azure_id_to_dict(interface.id)
             nic = self.get_network_interface(int_dict['resourceGroups'], int_dict['networkInterfaces'])
-            for interface_dict in result['properties']['networkProfile']['networkInterfaces']:
+            for interface_dict in result['network_profile']['network_interfaces']:
                 if interface_dict['id'] == interface.id:
                     nic_dict = self.serialize_obj(nic, 'NetworkInterface')
                     interface_dict['name'] = int_dict['networkInterfaces']
-                    interface_dict['properties'] = nic_dict['properties']
+                    interface_dict['properties'] = nic_dict
         # Expand public IPs to include config properties
-        for interface in result['properties']['networkProfile']['networkInterfaces']:
-            for config in interface['properties']['ipConfigurations']:
-                if config['properties'].get('publicIPAddress'):
-                    pipid_dict = azure_id_to_dict(config['properties']['publicIPAddress']['id'])
+        for interface in result['network_profile']['network_interfaces']:
+            for config in interface['properties']['ip_configurations']:
+                if config.get('public_ip_address'):
+                    pipid_dict = azure_id_to_dict(config['public_ip_address']['id'])
                     try:
                         pip = self.network_client.public_ip_addresses.get(pipid_dict['resourceGroups'],
                                                                           pipid_dict['publicIPAddresses'])
@@ -2161,8 +2163,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         self.fail("Error fetching public ip {0} - {1}".format(pipid_dict['publicIPAddresses'],
                                                                               str(exc)))
                     pip_dict = self.serialize_obj(pip, 'PublicIPAddress')
-                    config['properties']['publicIPAddress']['name'] = pipid_dict['publicIPAddresses']
-                    config['properties']['publicIPAddress']['properties'] = pip_dict['properties']
+                    config['public_ip_address']['name'] = pipid_dict['publicIPAddresses']
+                    config['public_ip_address']['properties'] = pip_dict['ip_configuration']
 
         self.log(result, pretty_print=True)
         if self.state != 'absent' and not result['powerstate']:
