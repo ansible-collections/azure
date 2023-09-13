@@ -141,6 +141,10 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         applications = []
+
+        async def application():
+            return await self.get_msgraph_client(self.tenant).applications.by_application_id(self.object_id)
+
         try:
             client = self.get_graphrbac_client(self.tenant)
             if self.object_id:

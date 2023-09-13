@@ -893,6 +893,11 @@ class AzureRMModuleBase(object):
         client = GraphRbacManagementClient(cred, tenant_id, base_url)
 
         return client
+    
+    def get_msgraph_client(self, tenant_id):
+        from msgraph import GraphServiceClient
+        return GraphServiceClient(self.azure_auth.azure_credential_track2)
+
 
     def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False, is_track2=False):
         self.log('Getting management service client {0}'.format(client_type.__name__))
