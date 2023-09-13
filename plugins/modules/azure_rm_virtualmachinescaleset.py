@@ -924,7 +924,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     differences.append('Tags')
                     changed = True
 
-                if self.overprovision is not None and bool(self.overprovision) != bool(vmss_dict.get('over_provision')):
+                if self.overprovision is not None and bool(self.overprovision) != bool(vmss_dict.get('overprovision')):
                     differences.append('overprovision')
                     changed = True
 
@@ -949,8 +949,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     if old != iso_8601_format:
                         differences.append('terminateNotification')
                         changed = True
-                        vmss_dict['virtual_machine_profile'].setdefault('scheduled_events_profile', {})['terminateNotificationProfile'] = {
-                            'notBeforeTimeout': iso_8601_format,
+                        vmss_dict['virtual_machine_profile'].setdefault('scheduled_events_profile', {})['terminate_notification_profile'] = {
+                            'not_before_timeout': iso_8601_format,
                             "enable": 'true'
                         }
 
@@ -960,7 +960,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     changed = True
                     vmss_dict.setdefault('scale_in_policy', {})['rules'] = [self.scale_in_policy]
 
-                nicConfigs = vmss_dict['virtualMachine_profile']['network_profile']['network_interface_configurations']
+                nicConfigs = vmss_dict['virtual_machine_profile']['network_profile']['network_interface_configurations']
 
                 backend_address_pool = nicConfigs[0]['ip_configurations'][0].get('load_balancer_backend_address_pools', [])
                 backend_address_pool += nicConfigs[0]['ip_configurations'][0].get('application_gateway_backend_address_pools', [])
@@ -980,7 +980,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                         changed = True
 
                 if self.custom_data:
-                    if self.custom_data != vmss_dict['virtual,machine_profile']['os_profile'].get('custom_data'):
+                    if self.custom_data != vmss_dict['virtual_machine_profile']['os_profile'].get('custom_data'):
                         differences.append('custom_data')
                         changed = True
                         vmss_dict['virtual_machine_profile']['os_profile']['custom_data'] = self.custom_data

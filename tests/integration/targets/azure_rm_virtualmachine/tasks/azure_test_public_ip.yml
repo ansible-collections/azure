@@ -65,8 +65,8 @@
 - name: Ensure VM was created properly
   assert:
     that:
-      - azure_vm.properties.provisioningState == 'Succeeded'
-      - azure_vm.properties.availabilitySet.id
+      - azure_vm.provisioning_state == 'Succeeded'
+      - azure_vm.availability_set.id
       # initial response from creation has no diagnosticsProfile
       # if you run it again however, there is one in the response
       # so we handle both cases
@@ -105,10 +105,10 @@
 - name: Ensure VM properties are correct
   assert:
     that:
-      - azure_vm.properties.diagnosticsProfile.bootDiagnostics.enabled
-      - azure_vm.properties.diagnosticsProfile.bootDiagnostics.storageUri is defined
-      - azure_vm.properties.instanceView.bootDiagnostics.consoleScreenshotBlobUri is defined
-      - azure_vm.properties.instanceView.bootDiagnostics.serialConsoleLogBlobUri is defined
+      - azure_vm.diagnostics_profile.boot_diagnostics.enabled
+      - azure_vm.diagnostics_profile.boot_diagnostics.storage_uri is defined
+      - azure_vm.instance_view.boot_diagnostics.console_screenshot_blob_uri is defined
+      - azure_vm.instance_view.boot_diagnostics.serial_console_log_blob_uri is defined
 
 - name: Get facts for virtual machine with boot diagnostics enabled
   azure_rm_virtualmachine_info:
@@ -158,10 +158,10 @@
 - name: Ensure boot diagnostics was reenabled
   assert:
     that:
-      - azure_vm.properties.diagnosticsProfile.bootDiagnostics.enabled
-      - azure_vm.properties.diagnosticsProfile.bootDiagnostics.storageUri is defined
-      - azure_vm.properties.instanceView.bootDiagnostics.consoleScreenshotBlobUri is defined
-      - azure_vm.properties.instanceView.bootDiagnostics.serialConsoleLogBlobUri is defined
+      - azure_vm.diagnostics_profile.boot_diagnostics.enabled
+      - azure_vm.diagnostics_profile.boot_diagnostics.storage_uri is defined
+      - azure_vm.instance_view.boot_diagnostics.console_screenshot_blob_uri is defined
+      - azure_vm.instance_view.boot_diagnostics.serial_consoleLog_blob_uri is defined
 
 # - add_host:
 #     name: new_azure_vm
@@ -257,7 +257,7 @@
   assert:
     that:
       - resize_result is changed
-      - resize_result.ansible_facts.azure_vm.properties.hardwareProfile.vmSize == "Standard_A1"
+      - resize_result.ansible_facts.azure_vm.hardware_profile.vm_size == "Standard_A1"
 
 - name: Delete VM
   azure_rm_virtualmachine:
