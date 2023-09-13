@@ -57,7 +57,6 @@
       resource_group: "{{ resource_group }}"
       list_keys: yes
   register: iothub
-  tags: fred
 
 - assert:
     that:
@@ -98,7 +97,7 @@
      that:
         - devices.iot_devices | length == 2
 
-- name: Query devices
+- name: Query devices by name
   azure_rm_iotdevice_info:
       hub: "hub{{ rpfx }}"
       name: "mydevice1"
@@ -144,8 +143,7 @@
 
 - assert:
      that:
-        - devices.iot_devices | length >= 1
-        - devices.iot_devices[0].deviceId == 'mydevice1'
+        - devices.iot_devices | length == 2
 
 - name: Delete IoT Hub (check mode)
   azure_rm_iothub:

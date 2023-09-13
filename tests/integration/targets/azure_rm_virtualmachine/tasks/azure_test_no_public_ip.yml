@@ -32,7 +32,7 @@
       - azure_vm.diagnostics_profile.boot_diagnostics.storage_uri is defined
       - azure_vm.instance_view.boot_diagnostics.console_screenshot_blob_uri is defined
       - azure_vm.instance_view.boot_diagnostics.serial_console_log_blob_uri is defined
-      - not 'publicIPAddress' in create_vm_public_result.ansible_facts.azure_vm.network_profile.network_interfaces[0].ip_configurations[0]
+      - not 'public_ip_address' in create_vm_public_result.ansible_facts.azure_vm.network_profile.network_interfaces[0].ip_configurations[0]
 
 - name: Delete VM with no public ip
   azure_rm_virtualmachine:

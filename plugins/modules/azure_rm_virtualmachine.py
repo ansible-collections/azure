@@ -1421,7 +1421,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     elif 'UserAssigned' in self.vm_identity.get('type'):
                         # Create sets with current user identities and module args identities
                         new_managed_identities = set(self.vm_identity.get('user_assigned_identities', {}).get('id', []))
-                        current_managed_identities = set(vm_dict['identity']['userAssignedIdentities'].keys())
+                        current_managed_identities = set(vm_dict['identity']['user_assigned_identities'].keys())
                         # If new identities have to be appended to VM
                         if self.vm_identity.get('user_assigned_identities', {}).get('append', False) is True:
                             # and the union of identities is longer

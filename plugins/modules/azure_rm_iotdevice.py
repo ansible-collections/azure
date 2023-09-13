@@ -496,7 +496,8 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             format_item['authentication']["x509Thumbprint"] = dict()
             format_item['authentication']["x509Thumbprint"]["primaryThumbprint"] = item.authentication.x509_thumbprint.primary_thumbprint
             format_item['authentication']["x509Thumbprint"]['secondaryThumbprint'] = item.authentication.x509_thumbprint.secondary_thumbprint
-        if item.capabilities:
+        format_item['capabilities'] = dict()
+        if hasattr(item, 'capabilities') and item.capabilities is not None:
             format_item['capabilities']["iotEdge"] = item.capabilities.iot_edge
 
         return format_item

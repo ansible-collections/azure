@@ -70,7 +70,7 @@
       # initial response from creation has no diagnosticsProfile
       # if you run it again however, there is one in the response
       # so we handle both cases
-      - "'diagnosticsProfile' not in azure_vm.properties or not azure_vm.properties.diagnosticsProfile.bootDiagnostics.enabled"
+      - "'diagnostics_profile' not in azure_vm or not azure_vm.diagnostics_profile.boot_diagnostics.enabled"
 
 - name: Get facts for virtual machine without boot diagnostics disabled
   azure_rm_virtualmachine_info:
