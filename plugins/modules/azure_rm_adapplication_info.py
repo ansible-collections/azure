@@ -101,8 +101,8 @@ applications:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.graphrbac.models import GraphErrorException
+    import asyncio
+    from msgraph.generated.applications.applications_request_builder import ApplicationsRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -141,25 +141,36 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         applications = []
-
-        async def application():
-            return await self.get_msgraph_client(self.tenant).applications.by_application_id(self.object_id)
-
+    
+        
         try:
-            client = self.get_graphrbac_client(self.tenant)
+            # client = self.get_graphrbac_client(self.tenant)
+            client = self.get_msgraph_client(self.tenant)
+            async def get_application():
+                return await client.applications.by_application_id(self.object_id)
+
             if self.object_id:
-                applications = [client.applications.get(self.object_id)]
+                # applications = [client.applications.get(self.object_id)]
+                applications = [asyncio.run(get_application())]
             else:
                 sub_filters = []
                 if self.identifier_uri:
                     sub_filters.append("identifierUris/any(s:s eq '{0}')".format(self.identifier_uri))
                 if self.app_id:
                     sub_filters.append("appId eq '{0}'".format(self.app_id))
-                # applications = client.applications.list(filter=(' and '.join(sub_filters)))
-                applications = list(client.applications.list(filter=(' and '.join(sub_filters))))
 
+                request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
+                            query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                                filter = (' and '.join(sub_filters)),
+                            ),
+                        )
+                async def get_applications():
+                    return await client.applications.get(request_configuration = request_configuration)
+                
+                apps = asyncio.run(get_applications())    
+                applications = list(apps.value)
             self.results['applications'] = [self.to_dict(app) for app in applications]
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.fail("failed to get application info {0}".format(str(ge)))
 
         return self.results
@@ -167,7 +178,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
     def to_dict(self, object):
         return dict(
             app_id=object.app_id,
-            object_id=object.object_id,
+            object_id=object.id,
             app_display_name=object.display_name,
             identifier_uris=object.identifier_uris
         )
