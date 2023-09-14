@@ -129,7 +129,7 @@
           sensor: humidity
   with_items:
     - 1
-    - 3
+    - 2
 
 - name: Pause for 5 mimutes
   shell: sleep 300
