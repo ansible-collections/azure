@@ -144,13 +144,11 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
     
         
         try:
-            # client = self.get_graphrbac_client(self.tenant)
             client = self.get_msgraph_client(self.tenant)
             async def get_application():
                 return await client.applications.by_application_id(self.object_id)
 
             if self.object_id:
-                # applications = [client.applications.get(self.object_id)]
                 applications = [asyncio.run(get_application())]
             else:
                 sub_filters = []
