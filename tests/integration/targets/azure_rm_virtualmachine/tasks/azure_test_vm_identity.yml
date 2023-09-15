@@ -90,8 +90,8 @@
   assert:
     that:      
       - vm_output.ansible_facts.azure_vm.identity.type == 'UserAssigned'
-      - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_dentities"
-      - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_dentities"
+      - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
+      - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
 
 - name: Add SystemAssigned
   azure_rm_virtualmachine:

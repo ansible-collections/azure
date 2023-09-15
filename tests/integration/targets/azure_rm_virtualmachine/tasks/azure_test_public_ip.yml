@@ -145,7 +145,7 @@
 - name: Ensure boot diagnostics was disabled
   assert:
     that:
-      - not azure_vm.properties.diagnosticsProfile.bootDiagnostics.enabled
+      - not azure_vm.diagnostics_profile.boot_diagnostics.enabled
 
 - name: Re-enable boot diagnostics on an existing VM where it was previously configured
   azure_rm_virtualmachine:
@@ -161,7 +161,7 @@
       - azure_vm.diagnostics_profile.boot_diagnostics.enabled
       - azure_vm.diagnostics_profile.boot_diagnostics.storage_uri is defined
       - azure_vm.instance_view.boot_diagnostics.console_screenshot_blob_uri is defined
-      - azure_vm.instance_view.boot_diagnostics.serial_consoleLog_blob_uri is defined
+      - azure_vm.instance_view.boot_diagnostics.serial_console_log_blob_uri is defined
 
 # - add_host:
 #     name: new_azure_vm
