@@ -272,8 +272,8 @@ try:
     from msrestazure import AzureConfiguration
     from msrest.authentication import Authentication
     from azure.mgmt.resource.locks import ManagementLockClient
-    from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
-    import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
+    from azure.mgmt.recoveryservicesbackup.activestamp import RecoveryServicesBackupClient
+    import azure.mgmt.recoveryservicesbackup.activestamp.models as RecoveryServicesBackupModels
     from azure.mgmt.search import SearchManagementClient
     from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
