@@ -43,6 +43,11 @@ options:
             - Name of the IoT hub device module.
             - Must use with I(device_id) defined.
         type: str
+    query:
+        description:
+            - Query an IoT hub to retrieve information regarding device twins using a SQL-like language.
+            - "See U(https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-query-language)."
+        type: str
     top:
         description:
             - Used when I(name) not defined.
@@ -63,6 +68,13 @@ EXAMPLES = '''
       hub: MyIoTHub
       hub_policy_name: registryRead
       hub_policy_key: XXXXXXXXXXXXXXXXXXXX
+
+- name: Query devices
+  azure_rm_iotdevice_info:
+      hub: "hub{{ rpfx }}"
+      query: "SELECT * FROM devices"
+      hub_policy_name: "{{ registry_write_name }}"
+      hub_policy_key: "{{ registry_write_key }}"
 
 - name: Query all device modules in an IoT Hub
   azure_rm_iotdevice_info:
@@ -180,6 +192,7 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str', aliases=['device_id']),
             module_id=dict(type='str'),
+            query=dict(type='str'),
             hub=dict(type='str', required=True),
             hub_policy_name=dict(type='str', required=True),
             hub_policy_key=dict(type='str', no_log=True, required=True),
@@ -197,6 +210,7 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
         self.hub_policy_name = None
         self.hub_policy_key = None
         self.top = None
+        self.query = None
 
         self.mgmt_client = None
         self._base_url = None
@@ -218,6 +232,8 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
             response = [self.get_device_module()]
         elif self.name:
             response = [self.get_device()]
+        elif self.query is not None:
+            response = self.hub_query()
         else:
             response = self.list_devices()
 
@@ -258,6 +274,19 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
                 return response[self.top - 1]
             else:
                 return response
+        except Exception as exc:
+            if hasattr(exc, 'message'):
+                pass
+            else:
+                self.fail('Error when listing IoT Hub devices in {0}: {1}'.format(self.hub, exc))
+
+    def hub_query(self):
+        try:
+            response = None
+            response = self.mgmt_client.query_iot_hub(dict(query=self.query))
+
+            return [self.format_twin(item) for item in response.items]
+
         except Exception as exc:
             if hasattr(exc, 'message'):
                 pass
@@ -324,6 +353,27 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
             format_item['capabilities']["iotEdge"] = item.capabilities.iot_edge
 
         return format_item
+
+    def format_twin(self, item):
+        if not item:
+            return None
+        format_twin = dict(
+            device_id=item.device_id,
+            module_id=item.module_id,
+            tags=item.tags,
+            properties=dict(),
+            etag=item.etag,
+            version=item.version,
+            device_etag=item.device_etag,
+            status=item.status,
+            cloud_to_device_message_count=item.cloud_to_device_message_count,
+            authentication_type=item.authentication_type,
+        )
+        if item.properties is not None:
+            format_twin['properties']['desired'] = item.properties.desired
+            format_twin['properties']['reported'] = item.properties.reported
+
+        return format_twin
 
 
 def main():
