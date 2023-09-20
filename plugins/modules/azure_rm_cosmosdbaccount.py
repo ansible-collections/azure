@@ -217,7 +217,6 @@ from ansible.module_utils.common.dict_transformations import _snake_to_camel
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.cosmosdb import CosmosDBManagementClient
     from ansible.module_utils.six import string_types
 except ImportError:
@@ -474,7 +473,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             response = self.mgmt_client.database_accounts.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                  account_name=self.name,
                                                                                  create_update_parameters=self.parameters)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:
@@ -493,7 +492,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             response = self.mgmt_client.database_accounts.begin_delete(resource_group_name=self.resource_group,
                                                                        account_name=self.name)
 
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as e:
             self.log('Error attempting to delete the Database Account instance.')

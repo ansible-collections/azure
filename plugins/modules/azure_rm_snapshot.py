@@ -130,11 +130,6 @@ import time
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # this is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -338,7 +333,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
                                               expected_status_codes=self.status_code,
                                               polling_timeout=600,
                                               polling_interval=30)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Snapshot instance.')
             self.fail('Error creating the Snapshot instance: {0}'.format(str(exc)))
 
@@ -360,7 +355,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
                                               expected_status_codes=self.status_code,
                                               polling_timeout=600,
                                               polling_interval=30)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Snapshot instance.')
             self.fail('Error deleting the Snapshot instance: {0}'.format(str(e)))
 
@@ -382,7 +377,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
             found = True
             self.log("Response : {0}".format(response))
             # self.log("Snapshot instance : {0} found".format(response.name))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the Snapshot instance.')
         if found is True:
             return response

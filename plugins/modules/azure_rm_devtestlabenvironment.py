@@ -108,7 +108,6 @@ from ansible.module_utils.common.dict_transformations import _snake_to_camel
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
 except ImportError:
     # This is handled in azure_rm_common
@@ -247,7 +246,7 @@ class AzureRMDtlEnvironment(AzureRMModuleBase):
 
             self.delete_environment()
             # This currently doesn't work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("Environment instance unchanged")
@@ -281,7 +280,7 @@ class AzureRMDtlEnvironment(AzureRMModuleBase):
                                                                 user_name=self.user_name,
                                                                 name=self.name,
                                                                 dtl_environment=self.dtl_environment)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:

@@ -112,8 +112,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.core.polling import LROPoller
     from azure.mgmt.batch import BatchManagementClient
     from azure.core.exceptions import ResourceNotFoundError

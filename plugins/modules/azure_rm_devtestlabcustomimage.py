@@ -96,7 +96,6 @@ from ansible.module_utils.common.dict_transformations import _snake_to_camel
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
 except ImportError:
     # This is handled in azure_rm_common
@@ -237,7 +236,7 @@ class AzureRMDtlCustomImage(AzureRMModuleBase):
 
             self.delete_customimage()
             # This currently doesnt' work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("Custom Image instance unchanged")
@@ -263,7 +262,7 @@ class AzureRMDtlCustomImage(AzureRMModuleBase):
                                                                              lab_name=self.lab_name,
                                                                              name=self.name,
                                                                              custom_image=self.custom_image)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:

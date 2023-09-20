@@ -111,7 +111,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 import uuid
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.graphrbac.models import GraphErrorException
     from azure.graphrbac.models import PasswordCredential
     from azure.graphrbac.models import ApplicationUpdateParameters

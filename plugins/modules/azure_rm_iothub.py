@@ -512,7 +512,7 @@ from ansible.module_utils.common.dict_transformations import _snake_to_camel, _c
 import re
 
 try:
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass

@@ -122,11 +122,6 @@ import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from copy import deepcopy
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class AzureRMApiManagementServiceInfo(AzureRMModuleBaseExt):
@@ -199,7 +194,7 @@ class AzureRMApiManagementServiceInfo(AzureRMModuleBaseExt):
                                               600,
                                               30)
             results = json.loads(response.body())
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return self.format_item(results)
@@ -228,7 +223,7 @@ class AzureRMApiManagementServiceInfo(AzureRMModuleBaseExt):
                                               600,
                                               30)
             results = json.loads(response.body())
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return [self.format_item(x) for x in results['value']] if results['value'] else []
@@ -254,7 +249,7 @@ class AzureRMApiManagementServiceInfo(AzureRMModuleBaseExt):
                                               600,
                                               30)
             results = json.loads(response.body())
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return [self.format_item(x) for x in results['value']] if results['value'] else []
