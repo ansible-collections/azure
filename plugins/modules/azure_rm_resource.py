@@ -216,7 +216,6 @@ from ansible.module_utils.common.dict_transformations import dict_merge
 
 try:
     from msrestazure.azure_exceptions import CloudError
-    from msrest.service_client import ServiceClient
     from msrestazure.tools import resource_id, is_valid_resource_id
     import json
 
@@ -309,6 +308,7 @@ class AzureRMResource(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.state == 'absent':
@@ -354,7 +354,7 @@ class AzureRMResource(AzureRMModuleBase):
                     provider = self.url.split("/providers/")[1].split("/")[0]
                     resourceType = self.url.split(provider + "/")[1].split("/")[0]
                     url = "/subscriptions/" + self.subscription_id + "/providers/" + provider
-                    api_versions = json.loads(self.mgmt_client.query(url, "GET", {'api-version': '2015-01-01'}, None, None, [200], 0, 0).text)
+                    api_versions = json.loads(self.mgmt_client.query(url, "GET", {'api-version': '2015-01-01'}, None, None, [200], 0, 0).body())
                     for rt in api_versions['resourceTypes']:
                         if rt['resourceType'].lower() == resourceType.lower():
                             self.api_version = rt['apiVersions'][0]
@@ -384,7 +384,7 @@ class AzureRMResource(AzureRMModuleBase):
                     needs_update = False
             else:
                 try:
-                    response = json.loads(original.text)
+                    response = json.loads(original.body())
                     needs_update = (dict_merge(response, self.body) != response)
                 except Exception:
                     pass
@@ -398,11 +398,11 @@ class AzureRMResource(AzureRMModuleBase):
                                               self.status_code,
                                               self.polling_timeout,
                                               self.polling_interval)
-            if self.state == 'present':
+            if self.state == 'present' and self.method != 'DELETE':
                 try:
-                    response = json.loads(response.text)
+                    response = json.loads(response.body())
                 except Exception:
-                    response = response.text
+                    response = response.context['deserialized_data']
             else:
                 response = None
 

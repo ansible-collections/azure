@@ -257,6 +257,7 @@ class BackupAzureVM(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         changed = False
@@ -298,9 +299,9 @@ class BackupAzureVM(AzureRMModuleBaseExt):
                 'Error in creating/updating protection for Azure VM {0}'.format(str(e)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.context['deserialized_data']}
 
         return response
 
@@ -324,9 +325,9 @@ class BackupAzureVM(AzureRMModuleBaseExt):
             self.fail('Error in disabling the protection: {0}'.format(str(e)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.context['deserialized_data']}
 
         return response
 
@@ -350,9 +351,9 @@ class BackupAzureVM(AzureRMModuleBaseExt):
             self.fail('Error deleting the azure backup: {0}'.format(str(e)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.context['deserialized_data']}
 
         return response
 
@@ -377,9 +378,9 @@ class BackupAzureVM(AzureRMModuleBaseExt):
                 'Error while taking on-demand backup: {0}'.format(str(e)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.context['deserialized_data']}
 
         return response
 

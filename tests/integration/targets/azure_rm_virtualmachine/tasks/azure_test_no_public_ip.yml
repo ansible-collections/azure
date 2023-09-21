@@ -28,11 +28,11 @@
 - name: Ensure VM was created properly
   assert:
     that:
-      - azure_vm.properties.diagnosticsProfile.bootDiagnostics.enabled
-      - azure_vm.properties.diagnosticsProfile.bootDiagnostics.storageUri is defined
-      - azure_vm.properties.instanceView.bootDiagnostics.consoleScreenshotBlobUri is defined
-      - azure_vm.properties.instanceView.bootDiagnostics.serialConsoleLogBlobUri is defined
-      - not 'publicIPAddress' in create_vm_public_result.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[0].properties.ipConfigurations[0].properties
+      - azure_vm.diagnostics_profile.boot_diagnostics.enabled
+      - azure_vm.diagnostics_profile.boot_diagnostics.storage_uri is defined
+      - azure_vm.instance_view.boot_diagnostics.console_screenshot_blob_uri is defined
+      - azure_vm.instance_view.boot_diagnostics.serial_console_log_blob_uri is defined
+      - not 'public_ip_address' in create_vm_public_result.ansible_facts.azure_vm.network_profile.network_interfaces[0].properties.ip_configurations[0]
 
 - name: Delete VM with no public ip
   azure_rm_virtualmachine:

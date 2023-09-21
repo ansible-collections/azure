@@ -653,6 +653,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         self.url = ('/subscriptions' +
@@ -758,9 +759,9 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             self.fail('Error creating the OpenShiftManagedCluster instance: {0}'
                       '\n{1}'.format(str(self.body), str(exc)))
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.context['deserialized_data']}
             pass
 
         return response
@@ -795,7 +796,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                                               600,
                                               30)
             found = True
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             found = True
             self.log("Response : {0}".format(response))
             # self.log("OpenShiftManagedCluster instance : {0} found".format(response.name))
