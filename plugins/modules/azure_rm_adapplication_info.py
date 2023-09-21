@@ -123,7 +123,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             ),
             tenant=dict(
                 type='str',
-                required=True
+                # required=True #TODO
             )
         )
         self.tenant = None
@@ -131,6 +131,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
         self.object_id = None
         self.identifier_uri = None
         self.results = dict(changed=False)
+        self._client = None
         super(AzureRMADApplicationInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                        supports_check_mode=True,
                                                        supports_tags=False,
@@ -144,28 +145,17 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
     
         
         try:
-            client = self.get_msgraph_client(self.tenant)
-            async def get_application():
-                return await client.applications.by_application_id(self.object_id)
-
+            self._client = self.get_msgraph_client(self.tenant)
             if self.object_id:
-                applications = [asyncio.run(get_application())]
+                applications = [asyncio.run(self.get_application(self.object_id))]
             else:
                 sub_filters = []
                 if self.identifier_uri:
                     sub_filters.append("identifierUris/any(s:s eq '{0}')".format(self.identifier_uri))
                 if self.app_id:
                     sub_filters.append("appId eq '{0}'".format(self.app_id))
-
-                request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
-                            query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
-                                filter = (' and '.join(sub_filters)),
-                            ),
-                        )
-                async def get_applications():
-                    return await client.applications.get(request_configuration = request_configuration)
                 
-                apps = asyncio.run(get_applications())    
+                apps = asyncio.run(self.get_applications(sub_filters))
                 applications = list(apps.value)
             self.results['applications'] = [self.to_dict(app) for app in applications]
         except Exception as ge:
@@ -181,7 +171,16 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             identifier_uris=object.identifier_uris
         )
 
+    async def get_application(self, obj_id):
+        return await self._client.applications.by_application_id(obj_id).get()
 
+    async def get_applications(self, sub_filters):
+        request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
+            query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                filter = (' and '.join(sub_filters)),
+                ))
+        return await self._client.applications.get(request_configuration = request_configuration)
+    
 def main():
     AzureRMADApplicationInfo()
 
