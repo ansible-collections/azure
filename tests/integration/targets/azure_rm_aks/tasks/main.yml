@@ -97,9 +97,9 @@
       that:
         - "fact.aks | length == 1"
         - fact.aks[0].id == output.id
-        - fact.aks[0].properties.agentPoolProfiles[0].availabilityZones == ["1", "2"]
-        - fact.aks[0].properties.agentPoolProfiles[0].mode == "System"
-        - fact.aks[0].properties.agentPoolProfiles[0].nodeLabels | length == 1
+        - fact.aks[0].agent_pool_profiles[0].availability_zones == ["1", "2"]
+        - fact.aks[0].agent_pool_profiles[0].mode == "System"
+        - fact.aks[0].agent_pool_profiles[0].node_labels | length == 1
 
  - name: Update an AKS instance node_labels
    azure_rm_aks:
@@ -147,7 +147,7 @@
       that:
         - "fact.aks | length == 1"
         - fact.aks[0].id == output.id
-        - fact.aks[0].properties.agentPoolProfiles[0].nodeLabels | length == 2
+        - fact.aks[0].agent_pool_profiles[0].node_labels | length == 2
 
  - name: Get AKS upgrade versions
    azure_rm_aksupgrade_info:

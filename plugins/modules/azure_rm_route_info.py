@@ -118,7 +118,7 @@ try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.network import NetworkManagementClient
     from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
+    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass

@@ -544,6 +544,7 @@ class AzureApiManagement(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         old_response = self.get_resource()
@@ -613,9 +614,9 @@ class AzureApiManagement(AzureRMModuleBaseExt):
             self.log('Error while creating/updating the Api instance.')
             self.fail('Error creating the Api instance: {0}'.format(str(exc)))
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.context['deserialized_data']}
 
         return response
 
@@ -653,7 +654,7 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                 30,
             )
             isFound = True
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             self.log("Response : {0}".format(response))
         except CloudError as e:
             self.log('Could not find the Api instance from the given parameters.')

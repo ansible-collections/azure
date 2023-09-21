@@ -90,7 +90,6 @@ try:
     from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

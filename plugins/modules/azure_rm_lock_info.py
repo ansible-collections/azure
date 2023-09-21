@@ -160,7 +160,7 @@ class AzureRMLockInfo(AzureRMModuleBase):
         for key in self.module_arg_spec.keys():
             setattr(self, key, kwargs[key])
 
-        self._mgmt_client = self.get_mgmt_svc_client(GenericRestClient, base_url=self._cloud_environment.endpoints.resource_manager)
+        self._mgmt_client = self.get_mgmt_svc_client(GenericRestClient, is_track2=True, base_url=self._cloud_environment.endpoints.resource_manager)
         changed = False
         # construct scope id
         scope = self.get_scope()
@@ -195,7 +195,7 @@ class AzureRMLockInfo(AzureRMModuleBase):
                                            expected_status_codes=[200],
                                            polling_timeout=None,
                                            polling_interval=None)
-            return json.loads(resp.text)
+            return json.loads(resp.body())
         except CloudError as exc:
             self.fail('Error when finding locks {0}: {1}'.format(url, exc.message))
 
