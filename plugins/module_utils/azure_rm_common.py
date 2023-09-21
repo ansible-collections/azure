@@ -1533,11 +1533,11 @@ class AzureRMAuth(object):
             rm_resource = self._cloud_environment.endpoints.resource_manager
             if is_ad_resource:
                 self.azure_credentials = ServicePrincipalCredentials(client_id=self.credentials['client_id'],
-                                                                    secret=self.credentials['secret'],
-                                                                    tenant=self.credentials['tenant'],
-                                                                    cloud_environment=self._cloud_environment,
-                                                                    resource=graph_resource if self.is_ad_resource else rm_resource,
-                                                                    verify=self._cert_validation_mode == 'validate')
+                                                                     secret=self.credentials['secret'],
+                                                                     tenant=self.credentials['tenant'],
+                                                                     cloud_environment=self._cloud_environment,
+                                                                     resource=graph_resource if self.is_ad_resource else rm_resource,
+                                                                     verify=self._cert_validation_mode == 'validate')
             self.azure_credential_track2 = client_secret.ClientSecretCredential(client_id=self.credentials['client_id'],
                                                                                 client_secret=self.credentials['secret'],
                                                                                 tenant_id=self.credentials['tenant'])
@@ -1562,7 +1562,6 @@ class AzureRMAuth(object):
                 self.credentials.get('password') is not None and \
                 self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None:
-                    
             if is_ad_resource:
                 self.azure_credentials = self.acquire_token_with_username_password(
                     self._adfs_authority_url,
@@ -1582,13 +1581,12 @@ class AzureRMAuth(object):
 
             if is_ad_resource:
                 self.azure_credentials = UserPassCredentials(self.credentials['ad_user'],
-                                                            self.credentials['password'],
-                                                            tenant=tenant,
-                                                            cloud_environment=self._cloud_environment,
-                                                            verify=self._cert_validation_mode == 'validate')
+                                                             self.credentials['password'],
+                                                             tenant=tenant,
+                                                             cloud_environment=self._cloud_environment,
+                                                             verify=self._cert_validation_mode == 'validate')
 
             client_id = self.credentials.get('client_id', '04b07795-8ddb-461a-bbee-02f9e1bf7b46')
-
             self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
                                                                                     password=self.credentials['password'],
                                                                                     tenant_id=self.credentials.get('tenant', 'organizations'),
