@@ -81,8 +81,8 @@ object_id:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.graphrbac.models import GraphErrorException
+    import asyncio
+    from msgraph.generated.service_principals.service_principals_request_builder import ServicePrincipalsRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -115,14 +115,25 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         service_principals = []
 
         try:
-            client = self.get_graphrbac_client(self.tenant)
+            client = self.get_msgraph_client(self.tenant)
+            async def get_service_principal():
+                return await client.service_principals.by_service_principal_id(self.object_id).get()
+            
             if self.object_id is None:
-                service_principals = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id)))
+                request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
+                            query_parameters = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
+                                filter = "servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
+                            ),
+                        )
+                async def get_service_principals():
+                    return await client.service_principals.get(request_configuration = request_configuration)
+                sps = asyncio.run(get_service_principals())    
+                service_principals = list(sps.value)
             else:
-                service_principals = [client.service_principals.get(self.object_id)]
+                service_principals = [asyncio.run(get_service_principal())]
 
             self.results['service_principals'] = [self.to_dict(sp) for sp in service_principals]
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.fail("failed to get service principal info {0}".format(str(ge)))
 
         return self.results
@@ -130,7 +141,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
     def to_dict(self, object):
         return dict(
             app_id=object.app_id,
-            object_id=object.object_id,
+            object_id=object.id,
             app_display_name=object.display_name,
             app_role_assignment_required=object.app_role_assignment_required
         )
