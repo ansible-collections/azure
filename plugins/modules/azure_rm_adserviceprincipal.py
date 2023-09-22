@@ -91,14 +91,13 @@ object_id:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
-    from azure.graphrbac.models import ServicePrincipalCreateParameters
-    from azure.graphrbac.models import ServicePrincipalUpdateParameters
+    from msgraph.generated.models.service_principal import ServicePrincipal
 except Exception:
     pass
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.graphrbac.models import GraphErrorException
+    import asyncio
+    from msgraph.generated.service_principals.service_principals_request_builder import ServicePrincipalsRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -149,46 +148,64 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
 
     def create_resource(self):
         try:
-            client = self.get_graphrbac_client(self.tenant)
-            response = client.service_principals.create(ServicePrincipalCreateParameters(app_id=self.app_id, account_enabled=True))
+            client = self.get_msgraph_client(self.tenant)
+            request_body = ServicePrincipal(
+                        app_id = self.app_id,
+                        account_enabled = True
+                    )
+            async def create_service_principal():
+                return await client.service_principals.post(body = request_body)
+            response = asyncio.run(create_service_principal())
             self.results['changed'] = True
             self.results.update(self.to_dict(response))
             return response
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.fail("Error creating service principle, app id {0} - {1}".format(self.app_id, str(ge)))
 
     def update_resource(self, old_response):
         try:
-            client = self.get_graphrbac_client(self.tenant)
+            client = self.get_msgraph_client(self.tenant)
             to_update = {}
             if self.app_role_assignment_required is not None:
                 to_update['app_role_assignment_required'] = self.app_role_assignment_required
 
-            client.service_principals.update(old_response['object_id'], to_update)
+            async def update_service_principal():
+                return await client.service_principals.by_service_principal_id(old_response['object_id']).patch()(body = to_update)
+            asyncio.run(update_service_principal())  
             self.results['changed'] = True
             self.results.update(self.get_resource())
 
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.fail("Error updating the service principal app_id {0} - {1}".format(self.app_id, str(ge)))
 
     def delete_resource(self, response):
         try:
-            client = self.get_graphrbac_client(self.tenant)
-            client.service_principals.delete(response.get('object_id'))
+            client = self.get_msgraph_client(self.tenant)
+            async def delete_service_principal():
+                return await client.service_principals.by_service_principal_id(response.get('object_id')).delete()
+            asyncio.run(delete_service_principal())
             self.results['changed'] = True
             return True
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.fail("Error deleting service principal app_id {0} - {1}".format(self.app_id, str(ge)))
 
     def get_resource(self):
         try:
-            client = self.get_graphrbac_client(self.tenant)
-            result = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id)))
+            client = self.get_msgraph_client(self.tenant)
+            request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
+                            query_parameters = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
+                                filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
+                            ),
+                        )
+            async def get_service_principals():
+                return await client.service_principals.get(request_configuration = request_configuration)
+            sps = asyncio.run(get_service_principals())    
+            result = list(sps.value)
             if not result:
                 return False
             result = result[0]
             return self.to_dict(result)
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.log("Did not find the graph instance instance {0} - {1}".format(self.app_id, str(ge)))
             return False
 
@@ -201,7 +218,7 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
     def to_dict(self, object):
         return dict(
             app_id=object.app_id,
-            object_id=object.object_id,
+            object_id=object.id,
             app_display_name=object.display_name,
             app_role_assignment_required=object.app_role_assignment_required
         )
