@@ -577,7 +577,7 @@ class AzureRMModuleBase(object):
         '''
         try:
             return self.rm_client.resource_groups.get(resource_group)
-        except Exception as cloud_error:
+        except Exception as exc:
             self.fail("Error retrieving resource group {0} - {1}".format(resource_group, str(exc)))
 
     def parse_resource_to_dict(self, resource):

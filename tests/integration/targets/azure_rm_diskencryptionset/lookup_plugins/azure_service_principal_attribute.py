@@ -88,6 +88,6 @@ class LookupModule(LookupBase):
             sp = response[0]
 
             return sp.object_id.split(',')
-        except CloudError as ex:
+        except Exception as ex:
             raise AnsibleError("Failed to get service principal object id: %s" % to_native(ex))
         return False
