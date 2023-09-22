@@ -108,10 +108,8 @@ passwords:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.graphrbac.models import GraphErrorException
-    from azure.graphrbac.models import PasswordCredential
-    from azure.graphrbac.models import ApplicationUpdateParameters
+    import asyncio
+    from msgraph.generated.applications.applications_request_builder import ApplicationsRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -151,7 +149,7 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        self.client = self.get_graphrbac_client(self.tenant)
+        self.client = self.get_msgraph_client(self.tenant)
         self.resolve_app_obj_id()
         passwords = self.get_all_passwords()
 
@@ -169,27 +167,41 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
                 return
             elif self.app_id or self.service_principal_object_id:
                 if not self.app_id:
-                    sp = self.client.service_principals.get(self.service_principal_id)
+                    async def get_service_principal():
+                        return await self.client.service_principals.by_service_principal_id(self.service_principal_object_id).get()
+                    sp = asyncio.run(get_service_principal())
                     self.app_id = sp.app_id
                 if not self.app_id:
                     self.fail("can't resolve app via service principal object id {0}".format(self.service_principal_object_id))
 
-                result = list(self.client.applications.list(filter="appId eq '{0}'".format(self.app_id)))
+                request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
+                            query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                                filter = "appId eq '{0}'".format(self.app_id),
+                            ),
+                        )
+                async def get_applications():
+                    return await self.client.applications.get(request_configuration = request_configuration)
+                apps = asyncio.run(get_applications())    
+                result = list(apps.value)
                 if result:
                     self.app_object_id = result[0].object_id
                 else:
                     self.fail("can't resolve app via app id {0}".format(self.app_id))
             else:
-                self.fail("one of the [app_id, app_object_id, service_principal_id] must be set")
+                self.fail("one of the [app_id, app_object_id, service_principal_object_id] must be set")
 
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.fail("error in resolve app_object_id {0}".format(str(ge)))
 
     def get_all_passwords(self):
 
         try:
-            return list(self.client.applications.list_password_credentials(self.app_object_id))
-        except GraphErrorException as ge:
+            async def get_application():
+                return await self.client.applications.by_application_id(self.app_object_id).get()
+            application = asyncio.run(get_application())
+            passwordCredentials = application.password_credentials
+            return passwordCredentials
+        except Exception as ge:
             self.fail("failed to fetch passwords for app {0}: {1}".format(self.app_object_id, str(ge)))
 
     def to_dict(self, pd):
