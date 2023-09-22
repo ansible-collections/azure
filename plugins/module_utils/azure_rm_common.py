@@ -224,7 +224,7 @@ try:
     from msrestazure.azure_active_directory import MSIAuthentication
     from azure.cli.core.auth.adal_authentication import MSIAuthenticationWrapper
     from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
-    from msrestazure import azure_cloud
+    from azure.cli.core import cloud as azure_cloud
     from azure.common.credentials import ServicePrincipalCredentials, UserPassCredentials
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource.resources import ResourceManagementClient

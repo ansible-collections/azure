@@ -12,7 +12,6 @@ except Exception:
     ANSIBLE_VERSION = 'unknown'
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.core._pipeline_client import PipelineClient
     from azure.core.polling import LROPoller
     from azure.core.pipeline import PipelineResponse
@@ -84,9 +83,7 @@ class GenericRestClient(object):
         response = self._client.send_request(request, **operation_config)
 
         if response.status_code not in expected_status_codes:
-            exp = CloudError(response)
-            exp.request_id = response.headers.get('x-ms-request-id')
-            raise exp
+            raise response
         elif response.status_code == 202 and polling_timeout > 0:
             def get_long_running_output(response):
                 return response
