@@ -120,7 +120,6 @@ import uuid
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
     from azure.mgmt.managedservices import ManagedServicesClient
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
@@ -238,7 +237,7 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
             response = self.mgmt_client.registration_assignments.begin_create_or_update(scope=self.scope,
                                                                                         registration_assignment_id=self.registration_assignment_id,
                                                                                         request_body=self.body)
-            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
             self.log('Error attempting to create the RegistrationAssignment instance.')

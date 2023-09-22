@@ -606,9 +606,8 @@ azure_vmss:
 import base64
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
     from azure.core.exceptions import ResourceNotFoundError
 
 except ImportError:
@@ -1338,7 +1337,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
         self.log("Fetching subnet {0} in virtual network {1}".format(subnet_name, vnet_name))
         try:
             subnet = self.network_client.subnets.get(self.virtual_network_resource_group, vnet_name, subnet_name)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Error: fetching subnet {0} in virtual network {1} - {2}".format(
                 subnet_name,
                 vnet_name,

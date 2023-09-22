@@ -55,7 +55,6 @@ azure_aks_versions:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.common import AzureHttpError
 except Exception:
     # handled in azure_rm_common

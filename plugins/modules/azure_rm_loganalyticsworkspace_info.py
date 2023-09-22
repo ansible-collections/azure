@@ -138,7 +138,6 @@ from ansible.module_utils.common.dict_transformations import _snake_to_camel, _c
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
-    from msrestazure.tools import parse_resource_id
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common

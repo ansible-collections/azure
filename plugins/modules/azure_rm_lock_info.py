@@ -115,7 +115,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -196,7 +195,7 @@ class AzureRMLockInfo(AzureRMModuleBase):
                                            polling_timeout=None,
                                            polling_interval=None)
             return json.loads(resp.body())
-        except CloudError as exc:
+        except Exception as exc:
             self.fail('Error when finding locks {0}: {1}'.format(url, exc.message))
 
     def get_scope(self):

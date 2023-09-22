@@ -52,8 +52,7 @@ from ansible.module_utils._text import to_native
 try:
     from azure.common.credentials import ServicePrincipalCredentials
     from azure.graphrbac import GraphRbacManagementClient
-    from msrestazure import azure_cloud
-    from msrestazure.azure_exceptions import CloudError
+    from azure.cli.core import cloud as azure_cloud
 except ImportError:
     raise AnsibleError(
         "The lookup azure_service_principal_attribute requires azure.graphrbac, msrest")

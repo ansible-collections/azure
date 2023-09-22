@@ -136,7 +136,7 @@ try:
     from msrest import ServiceClient, Serializer, Deserializer
     from msrestazure import AzureConfiguration
     from msrestazure.polling.arm_polling import ARMPolling
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
 except ImportError:
     AzureConfiguration = object
     ARMPolling = object

@@ -15,7 +15,6 @@ version_added: '1.12.0'
 requirements:
     - requests
     - azure
-    - msrest
 short_description: Read secret from Azure Key Vault.
 description:
   - This lookup returns the content of secret saved in Azure Key Vault.
@@ -120,7 +119,6 @@ try:
     import requests
     from azure.keyvault.secrets import SecretClient
     from azure.common.exceptions import ClientRequestError
-    from msrest.exceptions import ClientRequestError
     from azure.identity import DefaultAzureCredential, ClientSecretCredential
     from azure.keyvault.secrets import SecretClient
 
@@ -160,8 +158,6 @@ except Exception:
 
 
 def lookup_secret_non_msi(terms, vault_url, kwargs):
-    logging.getLogger('msrestazure.azure_active_directory').addHandler(logging.NullHandler())
-    logging.getLogger('msrest.service_client').addHandler(logging.NullHandler())
 
     client_id = kwargs['client_id'] if kwargs.get('client_id') else None
     secret = kwargs['secret'] if kwargs.get('secret') else None

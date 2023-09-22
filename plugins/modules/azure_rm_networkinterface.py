@@ -485,7 +485,7 @@ state:
 '''
 
 try:
-    from msrestazure.tools import parse_resource_id, resource_id, is_valid_resource_id
+    from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common

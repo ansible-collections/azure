@@ -202,9 +202,6 @@ HAS_AZURE_EXC = None
 HAS_AZURE_CLI_CORE = True
 HAS_AZURE_CLI_CORE_EXC = None
 
-HAS_MSRESTAZURE = True
-HAS_MSRESTAZURE_EXC = None
-
 try:
     import importlib
 except ImportError:
@@ -224,11 +221,10 @@ except ImportError:
 try:
     from enum import Enum
     from msrestazure.azure_active_directory import AADTokenCredentials
-    from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_active_directory import MSIAuthentication
     from azure.cli.core.auth.adal_authentication import MSIAuthenticationWrapper
-    from msrestazure.tools import parse_resource_id, resource_id, is_valid_resource_id
-    from msrestazure import azure_cloud
+    from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
+    from azure.cli.core import cloud as azure_cloud
     from azure.common.credentials import ServicePrincipalCredentials, UserPassCredentials
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource.resources import ResourceManagementClient
@@ -401,10 +397,6 @@ class AzureRMModuleBase(object):
         if not HAS_PACKAGING_VERSION:
             self.fail(msg=missing_required_lib('packaging'),
                       exception=HAS_PACKAGING_VERSION_EXC)
-
-        if not HAS_MSRESTAZURE:
-            self.fail(msg=missing_required_lib('msrestazure'),
-                      exception=HAS_MSRESTAZURE_EXC)
 
         if not HAS_AZURE:
             self.fail(msg=missing_required_lib('ansible[azure] (azure >= {0})'.format(AZURE_MIN_RELEASE)),
@@ -585,9 +577,7 @@ class AzureRMModuleBase(object):
         '''
         try:
             return self.rm_client.resource_groups.get(resource_group)
-        except CloudError as cloud_error:
-            self.fail("Error retrieving resource group {0} - {1}".format(resource_group, cloud_error.message))
-        except Exception as exc:
+        except Exception as cloud_error:
             self.fail("Error retrieving resource group {0} - {1}".format(resource_group, str(exc)))
 
     def parse_resource_to_dict(self, resource):

@@ -80,7 +80,6 @@ from ansible.module_utils.common.dict_transformations import _snake_to_camel
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
 except ImportError:
     # This is handled in azure_rm_common
@@ -199,7 +198,7 @@ class AzureRMDevTestLab(AzureRMModuleBase):
 
             self.delete_devtestlab()
             # This currently doesnt' work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("DevTest Lab instance unchanged")
@@ -224,7 +223,7 @@ class AzureRMDevTestLab(AzureRMModuleBase):
             response = self.mgmt_client.labs.begin_create_or_update(resource_group_name=self.resource_group,
                                                                     name=self.name,
                                                                     lab=self.lab)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:
