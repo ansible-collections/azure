@@ -152,8 +152,8 @@ user_type:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.graphrbac.models import GraphErrorException
+    import asyncio
+    from msgraph.generated.users.users_request_builder import UsersRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -204,37 +204,55 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         ad_users = []
 
         try:
-            client = self.get_graphrbac_client(self.tenant)
+            client = self.get_msgraph_client(self.tenant)
+
+            async def get_user(object):
+                return await client.users.by_user_id(object).get()
+            
+            async def get_users():
+                return await client.users.get()
+            
+            async def get_users_by_filter(filter):
+                return await client.users.get(request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
+                            query_parameters = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                                filter = filter,
+                            ),
+                        )
+                    )
 
             if self.user_principal_name is not None:
-                ad_users = [client.users.get(self.user_principal_name)]
-            elif self.object_id is not None:
-                ad_users = [client.users.get(self.object_id)]
+                ad_users = [asyncio.run(get_user(self.user_principal_name))]
+            elif self.object_id is not None:                
+                ad_users = [asyncio.run(get_user(self.object_id))]
             elif self.attribute_name is not None and self.attribute_value is not None:
                 try:
-                    ad_users = list(client.users.list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
-                except GraphErrorException as e:
+                    users = asyncio.run(get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))    
+                    ad_users = list(users.value)
+                except Exception as e:
                     # the type doesn't get more specific. Could check the error message but no guarantees that message doesn't change in the future
                     # more stable to try again assuming the first error came from the attribute being a list
                     try:
-                        ad_users = list(client.users.list(filter="{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
-                    except GraphErrorException as sub_e:
+                        users = asyncio.run(get_users_by_filter("{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))    
+                        ad_users = list(users.value)
+                    except Exception as sub_e:
                         raise
             elif self.odata_filter is not None:  # run a filter based on user input to return based on any given attribute/query
-                ad_users = list(client.users.list(filter=self.odata_filter))
-            elif self.all:
-                ad_users = list(client.users.list())
+                users = asyncio.run(get_users_by_filter(self.odata_filter))    
+                ad_users = list(users.value)
+            elif self.all:                
+                users = asyncio.run(get_users())
+                ad_users = list(users.value)
 
             self.results['ad_users'] = [self.to_dict(user) for user in ad_users]
 
-        except GraphErrorException as e:
+        except Exception as e:
             self.fail("failed to get ad user info {0}".format(str(e)))
 
         return self.results
 
     def to_dict(self, object):
         return dict(
-            object_id=object.object_id,
+            object_id=object.id,
             display_name=object.display_name,
             user_principal_name=object.user_principal_name,
             mail_nickname=object.mail_nickname,
