@@ -1438,7 +1438,7 @@ class AzureRMAuth(object):
     def __init__(self, auth_source=None, profile=None, subscription_id=None, client_id=None, secret=None,
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
                  api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False,
-                 x509_certificate_path=None, thumbprint=None, **kwargs):
+                 x509_certificate_path=None, thumbprint=None, track1_cred=False, **kwargs):
 
         if fail_impl:
             self._fail_impl = fail_impl
@@ -1517,12 +1517,12 @@ class AzureRMAuth(object):
 
         if self.credentials.get('auth_source') == 'msi':
             # MSI Credentials
-            if is_ad_resource:
+            if is_ad_resource or track1_cred:
                 self.azure_credentials = self.credentials['credentials']
             self.azure_credential_track2 = self.credentials['credential']
         elif self.credentials.get('credentials') is not None:
             # AzureCLI credentials
-            if is_ad_resource:
+            if is_ad_resource or track1_cred:
                 self.azure_credentials = self.credentials['credentials']
             self.azure_credential_track2 = self.credentials['credentials']
         elif self.credentials.get('client_id') is not None and \
@@ -1531,7 +1531,7 @@ class AzureRMAuth(object):
 
             graph_resource = self._cloud_environment.endpoints.active_directory_graph_resource_id
             rm_resource = self._cloud_environment.endpoints.resource_manager
-            if is_ad_resource:
+            if is_ad_resource or track1_cred:
                 self.azure_credentials = ServicePrincipalCredentials(client_id=self.credentials['client_id'],
                                                                      secret=self.credentials['secret'],
                                                                      tenant=self.credentials['tenant'],
@@ -1546,7 +1546,7 @@ class AzureRMAuth(object):
                 self.credentials.get('tenant') is not None and \
                 self.credentials.get('thumbprint') is not None and \
                 self.credentials.get('x509_certificate_path') is not None:
-            if is_ad_resource:
+            if is_ad_resource or track1_cred:
                 self.azure_credentials = self.acquire_token_with_client_certificate(
                     self._adfs_authority_url,
                     self.credentials['x509_certificate_path'],
@@ -1562,7 +1562,7 @@ class AzureRMAuth(object):
                 self.credentials.get('password') is not None and \
                 self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None:
-            if is_ad_resource:
+            if is_ad_resource or track1_cred:
                 self.azure_credentials = self.acquire_token_with_username_password(
                     self._adfs_authority_url,
                     self.credentials['ad_user'],
@@ -1579,7 +1579,7 @@ class AzureRMAuth(object):
             if not tenant:
                 tenant = 'common'  # SDK default
 
-            if is_ad_resource:
+            if is_ad_resource or track1_cred:
                 self.azure_credentials = UserPassCredentials(self.credentials['ad_user'],
                                                              self.credentials['password'],
                                                              tenant=tenant,
