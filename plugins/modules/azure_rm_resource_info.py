@@ -53,6 +53,7 @@ options:
     subresource:
         description:
             - List of subresources.
+        default: []
         suboptions:
             namespace:
                 description:

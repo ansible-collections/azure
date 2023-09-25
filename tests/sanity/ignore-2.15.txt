@@ -253,7 +253,6 @@ plugins/modules/azure_rm_adpassword.py validate-modules:return-syntax-error
 plugins/modules/azure_rm_adpassword.py validate-modules:import-before-documentation
 plugins/modules/azure_rm_adpassword.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_adpassword_info.py validate-modules:return-syntax-error
-plugins/modules/azure_rm_adpassword_info.py validate-modules:import-before-documentation
 plugins/modules/azure_rm_adserviceprincipal.py validate-modules:nonexistent-parameter-documented
 plugins/modules/azure_rm_apimanagementservice.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:invalid-ansiblemodule-schema
