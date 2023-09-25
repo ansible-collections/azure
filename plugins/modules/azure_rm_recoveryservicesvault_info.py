@@ -98,9 +98,7 @@ response:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-import re
 import json
-import time
 
 
 class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):

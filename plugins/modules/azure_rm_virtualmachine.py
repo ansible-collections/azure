@@ -396,6 +396,7 @@ options:
                     - User Assigned Managed Identities and its options
                 required: false
                 type: dict
+                default: {}
                 suboptions:
                     id:
                         description:

@@ -322,7 +322,6 @@ output:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.graphrbac.models import GraphErrorException
     import datetime
     from dateutil.relativedelta import relativedelta

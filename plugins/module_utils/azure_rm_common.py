@@ -249,7 +249,6 @@ try:
     from azure.mgmt.authorization import AuthorizationManagementClient
     from azure.mgmt.sql import SqlManagementClient
     from azure.mgmt.servicebus import ServiceBusManagementClient
-    import azure.mgmt.servicebus.models as ServicebusModel
     from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
     from azure.mgmt.rdbms.mysql import MySQLManagementClient
     from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
@@ -261,7 +260,6 @@ try:
     import azure.mgmt.automation.models as AutomationModel
     from azure.mgmt.iothub import IotHubClient
     from azure.mgmt.iothub import models as IoTHubModels
-    from msrestazure import AzureConfiguration
     from azure.mgmt.resource.locks import ManagementLockClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
     import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels

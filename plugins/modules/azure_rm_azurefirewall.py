@@ -314,10 +314,8 @@ id:
 
 import time
 import json
-import re
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-from copy import deepcopy
 try:
     from msrestazure.azure_exceptions import CloudError
 except ImportError:

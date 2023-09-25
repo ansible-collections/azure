@@ -39,6 +39,7 @@ options:
             - The web app's HTTP access restrictions.
         type: list
         elements: dict
+        default: []
         suboptions:
             name:
                 description:
@@ -73,6 +74,7 @@ options:
                 the SCM restrictions will be configured but not used.
         type: list
         elements: dict
+        default: []
         suboptions:
             name:
                 description:

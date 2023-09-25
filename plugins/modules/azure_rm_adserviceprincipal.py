@@ -92,12 +92,10 @@ object_id:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
     from azure.graphrbac.models import ServicePrincipalCreateParameters
-    from azure.graphrbac.models import ServicePrincipalUpdateParameters
 except Exception:
     pass
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.graphrbac.models import GraphErrorException
 except ImportError:
     # This is handled in azure_rm_common

@@ -206,7 +206,6 @@ networkinterfaces:
 '''  # NOQA
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
 except Exception:
     # This is handled in azure_rm_common
     pass

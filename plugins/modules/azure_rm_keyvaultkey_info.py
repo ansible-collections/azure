@@ -271,7 +271,7 @@ def deletedkeybundle_to_dict(bundle):
                             crv=bundle.key.crv if hasattr(bundle.key, 'crv') else None,
                             x=bundle.key.x if hasattr(bundle.key, 'x') else None,
                             y=bundle.key.y if hasattr(bundle.key, 'y') else None)
-    keybundle['id'] = bundle.id,
+    keybundle['id'] = bundle.id
     return keybundle
 
 
@@ -313,8 +313,8 @@ def delete_item_to_dict(bundle):
 
 def deletedkeyitem_to_dict(keyitem):
     item = delete_item_to_dict(keyitem)
-    item['recovery_id'] = keyitem.recovery_id,
-    item['scheduled_purge_date'] = keyitem.scheduled_purge_date,
+    item['recovery_id'] = keyitem.recovery_id
+    item['scheduled_purge_date'] = keyitem.scheduled_purge_date
     item['deleted_date'] = keyitem.deleted_date
     return item
 
