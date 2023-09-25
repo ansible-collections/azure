@@ -184,7 +184,7 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
                 apps = asyncio.run(get_applications())    
                 result = list(apps.value)
                 if result:
-                    self.app_object_id = result[0].object_id
+                    self.app_object_id = result[0].id
                 else:
                     self.fail("can't resolve app via app id {0}".format(self.app_id))
             else:
