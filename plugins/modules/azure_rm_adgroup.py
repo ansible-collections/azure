@@ -222,7 +222,6 @@ group_members:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.graphrbac.models import GraphErrorException
     from azure.graphrbac.models import GroupCreateParameters
 except ImportError:

@@ -120,8 +120,6 @@ roledefinitions:
                     sample: [ 'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write' ]
 '''
 
-from ansible.module_utils._text import to_native
-
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.mgmt.authorization import AuthorizationManagementClient

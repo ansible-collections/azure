@@ -63,6 +63,7 @@ options:
             - This option is deprecated, using I(ports) under I(containers)".
         type: list
         elements: int
+        default: []
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.

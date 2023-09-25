@@ -120,7 +120,6 @@ try:
     import requests
     from azure.keyvault.secrets import SecretClient
     from azure.common.exceptions import ClientRequestError
-    from msrest.exceptions import ClientRequestError
     from azure.identity import DefaultAzureCredential, ClientSecretCredential
     from azure.keyvault.secrets import SecretClient
 

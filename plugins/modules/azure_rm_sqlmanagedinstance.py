@@ -513,7 +513,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.core.polling import LROPoller
 except ImportError:
     pass
 

@@ -287,6 +287,7 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
         return not changed
 
     def update_module(self):
+        response = None
         try:
             if self.auth_method == 'sas':
                 response = self.mgmt_client.update_module_with_sas(self.device, self.name, self.managed_by, self.etag, self.primary_key, self.secondary_key)
@@ -304,6 +305,7 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
                 self.fail('Error when creating or updating IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
 
     def create_module(self):
+        response = None
         try:
             if self.auth_method == 'sas':
                 response = self.mgmt_client.create_module_with_sas(self.device, self.name, self.managed_by, self.primary_key, self.secondary_key)

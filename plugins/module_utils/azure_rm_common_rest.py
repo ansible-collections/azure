@@ -19,7 +19,6 @@ try:
     from azure.core.pipeline.policies import BearerTokenCredentialPolicy
     from azure.mgmt.core.polling.arm_polling import ARMPolling
     import uuid
-    import json
     from azure.core.configuration import Configuration
 except ImportError:
     # This is handled in azure_rm_common

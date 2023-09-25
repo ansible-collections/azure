@@ -417,7 +417,6 @@ state:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-import datetime
 
 try:
     from azure.core.exceptions import ResourceNotFoundError

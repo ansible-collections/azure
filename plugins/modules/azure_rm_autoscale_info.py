@@ -117,12 +117,6 @@ autoscales:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils._text import to_native
 
-try:
-    from msrest.serialization import Model
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
-
 
 # duplicated in azure_rm_autoscale
 def timedelta_to_minutes(time):
