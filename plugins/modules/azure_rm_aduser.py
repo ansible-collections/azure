@@ -202,11 +202,10 @@ user_type:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.graphrbac.models import UserUpdateParameters
-    from azure.graphrbac.models import UserCreateParameters
-    from azure.graphrbac.models import PasswordProfile
-    from azure.graphrbac.models import GraphErrorException
+    import asyncio
+    from msgraph.generated.models.password_profile import PasswordProfile
+    from msgraph.generated.models.user import User
+    from msgraph.generated.users.users_request_builder import UsersRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -275,9 +274,9 @@ class AzureRMADUser(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         try:
-            client = self.get_graphrbac_client(self.tenant)
+            client = self.get_msgraph_client(self.tenant)
 
-            ad_user = self.get_exisiting_user(client)
+            ad_user = self.get_exisiting_user(client)            
 
             if self.state == 'present':
 
@@ -286,7 +285,9 @@ class AzureRMADUser(AzureRMModuleBase):
                     password = None
 
                     if self.password_profile:
-                        password = PasswordProfile(password=self.password_profile)
+                        password = PasswordProfile(
+                                    password = self.password_profile,
+                                )
 
                     should_update = False
 
@@ -312,18 +313,21 @@ class AzureRMADUser(AzureRMModuleBase):
                         should_update = True
 
                     if should_update:
-                        parameters = UserUpdateParameters(immutable_id=self.immutable_id,
-                                                          usage_location=self.usage_location,
-                                                          given_name=self.given_name,
-                                                          surname=self.surname,
-                                                          user_type=self.user_type,
-                                                          account_enabled=self.account_enabled,
-                                                          display_name=self.display_name,
-                                                          password_profile=password,
-                                                          user_principal_name=self.user_principal_name,
-                                                          mail_nickname=self.mail_nickname)
-
-                        client.users.update(upn_or_object_id=ad_user.object_id, parameters=parameters)
+                        request_body = User(
+                                on_premises_immutable_id = self.immutable_id,
+                                usage_location = self.usage_location,
+                                given_name = self.given_name,
+                                surname = self.surname,
+                                user_type = self.user_type,
+                                account_enabled = self.account_enabled,
+                                display_name = self.display_name,
+                                password_profile = password,
+                                user_principal_name = self.user_principal_name,
+                                mail_nickname = self.mail_nickname
+                            )
+                        async def update_user():
+                            return await client.users.by_user_id(ad_user.object_id).patch()(body = request_body)
+                        asyncio.run(update_user())
 
                         self.results['changed'] = True
 
@@ -335,31 +339,39 @@ class AzureRMADUser(AzureRMModuleBase):
                         self.results['changed'] = False
 
                 else:  # Create, changed
-                    password = PasswordProfile(password=self.password_profile)
-                    parameters = UserCreateParameters(account_enabled=self.account_enabled,
-                                                      display_name=self.display_name,
-                                                      password_profile=password,
-                                                      user_principal_name=self.user_principal_name,
-                                                      mail_nickname=self.mail_nickname,
-                                                      immutable_id=self.immutable_id,
-                                                      usage_location=self.usage_location,
-                                                      given_name=self.given_name,
-                                                      surname=self.surname,
-                                                      user_type=self.user_type,
-                                                      mail=self.mail)
-                    ad_user = client.users.create(parameters=parameters)
+                    password = PasswordProfile(
+                            password = self.password_profile
+                        )
+                    request_body = User(
+                        account_enabled = self.account_enabled,
+                        display_name = self.display_name,
+                        password_profile = password,
+                        user_principal_name = self.user_principal_name,
+                        mail_nickname = self.mail_nickname,
+                        on_premises_immutable_id = self.immutable_id,
+                        usage_location = self.usage_location,
+                        given_name = self.given_name,
+                        surname = self.surname,
+                        user_type = self.user_type,
+                        mail = self.mail
+                    )
+                    async def create_user():
+                        return await client.users.post(body = request_body)
+                    ad_user = asyncio.run(create_user())
                     self.results['changed'] = True
 
                 self.results['ad_user'] = self.to_dict(ad_user)
 
             elif self.state == 'absent':
                 if ad_user:  # Delete, changed
-                    client.users.delete(ad_user.object_id)
+                    async def delete_user():
+                        return await client.users.by_user_id(ad_user.object_id).delete()
+                    asyncio.run(delete_user())
                     self.results['changed'] = True
                 else:  # Do nothing unchanged
                     self.results['changed'] = False
 
-        except GraphErrorException as e:
+        except Exception as e:
             self.fail("failed to get ad user info {0}".format(str(e)))
 
         return self.results
@@ -368,26 +380,43 @@ class AzureRMADUser(AzureRMModuleBase):
         ad_user = None
 
         try:
+            async def get_user(object):
+                return await client.users.by_user_id(object).get()
+            
+            async def get_users_by_filter(filter):
+                return await client.users.get(request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
+                            query_parameters = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                                filter = filter,
+                            ),
+                        )
+                    )
+
             if self.user_principal_name is not None:
-                ad_user = client.users.get(self.user_principal_name)
+                ad_user = asyncio.run(get_user(self.user_principal_name))
             elif self.object_id is not None:
-                ad_user = client.users.get(self.object_id)
+                ad_user = asyncio.run(get_user(self.object_id))
             elif self.attribute_name is not None and self.attribute_value is not None:
                 try:
-                    ad_user = list(client.users.list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))[0]
-                except GraphErrorException as e:
+                    users = asyncio.run(get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))    
+                    ad_users = list(users.value)
+                    ad_user = ad_users[0]
+                except Exception as e:
                     # the type doesn't get more specific. Could check the error message but no guarantees that message doesn't change in the future
                     # more stable to try again assuming the first error came from the attribute being a list
                     try:
-                        ad_user = list(client.users.list(filter="{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))[0]
-                    except GraphErrorException as sub_e:
+                        users = asyncio.run(get_users_by_filter("{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))    
+                        ad_users = list(users.value)
+                        ad_user = ad_users[0]
+                    except Exception as sub_e:
                         raise
             elif self.odata_filter is not None:  # run a filter based on user input to return based on any given attribute/query
-                ad_user = list(client.users.list(filter=self.odata_filter))[0]
-        except GraphErrorException as e:
+                users = asyncio.run(get_users_by_filter(self.odata_filter))    
+                ad_users = list(users.value)
+                ad_user = ad_users[0]
+        except Exception as e:
             # User was not found
             err_msg = str(e)
-            if err_msg == "Resource '{0}' does not exist or one of its queried reference-property objects are not present.".format(self.user_principal_name):
+            if "Resource '{0}' does not exist or one of its queried reference-property objects are not present.".format(self.user_principal_name) in err_msg:
                 ad_user = None
             else:
                 raise
@@ -395,7 +424,7 @@ class AzureRMADUser(AzureRMModuleBase):
 
     def to_dict(self, object):
         return dict(
-            object_id=object.object_id,
+            object_id=object.id,
             display_name=object.display_name,
             user_principal_name=object.user_principal_name,
             mail_nickname=object.mail_nickname,
