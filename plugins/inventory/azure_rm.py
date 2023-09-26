@@ -133,21 +133,19 @@ from ansible.module_utils._text import to_native, to_bytes, to_text
 from itertools import chain
 
 try:
-    from msrest import ServiceClient, Serializer, Deserializer
-    from msrestazure import AzureConfiguration
-    from msrestazure.polling.arm_polling import ARMPolling
+    from azure.core._pipeline_client import PipelineClient
+    from azure.core.pipeline.policies import BearerTokenCredentialPolicy
+    from azure.core.configuration import Configuration
     from azure.mgmt.core.tools import parse_resource_id
 except ImportError:
-    AzureConfiguration = object
-    ARMPolling = object
+    Configuration = object
     parse_resource_id = object
-    ServiceClient = object
-    Serializer = object
-    Deserializer = object
+    PipelineClient = object
+    BearerTokenCredentialPolicy = object
     pass
 
 
-class AzureRMRestConfiguration(AzureConfiguration):
+class AzureRMRestConfiguration(Configuration):
     def __init__(self, credentials, subscription_id, base_url=None):
 
         if credentials is None:
@@ -157,10 +155,11 @@ class AzureRMRestConfiguration(AzureConfiguration):
         if not base_url:
             base_url = 'https://management.azure.com'
 
-        super(AzureRMRestConfiguration, self).__init__(base_url)
+        credential_scopes = base_url + '/.default'
 
-        self.add_user_agent('ansible-dynamic-inventory/{0}'.format(release.__version__))
+        super(AzureRMRestConfiguration, self).__init__()
 
+        self.authentication_policy = BearerTokenCredentialPolicy(credentials, credential_scopes)
         self.credentials = credentials
         self.subscription_id = subscription_id
 
@@ -176,8 +175,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
     def __init__(self):
         super(InventoryModule, self).__init__()
 
-        self._serializer = Serializer()
-        self._deserializer = Deserializer()
         self._hosts = []
         self._filters = None
 
@@ -224,7 +221,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             self._get_hosts()
         except Exception:
             raise
-
     def _credential_setup(self):
         auth_options = dict(
             auth_source=self.get_option('auth_source'),
@@ -238,15 +234,16 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             cloud_environment=self.get_option('cloud_environment'),
             cert_validation_mode=self.get_option('cert_validation_mode'),
             api_profile=self.get_option('api_profile'),
-            adfs_authority_url=self.get_option('adfs_authority_url'),
             track1_cred=True,
+            adfs_authority_url=self.get_option('adfs_authority_url')
         )
 
         self.azure_auth = AzureRMAuth(**auth_options)
 
-        self._clientconfig = AzureRMRestConfiguration(self.azure_auth.azure_credentials, self.azure_auth.subscription_id,
+        self._clientconfig = AzureRMRestConfiguration(self.azure_auth.azure_credential_track2, self.azure_auth.subscription_id,
                                                       self.azure_auth._cloud_environment.endpoints.resource_manager)
-        self._client = ServiceClient(self._clientconfig.credentials, self._clientconfig)
+
+        self.new_client = PipelineClient(self.azure_auth._cloud_environment.endpoints.resource_manager, config=self._clientconfig)
 
     def _enqueue_get(self, url, api_version, handler, handler_args=None):
         if not handler_args:
@@ -402,7 +399,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
                     name = str(uuid.uuid4())
                     query_parameters = {'api-version': item.api_version}
-                    req = self._client.get(item.url, query_parameters)
+                    header_parameters = {'x-ms-client-request-id': str(uuid.uuid1()), 'Content-Type': 'application/json; charset=utf-8'}
+                    body = {}
+                    req = self.new_client.get(item.url, query_parameters, header_parameters, body)
                     batch_requests.append(dict(httpMethod="GET", url=req.url, name=name))
                     batch_response_handlers[name] = item
                     batch_item_index += 1
@@ -434,36 +433,27 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
     def _send_batch(self, batched_requests):
         url = '/batch'
         query_parameters = {'api-version': '2015-11-01'}
+        header_parameters = {'x-ms-client-request-id': str(uuid.uuid1()), 'Content-Type': 'application/json; charset=utf-8'}
+        body = {}
 
-        body_obj = dict(requests=batched_requests)
-
-        body_content = self._serializer.body(body_obj, 'object')
+        body_content = dict(requests=batched_requests)
 
         header = {'x-ms-client-request-id': str(uuid.uuid4())}
         header.update(self._default_header_parameters)
 
-        request = self._client.post(url, query_parameters)
-        initial_response = self._client.send(request, header, body_content)
+        request_new = self.new_client.post(url, query_parameters, header_parameters, body_content)
+        response = self.new_client.send_request(request_new)
 
-        # FUTURE: configurable timeout?
-        poller = ARMPolling(timeout=2)
-        poller.initialize(client=self._client,
-                          initial_response=initial_response,
-                          deserialization_callback=lambda r: self._deserializer('object', r))
-
-        poller.run()
-
-        return poller.resource()
+        return json.loads(response.body())
 
     def send_request(self, url, api_version):
         query_parameters = {'api-version': api_version}
-        req = self._client.get(url, query_parameters)
-        resp = self._client.send(req, self._default_header_parameters, stream=False)
+        header_parameters = {'x-ms-client-request-id': str(uuid.uuid1()), 'Content-Type': 'application/json; charset=utf-8'}
+        body = {}
+        request_new = self.new_client.get(url, query_parameters, header_parameters)
+        response = self.new_client.send_request(request_new)
 
-        resp.raise_for_status()
-        content = resp.content
-
-        return json.loads(content)
+        return json.loads(response.body())
 
     @staticmethod
     def _legacy_script_compatible_group_sanitization(name):
