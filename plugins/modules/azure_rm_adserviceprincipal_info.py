@@ -112,25 +112,16 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
+        self._client = self.get_msgraph_client(self.tenant)
+
         service_principals = []
 
         try:
-            client = self.get_msgraph_client(self.tenant)
-            async def get_service_principal():
-                return await client.service_principals.by_service_principal_id(self.object_id).get()
-            
             if self.object_id is None:
-                request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
-                            query_parameters = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
-                                filter = "servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
-                            ),
-                        )
-                async def get_service_principals():
-                    return await client.service_principals.get(request_configuration = request_configuration)
-                sps = asyncio.run(get_service_principals())    
+                sps = asyncio.get_event_loop().run_until_complete(self.get_service_principals())    
                 service_principals = list(sps.value)
             else:
-                service_principals = [asyncio.run(get_service_principal())]
+                service_principals = [asyncio.get_event_loop().run_until_complete(self.get_service_principal())]
 
             self.results['service_principals'] = [self.to_dict(sp) for sp in service_principals]
         except Exception as ge:
@@ -146,6 +137,16 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
             app_role_assignment_required=object.app_role_assignment_required
         )
 
+    async def get_service_principal(self):
+        return await self._client.service_principals.by_service_principal_id(self.object_id).get()
+
+    async def get_service_principals(self):
+        request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
+                            query_parameters = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
+                                filter = "servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
+                            ),
+                        )        
+        return await self._client.service_principals.get(request_configuration = request_configuration)
 
 def main():
     AzureRMADServicePrincipalInfo()
