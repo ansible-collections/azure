@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2021 Cole Neubauer, (@coleneubauer)
+# Copyright (c) 2021 Cole Neubauer, (@coleneubauer), xuzhang3 (@xuzhang3)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -70,6 +70,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 author:
     - Cole Neubauer(@coleneubauer)
+    - xuzhang3(@xuzhang3)
 '''
 
 EXAMPLES = '''
@@ -173,9 +174,9 @@ group_members:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.graphrbac.models import GraphErrorException
-    from azure.graphrbac.models import CheckGroupMembershipParameters
+    import asyncio
+    from msgraph.generated.groups.groups_request_builder import GroupsRequestBuilder
+    from msgraph.generated.users.users_request_builder import UsersRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -194,7 +195,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             return_group_members=dict(type='bool', default=False),
             return_member_groups=dict(type='bool', default=False),
             all=dict(type='bool', default=False),
-            tenant=dict(type='str', required=True),
+            tenant=dict(type='str'), # https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison
         )
 
         self.tenant = None
@@ -209,6 +210,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         self.all = False
 
         self.results = dict(changed=False)
+        self._client = None
 
         mutually_exclusive = [['odata_filter', 'attribute_name', 'object_id', 'all']]
         required_together = [['attribute_name', 'attribute_value']]
@@ -230,20 +232,19 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         ad_groups = []
 
         try:
-            client = self.get_graphrbac_client(self.tenant)
+            self._client = self.get_msgraph_client(self.tenant)
 
             if self.object_id is not None:
-                ad_groups = [client.groups.get(self.object_id)]
+                ad_groups = [asyncio.get_event_loop().run_until_complete(self.get_group(self.object_id))]
             elif self.attribute_name is not None and self.attribute_value is not None:
-                ad_groups = list(client.groups.list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
+                ad_groups = asyncio.get_event_loop().run_until_complete(self.get_group_list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
             elif self.odata_filter is not None:  # run a filter based on user input
-                ad_groups = list(client.groups.list(filter=self.odata_filter))
+                ad_groups = asyncio.get_event_loop().run_until_complete(self.get_group_list(filter=self.odata_filter))
             elif self.all:
-                ad_groups = list(client.groups.list())
-
-            self.results['ad_groups'] = [self.set_results(group, client) for group in ad_groups]
-
-        except GraphErrorException as e:
+                ad_groups = asyncio.get_event_loop().run_until_complete(self.get_group_list())
+            self.results['ad_groups'] = [self.set_results(group) for group in ad_groups]
+            
+        except Exception as e:
             self.fail("failed to get ad group info {0}".format(str(e)))
 
         return self.results
@@ -258,14 +259,14 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
     def serviceprincipal_to_dict(self, object):
         return dict(
             app_id=object.app_id,
-            object_id=object.object_id,
+            object_id=object.id,
             app_display_name=object.display_name,
             app_role_assignment_required=object.app_role_assignment_required
         )
 
     def group_to_dict(self, object):
         return dict(
-            object_id=object.object_id,
+            object_id=object.id,
             display_name=object.display_name,
             mail_nickname=object.mail_nickname,
             mail_enabled=object.mail_enabled,
@@ -275,7 +276,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
 
     def user_to_dict(self, object):
         return dict(
-            object_id=object.object_id,
+            object_id=object.id,
             display_name=object.display_name,
             user_principal_name=object.user_principal_name,
             mail_nickname=object.mail_nickname,
@@ -285,36 +286,82 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         )
 
     def result_to_dict(self, object):
-        if object.object_type == "Group":
+        if object.odata_type == "#microsoft.graph.group":
             return self.group_to_dict(object)
-        elif object.object_type == "User":
+        elif object.odata_type == "#microsoft.graph.user":
             return self.user_to_dict(object)
-        elif object.object_type == "Application":
+        elif object.odata_type == "#microsoft.graph.application":
             return self.application_to_dict(object)
-        elif object.object_type == "ServicePrincipal":
+        elif object.odata_type == "#microsoft.graph.servicePrincipal":
             return self.serviceprincipal_to_dict(object)
         else:
-            return object.object_type
+            return object.odata_type
 
-    def set_results(self, object, client):
+    def set_results(self, object):
         results = self.group_to_dict(object)
 
         if results["object_id"] and self.return_owners:
-            results["group_owners"] = [self.result_to_dict(object) for object in list(client.groups.list_owners(results["object_id"]))]
+            ret = asyncio.get_event_loop().run_until_complete(self.get_group_owners(results["object_id"]))
+            results["group_owners"] = [self.result_to_dict(object) for object in ret.value]
 
         if results["object_id"] and self.return_group_members:
-            results["group_members"] = [self.result_to_dict(object) for object in list(client.groups.get_group_members(results["object_id"]))]
+            ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"]))                
+            results["group_members"] = [self.result_to_dict(object) for object in ret.value]
 
-        if results["object_id"] and self.return_member_groups:
-            results["member_groups"] = [self.result_to_dict(object) for object in list(client.groups.get_member_groups(results["object_id"], False))]
-
+        # TODO no corresponding API in MS Graph
+        # if results["object_id"] and self.return_member_groups:
+        #     results["member_groups"] = [self.result_to_dict(object) for object in list(client.groups.get_member_groups(results["object_id"], False))]
+            
+        
         if results["object_id"] and self.check_membership:
-            results["is_member_of"] = client.groups.is_member_of(
-                CheckGroupMembershipParameters(group_id=results["object_id"], member_id=self.check_membership)).value
+            filter = "id eq '{0}' ".format(self.check_membership)
+            ret = ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"], filter))
+            results["is_member_of"] = True if ret.value and len(ret.value) != 0 else False
 
         return results
 
-
+    async def get_group(self, group_id):
+        return await self._client.groups.by_group_id(group_id).get()
+    
+    async def get_group_list(self, filter=None):
+        if filter:
+            request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
+                query_parameters = GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
+                    count = True,
+                    filter = filter,
+                ),
+                headers = {'ConsistencyLevel' : "eventual",}
+            )
+            groups = await self._client.groups.get(request_configuration = request_configuration)
+        else:
+            groups = await self._client.groups.get()
+            
+        if groups and groups.value:
+            return groups.value
+        return []
+        
+    async def get_group_owners(self, group_id):
+        request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
+            query_parameters = GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
+                count = True,
+                ),
+            headers = {'ConsistencyLevel' : "eventual",}
+            )
+        return await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
+    
+    async def get_group_members(self, group_id, filters=None):
+        from msgraph.generated.groups.item.transitive_members.transitive_members_request_builder import TransitiveMembersRequestBuilder
+        request_configuration = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetRequestConfiguration(
+            query_parameters = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
+                count = True,
+                ),
+            headers = {'ConsistencyLevel' : "eventual",}
+            )
+        if filters:
+            request_configuration.query_parameters.filter = filters
+        return await self._client.groups.by_group_id(group_id).transitive_members.get(request_configuration=request_configuration)
+    
+    
 def main():
     AzureRMADGroupInfo()
 

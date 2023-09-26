@@ -1,7 +1,7 @@
 packaging
 requests[security]
 xmltodict
-msgraph-sdk==1.0.0a14
+msgraph-sdk==1.0.0a16
 msal==1.23.0
 azure-cli-core==2.34.0
 azure-common==1.1.11

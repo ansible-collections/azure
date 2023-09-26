@@ -145,17 +145,28 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
     
         
         try:
-            self._client = self.get_msgraph_client(self.tenant)
+            client = self.get_msgraph_client(self.tenant)
+            async def get_application():
+                return await client.applications.by_application_id(self.object_id)
+
             if self.object_id:
-                applications = [asyncio.run(self.get_application(self.object_id))]
+                applications = [asyncio.run(get_application())]
             else:
                 sub_filters = []
                 if self.identifier_uri:
                     sub_filters.append("identifierUris/any(s:s eq '{0}')".format(self.identifier_uri))
                 if self.app_id:
                     sub_filters.append("appId eq '{0}'".format(self.app_id))
+
+                request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
+                            query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                                filter = (' and '.join(sub_filters)),
+                            ),
+                        )
+                async def get_applications():
+                    return await client.applications.get(request_configuration = request_configuration)
                 
-                apps = asyncio.run(self.get_applications(sub_filters))
+                apps = asyncio.run(get_applications())    
                 applications = list(apps.value)
             self.results['applications'] = [self.to_dict(app) for app in applications]
         except Exception as ge:
@@ -178,6 +189,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
         request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
             query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
                 filter = (' and '.join(sub_filters)),
+                headers = {'ConsistencyLevel' : "eventual"}
                 ))
         return await self._client.applications.get(request_configuration = request_configuration)
     
