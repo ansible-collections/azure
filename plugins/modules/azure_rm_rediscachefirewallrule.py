@@ -80,8 +80,6 @@ id:
     sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Cache/redis/myRedis/firewallRules/myRule"
 '''
 
-import time
-
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.core.polling import LROPoller

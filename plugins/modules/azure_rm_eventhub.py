@@ -157,7 +157,6 @@ state:
 '''
 
 try:
-    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.eventhub.models import Eventhub, EHNamespace
     from azure.mgmt.eventhub.models import Sku
 except ImportError:

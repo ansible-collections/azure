@@ -87,7 +87,6 @@ import time
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
 except ImportError:

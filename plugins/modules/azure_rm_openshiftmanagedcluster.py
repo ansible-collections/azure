@@ -41,7 +41,6 @@ options:
                 description:
                     - Pull secret for the cluster (immutable).
                 type: str
-                default: ""
             domain:
                 description:
                     - The domain for the cluster (immutable).

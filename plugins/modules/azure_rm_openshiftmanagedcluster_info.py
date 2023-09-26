@@ -211,9 +211,7 @@ properties:
                     sample: Public
 '''
 
-import time
 import json
-import random
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 

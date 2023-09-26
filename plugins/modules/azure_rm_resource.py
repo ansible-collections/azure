@@ -44,6 +44,7 @@ options:
     subresource:
         description:
             - List of subresources.
+        default: []
         suboptions:
             namespace:
                 description:
@@ -215,7 +216,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import dict_merge
 
 try:
-    from azure.mgmt.core.tools import resource_id, is_valid_resource_id
+    from azure.mgmt.core.tools import resource_id
     import json
 
 except ImportError:

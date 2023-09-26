@@ -150,8 +150,6 @@ except Exception:
     # handled in azure_rm_common
     pass
 
-import re
-
 AZURE_OBJECT_CLASS = 'TrafficManagerEndpoints'
 
 

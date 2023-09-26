@@ -92,7 +92,6 @@ object_id:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
     from azure.graphrbac.models import ServicePrincipalCreateParameters
-    from azure.graphrbac.models import ServicePrincipalUpdateParameters
 except Exception:
     pass
 

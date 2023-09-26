@@ -150,7 +150,6 @@ registration_definitions:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 try:
     from azure.mgmt.managedservices import ManagedServicesClient
-    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass

@@ -5,7 +5,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-import datetime
 
 __metaclass__ = type
 
@@ -109,8 +108,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.graphrbac.models import GraphErrorException
-    from azure.graphrbac.models import PasswordCredential
-    from azure.graphrbac.models import ApplicationUpdateParameters
 except ImportError:
     # This is handled in azure_rm_common
     pass

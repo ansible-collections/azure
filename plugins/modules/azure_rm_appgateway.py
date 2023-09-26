@@ -236,6 +236,7 @@ options:
                             - Conditions based on which the action set execution will be evaluated.
                         type: list
                         elements: dict
+                        default: []
                         suboptions:
                             variable:
                                 description:
@@ -266,6 +267,7 @@ options:
                                     - List of actions to be taken on request headers.
                                 type: list
                                 elements: dict
+                                default: []
                                 suboptions:
                                     header_name:
                                         description:
@@ -275,11 +277,13 @@ options:
                                         description:
                                             - Value of the header.
                                             - Leave the parameter unset to remove the header.
+                                        default: ''
                             response_header_configurations:
                                 description:
                                     - List of actions to be taken on response headers.
                                 type: list
                                 elements: dict
+                                default: []
                                 suboptions:
                                     header_name:
                                         description:
@@ -289,6 +293,7 @@ options:
                                         description:
                                             - Value of the header.
                                             - Leave the parameter unset to remove the header.
+                                        default: ''
                             url_configuration:
                                 description:
                                     - Action to be taken on the URL.
@@ -342,6 +347,7 @@ options:
             key_vault_secret_id:
                 description:
                     - Secret Id of (base-64 encoded unencrypted pfx) 'Secret' or 'Certificate' object stored in KeyVault.
+                default: ''
                 type: str
     frontend_ip_configurations:
         description:
@@ -683,6 +689,7 @@ options:
                     - The disabled rule groups.
                 type: list
                 elements: dict
+                default: []
                 suboptions:
                     rule_group_name:
                         description:
@@ -693,6 +700,7 @@ options:
                             - The list of rules that will be disabled. If null, all rules of the rule group will be disabled.
                         type: list
                         elements: int
+                        default: []
             enabled:
                 description:
                     - Whether the web application firewall is enabled or not.
@@ -702,6 +710,7 @@ options:
                     - The exclusion list.
                 type: list
                 elements: dict
+                default: []
                 suboptions:
                     match_variable:
                         description:

@@ -100,10 +100,7 @@ api:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from copy import deepcopy
-import time
 import json
-import re
 
 
 class AzureApiManagementInfo(AzureRMModuleBaseExt):

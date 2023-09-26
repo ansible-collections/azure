@@ -90,11 +90,9 @@ galleries:
 
 '''
 
-import time
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-from copy import deepcopy
 
 
 class AzureRMGalleriesInfo(AzureRMModuleBase):

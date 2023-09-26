@@ -39,6 +39,7 @@ options:
             - List of data disk sources, including unmanaged blob URI, managed disk id or name, or snapshot id or name.
         type: list
         elements: str
+        default: []
     location:
         description:
             - Location of the image. Derived from I(resource_group) if not specified.
