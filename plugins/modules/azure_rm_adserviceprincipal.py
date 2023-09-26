@@ -130,6 +130,8 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
+        self._client = self.get_msgraph_client(self.tenant)
+
         response = self.get_resource()
 
         if response:
@@ -148,14 +150,7 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
 
     def create_resource(self):
         try:
-            client = self.get_msgraph_client(self.tenant)
-            request_body = ServicePrincipal(
-                        app_id = self.app_id,
-                        account_enabled = True
-                    )
-            async def create_service_principal():
-                return await client.service_principals.post(body = request_body)
-            response = asyncio.run(create_service_principal())
+            response = asyncio.get_event_loop().run_until_complete(self.create_service_principal())
             self.results['changed'] = True
             self.results.update(self.to_dict(response))
             return response
@@ -164,14 +159,15 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
 
     def update_resource(self, old_response):
         try:
-            client = self.get_msgraph_client(self.tenant)
-            to_update = {}
+            request_body = ServicePrincipal(
+                app_role_assignment_required = None,
+            )
             if self.app_role_assignment_required is not None:
-                to_update['app_role_assignment_required'] = self.app_role_assignment_required
+                request_body = ServicePrincipal(
+                    app_role_assignment_required = self.app_role_assignment_required
+                )
 
-            async def update_service_principal():
-                return await client.service_principals.by_service_principal_id(old_response['object_id']).patch()(body = to_update)
-            asyncio.run(update_service_principal())  
+            asyncio.get_event_loop().run_until_complete(self.update_service_principal(old_response, request_body))
             self.results['changed'] = True
             self.results.update(self.get_resource())
 
@@ -180,10 +176,7 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
 
     def delete_resource(self, response):
         try:
-            client = self.get_msgraph_client(self.tenant)
-            async def delete_service_principal():
-                return await client.service_principals.by_service_principal_id(response.get('object_id')).delete()
-            asyncio.run(delete_service_principal())
+            asyncio.get_event_loop().run_until_complete(self.delete_service_principal(response))
             self.results['changed'] = True
             return True
         except Exception as ge:
@@ -191,15 +184,7 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
 
     def get_resource(self):
         try:
-            client = self.get_msgraph_client(self.tenant)
-            request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
-                            query_parameters = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
-                                filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
-                            ),
-                        )
-            async def get_service_principals():
-                return await client.service_principals.get(request_configuration = request_configuration)
-            sps = asyncio.run(get_service_principals())    
+            sps = asyncio.get_event_loop().run_until_complete(self.get_service_principals())
             result = list(sps.value)
             if not result:
                 return False
@@ -223,6 +208,26 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
             app_role_assignment_required=object.app_role_assignment_required
         )
 
+    async def create_service_principal(self):
+        request_body = ServicePrincipal(
+                    app_id = self.app_id,
+                    account_enabled = True
+                )
+        return await self._client.service_principals.post(body = request_body)    
+
+    async def update_service_principal(self, old_response, request_body):
+        return await self._client.service_principals.by_service_principal_id(old_response['object_id']).patch(body = request_body)
+
+    async def delete_service_principal(self, response):
+        return await self._client.service_principals.by_service_principal_id(response.get('object_id')).delete()
+
+    async def get_service_principals(self):
+        request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
+                            query_parameters = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
+                                filter = "servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
+                            )
+                        )
+        return await self._client.service_principals.get(request_configuration = request_configuration)
 
 def main():
     AzureRMADServicePrincipal()
