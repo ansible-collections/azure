@@ -149,7 +149,7 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        self.client = self.get_msgraph_client(self.tenant)
+        self._client = self.get_msgraph_client(self.tenant)
         self.resolve_app_obj_id()
         passwords = self.get_all_passwords()
 
@@ -167,21 +167,12 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
                 return
             elif self.app_id or self.service_principal_object_id:
                 if not self.app_id:
-                    async def get_service_principal():
-                        return await self.client.service_principals.by_service_principal_id(self.service_principal_object_id).get()
-                    sp = asyncio.run(get_service_principal())
+                    sp = asyncio.get_event_loop().run_until_complete(self.get_service_principal())
                     self.app_id = sp.app_id
                 if not self.app_id:
                     self.fail("can't resolve app via service principal object id {0}".format(self.service_principal_object_id))
 
-                request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
-                            query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
-                                filter = "appId eq '{0}'".format(self.app_id),
-                            ),
-                        )
-                async def get_applications():
-                    return await self.client.applications.get(request_configuration = request_configuration)
-                apps = asyncio.run(get_applications())    
+                apps = asyncio.get_event_loop().run_until_complete(self.get_applications())    
                 result = list(apps.value)
                 if result:
                     self.app_object_id = result[0].id
@@ -196,9 +187,7 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
     def get_all_passwords(self):
 
         try:
-            async def get_application():
-                return await self.client.applications.by_application_id(self.app_object_id).get()
-            application = asyncio.run(get_application())
+            application = asyncio.get_event_loop().run_until_complete(self.get_application())
             passwordCredentials = application.password_credentials
             return passwordCredentials
         except Exception as ge:
@@ -206,12 +195,25 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
 
     def to_dict(self, pd):
         return dict(
-            end_date=pd.end_date,
-            start_date=pd.start_date,
-            key_id=pd.key_id,
+            end_date=pd.end_date_time,
+            start_date=pd.start_date_time,
+            key_id=str(pd.key_id),
             custom_key_identifier=str(pd.custom_key_identifier)
         )
 
+    async def get_service_principal(self):
+        return await self._client.service_principals.by_service_principal_id(self.service_principal_object_id).get()
+
+    async def get_applications(self):
+        request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
+                query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                    filter = "appId eq '{0}'".format(self.app_id),
+                ),
+            )
+        return await self._client.applications.get(request_configuration = request_configuration)
+
+    async def get_application(self):
+        return await self._client.applications.by_application_id(self.app_object_id).get()
 
 def main():
     AzureRMADPasswordInfo()
