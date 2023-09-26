@@ -123,7 +123,6 @@ except ImportError:
     from Queue import Queue, Empty
 
 from collections import namedtuple
-from ansible import release
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable
 from ansible.module_utils.six import iteritems
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMAuth
@@ -221,6 +220,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             self._get_hosts()
         except Exception:
             raise
+
     def _credential_setup(self):
         auth_options = dict(
             auth_source=self.get_option('auth_source'),

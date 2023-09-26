@@ -54,6 +54,7 @@ azure_aks_versions:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
+
 class AzureRMAKSVersion(AzureRMModuleBase):
 
     def __init__(self):
