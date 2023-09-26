@@ -155,7 +155,7 @@ class AzureRMADPassword(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        self.client = self.get_msgraph_client(self.tenant)
+        self._client = self.get_msgraph_client(self.tenant)
         self.resolve_app_obj_id()
         passwords = self.get_all_passwords()
 
@@ -183,22 +183,13 @@ class AzureRMADPassword(AzureRMModuleBase):
             if self.app_object_id is not None:
                 return
             elif self.app_id or self.service_principal_object_id:
-                if not self.app_id:
-                    async def get_service_principal():
-                        return await self.client.service_principals.by_service_principal_id(self.service_principal_object_id).get()
-                    sp = asyncio.run(get_service_principal())
+                if not self.app_id:                    
+                    sp = asyncio.get_event_loop().run_until_complete(self.get_service_principal())
                     self.app_id = sp.app_id
                 if not self.app_id:
                     self.fail("can't resolve app via service principal object id {0}".format(self.service_principal_object_id))
 
-                request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
-                            query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
-                                filter = "appId eq '{0}'".format(self.app_id),
-                            ),
-                        )
-                async def get_applications():
-                    return await self.client.applications.get(request_configuration = request_configuration)
-                apps = asyncio.run(get_applications())
+                apps = asyncio.get_event_loop().run_until_complete(self.get_applications())
                 result = list(apps.value)
                 if result:
                     self.app_object_id = result[0].id
@@ -213,9 +204,7 @@ class AzureRMADPassword(AzureRMModuleBase):
     def get_all_passwords(self):
 
         try:
-            async def get_application():
-                return await self.client.applications.by_application_id(self.app_object_id).get()
-            application = asyncio.run(get_application())
+            application = asyncio.get_event_loop().run_until_complete(self.get_application())
             passwordCredentials = application.password_credentials
             return passwordCredentials
         except Exception as ge:
@@ -226,13 +215,8 @@ class AzureRMADPassword(AzureRMModuleBase):
         if len(old_passwords) == 0:
             self.results['changed'] = False
             return
-        try:
-            request_body = Application(
-                password_credentials = []
-            )
-            async def update_application():
-                return await self.client.applications.by_application_id(self.app_object_id).patch(body = request_body)
-            asyncio.run(update_application())
+        try:            
+            asyncio.get_event_loop().run_until_complete(self.remove_all_passwords())
             self.results['changed'] = True
         except Exception as ge:
             self.fail("fail to purge all passwords for app: {0} - {1}".format(self.app_object_id, str(ge)))
@@ -249,12 +233,7 @@ class AzureRMADPassword(AzureRMModuleBase):
                 old_passwords.remove(pd)
                 break
         try:
-            request_body = Application(
-                password_credentials = old_passwords
-            )
-            async def update_application():
-                return await self.client.applications.by_application_id(self.app_object_id).patch(body = request_body)
-            asyncio.run(update_application())
+            asyncio.get_event_loop().run_until_complete(self.update_password(old_passwords))
             
             num_of_passwords_after_delete = len(self.get_all_passwords())
             if num_of_passwords_after_delete != num_of_passwords_before_delete:
@@ -281,13 +260,7 @@ class AzureRMADPassword(AzureRMModuleBase):
         old_passwords.append(new_password)
 
         try:
-            client = self.get_msgraph_client(self.tenant)
-            request_body = Application(
-                password_credentials = old_passwords
-            )
-            async def update_application():
-                return await client.applications.by_application_id(self.app_object_id).patch(body = request_body)
-            asyncio.run(update_application())
+            asyncio.get_event_loop().run_until_complete(self.update_password(old_passwords))
 
             new_passwords = self.get_all_passwords()
             for pd in new_passwords:
@@ -307,6 +280,31 @@ class AzureRMADPassword(AzureRMModuleBase):
             key_id=pd.key_id
         )
 
+    async def get_service_principal(self):
+        return await self._client.service_principals.by_service_principal_id(self.service_principal_object_id).get()
+
+    async def get_applications(self):
+        request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
+                query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                    filter = "appId eq '{0}'".format(self.app_id),
+                ),
+            )
+        return await self._client.applications.get(request_configuration = request_configuration)
+
+    async def get_application(self):
+        return await self._client.applications.by_application_id(self.app_object_id).get()
+
+    async def remove_all_passwords(self):
+        request_body = Application(
+                password_credentials = []
+            )
+        return await self._client.applications.by_application_id(self.app_object_id).patch(body = request_body)
+
+    async def update_password(self, old_passwords):
+        request_body = Application(
+                password_credentials = old_passwords
+            )
+        return await self._client.applications.by_application_id(self.app_object_id).patch(body = request_body)
 
 def main():
     AzureRMADPassword()
