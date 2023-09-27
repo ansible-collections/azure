@@ -401,7 +401,7 @@ class AzureRMADUser(AzureRMModuleBase):
                 user_principal_name = self.user_principal_name,
                 mail_nickname = self.mail_nickname
             )
-        return await self._client.users.by_user_id(ad_user.object_id).patch()(body = request_body)
+        return await self._client.users.by_user_id(ad_user.id).patch(body = request_body)
 
     async def create_user(self):
         password = PasswordProfile(
@@ -423,7 +423,7 @@ class AzureRMADUser(AzureRMModuleBase):
         return await self._client.users.post(body = request_body)
 
     async def delete_user(self, ad_user):
-        return await self._client.users.by_user_id(ad_user.object_id).delete()
+        return await self._client.users.by_user_id(ad_user.id).delete()
 
     async def get_user(self, object):
         return await self._client.users.by_user_id(object).get()
