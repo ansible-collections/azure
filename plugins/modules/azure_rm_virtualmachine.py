@@ -2066,8 +2066,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         for data_disk in vm_dict['storage_profile']['data_disks']:
                             if data_disk.get('managed_disk'):
                                 managed_disk_type = data_disk['managed_disk'].get('storage_account_type')
-                                if data_disk.get('disk_encryption_set_id'):
-                                    data_disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(id=data_disk['disk_encryption_set_id']['id'])
+                                if data_disk['managed_disk'].get('disk_encryption_set'):
+                                    managed_disk_encryption_set_id = data_disk['managed_disk']['disk_encryption_set']['id']
+                                    data_disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(id=managed_disk_encryption_set_id)
                                     data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=managed_disk_type,
                                                                                                        disk_encryption_set=data_disk_encryption_set)
                                 else:
