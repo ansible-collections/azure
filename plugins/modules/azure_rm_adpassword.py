@@ -111,8 +111,9 @@ import uuid
 
 try:
     import asyncio
-    from msgraph.generated.models.application import Application
     from msgraph.generated.models.password_credential import PasswordCredential
+    from msgraph.generated.applications.item.add_password.add_password_post_request_body import AddPasswordPostRequestBody
+    from msgraph.generated.applications.item.remove_password.remove_password_post_request_body import RemovePasswordPostRequestBody
     from msgraph.generated.applications.applications_request_builder import ApplicationsRequestBuilder
     from dateutil.relativedelta import relativedelta
 except ImportError:
@@ -215,8 +216,9 @@ class AzureRMADPassword(AzureRMModuleBase):
         if len(old_passwords) == 0:
             self.results['changed'] = False
             return
-        try:            
-            asyncio.get_event_loop().run_until_complete(self.remove_all_passwords())
+        try:
+            for pd in old_passwords:
+                asyncio.get_event_loop().run_until_complete(self.remove_password(pd.key_id))
             self.results['changed'] = True
         except Exception as ge:
             self.fail("fail to purge all passwords for app: {0} - {1}".format(self.app_object_id, str(ge)))
@@ -230,43 +232,40 @@ class AzureRMADPassword(AzureRMModuleBase):
 
         for pd in old_passwords:
             if str(pd.key_id) == self.key_id:
-                old_passwords.remove(pd)
+                try:
+                    asyncio.get_event_loop().run_until_complete(self.remove_password(pd.key_id))
+                    
+                    num_of_passwords_after_delete = len(self.get_all_passwords())
+                    if num_of_passwords_after_delete != num_of_passwords_before_delete:
+                        self.results['changed'] = True
+                except Exception as ge:
+                    self.fail("failed to delete password with key id {0} - {1}".format(self.app_id, str(ge)))
                 break
-        try:
-            asyncio.get_event_loop().run_until_complete(self.update_password_in_application(old_passwords))
-            
-            num_of_passwords_after_delete = len(self.get_all_passwords())
-            if num_of_passwords_after_delete != num_of_passwords_before_delete:
-                self.results['changed'] = True
-
-        except Exception as ge:
-            self.fail("failed to delete password with key id {0} - {1}".format(self.app_id, str(ge)))
 
     def create_password(self, old_passwords):
-
-        def gen_guid():
-            return uuid.uuid4()
-
         if self.display_name is None:
             self.fail("when creating a new password, module parameter display_name can't be None")
 
         start_date = datetime.datetime.now(datetime.timezone.utc)
         end_date = self.end_date or start_date + relativedelta(years=1)
         display_name = self.display_name
-        key_id = self.key_id or str(gen_guid())
-
-        new_password = PasswordCredential(start_date_time=start_date, end_date_time=end_date, key_id=key_id,
-                                          display_name=display_name, custom_key_identifier=None)
-        old_passwords.append(new_password)
+        num_of_passwords_before_add = len(old_passwords)
 
         try:
-            asyncio.get_event_loop().run_until_complete(self.update_password_in_application(old_passwords))
+            request_body = AddPasswordPostRequestBody(
+                password_credential = PasswordCredential(
+                    start_date_time = start_date,
+                    end_date_time = end_date,
+                    display_name = display_name,
+                    custom_key_identifier = None
+                ),
+            )
+            pd = asyncio.get_event_loop().run_until_complete(self.add_password(request_body))
 
-            new_passwords = self.get_all_passwords()
-            for pd in new_passwords:
-                if str(pd.key_id) == key_id:
-                    self.results['changed'] = True
-                    self.results.update(self.to_dict(pd))
+            num_of_passwords_after_add = len(self.get_all_passwords())
+            if num_of_passwords_after_add != num_of_passwords_before_add:
+                self.results['changed'] = True
+                self.results.update(self.to_dict(pd))
         except Exception as ge:
             self.fail("failed to create new password: {0}".format(str(ge)))
 
@@ -275,8 +274,8 @@ class AzureRMADPassword(AzureRMModuleBase):
 
     def to_dict(self, pd):
         return dict(
-            end_date=pd.end_date,
-            start_date=pd.start_date,
+            end_date=str(pd.end_date_time),
+            start_date=str(pd.start_date_time),
             key_id=str(pd.key_id)
         )
 
@@ -294,17 +293,14 @@ class AzureRMADPassword(AzureRMModuleBase):
     async def get_application(self):
         return await self._client.applications.by_application_id(self.app_object_id).get()
 
-    async def remove_all_passwords(self):
-        request_body = Application(
-                password_credentials = []
-            )
-        return await self._client.applications.by_application_id(self.app_object_id).patch(body = request_body)
+    async def remove_password(self, key_id):      
+        request_body = RemovePasswordPostRequestBody(
+            key_id = key_id,
+        )
+        return await self._client.applications.by_application_id(self.app_object_id).remove_password.post(body = request_body)
 
-    async def update_password_in_application(self, old_passwords):
-        request_body = Application(
-                password_credentials = old_passwords
-            )
-        return await self._client.applications.by_application_id(self.app_object_id).patch(body = request_body)
+    async def add_password(self, request_body):
+        return await self._client.applications.by_application_id(self.app_object_id).add_password.post(body = request_body)
 
 def main():
     AzureRMADPassword()
