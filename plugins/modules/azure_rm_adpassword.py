@@ -174,7 +174,7 @@ class AzureRMADPassword(AzureRMModuleBase):
 
     def key_exists(self, old_passwords):
         for pd in old_passwords:
-            if pd.key_id == self.key_id:
+            if str(pd.key_id) == self.key_id:
                 return True
         return False
 
@@ -229,11 +229,11 @@ class AzureRMADPassword(AzureRMModuleBase):
         num_of_passwords_before_delete = len(old_passwords)
 
         for pd in old_passwords:
-            if pd.key_id == self.key_id:
+            if str(pd.key_id) == self.key_id:
                 old_passwords.remove(pd)
                 break
         try:
-            asyncio.get_event_loop().run_until_complete(self.update_password(old_passwords))
+            asyncio.get_event_loop().run_until_complete(self.update_password_in_application(old_passwords))
             
             num_of_passwords_after_delete = len(self.get_all_passwords())
             if num_of_passwords_after_delete != num_of_passwords_before_delete:
@@ -260,11 +260,11 @@ class AzureRMADPassword(AzureRMModuleBase):
         old_passwords.append(new_password)
 
         try:
-            asyncio.get_event_loop().run_until_complete(self.update_password(old_passwords))
+            asyncio.get_event_loop().run_until_complete(self.update_password_in_application(old_passwords))
 
             new_passwords = self.get_all_passwords()
             for pd in new_passwords:
-                if pd.key_id == key_id:
+                if str(pd.key_id) == key_id:
                     self.results['changed'] = True
                     self.results.update(self.to_dict(pd))
         except Exception as ge:
@@ -277,7 +277,7 @@ class AzureRMADPassword(AzureRMModuleBase):
         return dict(
             end_date=pd.end_date,
             start_date=pd.start_date,
-            key_id=pd.key_id
+            key_id=str(pd.key_id)
         )
 
     async def get_service_principal(self):
@@ -300,7 +300,7 @@ class AzureRMADPassword(AzureRMModuleBase):
             )
         return await self._client.applications.by_application_id(self.app_object_id).patch(body = request_body)
 
-    async def update_password(self, old_passwords):
+    async def update_password_in_application(self, old_passwords):
         request_body = Application(
                 password_credentials = old_passwords
             )
