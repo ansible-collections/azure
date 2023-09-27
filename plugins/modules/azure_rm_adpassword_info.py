@@ -154,7 +154,7 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
         passwords = self.get_all_passwords()
 
         if self.key_id:
-            filtered = [pd for pd in passwords if pd.key_id == self.key_id]
+            filtered = [pd for pd in passwords if str(pd.key_id) == self.key_id]
             self.results['passwords'] = [self.to_dict(pd) for pd in filtered]
         else:
             self.results['passwords'] = [self.to_dict(pd) for pd in passwords]
