@@ -248,15 +248,26 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         )
 
     async def get_user(self, object):
-        return await self._client.users.by_user_id(object).get()
+        request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
+                    query_parameters = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                        select = ["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
+                    ),
+                )
+        return await self._client.users.by_user_id(object).get(request_configuration = request_configuration)
     
     async def get_users(self):
-        return await self._client.users.get()
+        request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
+                    query_parameters = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                        select = ["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
+                    ),
+                )
+        return await self._client.users.get(request_configuration = request_configuration)
     
     async def get_users_by_filter(self, filter):
         return await self._client.users.get(request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
                     query_parameters = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
                         filter = filter,
+                        select = ["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
                     ),
                 )
             )
