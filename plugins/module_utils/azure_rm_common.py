@@ -222,7 +222,6 @@ try:
     from enum import Enum
     from msrestazure.azure_active_directory import AADTokenCredentials
     from msrestazure.azure_active_directory import MSIAuthentication
-    from azure.cli.core.auth.adal_authentication import MSIAuthenticationWrapper
     from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
     from azure.cli.core import cloud as azure_cloud
     from azure.common.credentials import ServicePrincipalCredentials, UserPassCredentials
@@ -266,7 +265,7 @@ try:
     from azure.mgmt.eventhub import EventHubManagementClient
     from azure.mgmt.datafactory import DataFactoryManagementClient
     import azure.mgmt.datafactory.models as DataFactoryModel
-    from azure.identity._credentials import client_secret, user_password, certificate
+    from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
 
 except ImportError as exc:
     Authentication = object
@@ -1638,12 +1637,12 @@ class AzureRMAuth(object):
                     self.fail("cloud_environment {0} could not be resolved: {1}".format(_cloud_environment, str(exc)), exception=traceback.format_exc())
 
         credentials = MSIAuthentication(client_id=client_id, cloud_environment=cloud_environment)
-        credential = MSIAuthenticationWrapper(client_id=client_id, cloud_environment=cloud_environment)
+        credential = managed_identity.ManagedIdentityCredential(client_id=client_id, cloud_environment=cloud_environment)
         subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
             try:
                 # use the first subscription of the MSI
-                subscription_client = SubscriptionClient(credentials)
+                subscription_client = SubscriptionClient(credential)
                 subscription = next(subscription_client.subscriptions.list())
                 subscription_id = str(subscription.subscription_id)
             except Exception as exc:
