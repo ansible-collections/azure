@@ -295,7 +295,7 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
                 response = self.mgmt_client.update_module_with_certificate_authority(self.device, self.name, self.managed_by, self.etag)
             elif self.auth_method == 'certificate_authority':
                 response = self.mgmt_client.update_module_with_x509(self.device,
-                                                                    self.name, self.managed_by, self.etag, self.primary_thumbprint, self.secondary_thumbprint)
+                                                                    self.name, self.managed_by, self.etag, self.primary_key, self.secondary_key)
 
             return self.format_module(response)
         except Exception as exc:
@@ -313,7 +313,7 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
                 response = self.mgmt_client.create_module_with_certificate_authority(self.device, self.name, self.managed_by)
             elif self.auth_method == 'certificate_authority':
                 response = self.mgmt_client.create_module_with_x509(self.device_id,
-                                                                    self.name, self.managed_by, self.primary_thumbprint, self.secondary_thumbprint)
+                                                                    self.name, self.managed_by, self.primary_key, self.secondary_key)
 
             return self.format_module(response)
         except Exception as exc:
