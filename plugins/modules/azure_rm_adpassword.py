@@ -184,7 +184,7 @@ class AzureRMADPassword(AzureRMModuleBase):
             if self.app_object_id is not None:
                 return
             elif self.app_id or self.service_principal_object_id:
-                if not self.app_id:                    
+                if not self.app_id:
                     sp = asyncio.get_event_loop().run_until_complete(self.get_service_principal())
                     self.app_id = sp.app_id
                 if not self.app_id:

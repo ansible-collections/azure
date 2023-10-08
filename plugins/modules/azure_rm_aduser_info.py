@@ -208,7 +208,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
 
             if self.user_principal_name is not None:
                 ad_users = [asyncio.get_event_loop().run_until_complete(self.get_user(self.user_principal_name))]
-            elif self.object_id is not None:                
+            elif self.object_id is not None:
                 ad_users = [asyncio.get_event_loop().run_until_complete(self.get_user(self.object_id))]
             elif self.attribute_name is not None and self.attribute_value is not None:
                 try:

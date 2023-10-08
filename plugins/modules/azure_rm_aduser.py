@@ -276,7 +276,7 @@ class AzureRMADUser(AzureRMModuleBase):
         try:
             self._client = self.get_msgraph_client(self.tenant)
 
-            ad_user = self.get_exisiting_user()            
+            ad_user = self.get_exisiting_user()
 
             if self.state == 'present':
 
@@ -331,7 +331,7 @@ class AzureRMADUser(AzureRMModuleBase):
                 self.results['ad_user'] = self.to_dict(ad_user)
 
             elif self.state == 'absent':
-                if ad_user:  # Delete, changed                    
+                if ad_user:  # Delete, changed
                     asyncio.get_event_loop().run_until_complete(self.delete_user(ad_user))
                     self.results['changed'] = True
                 else:  # Do nothing unchanged
