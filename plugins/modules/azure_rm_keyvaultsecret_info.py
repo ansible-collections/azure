@@ -200,8 +200,8 @@ def deleted_bundle_to_dict(bundle):
 
 def deletedsecretbundle_to_dict(bundle):
     secretbundle = deleted_bundle_to_dict(bundle.properties)
-    secretbundle['recovery_id'] = bundle._recovery_id,
-    secretbundle['scheduled_purge_date'] = bundle._scheduled_purge_date,
+    secretbundle['recovery_id'] = bundle._recovery_id
+    secretbundle['scheduled_purge_date'] = bundle._scheduled_purge_date
     secretbundle['deleted_date'] = bundle._deleted_date
     return secretbundle
 
@@ -221,8 +221,8 @@ def secretitem_to_dict(secretitem):
 
 def deletedsecretitem_to_dict(secretitem):
     item = secretitem_to_dict(secretitem.properties)
-    item['recovery_id'] = secretitem._recovery_id,
-    item['scheduled_purge_date'] = secretitem._scheduled_purge_date,
+    item['recovery_id'] = secretitem._recovery_id
+    item['scheduled_purge_date'] = secretitem._scheduled_purge_date
     item['deleted_date'] = secretitem._deleted_date
     return item
 

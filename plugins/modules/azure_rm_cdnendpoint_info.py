@@ -170,8 +170,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.mgmt.cdn import CdnManagementClient
-    from azure.mgmt.cdn.models import ErrorResponseException
-    from azure.common import AzureHttpError
 except ImportError:
     # handled in azure_rm_common
     pass

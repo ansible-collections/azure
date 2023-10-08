@@ -180,12 +180,10 @@ clusters:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.hdinsight import HDInsightManagementClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

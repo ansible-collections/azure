@@ -141,10 +141,10 @@
     that: 
       - not results.changed
       - not results.failed
-      - results.ansible_info.azure_availabilitysets[0].properties.platformFaultDomainCount == 2
-      - results.ansible_info.azure_availabilitysets[0].properties.platformUpdateDomainCount == 5
+      - results.ansible_info.azure_availabilitysets[0].platform_fault_domain_count == 2
+      - results.ansible_info.azure_availabilitysets[0].platform_update_domain_count == 5
       - results.ansible_info.azure_availabilitysets[0].sku == 'Aligned'
-      - results.ansible_info.azure_availabilitysets[0].properties.proximityPlacementGroup.id.split('/')[-1] == ppgroup_name
+      - results.ansible_info.azure_availabilitysets[0].proximity_placement_group.id.split('/')[-1] == ppgroup_name
 
 - name: Delete an availability set - Check Mode
   azure_rm_availabilityset:

@@ -52,8 +52,8 @@
 - name: Ensure VM was created properly
   assert:
     that:
-      - azure_vm.properties.availabilitySet.id
-      - azure_vm.properties.storageProfile.osDisk.name == 'testosdiskxx'
+      - azure_vm.availability_set.id
+      - azure_vm.storage_profile.os_disk.name == 'testosdiskxx'
 
 - name: Retrieve VM facts (filtering by name)
   azure_rm_virtualmachine_info:

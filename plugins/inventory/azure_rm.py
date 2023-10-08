@@ -238,7 +238,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             cloud_environment=self.get_option('cloud_environment'),
             cert_validation_mode=self.get_option('cert_validation_mode'),
             api_profile=self.get_option('api_profile'),
-            adfs_authority_url=self.get_option('adfs_authority_url')
+            adfs_authority_url=self.get_option('adfs_authority_url'),
+            track1_cred=True,
         )
 
         self.azure_auth = AzureRMAuth(**auth_options)

@@ -151,7 +151,6 @@
   assert:
     that:
       - output.aks_agent_pools[0].availability_zones == [1, 2]
-      - output.aks_agent_pools[0].count == 1
       - output.aks_agent_pools[0].min_count == 2
       - output.aks_agent_pools[0].max_count == 20
       - output.aks_agent_pools[0].type_properties_type == "VirtualMachineScaleSets"

@@ -191,7 +191,6 @@ id:
     sample: id
 '''
 
-import collections
 import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
@@ -199,7 +198,6 @@ try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.keyvault import KeyVaultManagementClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

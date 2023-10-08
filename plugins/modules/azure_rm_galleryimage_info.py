@@ -115,11 +115,9 @@ images:
 
 '''
 
-import time
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-from copy import deepcopy
 try:
     from msrestazure.azure_exceptions import CloudError
 except Exception:
@@ -167,6 +165,7 @@ class AzureRMGalleryImagesInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if (self.resource_group is not None and
@@ -208,7 +207,7 @@ class AzureRMGalleryImagesInfo(AzureRMModuleBase):
                                               self.status_code,
                                               600,
                                               30)
-            results = json.loads(response.text)
+            results = json.loads(response.body())
             # self.log('Response : {0}'.format(response))
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
@@ -241,7 +240,7 @@ class AzureRMGalleryImagesInfo(AzureRMModuleBase):
                                               self.status_code,
                                               600,
                                               30)
-            results = json.loads(response.text)
+            results = json.loads(response.body())
             # self.log('Response : {0}'.format(response))
         except CloudError as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')

@@ -418,13 +418,11 @@ state:
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from msrestazure.tools import is_valid_resource_id
-    from azure.mgmt.network import NetworkManagementClient
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.six import integer_types
 from ansible.module_utils._text import to_native
 
 

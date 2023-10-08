@@ -1,5 +1,19 @@
 # Change Log
 
+## v1.18.1 (2023-9-25)
+
+### BUG FIXING
+- inventory/azure_rm: - Fix authorization initialization bug. [#1271](https://github.com/ansible-collections/azure/pull/1271) 
+
+- azure_rm_managementgroup_info: - Fix `azure_object.type` to equal `Microsoft.Management/managementGroups`. [#1252](https://github.com/ansible-collections/azure/pull/1252) 
+
+## v1.18.0 (2023-9-22)
+
+### FEATURE ENHANCEMENT
+  - Migrate `msrest` to `azure-core`. [#1245](https://github.com/ansible-collections/azure/pull/1245)
+  - Upgrade `GenericRestClient` authorization from ADAL to MSAL - [#1245](https://github.com/ansible-collections/azure/pull/1245)
+  - Lazy initialization of AD resource credentials. [#1268](https://github.com/ansible-collections/azure/pull/1268)
+
 ## v1.17.0 (2023-8-23)
 
 ### FEATURE ENHANCEMENT
