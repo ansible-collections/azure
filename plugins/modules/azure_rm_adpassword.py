@@ -253,8 +253,7 @@ class AzureRMADPassword(AzureRMModuleBase):
                 password_credential = PasswordCredential(
                     start_date_time = start_date,
                     end_date_time = end_date,
-                    display_name = display_name,
-                    custom_key_identifier = None
+                    display_name = display_name
                 ),
             )
             pd = asyncio.get_event_loop().run_until_complete(self.add_password(request_body))
