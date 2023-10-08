@@ -20,6 +20,7 @@ short_description: Manage application password
 
 description:
     - Manage application password.
+    - The value property is deprecated in MS Graph API since this API will automatically generate the application password.
 
 options:
     app_id:
@@ -103,11 +104,16 @@ start_date:
     type: str
     returned: always
     sample: 2020-06-28T06:00:32.637070+00:00
-
+secret_text:
+    description:
+        - The application password value.
+        - API only returns the application password value at creation.
+    type: str
+    returned: always
+    sample: abM8Q~.S87LV3yWI0dP~.C4hOQWeONi6sysZgaYp
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-import uuid
 
 try:
     import asyncio
@@ -272,7 +278,8 @@ class AzureRMADPassword(AzureRMModuleBase):
         return dict(
             end_date=str(pd.end_date_time),
             start_date=str(pd.start_date_time),
-            key_id=str(pd.key_id)
+            key_id=str(pd.key_id),
+            secret_text=str(pd.secret_text)
         )
 
     async def get_service_principal(self):
