@@ -243,9 +243,6 @@ class AzureRMADPassword(AzureRMModuleBase):
                 break
 
     def create_password(self, old_passwords):
-        if self.display_name is None:
-            self.fail("when creating a new password, module parameter display_name can't be None")
-
         start_date = datetime.datetime.now(datetime.timezone.utc)
         end_date = self.end_date or start_date + relativedelta(years=1)
         display_name = self.display_name
