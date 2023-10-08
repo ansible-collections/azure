@@ -111,6 +111,7 @@ EOF
 
 pwd
 dir
+git status
 
 ansible-lint -v
 
