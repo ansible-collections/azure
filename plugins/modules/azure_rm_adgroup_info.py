@@ -70,7 +70,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 author:
     - Cole Neubauer(@coleneubauer)
-    - xuzhang3(@xuzhang3)
+    - Xu Zhang(@xuzhang)
 '''
 
 EXAMPLES = '''
@@ -176,7 +176,8 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     import asyncio
     from msgraph.generated.groups.groups_request_builder import GroupsRequestBuilder
-    from msgraph.generated.users.users_request_builder import UsersRequestBuilder
+    from msgraph.generated.groups.item.transitive_members.transitive_members_request_builder import TransitiveMembersRequestBuilder
+    from msgraph.generated.groups.item.get_member_groups.get_member_groups_post_request_body import GetMemberGroupsPostRequestBody
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -308,14 +309,14 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"]))                
             results["group_members"] = [self.result_to_dict(object) for object in ret.value]
 
-        # TODO no corresponding API in MS Graph
-        # if results["object_id"] and self.return_member_groups:
-        #     results["member_groups"] = [self.result_to_dict(object) for object in list(client.groups.get_member_groups(results["object_id"], False))]
+        if results["object_id"] and self.return_member_groups:
+            ret = asyncio.get_event_loop().run_until_complete(self.get_member_groups(results["object_id"]))
+            results["member_groups"] = [self.result_to_dict(object) for object in list(ret.value)]
             
         
         if results["object_id"] and self.check_membership:
             filter = "id eq '{0}' ".format(self.check_membership)
-            ret = ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"], filter))
+            ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"], filter))
             results["is_member_of"] = True if ret.value and len(ret.value) != 0 else False
 
         return results
@@ -344,16 +345,17 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
             query_parameters = GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
                 count = True,
+                select= 'id,displayName,userPrincipalName,mailNickname,mail,accountEnabled,userType,appId,appRoleAssignmentRequired'
                 ),
             headers = {'ConsistencyLevel' : "eventual",}
             )
         return await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
     
     async def get_group_members(self, group_id, filters=None):
-        from msgraph.generated.groups.item.transitive_members.transitive_members_request_builder import TransitiveMembersRequestBuilder
         request_configuration = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetRequestConfiguration(
             query_parameters = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
                 count = True,
+                select= 'id,displayName,userPrincipalName,mailNickname,mail,accountEnabled,userType,appId,appRoleAssignmentRequired'
                 ),
             headers = {'ConsistencyLevel' : "eventual",}
             )
@@ -361,6 +363,10 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             request_configuration.query_parameters.filter = filters
         return await self._client.groups.by_group_id(group_id).transitive_members.get(request_configuration=request_configuration)
     
+    async def get_member_groups(self, obj_id):
+        request_body = GetMemberGroupsPostRequestBody(security_enabled_only = False)
+        return await self._client.groups.by_group_id(obj_id).get_member_groups.post(body = request_body)
+
     
 def main():
     AzureRMADGroupInfo()
