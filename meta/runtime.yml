@@ -1,5 +1,5 @@
 ---
-requires_ansible: '>=2.9.10'
+requires_ansible: '>=2.13.0'
 action_groups:
   all:
   - azure.azcollection.azure_rm_account_info
