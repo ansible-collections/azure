@@ -109,7 +109,7 @@ secret_text:
         - The application password value.
         - API only returns the application password value at creation.
     type: str
-    returned: always
+    returned: created
     sample: abM8Q~.S87LV3yWI0dP~.C4hOQWeONi6sysZgaYp
 '''
 
