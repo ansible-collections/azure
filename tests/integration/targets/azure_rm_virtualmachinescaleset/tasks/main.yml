@@ -177,7 +177,7 @@
 
 - assert:
     that:
-      - output_scaleset.vmss[0].properties.orchestrationMode == "Flexible"
+      - output_scaleset.vmss[0].orchestration_mode == "Flexible"
 
 - name: Delete VMSS
   azure_rm_virtualmachinescaleset:
@@ -220,9 +220,9 @@
 - name: Assert that VMSS was created using Spot Instance default values
   assert:
     that:
-      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.priority == 'Spot'
-      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.evictionPolicy == 'Deallocate'
-      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.billingProfile.maxPrice == -1.0
+      - results.ansible_facts.azure_vmss.virtual_machine_profile.priority == 'Spot'
+      - results.ansible_facts.azure_vmss.virtual_machine_profile.eviction_policy == 'Deallocate'
+      - results.ansible_facts.azure_vmss.virtual_machine_profile.billing_profile.max_price == -1.0
 
 - name: Delete VMSS
   azure_rm_virtualmachinescaleset:
@@ -266,9 +266,9 @@
 - name: Assert that VMSS was created using Spot Instance custom values
   assert:
     that:
-      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.priority == 'Spot'
-      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.evictionPolicy == 'Delete'
-      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.billingProfile.maxPrice == 1.0
+      - results.ansible_facts.azure_vmss.virtual_machine_profile.priority == 'Spot'
+      - results.ansible_facts.azure_vmss.virtual_machine_profile.eviction_policy == 'Delete'
+      - results.ansible_facts.azure_vmss.virtual_machine_profile.billing_profile.max_price == 1.0
 
 - name: Delete VMSS
   azure_rm_virtualmachinescaleset:
@@ -638,8 +638,8 @@
   assert:
     that:
       - 'results.changed'
-      - 'results.ansible_facts.azure_vmss.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.0.properties.enableAcceleratedNetworking == true'
-      - 'results.ansible_facts.azure_vmss.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.0.properties.networkSecurityGroup != {}'
+      - 'results.ansible_facts.azure_vmss.virtual_machine_profile.network_profile.network_interface_configurations[0].enable_accelerated_networking == true'
+      - 'results.ansible_facts.azure_vmss.virtual_machine_profile.network_profile.network_interface_configurations[0].network_security_group != {}'
 
 - name: Create VMSS with security group in same resource group, with accelerated networking.
   azure_rm_virtualmachinescaleset:
@@ -758,7 +758,7 @@
 - assert:
     that:
       - results.changed
-      - results.ansible_facts.azure_vmss.properties.virtualMachineProfile.storageProfile.osDisk.diffDiskSettings.option == 'Local'
+      - results.ansible_facts.azure_vmss.virtual_machine_profile.storage_profile.os_disk.diff_disk_settings.option == 'Local'
 
 - name: Check VMSS ephmeral OS disk can't udpate
   azure_rm_virtualmachinescaleset:

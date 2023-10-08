@@ -99,7 +99,6 @@ azure_appserviceplan:
     }
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:

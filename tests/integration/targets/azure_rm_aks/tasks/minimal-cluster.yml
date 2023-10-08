@@ -49,7 +49,7 @@
     that:
       - "fact.aks | length == 1"
       - fact.aks[0].id == output.id
-      - fact.aks[0].properties.aadProfile.managed == true
+      - fact.aks[0].aad_profile.managed == true
 
 - name: Use minimal parameters and system-assigned identity (idempotent)
   azure_rm_aks:

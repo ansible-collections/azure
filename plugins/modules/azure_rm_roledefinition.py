@@ -110,9 +110,7 @@ try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from msrestazure.azure_operation import AzureOperationPoller
     from azure.core.polling import LROPoller
-    from msrest.serialization import Model
     from azure.mgmt.authorization import AuthorizationManagementClient
-    from azure.mgmt.authorization.model import (RoleDefinition, Permission)
 
 except ImportError:
     # This is handled in azure_rm_common

@@ -441,20 +441,20 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
         curated_output = dict()
         curated_output['id'] = webapp['id']
         curated_output['name'] = webapp['name']
-        curated_output['resource_group'] = webapp['properties']['resourceGroup']
+        curated_output['resource_group'] = webapp['resource_group']
         curated_output['location'] = webapp['location']
-        curated_output['plan'] = webapp['properties']['serverFarmId']
+        curated_output['plan'] = webapp['server_farm_id']
         curated_output['tags'] = webapp.get('tags', None)
 
         # important properties from output. not match input arguments.
-        curated_output['app_state'] = webapp['properties']['state']
-        curated_output['availability_state'] = webapp['properties']['availabilityState']
-        curated_output['default_host_name'] = webapp['properties']['defaultHostName']
-        curated_output['host_names'] = webapp['properties']['hostNames']
-        curated_output['enabled'] = webapp['properties']['enabled']
-        curated_output['enabled_host_names'] = webapp['properties']['enabledHostNames']
-        curated_output['host_name_ssl_states'] = webapp['properties']['hostNameSslStates']
-        curated_output['outbound_ip_addresses'] = webapp['properties']['outboundIpAddresses']
+        curated_output['app_state'] = webapp['state']
+        curated_output['availability_state'] = webapp['availability_state']
+        curated_output['default_host_name'] = webapp['default_host_name']
+        curated_output['host_names'] = webapp['host_names']
+        curated_output['enabled'] = webapp['enabled']
+        curated_output['enabled_host_names'] = webapp['enabled_host_names']
+        curated_output['host_name_ssl_states'] = webapp['host_name_ssl_states']
+        curated_output['outbound_ip_addresses'] = webapp['outbound_ip_addresses']
 
         # curated site_config
         if configuration:

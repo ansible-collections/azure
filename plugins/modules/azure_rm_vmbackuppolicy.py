@@ -360,6 +360,7 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         old_response = self.get_resource()
@@ -397,9 +398,9 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
             self.fail('Error in creating Backup Policy {0}'.format(str(e)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.context['deserialized_data']}
 
         return response
 
@@ -420,12 +421,6 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
             self.log('Error attempting to delete Azure Backup policy.')
             self.fail('Error attempting to delete Azure Backup policy: {0}'.format(str(e)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
-        return response
-
     def get_resource(self):
         # self.log('Fetch Backup Policy Details {0}'.format(self.))
         found = False
@@ -444,7 +439,7 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
         except Exception as e:
             self.log('Backup policy does not exist.')
         if found is True:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             return response
         else:
             return False

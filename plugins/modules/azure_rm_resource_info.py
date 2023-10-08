@@ -53,6 +53,7 @@ options:
     subresource:
         description:
             - List of subresources.
+        default: []
         suboptions:
             namespace:
                 description:
@@ -289,9 +290,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.service_client import ServiceClient
-    from msrestazure.tools import resource_id, is_valid_resource_id
+    from msrestazure.tools import resource_id
     import json
 
 except ImportError:
@@ -353,6 +352,7 @@ class AzureRMResourceInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.url is None:
@@ -394,7 +394,7 @@ class AzureRMResourceInfo(AzureRMModuleBase):
                     provider = self.url.split("/providers/")[1].split("/")[0]
                     resourceType = self.url.split(provider + "/")[1].split("/")[0]
                     url = "/subscriptions/" + self.subscription_id + "/providers/" + provider
-                    api_versions = json.loads(self.mgmt_client.query(url, self.method, {'api-version': '2015-01-01'}, None, None, [200], 0, 0).text)
+                    api_versions = json.loads(self.mgmt_client.query(url, self.method, {'api-version': '2015-01-01'}, None, None, [200], 0, 0).body())
                     for rt in api_versions['resourceTypes']:
                         if rt['resourceType'].lower() == resourceType.lower():
                             self.api_version = rt['apiVersions'][0]
@@ -421,7 +421,7 @@ class AzureRMResourceInfo(AzureRMModuleBase):
                 query_parameters['skiptoken'] = skiptoken
             response = self.mgmt_client.query(self.url, self.method, query_parameters, header_parameters, None, [200, 404], 0, 0)
             try:
-                response = json.loads(response.text)
+                response = json.loads(response.body())
                 if isinstance(response, dict):
                     if response.get('value'):
                         self.results['response'] = self.results['response'] + response['value']

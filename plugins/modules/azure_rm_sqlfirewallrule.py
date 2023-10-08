@@ -78,7 +78,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.core.polling import LROPoller
     from azure.mgmt.sql.models import FirewallRule
 except ImportError:
     # This is handled in azure_rm_common
