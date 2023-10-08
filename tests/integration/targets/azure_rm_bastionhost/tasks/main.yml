@@ -119,7 +119,7 @@
       - not output.changed
 
 - name: Pause for 20 mimutes to Bastion host updating
-  shell: sleep 1200
+  command: sleep 1200
 
 - name: Update bastion host
   azure_rm_bastionhost:

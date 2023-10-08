@@ -107,6 +107,8 @@ AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
 AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
 EOF
 
+ansible-lint -v
+
 if [ "sanity" = "${group}" ]
 then
     ansible-test sanity --color -v --junit

@@ -111,7 +111,7 @@
         - devices.iot_devices[0].deviceId == 'mydevice1'
 
 - name: Pause for 5 mimutes
-  shell: sleep 300
+  command: sleep 300
 
 - name: Update devices
   azure_rm_iotdevice:
@@ -132,7 +132,7 @@
     - 2
 
 - name: Pause for 5 mimutes
-  shell: sleep 300
+  command: sleep 300
 
 - name: Query devices twin
   azure_rm_iotdevice_info:

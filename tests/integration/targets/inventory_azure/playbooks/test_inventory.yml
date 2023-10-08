@@ -3,14 +3,16 @@
   connection: local
   gather_facts: no
   tasks:
-  - include_vars: vars.yml
+  - name: set facts
+    include_vars: vars.yml
 
   - name: Pause for 10 mimutes for updating
-    shell: sleep 600
+    command: sleep 600
+    changed_when: false
 
   - meta: refresh_inventory
 
-  - name: Test Inventory 
+  - name: Test Inventory
     assert:
       that:
         - vm_name in hostvars

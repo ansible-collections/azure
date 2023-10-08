@@ -4,7 +4,8 @@
   gather_facts: no
 
   tasks:
-  - include_vars: vars.yml
+  - name: Set facts
+    include_vars: vars.yml
 
   - name: Delete VM
     azure_rm_virtualmachine:

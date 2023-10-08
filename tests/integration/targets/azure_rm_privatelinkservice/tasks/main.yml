@@ -271,7 +271,7 @@
     that: output.changed
 
 - name: Pause for 5 mimutes to waiting
-  shell: sleep 300
+  command: sleep 300
 
 - name: Delete private link service
   azure_rm_privatelinkservice:
