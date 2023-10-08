@@ -81,7 +81,8 @@ object_id:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from azure.graphrbac.models import GraphErrorException
+    import asyncio
+    from msgraph.generated.service_principals.service_principals_request_builder import ServicePrincipalsRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -93,7 +94,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             app_id=dict(type='str'),
             object_id=dict(type='str'),
-            tenant=dict(type='str', required=True),
+            tenant=dict(type='str'),
         )
 
         self.tenant = None
@@ -114,14 +115,30 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         service_principals = []
 
         try:
-            client = self.get_graphrbac_client(self.tenant)
+            # client = self.get_graphrbac_client(self.tenant)
+            client = self.get_msgraph_client(self.tenant)
+            
             if self.object_id is None:
-                service_principals = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id)))
-            else:
-                service_principals = [client.service_principals.get(self.object_id)]
+                request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
+                            query_parameters = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
+                                filter = "servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
+                            ),
+                            headers = {'ConsistencyLevel' : "eventual"}
+                        )
+                async def get_service_principals():
+                    return await client.service_principals.get(request_configuration = request_configuration)
+                
+                spns = asyncio.run(get_service_principals()) 
+                service_principals = list(spns.value)
+                # service_principals = list(client.service_principals.get(filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id)))
+            else:  
+                async def get_service_principal_by_id():
+                    return await client.service_principals.by_service_principal_id(self.object_id).get()
+                
+                service_principals = [asyncio.run(get_service_principal_by_id())]
 
             self.results['service_principals'] = [self.to_dict(sp) for sp in service_principals]
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.fail("failed to get service principal info {0}".format(str(ge)))
 
         return self.results
