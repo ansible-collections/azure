@@ -195,14 +195,14 @@ class AzureRMAccountInfo(AzureRMModuleBase):
 
         user = {}
 
-        async def account():
+        async def getAccount():
             return await self.get_msgraph_client(tenant_id).me.get(
                 request_configuration=UserRequestBuilder.UserRequestBuilderGetRequestConfiguration(
                     query_parameters=UserRequestBuilder.UserRequestBuilderGetQueryParameters(
                         select=["userType", "userPrincipalName", "postalCode", "identities"], ),
                 ))
 
-        user_info = asyncio.run(account())
+        user_info = asyncio.get_event_loop().run_until_complete(getAccount())
         user['name'] = user_info.user_principal_name
         user['type'] = user_info.user_type
 
