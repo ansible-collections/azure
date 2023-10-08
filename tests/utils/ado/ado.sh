@@ -66,6 +66,7 @@ mkdir -p shippable/testresults
 
 pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
 pip install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
+
 pip install ansible-lint
 
 timeout=90
@@ -107,6 +108,9 @@ AZURE_PRINCIPAL_ID:${AZURE_PRINCIPAL_ID}
 AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
 AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
 EOF
+
+pwd
+dir
 
 ansible-lint -v
 
