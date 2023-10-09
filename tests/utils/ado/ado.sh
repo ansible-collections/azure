@@ -109,6 +109,8 @@ AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
 AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
 EOF
 
+rm -rf "ansible"
+
 if [ "sanity" = "${group}" ]
 then
     ansible-lint -v --exclude tests/integration/targets/inventory_azure/playbooks/vars.yml --force-color
