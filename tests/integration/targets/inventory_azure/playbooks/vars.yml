@@ -1,3 +1,4 @@
+---
 uid: "{{ (resource_group ~ inventory_hostname) | hash('md5') | truncate(18, True, '') }}"
 uid_short: "{{ (resource_group ~ inventory_hostname) | hash('md5') | truncate(10, True, '') }}"
 

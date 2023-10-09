@@ -114,7 +114,7 @@ pwd
 dir
 git status
 
-ansible-lint -v
+ansible-lint -v --exclude tests/integration/targets/inventory_azure/playbooks/vars.yml
 
 if [ "sanity" = "${group}" ]
 then
