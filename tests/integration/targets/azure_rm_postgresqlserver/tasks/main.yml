@@ -78,7 +78,7 @@
     that:
       - output.changed
       - output.state == 'Ready'
-- debug:
+- ansible.builtin.debug:
     var: output
 
 - name: Gather facts postgresql Server

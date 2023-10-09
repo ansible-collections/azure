@@ -20,7 +20,7 @@
           - 81
   register: output
 
-- debug:
+- ansible.builtin.debug:
     var: output
 
 - name: Assert the container instance is well created
@@ -152,7 +152,7 @@
     name: "aci{{ rpfx }}sec"
   register: output 
 
-- debug:
+- ansible.builtin.debug:
     var: output
 
 - name: Assert that facts are returned
@@ -221,7 +221,7 @@
   register: output
   ignore_errors: True
 
-- debug:
+- ansible.builtin.debug:
     var: output
   ignore_errors: True
 
@@ -239,7 +239,7 @@
   register: output
   ignore_errors: True
 
-- debug:
+- ansible.builtin.debug:
     var: output
   ignore_errors: True
 

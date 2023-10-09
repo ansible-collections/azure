@@ -1,4 +1,5 @@
-- ansible.builtin.set_fact:
+- name: Set variables
+  ansible.builtin.set_fact:
     tenant_id: "{{ azure_tenant }}"
     resource_prefix: "{{ 999999999999999999994 | random | to_uuid }}"
   run_once: yes
@@ -8,9 +9,9 @@
     attribute_name: "displayName"
     attribute_value: "{{ resource_prefix }}-Group-Root"
     tenant: "{{ tenant_id }}"
-  register: get_nonexistent_group_display_name_ShouldFail
+  register: get_nonexistent_group_display_name_shouldfail
   failed_when:
-    - get_nonexistent_group_display_name_ShouldFail.ad_groups != []
+    - get_nonexistent_group_display_name_shouldfail.ad_groups != []
 
 - name: Create Group Root
   azure_rm_adgroup:
@@ -18,7 +19,7 @@
     display_name: "{{ resource_prefix }}-Group-Root"
     mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
-  register: group_create_changed_ShouldPass
+  register: group_create_changed_shouldpass
 
 - name: Create Group Should Return Not Changed
   azure_rm_adgroup:
@@ -26,29 +27,29 @@
     display_name: "{{ resource_prefix }}-Group-Root"
     mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
-  register: group_create_unchanged_ShouldPass
+  register: group_create_unchanged_shouldpass
 
 - name: Assert Otherwise Changed Returns are Equal
   ansible.builtin.assert:
     that:
-      - group_create_changed_ShouldPass.changed == True
-      - group_create_unchanged_ShouldPass.changed == False
-      - group_create_changed_ShouldPass.display_name == group_create_unchanged_ShouldPass.display_name
-      - group_create_changed_ShouldPass.mail_enabled == group_create_unchanged_ShouldPass.mail_enabled
-      - group_create_changed_ShouldPass.mail_nickname == group_create_unchanged_ShouldPass.mail_nickname
-      - group_create_changed_ShouldPass.object_id == group_create_unchanged_ShouldPass.object_id
-      - group_create_changed_ShouldPass.security_enabled == group_create_unchanged_ShouldPass.security_enabled
+      - group_create_changed_shouldpass.changed == True
+      - group_create_unchanged_shouldpass.changed == False
+      - group_create_changed_shouldpass.display_name == group_create_unchanged_shouldpass.display_name
+      - group_create_changed_shouldpass.mail_enabled == group_create_unchanged_shouldpass.mail_enabled
+      - group_create_changed_shouldpass.mail_nickname == group_create_unchanged_shouldpass.mail_nickname
+      - group_create_changed_shouldpass.object_id == group_create_unchanged_shouldpass.object_id
+      - group_create_changed_shouldpass.security_enabled == group_create_unchanged_shouldpass.security_enabled
 
 - name: Return previously created group using object_id
   azure_rm_adgroup_info:
-    object_id: "{{ group_create_unchanged_ShouldPass.object_id }}"
+    object_id: "{{ group_create_unchanged_shouldpass.object_id }}"
     tenant: "{{ tenant_id }}"
-  register: get_created_object_id_ShouldPass
+  register: get_created_object_id_shouldpass
 
 - name: Assert Returns are Equal to Created Group
   ansible.builtin.assert:
     that:
-      - get_created_object_id_ShouldPass.ad_groups[0].object_id == group_create_unchanged_ShouldPass.object_id
+      - get_created_object_id_shouldpass.ad_groups[0].object_id == group_create_unchanged_shouldpass.object_id
 
 - name: Create Group Member 1
   azure_rm_adgroup:
@@ -56,7 +57,7 @@
     display_name: "{{ resource_prefix }}-Group-Member-1"
     mail_nickname: "{{ resource_prefix }}-Group-Member-1"
     state: 'present'
-  register: create_group_member_1_ShouldPass
+  register: create_pass
 
 - name: Create Group Member 2
   azure_rm_adgroup:
@@ -64,7 +65,7 @@
     display_name: "{{ resource_prefix }}-Group-Member-2"
     mail_nickname: "{{ resource_prefix }}-Group-Member-2"
     state: 'present'
-  register: create_group_member_2_ShouldPass
+  register: create_group_member_2_shouldpass
 
 - name: Ensure member is in group using display_name and mail_nickname
   azure_rm_adgroup:
@@ -73,44 +74,44 @@
     mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
     present_members:
-      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ create_group_member_1_ShouldPass.object_id }}"
-      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ create_group_member_2_ShouldPass.object_id }}"
-  register: add_members_to_group_ShouldPass
+      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ create_pass.object_id }}"
+      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ create_group_member_2_shouldpass.object_id }}"
+  register: add_pass
 
 - name: Validate members are in the group
   ansible.builtin.assert:
     that:
-      - add_members_to_group_ShouldPass.group_members[0].object_id == create_group_member_1_ShouldPass.object_id or add_members_to_group_ShouldPass.group_members[1].object_id == create_group_member_1_ShouldPass.object_id
-      - add_members_to_group_ShouldPass.group_members[1].object_id == create_group_member_2_ShouldPass.object_id or add_members_to_group_ShouldPass.group_members[0].object_id == create_group_member_2_ShouldPass.object_id
+      - add_pass.group_members[0].object_id == create_pass.object_id or add_pass.group_members[1].object_id == create_pass.object_id
+      - add_pass.group_members[1].object_id == create_group_member_2_shouldpass.object_id or add_pass.group_members[0].object_id == create_group_member_2_shouldpass.object_id
 
 - name: Ensure member is in group that is already present using object_id
   azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
-    object_id: "{{ group_create_changed_ShouldPass.object_id }}"
+    object_id: "{{ group_create_changed_shouldpass.object_id }}"
     state: 'present'
     present_members:
-      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ create_group_member_1_ShouldPass.object_id }}"
-  register: add_already_present_member_to_group_ShouldPass
+      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ create_pass.object_id }}"
+  register: add_already_present_member_to_group_shouldpass
 
 - name: Validate nothing changed from already present member
   ansible.builtin.assert:
     that:
-      - add_already_present_member_to_group_ShouldPass.changed == false
+      - add_already_present_member_to_group_shouldpass.changed == false
 
 - name: Ensure member is not in group using object_id
   azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
-    object_id: "{{ group_create_changed_ShouldPass.object_id }}"
+    object_id: "{{ group_create_changed_shouldpass.object_id }}"
     state: 'present'
     absent_members:
-      - "{{ create_group_member_2_ShouldPass.object_id }}"
-  register: remove_member_from_group_ShouldPass
+      - "{{ create_group_member_2_shouldpass.object_id }}"
+  register: remove_member_from_group_shouldpass
 
 - name: Validate Group Member 1 is in the group and Group Member 2 is not
   ansible.builtin.assert:
     that:
-      - remove_member_from_group_ShouldPass.group_members[0].object_id == create_group_member_1_ShouldPass.object_id
-      - remove_member_from_group_ShouldPass.group_members | length == 1
+      - remove_member_from_group_shouldpass.group_members[0].object_id == create_pass.object_id
+      - remove_member_from_group_shouldpass.group_members | length == 1
 
 - name: Ensure member is not in group that is already not in group using display_name and mail_nickname
   azure_rm_adgroup:
@@ -119,121 +120,121 @@
     mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
     absent_members:
-      - "{{ create_group_member_2_ShouldPass.object_id }}"
-  register: remove_already_absent_member_from_group_ShouldPass
+      - "{{ create_group_member_2_shouldpass.object_id }}"
+  register: remove_already_absent_member_from_group_shouldpass
 
 - name: Validate nothing changed from already absent member
   ansible.builtin.assert:
     that:
-      - remove_already_absent_member_from_group_ShouldPass.changed == false
+      - remove_already_absent_member_from_group_shouldpass.changed == false
 
 - name: Return a specific group using object_id
   azure_rm_adgroup_info:
-    object_id: "{{ group_create_changed_ShouldPass.object_id }}"
+    object_id: "{{ group_create_changed_shouldpass.object_id }}"
     tenant: "{{ tenant_id }}"
-  register: object_id_ShouldPass
+  register: object_id_shouldpass
 
 - name: Return a specific group using object_id and return_owners
   azure_rm_adgroup_info:
-    object_id: "{{ group_create_changed_ShouldPass.object_id }}"
-    return_owners: True
+    object_id: "{{ group_create_changed_shouldpass.object_id }}"
+    return_owners: true
     tenant: "{{ tenant_id }}"
-  register: object_id_return_owners_ShouldPass
+  register: object_id_return_owners_shouldpass
 
 - name: Return a specific group using object_id and return_owners and return_group_members
   azure_rm_adgroup_info:
-    object_id: "{{ group_create_changed_ShouldPass.object_id }}"
-    return_owners: True
-    return_group_members: True
+    object_id: "{{ group_create_changed_shouldpass.object_id }}"
+    return_owners: true
+    return_group_members: true
     tenant: "{{ tenant_id }}"
-  register: object_id_return_owners_and_group_members_ShouldPass
+  register: object_id_return_owners_and_group_members_shouldpass
 
 - name: Return a specific group using object_id and member_groups
   azure_rm_adgroup_info:
-    object_id: "{{ group_create_changed_ShouldPass.object_id }}"
-    return_member_groups: True
+    object_id: "{{ group_create_changed_shouldpass.object_id }}"
+    return_member_groups: true
     tenant: "{{ tenant_id }}"
-  register: object_id_return_member_groups_ShouldPass
+  register: object_id_return_member_groups_shouldpass
 
 - name: Return a specific group using object_id and check_membership
   azure_rm_adgroup_info:
-    object_id: "{{ group_create_changed_ShouldPass.object_id }}"
-    check_membership: "{{ create_group_member_1_ShouldPass.object_id }}"
+    object_id: "{{ group_create_changed_shouldpass.object_id }}"
+    check_membership: "{{ create_pass.object_id }}"
     tenant: "{{ tenant_id }}"
-  register: object_id_return_check_membership_ShouldPass
+  register: object_id_return_check_membership_shouldpass
 
 - name: Return a specific group using displayName attribute
   azure_rm_adgroup_info:
     attribute_name: "displayName"
-    attribute_value: "{{ group_create_changed_ShouldPass.display_name }}"
+    attribute_value: "{{ group_create_changed_shouldpass.display_name }}"
     tenant: "{{ tenant_id }}"
-  register: displayName_attribute_ShouldPass
+  register: displayname_attribute_shouldpass
 
 - name: Return a specific group using mailNickname filter
   azure_rm_adgroup_info:
-    odata_filter: "mailNickname eq '{{ group_create_changed_ShouldPass.mail_nickname }}'"
+    odata_filter: "mailNickname eq '{{ group_create_changed_shouldpass.mail_nickname }}'"
     tenant: "{{ tenant_id }}"
-  register: mailNickname_filter_ShouldPass
+  register: mailnickname_filter_shouldpass
 
 - name: Return a different group using displayName attribute
   azure_rm_adgroup_info:
     attribute_name: "displayName"
-    attribute_value: "{{ create_group_member_2_ShouldPass.display_name }}"
+    attribute_value: "{{ create_group_member_2_shouldpass.display_name }}"
     tenant: "{{ tenant_id }}"
-  register: displayName_attribute_different_ShouldPass
+  register: displayname_attribute_different_shouldpass
 
 - name: Assert All Returns Are Equal
   ansible.builtin.assert:
     that:
-      - object_id_ShouldPass == displayName_attribute_ShouldPass
-      - object_id_ShouldPass == mailNickname_filter_ShouldPass
+      - object_id_shouldpass == displayname_attribute_shouldpass
+      - object_id_shouldpass == mailnickname_filter_shouldpass
 
 - name: Assert Returns Are Not Equal
   ansible.builtin.assert:
     that:
-      - object_id_ShouldPass != displayName_attribute_different_ShouldPass
+      - object_id_shouldpass != displayname_attribute_different_shouldpass
 
 - name: Delete group Group Root on object_id
   azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
-    object_id: "{{ group_create_unchanged_ShouldPass.object_id }}"
+    object_id: "{{ group_create_unchanged_shouldpass.object_id }}"
     state: 'absent'
-  register: group_delete_group_root_ShouldPass
+  register: group_delete_group_root_shouldpass
 
 - name: Try to return now deleted group Group Root using object_id
   azure_rm_adgroup_info:
-    object_id: "{{ group_create_unchanged_ShouldPass.object_id }}"
+    object_id: "{{ group_create_unchanged_shouldpass.object_id }}"
     tenant: "{{ tenant_id }}"
-  register: get_deleted_object_group_root_ShouldFail
+  register: get_deleted_object_group_root_shouldfail
   failed_when:
-    - '"failed to get ad group info Resource" not in get_deleted_object_group_root_ShouldFail.msg'
+    - '"failed to get ad group info Resource" not in get_deleted_object_group_root_shouldfail.msg'
 
 - name: Delete group Group Member 1 on object_id
   azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
-    object_id: "{{ create_group_member_1_ShouldPass.object_id }}"
+    object_id: "{{ create_pass.object_id }}"
     state: 'absent'
-  register: group_delete_group_member_1_ShouldPass
+  register: group_delete_group_member_1_shouldpass
 
 - name: Try to return now deleted group Group Member 1 using object_id
   azure_rm_adgroup_info:
-    object_id: "{{ create_group_member_1_ShouldPass.object_id }}"
+    object_id: "{{ create_pass.object_id }}"
     tenant: "{{ tenant_id }}"
-  register: get_deleted_object_group_member_1_ShouldFail
+  register: get_deleted_object_group_member_1_shouldfail
   failed_when:
-    - '"failed to get ad group info Resource" not in get_deleted_object_group_member_1_ShouldFail.msg'
+    - '"failed to get ad group info Resource" not in get_deleted_object_group_member_1_shouldfail.msg'
 
 - name: Delete group Group Member 2 on object_id
   azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
-    object_id: "{{ create_group_member_2_ShouldPass.object_id }}"
+    object_id: "{{ create_group_member_2_shouldpass.object_id }}"
     state: 'absent'
-  register: group_delete_group_member_2_ShouldPass
+  register: group_delete_group_member_2_shouldpass
 
 - name: Try to return now deleted group Group Member 2 using object_id
   azure_rm_adgroup_info:
-    object_id: "{{ create_group_member_2_ShouldPass.object_id }}"
+    object_id: "{{ create_group_member_2_shouldpass.object_id }}"
     tenant: "{{ tenant_id }}"
-  register: get_deleted_object_group_member_2_ShouldFail
+  register: get_deleted_object_group_member_2_shouldfail
   failed_when:
-    - '"failed to get ad group info Resource" not in get_deleted_object_group_member_2_ShouldFail.msg'
+    - '"failed to get ad group info Resource" not in get_deleted_object_group_member_2_shouldfail.msg'

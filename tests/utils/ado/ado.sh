@@ -114,11 +114,10 @@ pwd
 dir
 git status
 
-ansible-lint -v --exclude tests/integration/targets/inventory_azure/playbooks/vars.yml --force-color
-
 if [ "sanity" = "${group}" ]
 then
     ansible-test sanity --color -v --junit
+    ansible-lint -v --exclude tests/integration/targets/inventory_azure/playbooks/vars.yml --force-color
 else
     ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
 fi

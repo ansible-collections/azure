@@ -2,7 +2,7 @@
   ansible.builtin.set_fact:
     name: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
-- name: To create API Management service
+- name: To create api management service
   azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
     name: "{{ name }}"
@@ -18,7 +18,7 @@
       - output.changed == True
       - output.failed == False
 
-- name: Recreate API Management service( Idempotent test)
+- name: Recreate api management service idempotent test
   azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
     name: "{{ name }}"

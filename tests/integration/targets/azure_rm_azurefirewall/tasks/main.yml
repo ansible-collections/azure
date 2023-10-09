@@ -34,7 +34,7 @@
       sku: Standard
   register: pip_output
 
-- debug:
+- ansible.builtin.debug:
     var: pip_output
 
 - name: Create Azure Firewall
@@ -101,7 +101,7 @@
         name: azureFirewallIpConfiguration
   register: output
 
-- debug:
+- ansible.builtin.debug:
     var: output
 
 - name: Assert that output has changed
@@ -171,7 +171,7 @@
         name: azureFirewallIpConfiguration
   register: output
 
-- debug:
+- ansible.builtin.debug:
     var: output
 
 - name: Assert that output has not changed

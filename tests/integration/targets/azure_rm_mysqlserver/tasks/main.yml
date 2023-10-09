@@ -98,7 +98,7 @@
     that:
       - output.changed
       - output.state == 'Ready'
-- debug:
+- ansible.builtin.debug:
     var: output
 
 - name: Gather facts MySQL Server
@@ -532,7 +532,7 @@
     name: event_scheduler
   register: output
 - name: Get facts of event_scheduler
-  debug:
+  ansible.builtin.debug:
     var: output
 
 - name: Try to delete default configuraion

@@ -1,4 +1,5 @@
-- ansible.builtin.set_fact:
+- name: Set variables
+  ansible.builtin.set_fact:
     tenant_id: "{{ azure_tenant }}"
     display_name: "app{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
   run_once: yes
@@ -9,7 +10,8 @@
     display_name: "{{ display_name }}"
   register: create_output
 
-- ansible.builtin.assert:
+- name: Assert create successfully
+  ansible.builtin.assert:
     that: create_output.changed
 
 - name: Create application again (idempotent test)
@@ -18,14 +20,15 @@
     app_id: "{{ create_output.app_id }}"
   register: output
 
-- ansible.builtin.assert:
+- name: Assert the idempotent success
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Create application with more parameter
   azure_rm_adapplication:
     tenant: "{{ tenant_id }}"
     display_name: "{{ display_name }}-01"
-    available_to_other_tenants: False
+    available_to_other_tenants: false
     credential_description: "for test"
     end_date: 2021-10-01
     start_date: 2021-05-18
@@ -36,11 +39,12 @@
           - User
         description: "for app role test"
         display_name: "{{ display_name }}_approle"
-        is_enabled: True
+        is_enabled: true
         value: Password@0329
   register: second_output
 
-- ansible.builtin.assert:
+- name: Assert secondary resource create success
+  ansible.builtin.assert:
     that: second_output.changed
 
 - name: get ad app info ---- by object ID
@@ -55,7 +59,8 @@
     tenant: "{{ tenant_id }}"
   register: output
 
-- ansible.builtin.assert:
+- name: Assert the application facts
+  ansible.builtin.assert:
     that:
       - output.applications[0].app_display_name == "{{ display_name }}"
       - output.applications | length == 1
@@ -67,7 +72,8 @@
     state: absent
   register: output
 
-- ansible.builtin.assert:
+- name: Assert the application delete success
+  ansible.builtin.assert:
     that: output.changed
 
 - name: delete ad app  by app id
@@ -77,7 +83,8 @@
     state: absent
   register: output
 
-- ansible.builtin.assert:
+- name: Assert the secondary application delete success
+  ansible.builtin.assert:
     that: output.changed
 
 - name: get ad app info ---- by app id
@@ -86,6 +93,7 @@
     tenant: "{{ tenant_id }}"
   register: output
 
-- ansible.builtin.assert:
+- name: Assert there is no application
+  ansible.builtin.assert:
     that:
       - output.applications | length == 0

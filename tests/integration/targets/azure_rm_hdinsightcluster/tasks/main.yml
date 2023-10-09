@@ -22,7 +22,7 @@
       - type: listkeys
   register: storage_output
 
-- debug:
+- ansible.builtin.debug:
     var: storage_output
 
 - name: Create instance of Cluster -- check mode
@@ -192,7 +192,7 @@
     tags:
       aaa: bbb
   register: output
-- debug:
+- ansible.builtin.debug:
     var: output
 - name: Assert the state has changed
   ansible.builtin.assert:
