@@ -79,13 +79,13 @@
     name: "{{ adl_name }}"
     encryption_state: Disabled
   register: output
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert that encryption state cannot change
   ansible.builtin.assert:
-    that: 
-    - not output.changed
-    - output.msg == 'Encryption type cannot be updated.'
+    that:
+      - not output.changed
+      - output.msg == 'Encryption type cannot be updated.'
 
 - name: Update data lake store to add new_tier
   azure_rm_datalakestore:
@@ -122,12 +122,10 @@
     firewall_state: Enabled
     firewall_allow_azure_ips: Enabled
     firewall_rules:
-      - 
-        name: test_rule_1
+      - name: test_rule_1
         start_ip_address: 192.168.1.1
         end_ip_address: 192.168.1.254
-      - 
-        name: test_rule_2
+      - name: test_rule_2
         start_ip_address: 10.0.0.1
         end_ip_address: 10.1.0.1
     virtual_network_rules:
@@ -172,12 +170,10 @@
     firewall_state: Enabled
     firewall_allow_azure_ips: Enabled
     firewall_rules:
-      - 
-        name: test_rule_1
+      - name: test_rule_1
         start_ip_address: 192.168.1.1
         end_ip_address: 192.168.1.254
-      - 
-        name: test_rule_2
+      - name: test_rule_2
         start_ip_address: 10.0.0.1
         end_ip_address: 10.1.0.1
     virtual_network_rules:

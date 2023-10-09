@@ -2,38 +2,39 @@
   ansible.builtin.set_fact:
     cdnprofilename: "cdnprofile{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     endpointname: "endpoint{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 
 - name: Create a CDN profile(check mode)
   azure_rm_cdnprofile:
-      resource_group: "{{ resource_group }}"
-      name: "{{ cdnprofilename }}"
-      sku: standard_verizon
-      tags:
-          testing: testing
-          delete: on-exit
-          foo: bar
-  check_mode: yes
+    resource_group: "{{ resource_group }}"
+    name: "{{ cdnprofilename }}"
+    sku: standard_verizon
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
+  check_mode: true
 
 - name: Check there is no CDN profile created
   azure_rm_cdnprofile_info:
-      resource_group: "{{ resource_group }}"
-      name: "{{ cdnprofilename }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ cdnprofilename }}"
   register: fact
 
 - name: Check there is no CDN profile created
-  ansible.builtin.assert: { that: "{{ fact.cdnprofiles | length }} == 0" }
+  ansible.builtin.assert:
+    { that: "{{ fact.cdnprofiles | length }} == 0" }
 
 - name: Create a CDN profile
   azure_rm_cdnprofile:
-      resource_group: "{{ resource_group }}"
-      name: "{{ cdnprofilename }}"
-      sku: standard_verizon
-      tags:
-          testing: testing
-          delete: on-exit
-          foo: bar
+    resource_group: "{{ resource_group }}"
+    name: "{{ cdnprofilename }}"
+    sku: standard_verizon
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
   register: output
 
 - name: Assert the CDN profile is well created
@@ -44,26 +45,26 @@
 
 - name: Gather CDN profile facts
   azure_rm_cdnprofile_info:
-      resource_group: "{{ resource_group }}"
-      name: "{{ cdnprofilename }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ cdnprofilename }}"
   register: fact
 
 - name: Assert fact returns the created one
   ansible.builtin.assert:
-      that:
-        - "fact.cdnprofiles | length == 1"
-        - fact.cdnprofiles[0].sku == 'Standard_Verizon'
-        - fact.cdnprofiles[0].tags.foo == 'bar'
+    that:
+      - "fact.cdnprofiles | length == 1"
+      - fact.cdnprofiles[0].sku == 'Standard_Verizon'
+      - fact.cdnprofiles[0].tags.foo == 'bar'
 
 - name: Create a CDN profile (idempotent)
   azure_rm_cdnprofile:
-      resource_group: "{{ resource_group }}"
-      name: "{{ cdnprofilename }}"
-      sku: standard_verizon
-      tags:
-          testing: testing
-          delete: on-exit
-          foo: bar
+    resource_group: "{{ resource_group }}"
+    name: "{{ cdnprofilename }}"
+    sku: standard_verizon
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
   register: output
 
 - name: Assert idempotent
@@ -73,14 +74,14 @@
 
 - name: Update the CDN profile
   azure_rm_cdnprofile:
-      resource_group: "{{ resource_group }}"
-      name: "{{ cdnprofilename }}"
-      sku: standard_verizon
-      tags:
-          testing: testing
-          delete: on-exit
-          foo: bar
-          baz: qux
+    resource_group: "{{ resource_group }}"
+    name: "{{ cdnprofilename }}"
+    sku: standard_verizon
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
+      baz: qux
   register: output
 
 - name: Assert the CDN profile is updated
@@ -93,48 +94,48 @@
     resource_group: "{{ resource_group }}"
     name: "{{ cdnprofilename }}"
     state: absent
-  check_mode: yes
+  check_mode: true
 
 - name: Gather CDN profile facts
   azure_rm_cdnprofile_info:
-      resource_group: "{{ resource_group }}"
-      name: "{{ cdnprofilename }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ cdnprofilename }}"
   register: fact
 
 - name: Assert the CDN is still there
   ansible.builtin.assert:
-      that:
-        - "fact.cdnprofiles | length == 1"
-        - fact.cdnprofiles[0].sku == 'Standard_Verizon'
-        - fact.cdnprofiles[0].tags.foo == 'bar'
-        - fact.cdnprofiles[0].tags.baz == 'qux'
+    that:
+      - "fact.cdnprofiles | length == 1"
+      - fact.cdnprofiles[0].sku == 'Standard_Verizon'
+      - fact.cdnprofiles[0].tags.foo == 'bar'
+      - fact.cdnprofiles[0].tags.baz == 'qux'
 
 - name: Create a Azure CDN endpoint(check mode)
   azure_rm_cdnendpoint:
-      resource_group: "{{ resource_group }}"
-      name: "{{ endpointname }}"
-      profile_name: "{{ cdnprofilename }}"
-      origins:
-        - name: "org{{ endpointname }}"
-          host_name: "www.google.com"
-      tags:
-          testing: testing
-          delete: on-exit
-          foo: bar
-  check_mode: yes
+    resource_group: "{{ resource_group }}"
+    name: "{{ endpointname }}"
+    profile_name: "{{ cdnprofilename }}"
+    origins:
+      - name: "org{{ endpointname }}"
+        host_name: "www.google.com"
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
+  check_mode: true
 
 - name: Create a Azure CDN endpoint
   azure_rm_cdnendpoint:
-      resource_group: "{{ resource_group }}"
-      name: "{{ endpointname }}"
-      profile_name: "{{ cdnprofilename }}"
-      origins:
-        - name: "org{{ endpointname }}"
-          host_name: "www.google.com"
-      tags:
-          testing: testing
-          delete: on-exit
-          foo: bar
+    resource_group: "{{ resource_group }}"
+    name: "{{ endpointname }}"
+    profile_name: "{{ cdnprofilename }}"
+    origins:
+      - name: "org{{ endpointname }}"
+        host_name: "www.google.com"
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
   register: output
 
 - name: Assert the Azure CDN endpoint is well created
@@ -145,9 +146,9 @@
 
 - name: Get facts of a Azure CDN endpoint
   azure_rm_cdnendpoint_info:
-      resource_group: "{{ resource_group }}"
-      name: "{{ endpointname }}"
-      profile_name: "{{ cdnprofilename }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ endpointname }}"
+    profile_name: "{{ cdnprofilename }}"
   register: facts
 
 - name: Assert facts output
@@ -164,16 +165,16 @@
 
 - name: Create a Azure CDN endpoint(idempotent)
   azure_rm_cdnendpoint:
-      resource_group: "{{ resource_group }}"
-      name: "{{ endpointname }}"
-      profile_name: "{{ cdnprofilename }}"
-      origins:
-        - name: "org{{ endpointname }}"
-          host_name: "www.google.com"
-      tags:
-          testing: testing
-          delete: on-exit
-          foo: bar
+    resource_group: "{{ resource_group }}"
+    name: "{{ endpointname }}"
+    profile_name: "{{ cdnprofilename }}"
+    origins:
+      - name: "org{{ endpointname }}"
+        host_name: "www.google.com"
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
   register: output
 
 - name: Assert idempotent
@@ -183,10 +184,10 @@
 
 - name: Stop a Azure CDN endpoint
   azure_rm_cdnendpoint:
-      resource_group: "{{ resource_group }}"
-      name: "{{ endpointname }}"
-      profile_name: "{{ cdnprofilename }}"
-      started: False
+    resource_group: "{{ resource_group }}"
+    name: "{{ endpointname }}"
+    profile_name: "{{ cdnprofilename }}"
+    started: false
   register: output
 
 - name: Assert stopped
@@ -196,10 +197,10 @@
 
 - name: Stop a Azure CDN endpoint(idempotent)
   azure_rm_cdnendpoint:
-      resource_group: "{{ resource_group }}"
-      name: "{{ endpointname }}"
-      profile_name: "{{ cdnprofilename }}"
-      started: False
+    resource_group: "{{ resource_group }}"
+    name: "{{ endpointname }}"
+    profile_name: "{{ cdnprofilename }}"
+    started: false
   register: output
 
 - name: Assert still stopped and not changed
@@ -209,10 +210,10 @@
 
 - name: Start a Azure CDN endpoint
   azure_rm_cdnendpoint:
-      resource_group: "{{ resource_group }}"
-      name: "{{ endpointname }}"
-      profile_name: "{{ cdnprofilename }}"
-      started: True
+    resource_group: "{{ resource_group }}"
+    name: "{{ endpointname }}"
+    profile_name: "{{ cdnprofilename }}"
+    started: True
   register: output
 
 - name: Assert started
@@ -222,14 +223,14 @@
 
 - name: Update the Azure CDN endpoint
   azure_rm_cdnendpoint:
-      resource_group: "{{ resource_group }}"
-      name: "{{ endpointname }}"
-      profile_name: "{{ cdnprofilename }}"
-      origin_path: /test/
-      tags:
-          testing: testing
-          delete: on-exit
-          foo: baz
+    resource_group: "{{ resource_group }}"
+    name: "{{ endpointname }}"
+    profile_name: "{{ cdnprofilename }}"
+    origin_path: /test/
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: baz
   register: output
 
 - name: Assert the Azure CDN endpoint is updated
@@ -239,18 +240,18 @@
 
 - name: Delete a Azure CDN endpoint(check mode)
   azure_rm_cdnendpoint:
-      resource_group: "{{ resource_group }}"
-      name: "{{ endpointname }}"
-      profile_name: "{{ cdnprofilename }}"
-      state: absent
-  check_mode: yes
+    resource_group: "{{ resource_group }}"
+    name: "{{ endpointname }}"
+    profile_name: "{{ cdnprofilename }}"
+    state: absent
+  check_mode: true
 
 - name: Delete a Azure CDN endpoint
   azure_rm_cdnendpoint:
-      resource_group: "{{ resource_group }}"
-      name: "{{ endpointname }}"
-      profile_name: "{{ cdnprofilename }}"
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: "{{ endpointname }}"
+    profile_name: "{{ cdnprofilename }}"
+    state: absent
 
 - name: Delete the CDN profile
   azure_rm_cdnprofile:
@@ -266,8 +267,8 @@
 
 - name: Get CDN profile fact
   azure_rm_cdnprofile_info:
-      resource_group: "{{ resource_group }}"
-      name: "{{ cdnprofilename }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ cdnprofilename }}"
   register: fact
 
 - name: Assert fact returns empty

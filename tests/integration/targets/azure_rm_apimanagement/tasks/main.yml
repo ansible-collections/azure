@@ -30,7 +30,7 @@
     protocols:
       - https
   register: newapi
-  
+ 
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
@@ -111,12 +111,12 @@
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}"
     state: absent
-  register: deleteApi
+  register: deleteapi
 
 - name: Assert the changes
   ansible.builtin.assert:
     that:
-      - deleteApi.changed == True
+      - deleteapi.changed == True
 
 - name: Delete an api Idempotent
   azure_rm_apimanagement:
@@ -124,12 +124,12 @@
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}"
     state: absent
-  register: deleteApi_idempotent
+  register: deleteapi_idempotent
 
 - name: Assert the changes
   ansible.builtin.assert:
     that:
-      - deleteApi_idempotent.changed == False
+      - deleteapi_idempotent.changed == False
 
 - name: Delete an api
   azure_rm_apimanagement:

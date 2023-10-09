@@ -34,15 +34,16 @@
       sku: Standard
   register: pip_output
 
-- ansible.builtin.debug:
+- name: Print the creating return
+  ansible.builtin.debug:
     var: pip_output
 
 - name: Create Azure Firewall
   azure_rm_azurefirewall:
-    resource_group: '{{resource_group}}'
-    name: '{{azure_firewall_name}}'
-    #tags:
-    #  key1: value1
+    resource_group: '{{ resource_group }}'
+    name: '{{ azure_firewall_name }}'
+    # tags:
+    #   key1: value1
     application_rule_collections:
       - priority: 110
         action: deny
@@ -101,7 +102,8 @@
         name: azureFirewallIpConfiguration
   register: output
 
-- ansible.builtin.debug:
+- name: Print the creating return
+  ansible.builtin.debug:
     var: output
 
 - name: Assert that output has changed
@@ -111,8 +113,8 @@
 
 - name: Create Azure Firewall -- idempotent
   azure_rm_azurefirewall:
-    resource_group: '{{resource_group}}'
-    name: '{{azure_firewall_name}}'
+    resource_group: '{{ resource_group }}'
+    name: '{{ azure_firewall_name }}'
     application_rule_collections:
       - priority: 110
         action: deny
@@ -171,7 +173,8 @@
         name: azureFirewallIpConfiguration
   register: output
 
-- ansible.builtin.debug:
+- name: Print the return value
+  ansible.builtin.debug:
     var: output
 
 - name: Assert that output has not changed
@@ -181,8 +184,8 @@
 
 - name: Create Azure Firewall -- change something
   azure_rm_azurefirewall:
-    resource_group: '{{resource_group}}'
-    name: '{{azure_firewall_name}}'
+    resource_group: '{{ resource_group }}'
+    name: '{{ azure_firewall_name }}'
     application_rule_collections:
       - priority: 110
         action: deny
@@ -239,7 +242,7 @@
         public_ip_address:
           name: "{{ public_ipaddress_name }}"
         name: azureFirewallIpConfiguration
-  check_mode: yes
+  check_mode: true
   register: output
 
 - name: Assert that output has changed
@@ -249,11 +252,12 @@
 
 - name: Get info of the Azure Firewall
   azure_rm_azurefirewall_info:
-    resource_group: '{{resource_group}}'
-    name: '{{azure_firewall_name}}'
+    resource_group: '{{ resource_group }}'
+    name: '{{ azure_firewall_name }}'
   register: output
 
-- ansible.builtin.assert:
+- name: Assert the azure firewall facts
+  ansible.builtin.assert:
     that: 
       - not output.changed
       - output.firewalls['id'] != None
@@ -267,11 +271,12 @@
 
 - name: Delete Azure Firewall
   azure_rm_azurefirewall:
-    resource_group: '{{resource_group}}'
-    name: '{{azure_firewall_name}}'
+    resource_group: '{{ resource_group }}'
+    name: '{{ azure_firewall_name }}'
     state: absent
   register: output
 
-- ansible.builtin.assert:
+- name: Assert the azure firewall deleted
+  ansible.builtin.assert:
     that: 
       - output.changed

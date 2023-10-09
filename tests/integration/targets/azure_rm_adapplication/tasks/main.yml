@@ -2,7 +2,7 @@
   ansible.builtin.set_fact:
     tenant_id: "{{ azure_tenant }}"
     display_name: "app{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
-  run_once: yes
+  run_once: true
 
 - name: Create application
   azure_rm_adapplication:
@@ -14,7 +14,7 @@
   ansible.builtin.assert:
     that: create_output.changed
 
-- name: Create application again (idempotent test)
+- name: Create application again idempotent test
   azure_rm_adapplication:
     tenant: "{{ tenant_id }}"
     app_id: "{{ create_output.app_id }}"
@@ -47,13 +47,13 @@
   ansible.builtin.assert:
     that: second_output.changed
 
-- name: get ad app info ---- by object ID
+- name: Get ad app info by object id
   azure_rm_adapplication_info:
     object_id: "{{ create_output.object_id }}"
     tenant: "{{ tenant_id }}"
   register: output
 
-- name: get ad app info ---- by app ID
+- name: Get ad app info by app id
   azure_rm_adapplication_info:
     app_id: "{{ create_output.app_id }}"
     tenant: "{{ tenant_id }}"
@@ -65,7 +65,7 @@
       - output.applications[0].app_display_name == "{{ display_name }}"
       - output.applications | length == 1
 
-- name: delete ad app  by app id
+- name: Delete ad app  by app id
   azure_rm_adapplication:
     app_id: "{{ create_output.app_id }}"
     tenant: "{{ tenant_id }}"
@@ -76,7 +76,7 @@
   ansible.builtin.assert:
     that: output.changed
 
-- name: delete ad app  by app id
+- name: Delete ad app  by app id
   azure_rm_adapplication:
     app_id: "{{ second_output.app_id }}"
     tenant: "{{ tenant_id }}"
@@ -87,7 +87,7 @@
   ansible.builtin.assert:
     that: output.changed
 
-- name: get ad app info ---- by app id
+- name: Get ad app info by app id
   azure_rm_adapplication_info:
     app_id: "{{ create_output.app_id }}"
     tenant: "{{ tenant_id }}"

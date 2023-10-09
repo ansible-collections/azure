@@ -2,7 +2,7 @@
   ansible.builtin.set_fact:
     tenant_id: "{{ azure_tenant }}"
     resource_prefix: "{{ 999999999999999999994 | random | to_uuid }}"
-  run_once: yes
+  run_once: true
 
 - name: Try to return non-existent group using display name
   azure_rm_adgroup_info:
@@ -65,7 +65,7 @@
     display_name: "{{ resource_prefix }}-Group-Member-2"
     mail_nickname: "{{ resource_prefix }}-Group-Member-2"
     state: 'present'
-  register: create_group_member_2_shouldpass
+  register: create_pass
 
 - name: Ensure member is in group using display_name and mail_nickname
   azure_rm_adgroup:
@@ -75,14 +75,14 @@
     state: 'present'
     present_members:
       - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ create_pass.object_id }}"
-      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ create_group_member_2_shouldpass.object_id }}"
+      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ create_pass.object_id }}"
   register: add_pass
 
 - name: Validate members are in the group
   ansible.builtin.assert:
     that:
       - add_pass.group_members[0].object_id == create_pass.object_id or add_pass.group_members[1].object_id == create_pass.object_id
-      - add_pass.group_members[1].object_id == create_group_member_2_shouldpass.object_id or add_pass.group_members[0].object_id == create_group_member_2_shouldpass.object_id
+      - add_pass.group_members[1].object_id == create_pass.object_id or add_pass.group_members[0].object_id == create_pass.object_id
 
 - name: Ensure member is in group that is already present using object_id
   azure_rm_adgroup:
@@ -104,7 +104,7 @@
     object_id: "{{ group_create_changed_shouldpass.object_id }}"
     state: 'present'
     absent_members:
-      - "{{ create_group_member_2_shouldpass.object_id }}"
+      - "{{ create_pass.object_id }}"
   register: remove_member_from_group_shouldpass
 
 - name: Validate Group Member 1 is in the group and Group Member 2 is not
@@ -120,7 +120,7 @@
     mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
     absent_members:
-      - "{{ create_group_member_2_shouldpass.object_id }}"
+      - "{{ create_pass.object_id }}"
   register: remove_already_absent_member_from_group_shouldpass
 
 - name: Validate nothing changed from already absent member
@@ -179,7 +179,7 @@
 - name: Return a different group using displayName attribute
   azure_rm_adgroup_info:
     attribute_name: "displayName"
-    attribute_value: "{{ create_group_member_2_shouldpass.display_name }}"
+    attribute_value: "{{ create_pass.display_name }}"
     tenant: "{{ tenant_id }}"
   register: displayname_attribute_different_shouldpass
 
@@ -227,13 +227,13 @@
 - name: Delete group Group Member 2 on object_id
   azure_rm_adgroup:
     tenant: "{{ tenant_id }}"
-    object_id: "{{ create_group_member_2_shouldpass.object_id }}"
+    object_id: "{{ create_pass.object_id }}"
     state: 'absent'
   register: group_delete_group_member_2_shouldpass
 
 - name: Try to return now deleted group Group Member 2 using object_id
   azure_rm_adgroup_info:
-    object_id: "{{ create_group_member_2_shouldpass.object_id }}"
+    object_id: "{{ create_pass.object_id }}"
     tenant: "{{ tenant_id }}"
   register: get_deleted_object_group_member_2_shouldfail
   failed_when:

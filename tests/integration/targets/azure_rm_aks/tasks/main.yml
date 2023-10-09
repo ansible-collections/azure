@@ -4,7 +4,7 @@
     noderpfx: "{{ resource_group | hash('md5') | truncate(4, True, '') }}"
 
 - name: Include aks tasks
-  include_tasks: minimal-cluster.yml
+  ansible.builtin.include_tasks: minimal-cluster.yml
 
 - name: Find available k8s version
   azure_rm_aksversion_info:
@@ -36,10 +36,10 @@
           - 1
           - 2
     node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: yes
+    enable_rbac: true
     network_profile:
       load_balancer_sku: standard
-  check_mode: yes
+  check_mode: true
 
 - name: Check there is no AKS created
   azure_rm_aks_info:
@@ -77,7 +77,7 @@
           - 1
           - 2
     node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: yes
+    enable_rbac: true
     network_profile:
       load_balancer_sku: standard
   register: output
@@ -128,7 +128,7 @@
           - 1
           - 2
     node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: yes
+    enable_rbac: true
     network_profile:
       load_balancer_sku: standard
   register: output
@@ -186,7 +186,7 @@
           - 1
           - 2
     node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: yes
+    enable_rbac: true
     network_profile:
       load_balancer_sku: standard
   register: output
@@ -230,7 +230,7 @@
     network_profile:
       network_plugin: kubenet
       load_balancer_sku: standard
-    enable_rbac: yes
+    enable_rbac: true
   register: output
 
 - name: Assert the AKS instance is upgraded
@@ -270,7 +270,7 @@
     network_profile:
       network_plugin: kubenet
       load_balancer_sku: standard
-    enable_rbac: yes
+    enable_rbac: true 
   register: output
 
 - name: Assert the aks idempotent
@@ -305,18 +305,18 @@
           - 1
           - 2
     node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: yes
+    enable_rbac: true
     network_profile:
       load_balancer_sku: standard
   register: output
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert the AKS instance is well created
   ansible.builtin.assert:
     that:
       - output.changed
       - output.provisioning_state == 'Succeeded'
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Upgrade the AKS instance with agent pool profiles (idempontent)
   azure_rm_aks:
@@ -345,7 +345,7 @@
           - 1
           - 2
     node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: yes
+    enable_rbac: true
     network_profile:
       load_balancer_sku: standard
   register: output
@@ -387,11 +387,11 @@
         type: VirtualMachineScaleSets
         mode: User
     node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: yes
+    enable_rbac: true
     network_profile:
       load_balancer_sku: standard
   register: output
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert the AKS instance is well created
   ansible.builtin.assert:
@@ -400,7 +400,7 @@
       - "output.agent_pool_profiles | length == 2"
       - output.provisioning_state == 'Succeeded'
       - output.agent_pool_profiles[1].mode == 'User'
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Upgrade the AKS instance with multiple agent pool profiles (idempontent)
   azure_rm_aks:
@@ -433,7 +433,7 @@
         type: VirtualMachineScaleSets
         mode: User
     node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: yes
+    enable_rbac: true
     network_profile:
       load_balancer_sku: standard
   register: output
@@ -475,10 +475,10 @@
         type: VirtualMachineScaleSets
         mode: System
     node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: yes
+    enable_rbac: true
     network_profile:
       load_balancer_sku: standard
-  ignore_errors: yes
+  ignore_errors: true
   register: output
 
 - name: Assert the AKS instance is well created
@@ -488,7 +488,7 @@
       - "output.agent_pool_profiles | length == 2"
       - output.provisioning_state == 'Succeeded'
       - output.agent_pool_profiles[1].mode == 'System'
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Update the default2 agent_pool mode from User to System (idempontent)
   azure_rm_aks:
@@ -521,23 +521,23 @@
         type: VirtualMachineScaleSets
         mode: System
     node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: yes
+    enable_rbac: true
     network_profile:
       load_balancer_sku: standard
   register: output
 
 - name: Get AKS fact
   azure_rm_aks_info:
-     name: "aks{{ rpfx }}"
-     resource_group: "{{ resource_group }}"
-     show_kubeconfig: user
+    name: "aks{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    show_kubeconfig: user
   register: fact
 
 - name: Assert fact returns the created one
   ansible.builtin.assert:
-     that:
-       - "fact.aks | length == 1"
-       - fact.aks[0].kube_config == output.kube_config
+    that:
+      - "fact.aks | length == 1"
+      - fact.aks[0].kube_config == output.kube_config
 
 - name: Delete the AKS instance
   azure_rm_aks:
@@ -565,11 +565,11 @@
 
 - name: Get AKS fact
   azure_rm_aks_info:
-     name: "aks{{ rpfx }}"
-     resource_group: "{{ resource_group }}"
+    name: "aks{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
   register: fact
 
 - name: Assert fact returns empty
   ansible.builtin.assert:
-     that:
-       - "fact.aks | length == 0"
+    that:
+      - "fact.aks | length == 0"

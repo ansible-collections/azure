@@ -29,7 +29,7 @@
     plan: "{{ win_plan_name }}"
   register: output
 
-- name: stop the web app
+- name: Stop the web app
   azure_rm_webapp:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}2"
@@ -37,18 +37,18 @@
     app_state: stopped
   register: output
 
-- name: ansible.builtin.assert output changed
+- name: Assert output changed
   ansible.builtin.assert:
     that:
       output.changed
 
-- name: get the web app
+- name: Get the web app
   azure_rm_webapp_info:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}2"
   register: stopped
 
-- name: ansible.builtin.assert web app is stopped
+- name: Assert web app is stopped
   ansible.builtin.assert:
     that:
       - stopped.webapps[0].app_state == "Stopped"
@@ -63,7 +63,7 @@
       testwebapptag: test
   register: output
 
-- name: get web app with resource group and tag
+- name: Get web app with resource group and tag
   azure_rm_webapp_info:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}3"
@@ -71,7 +71,8 @@
       - testwebapptag
   register: output
 
-- ansible.builtin.assert:
+- name: Assert the web app facts
+  ansible.builtin.assert:
     that:
       - output.webapps | length == 1
 
@@ -90,17 +91,18 @@
       testkey: "testvalue"
   register: output
 
-- name: ansible.builtin.assert the web app was created
+- name: Assert web app was created
   ansible.builtin.assert:
     that: output.changed
 
-- name: get web app with name
+- name: Get web app with name
   azure_rm_webapp_info:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}4"
   register: output
 
-- ansible.builtin.assert:
+- name: Assert the web app facts
+  ansible.builtin.assert:
     that:
       - output.webapps | length == 1
       - output.webapps[0].app_settings | length == 1
@@ -126,7 +128,7 @@
     that:
     - output.changed
 
-- name: get web app with name
+- name: Get web app with name
   azure_rm_webapp_info:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}4"
@@ -139,7 +141,7 @@
     - output.webapps[0].app_settings['testkey'] == 'testvalue'
     - output.webapps[0].app_settings['testkey2'] == 'testvalue2'
 
-- name: get web app with return publishing profile
+- name: Get web app with return publishing profile
   azure_rm_webapp_info:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}4"
@@ -289,7 +291,7 @@
   ansible.builtin.assert:
     that: output.changed
 
-- name: ansible.builtin.assert error that java is mutually exclusive with frameworks
+- name: Assert error that java is mutually exclusive with frameworks
   azure_rm_webapp:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}11"
@@ -302,7 +304,7 @@
   register: fail_win_java_version_mutual_exclusive
   failed_when: 'fail_win_java_version_mutual_exclusive.msg != "Java is mutually exclusive with other frameworks."'
 
-- name: ansible.builtin.assert error when linux web app, only can specify one framework
+- name: Assert error when linux web app, only can specify one framework
   azure_rm_webapp:
     resource_group: "{{ resource_group }}"
     name: "{{ linux_plan_name }}12"

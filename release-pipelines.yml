@@ -19,11 +19,11 @@ steps:
       pip install ansible==v2.14.0
       ansible --version
     displayName: 'install ansible'
- 
+
   - script: |
       ansible-galaxy collection build .
     displayName: 'build collection'
- 
+
   - script: |
       ansible-galaxy collection publish *.tar.gz --api-key $(GALAXY_KEY)
     displayName: 'publish collection'

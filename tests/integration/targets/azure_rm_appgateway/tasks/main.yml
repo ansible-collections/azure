@@ -107,11 +107,11 @@
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
     redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
+      - redirect_type: permanent
+        target_listener: sample_http_listener
+        include_path: true
+        include_query_string: true
+        name: redirect_site_to_https
   register: output
   check_mode: true
 - name: Assert the resource instance is well created
@@ -155,13 +155,13 @@
           - ip_address: 10.0.0.4
         name: test_backend_address_pool
     probes:
-     - name: custom_probe
-       protocol: http
-       host: 10.0.0.4
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
+      - name: custom_probe
+        protocol: http
+        host: 10.0.0.4
+        path: /healthz
+        interval: 30
+        timeout: 30
+        unhealthy_threshold: 3
     backend_http_settings_collection:
       - port: 80
         protocol: http

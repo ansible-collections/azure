@@ -18,7 +18,7 @@
       ubuntuOSVersion:
         value: "Never-LTS"
   register: output
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Create Azure Deploy
   azure_rm_deployment:
@@ -38,7 +38,7 @@
   register: output
 
 - name: Add new instance to host group
-  add_host:
+  ansible.builtin.add_host:
     hostname: "{{ item.vm_name }}"
     ansible_host: "{{ item['ips'][0].public_ip }}"
     ansible_user: chouseknecht
@@ -50,7 +50,8 @@
   azure_rm_deployment_info:
     resource_group: "{{ resource_group }}"
   register: output
-- ansible.builtin.debug:
+- name: Print the deployment facts
+  ansible.builtin.debug:
     var: output
 
 - name: Get Deployment Facts for named deployment
@@ -58,7 +59,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ dns_label }}"
   register: output
-- ansible.builtin.debug:
+- name: Print the deployment facts
+  ansible.builtin.debug:
     var: output
 
 - name: Assert that values are returned

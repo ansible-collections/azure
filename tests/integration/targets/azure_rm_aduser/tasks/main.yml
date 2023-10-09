@@ -4,7 +4,7 @@
     user_id: "user{{ 999999999999999999994 | random | to_uuid }}@contoso.com"
     object_id: "{{ 999999999999999999994 | random | to_uuid }}"
     user_principal_name: "{{ 999999999999999999994 | random | to_uuid }}"
-  run_once: yes
+  run_once: true
 
 - name: Create test user
   azure_rm_aduser:
@@ -40,7 +40,7 @@
     that:
       - attempted_update_with_no_changes_should_pass["changed"] == False
 
-- name: user_principal_name Should Pass
+- name: User_principal_name Should Pass
   azure_rm_aduser_info:
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
@@ -60,7 +60,7 @@
     account_enabled: false
   register: update_user_should_pass
 
-- name: user_principal_name on updated user Should Pass
+- name: User_principal_name on updated user Should Pass
   azure_rm_aduser_info:
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
@@ -79,7 +79,7 @@
     state: "absent"
   register: delete_user_should_pass
 
-- name: user_principal_name Should Fail
+- name: User_principal_name Should Fail
   azure_rm_aduser_info:
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
@@ -96,7 +96,7 @@
     user_principal_name: "{{ user_id }}"
     tenant: None
   register: missing_tenant
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert task failed
   ansible.builtin.assert:
@@ -107,7 +107,7 @@
   azure_rm_aduser_info:
     tenant: "{{ tenant_id }}"
   register: missing_any_identifiers
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert task failed
   ansible.builtin.assert:
@@ -120,7 +120,7 @@
     object_id: "{{ object_id }}"
     tenant: "{{ tenant_id }}"
   register: too_many_identifiers
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert task failed
   ansible.builtin.assert:
@@ -132,7 +132,7 @@
     attribute_name: proxyAddresses
     tenant: "{{ tenant_id }}"
     register: missing attribute_value
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert task failed
   ansible.builtin.assert:
@@ -144,7 +144,7 @@
     attribute_value: SMTP:user@contoso.com
     tenant: "{{ tenant_id }}"
     register: missing attribute_name
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert task failed
   ansible.builtin.assert:
@@ -157,7 +157,7 @@
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
     register: using_all_with_principal_name
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert task failed
   ansible.builtin.assert:

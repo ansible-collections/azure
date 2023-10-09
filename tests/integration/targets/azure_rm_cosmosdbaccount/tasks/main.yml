@@ -5,7 +5,7 @@
     vnname: "vn{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     subnetname: "subnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     free_tier_supported: false  # https://github.com/ansible-collections/azure/pull/675#discussion_r843584406
-  run_once: yes
+  run_once: true
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
@@ -34,7 +34,7 @@
       - name: eastasia
         failover_priority: 0
     database_account_offer_type: Standard
-  check_mode: yes
+  check_mode: true 
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -53,13 +53,13 @@
       - name: westus
         failover_priority: 1
     database_account_offer_type: Standard
-    is_virtual_network_filter_enabled: yes
+    is_virtual_network_filter_enabled: true
     virtual_network_rules:
       - subnet:
           resource_group: "{{ resource_group }}"
           virtual_network_name: "{{ vnname }}"
           subnet_name: "{{ subnetname }}"
-        ignore_missing_v_net_service_endpoint: yes
+        ignore_missing_v_net_service_endpoint: true
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -78,13 +78,13 @@
       - name: westus
         failover_priority: 1
     database_account_offer_type: Standard
-    is_virtual_network_filter_enabled: yes
+    is_virtual_network_filter_enabled: true
     virtual_network_rules:
       - subnet:
           resource_group: "{{ resource_group }}"
           virtual_network_name: "{{ vnname }}"
           subnet_name: "{{ subnetname }}"
-        ignore_missing_v_net_service_endpoint: yes
+        ignore_missing_v_net_service_endpoint: true 
   register: output
 - name: Assert the state has not changed
   ansible.builtin.assert:
@@ -103,14 +103,14 @@
       - name: westus
         failover_priority: 1
     database_account_offer_type: Standard
-    is_virtual_network_filter_enabled: yes
+    is_virtual_network_filter_enabled: true
     virtual_network_rules:
       - subnet:
           resource_group: "{{ resource_group }}"
           virtual_network_name: "{{ vnname }}"
           subnet_name: "{{ subnetname }}"
-        ignore_missing_v_net_service_endpoint: yes
-    enable_automatic_failover: yes
+        ignore_missing_v_net_service_endpoint: true 
+    enable_automatic_failover: true 
   register: output
 - name: Assert the state has changed
   ansible.builtin.assert:
@@ -129,13 +129,13 @@
       - name: westus
         failover_priority: 1
     database_account_offer_type: Standard
-    is_virtual_network_filter_enabled: yes
+    is_virtual_network_filter_enabled: true 
     virtual_network_rules:
       - subnet:
           resource_group: "{{ resource_group }}"
           virtual_network_name: "{{ vnname }}"
           subnet_name: "{{ subnetname }}"
-        ignore_missing_v_net_service_endpoint: yes
+        ignore_missing_v_net_service_endpoint: true 
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -197,7 +197,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ dbname }}"
     retrieve_keys: readonly
-    retrieve_connection_strings: yes
+    retrieve_connection_strings: true
   register: output
 - name: Assert that facts are returned
   ansible.builtin.assert:
@@ -272,14 +272,14 @@
       - name: westus
         failover_priority: 1
     database_account_offer_type: Standard
-    is_virtual_network_filter_enabled: yes
+    is_virtual_network_filter_enabled: true 
     virtual_network_rules:
       - subnet:
           resource_group: "{{ resource_group }}"
           virtual_network_name: "{{ vnname }}"
           subnet_name: "{{ subnetname }}"
-        ignore_missing_v_net_service_endpoint: yes
-    enable_automatic_failover: yes
+        ignore_missing_v_net_service_endpoint: true
+    enable_automatic_failover: true
   register: output
 - name: Assert resource created
   ansible.builtin.assert:
@@ -307,7 +307,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ dbname }}"
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
   ansible.builtin.assert:
