@@ -17,8 +17,9 @@
   register: ad_fact
 
 - name: Assert ansible.builtin.assert:
-  that:
-    - ad_fact.changed
+  ansible.builtin.assert:
+    that:
+      - ad_fact.changed
 
 - name: Create ad service principal (idempontent)
   azure_rm_adserviceprincipal:
