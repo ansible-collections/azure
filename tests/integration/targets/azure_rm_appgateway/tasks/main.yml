@@ -1807,7 +1807,7 @@
         protocol: "http"
         pick_host_name_from_backend_http_settings: true
          timeout: 30
-          unhealthy_threshold: 2
+        unhealthy_threshold: 2
     redirect_configurations:
       - name: "redirect-http"
         redirect_type: "permanent"
