@@ -16,7 +16,7 @@
     state: present
   register: ad_fact
 
-- name: Assert ansible.builtin.assert:
+- name: Assert the ad service prinicipal created
   ansible.builtin.assert:
     that:
       - ad_fact.changed
