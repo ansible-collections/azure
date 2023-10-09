@@ -1,5 +1,5 @@
 - name: Create random domain name
-  set_fact:
+  ansible.builtin.set_fact:
     domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create a Private DNS zone
@@ -10,7 +10,7 @@
   register: results
 
 - name: Assert that Private DNS zone was created
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: create "A" record set with multiple records
@@ -26,7 +26,7 @@
   register: results
 
 - name: Assert that A record set was created
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: re-run "A" record with same values
@@ -42,7 +42,7 @@
   register: results
 
 - name: Assert that A record set was not changed
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Update "A" record set with additional record
@@ -57,7 +57,7 @@
   register: results
 
 - name: Assert that new record was appended
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed
 
@@ -73,7 +73,7 @@
   register: results
 
 - name: Assert that A record set was not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not results.changed
 
@@ -90,7 +90,7 @@
   register: results
 
 - name: Assert that record was deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed
 
@@ -106,7 +106,7 @@
   register: results
 
 - name: Assert that check_mode returns new state
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed
 
@@ -118,7 +118,7 @@
     record_type: A
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not results.changed
       - results.dnsrecordsets[0].id != None
@@ -138,7 +138,7 @@
   register: results
 
 - name: Assert that record set deleted
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: (idempotence test) re-run record set absent
@@ -151,7 +151,7 @@
   register: results
 
 - name:
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: create SRV records in a new record set
@@ -170,7 +170,7 @@
   register: results
 
 - name: Assert that SRV record set was created
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed
 
@@ -182,7 +182,7 @@
     record_type: SRV
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not results.changed
       - results.dnsrecordsets[0].id != None
@@ -208,7 +208,7 @@
   register: results
 
 - name: Assert that TXT record set was created
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed
 
@@ -220,7 +220,7 @@
     record_type: TXT
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not results.changed
       - results.dnsrecordsets[0].id != None
@@ -248,7 +248,7 @@
   register: results
 
 - name: Assert that SOA record set was created
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed
 

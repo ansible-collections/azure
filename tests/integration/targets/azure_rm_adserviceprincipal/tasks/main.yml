@@ -1,4 +1,4 @@
-- set_fact:
+- ansible.builtin.set_fact:
     app_id: "e0a62513-1d81-480e-a6dc-5c99cdd58d9a"
     tenant_id: "72f988bf-86f1-41af-91ab-2d7cd011db47"
 
@@ -15,7 +15,7 @@
     state: present
   register: ad_fact
 
-- assert:
+- ansible.builtin.assert:
     that:
         - ad_fact.changed
 
@@ -26,7 +26,7 @@
     state: present
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
         - not output.changed
 
@@ -36,7 +36,7 @@
     tenant: "{{ tenant_id }}"
   register: ad_info
 
-- assert:
+- ansible.builtin.assert:
     that:
         - ad_info.service_principals[0].app_display_name == ad_fact.app_display_name
         - ad_info.service_principals[0].app_role_assignment_required == False
@@ -55,7 +55,7 @@
     object_id: "{{ ad_info.service_principals[0].object_id }}"
   register: ad_info
 
-- assert:
+- ansible.builtin.assert:
     that:
         - ad_info.service_principals[0].app_display_name == ad_fact.app_display_name
         - ad_info.service_principals[0].app_role_assignment_required == True
@@ -67,6 +67,6 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
         - output.changed

@@ -63,7 +63,7 @@
       echo "custom_data was executed" > /tmp/custom_data.txt
 
 - name: Ensure VM was created properly
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_vm.provisioning_state == 'Succeeded'
       - azure_vm.availability_set.id
@@ -79,7 +79,7 @@
   register: vm_facts_no_boot_diag_result
 
 - name: Ensure VM facts are correct
-  assert:
+  ansible.builtin.assert:
     that:
       - vm_facts_no_boot_diag_result.vms != []
       - not vm_facts_no_boot_diag_result.vms[0].boot_diagnostics.enabled
@@ -103,7 +103,7 @@
       # without specifying storage_account you get a new default storage account for the VM
 
 - name: Ensure VM properties are correct
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_vm.diagnostics_profile.boot_diagnostics.enabled
       - azure_vm.diagnostics_profile.boot_diagnostics.storage_uri is defined
@@ -117,7 +117,7 @@
   register: vm_facts_boot_diag_result
 
 - name: Ensure VM facts were returned
-  assert:
+  ansible.builtin.assert:
     that:
       - vm_facts_boot_diag_result.vms != []
       - vm_facts_boot_diag_result.vms[0].boot_diagnostics.enabled
@@ -143,7 +143,7 @@
         storage_account: "{{ storage_account }}"
 
 - name: Ensure boot diagnostics was disabled
-  assert:
+  ansible.builtin.assert:
     that:
       - not azure_vm.diagnostics_profile.boot_diagnostics.enabled
 
@@ -156,7 +156,7 @@
   register: reenable_boot_diag_result
 
 - name: Ensure boot diagnostics was reenabled
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_vm.diagnostics_profile.boot_diagnostics.enabled
       - azure_vm.diagnostics_profile.boot_diagnostics.storage_uri is defined
@@ -188,8 +188,8 @@
 #      raw: cat /tmp/custom_data.txt
 #      register: custom_data_content
 
-#    - name: assert contents
-#      assert:
+#    - name: ansible.builtin.assert contents
+#      ansible.builtin.assert:
 #        that: custom_data_content.stdout | regex_search('custom_data was executed')
 #   delegate_to: new_azure_vm
 
@@ -227,7 +227,7 @@
   register: single_nic_result
 
 - name: Ensure nothing changed
-  assert:
+  ansible.builtin.assert:
     that: single_nic_result is not changed
 
 - name: Resize VM
@@ -254,7 +254,7 @@
   register: resize_result
 
 - name: Esure VM was resized
-  assert:
+  ansible.builtin.assert:
     that:
       - resize_result is changed
       - resize_result.ansible_facts.azure_vm.hardware_profile.vm_size == "Standard_A1"
@@ -273,7 +273,7 @@
   register: output
 
 - name: Ensure NIC was removed
-  assert:
+  ansible.builtin.assert:
     that: output.networkinterfaces | length == 0
 
 - name: Public IP should be gone
@@ -283,7 +283,7 @@
   register: output
 
 - name: Ensure public IP was removed
-  assert:
+  ansible.builtin.assert:
     that: output.publicipaddresses | length == 0
 
 - name: Destroy NIC

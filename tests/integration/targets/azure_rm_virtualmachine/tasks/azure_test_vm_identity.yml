@@ -35,7 +35,7 @@
     - "ansible-test-vm-identity-2"
 
 - name: Set identities IDs to test. Identities ansible-test-vm-identity and ansible-test-vm-identity-2 have to be created previously
-  set_fact:
+  ansible.builtin.set_fact:
     user_identity_1: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-vm-identity"
     user_identity_2: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-vm-identity-2"
 
@@ -69,7 +69,7 @@
   register: vm_output
 
 - name: Assert User identity assigned
-  assert:
+  ansible.builtin.assert:
     that:      
       - vm_output.ansible_facts.azure_vm.identity.type == 'UserAssigned'
       - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
@@ -87,7 +87,7 @@
   register: vm_output
 
 - name: Assert appended user identity
-  assert:
+  ansible.builtin.assert:
     that:      
       - vm_output.ansible_facts.azure_vm.identity.type == 'UserAssigned'
       - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
@@ -104,7 +104,7 @@
   register: vm_output
 
 - name: Assert System identity assigned
-  assert:
+  ansible.builtin.assert:
     that:      
       - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
       - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
@@ -123,7 +123,7 @@
   register: vm_output
 
 - name: Assert appended user identity
-  assert:
+  ansible.builtin.assert:
     that:      
       - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
       - "\"{{ user_identity_1 }}\" not in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
@@ -138,7 +138,7 @@
   register: vm_output
 
 - name: Assert removed user identities
-  assert:
+  ansible.builtin.assert:
     that:      
       - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned'
       - "'user_assigned_identities' not in vm_output.ansible_facts.azure_vm.identity"
@@ -152,7 +152,7 @@
   register: vm_output
 
 - name: Assert no managed identities
-  assert:
+  ansible.builtin.assert:
     that:      
       - "'identity' not in vm_output.ansible_facts.azure_vm"      
 

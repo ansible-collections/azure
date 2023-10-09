@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     storage_name: "storage{{ resource_group | hash('md5') | truncate(5, True, '') }}{{ 1000 | random }}"
     profile_name: "profile{{ resource_group | hash('md5') | truncate(5, True, '') }}{{ 1000 | random }}"
     location: eastus
@@ -30,8 +30,8 @@
   check_mode: yes
   register: output
 
-- name: assert create check mode
-  assert:
+- name: ansible.builtin.assert create check mode
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -52,8 +52,8 @@
       resource_group: "{{ resource_group }}"
       name: "{{ storage_name }}"
   register: output
-- name: assert create
-  assert:
+- name: ansible.builtin.assert create
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
@@ -75,8 +75,8 @@
       resource_group: "{{ resource_group }}"
       name: "{{ storage_name }}"
   register: output
-- name: assert update idempotence
-  assert:
+- name: ansible.builtin.assert update idempotence
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -96,8 +96,8 @@
       resource_group: "{{ resource_group }}"
       name: "{{ storage_name }}"
   register: output
-- name: assert update
-  assert:
+- name: ansible.builtin.assert update
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -107,8 +107,8 @@
     state: absent
   register: output
   check_mode: true
-- name: assert delete
-  assert:
+- name: ansible.builtin.assert delete
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -117,8 +117,8 @@
     name: "{{ profile_name }}"
     state: absent
   register: output
-- name: assert delete
-  assert:
+- name: ansible.builtin.assert delete
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -127,7 +127,7 @@
     name: "{{ profile_name }}"
     state: absent
   register: output
-- name: assert delete
-  assert:
+- name: ansible.builtin.assert delete
+  ansible.builtin.assert:
     that:
       - not output.changed

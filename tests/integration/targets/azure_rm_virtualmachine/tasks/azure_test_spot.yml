@@ -21,7 +21,7 @@
   register: vm_output
 
 - name: Ensure VM was created using Spot Instance default values
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_vm.properties.priority == 'Spot'
       - azure_vm.properties.evictionPolicy == 'Deallocate'
@@ -56,7 +56,7 @@
   register: vm_output
 
 - name: Ensure VM was created using custom spot instance values
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_vm.properties.priority == 'Spot'
       - azure_vm.properties.evictionPolicy == 'Delete'

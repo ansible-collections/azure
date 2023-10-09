@@ -1,4 +1,4 @@
-- set_fact:
+- ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
 - name: Find available k8s version
@@ -33,7 +33,7 @@
   register: output
 
 - name: Assert the AKS instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.provisioning_state == 'Succeeded'
@@ -45,7 +45,7 @@
   register: fact
 
 - name: Assert fact returns the created one
-  assert:
+  ansible.builtin.assert:
     that:
       - "fact.aks | length == 1"
       - fact.aks[0].id == output.id
@@ -78,7 +78,7 @@
   register: output
 
 - name: Assert idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -108,7 +108,7 @@
   register: output
 
 - name: Assert idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -120,7 +120,7 @@
   register: output
 
 - name: Assert the AKS instance is well deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -131,6 +131,6 @@
   register: fact
 
 - name: Assert fact returns empty
-  assert:
+  ansible.builtin.assert:
     that:
       - "fact.aks | length == 0"

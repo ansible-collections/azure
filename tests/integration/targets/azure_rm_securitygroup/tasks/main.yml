@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     secgroupname: "sg{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     asg_name1: "asg1{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     asg_name2: "asg2{{ resource_group | hash('md5') | truncate(7, True, '') }}"
@@ -31,8 +31,8 @@
         priority: 101
         direction: Inbound
   register: output
-- name: assert resource created
-  assert:
+- name: ansible.builtin.assert resource created
+  ansible.builtin.assert:
     that: "{{ output.state.rules | length }} == 2"
 
 - name: Gather facts by tags
@@ -43,8 +43,8 @@
       - foo:bar
       - testkey
   register: output
-- name: assert resource retrieved
-  assert:
+- name: ansible.builtin.assert resource retrieved
+  ansible.builtin.assert:
     that:
       - output.securitygroups | length == 1
       - output.securitygroups[0].default_rules | length > 0
@@ -77,8 +77,8 @@
           - 443
         priority: 103
   register: output
-- name: assert resource updated
-  assert:
+- name: ansible.builtin.assert resource updated
+  ansible.builtin.assert:
     that:
       - "{{ output.state.rules | length }} == 4"
       - output.state.rules[0].source_address_prefix == '174.108.158.0/24'
@@ -88,8 +88,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ secgroupname }}"
   register: output
-- name: assert rules updated
-  assert:
+- name: ansible.builtin.assert rules updated
+  ansible.builtin.assert:
     that:
       - output.securitygroups[0].rules | length == 4
 
@@ -117,8 +117,8 @@
           - 443
         priority: 103
   register: output
-- name: assert resource not updated
-  assert:
+- name: ansible.builtin.assert resource not updated
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Update tags
@@ -131,8 +131,8 @@
       baz: bar
     append_tags: false
   register: output
-- name: assert resource updated
-  assert:
+- name: ansible.builtin.assert resource updated
+  ansible.builtin.assert:
     that:
       - output.state.tags | length == 3
       - output.state.tags.delete == 'never'
@@ -146,8 +146,8 @@
       testing: testing
       delete: on-exit
   register: output
-- name: assert resource updated
-  assert:
+- name: ansible.builtin.assert resource updated
+  ansible.builtin.assert:
     that:
       - output.state.tags | length == 2
       - output.state.tags.delete == 'on-exit'
@@ -157,8 +157,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ secgroupname }}"
   register: output
-- name: assert resource retrieved
-  assert:
+- name: ansible.builtin.assert resource retrieved
+  ansible.builtin.assert:
     that:
       - output.securitygroups | length == 1
 
@@ -168,8 +168,8 @@
     tags:
       - testing:testing
   register: output_groups
-- name: assert resource retrieved
-  assert:
+- name: ansible.builtin.assert resource retrieved
+  ansible.builtin.assert:
     that:
       - output_groups.securitygroups | length > 0
 
@@ -194,8 +194,8 @@
         priority: 101
         direction: Inbound
   register: output
-- name: assert resource created
-  assert:
+- name: ansible.builtin.assert resource created
+  ansible.builtin.assert:
     that:
       - "{{ output.state.rules | length }} == 1"
       - "{{ output.state.rules[0].source_address_prefixes | length }} == 3"
@@ -222,8 +222,8 @@
         priority: 101
         direction: Inbound
   register: output
-- name: assert resource not updated
-  assert:
+- name: ansible.builtin.assert resource not updated
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Add a single one group
@@ -244,8 +244,8 @@
         priority: 102
         direction: Inbound
   register: output
-- name: assert resource updated
-  assert:
+- name: ansible.builtin.assert resource updated
+  ansible.builtin.assert:
     that:
       - output.changed
       - "{{ output.state.rules | length }} == 2"
@@ -285,8 +285,8 @@
         priority: 100
         direction: Inbound
   register: output
-- name: assert resource not updated
-  assert:
+- name: ansible.builtin.assert resource not updated
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -324,8 +324,8 @@
         priority: 101
         direction: Inbound
   register: output
-- name: assert resource retrieved
-  assert:
+- name: ansible.builtin.assert resource retrieved
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -347,8 +347,8 @@
         priority: 101
         direction: Inbound
   register: output
-- name: assert resource not updated
-  assert:
+- name: ansible.builtin.assert resource not updated
+  ansible.builtin.assert:
     that:
       - not output.changed
 

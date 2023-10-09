@@ -1,4 +1,4 @@
-- set_fact:
+- ansible.builtin.set_fact:
     tenant_id: "{{ azure_tenant }}"
     resource_prefix: "{{ 999999999999999999994 | random | to_uuid }}"
   run_once: yes
@@ -29,7 +29,7 @@
   register: group_create_unchanged_ShouldPass
 
 - name: Assert Otherwise Changed Returns are Equal
-  assert:
+  ansible.builtin.assert:
     that:
       - group_create_changed_ShouldPass.changed == True
       - group_create_unchanged_ShouldPass.changed == False
@@ -46,7 +46,7 @@
   register: get_created_object_id_ShouldPass
 
 - name: Assert Returns are Equal to Created Group
-  assert:
+  ansible.builtin.assert:
     that:
       - get_created_object_id_ShouldPass.ad_groups[0].object_id == group_create_unchanged_ShouldPass.object_id
 
@@ -78,7 +78,7 @@
   register: add_members_to_group_ShouldPass
 
 - name: Validate members are in the group
-  assert:
+  ansible.builtin.assert:
     that:
       - add_members_to_group_ShouldPass.group_members[0].object_id == create_group_member_1_ShouldPass.object_id or add_members_to_group_ShouldPass.group_members[1].object_id == create_group_member_1_ShouldPass.object_id
       - add_members_to_group_ShouldPass.group_members[1].object_id == create_group_member_2_ShouldPass.object_id or add_members_to_group_ShouldPass.group_members[0].object_id == create_group_member_2_ShouldPass.object_id
@@ -93,7 +93,7 @@
   register: add_already_present_member_to_group_ShouldPass
 
 - name: Validate nothing changed from already present member
-  assert:
+  ansible.builtin.assert:
     that:
       - add_already_present_member_to_group_ShouldPass.changed == false
 
@@ -107,7 +107,7 @@
   register: remove_member_from_group_ShouldPass
 
 - name: Validate Group Member 1 is in the group and Group Member 2 is not
-  assert:
+  ansible.builtin.assert:
     that:
       - remove_member_from_group_ShouldPass.group_members[0].object_id == create_group_member_1_ShouldPass.object_id
       - remove_member_from_group_ShouldPass.group_members | length == 1
@@ -123,7 +123,7 @@
   register: remove_already_absent_member_from_group_ShouldPass
 
 - name: Validate nothing changed from already absent member
-  assert:
+  ansible.builtin.assert:
     that:
       - remove_already_absent_member_from_group_ShouldPass.changed == false
 
@@ -183,13 +183,13 @@
   register: displayName_attribute_different_ShouldPass
 
 - name: Assert All Returns Are Equal
-  assert:
+  ansible.builtin.assert:
     that:
       - object_id_ShouldPass == displayName_attribute_ShouldPass
       - object_id_ShouldPass == mailNickname_filter_ShouldPass
 
 - name: Assert Returns Are Not Equal
-  assert:
+  ansible.builtin.assert:
     that:
       - object_id_ShouldPass != displayName_attribute_different_ShouldPass
 

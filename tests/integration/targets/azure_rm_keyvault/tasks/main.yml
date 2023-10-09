@@ -1,11 +1,11 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     tenant_id: "{{ azure_tenant }}"
   run_once: yes
 
 - name: lookup service principal object id
-  set_fact:
+  ansible.builtin.set_fact:
     object_id: "{{ lookup('azure_service_principal_attribute',
                    azure_client_id=azure_client_id,
                    azure_secret=azure_secret,
@@ -46,7 +46,7 @@
   check_mode: yes
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -74,7 +74,7 @@
   register: output
 
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -101,7 +101,7 @@
           - restore
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -140,7 +140,7 @@
       aaa: bbb
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == true
 
@@ -151,7 +151,7 @@
   register: facts
 
 - name: Assert the facts are properly set
-  assert:
+  ansible.builtin.assert:
     that:
       - facts['keyvaults'] | length == 1
       - facts['keyvaults'][0]['vault_uri'] != None
@@ -174,7 +174,7 @@
           testing: test
           delete: on-exit
       register: output
-    - assert:
+    - ansible.builtin.assert:
         that: output.changed
   rescue:
     - azure_rm_keyvaultkey:
@@ -189,7 +189,7 @@
   register: facts
 
 - name: Assert key facts
-  assert:
+  ansible.builtin.assert:
     that:
       - facts['keys'] | length == 1
       - facts['keys'][0]['kid']
@@ -204,7 +204,7 @@
     key_name: testkey
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed
 
 #
@@ -220,7 +220,7 @@
           testing: test
           delete: on-exit
       register: output
-    - assert:
+    - ansible.builtin.assert:
         that: output.changed
   rescue:
     - azure_rm_keyvaultsecret:
@@ -235,7 +235,7 @@
     secret_name: testsecret
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed
 
 #
@@ -250,7 +250,7 @@
   check_mode: yes
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -261,7 +261,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -272,6 +272,6 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false

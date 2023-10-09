@@ -52,7 +52,7 @@
       - key
   register: _vms
 
-- set_fact:
+- ansible.builtin.set_fact:
     attach_disk_config: "{{ lookup('template', 'disk_config.j2') | from_yaml }}"
   vars:
     virtual_machines: "{{ _vms.vms }}"
@@ -84,7 +84,7 @@
   with_items: "{{ attach_disk_config | map(attribute='disks') | flatten | list }}"
 
 - name: Validate that disks are attached to VMs
-  assert:
+  ansible.builtin.assert:
     that:
       - result.ansible_info.azure_managed_disk[0].managed_by
   with_items: "{{ disks_info.results }}"
@@ -119,7 +119,7 @@
   with_items: "{{ attach_disk_config | map(attribute='disks') | flatten | list }}"
 
 - name: Validate that disks are attached to VMs
-  assert:
+  ansible.builtin.assert:
     that:
       - not result.ansible_info.azure_managed_disk[0].managed_by
   with_items: "{{ disks_info.results }}"
@@ -152,7 +152,7 @@
   with_items: "{{ attach_disk_config | map(attribute='disks') | flatten | list }}"
 
 - name: Validate that disks are attached to VMs
-  assert:
+  ansible.builtin.assert:
     that:
       - result.ansible_info.azure_managed_disk == []
   with_items: "{{ disks_info.results }}"

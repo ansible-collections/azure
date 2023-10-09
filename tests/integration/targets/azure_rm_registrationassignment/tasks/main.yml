@@ -1,5 +1,5 @@
 - name: set facts
-  set_fact:
+  ansible.builtin.set_fact:
     subscription_id: "{{ azure_subscription_id }}"
     managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
     principal_id: "{{ azure_principal_id }}"
@@ -25,7 +25,7 @@
   register: output
   check_mode: yes
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed 
 
@@ -36,7 +36,7 @@
       registration_definition_id: "{{ output1.state.id }}"
   register: output2
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output2.changed
 
@@ -48,7 +48,7 @@
       registration_definition_id: "{{ output1.state.id }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -58,7 +58,7 @@
     registration_assignment_id:  "{{ output2.state.name }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.registration_assignments[0].properties.registration_definition_id == "{{ output1.state.id }}"
 
@@ -67,7 +67,7 @@
     scope: subscriptions/{{ subscription_id }}
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.registration_assignments | length >= 1
 

@@ -19,6 +19,6 @@
   ignore_errors: yes  
 
 - name: Assert task failed
-  assert: 
+  ansible.builtin.assert: 
     that: 
       - "invalid_name['failed'] == True"

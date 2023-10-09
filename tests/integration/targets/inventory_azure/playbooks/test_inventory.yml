@@ -13,6 +13,6 @@
   - meta: refresh_inventory
 
   - name: Test Inventory
-    assert:
+    ansible.builtin.assert:
       that:
         - vm_name in hostvars

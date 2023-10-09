@@ -1,12 +1,12 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     cert1_file: "cert1.txt"
     cert2_file: "cert2.txt"
     cert3b64_file: "cert3b64.txt"
   run_once: yes
 - name: Set json query to only retrieve gateways from this test
-  set_fact:
+  ansible.builtin.set_fact:
     query: "[?ends_with(name, `{{ rpfx }}`)]"
   run_once: yes
 
@@ -14,7 +14,7 @@
   azure_rm_appgateway_info:
   register: appgw_output
 - name: Assert there are no gateways
-  assert:
+  ansible.builtin.assert:
     that:
       - appgw_output.gateways | community.general.json_query(query) | length == 0
 
@@ -115,7 +115,7 @@
   register: output
   check_mode: yes
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -196,7 +196,7 @@
        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -206,7 +206,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert properties
-  assert:
+  ansible.builtin.assert:
     that:
       - output.gateways | length == 1
       - output.gateways[0].name == 'appgateway{{ rpfx }}'
@@ -222,7 +222,7 @@
   check_mode: true
   register: output
 - name: Assert the resource instance is stopped
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -233,7 +233,7 @@
     gateway_state: stopped
   register: output
 - name: Assert the resource instance is stopped
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.operational_state == 'Stopped'
@@ -245,7 +245,7 @@
     gateway_state: stopped
   register: output
 - name: Assert the resource instance did not change
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.operational_state == 'Stopped'
@@ -258,7 +258,7 @@
   check_mode: true
   register: output
 - name: Assert the resource instance is started
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -269,7 +269,7 @@
     gateway_state: started
   register: output
 - name: Assert the resource instance is started
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.operational_state == 'Running'
@@ -281,7 +281,7 @@
     gateway_state: started
   register: output
 - name: Assert the resource instance did not change
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.operational_state == 'Running'
@@ -363,7 +363,7 @@
        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -444,7 +444,7 @@
        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -529,7 +529,7 @@
        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -539,7 +539,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert SSL config updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.gateways[0].ssl_policy.policy_type == 'custom'
 
@@ -624,7 +624,7 @@
        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -707,7 +707,7 @@
        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -715,7 +715,7 @@
   azure_rm_appgateway_info:
   register: appgw_output
 - name: Assert there are the correct number of gateways
-  assert:
+  ansible.builtin.assert:
     that:
       - appgw_output.gateways | community.general.json_query(query) | length == 2
 
@@ -725,7 +725,7 @@
     resource_group: "{{ resource_group }}"
   register: appgw_output
 - name: Assert there are the correct number of gateways
-  assert:
+  ansible.builtin.assert:
     that:
       - appgw_output.gateways | community.general.json_query(query) | length == 1
       - (appgw_output.gateways | community.general.json_query(query))[0].name == 'appgateway-subnet-lookup{{ rpfx }}'
@@ -811,7 +811,7 @@
        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -894,7 +894,7 @@
        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -903,7 +903,7 @@
     resource_group: "{{ resource_group_secondary }}"
   register: appgw_output
 - name: Assert there are the correct number of gateways and they are the right ones
-  assert:
+  ansible.builtin.assert:
     that:
       - appgw_output.gateways | community.general.json_query(query) | length == 1
       - (appgw_output.gateways | community.general.json_query(query))[0].name == 'appgateway-probe-{{ rpfx }}'
@@ -914,7 +914,7 @@
     resource_group: "{{ resource_group_secondary }}"
   register: appgw_output
 - name: Assert there are no results
-  assert:
+  ansible.builtin.assert:
     that:
       - appgw_output.gateways | community.general.json_query(query) | length == 0
 
@@ -1005,7 +1005,7 @@
        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -1096,7 +1096,7 @@
        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -1223,7 +1223,7 @@
           - "path_mappings"
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -1350,7 +1350,7 @@
           - "path_mappings"
   register: output
 - name: Assert the resource instance is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -1512,7 +1512,7 @@
           - "path_mappings"
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -1667,7 +1667,7 @@
           - "path_mappings"
   register: output
 - name: Assert the resource instance is not updated
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -1825,7 +1825,7 @@
           - "path_mappings"
   register: output
 - name: Assert the resource instance is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -1992,7 +1992,7 @@
   register: output
 
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2160,7 +2160,7 @@
   register: output
 
 - name: Assert the resource instance is not updated
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -2331,7 +2331,7 @@
   register: output
 
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2495,7 +2495,7 @@
   register: output
 
 - name: Assert the resource instance is not updated
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -2507,7 +2507,7 @@
   check_mode: yes
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2518,7 +2518,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2529,7 +2529,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -2540,7 +2540,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2551,7 +2551,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2562,7 +2562,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2573,7 +2573,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2584,7 +2584,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2595,7 +2595,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2606,7 +2606,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2617,7 +2617,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 

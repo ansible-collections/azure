@@ -1,4 +1,4 @@
-- set_fact:
+- ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
 - name: Find available k8s version
@@ -39,7 +39,7 @@
   register: output
 
 - name: Assert the cluster with one agent pool
-  assert:
+  ansible.builtin.assert:
     that:
       - "output.aks_agent_pools | length == 1"
 
@@ -50,7 +50,7 @@
   register: agentpool_version
 
 - name: Assert the orchestrator version is not None
-  assert:
+  ansible.builtin.assert:
     that:
       - "agentpool_version.azure_orchestrator_version | length >= 1"
 
@@ -75,7 +75,7 @@
   register: output
 
 - name: Assert the node agent pool created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -100,7 +100,7 @@
   register: output
 
 - name: Assert the node agent pool not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -111,7 +111,7 @@
   register: output
 
 - name: Assert node agent pool
-  assert:
+  ansible.builtin.assert:
     that:
       - "output.aks_agent_pools | length == 2"
 
@@ -136,7 +136,7 @@
   register: output
 
 - name: Assert the node agent pool udpated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -148,7 +148,7 @@
   register: output
 
 - name: Assert node agent configuration
-  assert:
+  ansible.builtin.assert:
     that:
       - output.aks_agent_pools[0].availability_zones == [1, 2]
       - output.aks_agent_pools[0].min_count == 2
@@ -166,6 +166,6 @@
   register: output
 
 - name: Assert the node agent pool has deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed

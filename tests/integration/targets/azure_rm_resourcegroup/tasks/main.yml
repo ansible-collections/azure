@@ -4,7 +4,7 @@
       list_resources: yes
   register: rg
 
-- assert:
+- ansible.builtin.assert:
     that:
         - rg.resourcegroups | length == 1
         - rg.resourcegroups[0].resources | length >= 0
@@ -13,7 +13,7 @@
   azure_rm_resourcegroup_info:
   register: rg
 
-- assert:
+- ansible.builtin.assert:
     that:
         - rg.resourcegroups | length >= 1
 
@@ -23,7 +23,7 @@
       list_resources: yes
   register: rg
 
-- assert:
+- ansible.builtin.assert:
     that:
         - rg.resourcegroups | length == 1
         - rg.resourcegroups[0].resources | length >= 0
@@ -34,7 +34,7 @@
       location: "{{ rg.resourcegroups[0].location }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
         - not output.changed
 
@@ -45,6 +45,6 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
         - output.changed

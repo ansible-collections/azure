@@ -1,5 +1,5 @@
 - name: Fix resource prefix
-  set_fact:
+  ansible.builtin.set_fact:
     redis_name: "redis-{{ resource_group | hash('md5') | truncate(7, True, '') }}-{{ 1000 | random }}"
     vnet_name: "vnet-{{ resource_group | hash('md5') | truncate(7, True, '') }}-{{ 1000 | random }}"
     subnet_name: "subnet-{{ resource_group | hash('md5') | truncate(7, True, '') }}-{{ 1000 | random }}"
@@ -18,7 +18,7 @@
   register: output
 
 - name: Assert creating redis cache check mode
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -33,7 +33,7 @@
   register: output
 
 - name: Assert creating redis cache
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
@@ -45,7 +45,7 @@
   register: facts
 
 - name: Assert facts
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.rediscaches | length == 1
       - facts.rediscaches[0].id != None
@@ -64,8 +64,8 @@
     wait_for_provisioning: False
   register: output
 
-- name: assert output not changed
-  assert:
+- name: ansible.builtin.assert output not changed
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -99,8 +99,8 @@
       wait_for_provisioning: True
     register: output
 
-  - name: assert output changed
-    assert:
+  - name: ansible.builtin.assert output changed
+    ansible.builtin.assert:
       that:
         - output.changed
 
@@ -117,8 +117,8 @@
         testing: foo
     register: output
 
-  - name: assert output changed
-    assert:
+  - name: ansible.builtin.assert output changed
+    ansible.builtin.assert:
       that:
         - output.changed
 
@@ -134,7 +134,7 @@
       wait_for_provisioning: True
     register: output
 
-  - assert:
+  - ansible.builtin.assert:
       that:
         - output.changed
 
@@ -146,8 +146,8 @@
         reboot_type: all
     register: output
 
-  - name: assert redis rebooted
-    assert:
+  - name: ansible.builtin.assert redis rebooted
+    ansible.builtin.assert:
       that:
         - output.changed
 
@@ -159,8 +159,8 @@
     check_mode: yes
     register: output
 
-  - name: assert deleting redis cache check mode
-    assert:
+  - name: ansible.builtin.assert deleting redis cache check mode
+    ansible.builtin.assert:
       that: output.changed
 
   - name: Delete the redis cache
@@ -170,7 +170,7 @@
       state: absent
     register: output
 
-  - assert:
+  - ansible.builtin.assert:
       that:
         - output.changed
   tags: [long_run, never]
@@ -189,7 +189,7 @@
     wait_for_provisioning: false
   register: output
 - name: Assert creating redis cache
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -199,7 +199,7 @@
     name: "{{ redis_name }}-enhanced"
   register: facts
 - name: Assert enhanced cache facts
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.rediscaches | length == 1
       - facts.rediscaches[0].id != None
@@ -240,8 +240,8 @@
       public_network_access: "Disabled"
       wait_for_provisioning: true
     register: output
-  - name: assert output not changed
-    assert:
+  - name: ansible.builtin.assert output not changed
+    ansible.builtin.assert:
       that:
         - not output.changed
 
@@ -257,8 +257,8 @@
       public_network_access: "Disabled"
       wait_for_provisioning: true
     register: output
-  - name: assert output changed
-    assert:
+  - name: ansible.builtin.assert output changed
+    ansible.builtin.assert:
       that:
         - output.changed
 
@@ -274,8 +274,8 @@
       public_network_access: "Enabled"
       wait_for_provisioning: true
     register: output
-  - name: assert output changed
-    assert:
+  - name: ansible.builtin.assert output changed
+    ansible.builtin.assert:
       that:
         - output.changed
 
@@ -285,7 +285,7 @@
       name: "{{ redis_name }}-enhanced"
     register: facts
   - name: Assert enhanced cache facts
-    assert:
+    ansible.builtin.assert:
       that:
         - facts.rediscaches[0].minimum_tls_version == '1.1'
         - facts.rediscaches[0].public_network_access == 'Enabled'
@@ -310,7 +310,7 @@
       name: "{{ redis_name }}-enhanced"
       state: absent
     register: output
-  - assert:
+  - ansible.builtin.assert:
       that:
         - output.changed
   tags: [long_run, never]
@@ -343,7 +343,7 @@
   register: output
 
 - name: Assert creating redis cache
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
@@ -356,7 +356,7 @@
   register: facts
 
 - name: Assert facts
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.rediscaches | length == 1
       - facts.rediscaches[0].subnet != None
@@ -373,7 +373,7 @@
   register: output
 
 - name: Assert check mode creation
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -405,7 +405,7 @@
     register: output
 
   - name: Assert creation
-    assert:
+    ansible.builtin.assert:
       that:
         - output.changed
         - output.id
@@ -420,7 +420,7 @@
     register: output
 
   - name: Assert idempotence
-    assert:
+    ansible.builtin.assert:
       that:
         - output.changed == False
 
@@ -433,7 +433,7 @@
     register: output
 
   - name: Assert updating
-    assert:
+    ansible.builtin.assert:
       that:
         - output.changed
 
@@ -453,7 +453,7 @@
     register: output
 
   - name: Assert output
-    assert:
+    ansible.builtin.assert:
       that:
         - output.changed
 
@@ -465,7 +465,7 @@
     register: key_facts2
 
   - name: Assert key change
-    assert:
+    ansible.builtin.assert:
       that:
         - key_facts.rediscaches[0].access_keys.primary != key_facts2.rediscaches[0].access_keys.primary
         - key_facts.rediscaches[0].access_keys.secondary == key_facts2.rediscaches[0].access_keys.secondary
@@ -479,7 +479,7 @@
     register: output
 
   - name: Assert deletion
-    assert:
+    ansible.builtin.assert:
       that:
         - output.changed
 

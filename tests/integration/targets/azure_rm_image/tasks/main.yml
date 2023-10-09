@@ -1,5 +1,5 @@
 - name: Create storage account name
-  set_fact:
+  ansible.builtin.set_fact:
       vm_name: "vm{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}x"
       public_ip_name: "pip{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
       security_group_name: "sg{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
@@ -78,7 +78,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output.changed
 
 - name: Create an image from VM
@@ -92,7 +92,7 @@
       os_type: Linux
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - output.changed
           - output.id
@@ -106,7 +106,7 @@
       os_type: Linux
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - not output.changed
           - output.id
@@ -117,7 +117,7 @@
     name: testimage001
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - output.images != []
           - output.images[0].hyper_v_generation == 'V1'
@@ -130,7 +130,7 @@
   register: output
   check_mode: yes
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -141,7 +141,7 @@
       state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -152,7 +152,7 @@
       state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 

@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(10, True, '') }}"
   run_once: yes
 
@@ -27,7 +27,7 @@
   register: output
 
 - name: Assert the automation runbook is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -41,7 +41,7 @@
   register: output
 
 - name: Assert the automation runbook is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -60,7 +60,7 @@
   register: output
 
 - name: Assert the automation runbook is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -79,7 +79,7 @@
   register: output
 
 - name: Assert the automation runbook is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -92,7 +92,7 @@
   register: output
 
 - name: Assert the automation runbook is well published
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -104,7 +104,7 @@
   register: output
 
 - name: Assert the automation runbook is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.automation_runbook[0].description == 'update'
       - output.automation_runbook[0].log_activity_trace == 3
@@ -120,7 +120,7 @@
   register: output
 
 - name: Assert the automation runbook is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.automation_runbook | length == 2
 

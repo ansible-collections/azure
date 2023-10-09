@@ -1,4 +1,4 @@
-- set_fact:
+- ansible.builtin.set_fact:
     app_id: "e0a62513-1d81-480e-a6dc-5c99cdd58d9a"
     tenant_id: "72f988bf-86f1-41af-91ab-2d7cd011db47"
     app_object_id: "b52e8275-a1ee-4c4a-86ff-15992e0920ed"
@@ -11,7 +11,7 @@
     state: present
   register: ad_fact
 
-- assert:
+- ansible.builtin.assert:
     that:
          - ad_fact.changed
 
@@ -23,7 +23,7 @@
     state: present
   register: ad_fact02
 
-- assert:
+- ansible.builtin.assert:
     that:
          - ad_fact02.changed
 
@@ -49,7 +49,7 @@
     state: present
   register: ad_fact03
 
-- assert:
+- ansible.builtin.assert:
     that:
          - ad_fact03.changed
 
@@ -72,7 +72,7 @@
     app_object_id: "{{ app_object_id }}"
   register: ad_info
 
-- assert:
+- ansible.builtin.assert:
     that:
         - ad_info.passwords[0].start_date == ad_fact.start_date
         - ad_info.passwords[0].end_date == ad_fact.end_date
@@ -86,7 +86,7 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
         - output.changed
 
@@ -98,6 +98,6 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
         - output.changed

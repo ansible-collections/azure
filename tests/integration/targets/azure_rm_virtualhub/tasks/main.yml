@@ -1,4 +1,4 @@
-- set_fact:
+- ansible.builtin.set_fact:
     name: "{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create a VirtualHub (check mode)
@@ -16,7 +16,7 @@
   register: output
 
 - name: Assert the virtual hub is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.provisioning_state == 'Succeeded'
@@ -29,7 +29,7 @@
   register: output
 
 - name: Assert idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -40,7 +40,7 @@
   register: output
 
 - name: Assert fact returns
-  assert:
+  ansible.builtin.assert:
     that:
       - output.virtual_hubs[0].provisioning_state == "Succeeded" 
       - output.virtual_hubs[0].sku == "Standard"
@@ -70,7 +70,7 @@
   register: output
 
 - name: Assert the virtual hub is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.provisioning_state == 'Succeeded'
@@ -89,6 +89,6 @@
   register: output
 
 - name: Assert the AKS instance is upgraded
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed

@@ -1,5 +1,5 @@
 - name: Set devtest labe value
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
 
 - name: Create a DevTest Lab (check mode)
@@ -23,7 +23,7 @@
   register: output
 
 - name: Check the devtest lab changed
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Create a DevTest Lab (Idempotent test)
@@ -37,7 +37,7 @@
   register: output
 
 - name: Check the devtest lab not changed
-  assert:
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Get devtest lab facts
@@ -47,7 +47,7 @@
   register: output
  
 - name: Assert the devtest lab create success
-  assert:
+  ansible.builtin.assert:
     that:
       - output.labs | length == 1
       - output.labs[0].provisioning_state == "Succeeded"
@@ -63,7 +63,7 @@
   register: output
 
 - name: Assert the devtest lab virtual network create successfully
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -75,7 +75,7 @@
   register: output
 
 - name: Assert the devtest lab virtual network facts
-  assert:
+  ansible.builtin.assert:
     that:
       - output.virtualnetworks | length == 1
       - output.virtualnetworks[0].description == "My Lab Virtual network"
@@ -105,7 +105,7 @@
   register: output
 
 - name: Assert the devtest lab virtual machine create successfully
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -117,7 +117,7 @@
   register: output
 
 - name: Assert the devtest lab virtualmachine facts
-  assert:
+  ansible.builtin.assert:
     that:
       - output.virtualmachines | length == 1
       - output.virtualmachines[0].provisioning_state == "Succeeded"
@@ -133,7 +133,7 @@
   register: output
 
 - name: Assert the devtest lab image create successufully
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -145,7 +145,7 @@
   register: output
 
 - name: Assert the devtest lab image facts
-  assert:
+  ansible.builtin.assert:
     that:
       - output.custom_images | length == 1
       - output.custom_images[0].lab_name
@@ -159,7 +159,7 @@
   register: output
   
 - name: Assert the devtest lab armtemplate is returned successfully
-  assert:
+  ansible.builtin.assert:
     that:
       - output.armtemplates | length >= 1
 
@@ -174,7 +174,7 @@
   register: output
 
 - name: Assert the devtest lab policy creatre successfully
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -186,7 +186,7 @@
   register: output
 
 - name: Assert the devtest lab policy facts
-  assert:
+  ansible.builtin.assert:
     that:
       - output.policies | length >= 1
 
@@ -200,7 +200,7 @@
   register: output
 
 - name: Assert the devtest lab schedule create sussessfully
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -212,7 +212,7 @@
   register: output
 
 - name: Assert the devtest lab schedule facts
-  assert:
+  ansible.builtin.assert:
     that:
       - output.schedules | length >= 1
       - output.schedules[0].name == "lab_vms_shutdown"

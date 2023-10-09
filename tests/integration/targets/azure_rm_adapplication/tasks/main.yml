@@ -1,4 +1,4 @@
-- set_fact:
+- ansible.builtin.set_fact:
     tenant_id: "{{ azure_tenant }}"
     display_name: "app{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
   run_once: yes
@@ -9,7 +9,7 @@
     display_name: "{{ display_name }}"
   register: create_output
 
-- assert:
+- ansible.builtin.assert:
     that: create_output.changed
 
 - name: Create application again (idempotent test)
@@ -18,7 +18,7 @@
     app_id: "{{ create_output.app_id }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: not output.changed
 
 - name: Create application with more parameter
@@ -40,7 +40,7 @@
         value: Password@0329
   register: second_output
 
-- assert:
+- ansible.builtin.assert:
     that: second_output.changed
 
 - name: get ad app info ---- by object ID
@@ -55,7 +55,7 @@
     tenant: "{{ tenant_id }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.applications[0].app_display_name == "{{ display_name }}"
       - output.applications | length == 1
@@ -67,7 +67,7 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed
 
 - name: delete ad app  by app id
@@ -77,7 +77,7 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed
 
 - name: get ad app info ---- by app id
@@ -86,6 +86,6 @@
     tenant: "{{ tenant_id }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.applications | length == 0

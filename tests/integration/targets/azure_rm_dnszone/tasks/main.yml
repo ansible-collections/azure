@@ -1,5 +1,5 @@
 - name: Create random domain name
-  set_fact:
+  ansible.builtin.set_fact:
     domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create a DNS zone (check mode)
@@ -9,7 +9,7 @@
   register: results
   check_mode: yes
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 - name: Create a DNS zone
@@ -18,7 +18,7 @@
     name: "{{ domain_name }}.com"
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 - name: Update DNS zone with tags
@@ -29,7 +29,7 @@
       test: modified
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: 
       - results.changed
       - results.state.tags.test == 'modified'
@@ -41,7 +41,7 @@
   register: zones
 
 - name: Assert that facts module returned result
-  assert:
+  ansible.builtin.assert:
     that: 
       - zones.dnszones[0].tags.test == 'modified'
       - zones.dnszones[0].type == 'public'
@@ -52,7 +52,7 @@
     resource_group: "{{ resource_group }}"
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not results.changed
 
@@ -73,7 +73,7 @@
   register: results
 
 - name: Assert that A record set was created
-  assert:
+  ansible.builtin.assert:
     that:
         - results.changed
         - 'results.state.a_records | length == 3'
@@ -91,7 +91,7 @@
   register: results
 
 - name: Assert that A record set was not changed
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Update "A" record set with additional record
@@ -106,7 +106,7 @@
   register: results
 
 - name: Assert that new record was appended
-  assert:
+  ansible.builtin.assert:
     that: 
       - results.changed
       - 'results.state.a_records | length == 4'
@@ -123,7 +123,7 @@
   register: results
 
 - name: Assert that A record set was not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not results.changed
 
@@ -140,7 +140,7 @@
   register: results
 
 - name: Assert that record was deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed
       - 'results.state.a_records | length == 3'      
@@ -157,7 +157,7 @@
   register: results
 
 - name: Assert that check_mode returns new state
-  assert:
+  ansible.builtin.assert:
     that: 
       - results.changed
 
@@ -178,7 +178,7 @@
   register: results
 
 - name: Assert that SRV record set was created
-  assert:
+  ansible.builtin.assert:
     that: 
       - results.changed
 
@@ -197,7 +197,7 @@
   register: results
 
 - name: Assert that TXT record set was created
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed
 
@@ -214,7 +214,7 @@
   register: results
 
 - name: Assert that facts module returned result for single Record Set
-  assert:
+  ansible.builtin.assert:
     that: 
       - not results.changed
 #     - azure_dnsrecordset[0].name == 'www'
@@ -229,7 +229,7 @@
   register: facts
 
 - name: Assert that facts module returned result for all Record Sets
-  assert:
+  ansible.builtin.assert:
     that: 
       - not facts.changed
 #     - facts.ansible_facts.azure_dnsrecordset[0].name == '@'
@@ -252,7 +252,7 @@
   register: results
 
 - name: Assert that record set deleted
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Retrieve DNS Record Set Facts for all Record Sets
@@ -262,7 +262,7 @@
   register: facts
 
 - name: Assert all record set deleted
-  assert:
+  ansible.builtin.assert:
     that:
        - item.relative_name == '@'
   with_items: "{{ facts.dnsrecordsets }}"
@@ -277,7 +277,7 @@
   register: results
 
 - name:
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 #
@@ -296,5 +296,5 @@
     state: absent
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: not results.changed

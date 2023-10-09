@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     name: "workspace{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Create workspace (check mode)
@@ -10,7 +10,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - output.changed
 
@@ -20,7 +20,7 @@
       resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
+- ansible.builtin.assert:
       that:
           - facts.workspaces | length == 0
 
@@ -31,7 +31,7 @@
       retention_in_days: 40
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
         - output.retention_in_days == 40
         - output.changed
@@ -44,7 +44,7 @@
       retention_in_days: 40
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
         - not output.changed
 
@@ -54,12 +54,12 @@
       resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
+- ansible.builtin.assert:
       that:
           - facts.workspaces | length == 1
           - facts.workspaces[0].id == output.id
 
-- set_fact:
+- ansible.builtin.set_fact:
         pack: "{{ pack | default({}) | combine({output.intelligence_packs[0].name: not output.intelligence_packs[0].enabled}) }}"
 
 - name: Update intelligence pack
@@ -69,7 +69,7 @@
       intelligence_packs: "{{ pack }}"
   register: intelligence
 
-- assert:
+- ansible.builtin.assert:
       that:
           - intelligence.intelligence_packs[0].enabled != output.intelligence_packs[0].enabled
 
@@ -81,7 +81,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - output.changed
 
@@ -91,7 +91,7 @@
       resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
+- ansible.builtin.assert:
       that:
           - facts.workspaces | length == 1
 
@@ -102,7 +102,7 @@
       state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - output.changed
 
@@ -112,7 +112,7 @@
       resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
+- ansible.builtin.assert:
       that:
           - facts.workspaces | length == 0
 
@@ -123,6 +123,6 @@
       state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - not output.changed

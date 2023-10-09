@@ -1,5 +1,5 @@
 - name: Set Private Link Service Names
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
     azure_subscription_id: f64d4ee8-be94-457d-ba26-3fa6b6506cef
 
@@ -91,7 +91,7 @@
   check_mode: True
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed
 
 - name: Create private link service
@@ -122,7 +122,7 @@
       key1: value1
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed
 
 - name: Create private link service (Idempotent test)
@@ -153,7 +153,7 @@
       key1: value1
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: not output.changed
 
 - name: Update private link service
@@ -185,7 +185,7 @@
       key3: value3
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed
 
 - name: Get private link service info by name
@@ -194,7 +194,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.link_service[0].tags | length == 3
       - output.link_service[0].fqdns | length == 4
@@ -217,7 +217,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.endpoint_connection[0].private_link_service_connection_state.actions_required == "None"
       - output.endpoint_connection[0].private_link_service_connection_state.description == "Approved"
@@ -234,7 +234,7 @@
       actions_required: "actions required"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed
 
 - name: Get private endpoint connection info by name
@@ -244,7 +244,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.endpoint_connection[0].private_link_service_connection_state.actions_required == "actions required"
       - output.endpoint_connection[0].private_link_service_connection_state.description == "Rejected"
@@ -258,7 +258,7 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed
 
 - name: Delete private endpoint
@@ -267,7 +267,7 @@
     resource_group: "{{ resource_group }}"
     state: absent
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed
 
 - name: Pause for 5 mimutes to waiting
@@ -280,5 +280,5 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed

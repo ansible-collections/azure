@@ -114,7 +114,7 @@ pwd
 dir
 git status
 
-ansible-lint -v --exclude tests/integration/targets/inventory_azure/playbooks/vars.yml
+ansible-lint -v --exclude tests/integration/targets/inventory_azure/playbooks/vars.yml --force-color
 
 if [ "sanity" = "${group}" ]
 then

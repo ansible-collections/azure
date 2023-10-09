@@ -1,4 +1,4 @@
-- set_fact:
+- ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
 - name: Create IoT Hub (check mode)
@@ -12,7 +12,7 @@
   check_mode: yes
   register: iothub
 
-- assert:
+- ansible.builtin.assert:
     that:
         - iothub.changed
 
@@ -33,7 +33,7 @@
           ip_mask: 40.60.80.10
   register: iothub
 
-- assert:
+- ansible.builtin.assert:
     that:
         - iothub.changed
 
@@ -47,7 +47,7 @@
           ip_mask: 40.60.80.10
   register: iothub
 
-- assert:
+- ansible.builtin.assert:
     that:
         - not iothub.changed
 
@@ -58,11 +58,11 @@
       list_keys: yes
   register: iothub
 
-- assert:
+- ansible.builtin.assert:
     that:
         - iothub.iothubs | length == 1
 
-- set_fact:
+- ansible.builtin.set_fact:
     registry_write_name: "{{ item.key_name }}"
     registry_write_key: "{{ item.primary_key }}"
     secondary_key: "{{ item.secondary_key }}"
@@ -93,7 +93,7 @@
       hub_policy_key: "{{ registry_write_key }}"
   register: devices
 
-- assert:
+- ansible.builtin.assert:
      that:
         - devices.iot_devices | length == 2
 
@@ -105,7 +105,7 @@
       hub_policy_key: "{{ registry_write_key }}"
   register: devices
 
-- assert:
+- ansible.builtin.assert:
      that:
         - devices.iot_devices | length == 1
         - devices.iot_devices[0].deviceId == 'mydevice1'
@@ -141,7 +141,7 @@
       hub_policy_key: "{{ registry_write_key }}"
   register: devices
 
-- assert:
+- ansible.builtin.assert:
      that:
         - devices.iot_devices | length == 2
 
@@ -153,7 +153,7 @@
   check_mode: yes
   register: iothub
 
-- assert:
+- ansible.builtin.assert:
     that:
         - iothub.changed
 
@@ -164,6 +164,6 @@
       state: absent
   register: iothub
 
-- assert:
+- ansible.builtin.assert:
     that:
         - iothub.changed

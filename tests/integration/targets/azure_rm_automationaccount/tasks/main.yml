@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     name: "account{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
@@ -11,7 +11,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
         - output.changed
 
@@ -21,7 +21,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
         - output.changed
         - output.id
@@ -32,7 +32,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
         - not output.changed
 
@@ -45,7 +45,7 @@
       list_keys: yes
   register: facts
 
-- assert:
+- ansible.builtin.assert:
     that:
         - facts.automation_accounts | length == 1
         - facts.automation_accounts[0].keys
@@ -61,7 +61,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
             - output.changed
 
@@ -72,7 +72,7 @@
         state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
             - output.changed
 
@@ -83,6 +83,6 @@
         state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
             - not output.changed

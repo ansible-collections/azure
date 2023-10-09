@@ -1,5 +1,5 @@
  - name: Create vpn site name
-   set_fact:
+   ansible.builtin.set_fact:
      vpn_site: "vpn{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
  - name: Create a VpnSite
@@ -25,7 +25,7 @@
          default: false
    register: output
  
- - assert:
+ - ansible.builtin.assert:
      that:
        - output.changed
 
@@ -52,7 +52,7 @@
          default: false
    register: output
  
- - assert:
+ - ansible.builtin.assert:
      that:
        - not output.changed
    
@@ -79,7 +79,7 @@
          default: false
    register: output
  
- - assert:
+ - ansible.builtin.assert:
      that:
        - output.changed
    
@@ -89,7 +89,7 @@
      name: "{{ vpn_site }}"
    register: output
 
- - assert:
+ - ansible.builtin.assert:
      that:
        - "output.vpn_sites[0].is_security_site == true"
        - "output.vpn_sites[0].ip_address == '10.0.0.0'"

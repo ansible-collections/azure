@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     pipaname: "pipa{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     pipbname: "pipb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     lbvnname: "lbvn{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
@@ -36,8 +36,8 @@
   check_mode: yes
   register: output
 
-- name: assert load balancer created
-  assert:
+- name: ansible.builtin.assert load balancer created
+  ansible.builtin.assert:
     that: output.changed
 
 - name: create load balancer
@@ -47,8 +47,8 @@
     public_ip: "{{ pipaname }}"
   register: output
 
-- name: assert load balancer created
-  assert:
+- name: ansible.builtin.assert load balancer created
+  ansible.builtin.assert:
     that: output.changed
 
 - name: create load balancer -- idempotent
@@ -58,8 +58,8 @@
     public_ip: "{{ pipaname }}"
   register: output
 
-- name: assert no change
-  assert:
+- name: ansible.builtin.assert no change
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -70,8 +70,8 @@
     state: absent
   register: output
 
-- name: assert load balancer deleted
-  assert:
+- name: ansible.builtin.assert load balancer deleted
+  ansible.builtin.assert:
     that: output.changed
 
 - name: delete load balancer (idempotent)
@@ -81,8 +81,8 @@
     state: absent
   register: output
 
-- name: assert load balancer deleted (idempotent)
-  assert:
+- name: ansible.builtin.assert load balancer deleted (idempotent)
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: create another load balancer with more options
@@ -106,8 +106,8 @@
     natpool_protocol: Tcp
   register: output
 
-- name: assert complex load balancer created
-  assert:
+- name: ansible.builtin.assert complex load balancer created
+  ansible.builtin.assert:
     that:
     - output.changed
     - output.state.sku.name == 'Standard'
@@ -133,8 +133,8 @@
     natpool_protocol: Tcp
   register: output
 
-- name: assert that output has not changed
-  assert:
+- name: ansible.builtin.assert that output has not changed
+  ansible.builtin.assert:
     that:
     - not output.changed
 
@@ -159,8 +159,8 @@
     natpool_protocol: Tcp
   register: output
 
-- name: assert that output has changed
-  assert:
+- name: ansible.builtin.assert that output has changed
+  ansible.builtin.assert:
     that:
     - output.changed
 
@@ -199,8 +199,8 @@
         disable_outbound_snat: True
   register: output
 
-- name: assert complex load balancer created
-  assert:
+- name: ansible.builtin.assert complex load balancer created
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -238,8 +238,8 @@
         frontend_ip_configuration: frontendipconf0
   register: output
 
-- name: assert complex load balancer created
-  assert:
+- name: ansible.builtin.assert complex load balancer created
+  ansible.builtin.assert:
     that: output.changed
 
 - name: delete load balancer
@@ -298,8 +298,8 @@
         disable_outbound_snat: False
   register: output
 
-- name: assert complex load balancer created
-  assert:
+- name: ansible.builtin.assert complex load balancer created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.frontend_ip_configurations[0].zones | length == 3

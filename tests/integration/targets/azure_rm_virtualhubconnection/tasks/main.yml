@@ -1,4 +1,4 @@
- - set_fact:
+ - ansible.builtin.set_fact:
      rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
  - name: Create virtual network
@@ -65,7 +65,7 @@
    register: output
  
  - name: Assert the virtual hub connection is well created
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
  
@@ -99,7 +99,7 @@
    register: output
  
  - name: Assert the virtual hub connection no changed
-   assert:
+   ansible.builtin.assert:
      that:
        - not output.changed
  
@@ -135,7 +135,7 @@
    register: output
  
  - name: Assert the virtual hub connection no changed
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
  
@@ -147,7 +147,7 @@
    register: output
  
  - name: Assert fact returns
-   assert:
+   ansible.builtin.assert:
      that:
        - output.virtual_hub_connection[0].allow_hub_to_remote_vnet_transit
        - not output.virtual_hub_connection[0].allow_remote_vnet_to_use_hub_vnet_gateways

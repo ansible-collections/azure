@@ -48,7 +48,7 @@
     os_type: Linux
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -67,7 +67,7 @@
     image: testimage
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.ansible_facts.azure_vm.properties.storageProfile.osDisk.diffDiskSettings.option == 'Local'
@@ -87,7 +87,7 @@
     image: testimage
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -107,7 +107,7 @@
   ignore_errors: yes
   register: ouput
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 

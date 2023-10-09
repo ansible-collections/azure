@@ -1,5 +1,5 @@
 - name: Create random ddos protection plan
-  set_fact:
+  ansible.builtin.set_fact:
       ddosprotectionplan: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create DDoS protection plan (check mode)
@@ -10,7 +10,7 @@
   check_mode: yes
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 - name: Create DDoS protection plan
@@ -20,7 +20,7 @@
     resource_group: "{{ resource_group }}"
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 - name: Update DDoS protection plan
@@ -32,7 +32,7 @@
       test: modified
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: 
       - results.changed
       - results.state.tags.test == 'modified'
@@ -44,7 +44,7 @@
   register: results
 
 - name: Assert that facts module returned result
-  assert:
+  ansible.builtin.assert:
     that: 
       - results.ddosprotectionplan[0].tags.test == 'modified'
 
@@ -55,7 +55,7 @@
     resource_group: "{{ resource_group }}"
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not results.changed
 
@@ -78,5 +78,5 @@
     state: absent
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: not results.changed

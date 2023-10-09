@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
 
@@ -64,7 +64,7 @@
   check_mode: yes
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -107,7 +107,7 @@
   register: output
 
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -149,7 +149,7 @@
           password: Password123!
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -195,7 +195,7 @@
 - debug:
     var: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -206,7 +206,7 @@
   register: output
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.clusters[0]['id'] != None
@@ -228,7 +228,7 @@
   check_mode: yes
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -239,6 +239,6 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed

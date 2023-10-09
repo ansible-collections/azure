@@ -20,7 +20,7 @@
    register: output
 
  - name: Assert the ACS instance is well created
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
        - output.state.provisioning_state == 'Succeeded'
@@ -47,7 +47,7 @@
    register: output
 
  - name: Assert the ACS instance is well scaled
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
        - output.state.agent_pool_profiles[0].count == 2
@@ -95,7 +95,7 @@
    register: output
 
  - name: Assert the ACS instance is well created
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
        - output.state.provisioning_state == 'Succeeded'
@@ -122,7 +122,7 @@
    register: output
 
  - name: Assert the ACS instance is well scaled
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
        - output.state.agent_pool_profiles[0].count == 2

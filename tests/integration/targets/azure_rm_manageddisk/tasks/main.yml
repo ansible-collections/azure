@@ -1,5 +1,5 @@
  - name: Prepare random number
-   set_fact:
+   ansible.builtin.set_fact:
      rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
      parameter: {}
    run_once: yes
@@ -25,7 +25,7 @@
    check_mode: no
 
  - name: Assert task failed
-   assert: { that: "output['failed'] == True" }
+   ansible.builtin.assert: { that: "output['failed'] == True" }
 
  - name: Create managed disk (Check Mode)
    azure_rm_manageddisk:
@@ -40,7 +40,7 @@
    check_mode: yes
 
  - name: Assert status succeeded (Check Mode)
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
        - output.state
@@ -57,7 +57,7 @@
    register: output
 
  - name: Assert status succeeded and results include an Id value
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
        - output.state.disk_size_gb == 1
@@ -75,7 +75,7 @@
    register: disk2
 
  - name: Assert status succeeded and results include an Id value
-   assert:
+   ansible.builtin.assert:
      that:
        - disk2.changed
        - disk2.state.id is defined
@@ -91,7 +91,7 @@
    register: disk3
 
  - name: Assert status succeeded and results include an Id value
-   assert:
+   ansible.builtin.assert:
      that:
        - disk3.changed
        - disk3.state.id is defined
@@ -108,7 +108,7 @@
    ignore_errors: yes
 
  - name: Assert storage account type change failed
-   assert: { that: "output['failed'] == True" }
+   ansible.builtin.assert: { that: "output['failed'] == True" }
 
  - name: Update disk options (os_type, account_type, size, tags)
    azure_rm_manageddisk:
@@ -122,7 +122,7 @@
            delete: never
    register: output
 
- - assert:
+ - ansible.builtin.assert:
      that:
        - output.changed
        - output.state.storage_account_type == "StandardSSD_LRS"
@@ -137,14 +137,14 @@
        name: "md{{ rpfx }}1"
    register: output
 
- - assert:
+ - ansible.builtin.assert:
        that:
            - "output.ansible_info.azure_managed_disk | length == 1"
            - output.ansible_info.azure_managed_disk[0].storage_account_type == "StandardSSD_LRS"
            - output.ansible_info.azure_managed_disk[0].disk_size_gb == 2
            - "output.ansible_info.azure_managed_disk[0].os_type == 'linux'"
 
- - set_fact:
+ - ansible.builtin.set_fact:
      parameter: "{{parameter |combine({item.key: item.value})}}"
    when: "{{item.key not in ['id', 'changed'] and item.value != None}}"
    with_dict: "{{ output.ansible_info.azure_managed_disk[0] }}"
@@ -160,7 +160,7 @@
        tags: "{{ parameter.tags }}"
    register: output
 
- - assert:
+ - ansible.builtin.assert:
        that:
            - not output.changed
 
@@ -173,7 +173,7 @@
        location: westus2
    register: output
 
- - assert:
+ - ansible.builtin.assert:
      that:
        - output.changed
        - output.state.storage_account_type == "StandardSSD_ZRS"
@@ -185,7 +185,7 @@
        name: "md{{ rpfx }}4"
    register: output
 
- - assert:
+ - ansible.builtin.assert:
        that:
            - "output.ansible_info.azure_managed_disk | length == 1"
            - output.ansible_info.azure_managed_disk[0].storage_account_type == "StandardSSD_ZRS"
@@ -200,7 +200,7 @@
        location: westus2
    register: output
 
- - assert:
+ - ansible.builtin.assert:
      that:
        - output.changed
        - output.state.storage_account_type == "Premium_ZRS"
@@ -212,7 +212,7 @@
        name: "md{{ rpfx }}5"
    register: output
 
- - assert:
+ - ansible.builtin.assert:
        that:
            - "output.ansible_info.azure_managed_disk | length == 1"
            - output.ansible_info.azure_managed_disk[0].storage_account_type == "Premium_ZRS"
@@ -227,7 +227,7 @@
    check_mode: yes
 
  - name: Assert status succeeded
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
        - output.state

@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
 
@@ -64,8 +64,8 @@
   azure_rm_monitordiagnosticsetting_info:
     resource: "{{ vnet_output.state.id }}"
   register: output
-- name: assert no settings
-  assert:
+- name: ansible.builtin.assert no settings
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.settings | length == 0
@@ -81,8 +81,8 @@
       - category: "AllMetrics"
   check_mode: true
   register: output
-- name: assert resource created
-  assert:
+- name: ansible.builtin.assert resource created
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -96,8 +96,8 @@
     metrics:
       - category: "AllMetrics"
   register: output
-- name: assert resource created
-  assert:
+- name: ansible.builtin.assert resource created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.name == 'logs-storage'
@@ -122,8 +122,8 @@
       - category: "AllMetrics"
   check_mode: true
   register: output
-- name: assert resource not changed
-  assert:
+- name: ansible.builtin.assert resource not changed
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -140,8 +140,8 @@
     metrics:
       - category: "AllMetrics"
   register: output
-- name: assert resource not changed
-  assert:
+- name: ansible.builtin.assert resource not changed
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -153,8 +153,8 @@
     logs:
       - category_group: "allLogs"
   register: output
-- name: assert resource updated
-  assert:
+- name: ansible.builtin.assert resource updated
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.name == 'logs-storage'
@@ -178,8 +178,8 @@
         retention_policy:
           days: 15
   register: output
-- name: assert resource created
-  assert:
+- name: ansible.builtin.assert resource created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.name == 'logs-storage2'
@@ -205,8 +205,8 @@
         retention_policy:
           days: 30
   register: output
-- name: assert resource created
-  assert:
+- name: ansible.builtin.assert resource created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.logs[0].retention_policy.days == 30
@@ -223,8 +223,8 @@
         retention_policy:
           days: 30
   register: output
-- name: assert resource not changed
-  assert:
+- name: ansible.builtin.assert resource not changed
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -232,8 +232,8 @@
   azure_rm_monitordiagnosticsetting_info:
     resource: "{{ vnet_output.state.id }}"
   register: output
-- name: assert output maches expectations
-  assert:
+- name: ansible.builtin.assert output maches expectations
+  ansible.builtin.assert:
     that:
       - output.settings | length == 2
       - output.settings[0].name == 'logs-storage'
@@ -260,8 +260,8 @@
     name: "logs-storage2"
     resource: "{{ vnet_output.state.id }}"
   register: output
-- name: assert output maches expectations
-  assert:
+- name: ansible.builtin.assert output maches expectations
+  ansible.builtin.assert:
     that:
       - output.settings | length == 1
       - output.settings[0].name == 'logs-storage2'
@@ -280,8 +280,8 @@
     name: "does-not-exist"
     resource: "{{ vnet_output.state.id }}"
   register: output
-- name: assert no settings
-  assert:
+- name: ansible.builtin.assert no settings
+  ansible.builtin.assert:
     that:
       - output.settings | length == 0
 
@@ -308,8 +308,8 @@
       - category: "AppServiceIPSecAuditLogs"
       - category: "AppServicePlatformLogs"
   register: output
-- name: assert resource created
-  assert:
+- name: ansible.builtin.assert resource created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.name == 'logs'
@@ -349,8 +349,8 @@
       - category: "AppServiceIPSecAuditLogs"
       - category: "AppServicePlatformLogs"
   register: output
-- name: assert resource created
-  assert:
+- name: ansible.builtin.assert resource created
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -374,8 +374,8 @@
       - category: "AppServiceIPSecAuditLogs"
       - category: "AppServicePlatformLogs"
   register: output
-- name: assert resource updated
-  assert:
+- name: ansible.builtin.assert resource updated
+  ansible.builtin.assert:
     that:
       - output.changed
       - not output.state.storage_account
@@ -395,8 +395,8 @@
       resource_group: "{{ resource_group }}"
     state: "absent"
   register: output
-- name: assert resource delete
-  assert:
+- name: ansible.builtin.assert resource delete
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -409,8 +409,8 @@
       resource_group: "{{ resource_group }}"
     state: "absent"
   register: output
-- name: assert resource delete
-  assert:
+- name: ansible.builtin.assert resource delete
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -421,8 +421,8 @@
     state: "absent"
   check_mode: true
   register: output
-- name: assert resource deleted
-  assert:
+- name: ansible.builtin.assert resource deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -432,8 +432,8 @@
     resource: "{{ vnet_output.state.id }}"
     state: "absent"
   register: output
-- name: assert resource deleted
-  assert:
+- name: ansible.builtin.assert resource deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -443,8 +443,8 @@
     resource: "{{ vnet_output.state.id }}"
     state: "absent"
   register: output
-- name: assert resource already deleted
-  assert:
+- name: ansible.builtin.assert resource already deleted
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -454,8 +454,8 @@
     resource: "{{ vnet_output.state.id }}"
     state: "absent"
   register: output
-- name: assert resource deleted
-  assert:
+- name: ansible.builtin.assert resource deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 

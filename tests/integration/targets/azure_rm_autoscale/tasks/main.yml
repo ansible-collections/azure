@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     name: "scale{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
@@ -68,7 +68,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -96,7 +96,7 @@
       - '18'
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.id
@@ -122,7 +122,7 @@
       - '18'
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
       - output.id
@@ -161,7 +161,7 @@
       - '6'
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.profiles[0].rules[0].metric_resource_uri == vmss.ansible_facts.azure_vmss.id
@@ -174,7 +174,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -185,7 +185,7 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -196,7 +196,7 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 

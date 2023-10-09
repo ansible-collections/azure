@@ -1,5 +1,5 @@
 - name: Set Bastion host name
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
 - name: create resource group
@@ -86,7 +86,7 @@
   register: output
 
 - name: Assert the bastion host created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -114,7 +114,7 @@
   register: output
 
 - name: Assert the bastion host no changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -145,7 +145,7 @@
   register: output
 
 - name: Assert the bastion host updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -156,7 +156,7 @@
   register: output
   
 - name: Assert the bastion host is well create
-  assert:
+  ansible.builtin.assert:
     that:
       - output.bastion_host[0].disable_copy_paste == true
       - output.bastion_host[0].enable_file_copy == true

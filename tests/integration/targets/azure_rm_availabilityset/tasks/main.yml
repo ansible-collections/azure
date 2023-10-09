@@ -7,7 +7,7 @@
   register: results
   check_mode: yes
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 - name: Create an availability set with default options
@@ -18,11 +18,11 @@
       tag1: testtag
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 - name: Create proximity placement group name
-  set_fact:
+  ansible.builtin.set_fact:
     ppgroup_name: "ppg{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create a proximity placement group
@@ -43,7 +43,7 @@
     sku: Aligned
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 - name: Modify availabilty set immutable options - no changes, fail for immutable options
@@ -57,7 +57,7 @@
   register: results
   ignore_errors: yes
 
-- assert:
+- ansible.builtin.assert:
     that: 
     - not results.changed
     - results.msg == 'You tried to change platform_update_domain_count but is was unsuccessful. An Availability Set is immutable, except tags'
@@ -75,7 +75,7 @@
   register: results
   ignore_errors: yes
 
-- assert:
+- ansible.builtin.assert:
     that: 
     - not results.changed
     - results.msg == 'You tried to change platform_update_domain_count but is was unsuccessful. An Availability Set is immutable, except tags'
@@ -92,7 +92,7 @@
       test2: modified
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that:
       - results.state.tags.test2 == 'modified'
 
@@ -106,7 +106,7 @@
   register: results
   ignore_errors: yes
 
-- assert:
+- ansible.builtin.assert:
     { that: "'The specified fault domain count 4 must fall in the range 1 to' in results['msg']" }
 
 - name: Test check_mode
@@ -123,7 +123,7 @@
   check_mode: yes
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: 
       - results.changed
       - results.state.tags.checktest1 == 'modified1'
@@ -137,7 +137,7 @@
     resource_group: "{{ resource_group }}"
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: 
       - not results.changed
       - not results.failed
@@ -153,7 +153,7 @@
     state: absent
   check_mode: yes
   register: results
-- assert:
+- ansible.builtin.assert:
     that:
       - results.changed
 
@@ -170,7 +170,7 @@
     state: absent
   check_mode: yes
   register: results
-- assert:
+- ansible.builtin.assert:
     that:
       - not results.changed
 

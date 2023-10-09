@@ -1,9 +1,9 @@
 - name: Fix resource prefix
-  set_fact:
+  ansible.builtin.set_fact:
     fixed_resource_prefix: "fa{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Fix resource prefix
-  set_fact:
+  ansible.builtin.set_fact:
     funcapp_name_basic: "fa{{ fixed_resource_prefix }}basic"
     funcapp_name_container: "fa{{ fixed_resource_prefix }}container"
     funcapp_name_params: "fa{{ fixed_resource_prefix }}params"
@@ -23,8 +23,8 @@
     storage_account: "{{ storage_account_name }}"
   register: output
 
-- name: assert the function was created
-  assert:
+- name: ansible.builtin.assert the function was created
+  ansible.builtin.assert:
     that: output.changed
 
 - name: list facts for function
@@ -33,8 +33,8 @@
     name: "{{ funcapp_name_basic }}"
   register: results
 
-- name: assert the facts were retrieved
-  assert:
+- name: ansible.builtin.assert the facts were retrieved
+  ansible.builtin.assert:
     that:
     - results.ansible_info.azure_functionapps|length == 1
     - results.ansible_info.azure_functionapps[0].name == "{{ funcapp_name_basic }}"
@@ -46,8 +46,8 @@
     state: absent
   register: output
 
-- name: assert the function was deleted
-  assert:
+- name: ansible.builtin.assert the function was deleted
+  ansible.builtin.assert:
     that: output.changed
 
 - name: create a function with app settings
@@ -61,8 +61,8 @@
       FUNCTIONS_EXTENSION_VERSION: "~2"
   register: output
 
-- name: assert the function with app settings was created
-  assert:
+- name: ansible.builtin.assert the function with app settings was created
+  ansible.builtin.assert:
     that: output.changed
 
 - name: change app settings
@@ -77,8 +77,8 @@
       another: one
   register: output
 
-- name: assert the function was changed
-  assert:
+- name: ansible.builtin.assert the function was changed
+  ansible.builtin.assert:
     that: output.changed
 
 - name: delete the function app
@@ -88,8 +88,8 @@
     state: absent
   register: output
 
-- name: assert the function was deleted
-  assert:
+- name: ansible.builtin.assert the function was deleted
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Create a linux app service plan
@@ -114,8 +114,8 @@
         FUNCTIONS_EXTENSION_VERSION: "~2"
   register: output
 
-- name: assert the function was changed
-  assert:
+- name: ansible.builtin.assert the function was changed
+  ansible.builtin.assert:
     that: output.changed
 
 - name: delete the function app

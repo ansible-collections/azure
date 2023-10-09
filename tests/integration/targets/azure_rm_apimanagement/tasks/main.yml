@@ -1,5 +1,5 @@
 - name: Fix resource prefix
-  set_fact:
+  ansible.builtin.set_fact:
     api_id: "myPolicy{{ resource_group | hash('md5') | truncate(23, True, '') }}"
     service_name: "myService{{ resource_group | hash('md5') | truncate(22, True, '') }}"
     display_name: test-api
@@ -32,7 +32,7 @@
   register: newApi
   
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - newApi.changed == True
       - newApi.failed == False
@@ -51,7 +51,7 @@
   register: newApi_idempotent
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - newApi_idempotent.changed == False
       - newApi_idempotent.failed == False
@@ -71,7 +71,7 @@
   register: updateApi
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - updateApi.changed == True
 
@@ -88,7 +88,7 @@
   register: newOpenApi
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - newOpenApi.changed == True
       - newOpenApi.failed == False
@@ -101,7 +101,7 @@
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.api.id != None
 
@@ -114,7 +114,7 @@
   register: deleteApi
 
 - name: Assert the changes
-  assert:
+  ansible.builtin.assert:
     that:
       - deleteApi.changed == True
 
@@ -127,7 +127,7 @@
   register: deleteApi_idempotent
 
 - name: Assert the changes
-  assert:
+  ansible.builtin.assert:
     that:
       - deleteApi_idempotent.changed == False
 

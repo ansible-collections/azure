@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     name: "loganalytics{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     retention_days: 60
 
@@ -14,7 +14,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -28,7 +28,7 @@
     show_usages: true
   register: facts
 
-- assert:
+- ansible.builtin.assert:
     that:
       - facts.workspaces | length == 0
 
@@ -44,7 +44,7 @@
       key1: value1
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.retention_in_days == 30
@@ -66,7 +66,7 @@
       key2: value2
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.retention_in_days == retention_days
@@ -82,7 +82,7 @@
     show_usages: true
   register: facts
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not facts.changed
       - facts.workspaces | length > 0
@@ -104,7 +104,7 @@
     resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not facts.changed
       - facts.workspaces | length > 0
@@ -122,7 +122,7 @@
     retention_in_days: "{{ retention_days }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -134,7 +134,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -144,7 +144,7 @@
     resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
+- ansible.builtin.assert:
     that:
       - facts.workspaces | length == 1
 
@@ -156,7 +156,7 @@
     force: true
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -166,7 +166,7 @@
     resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
+- ansible.builtin.assert:
     that:
       - facts.workspaces | length == 0
 
@@ -178,6 +178,6 @@
     force: true
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed

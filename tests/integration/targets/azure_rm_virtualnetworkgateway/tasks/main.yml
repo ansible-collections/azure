@@ -1,7 +1,7 @@
 # FIXME: needs minimal tests (check mode?) that can run quickly, VNG creation takes > 20min
 
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     vnetname: "vnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     vngname: "vng{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     pubipname: "testPublicIP{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
@@ -20,7 +20,7 @@
       common: "xyz"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed
 
 - name: Create virtual network gateway Generation2 (check mode)
@@ -38,7 +38,7 @@
     tags:
       common: "xyz"
 
-- assert:
+- ansible.builtin.assert:
     that: output.changed
 
 
@@ -77,7 +77,7 @@
         common: "xyz"
     register: output
 
-  - assert:
+  - ansible.builtin.assert:
       that: output.changed
 
   - name: Create virtual network gateway without bgp settings - idempotent
@@ -93,7 +93,7 @@
         common: "xyz"
     register: output
 
-  - assert:
+  - ansible.builtin.assert:
       that: not output.changed
 
   - name: Update virtual network gateway
@@ -108,7 +108,7 @@
       tags:
         common: "mno"
     register: output
-  - assert:
+  - ansible.builtin.assert:
       that: output.changed
 
   - name: Delete virtual network gateway
@@ -117,7 +117,7 @@
       name: "{{ vngname }}"
       state: absent
     register: output
-  - assert:
+  - ansible.builtin.assert:
       that: output.changed
 
 - name: long-running generation virtualnetworkgateway tests [run with `--tags long_run_gen,untagged` to enable]
@@ -156,7 +156,7 @@
       tags:
         common: "xyz"
 
-  - assert:
+  - ansible.builtin.assert:
       that: output.changed
 
   - name: Update virtual network gateway
@@ -174,7 +174,7 @@
         common: "mno"
 
     register: output
-  - assert:
+  - ansible.builtin.assert:
       that: output.changed
 
   - name: Delete virtual network gateway
@@ -183,7 +183,7 @@
       name: "{{ vngname }}"
       state: absent
     register: output
-  - assert:
+  - ansible.builtin.assert:
       that: output.changed
 
 - name: Delete virtual network gateway - idempotent
@@ -192,7 +192,7 @@
     name: "{{ vngname }}"
     state: absent
   register: output
-- assert:
+- ansible.builtin.assert:
     that: not output.changed
 
 # Clean up networking components after test

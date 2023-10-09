@@ -1,5 +1,5 @@
 - name: Create random notification hub and namespace
-  set_fact:
+  ansible.builtin.set_fact:
       namespace_name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
       name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
@@ -12,7 +12,7 @@
   check_mode: yes
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 - name: Create Notification Hub  (check mode)
@@ -25,7 +25,7 @@
   check_mode: yes
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 - name: Create Namespace Hub
@@ -36,7 +36,7 @@
     sku: "free"
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 - name: Create Notification Hub
@@ -48,7 +48,7 @@
     sku: "free"
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 - name: Update Namespace
@@ -60,7 +60,7 @@
       test: modified
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: 
       - results.changed
       - results.state.tags.test == 'modified'
@@ -76,7 +76,7 @@
       test: modified
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: 
       - results.changed
       - results.state.tags.test == 'modified'
@@ -88,7 +88,7 @@
   register: results
 
 - name: Assert that facts module returned result
-  assert:
+  ansible.builtin.assert:
     that: 
       - results.namespace[0].tags.test == 'modified'
 
@@ -98,7 +98,7 @@
     resource_group: "{{ resource_group }}"
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not results.changed
 
@@ -125,7 +125,7 @@
     state: absent
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: not results.changed
 
 - name: Delete Notification Hub
@@ -149,5 +149,5 @@
     state: absent
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: not results.changed

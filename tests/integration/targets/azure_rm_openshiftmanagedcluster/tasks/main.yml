@@ -1,4 +1,4 @@
-- set_fact:
+- ansible.builtin.set_fact:
     cluster_name: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
 - name: get resource group info
@@ -11,7 +11,7 @@
     resource_group: "{{ resource_group_secondary }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output['clusters'] | length == 0
 
 - name: Get specific cluster information for a specific cluster
@@ -20,14 +20,14 @@
     name: "{{ cluster_name }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output['clusters'].keys() | length == 0
 
 - name: Get all clusters
   azure_rm_openshiftmanagedcluster_info:
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output['clusters']['value'] | length == 0
 
 - name: Create virtual network
@@ -78,7 +78,7 @@
       subnet_id: "{{ master_sub_output.state.id }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output.changed
 
 
@@ -87,7 +87,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output['clusters'] | length == 1
 
 - name: Get specific cluster information for a specific cluster
@@ -96,14 +96,14 @@
     name: "{{ cluster_name }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output['clusters']['name'] == "{{ cluster_name }}"
 
 - name: Get all clusters
   azure_rm_openshiftmanagedcluster_info:
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output['clusters'] | length >= 1
 
 - name: Delete openshift cluster
@@ -114,5 +114,5 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output.changed

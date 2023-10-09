@@ -50,7 +50,7 @@
       abc: def
 
 - name: Ensure VM was created properly
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_vm.availability_set.id
       - azure_vm.storage_profile.os_disk.name == 'testosdiskxx'
@@ -62,7 +62,7 @@
   register: vm_facts_results
 
 - name: Ensure facts module returned the second VM
-  assert:
+  ansible.builtin.assert:
     that:
       - vm_facts_results.vms | length == 1
       - vm_facts_results.vms[0].name == "{{ vm_name }}"
@@ -78,7 +78,7 @@
   register: facts_by_tags_results
 
 - name: Assert that facts module returned the second VM
-  assert:
+  ansible.builtin.assert:
     that:
       - facts_by_tags_results.vms | length >= 1
 
@@ -108,7 +108,7 @@
   register: dual_nics_result
 
 - name: Ensure nothing changed
-  assert:
+  ansible.builtin.assert:
     that: dual_nics_result is not changed
 
 - name: Get VM facts
@@ -133,7 +133,7 @@
   register: generalized_output
 
 - name: Ensure power state is generalized
-  assert:
+  ansible.builtin.assert:
     that: generalized_output.vms[0].power_state == 'generalized'
 
 - name: Delete dual NIC VM

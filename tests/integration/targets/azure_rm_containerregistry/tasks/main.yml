@@ -11,7 +11,7 @@
    register: output
 
  - name: Assert the container registry instance is well created
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
        - output.admin_user_enabled
@@ -48,7 +48,7 @@
          Environment: Production
 
  - name: Assert the ACR instance is well updated
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed == True
        - output.admin_user_enabled == False
@@ -65,7 +65,7 @@
    register: output 
 
  - name: Assert that facts are returned
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed == False
        - output.registries[0]['name'] != None
@@ -83,7 +83,7 @@
    register: output
 
  - name: Assert that facts are returned
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed == False
        - output.registries[0]['name'] != None

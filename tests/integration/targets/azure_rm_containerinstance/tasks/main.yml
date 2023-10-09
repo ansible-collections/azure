@@ -1,5 +1,5 @@
 - name: Set Container Instance Names
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Create sample container instance
@@ -24,7 +24,7 @@
     var: output
 
 - name: Assert the container instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.provisioning_state == 'Succeeded'
@@ -48,7 +48,7 @@
   register: output
 
 - name: Assert the container instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
 
@@ -72,7 +72,7 @@
   register: output
 
 - name: Assert the container instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.provisioning_state == 'Succeeded'
@@ -142,7 +142,7 @@
   register: output
 
 - name: Assert the container instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -156,7 +156,7 @@
     var: output
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.containerinstances[0]['resource_group'] != None
@@ -175,7 +175,7 @@
   register: output
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.containerinstances[0]['resource_group'] != None
@@ -226,7 +226,7 @@
   ignore_errors: True
 
 - name: Assert the container instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.provisioning_state == 'Succeeded'
@@ -244,7 +244,7 @@
   ignore_errors: True
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.containerinstances[0]['resource_group'] != None
@@ -309,7 +309,7 @@
   register: output
 
 - name: Assert the container instance is deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -351,6 +351,6 @@
   register: output
 
 - name: Assert the changed is false
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False

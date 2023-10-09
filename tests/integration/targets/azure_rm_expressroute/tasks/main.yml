@@ -1,5 +1,5 @@
 - name: Create random express route
-  set_fact:
+  ansible.builtin.set_fact:
     express_route: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create Express route (check mode)
@@ -23,7 +23,7 @@
   register: results
   check_mode: yes
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 
@@ -47,7 +47,7 @@
       family: metereddata
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: results.changed
 
 
@@ -71,7 +71,7 @@
       family: metereddata
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: 
       - results.changed
       - results.state.tags.test == 'modified'
@@ -84,7 +84,7 @@
   register: results
 
 - name: Assert that facts module returned result
-  assert:
+  ansible.builtin.assert:
     that: 
       - results.expressroute[0].tags.test == 'modified'
       - results.expressroute[0].type == 'Microsoft.Network/expressRouteCircuits'
@@ -95,7 +95,7 @@
     resource_group: "{{ resource_group }}"
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not results.changed
 
@@ -115,5 +115,5 @@
     state: absent
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that: not results.changed

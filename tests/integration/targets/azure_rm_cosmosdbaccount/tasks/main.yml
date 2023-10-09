@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     dbname: "cosmos-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     db2name: "cosmos2-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     vnname: "vn{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
@@ -37,7 +37,7 @@
   check_mode: yes
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -62,7 +62,7 @@
         ignore_missing_v_net_service_endpoint: yes
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -87,7 +87,7 @@
         ignore_missing_v_net_service_endpoint: yes
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -113,7 +113,7 @@
     enable_automatic_failover: yes
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -138,7 +138,7 @@
         ignore_missing_v_net_service_endpoint: yes
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -148,7 +148,7 @@
     name: "{{ dbname }}"
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.accounts | length == 1
@@ -184,7 +184,7 @@
     retrieve_keys: all
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.accounts[0]['primary_master_key'] != None
@@ -200,7 +200,7 @@
     retrieve_connection_strings: yes
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - "'primary_master_key' not in output.accounts[0]"
@@ -214,7 +214,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.accounts | length == 1
@@ -247,7 +247,7 @@
   azure_rm_cosmosdbaccount_info:
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.accounts | length >= 2
@@ -282,7 +282,7 @@
     enable_automatic_failover: yes
   register: output
 - name: Assert resource created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -292,7 +292,7 @@
     name: "{{ dbname }}-free4"
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.accounts[0]['mongo_version'] == '4.0'
       - output.accounts[0]['enable_free_tier'] == free_tier_supported
@@ -310,7 +310,7 @@
   check_mode: yes
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -321,7 +321,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -332,7 +332,7 @@
     state: absent
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -343,7 +343,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -354,7 +354,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 

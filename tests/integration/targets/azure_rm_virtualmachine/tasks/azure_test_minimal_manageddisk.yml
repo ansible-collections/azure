@@ -45,7 +45,7 @@
   register: vm_output
 
 - name: Assert status succeeded
-  assert:
+  ansible.builtin.assert:
     that:
       - vm_output.changed
 

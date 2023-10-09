@@ -1,5 +1,5 @@
 - name: set facts
-  set_fact:
+  ansible.builtin.set_fact:
      subscription_id: "{{ azure_subscription_id }}"
      subscription_sec_id: "{{ azure_subscription_sec_id }}"
      managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
@@ -21,7 +21,7 @@
   register: output
 
 - name: Assert creating registration definition check mode
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -38,7 +38,7 @@
   register: output2
 
 - name: Assert creating registration definition
-  assert:
+  ansible.builtin.assert:
     that:
       - output2.changed
 
@@ -54,7 +54,7 @@
   register: output1
 
 - name: Assert creating registration definition
-  assert:
+  ansible.builtin.assert:
     that:
       - output1.changed
 
@@ -71,7 +71,7 @@
   register: output
 
 - name: Assert creating registration definition
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -88,7 +88,7 @@
   register: output
 
 - name: Assert creating registration definition
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -98,7 +98,7 @@
   register: output
 
 - name: Assert the registration definition info
-  assert:
+  ansible.builtin.assert:
     that:
       - output.registration_definitions[0].name == "{{ output1.state.name }}"
       - output.registration_definitions[0].properties.authorizations[0].principal_id == "{{ principal_id }}"
@@ -113,7 +113,7 @@
   register: output
 
 - name: Assert all the registration definition info
-  assert:
+  ansible.builtin.assert:
     that:
       - output.registration_definitions | length >=1
 
@@ -124,7 +124,7 @@
   register: output
 
 - name: Assert delete registration definition success
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 

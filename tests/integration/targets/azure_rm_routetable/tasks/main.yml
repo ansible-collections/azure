@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     name: "table{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     route_name: "route{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
@@ -13,7 +13,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.id
       - output.changed
@@ -26,7 +26,7 @@
       purpose: testing    
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.id
@@ -39,7 +39,7 @@
       purpose: testing
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -49,7 +49,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "output.route_tables | length == 1"
       - "output.route_tables[0].routes | length == 0"
@@ -64,7 +64,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - not output.id
@@ -78,7 +78,7 @@
     route_table_name: "{{ name }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.id
@@ -92,7 +92,7 @@
     route_table_name: "{{ name }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -105,7 +105,7 @@
     route_table_name: "{{ name }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -116,7 +116,7 @@
     route_table_name: "{{ name }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.routes[0].address_prefix == "10.1.0.0/24"
       - output.routes[0].next_hop_type == "VirtualNetworkGateway"
@@ -127,7 +127,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "output.route_tables | length == 1"
       - "output.route_tables[0].routes | length == 1"
@@ -149,7 +149,7 @@
     route_table_name: "{{ name }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -161,7 +161,7 @@
     route_table_name: "{{ name }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -179,7 +179,7 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -190,6 +190,6 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed

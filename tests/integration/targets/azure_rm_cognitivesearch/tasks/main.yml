@@ -1,5 +1,5 @@
 - name: Create Azure Search name
-  set_fact:
+  ansible.builtin.set_fact:
     search_name: "search{{ resource_group | hash('md5') | truncate(16, True, '') }}"
     search_name_secondary: "search{{ resource_group | hash('md5') | truncate(16, True, '') }}-secondary"
 
@@ -12,7 +12,7 @@
   ignore_errors: yes
 
 - name: Assert task failed
-  assert:
+  ansible.builtin.assert:
     that: 
       - invalid_hosting_name.failed == True
 
@@ -27,7 +27,7 @@
   ignore_errors: yes
 
 - name: Assert task failed
-  assert:
+  ansible.builtin.assert:
     that: 
       - invalid_partition_count.failed == True
 
@@ -40,7 +40,7 @@
   ignore_errors: yes
 
 - name: Assert task failed
-  assert:
+  ansible.builtin.assert:
     that: 
       - invalid_partition_count.failed == True
 
@@ -54,7 +54,7 @@
   ignore_errors: yes
 
 - name: Assert task failed
-  assert:
+  ansible.builtin.assert:
     that: 
       - invalid_replica_count.failed == True
 
@@ -68,7 +68,7 @@
   ignore_errors: yes
 
 - name: Assert task failed
-  assert:
+  ansible.builtin.assert:
     that: 
       - invalid_replica_count.failed == True
 
@@ -79,7 +79,7 @@
   register: search_info
 
 - name: Assert status succeeded and results
-  assert:
+  ansible.builtin.assert:
     that:
       - search_info.changed
       - search_info.state.id is defined
@@ -101,7 +101,7 @@
   register: search_info_module
 
 - name: Assert status succeeded and results
-  assert:
+  ansible.builtin.assert:
     that:
       - search_info_module.search.id is defined
       - search_info_module.search.identity.type == "None"
@@ -122,7 +122,7 @@
   register: search_info
 
 - name: Assert that idempotence is ok
-  assert:
+  ansible.builtin.assert:
     that:
       - not search_info.changed
 
@@ -150,7 +150,7 @@
   register: search_info
 
 - name: Assert status succeeded and results
-  assert:
+  ansible.builtin.assert:
     that:
       - search_info.changed
       - search_info.state.id is defined
@@ -182,7 +182,7 @@
   register: search_info
 
 - name: Assert that idempotence is ok
-  assert:
+  ansible.builtin.assert:
     that:
       - not search_info.changed
 

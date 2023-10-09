@@ -11,7 +11,7 @@
 #
 # ----------------------------------------------------------------------------
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     storage_account_name: "st{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     batch_account_name: "ba{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
@@ -37,7 +37,7 @@
   register: output
 
 - name: Assert the resource was created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -55,7 +55,7 @@
   register: output
 
 - name: Assert the resource was created
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -66,7 +66,7 @@
   register: output
 
 - name: Assert the facts
-  assert:
+  ansible.builtin.assert:
     that:
       - output.batch_account | length == 1
       - output.batch_account[0].tags | length == 2
@@ -79,7 +79,7 @@
   register: output
 
 - name: Assert that state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 

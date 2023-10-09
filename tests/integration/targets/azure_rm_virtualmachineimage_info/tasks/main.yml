@@ -1,5 +1,5 @@
 - name: set location
-  set_fact:
+  ansible.builtin.set_fact:
     location: eastus
 
 - name: Get facts for a specific image
@@ -11,7 +11,7 @@
     version: '7.5.201808150'
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output['vmimages'] | length == 1
 
 - name: List available versions
@@ -22,7 +22,7 @@
     sku: '7.5'
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output['vmimages'] | length > 0
 
 - name: List available offers
@@ -31,7 +31,7 @@
     publisher: OpenLogic
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output['vmimages'] | length > 0
 
 - name: List available publishers
@@ -39,7 +39,7 @@
     location: "{{ location }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output['vmimages'] | length > 0
 
 - name: Get facts for a specific image's latest version
@@ -51,5 +51,5 @@
     version: 'latest'
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: output['vmimages'] | length == 1

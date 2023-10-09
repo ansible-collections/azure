@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     cdnprofilename: "cdnprofile{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     endpointname: "endpoint{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
@@ -23,7 +23,7 @@
   register: fact
 
 - name: Check there is no CDN profile created
-  assert: { that: "{{ fact.cdnprofiles | length }} == 0" }
+  ansible.builtin.assert: { that: "{{ fact.cdnprofiles | length }} == 0" }
 
 - name: Create a CDN profile
   azure_rm_cdnprofile:
@@ -37,7 +37,7 @@
   register: output
 
 - name: Assert the CDN profile is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id != ''
@@ -49,7 +49,7 @@
   register: fact
 
 - name: Assert fact returns the created one
-  assert:
+  ansible.builtin.assert:
       that:
         - "fact.cdnprofiles | length == 1"
         - fact.cdnprofiles[0].sku == 'Standard_Verizon'
@@ -67,7 +67,7 @@
   register: output
 
 - name: Assert idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -84,7 +84,7 @@
   register: output
 
 - name: Assert the CDN profile is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -102,7 +102,7 @@
   register: fact
 
 - name: Assert the CDN is still there
-  assert:
+  ansible.builtin.assert:
       that:
         - "fact.cdnprofiles | length == 1"
         - fact.cdnprofiles[0].sku == 'Standard_Verizon'
@@ -138,7 +138,7 @@
   register: output
 
 - name: Assert the Azure CDN endpoint is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
@@ -151,7 +151,7 @@
   register: facts
 
 - name: Assert facts output
-  assert:
+  ansible.builtin.assert:
     that:
       - facts['cdnendpoints'] | length == 1
       - facts['cdnendpoints'][0]['id']
@@ -177,7 +177,7 @@
   register: output
 
 - name: Assert idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -190,7 +190,7 @@
   register: output
 
 - name: Assert stopped
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -203,7 +203,7 @@
   register: output
 
 - name: Assert still stopped and not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -216,7 +216,7 @@
   register: output
 
 - name: Assert started
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -233,7 +233,7 @@
   register: output
 
 - name: Assert the Azure CDN endpoint is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -260,7 +260,7 @@
   register: output
 
 - name: Assert the CDN profile is well deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -271,6 +271,6 @@
   register: fact
 
 - name: Assert fact returns empty
-  assert:
+  ansible.builtin.assert:
     that:
       - "fact.cdnprofiles | length == 0"

@@ -24,12 +24,12 @@
   ignore_errors: yes
 
 - name: Validate expected states
-  assert:
+  ansible.builtin.assert:
     that:
       - invalid_name['failed']
 
 - name: Validate expected attributes
-  assert:
+  ansible.builtin.assert:
     that:
       - "{{ item.id is defined }}"
   loop: "{{ az_recursive_managementgroups.management_groups + az_recursive_managementgroups.subscriptions }}"

@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
 
@@ -132,7 +132,7 @@
   register: results
 
 - name: Assert that VMSS can be created
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create VMSS with I(orchestration_mode=Flexible) again --- Idempotent
@@ -166,7 +166,7 @@
   register: results
 
 - name: Assert that VMSS can be created
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Retrieve scaleset VMSS fact
@@ -175,7 +175,7 @@
     resource_group: "{{ resource_group }}"
   register: output_scaleset
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output_scaleset.vmss[0].orchestration_mode == "Flexible"
 
@@ -218,7 +218,7 @@
   register: results
 
 - name: Assert that VMSS was created using Spot Instance default values
-  assert:
+  ansible.builtin.assert:
     that:
       - results.ansible_facts.azure_vmss.virtual_machine_profile.priority == 'Spot'
       - results.ansible_facts.azure_vmss.virtual_machine_profile.eviction_policy == 'Deallocate'
@@ -264,7 +264,7 @@
   register: results
 
 - name: Assert that VMSS was created using Spot Instance custom values
-  assert:
+  ansible.builtin.assert:
     that:
       - results.ansible_facts.azure_vmss.virtual_machine_profile.priority == 'Spot'
       - results.ansible_facts.azure_vmss.virtual_machine_profile.eviction_policy == 'Delete'
@@ -309,10 +309,10 @@
   check_mode: yes
 
 - name: Assert that VMSS can be created
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
-- name: Get VMSS to assert no VMSS is created in check mode
+- name: Get VMSS to ansible.builtin.assert no VMSS is created in check mode
   azure_rm_virtualmachinescaleset_info:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
@@ -320,7 +320,7 @@
   register: output_scaleset
 
 - name: Assert no VMSS created in check mode
-  assert:
+  ansible.builtin.assert:
     that:
       - output_scaleset.vmss | length == 0
 
@@ -358,7 +358,7 @@
   register: results
 
 - name: Assert that VMSS was created
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create VMSS -- test upgrade_policy idempotence and load balancer
@@ -394,7 +394,7 @@
   register: results
 
 - name: Assert that VMSS was created
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Retrieve scaleset facts
@@ -404,7 +404,7 @@
     format: curated
   register: output_scaleset
 
-- assert:
+- ansible.builtin.assert:
     that:
         - output_scaleset.vmss[0].load_balancer == "testLB1"
 
@@ -415,7 +415,7 @@
   register: instances
 
 - name: Assert that facts returned correctly
-  assert:
+  ansible.builtin.assert:
     that:
       - instances.instances | length == 1
       - instances.instances[0].id != None
@@ -427,7 +427,7 @@
       - instances.instances[0].power_state != None
 
 - name: Get scaleset body
-  set_fact:
+  ansible.builtin.set_fact:
     body: "{{ output_scaleset.vmss[0] }}"
 
 - name: Try to update VMSS using output as input
@@ -455,7 +455,7 @@
   register: results
 
 - name: Assert that nothing was changed
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Install VMSS Extension
@@ -471,7 +471,7 @@
   register: results
 
 - name: Assert that something was changed
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Install Again VMSS Extension - again
@@ -487,7 +487,7 @@
   register: results
 
 - name: Assert that nothing was changed
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Query extension
@@ -498,7 +498,7 @@
   register: results
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed == False
       - results.extensions[0]['id'] != None
@@ -518,7 +518,7 @@
   register: results
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed == False
       - results.extensions[0]['id'] != None
@@ -540,7 +540,7 @@
   register: results
 
 - name: Assert that change was reported
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Upgrade instance to the latest image
@@ -552,7 +552,7 @@
   register: results
 
 - name: Assert that something has changed
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Stop virtual machine
@@ -564,7 +564,7 @@
   register: results
 
 - name: Assert that something has changed
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Delete instance
@@ -576,7 +576,7 @@
   register: results
 
 - name: Assert that something has changed
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Delete VMSS
@@ -609,7 +609,7 @@
   check_mode: yes
 
 - name: Assert that VMSS can be created
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create VMSS with security group in same resource group, with accelerated networking.
@@ -635,7 +635,7 @@
   register: results
 
 - name: Assert that VMSS ran
-  assert:
+  ansible.builtin.assert:
     that:
       - 'results.changed'
       - 'results.ansible_facts.azure_vmss.virtual_machine_profile.network_profile.network_interface_configurations[0].enable_accelerated_networking == true'
@@ -664,7 +664,7 @@
   register: results
 
 - name: Assert that nothing has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not results.changed
 
@@ -691,7 +691,7 @@
   register: results
 
 - name: Assert that something has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed
 
@@ -720,7 +720,7 @@
 
 # disable for now
 #- name: Assert that security group is correct
-#  assert:
+#  ansible.builtin.assert:
 #    that:
 #      - 'results.changed'
 #      - '"testNetworkSecurityGroup2" in results.ansible_facts.azure_vmss.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.0.properties.networkSecurityGroup.id'
@@ -755,7 +755,7 @@
     single_placement_group: True
   register: results
 
-- assert:
+- ansible.builtin.assert:
     that:
       - results.changed
       - results.ansible_facts.azure_vmss.virtual_machine_profile.storage_profile.os_disk.diff_disk_settings.option == 'Local'
@@ -814,7 +814,7 @@
   ignore_errors: yes
 
 - name: Assert failure to show that accelerated networking is enabled only with supported instance types.
-  assert:
+  ansible.builtin.assert:
     that:
       - '"VMSizeIsNotPermittedToEnableAcceleratedNetworkingForVmss" in results.msg'
 
@@ -857,7 +857,7 @@
 
 # TODO: Until we have a module to create/delete images this is the best tests
 # I can do
-- name: assert error thrown with invalid image dict
+- name: ansible.builtin.assert error thrown with invalid image dict
   azure_rm_virtualmachinescaleset:
       resource_group: "{{ resource_group }}"
       name: testvm002
@@ -867,7 +867,7 @@
   register: fail_invalid_image_dict
   failed_when: 'fail_invalid_image_dict.msg != "parameter error: expecting image to contain [publisher, offer, sku, version], [name, resource_group] or [id]"'
 
-- name: assert error thrown with invalid image type
+- name: ansible.builtin.assert error thrown with invalid image type
   azure_rm_virtualmachinescaleset:
       resource_group: "{{ resource_group }}"
       name: testvm002
@@ -877,7 +877,7 @@
   register: fail_invalid_image_type
   failed_when: 'fail_invalid_image_type.msg != "parameter error: expecting image to be a string or dict not list"'
 
-- name: assert error finding missing custom image
+- name: ansible.builtin.assert error finding missing custom image
   azure_rm_virtualmachinescaleset:
       resource_group: "{{ resource_group }}"
       name: testvm002
@@ -886,7 +886,7 @@
   register: fail_missing_custom_image
   failed_when: fail_missing_custom_image.msg != "Error could not find image with name invalid-image"
 
-- name: assert error finding missing custom image (dict style)
+- name: ansible.builtin.assert error finding missing custom image (dict style)
   azure_rm_virtualmachinescaleset:
       resource_group: "{{ resource_group }}"
       name: testvm002

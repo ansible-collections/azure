@@ -36,7 +36,7 @@
   register: restart_result
 
 - name: Ensue VM was restarted
-  assert:
+  ansible.builtin.assert:
     that:
       - "azure_vm.powerstate in ['starting', 'running']"
       - restart_result is changed
@@ -50,7 +50,7 @@
   register: deallocate_result
 
 - name: Ensure VM was deallocated
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_vm.powerstate == 'deallocated'
       - deallocate_result is changed
@@ -64,7 +64,7 @@
   register: start_result
 
 - name: Ensure VM was started
-  assert:
+  ansible.builtin.assert:
     that:
       - "azure_vm.powerstate in ['starting', 'running']"
       - start_result is changed

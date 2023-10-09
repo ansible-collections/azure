@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     tmname: "tm{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     endpointname1: "ep1{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     endpointname2: "ep2{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
@@ -33,7 +33,7 @@
   register: fact
 
 - name: Check there is no Traffic Manager profile created
-  assert: { that: "{{ fact.tms | length }} == 0" }
+  ansible.builtin.assert: { that: "{{ fact.tms | length }} == 0" }
 
 - name: Create a Traffic Manager profile
   azure_rm_trafficmanagerprofile:
@@ -56,7 +56,7 @@
   register: tm
 
 - name: Assert the Traffic Manager profile is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - tm.changed
 
@@ -67,7 +67,7 @@
   register: fact
 
 - name: Assert fact returns the created one
-  assert:
+  ansible.builtin.assert:
       that:
         - "fact.tms | length == 1"
         - fact.tms[0].id == tm.id
@@ -94,7 +94,7 @@
   register: output
 
 - name: Assert idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -119,7 +119,7 @@
   register: output
 
 - name: Assert the Traffic Manager profile is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed 
 
@@ -137,7 +137,7 @@
   register: output
 
 - name: Assert check mode changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -148,7 +148,7 @@
   register: facts
 
 - name: Check no endpoint created in check mode
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.endpoints | length == 0
 
@@ -165,7 +165,7 @@
   register: output
 
 - name: Assert endpoint create changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -176,7 +176,7 @@
   register: facts
 
 - name: Check endpoint created
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.endpoints | length == 1
       - facts.endpoints[0].name == "{{ endpointname1 }}"
@@ -199,7 +199,7 @@
   register: facts
 
 - name: Check 2 endpoint in profile
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.endpoints | length == 2
 
@@ -216,7 +216,7 @@
   register: output
 
 - name: Assert endpoint creation idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
 
@@ -230,7 +230,7 @@
   register: output
 
 - name: Assert endpoint deletion changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -241,7 +241,7 @@
   register: facts
 
 - name: Check 1 endpoint left in profile
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.endpoints | length == 1
 
@@ -259,7 +259,7 @@
   register: fact
 
 - name: Assert the traffic manager profile is still there
-  assert:
+  ansible.builtin.assert:
       that:
         - "fact.tms | length == 1"
         - fact.tms[0].id == tm.id
@@ -273,7 +273,7 @@
   register: output
 
 - name: Assert the Traffic Manager profile is well deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -284,6 +284,6 @@
   register: fact
 
 - name: Assert fact returns empty
-  assert:
+  ansible.builtin.assert:
     that:
       - "fact.tms | length == 0"

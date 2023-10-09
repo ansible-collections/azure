@@ -1,5 +1,5 @@
 - name: Create random dns label
-  set_fact:
+  ansible.builtin.set_fact:
     dns_label: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Error Create Azure Deploy
@@ -62,7 +62,7 @@
     var: output
 
 - name: Assert that values are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.deployments[0]['provisioning_state'] != None

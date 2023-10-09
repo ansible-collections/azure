@@ -1,5 +1,5 @@
 - name: Fix resource prefix
-  set_fact:
+  ansible.builtin.set_fact:
     role_name: "{{ (resource_group | replace('-','x'))[-8:] }}{{ 1000 | random }}testrole"
     subscription_id: "{{azure_subscription_id}}"
     principal_id: "{{azure_client_id}}"
@@ -24,7 +24,7 @@
   register: output
 
 - name: Assert creating role definition check mode
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -46,7 +46,7 @@
   register: output
 
 - name: Assert creating role definition
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -60,7 +60,7 @@
 #  register: facts
 #
 #- name: Assert facts
-#  assert:
+#  ansible.builtin.assert:
 #    that:
 #      - facts['roledefinitions'] | length > 1
 #
@@ -74,7 +74,7 @@
 #  delay: 60
 #
 #- name: Assert facts
-#  assert:
+#  ansible.builtin.assert:
 #    that:
 #      - facts['roledefinitions'] | length == 1
 #      - facts['roledefinitions'][0]['permissions'] | length == 1
@@ -98,8 +98,8 @@
 #          - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #  register: output
 #
-#- name: assert output not changed
-#  assert:
+#- name: ansible.builtin.assert output not changed
+#  ansible.builtin.assert:
 #    that:
 #      - not output.changed
 #
@@ -122,8 +122,8 @@
 #        - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #  register: output
 #
-#- name: assert output changed
-#  assert:
+#- name: ansible.builtin.assert output changed
+#  ansible.builtin.assert:
 #    that:
 #      - output.changed
 #
@@ -138,7 +138,7 @@
 #  delay: 60
 #
 #- name: Assert role definition facts
-#  assert:
+#  ansible.builtin.assert:
 #    that:
 #      - roledef['roledefinitions'] | length == 1
 #      - roledef['roledefinitions'][0]['id']
@@ -152,7 +152,7 @@
 #  register: output
 #
 #- name: Assert creating role definition check mode
-#  assert:
+#  ansible.builtin.assert:
 #    that:
 #      - output.changed
 #
@@ -164,7 +164,7 @@
 #  register: output
 #
 #- name: Assert creating role assignment
-#  assert:
+#  ansible.builtin.assert:
 #    that:
 #      - output.changed
 #
@@ -175,8 +175,8 @@
 #    role_definition_id: "{{ roledef['roledefinitions'][0]['id'] }}"
 #  register: facts
 #
-#- name: assert role assignment facts
-#  assert:
+#- name: ansible.builtin.assert role assignment facts
+#  ansible.builtin.assert:
 #    that:
 #      - facts['roleassignments'] | length > 0
 #      - facts['roleassignments'][0]['id']
@@ -195,8 +195,8 @@
 #  check_mode: yes
 #  register: output
 #
-#- name: assert deleting role definition check mode
-#  assert:
+#- name: ansible.builtin.assert deleting role definition check mode
+#  ansible.builtin.assert:
 #    that: output.changed
 #
 #- name: Delete the role definition
@@ -206,6 +206,6 @@
 #    state: absent
 #  register: output
 #
-#- assert:
+#- ansible.builtin.assert:
 #    that:
 #      - output.changed

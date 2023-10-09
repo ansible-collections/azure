@@ -1,5 +1,5 @@
 - name: Create data lake store name
-  set_fact:
+  ansible.builtin.set_fact:
     adl_name: "adl{{ resource_group_datalake | hash('md5') | truncate(21, True, '') }}"
     vnet_name: "vnet{{ resource_group_datalake | hash('md5') | truncate(20, True, '') }}"
 
@@ -28,7 +28,7 @@
   register: output
 
 - name: Assert status succeeded and results
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.id is defined
@@ -52,7 +52,7 @@
   register: output
 
 - name: Assert that status has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -66,7 +66,7 @@
   register: output
 
 - name: Assert status succeeded and results include virtual_network_rules
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.virtual_network_rules | length == 1
@@ -82,7 +82,7 @@
   ignore_errors: yes
 
 - name: Assert that encryption state cannot change
-  assert:
+  ansible.builtin.assert:
     that: 
     - not output.changed
     - output.msg == 'Encryption type cannot be updated.'
@@ -95,7 +95,7 @@
   register: output
 
 - name: Assert status succeeded and results include virtual_network_rules
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.current_tier == "Consumption"
@@ -136,7 +136,7 @@
   register: output
 
 - name: Assert status succeeded and results include an Id value 
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.id is defined
@@ -186,7 +186,7 @@
   register: output
 
 - name: Assert that status has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 

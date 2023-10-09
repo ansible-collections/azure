@@ -18,7 +18,7 @@
   ignore_errors: true
 
 - name: Validate that disk creation failed
-  assert:
+  ansible.builtin.assert:
     that:
       - result is failed
       - 'result.msg == "Some required options are missing from managed disks configuration."'
@@ -33,7 +33,7 @@
   register: azure_disks
 
 - name: Ensure result is changed
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_disks is changed
       - azure_disks.state | length == 2
@@ -51,12 +51,12 @@
   register: create_idempotency
 
 - name: Ensure result is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - create_idempotency is not changed
 
 - name: Validate that disks have been created
-  assert:
+  ansible.builtin.assert:
     that:
       - item.name in disk_names
   with_items: "{{ shared_disks }}"
@@ -115,7 +115,7 @@
   register: vm_result
   with_items: "{{ shared_virtual_machines }}"
 
-- set_fact:
+- ansible.builtin.set_fact:
     vm_ids: "{{ vm_result.results | map(attribute='vms') | flatten | map(attribute='id') | list }}"
 
 # Test attach disk on VMs
@@ -128,7 +128,7 @@
   with_items: "{{ shared_virtual_machines }}"
 
 - name: Ensure result is changed
-  assert:
+  ansible.builtin.assert:
     that:
       - attach_disks is changed
       - attach_disks.results | length == 2
@@ -141,7 +141,7 @@
   with_items: "{{ shared_disks }}"
 
 - name: Validate disks are attached to the VMs
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_managed_disks | length == 2
       - azure_managed_disks.0.managed_by_extended | length == 2
@@ -160,7 +160,7 @@
   register: attach_idempotency
 
 - name: Ensure result is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - attach_idempotency is not changed
 
@@ -175,7 +175,7 @@
   register: detach_disks
 
 - name: Ensure result is changed
-  assert:
+  ansible.builtin.assert:
     that:
       - detach_disks is changed
 
@@ -187,7 +187,7 @@
   with_items: "{{ shared_disks }}"
 
 - name: Ensure disk 1 is attached to VM 1 only and disk 2 is attached to VM 1 and VM 2
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_managed_disks | length == 2
       - azure_managed_disks.0.managed_by_extended | length == 1
@@ -210,7 +210,7 @@
   register: detach_idempotency
 
 - name: Ensure result is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - detach_idempotency is not changed
 
@@ -230,7 +230,7 @@
   register: azure_disks
 
 - name: Ensure disk is not attached to any VM
-  assert:
+  ansible.builtin.assert:
     that:
       - detach_from_vms is changed
       - azure_disks.ansible_info.azure_managed_disk | length == 1
@@ -246,7 +246,7 @@
   register: detach_from_vms
 
 - name: Ensure nothing changed
-  assert:
+  ansible.builtin.assert:
     that:
       - detach_from_vms is not changed
 
@@ -258,7 +258,7 @@
   register: azure_disks
 
 - name: Ensure disk is attached to at least one VM
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_disks.ansible_info.azure_managed_disk.0.managed_by
       - azure_disks.ansible_info.azure_managed_disk.0.managed_by_extended | length > 0
@@ -277,7 +277,7 @@
   register: azure_disks
 
 - name: Ensure disk was deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - delete_attached_disk is changed
       - azure_disks.ansible_info.azure_managed_disk | length == 0
@@ -290,7 +290,7 @@
   register: delete_attached_disk
 
 - name: Ensure delete idempotency
-  assert:
+  ansible.builtin.assert:
     that:
       - delete_attached_disk is not changed
 
@@ -304,7 +304,7 @@
   register: delete_with_wrong_parameter
 
 - name: Ensure disks were not deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - delete_with_wrong_parameter is not changed
 
@@ -323,7 +323,7 @@
   register: azure_disks
 
 - name: Ensure disk was deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - delete_disk is changed
       - azure_disks.ansible_info.azure_managed_disk | length == 0
@@ -336,6 +336,6 @@
   register: delete_idempotency
 
 - name: Ensure nothing changed
-  assert:
+  ansible.builtin.assert:
     that:
       - delete_idempotency is not changed

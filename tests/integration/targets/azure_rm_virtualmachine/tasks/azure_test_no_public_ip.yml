@@ -26,7 +26,7 @@
   register: create_vm_public_result
 
 - name: Ensure VM was created properly
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_vm.diagnostics_profile.boot_diagnostics.enabled
       - azure_vm.diagnostics_profile.boot_diagnostics.storage_uri is defined

@@ -1,5 +1,5 @@
 - name: setup basic facts
-  set_fact:
+  ansible.builtin.set_fact:
     uuid: bb21a88b-30e1-42b5-84e8-1d3f322de033
     # Disk Backup Reader, unlikely to be already assigned in ansible-test resource groups.
     az_role_definition_guid: '3e5e47e6-65f7-47ef-90b5-e5dd4d455f24'
@@ -26,7 +26,7 @@
     - id: "{{ az_role_assignments.roleassignments[0].id }}"
 
 - name: check specific fetch for single return
-  assert:
+  ansible.builtin.assert:
     that:
       - "{{ ( item.roleassignments | length) == 1 }}"
   loop: "{{ az_role_assignment_specific.results }}"
@@ -48,7 +48,7 @@
       id: "{{ az_role_assignments.roleassignments[0].id }}"
 
 - name: check intended failures
-  assert:
+  ansible.builtin.assert:
     that:
       - item.failed
   loop: "{{ failures_info.results }}"
@@ -88,7 +88,7 @@
       state: "absent"
 
 - name: check intended failures
-  assert:
+  ansible.builtin.assert:
     that:
       - item.failed
   loop: "{{ failures_mutable.results }} "
@@ -113,7 +113,7 @@
   register: az_role_assignment_idempotent
 
 - name: check idempotence
-  assert:
+  ansible.builtin.assert:
     that:
       - az_role_assignment_idempotent.changed == False
 
@@ -135,7 +135,7 @@
   register: az_role_assignment_by_scope_strict
 
 - name: check strict scope matching
-  assert:
+  ansible.builtin.assert:
     that:
       - item.scope == az_role_assignments.roleassignments[0].scope 
   loop: "{{ az_role_assignment_by_scope_strict.roleassignments }}"
@@ -211,7 +211,7 @@
   register: absent_nochange_properties
 
 - name: check intended failures info
-  assert:
+  ansible.builtin.assert:
     that:
       - item.changed == false
   loop: 

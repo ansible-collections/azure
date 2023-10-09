@@ -1,5 +1,5 @@
 - name: Create domain name
-  set_fact:
+  ansible.builtin.set_fact:
       domain_name: "ansible-{{ resource_group | hash('md5') | truncate(24, True, '') }}"
       rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
@@ -20,7 +20,7 @@
           delete: on-exit
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - output.state.public_ip_allocation_method == 'static'
           - output.state.dns_settings.domain_name_label == domain_name
@@ -39,7 +39,7 @@
         - 1
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - output.state.public_ip_address_version == 'ipv6'
           - output.state.zones == ['1']
@@ -52,7 +52,7 @@
       domain_name: "{{ domain_name }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that: not output.changed
 
 - name: Update tags
@@ -67,7 +67,7 @@
           foo: bar
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - output.state.tags | length == 3
           - output.state.tags.delete == 'never'
@@ -80,7 +80,7 @@
           - foo:bar
   register: infos
 
-- assert:
+- ansible.builtin.assert:
       that: infos.publicipaddresses | length == 1
 
 - name: Purge all tags
@@ -92,7 +92,7 @@
       append_tags: no
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - output.state.tags | length == 0
 
@@ -102,7 +102,7 @@
       name: "pip{{ rpfx }}"
   register: pip
 
-- assert:
+- ansible.builtin.assert:
       that:
       - "pip.publicipaddresses | length == 1"
       - pip.publicipaddresses[0].name == "pip{{ rpfx }}"
@@ -114,7 +114,7 @@
       resource_group: "{{ resource_group }}"
   register: infos
 
-- assert:
+- ansible.builtin.assert:
       that: infos.publicipaddresses | length > 0
 
 - name: Remove IPV6 public ip
@@ -135,5 +135,5 @@
       name: "pip{{ rpfx }}"
   register: infos
 
-- assert:
+- ansible.builtin.assert:
       that: infos.publicipaddresses | length == 0

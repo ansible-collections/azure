@@ -1,4 +1,4 @@
- - set_fact:
+ - ansible.builtin.set_fact:
      rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
      noderpfx: "{{ resource_group | hash('md5') | truncate(4, True, '') }}"
 
@@ -46,7 +46,7 @@
    register: fact
 
  - name: Check there is no AKS created
-   assert:
+   ansible.builtin.assert:
      that:
         - "fact.aks | length == 0"
 
@@ -81,7 +81,7 @@
    register: output
 
  - name: Assert the AKS instance is well created
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
        - output.provisioning_state == 'Succeeded'
@@ -93,7 +93,7 @@
    register: fact
 
  - name: Assert fact returns the created one
-   assert:
+   ansible.builtin.assert:
       that:
         - "fact.aks | length == 1"
         - fact.aks[0].id == output.id
@@ -132,7 +132,7 @@
    register: output
 
  - name: Assert the AKS instance is well update
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
 
@@ -143,7 +143,7 @@
    register: fact
 
  - name: Assert fact returns the created one
-   assert:
+   ansible.builtin.assert:
       that:
         - "fact.aks | length == 1"
         - fact.aks[0].id == output.id
@@ -156,7 +156,7 @@
    register: upgrades
 
  - name: Assert available control-plane versions for upgrade
-   assert:
+   ansible.builtin.assert:
       that:
         - "upgrades.azure_aks_upgrades.control_plane_profile.kubernetes_version == versions.azure_aks_versions[0]"
         - "upgrades.azure_aks_upgrades.control_plane_profile.upgrades | length > 0"
@@ -190,7 +190,7 @@
    register: output
 
  - name: Assert idempotent
-   assert:
+   ansible.builtin.assert:
      that:
        - not output.changed
 
@@ -232,7 +232,7 @@
    register: output
 
  - name: Assert the AKS instance is upgraded
-   assert:
+   ansible.builtin.assert:
       that:
        - output.changed
        - output.kubernetes_version == version1.azure_aks_versions[0]
@@ -271,7 +271,7 @@
      enable_rbac: yes
    register: output
 
- - assert:
+ - ansible.builtin.assert:
       that:
         - not output.changed
 
@@ -309,7 +309,7 @@
    ignore_errors: yes
 
  - name: Assert the AKS instance is well created
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
        - output.provisioning_state == 'Succeeded'
@@ -348,7 +348,7 @@
    register: output
 
  - name: Assert the AKS instance is well created
-   assert:
+   ansible.builtin.assert:
      that:
        - not output.changed
 
@@ -391,7 +391,7 @@
    ignore_errors: yes
 
  - name: Assert the AKS instance is well created
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
        - "output.agent_pool_profiles | length == 2"
@@ -436,7 +436,7 @@
    register: output
 
  - name: Assert the AKS instance is well created
-   assert:
+   ansible.builtin.assert:
      that:
        - not output.changed
 
@@ -479,7 +479,7 @@
    register: output
 
  - name: Assert the AKS instance is well created
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
        - "output.agent_pool_profiles | length == 2"
@@ -531,7 +531,7 @@
    register: fact
 
  - name: Assert fact returns the created one
-   assert:
+   ansible.builtin.assert:
       that:
         - "fact.aks | length == 1"
         - fact.aks[0].kube_config == output.kube_config
@@ -544,7 +544,7 @@
    register: output
 
  - name: Assert the AKS instance is well deleted
-   assert:
+   ansible.builtin.assert:
      that:
        - output.changed
 
@@ -556,7 +556,7 @@
    register: output
 
  - name: Assert idempotent
-   assert:
+   ansible.builtin.assert:
      that:
        - not output.changed
 
@@ -567,6 +567,6 @@
    register: fact
 
  - name: Assert fact returns empty
-   assert:
+   ansible.builtin.assert:
       that:
         - "fact.aks | length == 0"

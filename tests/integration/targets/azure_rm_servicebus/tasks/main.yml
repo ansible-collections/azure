@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
 
@@ -12,7 +12,7 @@
         key1: value1
   register: namespace
 
-- assert:
+- ansible.builtin.assert:
     that:
       - namespace.id
       - namespace.changed
@@ -24,7 +24,7 @@
       resource_group: "{{ resource_group }}"
   register: namespace
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not namespace.changed
 
@@ -37,7 +37,7 @@
       max_size_in_mb: 2048
   register: queue
 
-- assert:
+- ansible.builtin.assert:
       that:
           - queue.id
           - queue.changed
@@ -53,7 +53,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - output.changed
 
@@ -67,7 +67,7 @@
       max_size_in_mb: 2048
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - output.changed
           - output.id
@@ -83,7 +83,7 @@
       max_size_in_mb: 2048
   register: output
 
-- assert:
+- ansible.builtin.assert:
       that:
           - not output.changed
 
@@ -103,7 +103,7 @@
       topic: "topic{{ rpfx }}"
   register: subs
 
-- assert:
+- ansible.builtin.assert:
       that:
           - subs.id
           - subs.changed
@@ -117,7 +117,7 @@
       show_sas_policies: yes
   register: facts
 
-- assert:
+- ansible.builtin.assert:
       that:
          - "facts.servicebuses | length == 1"
          - facts.servicebuses[0].id == output.id
@@ -142,7 +142,7 @@
       show_sas_policies: yes
   register: facts
 
-- assert:
+- ansible.builtin.assert:
       that:
          - facts.servicebuses[0].subscription_count == 0
          - "facts.servicebuses | length == 1"
@@ -163,7 +163,7 @@
       show_sas_policies: yes
   register: facts
 
-- assert:
+- ansible.builtin.assert:
       that:
          - "facts.servicebuses | length == 0"
 

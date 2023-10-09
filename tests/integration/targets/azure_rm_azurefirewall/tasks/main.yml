@@ -1,5 +1,5 @@
 - name: Fix resource prefix
-  set_fact:
+  ansible.builtin.set_fact:
     virtual_network_name: myVirtualNetwork
     subnet_name: AzureFirewallSubnet
     public_ipaddress_name: myPublicIpAddress
@@ -105,7 +105,7 @@
     var: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -175,7 +175,7 @@
     var: output
 
 - name: Assert that output has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -243,7 +243,7 @@
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -253,7 +253,7 @@
     name: '{{azure_firewall_name}}'
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: 
       - not output.changed
       - output.firewalls['id'] != None
@@ -272,6 +272,6 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that: 
       - output.changed

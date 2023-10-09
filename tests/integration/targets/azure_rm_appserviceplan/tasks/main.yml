@@ -1,10 +1,10 @@
 - name: Prepare facts
-  set_fact:
+  ansible.builtin.set_fact:
     resource_prefix: "{{ resource_group_secondary | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: yes
 
 - name: Prepare facts
-  set_fact:
+  ansible.builtin.set_fact:
     linux_plan_resource_group: "{{ resource_group_secondary }}"
     win_plan_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}winplan"
     linux_plan_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}linplan"
@@ -17,8 +17,8 @@
     sku: B1
   register: output
 
-- name: assert app service was created
-  assert:
+- name: ansible.builtin.assert app service was created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
@@ -32,8 +32,8 @@
     number_of_workers: 1
   register: output
 
-- name: assert app service was created
-  assert:
+- name: ansible.builtin.assert app service was created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
@@ -44,8 +44,8 @@
     name: "{{ linux_plan_name }}1"
   register: output
 
-- name: assert is_linux is True
-  assert:
+- name: ansible.builtin.assert is_linux is True
+  ansible.builtin.assert:
     that:
       - output.appserviceplans | length == 1
       - output.appserviceplans[0].is_linux == True
@@ -59,8 +59,8 @@
     number_of_workers: 1
   register: output
 
-- name: assert app service is not updated
-  assert:
+- name: ansible.builtin.assert app service is not updated
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: update a windows plan sku
@@ -70,8 +70,8 @@
     sku: B2
   register: output
 
-- name: assert app service was updated
-  assert:
+- name: ansible.builtin.assert app service was updated
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -84,8 +84,8 @@
     number_of_workers: 2
   register: output
 
-- name: assert app service was updated
-  assert:
+- name: ansible.builtin.assert app service was updated
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -97,8 +97,8 @@
     is_linux: true
   register: output
 
-- name: assert app service was created
-  assert:
+- name: ansible.builtin.assert app service was created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
@@ -111,6 +111,6 @@
     is_linux: true
   register: output
 
-- name: assert app service is not updated
-  assert:
+- name: ansible.builtin.assert app service is not updated
+  ansible.builtin.assert:
     that: not output.changed

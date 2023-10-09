@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     applicationsecuritygroup_name1: "asg{{ resource_group | hash('md5') | truncate(5, True, '') }}{{ 1000 | random }}"
     applicationsecuritygroup_name2: "asg{{ resource_group | hash('md5') | truncate(5, True, '') }}{{ 1000 | random }}"
@@ -93,7 +93,7 @@
   register: output
   check_mode: yes
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -109,7 +109,7 @@
       create_with_security_group: False
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.state.id
@@ -121,7 +121,7 @@
     name: "tn{{ rpfx }}"
   register: facts
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "facts.networkinterfaces | length == 1"
       - facts.networkinterfaces[0].id == output.state.id
@@ -146,7 +146,7 @@
       subnet: "{{ facts.networkinterfaces[0].subnet }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -160,7 +160,7 @@
       public_ip: False
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -175,7 +175,7 @@
   register: output
   check_mode: yes
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -190,7 +190,7 @@
   register: output
   check_mode: yes
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -206,7 +206,7 @@
   register: output
   check_mode: yes
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -222,7 +222,7 @@
   register: output
   check_mode: yes
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -240,7 +240,7 @@
   register: output
   check_mode: yes
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -276,7 +276,7 @@
                 load_balancer: "lb{{ rpfx }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.state.dns_settings.dns_servers == ['8.9.10.11', '7.8.9.10']
@@ -316,7 +316,7 @@
                 load_balancer: "lb{{ rpfx }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -326,7 +326,7 @@
     name: "tn{{ rpfx }}"
   register:  facts
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "facts.networkinterfaces | length == 1"
       - facts.networkinterfaces[0].id == output.state.id
@@ -358,7 +358,7 @@
                 load_balancer: "lb{{ rpfx }}"
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.state.dns_settings.dns_servers == ['8.9.10.11']
@@ -378,7 +378,7 @@
   register: output
 
 - name: Assert check mode creation
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -391,7 +391,7 @@
   register: output
 
 - name: Assert application security group creation
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id != ''
@@ -403,7 +403,7 @@
   register: facts
 
 - name: Assert facts
-  assert:
+  ansible.builtin.assert:
     that:
       - facts['applicationsecuritygroups'] | length == 1
       - facts['applicationsecuritygroups'][0]['name'] != None
@@ -419,7 +419,7 @@
   register: output
 
 - name: Assert idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -433,7 +433,7 @@
   register: output
 
 - name: Assert update
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -459,8 +459,8 @@
         primary: True
   register: output
 
-- name: assert creation succeeded
-  assert:
+- name: ansible.builtin.assert creation succeeded
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -480,8 +480,8 @@
         primary: True
   register: output
 
-- name: assert idempotent
-  assert:
+- name: ansible.builtin.assert idempotent
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -500,8 +500,8 @@
         primary: True
   register: output
 
-- name: assert update succeeded
-  assert:
+- name: ansible.builtin.assert update succeeded
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -511,7 +511,7 @@
     name: "{{ nic_name1 }}"
   register: facts
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "facts.networkinterfaces[0].ip_configurations[0].application_security_groups | length == 1"
 
@@ -591,7 +591,7 @@
           - name: "test_backend_address_pool"
             application_gateway: "appgateway{{ rpfx }}"
   register: output
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.state.ip_configurations | length == 1
@@ -613,7 +613,7 @@
           - name: "test_backend_address_pool"
             application_gateway: "appgateway{{ rpfx }}"
   register: output
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -622,7 +622,7 @@
     name: "appgw-nic{{ rpfx }}"
     resource_group: "{{ resource_group_secondary }}"
   register: facts
-- assert:
+- ansible.builtin.assert:
     that:
       - facts.networkinterfaces | length == 1
       - facts.networkinterfaces[0].id == output.state.id
@@ -636,7 +636,7 @@
     resource_group: "{{ resource_group_secondary }}"
     state: absent
   register: output
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -646,7 +646,7 @@
     resource_group: "{{ resource_group_secondary }}"
     state: absent
   register: output
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -658,7 +658,7 @@
   check_mode: yes
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -669,7 +669,7 @@
       state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -680,7 +680,7 @@
       state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -702,7 +702,7 @@
     - 'tn{{ rpfx }}'
     - 'tn{{ rpfx }}v6'
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.results | length == 4
@@ -722,7 +722,7 @@
   register: output
 
 - name: Assert delete check mode
-  assert:
+  ansible.builtin.assert:
       that:
         - output.changed
 
@@ -734,7 +734,7 @@
   register: output
 
 - name: Assert the deletion
-  assert:
+  ansible.builtin.assert:
       that:
         - output.changed
 
@@ -755,7 +755,7 @@
     - '{{ nic_name1 }}'
     - 'tn{{ rpfx }}sg'
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
       - output.results | length == 2
@@ -767,6 +767,6 @@
     state: 'absent'
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed

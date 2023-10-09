@@ -26,7 +26,7 @@
   register: nsg_result
 
 - name: Assert that security group were not exist before deleting
-  assert:
+  ansible.builtin.assert:
     that:
       - nsg_result.securitygroups | length == 0
 
@@ -50,7 +50,7 @@
   register: pip_result
 
 - name: Assert that autocreated resources were deleted
-  assert:
+  ansible.builtin.assert:
     that:
       # what about the default storage group?
       - nic_result.networkinterfaces | length == 0

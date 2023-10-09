@@ -1,7 +1,7 @@
 - include_tasks: setup.yml
 
 - name: Set specific UbuntuServer image version
-  set_fact:
+  ansible.builtin.set_fact:
     specific_image_name: "16.04.202104140"
 
 - name: Create minimal VM with defaults
@@ -23,7 +23,7 @@
   register: vm_output
 
 - name: Ensure VM was created using the specific UbuntuServer image version / name
-  assert:
+  ansible.builtin.assert:
     that:
       - vm_output.azure_vm.properties.storageProfile.imageReference.version == specific_image_name
 

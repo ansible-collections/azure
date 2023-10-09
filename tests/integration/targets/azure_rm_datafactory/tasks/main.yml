@@ -1,5 +1,5 @@
 - name: Create data factory name
-  set_fact:
+  ansible.builtin.set_fact:
     name: "df{{ resource_group | hash('md5') | truncate(21, True, '') }}"
 
 - name: Create data factory (Checkmode)
@@ -20,7 +20,7 @@
       key1: value1
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -33,7 +33,7 @@
       key1: value1
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -47,7 +47,7 @@
       key2: value2
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed
 
@@ -58,7 +58,7 @@
   register: output
 
 - name: Assert status succeed and result match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.datafactory[0].tags | length == 2
       - output.datafactory[0].public_network_access == 'Disabled'
@@ -71,6 +71,6 @@
     state: absent
   register: output
 
-- assert:
+- ansible.builtin.assert:
     that:
       - output.changed

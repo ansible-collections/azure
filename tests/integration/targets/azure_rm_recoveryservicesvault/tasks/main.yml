@@ -1,5 +1,5 @@
 - name: Fix resource prefix
-  set_fact:
+  ansible.builtin.set_fact:
     name: "revault{{ resource_group | hash('md5') | truncate(22, True, '') }}"
     location: "eastus"
 
@@ -12,7 +12,7 @@
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       
@@ -25,7 +25,7 @@
   register: output
 
 - name: Assert that output has no changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -36,7 +36,7 @@
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.response.id != None
       - output.response.name != None
@@ -50,6 +50,6 @@
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
