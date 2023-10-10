@@ -28,10 +28,10 @@
 
 - name: Create public IP address
   azure_rm_publicipaddress:
-      resource_group: "{{ resource_group }}"
-      allocation_method: Static
-      name: "{{ public_ipaddress_name }}"
-      sku: Standard
+    resource_group: "{{ resource_group }}"
+    allocation_method: Static
+    name: "{{ public_ipaddress_name }}"
+    sku: Standard
   register: pip_output
 
 - name: Print the creating return
@@ -258,7 +258,7 @@
 
 - name: Assert the azure firewall facts
   ansible.builtin.assert:
-    that: 
+    that:
       - not output.changed
       - output.firewalls['id'] != None
       - output.firewalls['name'] != None
@@ -278,5 +278,5 @@
 
 - name: Assert the azure firewall deleted
   ansible.builtin.assert:
-    that: 
+    that:
       - output.changed

@@ -1,14 +1,14 @@
 - name: Prepare random number
   ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Create storage account
   azure_rm_storageaccount:
-      resource_group: "{{ resource_group }}"
-      name: "storage{{ rpfx }}"
-      account_type: Standard_LRS
-      location: eastus2
+    resource_group: "{{ resource_group }}"
+    name: "storage{{ rpfx }}"
+    account_type: Standard_LRS
+    location: eastus2
 
 - name: Sample for Azure REST API - StorageAccounts_ListKeys
   azure_rm_resource:
@@ -22,7 +22,8 @@
       - type: listkeys
   register: storage_output
 
-- ansible.builtin.debug:
+- name: Print the storage account keys
+  ansible.builtin.debug:
     var: storage_output
 
 - name: Create instance of Cluster -- check mode
@@ -38,8 +39,8 @@
       gateway_rest_username: http-user
       gateway_rest_password: Password123!
     storage_accounts:
-      - name: storage{{ rpfx }}.blob.core.windows.net 
-        is_default: yes
+      - name: storage{{ rpfx }}.blob.core.windows.net
+        is_default: true
         container: "cluster{{ rpfx }}"
         key: "{{ storage_output['response']['keys'][0]['value'] }}"
     compute_profile_roles:
@@ -61,7 +62,7 @@
         linux_profile:
           username: sshuser
           password: Password123!
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -81,8 +82,8 @@
       gateway_rest_username: http-user
       gateway_rest_password: Password123!
     storage_accounts:
-      - name: storage{{ rpfx }}.blob.core.windows.net 
-        is_default: yes
+      - name: storage{{ rpfx }}.blob.core.windows.net
+        is_default: true
         container: "cluster{{ rpfx }}"
         key: "{{ storage_output['response']['keys'][0]['value'] }}"
     compute_profile_roles:
@@ -124,8 +125,8 @@
       gateway_rest_username: http-user
       gateway_rest_password: Password123!
     storage_accounts:
-      - name: storage{{ rpfx }}.blob.core.windows.net 
-        is_default: yes
+      - name: storage{{ rpfx }}.blob.core.windows.net
+        is_default: true
         container: "cluster{{ rpfx }}"
         key: "{{ storage_output['response']['keys'][0]['value'] }}"
     compute_profile_roles:
@@ -166,8 +167,8 @@
       gateway_rest_username: http-user
       gateway_rest_password: Password123!
     storage_accounts:
-      - name: storage{{ rpfx }}.blob.core.windows.net 
-        is_default: yes
+      - name: storage{{ rpfx }}.blob.core.windows.net
+        is_default: true
         container: "cluster{{ rpfx }}"
         key: "{{ storage_output['response']['keys'][0]['value'] }}"
     compute_profile_roles:
@@ -192,7 +193,8 @@
     tags:
       aaa: bbb
   register: output
-- ansible.builtin.debug:
+- name: Print the cluster creating result
+  ansible.builtin.debug:
     var: output
 - name: Assert the state has changed
   ansible.builtin.assert:
@@ -225,7 +227,7 @@
     resource_group: "{{ resource_group }}"
     name: "cluster{{ rpfx }}"
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
   ansible.builtin.assert:

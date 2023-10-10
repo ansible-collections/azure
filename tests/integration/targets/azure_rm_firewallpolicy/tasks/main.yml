@@ -67,7 +67,8 @@
     name: "{{ policy_name }}"
   register: results
 
-- ansible.builtin.assert:
+- name: Assert the firewall policy facts
+  ansible.builtin.assert:
     that:
       - not results.changed
       - results.firewallpolicies[0].id != None

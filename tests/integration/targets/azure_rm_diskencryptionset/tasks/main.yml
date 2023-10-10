@@ -3,9 +3,9 @@
     set_name: "des{{ resource_group | hash('md5') | truncate(22, True, '') }}"
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     tenant_id: "{{ azure_tenant }}"
-  run_once: yes
+  run_once: true
 
-- name: lookup service principal object id
+- name: Lookup service principal object id
   ansible.builtin.set_fact:
     object_id: "{{ lookup('azure_service_principal_attribute',
                    azure_client_id=azure_client_id,
@@ -13,11 +13,11 @@
                    azure_tenant=tenant_id) }}"
   register: object_id_facts
 
-- name: create a key vault
+- name: Create a key vault
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     vault_name: "myvault{{ rpfx }}"
-    enabled_for_disk_encryption: yes
+    enabled_for_disk_encryption: true
     vault_tenant: "{{ tenant_id }}"
     sku:
       name: standard
@@ -50,10 +50,11 @@
     name: testkey
   register: results
 
-- ansible.builtin.set_fact:
+- name: Assert the key vault facts
+  ansible.builtin.set_fact:
     key_url: "{{ results['keys'][0]['kid'] }}"
 
-- name: create disk encryption set
+- name: Create disk encryption set
   azure_rm_diskencryptionset:
     resource_group: "{{ resource_group }}"
     name: "{{ set_name }}"
@@ -66,7 +67,7 @@
   ansible.builtin.assert:
     that: results.changed
 
-- name: create disk encryption set (Idempotent test)
+- name: Create disk encryption set (Idempotent test)
   azure_rm_diskencryptionset:
     resource_group: "{{ resource_group }}"
     name: "{{ set_name }}"
@@ -100,7 +101,8 @@
     name: "{{ set_name }}"
   register: results
 
-- ansible.builtin.assert:
+- name: Assert the disk encryption facts
+  ansible.builtin.assert:
     that:
       - not results.changed
       - results.diskencryptionsets[0].id != None

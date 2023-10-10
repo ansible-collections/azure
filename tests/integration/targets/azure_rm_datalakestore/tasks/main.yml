@@ -133,7 +133,7 @@
         subnet_id: "{{ subnet_output.state.id }}"
   register: output
 
-- name: Assert status succeeded and results include an Id value 
+- name: Assert status succeeded and results include an Id value
   ansible.builtin.assert:
     that:
       - output.changed

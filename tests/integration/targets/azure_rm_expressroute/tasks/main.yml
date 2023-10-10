@@ -21,9 +21,10 @@
       tier: premium
       family: metereddata
   register: results
-  check_mode: yes
+  check_mode: true
 
-- ansible.builtin.assert:
+- name: Assert the excpress route check mode result
+  ansible.builtin.assert:
     that: results.changed
 
 
@@ -47,7 +48,8 @@
       family: metereddata
   register: results
 
-- ansible.builtin.assert:
+- name: Assert the express route created
+  ansible.builtin.assert:
     that: results.changed
 
 
@@ -71,7 +73,8 @@
       family: metereddata
   register: results
 
-- ansible.builtin.assert:
+- name: Assert the express route updated
+  ansible.builtin.assert:
     that: 
       - results.changed
       - results.state.tags.test == 'modified'
@@ -85,7 +88,7 @@
 
 - name: Assert that facts module returned result
   ansible.builtin.assert:
-    that: 
+    that:
       - results.expressroute[0].tags.test == 'modified'
       - results.expressroute[0].type == 'Microsoft.Network/expressRouteCircuits'
 
@@ -95,7 +98,8 @@
     resource_group: "{{ resource_group }}"
   register: results
 
-- ansible.builtin.assert:
+- naem: Assert the idempotent
+  ansible.builtin.assert:
     that:
       - not results.changed
 
@@ -115,5 +119,6 @@
     state: absent
   register: results
 
-- ansible.builtin.assert:
+- name: Assert the express route deleted
+  ansible.builtin.assert:
     that: not results.changed

@@ -213,7 +213,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ endpointname }}"
     profile_name: "{{ cdnprofilename }}"
-    started: True
+    started: true
   register: output
 
 - name: Assert started

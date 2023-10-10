@@ -46,7 +46,7 @@
         managed_disk_type: Standard_LRS
   register: vmss
 
-- name: create auto scaling (check mode)
+- name: Create auto scaling (check mode)
   azure_rm_autoscale:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
@@ -103,7 +103,7 @@
       - output.changed
       - output.id
 
-- name: create auto scaling (idemponent)
+- name: Create auto scaling (idemponent)
   azure_rm_autoscale:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
@@ -175,7 +175,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     state: absent
-  check_mode: true 
+  check_mode: true
   register: output
 
 - name: Assert the auto scaling deleted

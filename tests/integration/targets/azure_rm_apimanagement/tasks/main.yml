@@ -30,7 +30,7 @@
     protocols:
       - https
   register: newapi
- 
+
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:

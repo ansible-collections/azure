@@ -10,7 +10,7 @@
     premium_data_disks: true
     tags:
       key1: value1
-  check_mode: yes
+  check_mode: true
 
 - name: Create a DevTest Lab
   azure_rm_devtestlab:
@@ -45,7 +45,7 @@
     resource_group: "{{ resource_group }}"
     name: "dev-{{ rpfx }}"
   register: output
- 
+
 - name: Assert the devtest lab create success
   ansible.builtin.assert:
     that:
@@ -100,7 +100,7 @@
       sku: 16.04-LTS
       os_type: Linux
       version: latest
-    allow_claim: no
+    allow_claim: false
     expiration_date: "2025-10-22T01:49:12.117974Z"
   register: output
 
@@ -123,7 +123,7 @@
       - output.virtualmachines[0].provisioning_state == "Succeeded"
       - output.virtualmachines[0].expiration_date == "2025-10-22T01:49:12.117974Z"
 
-- name: create a instance devtest lab image
+- name: Create a instance devtest lab image
   azure_rm_devtestlabcustomimage:
     resource_group: "{{ resource_group }}"
     lab_name: "dev-{{ rpfx }}"
@@ -157,7 +157,7 @@
     lab_name: "dev-{{ rpfx }}"
     artifact_source_name: "public environment repo"
   register: output
-  
+
 - name: Assert the devtest lab armtemplate is returned successfully
   ansible.builtin.assert:
     that:

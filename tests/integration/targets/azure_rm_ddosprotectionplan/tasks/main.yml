@@ -36,7 +36,7 @@
 
 - name: Assert the ddos protection updated
   ansible.builtin.assert:
-    that: 
+    that:
       - results.changed
       - results.state.tags.test == 'modified'
 
@@ -48,7 +48,7 @@
 
 - name: Assert that facts module returned result
   ansible.builtin.assert:
-    that: 
+    that:
       - results.ddosprotectionplan[0].tags.test == 'modified'
 
 - name: Test idempotent

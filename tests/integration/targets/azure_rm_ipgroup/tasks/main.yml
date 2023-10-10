@@ -14,7 +14,7 @@
     tags:
       key1: "value1"
     state: present
-  check_mode: yes
+  check_mode: true
 
 - name: Create IP group
   azure_rm_ipgroup:
@@ -73,7 +73,8 @@
     name: "{{ group_name }}"
   register: results
 
-- ansible.builtin.assert:
+- name: Assert the ip group facts
+  ansible.builtin.assert:
     that:
       - not results.changed
       - results.ipgroups[0].id != None

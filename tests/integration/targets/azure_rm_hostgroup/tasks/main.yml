@@ -55,7 +55,8 @@
     name: "{{ group_name }}"
   register: results
 
-- ansible.builtin.assert:
+- name: Assert the host group facts
+  ansible.builtin.assert:
     that:
       - not results.changed
       - results.hostgroups[0].name == "{{ group_name }}"

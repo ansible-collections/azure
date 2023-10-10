@@ -13,7 +13,7 @@
 
 - name: Assert task failed
   ansible.builtin.assert:
-    that: 
+    that:
       - invalid_hosting_name.failed == True
 
 - name: Create invalid Azure Search - Partition Count High Density

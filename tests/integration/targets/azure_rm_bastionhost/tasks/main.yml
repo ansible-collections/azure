@@ -119,7 +119,8 @@
       - not output.changed
 
 - name: Pause for 20 mimutes to Bastion host updating
-  ansible.builtin.command: sleep 1200
+  ansible.builtin.command:
+    sleep 1200
 
 - name: Update bastion host
   azure_rm_bastionhost:
@@ -127,9 +128,9 @@
     name: "bh{{ rpfx }}"
     ip_configurations:
       - name: testip_configuration
-        subnet: 
+        subnet:
           id: "{{ subnet_output.state.id }}"
-        public_ip_address: 
+        public_ip_address:
           id: "{{ publicip_output.publicipaddresses[0].id }}"
         private_ip_allocation_method: Dynamic
     sku:
@@ -154,7 +155,7 @@
     resource_group: "{{ resource_group }}"
     name: "bh{{ rpfx }}"
   register: output
-  
+
 - name: Assert the bastion host is well create
   ansible.builtin.assert:
     that:

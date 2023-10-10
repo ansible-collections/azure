@@ -45,7 +45,7 @@
     that:
       - not output.changed
 
-- name: Create automation runbook with more paramters 
+- name: Create automation runbook with more paramters
   azure_rm_automationrunbook:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"
@@ -55,7 +55,7 @@
     log_activity_trace: 2
     log_progress: false
     log_verbose: true
-    tags: 
+    tags:
       key1: value1
   register: output
 
@@ -64,7 +64,7 @@
     that:
       - output.changed
 
-- name: Update automation runbook with more paramters 
+- name: Update automation runbook with more paramters
   azure_rm_automationrunbook:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"
@@ -83,7 +83,7 @@
     that:
       - output.changed
 
-- name: Publish automation runbook 
+- name: Publish automation runbook
   azure_rm_automationrunbook:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"

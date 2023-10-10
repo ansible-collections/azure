@@ -62,7 +62,7 @@
 
 - name: Assert availabilty set modified
   ansible.builtin.assert:
-    that: 
+    that:
       - not results.changed
       - results.msg == 'You tried to change platform_update_domain_count but is was unsuccessful. An Availability Set is immutable, except tags'
 
@@ -77,11 +77,11 @@
     tags:
       test1: modified
   register: results
-  ignore_errors: true 
+  ignore_errors: true
 
 - name: Assert the availabilty set idempotent
   ansible.builtin.assert:
-    that: 
+    that:
       - not results.changed
       - results.msg == 'You tried to change platform_update_domain_count but is was unsuccessful. An Availability Set is immutable, except tags'
 
@@ -110,7 +110,7 @@
     platform_fault_domain_count: 4
     sku: Aligned
   register: results
-  ignore_errors: true 
+  ignore_errors: true
 
 - name: Assert the error return
   ansible.builtin.assert:
@@ -127,12 +127,12 @@
     tags:
       checktest1: modified1
       checktest2: modified2
-  check_mode: true 
+  check_mode: true
   register: results
 
 - name: Assert the check mode test
   ansible.builtin.assert:
-    that: 
+    that:
       - results.changed
       - results.state.tags.checktest1 == 'modified1'
 
@@ -147,7 +147,7 @@
 
 - name: Assert the availabilty set facts
   ansible.builtin.assert:
-    that: 
+    that:
       - not results.changed
       - not results.failed
       - results.ansible_info.azure_availabilitysets[0].platform_fault_domain_count == 2
@@ -160,7 +160,7 @@
     name: myavailabilityset1
     resource_group: "{{ resource_group }}"
     state: absent
-  check_mode: true 
+  check_mode: true
   register: results
 - name: Assert the availabilty set deleted
   ansible.builtin.assert:
@@ -178,7 +178,7 @@
     name: myavailabilityset1
     resource_group: "{{ resource_group }}"
     state: absent
-  check_mode: true 
+  check_mode: true
   register: results
 - name: Assert check mode return
   ansible.builtin.assert:
