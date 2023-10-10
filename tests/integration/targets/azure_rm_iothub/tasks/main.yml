@@ -23,7 +23,7 @@
     name: "hub{{ rpfx }}"
     resource_group: "{{ resource_group }}"
   register: iothub
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Create IoT Hub
   azure_rm_iothub:

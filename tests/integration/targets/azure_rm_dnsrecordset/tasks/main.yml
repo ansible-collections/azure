@@ -107,7 +107,7 @@
 
 - name: Assert that check_mode returns new state
   ansible.builtin.assert:
-    that: 
+    that:
       - results.changed
 
 # FUTURE: add facts module calls to ensure that we really didn't touch anything
@@ -155,7 +155,7 @@
 
 - name: Assert that SRV record set was created
   ansible.builtin.assert:
-    that: 
+    that:
       - results.changed
 
 - name: Create TXT records in a new record set

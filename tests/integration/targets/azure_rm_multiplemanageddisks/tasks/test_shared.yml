@@ -81,26 +81,26 @@
 
 - name: Create virtual machines
   azure_rm_virtualmachine:
-      resource_group: "{{ item.resource_group }}"
-      name: "{{ item.name }}"
-      vm_size: Standard_E2_v3
-      virtual_network: "vnet-{{ item.name }}"
-      managed_disk_type: Standard_LRS
-      admin_username: adminuser
-      admin_password: "!test123@"
-      os_type: Linux
-      image:
-        offer: UbuntuServer
-        publisher: Canonical
-        sku: 16.04-LTS
-        version: latest
+    resource_group: "{{ item.resource_group }}"
+    name: "{{ item.name }}"
+    vm_size: Standard_E2_v3
+    virtual_network: "vnet-{{ item.name }}"
+    managed_disk_type: Standard_LRS
+    admin_username: adminuser
+    admin_password: "!test123@"
+    os_type: Linux
+    image:
+      offer: UbuntuServer
+      publisher: Canonical
+      sku: 16.04-LTS
+      version: latest
   with_items: "{{ shared_virtual_machines }}"
   register: create_vms
   async: 1000
   poll: 0
 
 - name: Wait for Virtual machine to be created
-  async_status:
+  ansible.builtin.async_status:
     jid: "{{ item.ansible_job_id }}"
   register: wait_create_vm
   until: wait_create_vm.finished
@@ -115,7 +115,8 @@
   register: vm_result
   with_items: "{{ shared_virtual_machines }}"
 
-- ansible.builtin.set_fact:
+- name: Assert the virtualmachine facts
+  ansible.builtin.set_fact:
     vm_ids: "{{ vm_result.results | map(attribute='vms') | flatten | map(attribute='id') | list }}"
 
 # Test attach disk on VMs
@@ -169,7 +170,7 @@
   azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
       - "{{ shared_disks[0] }}"
-    managed_by_extended: 
+    managed_by_extended:
       - "{{ shared_virtual_machines[0] }}"
     state: absent
   register: detach_disks
@@ -204,7 +205,7 @@
   azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
       - "{{ shared_disks[0] }}"
-    managed_by_extended: 
+    managed_by_extended:
       - "{{ shared_virtual_machines[0] }}"
     state: absent
   register: detach_idempotency
@@ -217,7 +218,7 @@
 # Test Detach disks from all VMs
 - name: Detach disk 2 from all VMs
   azure.azcollection.azure_rm_multiplemanageddisks:
-    managed_disks: 
+    managed_disks:
       - "{{ shared_disks[1] }}"
     managed_by_extended: []
     state: present
@@ -239,7 +240,7 @@
 
 - name: Detach disk 2 from all VMs once again (idempotency)
   azure.azcollection.azure_rm_multiplemanageddisks:
-    managed_disks: 
+    managed_disks:
       - "{{ shared_disks[1] }}"
     managed_by_extended: []
     state: present
@@ -265,7 +266,7 @@
 
 - name: Delete managed disk attached to VM
   azure.azcollection.azure_rm_multiplemanageddisks:
-    managed_disks: 
+    managed_disks:
       - "{{ shared_disks[0] }}"
     state: absent
   register: delete_attached_disk
@@ -284,7 +285,7 @@
 
 - name: Delete managed disk once again (idempotency)
   azure.azcollection.azure_rm_multiplemanageddisks:
-    managed_disks: 
+    managed_disks:
       - "{{ shared_disks[0] }}"
     state: absent
   register: delete_attached_disk
@@ -297,7 +298,7 @@
 # Test managed disks deletion with managed_by_extended set to []
 - name: Trying to delete managed disks with managed_by_extended set to []
   azure.azcollection.azure_rm_multiplemanageddisks:
-    managed_disks: 
+    managed_disks:
       - "{{ shared_disks[1] }}"
     managed_by_extended: []
     state: absent
@@ -311,7 +312,7 @@
 # Test managed disks deletion
 - name: Delete managed disks
   azure.azcollection.azure_rm_multiplemanageddisks:
-    managed_disks: 
+    managed_disks:
       - "{{ shared_disks[1] }}"
     state: absent
   register: delete_disk
@@ -330,7 +331,7 @@
 
 - name: Delete managed disks once again (idempotency)
   azure.azcollection.azure_rm_multiplemanageddisks:
-    managed_disks: 
+    managed_disks:
       - "{{ shared_disks[1] }}"
     state: absent
   register: delete_idempotency

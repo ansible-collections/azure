@@ -108,7 +108,7 @@
     that:
       - not results.changed
 
-#cleanup
+# cleanup
 - name: Delete Event Hub
   azure_rm_eventhub:
     location: eastus2

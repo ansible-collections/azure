@@ -247,7 +247,7 @@
     location: eastus
     publishing_profile:
       end_of_life_date: "2050-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 3
       storage_account_type: Standard_LRS
       target_regions:
@@ -303,7 +303,7 @@
     location: eastus
     publishing_profile:
       end_of_life_date: "2051-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 3
       storage_account_type: Standard_LRS
       target_regions:

@@ -35,7 +35,7 @@
     resource_group: "{{ resource_group }}"
     allow_classic_operations: true
     global_reach_enabled: false
-    tags: 
+    tags:
       a: b
     authorizations:
       - name: authorization_test
@@ -60,7 +60,7 @@
     resource_group: "{{ resource_group }}"
     allow_classic_operations: true
     global_reach_enabled: false
-    tags: 
+    tags:
       test: modified
     authorizations:
       - name: authorization_test
@@ -75,7 +75,7 @@
 
 - name: Assert the express route updated
   ansible.builtin.assert:
-    that: 
+    that:
       - results.changed
       - results.state.tags.test == 'modified'
 
@@ -98,7 +98,7 @@
     resource_group: "{{ resource_group }}"
   register: results
 
-- naem: Assert the idempotent
+- name: Assert the idempotent
   ansible.builtin.assert:
     that:
       - not results.changed
@@ -109,7 +109,7 @@
 - name: Delete Express Route
   azure_rm_expressroute:
     resource_group: "{{ resource_group }}"
-    name:  "{{ express_route }}"
+    name: "{{ express_route }}"
     state: absent
 
 - name: Delete Express Route (idempotent)

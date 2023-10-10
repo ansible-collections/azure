@@ -282,7 +282,7 @@
     name: nat-gateway{{ rpfx }}2
     idle_timeout_in_minutes: 10
     location: eastus
-    zones: [ 1 ]
+    zones: [1]
     sku:
       name: standard
   register: natgw_output
@@ -310,9 +310,9 @@
     state: absent
   register: output
   with_items:
-       - 1
-       - 2
-       - 3
+    - 1
+    - 2
+    - 3
 
 - name: Remove subnet
   azure_rm_subnet:
@@ -338,9 +338,9 @@
 
 - name: Delete public IPs for NAT Gateway
   azure_rm_publicipaddress:
-       resource_group: "{{ resource_group }}"
-       name: "nat-gateway{{ rpfx }}-pip{{ item }}"
-       state: absent
+    resource_group: "{{ resource_group }}"
+    name: "nat-gateway{{ rpfx }}-pip{{ item }}"
+    state: absent
   with_items:
-       - 1
-       - 2
+    - 1
+    - 2

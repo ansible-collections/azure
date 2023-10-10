@@ -52,8 +52,8 @@
         secret_name: testsecret
         secret_value: 'mysecret'
         content_type: 'Content Type Secret'
-        secret_valid_from: 2000-01-02T010203Z 
-        secret_expiry: 2030-03-04T040506Z 
+        secret_valid_from: 2000-01-02T010203Z
+        secret_expiry: 2030-03-04T040506Z
         tags:
           testing: test
           delete: on-exit

@@ -1,7 +1,7 @@
 - name: Prepare random number
   ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Create instance of MariaDB Server -- check mode
   azure_rm_mariadbserver:
@@ -13,10 +13,10 @@
     location: westus2
     storage_mb: 51200
     version: 10.2
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -33,7 +33,7 @@
     location: westus2
     storage_mb: 51200
     version: 10.2
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
   register: output
@@ -53,7 +53,7 @@
     location: westus2
     storage_mb: 51200
     version: 10.2
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
   register: output
@@ -73,7 +73,7 @@
     location: westus2
     storage_mb: 128000
     version: 10.2
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
   register: output
@@ -82,7 +82,8 @@
     that:
       - output.changed
       - output.state == 'Ready'
-- ansible.builtin.debug:
+- name: Print the state of the mariadb server
+  ansible.builtin.debug:
     var: output
 
 - name: Gather facts MariaDB Server
@@ -105,7 +106,7 @@
     location: westus2
     storage_mb: 51200
     version: 10.3
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
     tags:
@@ -121,7 +122,7 @@
     location: westus2
     storage_mb: 51200
     version: 10.3
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
     tags:
@@ -184,7 +185,7 @@
     resource_group: "{{ resource_group }}"
     server_name: mariadbsrv{{ rpfx }}
     name: testdatabase
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -226,7 +227,7 @@
     name: testdatabase
     collation: utf8_general_ci
     charset: utf8
-  ignore_errors: yes
+  ignore_errors: true
   register: output
 - name: Assert that nothing has changed
   ansible.builtin.assert:
@@ -240,7 +241,7 @@
     name: testdatabase
     collation: utf8_general_ci
     charset: utf8
-    force_update: yes
+    force_update: true
   register: output
 - name: Assert the state has changed
   ansible.builtin.assert:
@@ -294,7 +295,7 @@
     server_name: mariadbsrv{{ rpfx }}
     name: testdatabase
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
   ansible.builtin.assert:
@@ -335,7 +336,7 @@
     name: firewallrule{{ rpfx }}
     start_ip_address: 172.28.10.136
     end_ip_address: 172.28.10.138
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -374,7 +375,7 @@
     server_name: mariadbsrv{{ rpfx }}
     name: firewallrule{{ rpfx }}
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
   ansible.builtin.assert:
@@ -483,7 +484,7 @@
     server_name: mariadbsrv{{ rpfx }}
     name: event_scheduler
     value: "ON"
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert that change was registered
   ansible.builtin.assert:
@@ -602,7 +603,7 @@
     resource_group: "{{ resource_group }}"
     name: mariadbsrv{{ rpfx }}
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
   ansible.builtin.assert:

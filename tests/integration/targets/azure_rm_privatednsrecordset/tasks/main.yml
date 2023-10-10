@@ -13,7 +13,7 @@
   ansible.builtin.assert:
     that: results.changed
 
-- name: create "A" record set with multiple records
+- name: Create "A" record set with multiple records
   azure_rm_privatednsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: www
@@ -29,7 +29,7 @@
   ansible.builtin.assert:
     that: results.changed
 
-- name: re-run "A" record with same values
+- name: Re-run "A" record with same values
   azure_rm_privatednsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: www
@@ -61,7 +61,7 @@
     that:
       - results.changed
 
-- name: re-update "A" record set with additional record
+- name: Re-update "A" record set with additional record
   azure_rm_privatednsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: www
@@ -102,7 +102,7 @@
     record_type: A
     records:
       - entry: 192.168.100.105
-  check_mode: yes
+  check_mode: true 
   register: results
 
 - name: Assert that check_mode returns new state
@@ -118,7 +118,8 @@
     record_type: A
   register: results
 
-- ansible.builtin.assert:
+- name: Assert the DNS recoredset facts
+  ansible.builtin.assert:
     that:
       - not results.changed
       - results.dnsrecordsets[0].id != None
@@ -128,7 +129,7 @@
       - results.dnsrecordsets[0].relative_name == 'www'
       - results.dnsrecordsets[0].records | length > 0
 
-- name: delete a record set
+- name: Delete a record set
   azure_rm_privatednsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: www
@@ -141,7 +142,7 @@
   ansible.builtin.assert:
     that: results.changed
 
-- name: (idempotence test) re-run record set absent
+- name: Re-run record set absent (idempotence test)
   azure_rm_privatednsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: www
@@ -150,11 +151,11 @@
     state: absent
   register: results
 
-- name:
+- name: Assert recored set deleted
   ansible.builtin.assert:
     that: not results.changed
 
-- name: create SRV records in a new record set
+- name: Create SRV records in a new record set
   azure_rm_privatednsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: "_sip._tcp.{{ domain_name }}.com"
@@ -182,7 +183,8 @@
     record_type: SRV
   register: results
 
-- ansible.builtin.assert:
+- name: Assert the DNS recordset facts
+  ansible.builtin.assert:
     that:
       - not results.changed
       - results.dnsrecordsets[0].id != None
@@ -192,7 +194,7 @@
       - results.dnsrecordsets[0].relative_name == "_sip._tcp.{{ domain_name }}.com"
       - results.dnsrecordsets[0].records | length > 0
 
-- name: create TXT records in a new record set
+- name: Create TXT records in a new record set
   azure_rm_privatednsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: "_txt.{{ domain_name }}.com"
@@ -220,7 +222,8 @@
     record_type: TXT
   register: results
 
-- ansible.builtin.assert:
+- name: Assert the DNS recordset facts
+  ansible.builtin.assert:
     that:
       - not results.changed
       - results.dnsrecordsets[0].id != None

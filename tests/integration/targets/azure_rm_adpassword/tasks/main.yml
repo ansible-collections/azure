@@ -67,7 +67,7 @@
     app_object_id: "{{ app_object_id }}"
     state: present
   register: output
-  ignore_errors: True
+  ignore_errors: true
 
 - name: Get ad password info
   azure_rm_adpassword_info:

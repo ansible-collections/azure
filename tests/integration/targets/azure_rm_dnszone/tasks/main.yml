@@ -33,7 +33,7 @@
 
 - name: Assert the dns zone updated
   ansible.builtin.assert:
-    that: 
+    that:
       - results.changed
       - results.state.tags.test == 'modified'
 
@@ -45,7 +45,7 @@
 
 - name: Assert that facts module returned result
   ansible.builtin.assert:
-    that: 
+    that:
       - zones.dnszones[0].tags.test == 'modified'
       - zones.dnszones[0].type == 'public'
 
@@ -79,8 +79,8 @@
 - name: Assert that A record set was created
   ansible.builtin.assert:
     that:
-        - results.changed
-        - 'results.state.a_records | length == 3'
+      - results.changed
+      - 'results.state.a_records | length == 3'
 
 - name: Re-run "A" record with same values
   azure_rm_dnsrecordset:
@@ -111,7 +111,7 @@
 
 - name: Assert that new record was appended
   ansible.builtin.assert:
-    that: 
+    that:
       - results.changed
       - 'results.state.a_records | length == 4'
 
@@ -162,7 +162,7 @@
 
 - name: Assert that check_mode returns new state
   ansible.builtin.assert:
-    that: 
+    that:
       - results.changed
 
 # FUTURE: add facts module calls to ensure that we really didn't touch anything
@@ -175,15 +175,15 @@
     time_to_live: 7200
     record_type: SRV
     records:
-    - entry: sip.{{ domain_name }}.com
-      priority: 20
-      weight: 10
-      port: 5060
+      - entry: sip.{{ domain_name }}.com
+        priority: 20
+        weight: 10
+        port: 5060
   register: results
 
 - name: Assert that SRV record set was created
   ansible.builtin.assert:
-    that: 
+    that:
       - results.changed
 
 - name: Create TXT records in a new record set
@@ -219,7 +219,7 @@
 
 - name: Assert that facts module returned result for single Record Set
   ansible.builtin.assert:
-    that: 
+    that:
       - not results.changed
 #     - azure_dnsrecordset[0].name == 'www'
       - results.dnsrecordsets[0].relative_name == 'www'
@@ -234,7 +234,7 @@
 
 - name: Assert that facts module returned result for all Record Sets
   ansible.builtin.assert:
-    that: 
+    that:
       - not facts.changed
 #     - facts.ansible_facts.azure_dnsrecordset[0].name == '@'
 #     - facts.ansible_facts.azure_dnsrecordset[1].name == '@'
@@ -268,7 +268,7 @@
 - name: Assert all record set deleted
   ansible.builtin.assert:
     that:
-       - item.relative_name == '@'
+      - item.relative_name == '@'
   with_items: "{{ facts.dnsrecordsets }}"
 
 - name: Re-run record set absent(Idempotent test)
@@ -290,7 +290,7 @@
 - name: Delete DNS zone
   azure_rm_dnszone:
     resource_group: "{{ resource_group }}"
-    name:  "{{ domain_name }}.com"
+    name: "{{ domain_name }}.com"
     state: absent
 
 - name: Delete DNS zone (idempotent)
