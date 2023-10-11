@@ -20,6 +20,7 @@ short_description: Manage application password
 
 description:
     - Manage application password.
+    - The value property is deprecated in MS Graph API since this API will automatically generate the application password.
 
 options:
     app_id:
@@ -44,10 +45,9 @@ options:
             - Date or datemtime after which credentials expire.
             - Default value is one year after current time.
         type: str
-    value:
+    display_name:
         description:
-            - The application password value.
-            - Length greater than 18 characters.
+            - The friendly name of the application password.
         type: str
     app_object_id:
         description:
@@ -79,7 +79,7 @@ EXAMPLES = '''
       azure_rm_adpassword:
         app_id: "{{ app_id }}"
         state: present
-        value: "$abc12345678"
+        display_name: "Password friendly name"
         tenant: "{{ tenant_id }}"
 '''
 
@@ -104,16 +104,23 @@ start_date:
     type: str
     returned: always
     sample: 2020-06-28T06:00:32.637070+00:00
-
+secret_text:
+    description:
+        - The application password value.
+        - API only returns the application password value at creation.
+    type: str
+    returned: created
+    sample: abM8Q~.S87LV3yWI0dP~.C4hOQWeONi6sysZgaYp
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-import uuid
 
 try:
-    from azure.graphrbac.models import GraphErrorException
-    from azure.graphrbac.models import PasswordCredential
-    from azure.graphrbac.models import ApplicationUpdateParameters
+    import asyncio
+    from msgraph.generated.models.password_credential import PasswordCredential
+    from msgraph.generated.applications.item.add_password.add_password_post_request_body import AddPasswordPostRequestBody
+    from msgraph.generated.applications.item.remove_password.remove_password_post_request_body import RemovePasswordPostRequestBody
+    from msgraph.generated.applications.applications_request_builder import ApplicationsRequestBuilder
     from dateutil.relativedelta import relativedelta
 except ImportError:
     # This is handled in azure_rm_common
@@ -129,7 +136,7 @@ class AzureRMADPassword(AzureRMModuleBase):
             app_object_id=dict(type='str'),
             key_id=dict(type='str'),
             tenant=dict(type='str', required=True),
-            value=dict(type='str'),
+            display_name=dict(type='str'),
             end_date=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
@@ -140,7 +147,7 @@ class AzureRMADPassword(AzureRMModuleBase):
         self.service_principal_object_id = None
         self.app_object_id = None
         self.key_id = None
-        self.value = None
+        self.display_name = None
         self.end_date = None
         self.results = dict(changed=False)
 
@@ -155,13 +162,13 @@ class AzureRMADPassword(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        self.client = self.get_graphrbac_client(self.tenant)
+        self._client = self.get_msgraph_client(self.tenant)
         self.resolve_app_obj_id()
         passwords = self.get_all_passwords()
 
         if self.state == 'present':
             if self.key_id and self.key_exists(passwords):
-                self.update(passwords)
+                self.update_password(passwords)
             else:
                 self.create_password(passwords)
         else:
@@ -174,7 +181,7 @@ class AzureRMADPassword(AzureRMModuleBase):
 
     def key_exists(self, old_passwords):
         for pd in old_passwords:
-            if pd.key_id == self.key_id:
+            if str(pd.key_id) == self.key_id:
                 return True
         return False
 
@@ -184,27 +191,30 @@ class AzureRMADPassword(AzureRMModuleBase):
                 return
             elif self.app_id or self.service_principal_object_id:
                 if not self.app_id:
-                    sp = self.client.service_principals.get(self.service_principal_object_id)
+                    sp = asyncio.get_event_loop().run_until_complete(self.get_service_principal())
                     self.app_id = sp.app_id
                 if not self.app_id:
                     self.fail("can't resolve app via service principal object id {0}".format(self.service_principal_object_id))
 
-                result = list(self.client.applications.list(filter="appId eq '{0}'".format(self.app_id)))
+                apps = asyncio.get_event_loop().run_until_complete(self.get_applications())
+                result = list(apps.value)
                 if result:
-                    self.app_object_id = result[0].object_id
+                    self.app_object_id = result[0].id
                 else:
                     self.fail("can't resolve app via app id {0}".format(self.app_id))
             else:
                 self.fail("one of the [app_id, app_object_id, service_principal_id] must be set")
 
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.fail("error in resolve app_object_id {0}".format(str(ge)))
 
     def get_all_passwords(self):
 
         try:
-            return list(self.client.applications.list_password_credentials(self.app_object_id))
-        except GraphErrorException as ge:
+            application = asyncio.get_event_loop().run_until_complete(self.get_application())
+            passwordCredentials = application.password_credentials
+            return passwordCredentials
+        except Exception as ge:
             self.fail("failed to fetch passwords for app {0}: {1}".format(self.app_object_id, str(ge)))
 
     def delete_all_passwords(self, old_passwords):
@@ -213,9 +223,10 @@ class AzureRMADPassword(AzureRMModuleBase):
             self.results['changed'] = False
             return
         try:
-            self.client.applications.patch(self.app_object_id, ApplicationUpdateParameters(password_credentials=[]))
+            for pd in old_passwords:
+                asyncio.get_event_loop().run_until_complete(self.remove_password(pd.key_id))
             self.results['changed'] = True
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.fail("fail to purge all passwords for app: {0} - {1}".format(self.app_object_id, str(ge)))
 
     def delete_password(self, old_passwords):
@@ -226,46 +237,38 @@ class AzureRMADPassword(AzureRMModuleBase):
         num_of_passwords_before_delete = len(old_passwords)
 
         for pd in old_passwords:
-            if pd.key_id == self.key_id:
-                old_passwords.remove(pd)
+            if str(pd.key_id) == self.key_id:
+                try:
+                    asyncio.get_event_loop().run_until_complete(self.remove_password(pd.key_id))
+                    
+                    num_of_passwords_after_delete = len(self.get_all_passwords())
+                    if num_of_passwords_after_delete != num_of_passwords_before_delete:
+                        self.results['changed'] = True
+                except Exception as ge:
+                    self.fail("failed to delete password with key id {0} - {1}".format(self.app_id, str(ge)))
                 break
-        try:
-            self.client.applications.patch(self.app_object_id, ApplicationUpdateParameters(password_credentials=old_passwords))
-            num_of_passwords_after_delete = len(self.get_all_passwords())
-            if num_of_passwords_after_delete != num_of_passwords_before_delete:
-                self.results['changed'] = True
-
-        except GraphErrorException as ge:
-            self.fail("failed to delete password with key id {0} - {1}".format(self.app_id, str(ge)))
 
     def create_password(self, old_passwords):
-
-        def gen_guid():
-            return uuid.uuid4()
-
-        if self.value is None:
-            self.fail("when creating a new password, module parameter value can't be None")
-
         start_date = datetime.datetime.now(datetime.timezone.utc)
         end_date = self.end_date or start_date + relativedelta(years=1)
-        value = self.value
-        key_id = self.key_id or str(gen_guid())
-
-        new_password = PasswordCredential(start_date=start_date, end_date=end_date, key_id=key_id,
-                                          value=value, custom_key_identifier=None)
-        old_passwords.append(new_password)
+        display_name = self.display_name
+        num_of_passwords_before_add = len(old_passwords)
 
         try:
-            client = self.get_graphrbac_client(self.tenant)
-            app_patch_parameters = ApplicationUpdateParameters(password_credentials=old_passwords)
-            client.applications.patch(self.app_object_id, app_patch_parameters)
+            request_body = AddPasswordPostRequestBody(
+                password_credential = PasswordCredential(
+                    start_date_time = start_date,
+                    end_date_time = end_date,
+                    display_name = display_name
+                ),
+            )
+            pd = asyncio.get_event_loop().run_until_complete(self.add_password(request_body))
 
-            new_passwords = self.get_all_passwords()
-            for pd in new_passwords:
-                if pd.key_id == key_id:
-                    self.results['changed'] = True
-                    self.results.update(self.to_dict(pd))
-        except GraphErrorException as ge:
+            num_of_passwords_after_add = len(self.get_all_passwords())
+            if num_of_passwords_after_add != num_of_passwords_before_add:
+                self.results['changed'] = True
+                self.results.update(self.to_dict(pd))
+        except Exception as ge:
             self.fail("failed to create new password: {0}".format(str(ge)))
 
     def update_password(self, old_passwords):
@@ -273,11 +276,34 @@ class AzureRMADPassword(AzureRMModuleBase):
 
     def to_dict(self, pd):
         return dict(
-            end_date=pd.end_date,
-            start_date=pd.start_date,
-            key_id=pd.key_id
+            end_date=str(pd.end_date_time),
+            start_date=str(pd.start_date_time),
+            key_id=str(pd.key_id),
+            secret_text=str(pd.secret_text)
         )
 
+    async def get_service_principal(self):
+        return await self._client.service_principals.by_service_principal_id(self.service_principal_object_id).get()
+
+    async def get_applications(self):
+        request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
+                query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                    filter = "appId eq '{0}'".format(self.app_id),
+                ),
+            )
+        return await self._client.applications.get(request_configuration = request_configuration)
+
+    async def get_application(self):
+        return await self._client.applications.by_application_id(self.app_object_id).get()
+
+    async def remove_password(self, key_id):      
+        request_body = RemovePasswordPostRequestBody(
+            key_id = key_id,
+        )
+        return await self._client.applications.by_application_id(self.app_object_id).remove_password.post(body = request_body)
+
+    async def add_password(self, request_body):
+        return await self._client.applications.by_application_id(self.app_object_id).add_password.post(body = request_body)
 
 def main():
     AzureRMADPassword()

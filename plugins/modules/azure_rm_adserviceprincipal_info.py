@@ -94,7 +94,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             app_id=dict(type='str'),
             object_id=dict(type='str'),
-            tenant=dict(type='str'),
+            tenant=dict(type='str', required=True),
         )
 
         self.tenant = None
@@ -112,30 +112,16 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
+        self._client = self.get_msgraph_client(self.tenant)
+
         service_principals = []
 
         try:
-            # client = self.get_graphrbac_client(self.tenant)
-            client = self.get_msgraph_client(self.tenant)
-            
             if self.object_id is None:
-                request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
-                            query_parameters = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
-                                filter = "servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
-                            ),
-                            headers = {'ConsistencyLevel' : "eventual"}
-                        )
-                async def get_service_principals():
-                    return await client.service_principals.get(request_configuration = request_configuration)
-                
-                spns = asyncio.run(get_service_principals()) 
-                service_principals = list(spns.value)
-                # service_principals = list(client.service_principals.get(filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id)))
-            else:  
-                async def get_service_principal_by_id():
-                    return await client.service_principals.by_service_principal_id(self.object_id).get()
-                
-                service_principals = [asyncio.run(get_service_principal_by_id())]
+                sps = asyncio.get_event_loop().run_until_complete(self.get_service_principals())    
+                service_principals = list(sps.value)
+            else:
+                service_principals = [asyncio.get_event_loop().run_until_complete(self.get_service_principal())]
 
             self.results['service_principals'] = [self.to_dict(sp) for sp in service_principals]
         except Exception as ge:
@@ -146,11 +132,21 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
     def to_dict(self, object):
         return dict(
             app_id=object.app_id,
-            object_id=object.object_id,
+            object_id=object.id,
             app_display_name=object.display_name,
             app_role_assignment_required=object.app_role_assignment_required
         )
 
+    async def get_service_principal(self):
+        return await self._client.service_principals.by_service_principal_id(self.object_id).get()
+
+    async def get_service_principals(self):
+        request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
+                            query_parameters = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
+                                filter = "servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
+                            ),
+                        )        
+        return await self._client.service_principals.get(request_configuration = request_configuration)
 
 def main():
     AzureRMADServicePrincipalInfo()
