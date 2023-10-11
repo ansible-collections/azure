@@ -34,6 +34,7 @@ options:
     display_name:
         description:
             - The display name of the application.
+        required: true
         type: str
 
     app_roles:
@@ -322,17 +323,21 @@ output:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
-    from azure.graphrbac.models import GraphErrorException
     import datetime
-    from dateutil.relativedelta import relativedelta
     import dateutil.parser
-    from azure.graphrbac.models import ApplicationCreateParameters
     import uuid
-    from azure.graphrbac.models import ResourceAccess
-    from azure.graphrbac.models import RequiredResourceAccess
-    from azure.graphrbac.models import AppRole
-    from azure.graphrbac.models import PasswordCredential, KeyCredential
-    from azure.graphrbac.models import ApplicationUpdateParameters
+    import asyncio
+    
+    from dateutil.relativedelta import relativedelta
+    from msgraph.generated.applications.applications_request_builder import ApplicationsRequestBuilder
+    from msgraph.generated.models.application import Application
+    from msgraph.generated.models.password_credential import PasswordCredential
+    from msgraph.generated.models.key_credential import KeyCredential
+    from msgraph.generated.models.required_resource_access import RequiredResourceAccess
+    from msgraph.generated.models.resource_access import ResourceAccess
+    from msgraph.generated.models.app_role import AppRole
+    from msgraph.generated.models.web_application import WebApplication
+    from msgraph.generated.models.implicit_grant_settings import ImplicitGrantSettings
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -396,9 +401,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            tenant=dict(type='str', required=True),
+            tenant=dict(type='str'), # https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison
             app_id=dict(type='str'),
-            display_name=dict(type='str'),
+            display_name=dict(type='str', required=True),
             app_roles=dict(type='list', elements='dict', options=app_role_spec),
             available_to_other_tenants=dict(type='bool'),
             credential_description=dict(type='str'),
@@ -441,6 +446,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         self.required_resource_accesses = None
         self.allow_guests_sign_in = None
         self.results = dict(changed=False)
+        self._client = None
 
         super(AzureRMADApplication, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                    supports_check_mode=False,
@@ -448,12 +454,15 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                                                    is_ad_resource=True)
 
     def exec_module(self, **kwargs):
-
+        self._client = self.get_msgraph_client(self.tenant)
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-
+            
+        # import logging
+        # logging.basicConfig(filename='./log.log', level=logging.INFO)
+        # logging.info("INFO DDD" + str(self.app_id))
         response = self.get_resource()
-
+        # logging.info("INFO DDD" + str(response))
         if response:
             if self.state == 'present':
                 if self.check_update(response):
@@ -482,30 +491,37 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
 
             if self.app_roles:
                 app_roles = self.build_app_roles(self.app_roles)
+            
+            
+            create_app = Application(
+                sign_in_audience=self.available_to_other_tenants,                
+                web = WebApplication(
+                    home_page_url = self.homepage,
+                    redirect_uris = self.reply_urls,
+                    implicit_grant_settings = ImplicitGrantSettings(
+                        enable_access_token_issuance=self.oauth2_allow_implicit_flow,
+                    ),
+                ),
+                
+                # allow_guests_sign_in=self.allow_guests_sign_in,
 
-            client = self.get_graphrbac_client(self.tenant)
-            app_create_param = ApplicationCreateParameters(available_to_other_tenants=self.available_to_other_tenants,
-                                                           display_name=self.display_name,
-                                                           identifier_uris=self.identifier_uris,
-                                                           homepage=self.homepage,
-                                                           reply_urls=self.reply_urls,
-                                                           key_credentials=key_creds,
-                                                           password_credentials=password_creds,
-                                                           oauth2_allow_implicit_flow=self.oauth2_allow_implicit_flow,
-                                                           required_resource_access=required_accesses,
-                                                           app_roles=app_roles,
-                                                           allow_guests_sign_in=self.allow_guests_sign_in,
-                                                           optional_claims=self.optional_claims)
-            response = client.applications.create(app_create_param)
+                display_name=self.display_name,
+                identifier_uris=self.identifier_uris,
+                key_credentials=key_creds,
+                password_credentials=password_creds,
+                required_resource_access=required_accesses,
+                app_roles=app_roles,
+                optional_claims=self.optional_claims
+            )
+            response = asyncio.get_event_loop().run_until_complete(self.create_application(create_app)) 
             self.results['changed'] = True
             self.results.update(self.to_dict(response))
             return response
-        except GraphErrorException as ge:
-            self.fail("Error creating application, display_name {0} - {1}".format(self.display_name, str(ge)))
+        except Exception as ge:
+            self.fail("Error creating application, display_name: {0} - {1}".format(self.display_name, str(ge)))
 
     def update_resource(self, old_response):
         try:
-            client = self.get_graphrbac_client(self.tenant)
             key_creds, password_creds, required_accesses, app_roles, optional_claims = None, None, None, None, None
             if self.native_app:
                 if self.identifier_uris:
@@ -518,47 +534,62 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
 
             if self.app_roles:
                 app_roles = self.build_app_roles(self.app_roles)
-            app_update_param = ApplicationUpdateParameters(available_to_other_tenants=self.available_to_other_tenants,
-                                                           display_name=self.display_name,
-                                                           identifier_uris=self.identifier_uris,
-                                                           homepage=self.homepage,
-                                                           reply_urls=self.reply_urls,
-                                                           key_credentials=key_creds,
-                                                           password_credentials=password_creds,
-                                                           oauth2_allow_implicit_flow=self.oauth2_allow_implicit_flow,
-                                                           required_resource_access=required_accesses,
-                                                           allow_guests_sign_in=self.allow_guests_sign_in,
-                                                           app_roles=app_roles,
-                                                           optional_claims=self.optional_claims)
-            client.applications.patch(old_response['object_id'], app_update_param)
+
+            app_update_param = Application(
+                sign_in_audience=self.available_to_other_tenants,                
+                web = WebApplication(
+                    home_page_url=self.homepage,
+                    redirect_uris=self.reply_urls,
+                    implicit_grant_settings = ImplicitGrantSettings(
+                        enable_access_token_issuance=self.oauth2_allow_implicit_flow,
+                    ),
+                ),
+                display_name=self.display_name,
+                identifier_uris=self.identifier_uris,
+                key_credentials=key_creds,
+                password_credentials=password_creds,
+                required_resource_access=required_accesses,
+                # allow_guests_sign_in=self.allow_guests_sign_in,
+                app_roles=app_roles,
+                optional_claims=self.optional_claims)
+            asyncio.get_event_loop().run_until_complete(self.update_application(
+                    appid = old_response['object_id'], update_app = app_update_param)) 
+            
             self.results['changed'] = True
             self.results.update(self.get_resource())
 
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.fail("Error updating the application app_id {0} - {1}".format(self.app_id, str(ge)))
 
     def delete_resource(self, response):
         try:
-            client = self.get_graphrbac_client(self.tenant)
-            client.applications.delete(response.get('object_id'))
+            asyncio.get_event_loop().run_until_complete(self.delete_application(response.get('object_id')))
             self.results['changed'] = True
             return True
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.fail("Error deleting application app_id {0} display_name {1} - {2}".format(self.app_id, self.display_name, str(ge)))
 
     def get_resource(self):
         try:
-            client = self.get_graphrbac_client(self.tenant)
             existing_apps = []
+            import logging
+            logging.basicConfig(filename='./log.log', level=logging.INFO)
+            logging.info("INFO DDDDD " + str(self.app_id))
             if self.app_id:
-                existing_apps = list(client.applications.list(filter="appId eq '{0}'".format(self.app_id)))
+                logging.info("INFO DDDDD " + str(self.app_id is not None))
+                ret = asyncio.get_event_loop().run_until_complete(self.get_application(self.app_id))
+                #  existing_apps
+                logging.info("INFO DDDDD query " + str(ret))
+            
+            logging.info("INFO DDDDD query " + str(existing_apps))
             if not existing_apps:
                 return False
-            result = existing_apps[0]
+            result = existing_apps
             return self.to_dict(result)
-        except GraphErrorException as ge:
-            self.log("Did not find the graph instance instance {0} - {1}".format(self.app_id, str(ge)))
-            return False
+        except Exception as ge:
+            self.fail(ge)
+            # self.log("Did not find the graph instance instance {0} - {1}".format(self.app_id, str(ge)))
+            # return False
 
     def check_update(self, response):
         for key in list(self.module_arg_spec.keys()):
@@ -578,16 +609,16 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         }for app_role in object.app_roles]
         return dict(
             app_id=object.app_id,
-            object_id=object.object_id,
+            object_id=object.id,
             display_name=object.display_name,
             app_roles=app_roles,
-            available_to_other_tenants=object.available_to_other_tenants,
-            homepage=object.homepage,
+            # available_to_other_tenants=object.available_to_other_tenants,
+            # homepage=object.homepage,
             identifier_uris=object.identifier_uris,
-            oauth2_allow_implicit_flow=object.oauth2_allow_implicit_flow,
+            # oauth2_allow_implicit_flow=object.oauth2_allow_implicit_flow,
             optional_claims=object.optional_claims,
-            allow_guests_sign_in=object.allow_guests_sign_in,
-            reply_urls=object.reply_urls
+            # allow_guests_sign_in=object.allow_guests_sign_in,
+            # reply_urls=object.reply_urls
         )
 
     def build_application_creds(self, password=None, key_value=None, key_type=None, key_usage=None,
@@ -616,10 +647,10 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         key_creds = None
         if password:
             password_creds = [PasswordCredential(start_date=start_date, end_date=end_date, key_id=str(self.gen_guid()),
-                                                 value=password, custom_key_identifier=custom_key_id)]
+                                                 value=password, custom_key_identifier=custom_key_id)] # value ? secret_text
         elif key_value:
             key_creds = [
-                KeyCredential(start_date=start_date, end_date=end_date, key_id=str(self.gen_guid()), value=key_value,
+                KeyCredential(start_date=start_date, end_date=end_date, key_id=str(self.gen_guid()), value=key_value,  # value ? key
                               usage=key_usage, type=key_type, custom_key_identifier=custom_key_id)]
 
         return (password_creds, key_creds)
@@ -657,10 +688,30 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             role = AppRole(id=x.get('id', None) or self.gen_guid(),
                            allowed_member_types=x.get('allowed_member_types', None),
                            description=x.get('description', None), display_name=x.get('display_name', None),
-                           is_enabled=x.get('is_enabled', None), value=x.get('value', None))
+                           is_enabled=x.get('is_enabled', None), value=x.get('value', None)) # value ? additional_data
             result.append(role)
         return result
+    
+    async def create_application(self, creat_app):
+        return await self._client.applications.post(body = creat_app)
 
+    async def update_application(self, obj_id, update_app):
+        return await self._client.applications.by_application_id(obj_id).patch(body = update_app)
+
+    async def get_application(self, app_id):
+        return await self._client.applications_with_app_id(app_id=app_id).get()
+
+    async def delete_application(self, obj_id):
+        await self._client.applications.by_application_id(obj_id).delete()
+
+    # TODO SDK bug
+    async def get_applications(self, filters):
+        request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
+            query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                filter = (' and '.join(filters)),
+                headers = {'ConsistencyLevel' : "eventual"}
+                ))
+        return await self._client.applications.get(request_configuration = request_configuration)
 
 def main():
     AzureRMADApplication()
