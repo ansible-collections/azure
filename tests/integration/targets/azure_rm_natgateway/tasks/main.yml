@@ -30,7 +30,7 @@
     resource_group: "{{ resource_group }}"
     name: nat-gateway{{ rpfx }}1
   register: output
-  check_mode: yes
+  check_mode: true
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:

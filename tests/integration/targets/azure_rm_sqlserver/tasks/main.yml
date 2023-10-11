@@ -5,7 +5,7 @@
     run_azuread_tests: false
     azuread_group_name: "Test Security Group"
     azuread_group_id: "00000000-0000-0000-0000-000000000000"
-  run_once: yes
+  run_once: true
 
 - name: Create instance of SQL Server -- check mode
   azure_rm_sqlserver:
@@ -14,7 +14,7 @@
     location: eastus
     admin_username: mylogin
     admin_password: Password123!
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -257,7 +257,7 @@
     server_name: sqlsrv{{ random_postfix }}
     name: database{{ random_postfix }}
     location: eastus
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -406,7 +406,7 @@
     server_name: sqlsrv{{ random_postfix }}
     name: database{{ random_postfix }}
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
   ansible.builtin.assert:
@@ -447,7 +447,7 @@
     sku:
       name: S0
       tier: Standard
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has not changed
   ansible.builtin.assert:
@@ -591,7 +591,7 @@
     name: firewallrule{{ random_postfix }}
     start_ip_address: 172.28.10.136
     end_ip_address: 172.28.10.138
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -711,7 +711,7 @@
     zone_redundant: False
     tags:
       aaa: bbb
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -753,7 +753,7 @@
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
     name: EP{{ random_postfix }}
-    zone_redundant: True
+    zone_redundant: true
     tags:
       aaa1: bbb1
   register: output
@@ -797,7 +797,7 @@
     resource_group: "{{ resource_group }}"
     name: "sqlsrv{{ random_postfix }}"
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
   ansible.builtin.assert:

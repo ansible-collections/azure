@@ -102,7 +102,7 @@
     record_type: A
     records:
       - entry: 192.168.100.105
-  check_mode: true 
+  check_mode: true
   register: results
 
 - name: Assert that check_mode returns new state
@@ -164,10 +164,10 @@
     record_type: SRV
     state: present
     records:
-    - entry: sip.{{ domain_name }}.com
-      priority: 20
-      weight: 10
-      port: 5060
+      - entry: sip.{{ domain_name }}.com
+        priority: 20
+        weight: 10
+        port: 5060
   register: results
 
 - name: Assert that SRV record set was created

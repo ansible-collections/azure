@@ -20,7 +20,7 @@
     enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:

@@ -1,12 +1,12 @@
-- name: set facts
+- name: Set facts
   ansible.builtin.set_fact:
-     subscription_id: "{{ azure_subscription_id }}"
-     subscription_sec_id: "{{ azure_subscription_sec_id }}"
-     managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
-     principal_id: "{{ azure_principal_id }}"
-     role_definition_id: "{{ azure_role_definition_id }}"
-     reg_def_name: test_name
-  run_once: yes
+    subscription_id: "{{ azure_subscription_id }}"
+    subscription_sec_id: "{{ azure_subscription_sec_id }}"
+    managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
+    principal_id: "{{ azure_principal_id }}"
+    role_definition_id: "{{ azure_role_definition_id }}"
+    reg_def_name: test_name
+  run_once: true
 
 - name: Create a RegistrationDefinition -- check mode
   azure_rm_registrationdefinition:
@@ -17,7 +17,7 @@
           role_definition_id: "{{ role_definition_id }}"
       managed_by_tenant_id: "{{ managed_by_tenant_id }}"
       registration_definition_name: "{{ reg_def_name }}"
-  check_mode: yes
+  check_mode: true
   register: output
 
 - name: Assert creating registration definition check mode

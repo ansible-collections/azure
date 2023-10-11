@@ -15,7 +15,7 @@
     enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
-  check_mode: true 
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -186,7 +186,7 @@
     name: testdatabase
     charset: UTF8
     collation: English_United States.1252
-  check_mode: true 
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
@@ -228,7 +228,7 @@
     name: testdatabase
     charset: utf8
     collation: en_US.utf8
-  ignore_errors: true 
+  ignore_errors: true
   register: output
 - name: Assert that nothing has changed
   ansible.builtin.assert:
@@ -296,7 +296,7 @@
     server_name: postgresqlsrv{{ rpfx }}
     name: testdatabase
     state: absent
-  check_mode: true 
+  check_mode: true
   register: output
 - name: Assert the state has changed
   ansible.builtin.assert:
@@ -481,7 +481,7 @@
     server_name: postgresqlsrv{{ rpfx }}
     name: deadlock_timeout
     value: 2000
-  check_mode: true 
+  check_mode: true
   register: output
 - name: Assert that change was registered
   ansible.builtin.assert:

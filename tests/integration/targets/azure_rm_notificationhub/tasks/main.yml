@@ -1,7 +1,7 @@
 - name: Create random notification hub and namespace
   ansible.builtin.set_fact:
     namespace_name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
-    name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+    name_rpfx: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create Notification Hub Namespace (check mode)
   azure_rm_notificationhub:
@@ -20,10 +20,10 @@
   azure_rm_notificationhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     sku: "free"
-  check_mode: true 
+  check_mode: true
   register: results
 
 - name: Assert the notfication hub check mode
@@ -46,7 +46,7 @@
   azure_rm_notificationhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     sku: "free"
   register: results
@@ -74,7 +74,7 @@
   azure_rm_notificationhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     tags:
       test: modified
@@ -139,7 +139,7 @@
   azure_rm_notificationhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
 
@@ -151,7 +151,7 @@
   azure_rm_notificationhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
   register: results

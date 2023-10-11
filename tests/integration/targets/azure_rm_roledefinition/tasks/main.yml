@@ -1,9 +1,9 @@
 - name: Fix resource prefix
   ansible.builtin.set_fact:
-    role_name: "{{ (resource_group | replace('-','x'))[-8:] }}{{ 1000 | random }}testrole"
-    subscription_id: "{{azure_subscription_id}}"
-    principal_id: "{{azure_client_id}}"
-  run_once: yes
+    role_name: "{{ (resource_group | replace('-', 'x'))[-8:] }}{{ 1000 | random }}testrole"
+    subscription_id: "{{ azure_subscription_id }}"
+    principal_id: "{{ azure_client_id }}"
+  run_once: true
 
 - name: Create a role definition (Check Mode)
   azure_rm_roledefinition:
@@ -19,8 +19,8 @@
         not_data_actions:
           - "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
     assignable_scopes:
-        - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
-  check_mode: yes
+      - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+  check_mode: true
   register: output
 
 - name: Assert creating role definition check mode
@@ -42,7 +42,7 @@
         not_data_actions:
           - "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
     assignable_scopes:
-        - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+      - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
   register: output
 
 - name: Assert creating role definition
@@ -53,18 +53,18 @@
 
 ## because of the bug of azure service , the following tasks will cause failures randomly
 #
-#- name: Get facts by type
+# - name: Get facts by type
 #  azure_rm_roledefinition_info:
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    type: custom
 #  register: facts
 #
-#- name: Assert facts
+# - name: Assert facts
 #  ansible.builtin.assert:
 #    that:
 #      - facts['roledefinitions'] | length > 1
 #
-#- name: Get facts by name
+# - name: Get facts by name
 #  azure_rm_roledefinition_info:
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    role_name: "{{ role_name }}"
@@ -73,7 +73,7 @@
 #  retries: 50
 #  delay: 60
 #
-#- name: Assert facts
+# - name: Assert facts
 #  ansible.builtin.assert:
 #    that:
 #      - facts['roledefinitions'] | length == 1
@@ -81,7 +81,7 @@
 #      - facts['roledefinitions'][0]['permissions'][0]['not_data_actions'] | length == 1
 #      - facts['roledefinitions'][0]['permissions'][0]['data_actions'] | length == 1
 #
-#- name: Update the role definition (idempotent)
+# - name: Update the role definition (idempotent)
 #  azure_rm_roledefinition:
 #    name: "{{ role_name }}"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
@@ -98,12 +98,12 @@
 #          - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #  register: output
 #
-#- name: ansible.builtin.assert output not changed
+# - name: ansible.builtin.assert output not changed
 #  ansible.builtin.assert:
 #    that:
 #      - not output.changed
 #
-#- name: Update the role definition
+# - name: Update the role definition
 #  azure_rm_roledefinition:
 #    name: "{{ role_name }}"
 #    description: "update description"
@@ -122,12 +122,12 @@
 #        - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #  register: output
 #
-#- name: ansible.builtin.assert output changed
+# - name: ansible.builtin.assert output changed
 #  ansible.builtin.assert:
 #    that:
 #      - output.changed
 #
-#- name: Get role definition facts
+# - name: Get role definition facts
 #  azure_rm_roledefinition_info:
 #    role_name: "{{ role_name }}"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
@@ -137,13 +137,13 @@
 #  retries: 50
 #  delay: 60
 #
-#- name: Assert role definition facts
+# - name: Assert role definition facts
 #  ansible.builtin.assert:
 #    that:
 #      - roledef['roledefinitions'] | length == 1
 #      - roledef['roledefinitions'][0]['id']
 #
-#- name: Create a role assignment (Check Mode)
+# - name: Create a role assignment (Check Mode)
 #  azure_rm_roleassignment:
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    assignee_object_id: "{{ principal_id }}"
@@ -151,43 +151,43 @@
 #  check_mode: yes
 #  register: output
 #
-#- name: Assert creating role definition check mode
+# - name: Assert creating role definition check mode
 #  ansible.builtin.assert:
 #    that:
 #      - output.changed
 #
-#- name: Create a role assignment
+# - name: Create a role assignment
 #  azure_rm_roleassignment:
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    assignee_object_id: "{{ principal_id }}"
 #    role_definition_id: "{{ roledef['roledefinitions'][0]['id'] }}"
 #  register: output
 #
-#- name: Assert creating role assignment
+# - name: Assert creating role assignment
 #  ansible.builtin.assert:
 #    that:
 #      - output.changed
 #
-#- name: Get facts
+# - name: Get facts
 #  azure_rm_roleassignment_info:
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    assignee: "{{ principal_id }}"
 #    role_definition_id: "{{ roledef['roledefinitions'][0]['id'] }}"
 #  register: facts
 #
-#- name: ansible.builtin.assert role assignment facts
+# - name: ansible.builtin.assert role assignment facts
 #  ansible.builtin.assert:
 #    that:
 #      - facts['roleassignments'] | length > 0
 #      - facts['roleassignments'][0]['id']
 #
-#- name: delete role assignment
+# - name: delete role assignment
 #  azure_rm_roleassignment:
 #    name: "{{ facts['roleassignments'][0]['id'].split('/')[-1] }}"
 #    scope: "/subscriptions/{{ subscription_id }}"
 #    state: absent
 #
-#- name: Delete the role definition (Check Mode)
+# - name: Delete the role definition (Check Mode)
 #  azure_rm_roledefinition:
 #    name: "{{ role_name }}"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
@@ -195,17 +195,17 @@
 #  check_mode: yes
 #  register: output
 #
-#- name: ansible.builtin.assert deleting role definition check mode
+# - name: ansible.builtin.assert deleting role definition check mode
 #  ansible.builtin.assert:
 #    that: output.changed
 #
-#- name: Delete the role definition
+# - name: Delete the role definition
 #  azure_rm_roledefinition:
 #    name: "{{ role_name }}"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    state: absent
 #  register: output
 #
-#- ansible.builtin.assert:
+# - ansible.builtin.assert:
 #    that:
 #      - output.changed

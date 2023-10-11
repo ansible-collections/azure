@@ -1,10 +1,10 @@
-- name: set facts
+- name: Set facts
   ansible.builtin.set_fact:
     subscription_id: "{{ azure_subscription_id }}"
     managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
     principal_id: "{{ azure_principal_id }}"
     role_definition_id: "{{ azure_role_definition_id }}"
-  run_once: yes
+  run_once: true
 
 - name: Create a RegistrationDefinition
   azure_rm_registrationdefinition:
@@ -23,9 +23,10 @@
     properties:
       registration_definition_id: "{{ output1.state.id }}"
   register: output
-  check_mode: yes
+  check_mode: true
 
-- ansible.builtin.assert:
+- name: Assert the registration assignment check mode
+  ansible.builtin.assert:
     that:
       - output.changed 
 
@@ -36,7 +37,8 @@
       registration_definition_id: "{{ output1.state.id }}"
   register: output2
 
-- ansible.builtin.assert:
+- name: Assert the registration assignment created
+  ansible.builtin.assert:
     that:
       - output2.changed
 
@@ -48,7 +50,8 @@
       registration_definition_id: "{{ output1.state.id }}"
   register: output
 
-- ansible.builtin.assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -58,7 +61,8 @@
     registration_assignment_id:  "{{ output2.state.name }}"
   register: output
 
-- ansible.builtin.assert:
+- name: Assert the registration assignment facts
+  ansible.builtin.assert:
     that:
       - output.registration_assignments[0].properties.registration_definition_id == "{{ output1.state.id }}"
 
@@ -67,7 +71,8 @@
     scope: subscriptions/{{ subscription_id }}
   register: output
 
-- ansible.builtin.assert:
+- name: Assert all registration assignment facts
+  ansible.builtin.assert:
     that:
       - output.registration_assignments | length >= 1
 

@@ -37,7 +37,7 @@
     - name: 'tn{{ rpfx }}v6'
       version: 'ipv6'
 
-- name: create load balancer with multiple parameters
+- name: Create load balancer with multiple parameters
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "lb{{ rpfx }}"
@@ -91,7 +91,7 @@
     public_ip: false
     create_with_security_group: false
   register: output
-  check_mode: true 
+  check_mode: true
 
 - name: Assert the check mode facts
   ansible.builtin.assert:
@@ -178,7 +178,7 @@
     public_ip: false
     security_group: "tn{{ rpfx }}sg"
   register: output
-  check_mode: true 
+  check_mode: true
 
 - name: Assert the security group check mode
   ansible.builtin.assert:
@@ -194,7 +194,7 @@
     public_ip_address_name: "tn{{ rpfx }}"
     create_with_security_group: false
   register: output
-  check_mode: true 
+  check_mode: true
 
 - name: Assert the public ip check mode
   ansible.builtin.assert:
@@ -247,7 +247,7 @@
       - 8.9.10.11
       - 7.8.9.10
   register: output
-  check_mode: true 
+  check_mode: true
 
 - name: Assert the NIC check mode facts
   ansible.builtin.assert:
@@ -336,7 +336,7 @@
   azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
-  register:  facts
+  register: facts
 
 - name: Assert the NIC facts
   ansible.builtin.assert:
@@ -388,7 +388,7 @@
     name: "{{ applicationsecuritygroup_name1 }}"
     tags:
       testing: testing
-  check_mode: true 
+  check_mode: true
   register: output
 
 - name: Assert check mode creation
@@ -401,7 +401,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ applicationsecuritygroup_name1 }}"
     tags:
-        testing: testing
+      testing: testing
   register: output
 
 - name: Assert application security group creation
@@ -473,7 +473,7 @@
         primary: true
   register: output
 
-- name: ansible.builtin.assert creation succeeded
+- name: Assert creation succeeded
   ansible.builtin.assert:
     that:
       - output.changed
@@ -494,7 +494,7 @@
         primary: true
   register: output
 
-- name: ansible.builtin.assert idempotent
+- name: Assert idempotent
   ansible.builtin.assert:
     that:
       - not output.changed
@@ -514,7 +514,7 @@
         primary: true
   register: output
 
-- name: ansible.builtin.assert update succeeded
+- name: Assert update succeeded
   ansible.builtin.assert:
     that:
       - output.changed
@@ -672,10 +672,10 @@
 
 - name: Delete the NIC (check mode)
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      state: absent
-  check_mode: true 
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    state: absent
+  check_mode: true
   register: output
 
 - name: Assert the NIC check mode
@@ -685,9 +685,9 @@
 
 - name: Delete the NIC
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    state: absent
   register: output
 
 - name: Assert the NIC deleted
@@ -697,9 +697,9 @@
 
 - name: Delete the NIC (idempotent)
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    state: absent
   register: output
 
 - name: Assert the NIC idempotent
@@ -742,7 +742,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ applicationsecuritygroup_name1 }}"
     state: absent
-  check_mode: true 
+  check_mode: true
   register: output
 
 - name: Assert delete check mode
@@ -779,7 +779,8 @@
     - '{{ nic_name1 }}'
     - 'tn{{ rpfx }}sg'
 
-- ansible.builtin.assert:
+- name: Assert the security group deleted
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.results | length == 2
@@ -791,7 +792,7 @@
     state: 'absent'
   register: output
 
-- name: assert the virtual network deleted
+- name: Assert the virtual network deleted
   ansible.builtin.assert:
     that:
       - output.changed

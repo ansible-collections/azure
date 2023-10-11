@@ -3,7 +3,7 @@
     nsgname: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     storageaccountname: "stacc{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     dbname: "mdb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Call REST API
   azure_rm_resource:
@@ -14,7 +14,7 @@
     resource_name: "{{ nsgname }}"
     body:
       location: eastus
-    idempotency: yes
+    idempotency: true
   register: output
 
 - name: Assert that something has changed
@@ -30,7 +30,7 @@
     resource_name: "{{ nsgname }}"
     body:
       location: eastus
-    idempotency: yes
+    idempotency: true
   register: output
 
 - name: Assert that nothing has changed
@@ -49,7 +49,7 @@
       tags:
         a: "abc"
         b: "cde"
-    idempotency: yes
+    idempotency: true
   register: output
 
 - name: Assert that something has changed

@@ -152,7 +152,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}06"
   register: output
-- ansible.builtin.assert:
+- name: Assert the storage account facts
+  ansible.builtin.assert:
     that:
       - "output.storageaccounts | length == 1"
       - output.storageaccounts[0].is_hns_enabled == true
@@ -226,7 +227,7 @@
   azure_rm_storageaccount:
     access_tier: Hot
     account_type: Premium_LRS
-    allow_blob_public_access: False
+    allow_blob_public_access: false
     append_tags: false
     blob_cors:
       - allowed_origins:
@@ -241,7 +242,7 @@
         exposed_headers:
           - x-ms-meta-*
         max_age_in_seconds: 200
-    https_only: False
+    https_only: false
     kind: StorageV2
     location: eastus
     minimum_tls_version: 'TLS1_2'
@@ -274,7 +275,7 @@
   azure_rm_storageaccount:
     access_tier: Hot
     account_type: Premium_LRS
-    allow_blob_public_access: False
+    allow_blob_public_access: false
     append_tags: false
     blob_cors:
       - allowed_origins:
@@ -289,7 +290,7 @@
         exposed_headers:
           - x-ms-meta-*
         max_age_in_seconds: 200
-    https_only: False
+    https_only: false
     kind: StorageV2
     location: eastus
     minimum_tls_version: 'TLS1_2'
@@ -358,7 +359,7 @@
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}"
-    allow_blob_public_access: False
+    allow_blob_public_access: false
     append_tags: false
     blob_cors:
       - allowed_origins:
@@ -373,7 +374,7 @@
         exposed_headers:
           - x-ms-meta-*
         max_age_in_seconds: 200
-    https_only: False
+    https_only: false
     kind: StorageV2
     minimum_tls_version: 'TLS1_1'
     network_acls:
@@ -470,7 +471,8 @@
       - test
       - galaxy
   register: output
-- ansible.builtin.assert:
+- name: Assert the storage account facts
+  ansible.builtin.assert:
     that: output.storageaccounts | length >= 1
 
 - name: Update account tags
@@ -482,7 +484,8 @@
       testing: testing
       delete: never
   register: output
-- ansible.builtin.assert:
+- name: Assert the storage account updated
+  ansible.builtin.assert:
     that:
       - "output.state.tags | length == 2"
       - "output.state.tags.testing == 'testing'"
@@ -492,10 +495,11 @@
   azure_rm_storageaccount_info:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_explicit }}"
-    show_connection_string: True
-    show_blob_cors: True
+    show_connection_string: true
+    show_blob_cors: true
   register: output
-- ansible.builtin.assert:
+- name: Assert the storage account facts
+  ansible.builtin.assert:
     that:
       - "output.storageaccounts | length == 1"
       - not output.storageaccounts[0].custom_domain
@@ -514,7 +518,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}01"
   register: output
-- ansible.builtin.assert:
+- name: Assert the storage account facts
+  ansible.builtin.assert:
     that:
       - output.storageaccounts | length == 1
       - output.storageaccounts[0].static_website is defined
@@ -527,7 +532,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}04"
   register: output
-- ansible.builtin.assert:
+- name: Assert the storage account facts
+  ansible.builtin.assert:
     that:
       - output.storageaccounts | length == 1
       - output.storageaccounts[0].static_website is defined
@@ -561,7 +567,8 @@
     name: "{{ storage_account_name_default }}05"
   register: encryption_output
 
-- ansible.builtin.assert:
+- name: Assert the storage account facts
+  ansible.builtin.assert:
     that:
       - output.storageaccounts | length == 1
       - output.storageaccounts[0].encryption.key_source == 'Microsoft.Storage'
@@ -572,7 +579,8 @@
   azure_rm_storageaccount_info:
     resource_group: "{{ resource_group }}"
   register: output
-- ansible.builtin.assert:
+- name: Assert all storage account facts
+  ansible.builtin.assert:
     that:
       - "output.storageaccounts | length >= 2"
 
@@ -581,7 +589,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ item }}"
     state: absent
-    force_delete_nonempty: True
+    force_delete_nonempty: true
   loop:
     - "{{ storage_account_name_default }}"
     - "{{ storage_account_name_explicit }}"

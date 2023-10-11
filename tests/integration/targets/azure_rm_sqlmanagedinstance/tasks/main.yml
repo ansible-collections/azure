@@ -29,7 +29,7 @@
       testing: testing
       delete: on-exit
       foo: bar
-    purge_rules: yes
+    purge_rules: true
     rules:
       - name: DenySSH
         protocol: Tcp

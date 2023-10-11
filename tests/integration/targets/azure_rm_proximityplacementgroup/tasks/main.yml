@@ -46,7 +46,8 @@
     name: "{{ group_name }}"
   register: results
 
-- ansible.builtin.assert:
+- name: Assert the proximity placement facts
+  ansible.builtin.assert:
     that:
       - not results.changed
       - results.proximityplacementgroups[0].name == "{{ group_name }}"

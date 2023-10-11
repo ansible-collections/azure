@@ -1,7 +1,6 @@
----
 - name: Set storage account name
   ansible.builtin.set_fact:
-      storage_account: "sb{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    storage_account: "sb{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create storage account
   azure_rm_storageaccount:
@@ -116,7 +115,7 @@
   register: delete_output
 
 - name: Pause for 3 minutes to waiting delete
-  pause:
+  ansible.builtin.pause:
     minutes: 3
 
 - name: Delete storage account

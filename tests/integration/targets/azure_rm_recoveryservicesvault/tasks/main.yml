@@ -1,12 +1,12 @@
 - name: Fix resource prefix
   ansible.builtin.set_fact:
-    name: "revault{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    name_rpfx: "revault{{ resource_group | hash('md5') | truncate(22, True, '') }}"
     location: "eastus"
 
 - name: Create Azure Recovery Service vault
   azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     location: "{{ location }}"
     state: "present"
   register: output
@@ -15,11 +15,11 @@
   ansible.builtin.assert:
     that:
       - output.changed
-      
+ 
 - name: Create Azure Recovery Service vault (idempotent)
   azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     location: "{{ location }}"
     state: "present"
   register: output
@@ -32,7 +32,7 @@
 - name: Get Azure Recovery Service Vault Details
   azure_rm_recoveryservicesvault_info:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
   register: output
 
 - name: Assert that output has changed
@@ -44,7 +44,7 @@
 - name: Delete Azure Recovery Service vault
   azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     location: "{{ location }}"
     state: "absent"
   register: output
