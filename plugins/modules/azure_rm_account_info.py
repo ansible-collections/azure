@@ -194,20 +194,24 @@ class AzureRMAccountInfo(AzureRMModuleBase):
         # https://learn.microsoft.com/en-us/graph/api/user-get?view=graph-rest-1.0&tabs=http
 
         user = {}
+        acc = asyncio.get_event_loop().run_until_complete(self.getAccount())
+        import logging
+        logging.basicConfig(filename='./log.log', level=logging.INFO)
+        logging.info("INFO DDD" + str(acc))
 
-        async def getAccount():
-            return await self.get_msgraph_client(tenant_id).me.get(
-                request_configuration=UserRequestBuilder.UserRequestBuilderGetRequestConfiguration(
-                    query_parameters=UserRequestBuilder.UserRequestBuilderGetQueryParameters(
-                        select=["userType", "userPrincipalName", "postalCode", "identities"], ),
-                ))
-
-        user_info = asyncio.get_event_loop().run_until_complete(getAccount())
+        user_info = asyncio.get_event_loop().run_until_complete(self.getAccount())
         user['name'] = user_info.user_principal_name
         user['type'] = user_info.user_type
 
         return user
-
+    
+    async def getAccount(self):
+        return await self.get_msgraph_client(None).me.get(
+            # request_configuration=UserRequestBuilder.UserRequestBuilderGetRequestConfiguration(
+            #     query_parameters=UserRequestBuilder.UserRequestBuilderGetQueryParameters(
+            #         select=["userType", "userPrincipalName", "postalCode", "identities"], ),
+            #     )
+            )
 
 def main():
     AzureRMAccountInfo()

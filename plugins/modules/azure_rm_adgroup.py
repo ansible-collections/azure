@@ -276,54 +276,53 @@ class AzureRMADGroup(AzureRMModuleBase):
         # TODO remove ad_groups return. Returns as one object always
         ad_groups = []
 
-        # try:
-        self._client = self.get_msgraph_client(self.tenant)
-        ad_groups = []
+        try:
+            self._client = self.get_msgraph_client(self.tenant)
+            ad_groups = []
 
-        if self.display_name and self.mail_nickname:
-            filter="displayName eq '{0}' and mailNickname eq '{1}'".format(self.display_name, self.mail_nickname)
-            ad_groups = asyncio.get_event_loop().run_until_complete(self.get_group_list(filter))
-            if len(ad_groups) > 0:
-                self.object_id = ad_groups[0].id
+            if self.display_name and self.mail_nickname:
+                filter="displayName eq '{0}' and mailNickname eq '{1}'".format(self.display_name, self.mail_nickname)
+                ad_groups = asyncio.get_event_loop().run_until_complete(self.get_group_list(filter))
+                if ad_groups:
+                    self.object_id = ad_groups[0].id
 
-        elif self.object_id:
-            ad_groups = [asyncio.get_event_loop().run_until_complete(self.get_group(self.object_id))]
-                      
-        if len(ad_groups) > 0:
-            if self.state == "present":
-                self.results["changed"] = False
-            elif self.state == "absent":
-                asyncio.get_event_loop().run_until_complete(self.delete_group(self.object_id))
-                ad_groups = []
-                self.results["changed"] = True
-        else:
-            if self.state == "present":
-                if self.display_name and self.mail_nickname:
-                    group = Group(
-                        mail_enabled = False,
-                        security_enabled = True,
-                        group_types = [],
-                        
-                        display_name = self.display_name, 
-                        mail_nickname = self.mail_nickname,
-                        )
-                    
-                    ad_groups = [asyncio.get_event_loop().run_until_complete(self.create_group(group))]
+            elif self.object_id:
+                ad_groups = [asyncio.get_event_loop().run_until_complete(self.get_group(self.object_id))]
+            
+            if ad_groups:
+                if self.state == "present":
+                    self.results["changed"] = False
+                elif self.state == "absent":
+                    asyncio.get_event_loop().run_until_complete(self.delete_group(self.object_id))
+                    ad_groups = []
                     self.results["changed"] = True
-                else:
-                    raise ValueError('The group does not exist. Both display_name : {0} and mail_nickname : {1} must be passed to create a new group'
-                                    .format(self.display_name, self.mail_nickname))
-            elif self.state == "absent":
-                self.results["changed"] = False
-        
-        if len(ad_groups) > 0 and ad_groups[0]:
-            self.update_members(ad_groups[0].id)
-            self.update_owners(ad_groups[0].id)
-            self.results.update(self.set_results(ad_groups[0]))
+            else:
+                if self.state == "present":
+                    if self.display_name and self.mail_nickname:
+                        group = Group(
+                            mail_enabled = False,
+                            security_enabled = True,
+                            group_types = [],
+                            
+                            display_name = self.display_name, 
+                            mail_nickname = self.mail_nickname,
+                            )
+                        
+                        ad_groups = [asyncio.get_event_loop().run_until_complete(self.create_group(group))]
+                        self.results["changed"] = True
+                    else:
+                        raise ValueError('The group does not exist. Both display_name : {0} and mail_nickname : {1} must be passed to create a new group'
+                                        .format(self.display_name, self.mail_nickname))
+                elif self.state == "absent":
+                    self.results["changed"] = False
+            
+            if ad_groups and ad_groups[0] is not None:
+                self.update_members(ad_groups[0].id)
+                self.update_owners(ad_groups[0].id)
+                self.results.update(self.set_results(ad_groups[0]))
 
-        # except Exception as e:
-        #     self.fail(e)
-
+        except Exception as e:
+            self.fail(e)
         return self.results
 
     def update_members(self, group_id):

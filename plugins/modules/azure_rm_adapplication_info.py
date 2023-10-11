@@ -113,19 +113,10 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
 
     def __init__(self):
         self.module_arg_spec = dict(
-            app_id=dict(
-                type='str'
-            ),
-            object_id=dict(
-                type='str'
-            ),
-            identifier_uri=dict(
-                type='str'
-            ),
-            tenant=dict(
-                type='str',
-                # required=True #TODO
-            )
+            app_id=dict(type='str'),
+            object_id=dict(type='str'),
+            identifier_uri=dict(type='str'),
+            tenant=dict(type='str')
         )
         self.tenant = None
         self.app_id = None
