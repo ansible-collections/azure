@@ -109,7 +109,7 @@
     admin_username: testuser
     single_placement_group: false
     platform_fault_domain_count: 1
-    public_ip_per_vm: True
+    public_ip_per_vm: true
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
@@ -194,7 +194,7 @@
     admin_username: testuser
     priority: Spot
     eviction_policy: Deallocate
-    single_placement_group: True
+    single_placement_group: true
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
@@ -251,7 +251,7 @@
     tier: Standard
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
-    single_placement_group: True
+    single_placement_group: true
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -275,7 +275,7 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
-    state: absent      
+    state: absent
 
 - name: Create VMSS (check mode)
   azure_rm_virtualmachinescaleset:
@@ -295,7 +295,7 @@
     tier: Standard
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
-    single_placement_group: True
+    single_placement_group: true
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -688,7 +688,7 @@
       resource_group: "{{ resource_group }}"
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
-    enable_accelerated_networking: true 
+    enable_accelerated_networking: true
     single_placement_group: true
   register: results
 
@@ -721,7 +721,7 @@
   register: results
 
 # disable for now
-#- name: Assert that security group is correct
+# - name: Assert that security group is correct
 #  ansible.builtin.assert:
 #    that:
 #      - 'results.changed'
@@ -744,8 +744,8 @@
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
-       - path: /home/testuser/.ssh/authorized_keys
-         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     ephemeral_os_disk: true
     image:
       name: testimageb

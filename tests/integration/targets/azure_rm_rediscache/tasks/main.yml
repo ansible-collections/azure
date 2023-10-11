@@ -446,7 +446,7 @@
         return_access_keys: true
       register: key_facts
 
-    - name: regenerate primary redis key
+    - name: Regenerate primary redis key
       azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}2"

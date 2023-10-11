@@ -67,7 +67,7 @@
 - name: Delete private DNS zone
   azure_rm_privatednszone:
     resource_group: "{{ resource_group }}"
-    name:  "{{ domain_name }}.com"
+    name: "{{ domain_name }}.com"
     state: absent
 
 - name: Delete private DNS zone (idempotent)

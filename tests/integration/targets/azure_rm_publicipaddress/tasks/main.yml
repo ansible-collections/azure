@@ -64,7 +64,7 @@
     name: "pip{{ rpfx }}"
     allocation_method: static
     domain_name: "{{ domain_name }}"
-    append_tags: yes
+    append_tags: true
     tags:
       delete: never
       foo: bar

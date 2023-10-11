@@ -132,7 +132,7 @@
   azure_rm_mariadbserver_info:
     resource_group: "{{ resource_group }}"
     name: mariadbsrv{{ rpfx }}second
-  register: output 
+  register: output
 
 - name: Assert that facts are returned
   ansible.builtin.assert:
@@ -260,7 +260,7 @@
     resource_group: "{{ resource_group }}"
     server_name: mariadbsrv{{ rpfx }}
     name: testdatabase
-  register: output 
+  register: output
 
 - name: Assert that facts are returned
   ansible.builtin.assert:

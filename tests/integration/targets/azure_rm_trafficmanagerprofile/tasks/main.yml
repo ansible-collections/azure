@@ -17,7 +17,7 @@
     location: global
     profile_status: enabled
     routing_method: performance
-    dns_config: 
+    dns_config:
       relative_name: "{{ tmname }}"
       ttl: 60
     monitor_config:
@@ -46,7 +46,7 @@
     location: global
     profile_status: enabled
     routing_method: performance
-    dns_config: 
+    dns_config:
       relative_name: "{{ tmname }}"
       ttl: 60
     monitor_config:
@@ -84,7 +84,7 @@
     location: global
     profile_status: enabled
     routing_method: performance
-    dns_config: 
+    dns_config:
       relative_name: "{{ tmname }}"
       ttl: 60
     monitor_config:
@@ -109,7 +109,7 @@
     location: global
     profile_status: disabled
     routing_method: priority
-    dns_config: 
+    dns_config:
       relative_name: "{{ tmname }}"
       ttl: 60
     monitor_config:
@@ -121,7 +121,7 @@
 - name: Assert the Traffic Manager profile is updated
   ansible.builtin.assert:
     that:
-      - output.changed 
+      - output.changed
 
 - name: Create Traffic Manager endpoint(check mode)
   azure_rm_trafficmanagerendpoint:

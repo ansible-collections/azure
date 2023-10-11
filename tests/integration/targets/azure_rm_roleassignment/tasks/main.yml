@@ -28,7 +28,7 @@
 - name: Check specific fetch for single return
   ansible.builtin.assert:
     that:
-      - "{{ ( item.roleassignments | length) == 1 }}"
+      - "{{ (item.roleassignments | length) == 1 }}"
   loop: "{{ az_role_assignment_specific.results }}"
 
 - name: Intentional mutual exclusion info
@@ -131,13 +131,13 @@
 - name: List Role Assignments at scope with strict matching
   azure_rm_roleassignment_info:
     scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-    strict_scope_match: True
+    strict_scope_match: true
   register: az_role_assignment_by_scope_strict
 
 - name: Check strict scope matching
   ansible.builtin.assert:
     that:
-      - item.scope == az_role_assignments.roleassignments[0].scope 
+      - item.scope == az_role_assignments.roleassignments[0].scope
   loop: "{{ az_role_assignment_by_scope_strict.roleassignments }}"
 
 - name: List Role Assignments at id
@@ -162,7 +162,7 @@
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-    name: "{{ uuid }}" 
+    name: "{{ uuid }}"
   register: az_role_assignment_create
 
 - name: Delete Role by Name

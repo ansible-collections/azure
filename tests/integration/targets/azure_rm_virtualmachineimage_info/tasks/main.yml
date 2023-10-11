@@ -57,4 +57,4 @@
 
 - name: Assert image facts
   ansible.builtin.assert:
-   that: output['vmimages'] | length == 1
+    that: output['vmimages'] | length == 1

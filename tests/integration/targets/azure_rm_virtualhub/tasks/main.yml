@@ -21,7 +21,7 @@
     that:
       - output.changed
       - output.state.provisioning_state == 'Succeeded'
-   
+
 - name: Create a VirtualHub (idempotent)
   azure_rm_virtualhub:
     resource_group: "{{ resource_group }}"

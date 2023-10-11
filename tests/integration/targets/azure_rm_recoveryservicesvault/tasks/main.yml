@@ -15,7 +15,7 @@
   ansible.builtin.assert:
     that:
       - output.changed
- 
+
 - name: Create Azure Recovery Service vault (idempotent)
   azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"

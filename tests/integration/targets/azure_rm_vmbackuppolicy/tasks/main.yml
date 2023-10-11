@@ -1,13 +1,13 @@
 - name: Fix resource prefix
   ansible.builtin.set_fact:
-    name: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+    name_rpfx: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
     vault_name: "myVault"
     location: "eastus"
 
 - name: Create Azure Recovery Service vault
   azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     location: "{{ location }}"
     state: "present"
   register: vault
@@ -15,7 +15,7 @@
 - name: Create VM Backup Policy
   azure_rm_vmbackuppolicy:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     vault_name: "{{ vault.response.name }}"
     state: "present"
   register: output
@@ -24,11 +24,11 @@
   ansible.builtin.assert:
     that:
       - output.changed
-      
+
 - name: Create VM Backup Policy (idempotent)
   azure_rm_vmbackuppolicy:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     vault_name: "{{ vault.response.name }}"
     state: "present"
   register: output
@@ -41,7 +41,7 @@
 - name: Get VM Backup Policy Details
   azure_rm_vmbackuppolicy_info:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     vault_name: "{{ vault.response.name }}"
   register: output
 
@@ -54,7 +54,7 @@
 - name: Delete VM Backup Policy
   azure_rm_vmbackuppolicy:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     vault_name: "{{ vault.response.name }}"
     state: "absent"
   register: output

@@ -1,15 +1,15 @@
 - name: Prepare facts
   ansible.builtin.set_fact:
     resource_prefix: "{{ resource_group_secondary | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Fix resource prefix
   ansible.builtin.set_fact:
     linux_app_plan_resource_group: "{{ resource_group_secondary }}"
-    win_app_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}{{ 1000 | random}}winapp"
-    linux_app_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}{{ 1000 | random}}linuxapp"
-    win_plan_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}winplan"
-    linux_plan_name: "{{ (resource_group_secondary | replace('-','x'))[-8:] }}linplan"
+    win_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random}}winapp"
+    linux_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random}}linuxapp"
+    win_plan_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}winplan"
+    linux_plan_name: "{{ (resource_group_secondary | replace('-', 'x'))[-8:] }}linplan"
     slot1_name: "stage1"
 
 - name: Create a windows web app with non-exist app service plan
@@ -126,7 +126,7 @@
 - name: Assert the web app was updated
   ansible.builtin.assert:
     that:
-    - output.changed
+      - output.changed
 
 - name: Get web app with name
   azure_rm_webapp_info:
@@ -137,9 +137,9 @@
 - name: Assert updating
   ansible.builtin.assert:
     that:
-    - output.webapps[0].app_settings | length == 2
-    - output.webapps[0].app_settings['testkey'] == 'testvalue'
-    - output.webapps[0].app_settings['testkey2'] == 'testvalue2'
+      - output.webapps[0].app_settings | length == 2
+      - output.webapps[0].app_settings['testkey'] == 'testvalue'
+      - output.webapps[0].app_settings['testkey2'] == 'testvalue2'
 
 - name: Get web app with return publishing profile
   azure_rm_webapp_info:
@@ -148,7 +148,8 @@
     return_publish_profile: true
   register: output
 
-- ansible.builtin.assert:
+- name: Assert the web app facts
+  ansible.builtin.assert:
     that:
       - output.webapps | length == 1
       - output.webapps[0].publishing_username != ""
@@ -244,7 +245,8 @@
         version: "6.6"
   register: output
 
-- ansible.builtin.assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that: not output.changed
     
 - name: Update nodejs framework
@@ -456,8 +458,8 @@
     name: "{{ slot1_name }}"
     configuration_source: "{{ win_app_name }}13"
     app_settings:
-        testkey: testvalue
-  check_mode: yes
+      testkey: testvalue
+  check_mode: true
   register: output
 
 - name: Assert slot check mode creation
@@ -472,7 +474,7 @@
     name: "{{ slot1_name }}"
     configuration_source: "{{ win_app_name }}13"
     app_settings:
-        testkey: testvalueslot
+      testkey: testvalueslot
   register: output
 
 - name: Assert slot creation
@@ -486,7 +488,7 @@
     webapp_name: "{{ win_app_name }}13"
     name: "{{ slot1_name }}"
     app_settings:
-        testkey: testvalueslot
+      testkey: testvalueslot
   register: output
 
 - name: Assert idempotence
@@ -503,7 +505,7 @@
       - name: "node"
         version: "10.1"
     app_settings:
-        testkey: testvalue2
+      testkey: testvalue2
   register: output
 
 - name: Assert updating

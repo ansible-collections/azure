@@ -28,9 +28,9 @@
 - name: Assert the registration assignment check mode
   ansible.builtin.assert:
     that:
-      - output.changed 
+      - output.changed
 
-- name: Create a RegistrationAssignment 
+- name: Create a RegistrationAssignment
   azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
     properties:
@@ -45,7 +45,7 @@
 - name: Create a RegistrationAssignment -- idempotent
   azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
-    registration_assignment_id:  "{{ output2.state.name }}"
+    registration_assignment_id: "{{ output2.state.name }}"
     properties:
       registration_definition_id: "{{ output1.state.id }}"
   register: output
@@ -58,7 +58,7 @@
 - name: Get a RegistrationAssignment
   azure_rm_registrationassignment_info:
     scope: subscriptions/{{ subscription_id }}
-    registration_assignment_id:  "{{ output2.state.name }}"
+    registration_assignment_id: "{{ output2.state.name }}"
   register: output
 
 - name: Assert the registration assignment facts
@@ -79,5 +79,5 @@
 - name: Delete the RegistrationAssignment
   azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
-    registration_assignment_id:  "{{ output2.state.name }}"
+    registration_assignment_id: "{{ output2.state.name }}"
     state: absent

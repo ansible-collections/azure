@@ -94,8 +94,8 @@
 
 - name: Assert status succeeded and results match expectations
   ansible.builtin.assert:
-   that:
-     - not output.changed
+    that:
+      - not output.changed
   ignore_errors: true
 
 - name: Update private endpoint with tags
