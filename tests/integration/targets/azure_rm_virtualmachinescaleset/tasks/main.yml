@@ -1,7 +1,7 @@
 - name: Prepare random number
   ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
@@ -84,7 +84,7 @@
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
-    generalized: yes
+    generalized: true
 - name: Create image A
   azure_rm_image:
     resource_group: "{{ resource_group }}"
@@ -107,7 +107,7 @@
     name: testVMSS{{ rpfx }}
     vm_size: Standard_A1_v2
     admin_username: testuser
-    single_placement_group: False
+    single_placement_group: false
     platform_fault_domain_count: 1
     public_ip_per_vm: True
     ssh_password_enabled: false
@@ -141,9 +141,9 @@
     name: testVMSS{{ rpfx }}
     vm_size: Standard_A1_v2
     admin_username: testuser
-    single_placement_group: False
+    single_placement_group: false
     platform_fault_domain_count: 1
-    public_ip_per_vm: True
+    public_ip_per_vm: true
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
@@ -175,7 +175,8 @@
     resource_group: "{{ resource_group }}"
   register: output_scaleset
 
-- ansible.builtin.assert:
+- name: Assert vmss facts
+  ansible.builtin.assert:
     that:
       - output_scaleset.vmss[0].orchestration_mode == "Flexible"
 
@@ -306,7 +307,7 @@
         caching: ReadWrite
         managed_disk_type: Standard_LRS
   register: results
-  check_mode: yes
+  check_mode: true
 
 - name: Assert that VMSS can be created
   ansible.builtin.assert:
@@ -343,7 +344,7 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
-    single_placement_group: True
+    single_placement_group: true
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -380,7 +381,7 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
-    single_placement_group: True
+    single_placement_group: true
     image:
       offer: UbuntuServer
       publisher: Canonical
@@ -404,9 +405,10 @@
     format: curated
   register: output_scaleset
 
-- ansible.builtin.assert:
+- name: Assert the vmss facts
+  ansible.builtin.assert:
     that:
-        - output_scaleset.vmss[0].load_balancer == "testLB1"
+      - output_scaleset.vmss[0].load_balancer == "testLB1"
 
 - name: Retrieve scaleset VMs facts
   azure_rm_virtualmachinescalesetinstance_info:
@@ -451,7 +453,7 @@
     image: "{{ body.image }}"
     data_disks: "{{ body.data_disks }}"
     overprovision: "{{ body.overprovision }}"
-    single_placement_group: True
+    single_placement_group: true
   register: results
 
 - name: Assert that nothing was changed
@@ -548,7 +550,7 @@
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
     instance_id: "{{ instances.instances[0].instance_id }}"
-    latest_model: yes
+    latest_model: true
   register: results
 
 - name: Assert that something has changed
@@ -603,10 +605,10 @@
       resource_group: "{{ resource_group }}"
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
-    enable_accelerated_networking: yes
-    single_placement_group: True
+    enable_accelerated_networking: true
+    single_placement_group: true
   register: results
-  check_mode: yes
+  check_mode: true
 
 - name: Assert that VMSS can be created
   ansible.builtin.assert:
@@ -630,8 +632,8 @@
       resource_group: "{{ resource_group }}"
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
-    enable_accelerated_networking: yes
-    single_placement_group: True
+    enable_accelerated_networking: true
+    single_placement_group: true
   register: results
 
 - name: Assert that VMSS ran
@@ -659,8 +661,8 @@
       resource_group: "{{ resource_group }}"
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
-    enable_accelerated_networking: yes
-    single_placement_group: True
+    enable_accelerated_networking: true
+    single_placement_group: true
   register: results
 
 - name: Assert that nothing has changed
@@ -686,8 +688,8 @@
       resource_group: "{{ resource_group }}"
     upgrade_policy: Manual
     security_group: testNetworkSecurityGroup
-    enable_accelerated_networking: yes
-    single_placement_group: True
+    enable_accelerated_networking: true 
+    single_placement_group: true
   register: results
 
 - name: Assert that something has changed
@@ -715,7 +717,7 @@
     security_group:
       name: testNetworkSecurityGroup2
       resource_group: "{{ resource_group_secondary }}"
-    single_placement_group: True
+    single_placement_group: true
   register: results
 
 # disable for now
@@ -744,7 +746,7 @@
     ssh_public_keys:
        - path: /home/testuser/.ssh/authorized_keys
          key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    ephemeral_os_disk: True
+    ephemeral_os_disk: true
     image:
       name: testimageb
       resource_group: "{{ resource_group }}"
@@ -752,10 +754,11 @@
     security_group:
       name: testNetworkSecurityGroup2
       resource_group: "{{ resource_group_secondary }}"
-    single_placement_group: True
+    single_placement_group: true
   register: results
 
-- ansible.builtin.assert:
+- name: Assert vmss created
+  ansible.builtin.assert:
     that:
       - results.changed
       - results.ansible_facts.azure_vmss.virtual_machine_profile.storage_profile.os_disk.diff_disk_settings.option == 'Local'
@@ -773,7 +776,7 @@
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    ephemeral_os_disk: False
+    ephemeral_os_disk: false
     image:
       name: testimageb
       resource_group: "{{ resource_group }}"
@@ -781,8 +784,8 @@
     security_group:
       name: testNetworkSecurityGroup2
       resource_group: "{{ resource_group_secondary }}"
-    single_placement_group: True
-  ignore_errors: yes
+    single_placement_group: true
+  ignore_errors: true
 
 - name: Delete VMSS
   azure_rm_virtualmachinescaleset:
@@ -808,10 +811,10 @@
       sku: 18.04-LTS
       version: latest
     upgrade_policy: Manual
-    enable_accelerated_networking: yes
-    single_placement_group: True
+    enable_accelerated_networking: true
+    single_placement_group: true
   register: results
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert failure to show that accelerated networking is enabled only with supported instance types.
   ansible.builtin.assert:
@@ -857,41 +860,41 @@
 
 # TODO: Until we have a module to create/delete images this is the best tests
 # I can do
-- name: ansible.builtin.assert error thrown with invalid image dict
+- name: Assert error thrown with invalid image dict
   azure_rm_virtualmachinescaleset:
-      resource_group: "{{ resource_group }}"
-      name: testvm002
-      vm_size: Standard_B1s
-      image:
-        offer: UbuntuServer
+    resource_group: "{{ resource_group }}"
+    name: testvm002
+    vm_size: Standard_B1s
+    image:
+      offer: UbuntuServer
   register: fail_invalid_image_dict
   failed_when: 'fail_invalid_image_dict.msg != "parameter error: expecting image to contain [publisher, offer, sku, version], [name, resource_group] or [id]"'
 
-- name: ansible.builtin.assert error thrown with invalid image type
+- name: Assert error thrown with invalid image type
   azure_rm_virtualmachinescaleset:
-      resource_group: "{{ resource_group }}"
-      name: testvm002
-      vm_size: Standard_B1s
-      image:
+    resource_group: "{{ resource_group }}"
+    name: testvm002
+    vm_size: Standard_B1s
+    image:
       - testing
   register: fail_invalid_image_type
   failed_when: 'fail_invalid_image_type.msg != "parameter error: expecting image to be a string or dict not list"'
 
-- name: ansible.builtin.assert error finding missing custom image
+- name: Assert error finding missing custom image
   azure_rm_virtualmachinescaleset:
-      resource_group: "{{ resource_group }}"
-      name: testvm002
-      vm_size: Standard_B1s
-      image: invalid-image
+    resource_group: "{{ resource_group }}"
+    name: testvm002
+    vm_size: Standard_B1s
+    image: invalid-image
   register: fail_missing_custom_image
   failed_when: fail_missing_custom_image.msg != "Error could not find image with name invalid-image"
 
-- name: ansible.builtin.assert error finding missing custom image (dict style)
+- name: Assert error finding missing custom image (dict style)
   azure_rm_virtualmachinescaleset:
-      resource_group: "{{ resource_group }}"
-      name: testvm002
-      vm_size: Standard_B1s
-      image:
-        name: invalid-image
+    resource_group: "{{ resource_group }}"
+    name: testvm002
+    vm_size: Standard_B1s
+    image:
+      name: invalid-image
   register: fail_missing_custom_image_dict
   failed_when: fail_missing_custom_image_dict.msg != "Error could not find image with name invalid-image"

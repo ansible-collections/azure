@@ -57,7 +57,9 @@
     that: not download_results.changed
 
 - name: Delete file
-  ansible.builtin.file: path="/tmp/Ratings.png" state=absent
+  ansible.builtin.file:
+    path: "/tmp/Ratings.png"
+    state: absent
 
 - name: Download file
   azure_rm_storageblob:
@@ -72,7 +74,9 @@
     that: "download_results.changed"
 
 - name: Find file
-  ansible.builtin.find: paths='/tmp' patterns="Ratings.png"
+  ansible.builtin.find:
+    paths: '/tmp'
+    patterns: "Ratings.png"
   register: find_results
 - name: Assert matched the file
   ansible.builtin.assert:

@@ -2,7 +2,7 @@
   ansible.builtin.set_fact:
     name_rpfx: "table{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     route_name: "route{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: true 
+  run_once: true
 
 - name: Create a route table (check mode)
   azure_rm_routetable:
@@ -149,7 +149,7 @@
     resource_group: "{{ resource_group }}"
     route_table_name: "{{ name_rpfx }}"
     state: absent
-  check_mode: true 
+  check_mode: true
 
 - name: Delete route
   azure_rm_route:

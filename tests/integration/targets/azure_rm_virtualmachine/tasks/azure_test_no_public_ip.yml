@@ -1,4 +1,5 @@
-- include_tasks: setup.yml
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
 
 - name: Create virtual machine without public ip address and with boot diagnostics enabled
   azure_rm_virtualmachine:
@@ -17,7 +18,7 @@
     availability_set: "{{ availability_set }}"
     virtual_network: "{{ network_name }}"
     boot_diagnostics:
-      enabled: yes
+      enabled: true
     image:
       offer: UbuntuServer
       publisher: Canonical

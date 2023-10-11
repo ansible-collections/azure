@@ -1,4 +1,5 @@
-- include_tasks: setup.yml
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
 
 - name: Create public ip
   azure_rm_publicipaddress:
@@ -10,7 +11,7 @@
   azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ security_group }}"
-    purge_rules: yes
+    purge_rules: true
     rules:
       - name: ALLOW_SSH
         protocol: Tcp
@@ -99,7 +100,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     boot_diagnostics:
-      enabled: yes
+      enabled: true
       # without specifying storage_account you get a new default storage account for the VM
 
 - name: Ensure VM properties are correct
@@ -130,17 +131,17 @@
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     boot_diagnostics:
-      enabled: yes
+      enabled: true
       storage_account: "{{ storage_account }}"
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Disable boot diagnostics and change the storage account at the same time
   azure_rm_virtualmachine:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vm_name }}"
-      boot_diagnostics:
-        enabled: no
-        storage_account: "{{ storage_account }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    boot_diagnostics:
+      enabled: false
+      storage_account: "{{ storage_account }}"
 
 - name: Ensure boot diagnostics was disabled
   ansible.builtin.assert:
@@ -149,10 +150,10 @@
 
 - name: Re-enable boot diagnostics on an existing VM where it was previously configured
   azure_rm_virtualmachine:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vm_name }}"
-      boot_diagnostics:
-        enabled: yes
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    boot_diagnostics:
+      enabled: true
   register: reenable_boot_diag_result
 
 - name: Ensure boot diagnostics was reenabled

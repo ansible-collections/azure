@@ -454,7 +454,7 @@
     that:
       - output.changed
 
-- name: Create SQL Database with sku 
+- name: Create SQL Database with sku
   azure_rm_sqldatabase:
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
@@ -471,7 +471,7 @@
     that:
       - output.changed
       - output.status == 'Online'
- 
+
 - name: Gather facts SQL Database with good SKU
   azure_rm_sqldatabase_info:
     resource_group: "{{ resource_group }}"
@@ -490,7 +490,7 @@
       - output.databases[0].sku.capacity != None
       - output.databases[0].kind != None
       - output.databases[0].status != None
-     
+
 - name: Create again instance of SQL Database with same SKU
   azure_rm_sqldatabase:
     resource_group: "{{ resource_group }}"
@@ -708,7 +708,7 @@
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
     name: EP{{ random_postfix }}
-    zone_redundant: False
+    zone_redundant: false
     tags:
       aaa: bbb
   check_mode: true
@@ -723,7 +723,7 @@
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
     name: EP{{ random_postfix }}
-    zone_redundant: False
+    zone_redundant: false
     tags:
       aaa: bbb
   register: output
@@ -738,7 +738,7 @@
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
     name: EP{{ random_postfix }}
-    zone_redundant: False
+    zone_redundant: false
     tags:
       aaa: bbb
   register: output

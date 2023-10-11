@@ -214,7 +214,7 @@
   ansible.builtin.assert:
     that:
       - item.changed == false
-  loop: 
+  loop:
     - "{{ absent_nochange_properties }}"
     - "{{ absent_nochange_id }}"
     - "{{ absent_nochange_name }}"

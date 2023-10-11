@@ -44,7 +44,7 @@
     public_ip_name: testPublicIP
     security_group_name: testNetworkSecurityGroup
 
-- name: create a storage account
+- name: Create a storage account
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"

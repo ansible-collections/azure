@@ -147,7 +147,7 @@
     name: "topic{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     namespace: "ns{{ rpfx }}"
-    show_sas_policies: true 
+    show_sas_policies: true
   register: facts
 
 - name: Assert the topic facts

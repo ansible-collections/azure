@@ -1,4 +1,5 @@
-- include_tasks: setup.yml
+- name: Set parameters
+  ansible.builtin.include_tasks: setup.yml
 
 - name: Create minimal VM with defaults
   azure_rm_virtualmachine:
@@ -25,13 +26,13 @@
   register: vm_state
 
 - name: Pause for 10 mimutes to VM updating
-  command: sleep 600
+  ansible.builtin.command: sleep 600
 
 - name: Restart the virtual machine
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
-    restarted: yes
+    restarted: true
     vm_size: Standard_B1ms
   register: restart_result
 
@@ -45,7 +46,7 @@
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
-    allocated: no
+    allocated: false
     vm_size: Standard_B1ms
   register: deallocate_result
 
@@ -60,7 +61,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
-    started: True
+    started: true
   register: start_result
 
 - name: Ensure VM was started
@@ -99,5 +100,5 @@
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
-    force_delete_nonempty: yes
+    force_delete_nonempty: false
     state: absent
