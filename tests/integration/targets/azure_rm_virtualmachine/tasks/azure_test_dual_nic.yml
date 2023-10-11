@@ -1,4 +1,4 @@
-- naem: Set variables
+- name: Set variables
   ansible.builtin.include_tasks: setup.yml
 
 - name: Create virtual network in secondary resource group

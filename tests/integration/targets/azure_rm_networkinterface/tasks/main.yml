@@ -276,7 +276,7 @@
         load_balancer_backend_address_pools:
           - "{{ lb.state.backend_address_pools[0].id }}"
           - name: backendaddrpool1
-        load_balancer: "lb{{ rpfx }}"
+            load_balancer: "lb{{ rpfx }}"
       - name: ipconfig2
         public_ip_name: "tn{{ rpfx }}v6"
         private_ip_address_version: 'IPv6'
