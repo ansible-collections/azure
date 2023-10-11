@@ -491,4 +491,4 @@
         name: "{{ redis_name }}2"
         state: absent
       register: output
-    tags: [long_run, never]
+      tags: [long_run, never]
