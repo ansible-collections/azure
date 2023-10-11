@@ -104,6 +104,8 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     import asyncio
     from msgraph.generated.applications.applications_request_builder import ApplicationsRequestBuilder
+    from kiota_abstractions.api_error import APIError
+    from msgraph.generated.models.o_data_errors.o_data_error import ODataError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -150,6 +152,9 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
                 apps = asyncio.get_event_loop().run_until_complete(self.get_applications(sub_filters))    
                 applications = list(apps.value)
             self.results['applications'] = [self.to_dict(app) for app in applications]
+        except APIError as e:
+            if e.response_status_code != 404:
+                self.fail("failed to get application info {0}".format(str(e)))
         except Exception as ge:
             self.fail("failed to get application info {0}".format(str(ge)))
 

@@ -271,6 +271,7 @@ try:
     from azure.mgmt.datafactory import DataFactoryManagementClient
     import azure.mgmt.datafactory.models as DataFactoryModel
     from azure.identity._credentials import client_secret, user_password, certificate
+    from azure.identity import AzureCliCredential
 
 except ImportError as exc:
     Authentication = object
@@ -1673,20 +1674,22 @@ class AzureRMAuth(object):
         }
 
     def _get_azure_cli_credentials(self, subscription_id=None, resource=None):
-        if self.is_ad_resource:
-            resource = 'https://graph.windows.net/'
-        subscription_id = subscription_id or self._get_env('subscription_id')
-        try:
-            profile = get_cli_profile()
-        except Exception as exc:
-            self.fail("Failed to load CLI profile {0}.".format(str(exc)))
+        # TODO mighrate CLI auth from azure.common to azure.identity
+        # if self.is_ad_resource:
+        #     resource = 'https://graph.windows.net/'
+        # subscription_id = subscription_id or self._get_env('subscription_id')
+        # try:
+        #     profile = get_cli_profile()
+        # except Exception as exc:
+        #     self.fail("Failed to load CLI profile {0}.".format(str(exc)))
 
-        credentials, subscription_id, tenant = profile.get_login_credentials(
-            subscription_id=subscription_id, resource=resource)
+        # credentials, subscription_id, tenant = profile.get_login_credentials(
+        #     subscription_id=subscription_id, resource=resource)
+        subscription_id = subscription_id or self._get_env('subscription_id')
         cloud_environment = get_cli_active_cloud()
 
         cli_credentials = {
-            'credentials': credentials,
+            'credentials': AzureCliCredential(),
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment
         }
