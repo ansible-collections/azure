@@ -3,7 +3,7 @@
     secgroupname: "sg{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     asg_name1: "asg1{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     asg_name2: "asg2{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-    sg_name1: "sgasg{{ resource_group | hash('md5') | truncate(7, Ttruerue, '') }}{{ 1000 | random }}"
+    sg_name1: "sgasg{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: true
 
 - name: Create security group
