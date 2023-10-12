@@ -399,7 +399,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
                     name = str(uuid.uuid4())
                     query_parameters = {'api-version': item.api_version}
-                    header_parameters = {'x-ms-client-request-id': str(uuid.uuid1()), 'Content-Type': 'application/json; charset=utf-8'}
+                    header_parameters = {'x-ms-client-request-id': str(uuid.uuid4()), 'Content-Type': 'application/json; charset=utf-8'}
                     body = {}
                     req = self.new_client.get(item.url, query_parameters, header_parameters, body)
                     batch_requests.append(dict(httpMethod="GET", url=req.url, name=name))
@@ -433,9 +433,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
     def _send_batch(self, batched_requests):
         url = '/batch'
         query_parameters = {'api-version': '2015-11-01'}
-        header_parameters = {'x-ms-client-request-id': str(uuid.uuid1()), 'Content-Type': 'application/json; charset=utf-8'}
-        body = {}
-
+        header_parameters = {'x-ms-client-request-id': str(uuid.uuid4()), 'Content-Type': 'application/json; charset=utf-8'}
         body_content = dict(requests=batched_requests)
 
         header = {'x-ms-client-request-id': str(uuid.uuid4())}
@@ -448,7 +446,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
     def send_request(self, url, api_version):
         query_parameters = {'api-version': api_version}
-        header_parameters = {'x-ms-client-request-id': str(uuid.uuid1()), 'Content-Type': 'application/json; charset=utf-8'}
+        header_parameters = {'x-ms-client-request-id': str(uuid.uuid4()), 'Content-Type': 'application/json; charset=utf-8'}
         body = {}
         request_new = self.new_client.get(url, query_parameters, header_parameters)
         response = self.new_client.send_request(request_new)
