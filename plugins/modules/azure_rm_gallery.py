@@ -21,20 +21,28 @@ options:
             - The name of the resource group.
         required: true
         type: str
+        disposition: 'resourceGroupName'
+        updateable: False
     name:
         description:
             - The name of the Shared Image Gallery.
             - Valid names consist of less than 80 alphanumeric characters, underscores and periods.
         required: true
         type: str
+        disposition: galleryName
+        updateable: False
     location:
         description:
             - Resource location.
         type: str
+        disposition: '/'
+        updateable: False
     description:
         description:
             - The description of this Shared Image Gallery resource. This property is updatable.
         type: str
+        disposition: '/properties/'
+
     state:
         description:
             - Assert the state of the Gallery.

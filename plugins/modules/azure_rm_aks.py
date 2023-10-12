@@ -132,6 +132,14 @@ options:
                 description:
                     - Agent pool node labels to be persisted across all nodes in agent pool.
                 type: dict
+            os_type:
+                description:
+                    - The operating system type.
+                    - The default is Linux.
+                choices:
+                    - Linux
+                    - Windows
+                type: str
             vnet_subnet_id:
                 description:
                     - Specifies the VNet's subnet identifier.
@@ -460,7 +468,6 @@ state:
     example:
         agent_pool_profiles:
          - count: 1
-           dns_prefix: Null
            name: default
            os_disk_size_gb: Null
            os_type: Linux
@@ -652,7 +659,6 @@ agent_pool_profile_spec = dict(
     count=dict(type='int', required=True),
     vm_size=dict(type='str', required=True),
     os_disk_size_gb=dict(type='int'),
-    dns_prefix=dict(type='str'),
     ports=dict(type='list', elements='int'),
     storage_profiles=dict(type='str', choices=[
                           'StorageAccount', 'ManagedDisks']),
@@ -672,7 +678,7 @@ agent_pool_profile_spec = dict(
 
 network_profile_spec = dict(
     network_plugin=dict(type='str', choices=['azure', 'kubenet']),
-    network_policy=dict(type='str'),
+    network_policy=dict(type='str', choices=['azure', 'calico']),
     pod_cidr=dict(type='str'),
     service_cidr=dict(type='str'),
     dns_service_ip=dict(type='str'),
