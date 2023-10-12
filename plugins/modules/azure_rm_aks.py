@@ -21,59 +21,74 @@ options:
         description:
             - Name of a resource group where the managed Azure Container Services (AKS) exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the managed Azure Container Services (AKS) instance.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the AKS. Use C(present) to create or update an AKS and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.
+        type: str
     dns_prefix:
         description:
             - DNS prefix specified when creating the managed cluster.
+        type: str
     kubernetes_version:
         description:
             - Version of Kubernetes specified when creating the managed cluster.
+        type: str
     linux_profile:
         description:
             - The Linux profile suboptions.
             - Optional, provide if you need an ssh access to the cluster nodes.
+        type: dict
         suboptions:
             admin_username:
                 description:
                     - The Admin Username for the cluster.
                 required: true
+                type: str
             ssh_key:
                 description:
                     - The Public SSH Key used to access the cluster.
                 required: true
+                type: str
     agent_pool_profiles:
         description:
             - The agent pool profile suboptions.
+        elements: dict
+        type: list
         suboptions:
             name:
                 description:
                     - Unique name of the agent pool profile in the context of the subscription and resource group.
                 required: true
+                type: str
             count:
                 description:
                     - Number of agents (VMs) to host docker containers.
                     - Allowed values must be in the range of C(1) to C(100) (inclusive).
                 required: true
+                type: int
             vm_size:
                 description:
                     - The VM Size of each of the Agent Pool VM's (e.g. C(Standard_F1) / C(Standard_D2v2)).
                 required: true
+                type: str
             os_disk_size_gb:
                 description:
                     - Size of the OS disk.
+                type: int
             enable_auto_scaling:
                 description:
                     - To enable auto-scaling.
@@ -121,6 +136,18 @@ options:
                 description:
                     - Specifies the VNet's subnet identifier.
                 type: str
+            storage_profile:
+                description:
+                    - Storage profile specifies what kind of storage used.
+                type: str
+                choices:
+                    - StorageAccount
+                    - ManagedDisks
+            ports:
+                description:
+                    - The ports of the agent pool profile.
+                type: list
+                elements: int
             availability_zones:
                 description:
                     - Availability zones for nodes. Must use VirtualMachineScaleSets AgentPoolType.
@@ -133,14 +160,17 @@ options:
     service_principal:
         description:
             - The service principal suboptions. If not provided - use system-assigned managed identity.
+        type: dict
         suboptions:
             client_id:
                 description:
                     - The ID for the Service Principal.
                 required: true
+                type: str
             client_secret:
                 description:
                     - The secret password associated with the service principal.
+                type: str
     enable_rbac:
         description:
             - Enable RBAC.
@@ -150,6 +180,7 @@ options:
     network_profile:
         description:
             - Profile of network configuration.
+        type: dict
         suboptions:
             network_plugin:
                 description:
@@ -158,12 +189,14 @@ options:
                     - With C(kubenet), nodes get an IP address from the Azure virtual network subnet.
                     - AKS features such as Virtual Nodes or network policies aren't supported with C(kubenet).
                     - C(azure) enables Azure Container Networking Interface(CNI), every pod gets an IP address from the subnet and can be accessed directly.
-                default: kubenet
+                type: str
                 choices:
                     - azure
                     - kubenet
             network_policy:
-                description: Network policy used for building Kubernetes network.
+                description:
+                    - Network policy used for building Kubernetes network.
+                type: str
                 choices:
                     - azure
                     - calico
@@ -172,39 +205,42 @@ options:
                     - A CIDR notation IP range from which to assign pod IPs when I(network_plugin=kubenet) is used.
                     - It should be a large address space that isn't in use elsewhere in your network environment.
                     - This address range must be large enough to accommodate the number of nodes that you expect to scale up to.
-                default: "10.244.0.0/16"
+                type: str
             service_cidr:
                 description:
                     - A CIDR notation IP range from which to assign service cluster IPs.
                     - It must not overlap with any Subnet IP ranges.
                     - It should be the *.10 address of your service IP address range.
-                default: "10.0.0.0/16"
+                type: str
             dns_service_ip:
                 description:
                     - An IP address assigned to the Kubernetes DNS service.
                     - It must be within the Kubernetes service address range specified in serviceCidr.
-                default: "10.0.0.10"
+                type: str
             docker_bridge_cidr:
                 description:
                     - A CIDR notation IP range assigned to the Docker bridge network.
                     - It must not overlap with any Subnet IP ranges or the Kubernetes service address range.
-                default: "172.17.0.1/16"
+                type: str
             load_balancer_sku:
                 description:
                     - The load balancer sku for the managed cluster.
                 choices:
                     - standard
                     - basic
+                type: str
             outbound_type:
                 description:
                     - How outbound traffic will be configured for a cluster.
                 type: str
+                default: loadBalancer
                 choices:
                     - loadBalancer
                     - userDefinedRouting
     api_server_access_profile:
         description:
             - Profile of API Access configuration.
+        type: dict
         suboptions:
             authorized_ip_ranges:
                 description:
@@ -220,17 +256,25 @@ options:
     aad_profile:
         description:
             - Profile of Azure Active Directory configuration.
+        type: dict
         suboptions:
             client_app_id:
-                description: The client AAD application ID.
+                description:
+                    - The client AAD application ID.
+                type: str
             server_app_id:
-                description: The server AAD application ID.
+                description:
+                    - The server AAD application ID.
+                type: str
             server_app_secret:
-                description: The server AAD application secret.
+                description:
+                    - The server AAD application secret.
+                type: str
             tenant_id:
                 description:
                     - The AAD tenant ID to use for authentication.
                     - If not specified, will use the tenant of the deployment subscription.
+                type: str
             managed:
                 description:
                     - Whether to enable manged AAD.
@@ -257,6 +301,7 @@ options:
                         description:
                             - Whether the solution enabled.
                         type: bool
+                        default: True
             monitoring:
                 description:
                     - It gives you performance visibility by collecting memory and processor metrics from controllers, nodes,
@@ -267,10 +312,12 @@ options:
                         description:
                             - Whether the solution enabled.
                         type: bool
+                        default: True
                     log_analytics_workspace_resource_id:
                         description:
                             - Where to store the container metrics.
                         required: true
+                        type: str
             virtual_node:
                 description:
                     - With virtual nodes, you have quick provisioning of pods, and only pay per second for their execution time.
@@ -281,10 +328,12 @@ options:
                         description:
                             - Whether the solution enabled.
                         type: bool
+                        default: True
                     subnet_resource_id:
                         description:
                             - Subnet associated to the cluster.
                         required: true
+                        type: str
     node_resource_group:
         description:
             - Name of the resource group containing agent pool nodes.
@@ -611,8 +660,8 @@ agent_pool_profile_spec = dict(
     availability_zones=dict(type='list', elements='int', choices=[1, 2, 3]),
     os_type=dict(type='str', choices=['Linux', 'Windows']),
     orchestrator_version=dict(type='str', required=False),
-    type=dict(type='str', choice=['VirtualMachineScaleSets', 'AvailabilitySet']),
-    mode=dict(type='str', choice=['System', 'User']),
+    type=dict(type='str', choices=['VirtualMachineScaleSets', 'AvailabilitySet']),
+    mode=dict(type='str', choices=['System', 'User']),
     enable_auto_scaling=dict(type='bool'),
     max_count=dict(type='int'),
     node_labels=dict(type='dict'),
@@ -628,7 +677,7 @@ network_profile_spec = dict(
     service_cidr=dict(type='str'),
     dns_service_ip=dict(type='str'),
     docker_bridge_cidr=dict(type='str'),
-    load_balancer_sku=dict(type='str'),
+    load_balancer_sku=dict(type='str', choices=['standard', 'basic']),
     outbound_type=dict(type='str', default='loadBalancer', choices=['userDefinedRouting', 'loadBalancer'])
 )
 
