@@ -1674,22 +1674,21 @@ class AzureRMAuth(object):
         }
 
     def _get_azure_cli_credentials(self, subscription_id=None, resource=None):
-        # TODO mighrate CLI auth from azure.common to azure.identity
-        # if self.is_ad_resource:
-        #     resource = 'https://graph.windows.net/'
-        # subscription_id = subscription_id or self._get_env('subscription_id')
-        # try:
-        #     profile = get_cli_profile()
-        # except Exception as exc:
-        #     self.fail("Failed to load CLI profile {0}.".format(str(exc)))
-
-        # credentials, subscription_id, tenant = profile.get_login_credentials(
-        #     subscription_id=subscription_id, resource=resource)
+        if self.is_ad_resource:
+            resource = 'https://graph.windows.net/'
         subscription_id = subscription_id or self._get_env('subscription_id')
+        try:
+            profile = get_cli_profile()
+        except Exception as exc:
+            self.fail("Failed to load CLI profile {0}.".format(str(exc)))
+
+        cred, subscription_id, tenant = profile.get_login_credentials(
+            subscription_id=subscription_id)
         cloud_environment = get_cli_active_cloud()
 
+        az_cli = AzureCliCredential()
         cli_credentials = {
-            'credentials': AzureCliCredential(),
+            'credentials': az_cli,
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment
         }
