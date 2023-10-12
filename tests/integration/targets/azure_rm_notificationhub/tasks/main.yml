@@ -122,6 +122,7 @@
 - name: Pause for 3 minutes to make sure delete successfully
   ansible.builtin.pause:
     minutes: 3
+  changed_when: true
 
 - name: Delete Namespace (idempotent)
   azure_rm_notificationhub:
@@ -146,6 +147,7 @@
 - name: Pause for 3 minutes to make sure delete successfully
   ansible.builtin.pause:
     minutes: 3
+  changed_when: true
 
 - name: Delete Notification Hub (idempotent)
   azure_rm_notificationhub:

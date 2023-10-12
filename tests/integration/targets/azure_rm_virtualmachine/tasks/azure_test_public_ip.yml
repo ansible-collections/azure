@@ -134,6 +134,7 @@
       enabled: true
       storage_account: "{{ storage_account }}"
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Disable boot diagnostics and change the storage account at the same time
   azure_rm_virtualmachine:

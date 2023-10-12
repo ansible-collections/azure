@@ -62,6 +62,7 @@
     name: "{{ interface_name }}-disk"
     state: absent
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Delete network security group
   azure_rm_securitygroup:

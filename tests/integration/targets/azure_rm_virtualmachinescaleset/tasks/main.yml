@@ -786,6 +786,7 @@
       resource_group: "{{ resource_group_secondary }}"
     single_placement_group: true
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Delete VMSS
   azure_rm_virtualmachinescaleset:

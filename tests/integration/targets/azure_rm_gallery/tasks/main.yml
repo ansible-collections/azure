@@ -56,6 +56,7 @@
 - name: Pause for 10 mimutes to VM updating
   ansible.builtin.command:
     sleep 600
+  changed_when: true
 
 - name: Create a snapshot by importing an unmanaged blob from the same subscription.
   azure_rm_snapshot:
@@ -357,6 +358,7 @@
 - name: Pasue 2 minutes, wait for deletion complete
   ansible.builtin.pause:
     minutes: 2
+  changed_when: true
 
 - name: Delete gallery image
   azure_rm_galleryimage:
@@ -371,9 +373,10 @@
     that:
       - output.changed
 
-- name: pasue 2 minutes, wait for deletion complete
+- name: Pasue 2 minutes, wait for deletion complete
   ansible.builtin.pause:
     minutes: 2
+  changed_when: true
 
 - name: Delete gallery
   azure_rm_gallery:

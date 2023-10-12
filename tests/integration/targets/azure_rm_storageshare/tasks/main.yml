@@ -117,6 +117,7 @@
 - name: Pause for 3 minutes to waiting delete
   ansible.builtin.pause:
     minutes: 3
+  changed_when: true
 
 - name: Delete storage account
   azure_rm_storageaccount:

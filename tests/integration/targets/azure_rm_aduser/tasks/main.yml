@@ -131,32 +131,32 @@
   azure_rm_aduser_info:
     attribute_name: proxyAddresses
     tenant: "{{ tenant_id }}"
-    register: missing attribute_value
+  register: missing_attribute_value
   ignore_errors: true
 
 - name: Assert task failed
   ansible.builtin.assert:
     that:
-      - "attribute_value is undefined"
+      - "missing_attribute_value is undefined"
 
 - name: Missing attribute_name Should Fail
   azure_rm_aduser_info:
     attribute_value: SMTP:user@contoso.com
     tenant: "{{ tenant_id }}"
-    register: missing attribute_name
+  register: missing_attribute_name
   ignore_errors: true
 
 - name: Assert task failed
   ansible.builtin.assert:
     that:
-      - "attribute_name is undefined"
+      - "missing_attribute_name is undefined"
 
 - name: Using all with principal name should fail
   azure_rm_aduser_info:
     all: true
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
-    register: using_all_with_principal_name
+  register: using_all_with_principal_name
   ignore_errors: true
 
 - name: Assert task failed

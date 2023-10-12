@@ -169,6 +169,7 @@
     name: "{{ interface_name }}-identity"
     state: absent
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Delete network security group
   azure_rm_securitygroup:

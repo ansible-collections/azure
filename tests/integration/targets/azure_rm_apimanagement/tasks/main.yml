@@ -17,6 +17,7 @@
 - name: Pause for 60 mimutes to create api mangement
   ansible.builtin.pause:
     minutes: 60
+  changed_when: true
 
 - name: Create a new API instance
   azure_rm_apimanagement:

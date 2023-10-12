@@ -317,6 +317,7 @@
       - output.changed
       - output.provisioning_state == 'Succeeded'
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Upgrade the AKS instance with agent pool profiles (idempontent)
   azure_rm_aks:
@@ -401,6 +402,7 @@
       - output.provisioning_state == 'Succeeded'
       - output.agent_pool_profiles[1].mode == 'User'
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Upgrade the AKS instance with multiple agent pool profiles (idempontent)
   azure_rm_aks:
@@ -489,6 +491,7 @@
       - output.provisioning_state == 'Succeeded'
       - output.agent_pool_profiles[1].mode == 'System'
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Update the default2 agent_pool mode from User to System (idempontent)
   azure_rm_aks:

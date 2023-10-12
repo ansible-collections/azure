@@ -121,6 +121,7 @@
 - name: Pause for 20 mimutes to Bastion host updating
   ansible.builtin.command:
     sleep 1200
+  changed_when: true
 
 - name: Update bastion host
   azure_rm_bastionhost:

@@ -227,12 +227,14 @@
   ansible.builtin.debug:
     var: output
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Assert the container instance is well created
   ansible.builtin.assert:
     that:
       - output.changed
       - output.provisioning_state == 'Succeeded'
+  register: ignore_errors_register
   ignore_errors: true
 
 - name: Gather facts for Container Instance
@@ -246,6 +248,7 @@
   ansible.builtin.debug:
     var: output
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Assert that facts are returned
   ansible.builtin.assert:
@@ -263,6 +266,7 @@
       - output.containerinstances[0]['containers'][0]['volume_mounts'][0]['name'] != None
       - output.containerinstances[0]['containers'][0]['volume_mounts'][0]['mount_path'] != None
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Remove container instance
   azure_rm_containerinstance:
