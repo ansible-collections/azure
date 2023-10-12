@@ -85,7 +85,7 @@ class GenericRestClient(object):
             raise response
         elif response.status_code == 202 and polling_timeout > 0:
             def get_long_running_output(response):
-                return response
+                return Exception
             poller = LROPoller(self._client,
                                PipelineResponse(None, response, None),
                                get_long_running_output,
