@@ -7,7 +7,7 @@
   tasks:
     - name: Set facts
       ansible.builtin.include_vars: vars.yml
- 
+
     - name: Delete VM
       azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}"

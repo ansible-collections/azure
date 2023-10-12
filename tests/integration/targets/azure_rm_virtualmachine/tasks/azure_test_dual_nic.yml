@@ -119,7 +119,8 @@
   register: vm_state
 
 - name: Pause for 10 mimutes to VM updating
-  command: sleep 600
+  ansible.builtin.command: sleep 600
+  changed_when: true
 
 - name: Generalize VM
   azure_rm_virtualmachine:

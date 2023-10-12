@@ -123,12 +123,12 @@
 
 - name: Assert the virtual network updated
   ansible.builtin.assert:
-     that: output.state.tags | length == 3
+    that: output.state.tags | length == 3
 
 - name: Purge tags
   azure_rm_virtualnetwork:
     name: "{{ vnetname }}"
-    append_tags: no
+    append_tags: false
     tags:
       testing: 'always'
     resource_group: "{{ resource_group }}"
@@ -136,9 +136,9 @@
 
 - name: Assert the virtual network updated
   ansible.builtin.assert:
-     that:
-       - output.state.tags | length == 1
-       - output.state.tags.testing == 'always'
+    that:
+      - output.state.tags | length == 1
+      - output.state.tags.testing == 'always'
 
 - name: Should require address_prefixes_cidr when purge_address_prefixes
   azure_rm_virtualnetwork:
@@ -163,10 +163,10 @@
 - name: Assert the virtual network updated
   ansible.builtin.assert:
     that:
-        - output.state.address_prefixes | length == 1
-        - output.state.address_prefixes[0] == '10.1.0.0/16'
-        - output.state.dns_servers | length == 2
-        - output.state.dns_servers[0] == '127.0.0.1'
+      - output.state.address_prefixes | length == 1
+      - output.state.address_prefixes[0] == '10.1.0.0/16'
+      - output.state.dns_servers | length == 2
+      - output.state.dns_servers[0] == '127.0.0.1'
 
 - name: Purge DNS servers
   azure_rm_virtualnetwork:

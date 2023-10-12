@@ -8,3 +8,4 @@
       ansible.builtin.copy:
         dest: ../test.azure_rm.yml
         content: ""
+        mode: preserve

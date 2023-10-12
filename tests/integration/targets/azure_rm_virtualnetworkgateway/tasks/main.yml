@@ -51,7 +51,7 @@
         resource_group: "{{ resource_group }}"
         name: "{{ vnetname }}"
         address_prefixes: "10.0.0.0/16"
- 
+
     - name: Add subnet
       azure_rm_subnet:
         resource_group: "{{ resource_group }}"
@@ -210,7 +210,7 @@
     name: GatewaySubnet
     virtual_network: "{{ vnetname }}"
     state: absent
-  
+
 - name: Delete public IP address
   azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"

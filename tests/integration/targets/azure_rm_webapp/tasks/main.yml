@@ -6,8 +6,8 @@
 - name: Fix resource prefix
   ansible.builtin.set_fact:
     linux_app_plan_resource_group: "{{ resource_group_secondary }}"
-    win_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random}}winapp"
-    linux_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random}}linuxapp"
+    win_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random }}winapp"
+    linux_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random }}linuxapp"
     win_plan_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}winplan"
     linux_plan_name: "{{ (resource_group_secondary | replace('-', 'x'))[-8:] }}linplan"
     slot1_name: "stage1"
@@ -248,7 +248,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that: not output.changed
-    
+
 - name: Update nodejs framework
   azure_rm_webapp:
     resource_group: "{{ resource_group }}"

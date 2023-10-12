@@ -79,7 +79,8 @@
     name: "vmforimage{{ rpfx }}"
   register: vm_state
 - name: Pause for 10 mimutes to VM updating
-  command: sleep 600
+  ansible.builtin.command: sleep 600
+  changed_when: true
 - name: Generalize VM
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
@@ -697,7 +698,7 @@
     that:
       - results.changed
 
-- name: update VMSS with security group in different resource group.
+- name: Update VMSS with security group in different resource group.
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2

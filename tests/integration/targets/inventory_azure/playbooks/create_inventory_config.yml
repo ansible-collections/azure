@@ -10,3 +10,4 @@
       ansible.builtin.copy:
         dest: ../test.azure_rm.yml
         content: "{{ lookup('template', template_name) }}"
+        mode: preserve

@@ -57,7 +57,7 @@
   ansible.builtin.assert:
     that:
       - not output.changed
-  
+
 - name: Update the VpnSite's device properties
   azure_rm_vpnsite:
     resource_group: "{{ resource_group }}"
@@ -85,7 +85,7 @@
   ansible.builtin.assert:
     that:
       - output.changed
-  
+
 - name: Get the VpnSite info
   azure_rm_vpnsite_info:
     resource_group: "{{ resource_group }}"

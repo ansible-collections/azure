@@ -149,7 +149,7 @@
 - name: Set variables
   ansible.builtin.set_fact:
     parameter: "{{ parameter | combine({item.key: item.value}) }}"
-  when: "{{ item.key not in ['id', 'changed'] and item.value != None }}"
+  when: item.key not in ['id', 'changed'] and item.value != None
   with_dict: "{{ output.ansible_info.azure_managed_disk[0] }}"
 
 - name: Create disk with facts return value

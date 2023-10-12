@@ -4,9 +4,9 @@
 
 - name: Create workspace (check mode)
   azure_rm_loganalyticsworkspace:
-      name: "{{ name_rpfx }}"
-      resource_group: "{{ resource_group }}"
-      retention_in_days: 40
+    name: "{{ name_rpfx }}"
+    resource_group: "{{ resource_group }}"
+    retention_in_days: 40
   check_mode: true
   register: output
 

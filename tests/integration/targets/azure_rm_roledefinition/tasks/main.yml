@@ -1,13 +1,13 @@
 - name: Fix resource prefix
   ansible.builtin.set_fact:
-    role_name: "{{ (resource_group | replace('-', 'x'))[-8:] }}{{ 1000 | random }}testrole"
+    my_role_name: "{{ (resource_group | replace('-', 'x'))[-8:] }}{{ 1000 | random }}testrole"
     subscription_id: "{{ azure_subscription_id }}"
     principal_id: "{{ azure_client_id }}"
   run_once: true
 
 - name: Create a role definition (Check Mode)
   azure_rm_roledefinition:
-    name: "{{ role_name }}"
+    name: "{{ my_role_name }}"
     scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
     permissions:
       - actions:
@@ -30,7 +30,7 @@
 
 - name: Create a role definition
   azure_rm_roledefinition:
-    name: "{{ role_name }}"
+    name: "{{ my_role_name }}"
     scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
     permissions:
       - actions:
@@ -67,7 +67,7 @@
 # - name: Get facts by name
 #  azure_rm_roledefinition_info:
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
-#    role_name: "{{ role_name }}"
+#    role_name: "{{ my_role_name }}"
 #  register: facts
 #  until: facts.roledefinitions | length > 0
 #  retries: 50
@@ -83,7 +83,7 @@
 #
 # - name: Update the role definition (idempotent)
 #  azure_rm_roledefinition:
-#    name: "{{ role_name }}"
+#    name: "{{ my_role_name }}"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    permissions:
 #      - actions:
@@ -105,7 +105,7 @@
 #
 # - name: Update the role definition
 #  azure_rm_roledefinition:
-#    name: "{{ role_name }}"
+#    name: "{{ my_role_name }}"
 #    description: "update description"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    permissions:
@@ -129,7 +129,7 @@
 #
 # - name: Get role definition facts
 #  azure_rm_roledefinition_info:
-#    role_name: "{{ role_name }}"
+#    role_name: "{{ my_role_name }}"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    type: custom
 #  register: roledef
@@ -189,7 +189,7 @@
 #
 # - name: Delete the role definition (Check Mode)
 #  azure_rm_roledefinition:
-#    name: "{{ role_name }}"
+#    name: "{{ my_role_name }}"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    state: absent
 #  check_mode: yes
@@ -201,7 +201,7 @@
 #
 # - name: Delete the role definition
 #  azure_rm_roledefinition:
-#    name: "{{ role_name }}"
+#    name: "{{ my_role_name }}"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    state: absent
 #  register: output
