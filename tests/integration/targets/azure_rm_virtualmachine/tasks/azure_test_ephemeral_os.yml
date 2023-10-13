@@ -109,7 +109,7 @@
     os_disk_caching: ReadOnly
     ephemeral_os_disk: false
     image: testimage
-  ignore_errors: yes
+  ignore_errors: true
   register: ouput
 
 - name: Assert the vm updated

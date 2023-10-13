@@ -270,7 +270,7 @@
     network_profile:
       network_plugin: kubenet
       load_balancer_sku: standard
-    enable_rbac: true 
+    enable_rbac: true
   register: output
 
 - name: Assert the aks idempotent

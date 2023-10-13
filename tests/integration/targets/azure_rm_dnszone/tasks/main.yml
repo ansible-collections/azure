@@ -147,7 +147,7 @@
   ansible.builtin.assert:
     that:
       - results.changed
-      - 'results.state.a_records | length == 3'      
+      - 'results.state.a_records | length == 3'
 
 - name: Check_mode test
   azure_rm_dnsrecordset:
