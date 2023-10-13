@@ -374,8 +374,7 @@ class AzureRMModuleBase(object):
                  required_one_of=None, add_file_common_args=False, supports_check_mode=False,
                  required_if=None, supports_tags=True, facts_module=False, skip_exec=False, is_ad_resource=False):
 
-        # merged_arg_spec = dict()
-        merged_arg_spec = dict(disposition='', updatable=False)
+        merged_arg_spec = dict()
         merged_arg_spec.update(AZURE_COMMON_ARGS)
         if supports_tags:
             merged_arg_spec.update(AZURE_TAG_ARGS)

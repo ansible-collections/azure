@@ -24,11 +24,9 @@ options:
         description:
             - Get the versions available for creating a managed Kubernetes cluster.
         required: true
-        type: str
     version:
         description:
             - Get the upgrade versions available for a managed Kubernetes cluster version.
-        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure

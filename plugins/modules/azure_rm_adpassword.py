@@ -5,6 +5,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+import datetime
 
 __metaclass__ = type
 
@@ -65,6 +66,7 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     haiyuan_zhang (@haiyuazhang)
@@ -88,7 +90,7 @@ end_date:
         - Default value is one year after current time.
     type: str
     returned: always
-    sample: "2021-06-28T06:00:32.637070+00:00"
+    sample: 2021-06-28T06:00:32.637070+00:00
 key_id:
     description:
         - The password key ID
@@ -101,13 +103,12 @@ start_date:
         - Default value is current time.
     type: str
     returned: always
-    sample: "2020-06-28T06:00:32.637070+00:00"
+    sample: 2020-06-28T06:00:32.637070+00:00
 
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 import uuid
-import datetime
 
 try:
     from azure.graphrbac.models import GraphErrorException
