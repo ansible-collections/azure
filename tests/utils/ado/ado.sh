@@ -113,7 +113,7 @@ rm -rf "ansible"
 
 if [ "sanity" = "${group}" ]
 then
-    ansible-lint -v --exclude tests/integration/targets/inventory_azure/playbooks/vars.yml --force-color
+    ansible-lint -v --exclude tests/integration/targets/inventory_azure/playbooks/vars.yml --force-color -c "test/lint/ignore_lint.txt"
     ansible-test sanity --color -v --junit
     #ansible-lint -v --force-color
 else
