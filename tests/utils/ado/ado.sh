@@ -113,9 +113,9 @@ rm -rf "ansible"
 
 if [ "sanity" = "${group}" ]
 then
-    # ansible-lint -v --exclude tests/integration/targets/inventory_azure/playbooks/vars.yml --force-color
+    ansible-lint -v --exclude tests/integration/targets/inventory_azure/playbooks/vars.yml --force-color
     ansible-test sanity --color -v --junit
-    ansible-lint -v --force-color
+    #ansible-lint -v --force-color
 else
     ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
 fi
