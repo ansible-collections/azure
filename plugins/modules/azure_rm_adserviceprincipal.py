@@ -46,6 +46,7 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 
 author:
     haiyuan_zhang (@haiyuazhang)
