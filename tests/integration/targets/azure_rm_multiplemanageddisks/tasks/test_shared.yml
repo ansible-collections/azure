@@ -92,7 +92,7 @@
       image:
         offer: UbuntuServer
         publisher: Canonical
-        sku: 16.04-LTS
+        sku: 20.04-LTS
         version: latest
   with_items: "{{ shared_virtual_machines }}"
   register: create_vms

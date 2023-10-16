@@ -103,7 +103,7 @@ EXAMPLE = """
       image:
         offer: UbuntuServer
         publisher: Canonical
-        sku: 16.04-LTS
+        sku: 20.04-LTS
         version: latest
 """
 

@@ -56,7 +56,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20.04-LTS
       version: latest
     custom_data: |
       #!/bin/sh
@@ -222,7 +222,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20.04-LTS
       version: latest
   register: single_nic_result
 
@@ -249,7 +249,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20.04-LTS
       version: latest
   register: resize_result
 
