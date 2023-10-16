@@ -343,7 +343,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
         elif 'context' in dir(response):
             response = response.context['deserialized_data']
         else:
-            self.fail("Create or Updating fail, no match message return, return info as {0}, {1}".format(response, dir(response)))
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
