@@ -324,6 +324,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
 
     def create_update_resource(self):
         # self.log('Creating / Updating the Snapshot instance {0}'.format(self.))
+        response = None
         try:
             response = self.mgmt_client.query(url=self.url,
                                               method='PUT',
@@ -337,10 +338,12 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
             self.log('Error attempting to create the Snapshot instance.')
             self.fail('Error creating the Snapshot instance: {0}'.format(str(exc)))
 
-        try:
+        if 'body' in dir(response):
             response = json.loads(response.body())
-        except Exception:
+        elif 'context' in dir(response):
             response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}, {1}".format(response, dir(response)))
 
         return response
 
