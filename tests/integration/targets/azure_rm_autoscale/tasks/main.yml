@@ -35,9 +35,9 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-minimal-focal
       publisher: Canonical
-      sku: 18.04-LTS
+      sku: minimal-20_04-lts
       version: latest
     data_disks:
       - lun: 0

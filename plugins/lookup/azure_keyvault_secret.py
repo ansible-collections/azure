@@ -101,9 +101,9 @@ EXAMPLE = """
           key_data: "{{ ssh_key }}"
       network_interfaces: "{{ vm_name }}"
       image:
-        offer: UbuntuServer
+        offer: 0001-com-ubuntu-minimal-focal
         publisher: Canonical
-        sku: 18.04-LTS
+        sku: minimal-20_04-lts
         version: latest
 """
 

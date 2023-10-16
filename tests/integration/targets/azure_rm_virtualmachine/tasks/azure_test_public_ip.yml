@@ -54,9 +54,9 @@
     network_interfaces: "{{ interface_name }}"
     availability_set: "{{ availability_set }}"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-minimal-focal
       publisher: Canonical
-      sku: 18.04-LTS
+      sku: minimal-20_04-lts
       version: latest
     custom_data: |
       #!/bin/sh
@@ -220,9 +220,9 @@
     os_type: Linux
     network_interfaces: "{{ interface_name }}"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-minimal-focal
       publisher: Canonical
-      sku: 18.04-LTS
+      sku: minimal-20_04-lts
       version: latest
   register: single_nic_result
 
@@ -247,9 +247,9 @@
     os_type: Linux
     network_interfaces: "{{ interface_name }}"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-minimal-focal
       publisher: Canonical
-      sku: 18.04-LTS
+      sku: minimal-20_04-lts
       version: latest
   register: resize_result
 

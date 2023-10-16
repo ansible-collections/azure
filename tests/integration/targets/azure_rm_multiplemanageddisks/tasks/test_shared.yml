@@ -90,9 +90,9 @@
       admin_password: "!test123@"
       os_type: Linux
       image:
-        offer: UbuntuServer
+        offer: 0001-com-ubuntu-minimal-focal
         publisher: Canonical
-        sku: 18.04-LTS
+        sku: minimal-20_04-lts
         version: latest
   with_items: "{{ shared_virtual_machines }}"
   register: create_vms
