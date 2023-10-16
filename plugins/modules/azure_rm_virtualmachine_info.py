@@ -242,6 +242,14 @@ vms:
             returned: always
             type: dict
             sample: { "key1":"value1" }
+        vm_agent_version:
+            description:
+                - Version of the Azure VM Agent (waagent) running inside the VM.
+            returned: always
+            type: str
+            sample:
+                - 'Unknown'
+                - '2.9.1.1'
         vm_size:
             description:
                 - Virtual machine size.
@@ -456,6 +464,11 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                 break
 
         new_result = {}
+
+        if instance.get('vm_agent') is not None:
+            new_result['vm_agent_version'] = instance['vm_agent'].get('vm_agent_version')
+        else:
+            new_result['vm_agent_version'] = 'Unknown'
 
         if vm.security_profile is not None:
             new_result['security_profile'] = dict()
