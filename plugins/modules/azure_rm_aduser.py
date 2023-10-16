@@ -438,8 +438,12 @@ class AzureRMADUser(AzureRMModuleBase):
         return await self._client.users.get(request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
                     query_parameters = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
                         filter = filter,
-                        select = ["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType", "onPremisesImmutableId", "usageLocation", "givenName", "surname"]
-                    )
+                        select = ["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType", "onPremisesImmutableId", "usageLocation", "givenName", "surname"],
+                        count = True
+                    ),
+                    headers = {
+			            'ConsistencyLevel' : "eventual",
+                    }
                 )
             )
 

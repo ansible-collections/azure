@@ -267,8 +267,12 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         return await self._client.users.get(request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
                     query_parameters = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
                         filter = filter,
-                        select = ["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
+                        select = ["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"],                        
+                        count = True
                     ),
+                    headers = {
+			            'ConsistencyLevel' : "eventual",
+                    }
                 )
             )
 
