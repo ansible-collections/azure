@@ -5,7 +5,7 @@
     location: eastus
     publisher: Canonical
     offer: UbuntuServer
-    sku: 20.04-LTS
+    sku: 18.04-LTS
   register: image_list
 
 - name: Get latest UbuntuServer image name
@@ -26,7 +26,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 20.04-LTS
+      sku: 18.04-LTS
       version: latest
   register: vm_output
 

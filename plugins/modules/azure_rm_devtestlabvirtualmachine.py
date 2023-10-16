@@ -150,7 +150,7 @@ EXAMPLES = '''
       image:
         offer: UbuntuServer
         publisher: Canonical
-        sku: 20.04-LTS
+        sku: 18.04-LTS
         os_type: Linux
         version: latest
       artifacts:

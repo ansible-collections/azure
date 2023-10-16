@@ -44,7 +44,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 20.04-LTS
+      sku: 18.04-LTS
       version: latest
     tags:
       abc: def
@@ -103,7 +103,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 20.04-LTS
+      sku: 18.04-LTS
       version: latest
   register: dual_nics_result
 

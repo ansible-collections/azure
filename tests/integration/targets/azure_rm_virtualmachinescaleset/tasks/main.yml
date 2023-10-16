@@ -71,7 +71,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 20.04-LTS
+      sku: 18.04-LTS
       version: latest
 - name: Get VM facts
   azure_rm_virtualmachine_info:
@@ -122,7 +122,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 20.04-LTS
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -156,7 +156,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 20.04-LTS
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -208,7 +208,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 20.04-LTS
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -254,7 +254,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 20.04-LTS
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -298,7 +298,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 20.04-LTS
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -347,7 +347,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 20.04-LTS
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -384,7 +384,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 20.04-LTS
+      sku: 18.04-LTS
       version: latest
     data_disks:
       - lun: 0
@@ -805,7 +805,7 @@
     image:
       offer: UbuntuServer
       publisher: Canonical
-      sku: 20.04-LTS
+      sku: 18.04-LTS
       version: latest
     upgrade_policy: Manual
     enable_accelerated_networking: yes
