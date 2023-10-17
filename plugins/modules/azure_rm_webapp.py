@@ -127,7 +127,6 @@ options:
                 description:
                     - The container registry server password.
                 type: str
-                no_log: True
 
     scm_type:
         description:

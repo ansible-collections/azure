@@ -505,7 +505,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                     ),
                     rules=dict(
                         type='list',
-                        elements='dict'
+                        elements='dict',
                         disposition='properties/*',
                         options=dict(
                             name=dict(

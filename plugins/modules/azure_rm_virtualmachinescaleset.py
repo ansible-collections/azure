@@ -108,7 +108,6 @@ options:
             - Password for the admin username.
             - Not required if the os_type is Linux and SSH password authentication is disabled by setting I(ssh_password_enabled=false).
         type: str
-        no_log: true
     ssh_password_enabled:
         description:
             - When the os_type is Linux, setting I(ssh_password_enabled=false) will disable SSH password authentication and require use of SSH keys.

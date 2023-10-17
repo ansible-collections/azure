@@ -147,7 +147,6 @@ options:
                 description:
                     - The container registry server password.
                 type: str
-                no_log: True
     startup_file:
         description:
             - The slot startup file.
