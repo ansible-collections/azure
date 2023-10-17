@@ -28,7 +28,6 @@ options:
         description:
             - The tenant ID.
         type: str
-        required: True
     object_id:
         description:
             - It's application's object ID.

@@ -24,7 +24,6 @@ options:
         description:
             - The tenant ID.
         type: str
-        required: True
 
     app_id:
         description:

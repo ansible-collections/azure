@@ -18,7 +18,7 @@ options:
         description:
             - The tenant ID.
         type: str
-        required: True
+
     state:
         description:
             - Assert the state of the resource group. Use C(present) to create or update and C(absent) to delete.

@@ -18,7 +18,6 @@ options:
         description:
             - The tenant ID.
         type: str
-        required: True
     object_id:
         description:
             - The object id for the ad group.
