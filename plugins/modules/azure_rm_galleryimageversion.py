@@ -45,7 +45,6 @@ options:
     storage_profile:
         description:
             - Storage profile
-        required: true
         type: dict
         suboptions:
             source_image:
@@ -59,12 +58,12 @@ options:
                 description:
                     - os disk snapshot
                     - Mutual exclusive with source_image
-                type: raw
+                type: dict
                 suboptions:
                     source:
                         description:
                             - Reference to os disk snapshot. Could be resource ID or dictionary containing I(resource_group) and I(name)
-                        type: str
+                        type: raw
                     host_caching:
                         description:
                             - host disk caching
@@ -79,11 +78,12 @@ options:
                     - list of data disk snapshot
                     - Mutual exclusive with source_image
                 type: list
+                elements: dict
                 suboptions:
                     source:
                         description:
                             - Reference to data disk snapshot. Could be resource ID or dictionary containing I(resource_group) and I(name)
-                        type: str
+                        type: raw
                     lun:
                         description:
                             - lun of the data disk
@@ -108,11 +108,13 @@ options:
                     - The target regions where the Image Version is going to be replicated to.
                     - This property is updatable.
                 type: list
+                elements: dict
                 suboptions:
                     name:
                         description:
                             - Region name.
                         type: str
+                        required: True
                     regional_replica_count:
                         description:
                             - The number of replicas of the Image Version to be created per region.
@@ -127,10 +129,12 @@ options:
                 description:
                     - Managed image reference, could be resource ID, or dictionary containing I(resource_group) and I(name)
                     - Obsolete since 2.10, use storage_profile instead
+                type: raw
             snapshot:
                 description:
                     - Source snapshot to be used.
                     - Obsolete since 2.10, use storage_profile instead
+                type: raw
             replica_count:
                 description:
                     - The number of replicas of the Image Version to be created per region.
@@ -152,6 +156,9 @@ options:
                     - Specifies the storage account type to be used to store the image.
                     - This property is not updatable.
                 type: str
+                choices:
+                    - Standard_LRS
+                    - Standard_ZRS
     state:
         description:
             - Assert the state of the GalleryImageVersion.
@@ -347,6 +354,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                     ),
                     data_disks=dict(
                         type='list',
+                        elements='dict',
                         disposition='dataDiskImages',
                         purgeIfNone=True,
                         options=dict(
@@ -376,6 +384,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                 options=dict(
                     target_regions=dict(
                         type='list',
+                        elements='dict',
                         disposition='targetRegions',
                         options=dict(
                             name=dict(

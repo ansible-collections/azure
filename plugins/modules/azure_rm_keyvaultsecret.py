@@ -21,7 +21,7 @@ options:
         description:
             - URI of the keyvault endpoint.
         required: true
-        type:s tr
+        type: str
     content_type:
         description:
             - Type of the secret value such as a password.
@@ -34,7 +34,7 @@ options:
     secret_value:
         description:
             - Secret to be secured by keyvault.
-        type:s tr
+        type: str
     secret_expiry:
         description:
             - Optional expiry datetime for secret
@@ -47,7 +47,7 @@ options:
         description:
             - Assert the state of the subnet. Use C(present) to create or update a secret and C(absent) to delete a secret .
         default: present
-        type:s tr
+        type: str
         choices:
             - absent
             - present

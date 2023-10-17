@@ -15,5 +15,6 @@ plugins/modules/azure_rm_azurefirewall.py validate-modules:invalid-ansiblemodule
 plugins/modules/azure_rm_apimanagementservice.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_privatednsrecordset.py validate-modules:invalid-ansiblemodule-schema
+plugins/modules/azure_rm_resource.py validate-modules:invalid-ansiblemodule-schema
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang

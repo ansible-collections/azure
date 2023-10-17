@@ -55,6 +55,7 @@ options:
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     storage_mb:
         description:
             - The maximum storage allowed for a server.
@@ -62,6 +63,7 @@ options:
     version:
         description:
             - Server version.
+        type: str
         choices:
             - 10.2
             - 10.3
@@ -73,17 +75,21 @@ options:
     admin_username:
         description:
             - The administrator's login name of a server. Can only be specified when the server is being created (and is required for creation).
+        type: str
     admin_password:
         description:
             - The password of the administrator login.
+        type: str
     create_mode:
         description:
             - Create mode of SQL Server.
+        type: str
         default: Default
     state:
         description:
             - Assert the state of the MariaDB Server. Use C(present) to create or update a server and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present

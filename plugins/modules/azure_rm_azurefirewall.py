@@ -383,6 +383,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                     ),
                     rules=dict(
                         type='list',
+                        elements='dict',
                         disposition='properties/*',
                         options=dict(
                             name=dict(
@@ -411,12 +412,11 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                             ),
                             target_fqdns=dict(
                                 type='list',
-                                elements='dict',
+                                elements='str',
                                 disposition='targetFqdns'
                             ),
                             fqdn_tags=dict(
                                 type='list',
-                                elements='str',
                                 disposition='fqdnTags'
                             )
                         )
@@ -455,22 +455,22 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                             ),
                             source_addresses=dict(
                                 type='list',
-                                elements='dict',
+                                elements='str',
                                 disposition='sourceAddresses'
                             ),
                             destination_addresses=dict(
                                 type='list',
-                                elements='dict',
+                                elements='str',
                                 disposition='destinationAddresses'
                             ),
                             destination_ports=dict(
                                 type='list',
-                                elements='dict',
+                                elements='str',
                                 disposition='destinationPorts'
                             ),
                             protocols=dict(
                                 type='list',
-                                elements='dict'
+                                elements='str'
                             ),
                             translated_address=dict(
                                 type='str',

@@ -135,7 +135,7 @@ options:
     os_disk_caching:
         description:
             - Type of OS disk caching.
-        required: true
+        type: str
         choices:
             - ReadOnly
             - ReadWrite
@@ -243,7 +243,7 @@ options:
             - Any other input will be ignored.
         default: ['all']
         type: list
-        elments: str
+        elements: str
     enable_accelerated_networking:
         description:
             - Indicates whether user wants to allow accelerated networking for virtual machines in scaleset being created.

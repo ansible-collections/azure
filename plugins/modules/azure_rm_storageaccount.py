@@ -28,6 +28,7 @@ options:
         description:
             - Name of the storage account to update or create.
         type: str
+        required: true
     state:
         description:
             - State of the storage account. Use C(present) to create or update a storage account and use C(absent) to delete an account.

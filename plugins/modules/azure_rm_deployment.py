@@ -55,24 +55,20 @@ options:
         - A hash containing the templates inline. This parameter is mutually exclusive with I(template_link).
         - Either I(template) or I(template_link) is required if I(state=present).
     type: dict
-    default: None
   template_link:
     description:
         - Uri of file containing the template body. This parameter is mutually exclusive with I(template).
         - Either I(template) or I(template_link) is required if I(state=present).
     type: str
-    default: None
   parameters:
     description:
         - A hash of all the required template variables for the deployment template. This parameter is mutually exclusive with I(parameters_link).
         - Either I(parameters_link) or I(parameters) is required if I(state=present).
     type: dict
-    default: None
   parameters_link:
     description:
         - Uri of file containing the parameters body. This parameter is mutually exclusive with I(parameters).
         - Either I(parameters_link) or I(parameters) is required if I(state=present).
-    default: None
     type: str
   wait_for_deployment_completion:
     description:
@@ -90,7 +86,7 @@ options:
         - If I(state=present) and deployment exists, it will be updated.
         - If I(state=absent), the resource group will be removed.
     default: present
-    type: int
+    type: str
     choices:
         - present
         - absent
@@ -436,10 +432,10 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
             resource_group=dict(type='str', required=True, aliases=['resource_group_name']),
             name=dict(type='str', default="ansible-arm", aliases=['deployment_name']),
             state=dict(type='str', default='present', choices=['present', 'absent']),
-            template=dict(type='dict', default=None),
-            parameters=dict(type='dict', default=None),
-            template_link=dict(type='str', default=None),
-            parameters_link=dict(type='str', default=None),
+            template=dict(type='dict',),
+            parameters=dict(type='dict',),
+            template_link=dict(type='str' ),
+            parameters_link=dict(type='str'),
             location=dict(type='str', default="westus"),
             deployment_mode=dict(type='str', default='incremental', choices=['complete', 'incremental']),
             wait_for_deployment_completion=dict(type='bool', default=True),

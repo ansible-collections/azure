@@ -276,7 +276,7 @@ class AzureRMResource(AzureRMModuleBase):
             ),
             status_code=dict(
                 type='list',
-                elements=int,
+                elements='int',
                 default=[200, 201, 202]
             ),
             idempotency=dict(

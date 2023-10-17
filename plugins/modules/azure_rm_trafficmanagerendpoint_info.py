@@ -23,7 +23,6 @@ options:
     name:
         description:
             - Limit results to a specific Traffic Manager endpoint.
-        required: True
         type: str
     resource_group:
         description:
@@ -34,6 +33,7 @@ options:
         description:
             - Name of Traffic Manager Profile.
         type: str
+        required: True
     type:
         description:
             - Type of endpoint.

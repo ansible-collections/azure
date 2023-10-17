@@ -29,7 +29,6 @@ options:
     virtual_network:
         description:
             - Name or resource ID of the virtual network to be peered.
-        required: true
         type: raw
     remote_virtual_network:
         description:

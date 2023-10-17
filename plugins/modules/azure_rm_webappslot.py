@@ -89,6 +89,7 @@ options:
                     - Linux web apps support only one framework.
                     - Java framework is mutually exclusive with others.
                 type: str
+                required: True
                 choices:
                     - java
                     - net_framework

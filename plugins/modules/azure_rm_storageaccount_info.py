@@ -479,6 +479,8 @@ storageaccounts:
                     description:
                         - The account key for the secondary_endpoints
                     sample: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                    type: str
+                    returned: always
         georeplication_stats:
             description:
                 - Parameters related to the status of geo-replication.

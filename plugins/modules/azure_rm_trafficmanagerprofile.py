@@ -77,6 +77,15 @@ options:
             - The endpoint monitoring settings of the Traffic Manager profile.
         type: dict
         suboptions:
+            profile_monitor_status:
+                description:
+                    - The profile-level monitoring status of the Traffic Manager profile.
+                type: str
+                choices:
+                    - CheckingEndpoints
+                    - Online
+                    - Disabled
+                    - Inactive
             protocol:
                 description:
                     - The protocol C(HTTP), C(HTTPS) or C(TCP) used to probe for endpoint health.
@@ -251,8 +260,8 @@ dns_config_spec = dict(
 )
 
 monitor_config_spec = dict(
-    profile_monitor_status=dict(type='str'),
-    protocol=dict(type='str'),
+    profile_monitor_status=dict(type='str', choices=["CheckingEndpoints", "Online", "Degraded", "Disabled", "Inactive"]),
+    protocol=dict(type='str', choices=['HTTP', 'HTTPS', 'TCP']),
     port=dict(type='int'),
     path=dict(type='str'),
     interval=dict(type='int'),

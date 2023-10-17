@@ -67,7 +67,7 @@ options:
     storage_account:
         description:
             - Name of the storage account to use.
-                type: str
+        type: str
         aliases:
             - storage
             - storage_account_name

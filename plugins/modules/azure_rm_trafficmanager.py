@@ -111,7 +111,7 @@ options:
         description:
             - The list of endpoints in the Traffic Manager profile.
         type: list
-        elements='dict'
+        elements: dict
         default: []
         suboptions:
             id:

@@ -152,6 +152,8 @@ cdnendpoints:
                 "https_port": null,
                 "name": "xxxxxxxx-blob-core-windows-net"
             }
+            type: dict
+            returned: always
         origin_host_header:
             description:
                 - The host header value sent to the origin with each request.

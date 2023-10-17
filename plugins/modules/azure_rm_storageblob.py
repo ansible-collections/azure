@@ -103,11 +103,11 @@ options:
     batch_upload_src:
         description:
             - Batch upload source directory. Use with state C(present) to upload batch of files under the directory.
-        type: str
+        type: path
     batch_upload_dst:
         description:
             - Base directory in container when upload batch of files.
-        type: str
+        type: path
     state:
         description:
             - State of a container or blob.

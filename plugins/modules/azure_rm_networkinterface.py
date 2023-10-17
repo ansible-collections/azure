@@ -30,21 +30,25 @@ options:
         description:
             - Name of a resource group where the network interface exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the network interface.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the network interface. Use C(present) to create or update an interface and
               C(absent) to delete an interface.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     virtual_network:
         description:
             - An existing virtual network with which the network interface will be associated. Required when creating a network interface.
@@ -52,22 +56,23 @@ options:
             - Make sure your virtual network is in the same resource group as NIC when you give only the name.
             - It can be the virtual network's resource id.
             - It can be a dict which contains I(name) and I(resource_group) of the virtual network.
+        type: raw
         aliases:
             - virtual_network_name
-        required: true
     subnet_name:
         description:
             - Name of an existing subnet within the specified virtual network. Required when creating a network interface.
             - Use the C(virtual_network)'s resource group.
+        type: raw
         aliases:
             - subnet
-        required: true
     os_type:
         description:
             - Determines any rules to be added to a default security group.
             - When creating a network interface, if no security group name is provided, a default security group will be created.
             - If the I(os_type=Windows), a rule allowing RDP access will be added.
             - If the I(os_type=Linux), a rule allowing SSH access will be added.
+        type: str
         choices:
             - Windows
             - Linux
@@ -76,6 +81,7 @@ options:
         description:
             - (Deprecate) Valid IPv4 address that falls within the specified subnet.
             - This option will be deprecated in 2.9, use I(ip_configurations) instead.
+        type: str
     private_ip_allocation_method:
         description:
             - (Deprecate) Whether or not the assigned IP address is permanent.
@@ -83,6 +89,7 @@ options:
             - You can update the allocation method to C(Static) after a dynamic private IP address has been assigned.
             - This option will be deprecated in 2.9, use I(ip_configurations) instead.
         default: Dynamic
+        type: str
         choices:
             - Dynamic
             - Static
@@ -92,11 +99,12 @@ options:
             - Set to C(false) if you do not want a public IP address automatically created.
             - This option will be deprecated in 2.9, use I(ip_configurations) instead.
         type: bool
-        default: 'yes'
+        default: True
     public_ip_address_name:
         description:
             - (Deprecate) Name of an existing public IP address object to associate with the security group.
             - This option will be deprecated in 2.9, use I(ip_configurations) instead.
+        type: str
         aliases:
             - public_ip_address
             - public_ip_name
@@ -105,6 +113,7 @@ options:
             - (Deprecate) If a I(public_ip_address_name) is not provided, a default public IP address will be created.
             - The allocation method determines whether or not the public IP address assigned to the network interface is permanent.
             - This option will be deprecated in 2.9, use I(ip_configurations) instead.
+        type: str
         choices:
             - Dynamic
             - Static
@@ -113,17 +122,23 @@ options:
         description:
             - List of IP configurations. Each configuration object should include
               field I(private_ip_address), I(private_ip_allocation_method), I(public_ip_address_name), I(public_ip), I(public_ip_allocation_method), I(name).
+        type: list
+        default: None
+        elements: dict
         suboptions:
             name:
                 description:
                     - Name of the IP configuration.
                 required: true
+                type: str
             private_ip_address:
                 description:
                     - Private IP address for the IP configuration.
+                type: str
             private_ip_address_version:
                 description:
                     - The version of the IP configuration.
+                type: str
                 choices:
                     - IPv4
                     - IPv6
@@ -131,6 +146,7 @@ options:
             private_ip_allocation_method:
                 description:
                     - Private IP allocation method.
+                type: str
                 choices:
                     - Dynamic
                     - Static
@@ -138,12 +154,14 @@ options:
             public_ip_address_name:
                 description:
                     - Name of the public IP address. None for disable IP address.
+                type: str
                 aliases:
                     - public_ip_address
                     - public_ip_name
             public_ip_allocation_method:
                 description:
                     - Public IP allocation method.
+                type: str
                 choices:
                     - Dynamic
                     - Static
@@ -153,6 +171,8 @@ options:
                     - List of existing load-balancer backend address pools to associate with the network interface.
                     - Can be written as a resource ID.
                     - Also can be a dict of I(name) and I(load_balancer).
+                type: list
+                elements: raw
             application_gateway_backend_address_pools:
                 description:
                     - List of existing application gateway backend address pools to associate with the network interface.
@@ -169,6 +189,8 @@ options:
                 description:
                     - List of application security groups in which the IP configuration is included.
                     - Element of the list could be a resource id of application security group, or dict of I(resource_group) and I(name).
+                type: list
+                elements: raw
     enable_accelerated_networking:
         description:
             - Whether the network interface should be created with the accelerated networking feature or not.
@@ -188,6 +210,7 @@ options:
             - Make sure the security group is in the same resource group when you only give its name.
             - It can be the resource id.
             - It can be a dict contains security_group's I(name) and I(resource_group).
+        type: raw
         aliases:
             - security_group_name
     open_ports:
@@ -195,6 +218,8 @@ options:
             - When a default security group is created for a Linux host a rule will be added allowing inbound TCP
               connections to the default SSH port C(22), and for a Windows host rules will be added allowing inbound
               access to RDP ports C(3389) and C(5986). Override the default ports by providing a list of open ports.
+        type: list
+        elements: raw
     enable_ip_forwarding:
         description:
             - Whether to enable IP forwarding.
@@ -207,6 +232,7 @@ options:
             - Which DNS servers should the NIC lookup.
             - List of IP addresses.
         type: list
+        elements: str
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -565,8 +591,8 @@ ip_configuration_spec = dict(
     private_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
     public_ip_address_name=dict(type='str', aliases=['public_ip_address', 'public_ip_name']),
     public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
-    load_balancer_backend_address_pools=dict(type='list'),
-    application_gateway_backend_address_pools=dict(type='list'),
+    load_balancer_backend_address_pools=dict(type='list', elements='raw'),
+    application_gateway_backend_address_pools=dict(type='list', elements='raw'),
     primary=dict(type='bool', default=False),
     application_security_groups=dict(type='list', elements='raw')
 )
@@ -593,9 +619,9 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
             public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
             ip_configurations=dict(type='list', default=None, elements='dict', options=ip_configuration_spec),
             os_type=dict(type='str', choices=['Windows', 'Linux'], default='Linux'),
-            open_ports=dict(type='list'),
+            open_ports=dict(type='list', elements='raw'),
             enable_ip_forwarding=dict(type='bool', aliases=['ip_forwarding'], default=False),
-            dns_servers=dict(type='list'),
+            dns_servers=dict(type='list', elements='str'),
         )
 
         required_if = [

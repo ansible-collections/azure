@@ -155,7 +155,7 @@ options:
                 description:
                     - It can be a string containing resource id of a subnet.
                     - It can be a dictionary containing 'resource_group', 'virtual_network_name' and 'subnet_name'
-                type: str
+                type: raw
                 required: True
             ignore_missing_v_net_service_endpoint:
                 description:
@@ -339,9 +339,10 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             ),
             virtual_network_rules=dict(
                 type='list',
+                elements='dict',
                 options=dict(
-                    id=dict(
-                        type='str',
+                    subnet=dict(
+                        type='raw',
                         required=True
                     ),
                     ignore_missing_v_net_service_endpoint=dict(

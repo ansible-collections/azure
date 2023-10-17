@@ -35,11 +35,20 @@ options:
     replication:
         description:
             - The parameters for creating a replication.
-        type: str
+        type: dict
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
         type: str
+    state:
+        description:
+            - Assert the state of the Container registery replication.
+            - Use C(present) to create or update Container registery replication and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure

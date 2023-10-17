@@ -61,6 +61,15 @@ options:
             - The list of actions that trigger the webhook to post notifications.
         type: list
         elements: dict
+    state:
+        description:
+            - Assert the state of the cosmosdb account
+            - Use C(present) to create or update an Cosmosdb Account and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure

@@ -126,7 +126,7 @@ artifacts:
             description:
                 - A dictionary containing parameters definition of the artifact.
             returned: always
-            type: complex
+            type: dict
             sample: {}
 '''
 

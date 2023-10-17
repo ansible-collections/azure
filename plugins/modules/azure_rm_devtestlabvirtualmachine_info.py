@@ -199,8 +199,8 @@ virtualmachines:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
-            sample: "{ 'foo': 'bar' }"
+            type: dict
+            sample: { 'foo': 'bar' }
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase

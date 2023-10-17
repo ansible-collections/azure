@@ -53,7 +53,6 @@ options:
         type: raw
         aliases:
             - virtual_network_name
-        required: true
     ip_configurations:
         description:
             - List of IP configurations.
@@ -70,9 +69,9 @@ options:
                     - Private IP allocation method.
                 type: str
                 choices:
-                    - dynamic
-                    - static
-                default: dynamic
+                    - Dynamic
+                    - Static
+                default: Dynamic
             public_ip_address_name:
                 description:
                     - Name of the public IP address. Use 'None' to disable the public IP address.

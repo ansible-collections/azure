@@ -589,7 +589,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             ),
             ingress_profiles=dict(
                 type='list',
-                elements='dcit',
+                elements='dict',
                 disposition='/properties/ingressProfiles',
                 options=dict(
                     name=dict(

@@ -44,7 +44,6 @@ options:
                     - basic
                     - standard
                     - premium
-                required: True
             size:
                 description:
                     - Size of Azure Cache for Redis to deploy.
@@ -64,7 +63,6 @@ options:
                     - P2
                     - P3
                     - P4
-                required: True
     enable_non_ssl_port:
         description:
             - When set I(enable_non_ssl_port=true), the non-ssl Redis server port 6379 will be enabled.
@@ -163,7 +161,6 @@ options:
                     - primary
                     - secondary
                     - all
-                default: all
     regenerate_key:
         description:
             - Regenerate Redis cache's access keys.

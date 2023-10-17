@@ -31,7 +31,6 @@ options:
             - Servicebus namespace name.
             - A namespace is a scoping container for all messaging components.
             - Multipletopics can reside within a single namespace.
-        required: true
         type: str
     state:
         description:

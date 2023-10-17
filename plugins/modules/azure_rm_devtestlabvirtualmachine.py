@@ -85,6 +85,7 @@ options:
             source_path:
                 description:
                     - The artifact's path in the source repository.
+                type: str
             parameters:
                 description:
                     - The parameters of the artifact.
@@ -270,12 +271,20 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             ),
             artifacts=dict(
                 type='list',
+                elements='dict',
                 options=dict(
                     artifact_id=dict(
                         type='str'
                     ),
+                    source_name=dict(
+                        type='str'
+                    ),
+                    source_path=dict(
+                        type='str'
+                    ),
                     parameters=dict(
                         type='list',
+                        elements='dict',
                         options=dict(
                             name=dict(
                                 type='str'

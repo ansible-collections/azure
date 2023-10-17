@@ -120,11 +120,11 @@ options:
             capacity:
                 description:
                     - Capacity of the particular SKU.
-                type: str
+                type: int
             size:
                 description:
                     - Size of the particular SKU
-                type: int
+                type: str
             family:
                 description:
                     - If the service has different generations of hardware, for the same SKU, then that can be used here

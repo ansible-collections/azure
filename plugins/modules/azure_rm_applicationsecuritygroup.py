@@ -36,7 +36,7 @@ options:
             - Assert the state of the Application Security Group.
             - Use C(present) to create or update an Application Security Group and C(absent) to delete it.
         default: present
-            type: str
+        type: str
         choices:
             - absent
             - present

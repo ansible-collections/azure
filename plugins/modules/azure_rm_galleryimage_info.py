@@ -85,7 +85,7 @@ images:
         os_state:
             description:
                 - The allowed values for OS State are C(generalized).
-            type: STR
+            type: str
             sample: "Generalized"
         os_type:
             description:

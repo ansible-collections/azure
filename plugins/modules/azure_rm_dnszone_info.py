@@ -64,7 +64,7 @@ azure_dnszones:
         - List of zone dicts.
     returned: always
     type: list
-    example:  [{
+    sample:  [{
              "etag": "00000002-0000-0000-0dcb-df5776efd201",
                 "location": "global",
                 "properties": {
@@ -77,20 +77,26 @@ dnszones:
     description:
         - List of zone dicts, which share the same layout as azure_rm_dnszone module parameter.
     returned: always
-    type: list
+    type: complex
     contains:
         id:
             description:
                 - id of the DNS Zone.
             sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/dnszones/azure.com"
+            type: str
+            returned: always
         name:
             description:
                 - name of the DNS zone.
             sample: azure.com
+            type: str
+            returned: always
         type:
             description:
                 - The type of this DNS zone (C(public) or C(private)).
             sample: private
+            type: str
+            returned: always
         registration_virtual_networks:
             description:
                 - A list of references to virtual networks that register hostnames in this DNS zone.

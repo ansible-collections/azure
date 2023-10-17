@@ -187,6 +187,7 @@ options:
             - Name of the container to use within the storage account to store VHD blobs.
             - If not specified, a default container will be created.
         default: vhds
+        type: str
         aliases:
             - storage_container
     storage_blob_name:
@@ -1048,7 +1049,7 @@ linux_configuration_spec = dict(
 )
 
 user_assigned_identities_spec = dict(
-    id=dict(type='list', default=[]),
+    id=dict(type='list', elements='str', default=[]),
     append=dict(type='bool', default=True)
 )
 
@@ -1108,7 +1109,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             accept_terms=dict(type='bool', default=False),
             license_type=dict(type='str', choices=['Windows_Server', 'Windows_Client', 'RHEL_BYOS', 'SLES_BYOS']),
             vm_identity=dict(type='dict', options=managed_identity_spec),
-            winrm=dict(type='list', elements='str'),
+            winrm=dict(type='list', elements='dict'),
             boot_diagnostics=dict(
                 type='dict',
                 options=dict(

@@ -20,16 +20,16 @@ options:
         description:
             - Name of a resource group where the Azure CDN endpoint exists or will be created.
         required: true
-        type: raw
+        type: str
     name:
         description:
             - Name of the Azure CDN endpoint.
         required: true
-        type: raw
+        type: str
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.
-        type: raw
+        type: str
     started:
         description:
             - Use with I(state=present) to start the endpoint.

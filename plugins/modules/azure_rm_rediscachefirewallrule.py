@@ -43,14 +43,14 @@ options:
             - Required when creating Firewall rule.
         type: str
     state:
-      description:
-          - Assert the state of the Firewall rule of Azure Cache for Redis.
-          - Use C(present) to create or update Firewall rule of Azure Cache for Redis and C(absent) to delete it.
+        description:
+            - Assert the state of the Firewall rule of Azure Cache for Redis.
+            - Use C(present) to create or update Firewall rule of Azure Cache for Redis and C(absent) to delete it.
         type: str
-      default: present
-      choices:
-          - absent
-          - present
+        default: present
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure

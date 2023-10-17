@@ -63,7 +63,6 @@ options:
     rights:
         description:
             - Claim rights of the SAS policy.
-        required: True
         type: str
         choices:
             - manage
