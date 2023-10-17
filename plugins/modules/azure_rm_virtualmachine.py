@@ -334,7 +334,7 @@ options:
             - If a network interface name is not provided when the VM is created, a default network interface will be created.
             - To create a new network interface, at least one Virtual Network with one Subnet must exist.
         type: list
-        elements: dict
+        elements: raw
         aliases:
             - network_interfaces
     virtual_network_resource_group:
@@ -1091,7 +1091,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static', 'Disabled'], default='Static',
                                              aliases=['public_ip_allocation']),
             open_ports=dict(type='list', elements='str'),
-            network_interface_names=dict(type='list', aliases=['network_interfaces'], elements='raw'), elements='dict',
+            network_interface_names=dict(type='list', aliases=['network_interfaces'], elements='raw'),
             remove_on_absent=dict(type='list', default=['all'], elements='str'),
             virtual_network_resource_group=dict(type='str'),
             virtual_network_name=dict(type='str', aliases=['virtual_network']),

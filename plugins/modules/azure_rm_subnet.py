@@ -409,7 +409,7 @@ class AzureRMSubnet(AzureRMModuleBase):
             route_table=dict(type='raw'),
             service_endpoints=dict(
                 type='list',
-                elements='str'
+                elements='dict'
             ),
             private_endpoint_network_policies=dict(
                 type='str',

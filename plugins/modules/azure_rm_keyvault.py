@@ -258,12 +258,9 @@ class AzureRMVaults(AzureRMModuleBase):
                     object_id=dict(type='str', required=True),
                     application_id=dict(type='str'),
                     # FUTURE: add `choices` support once choices supports lists of values
-                    keys=dict(type='list', no_log=True, choices=['encrypt', 'decrypt', 'unwrapkey', 'restore', 'recover',
-                              'sign', 'verify', 'get', 'list', 'create', 'update', 'import', 'delete', 'backup', 'purge']),
-                    secrets=dict(type='list', no_log=True, chocies=['get', 'list', 'set', 'delete', 'backup', 'restore', 'recover',
-                                 'purge']),
-                    certificates=dict(type='list', choices=['get', 'list', 'delete', 'create', 'import', 'update', 'managecontacts',
-                                      'getissuers', 'listissuers', 'setissuers', 'deleteissuers', 'manageissuers', 'recover', 'purge']),
+                    keys=dict(type='list', no_log=True),
+                    secrets=dict(type='list', no_log=True),
+                    certificates=dict(type='list'),
                     storage=dict(type='list')
                 )
             ),
