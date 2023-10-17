@@ -42,9 +42,9 @@
     network_interfaces: "{{ nic_list }}"
     availability_set: "{{ availability_set }}"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20_04-lts
       version: latest
     tags:
       abc: def
@@ -101,9 +101,9 @@
     network_interfaces: "{{ nic_list }}"
     availability_set: "{{ availability_set }}"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20_04-lts
       version: latest
   register: dual_nics_result
 
