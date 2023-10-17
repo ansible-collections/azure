@@ -457,12 +457,8 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         self._client = self.get_msgraph_client(self.tenant)
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-            
-        # import logging
-        # logging.basicConfig(filename='./log.log', level=logging.INFO)
-        # logging.info("INFO DDD" + str(self.app_id))
+
         response = self.get_resource()
-        # logging.info("INFO DDD" + str(response))
         if response:
             if self.state == 'present':
                 if self.check_update(response):
@@ -572,19 +568,13 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     def get_resource(self):
         try:
             existing_apps = []
-            import logging
-            logging.basicConfig(filename='./log.log', level=logging.INFO)
-            logging.info("INFO DDDDD " + str(self.app_id))
             if self.app_id:
-                logging.info("INFO DDDDD " + str(self.app_id is not None))
-                ret = asyncio.get_event_loop().run_until_complete(self.get_application(self.app_id))
-                #  existing_apps
-                logging.info("INFO DDDDD query " + str(ret))
+                ret = asyncio.get_event_loop().run_until_complete(self.get_application_by_app_id(self.app_id))
+                existing_apps = ret.value
             
-            logging.info("INFO DDDDD query " + str(existing_apps))
             if not existing_apps:
                 return False
-            result = existing_apps
+            result = existing_apps[0]
             return self.to_dict(result)
         except Exception as ge:
             self.fail(ge)
@@ -606,7 +596,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             'is_enabled': app_role.is_enabled,
             'value': app_role.value,
             "description": app_role.description
-        }for app_role in object.app_roles]
+        } for app_role in object.app_roles]
         return dict(
             app_id=object.app_id,
             object_id=object.id,
@@ -698,8 +688,14 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     async def update_application(self, obj_id, update_app):
         return await self._client.applications.by_application_id(obj_id).patch(body = update_app)
 
-    async def get_application(self, app_id):
-        return await self._client.applications_with_app_id(app_id=app_id).get()
+    async def get_application_by_app_id(self, app_id):
+        request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
+            query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                filter = (" appId eq '{0}'".format(app_id)),),
+            headers = {'ConsistencyLevel' : "eventual"},
+            )
+        
+        return await self._client.applications.get(request_configuration = request_configuration)
 
     async def delete_application(self, obj_id):
         await self._client.applications.by_application_id(obj_id).delete()
