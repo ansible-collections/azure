@@ -4,8 +4,8 @@
   azure_rm_virtualmachineimage_info:
     location: eastus
     publisher: Canonical
-    offer: 0001-com-ubuntu-minimal-focal
-    sku: minimal-20_04-lts
+    offer: 0001-com-ubuntu-server-focal 
+    sku: 20_04-lts
   register: image_list
 
 - name: Get latest UbuntuServer image name
@@ -24,9 +24,9 @@
     vm_size: Standard_B1ms
     virtual_network: "{{ network_name }}"
     image:
-      offer: 0001-com-ubuntu-minimal-focal
+      offer: 0001-com-ubuntu-server-focal 
       publisher: Canonical
-      sku: minimal-20_04-lts
+      sku: 20_04-lts
       version: latest
   register: vm_output
 

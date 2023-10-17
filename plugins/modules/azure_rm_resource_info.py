@@ -259,7 +259,7 @@ response:
                             sample: {
                                    "offer": "UbuntuServer",
                                    "publisher": "Canonical",
-                                   "sku": "minimal-20_04-lts",
+                                   "sku": "20_04-lts",
                                    "version": "latest"
                                    }
                         osDisk:

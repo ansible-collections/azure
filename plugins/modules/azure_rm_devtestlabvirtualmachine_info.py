@@ -128,7 +128,7 @@ virtualmachines:
                         - The SKU of the gallery image.
                     returned: when created from gallery image
                     type: str
-                    sample: minimal-20_04-lts
+                    sample: 20_04-lts
                 publisher:
                     description:
                         - The publisher of the gallery image.
