@@ -20,22 +20,27 @@ options:
     resource_group:
         description:
             - The name of the resource group that contains the resource.
+        type: str
         required: True
     server_name:
         description:
             - The name of the server.
+        type: str
         required: True
     name:
         description:
             - Setting name.
+        type: str
         required: True
     value:
         description:
             - Setting value.
+        type: str
     state:
         description:
             - Assert the state of the PostgreSQL setting. Use C(present) to update setting, or C(absent) to reset to default value.
         default: present
+        type: str
         choices:
             - absent
             - present

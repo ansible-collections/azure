@@ -41,11 +41,13 @@ options:
             - List of days of the week.
         required: false
         default: ['Monday']
+        elements: str
         type: list
     weeks:
         description:
             - List of weeks of month.
         required: false
+        elements: str
         default: ['First']
         type: list
     months:
@@ -53,6 +55,7 @@ options:
             - List of months of year of yearly retention policy.
         required: false
         default: ['January']
+        elements: str
         type: list
     count:
         description:
@@ -235,14 +238,17 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
             ),
             weekdays=dict(
                 type='list',
+                elements='str',
                 default=['Monday']
             ),
             weeks=dict(
                 type='list',
+                elements='str',
                 default=['First']
             ),
             months=dict(
                 type='list',
+                elements='str',
                 default=['January']
             ),
             count=dict(

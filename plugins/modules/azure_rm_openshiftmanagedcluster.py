@@ -104,6 +104,7 @@ options:
         description:
             - Configuration for OpenShift worker Vms.
         type: list
+        elements: dict
         suboptions:
             name:
                 description: name of the worker profile (immutable).
@@ -156,6 +157,7 @@ options:
         description:
             - Ingress profiles configuration. only one profile is supported at the current API version.
         type: list
+        elements: dict
         suboptions:
             visibility:
                 description:
@@ -525,6 +527,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             ),
             worker_profiles=dict(
                 type='list',
+                elements='dict',
                 disposition='/properties/workerProfiles',
                 options=dict(
                     name=dict(
@@ -586,6 +589,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             ),
             ingress_profiles=dict(
                 type='list',
+                elements='dcit',
                 disposition='/properties/ingressProfiles',
                 options=dict(
                     name=dict(

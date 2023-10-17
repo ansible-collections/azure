@@ -59,7 +59,6 @@ options:
         choices:
             - windows
             - linux
-        required: true
         type: str
     os_state:
         description:
@@ -67,7 +66,6 @@ options:
         choices:
             - generalized
             - specialized
-        required: true
         type: str
     hypervgeneration:
         description:
@@ -86,7 +84,6 @@ options:
     identifier:
         description:
             - Image identifier.
-        required: true
         type: dict
         suboptions:
             publisher:
@@ -144,6 +141,7 @@ options:
                 description:
                     - A list of disallowed disk types.
                 type: list
+                elements: str
     purchase_plan:
         description:
             - Purchase plan.
@@ -336,6 +334,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                 options=dict(
                     disk_types=dict(
                         type='list',
+                        elements='str'
                         disposition='diskTypes'
                     )
                 )

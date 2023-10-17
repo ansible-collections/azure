@@ -1,11 +1,11 @@
 - name: Fix resource prefix
-  set_fact:
+  ansible.builtin.set_fact:
     api_id: "myPolicy{{ resource_group | hash('md5') | truncate(23, True, '') }}"
     service_name: "myService{{ resource_group | hash('md5') | truncate(22, True, '') }}"
     display_name: test-api
     path: myapipath
 
-- name: create API management service
+- name: Create API management service
   azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
     name: "{{ service_name }}"
@@ -15,8 +15,9 @@
     sku_capacity: 1
 
 - name: Pause for 60 mimutes to create api mangement
-  pause:
+  ansible.builtin.pause:
     minutes: 60
+  changed_when: true
 
 - name: Create a new API instance
   azure_rm_apimanagement:
@@ -29,15 +30,15 @@
     path: "{{ path }}"
     protocols:
       - https
-  register: newApi
-  
-- name: Assert that output has changed
-  assert:
-    that:
-      - newApi.changed == True
-      - newApi.failed == False
+  register: newapi
 
-- name: Create a new API instance(Idempotent)
+- name: Assert that output has changed
+  ansible.builtin.assert:
+    that:
+      - newapi.changed == True
+      - newapi.failed == False
+
+- name: Create a new API instance Idempotent
   azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
@@ -48,15 +49,15 @@
     path: "{{ path }}"
     protocols:
       - https
-  register: newApi_idempotent
+  register: newapi_idempotent
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
-      - newApi_idempotent.changed == False
-      - newApi_idempotent.failed == False
+      - newapi_idempotent.changed == False
+      - newapi_idempotent.failed == False
 
-- name: Update API's protocols
+- name: Update protocols
   azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
@@ -68,12 +69,12 @@
     protocols:
       - https
       - http
-  register: updateApi
+  register: updateapi
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
-      - updateApi.changed == True
+      - updateapi.changed == True
 
 - name: Create different format api
   azure_rm_apimanagement:
@@ -85,13 +86,13 @@
     display_name: "{{ display_name }}-secondary"
     protocols:
       - https
-  register: newOpenApi
+  register: newopenapi
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
-      - newOpenApi.changed == True
-      - newOpenApi.failed == False
+      - newopenapi.changed == True
+      - newopenapi.failed == False
 
 - name: Get api information
   azure_rm_apimanagement_info:
@@ -101,7 +102,7 @@
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.api.id != None
 
@@ -111,25 +112,25 @@
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}"
     state: absent
-  register: deleteApi
+  register: deleteapi
 
 - name: Assert the changes
-  assert:
+  ansible.builtin.assert:
     that:
-      - deleteApi.changed == True
+      - deleteapi.changed == True
 
-- name: Delete an api(Idempotent)
+- name: Delete an api Idempotent
   azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}"
     state: absent
-  register: deleteApi_idempotent
+  register: deleteapi_idempotent
 
 - name: Assert the changes
-  assert:
+  ansible.builtin.assert:
     that:
-      - deleteApi_idempotent.changed == False
+      - deleteapi_idempotent.changed == False
 
 - name: Delete an api
   azure_rm_apimanagement:

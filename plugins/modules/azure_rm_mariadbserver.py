@@ -22,20 +22,25 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     name:
         description:
             - The name of the server.
         required: True
+        type: str
     sku:
         description:
             - The SKU (pricing tier) of the server.
+        type: dict
         suboptions:
             name:
                 description:
                     - The name of the SKU, typically, tier + family + cores, for example C(B_Gen4_1), C(GP_Gen5_8).
+                type: str
             tier:
                 description:
                     - The tier of the particular SKU, for example C(Basic).
+                type: str
                 choices:
                     - basic
                     - standard
@@ -46,6 +51,7 @@ options:
             size:
                 description:
                     - The size code, to be interpreted by resource as appropriate.
+                type: int
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.

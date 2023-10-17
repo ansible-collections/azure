@@ -20,14 +20,17 @@ options:
     resource_group:
         description:
             - The name of the resource group that contains the server.
+        type: str
         required: True
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the firewall rule.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure

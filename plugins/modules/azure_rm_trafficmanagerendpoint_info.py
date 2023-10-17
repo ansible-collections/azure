@@ -23,17 +23,21 @@ options:
     name:
         description:
             - Limit results to a specific Traffic Manager endpoint.
+        required: True
+        type: str
     resource_group:
         description:
             - The resource group to search for the desired Traffic Manager profile.
         required: True
+        type: str
     profile_name:
         description:
             - Name of Traffic Manager Profile.
-        required: True
+        type: str
     type:
         description:
             - Type of endpoint.
+        type: str
         choices:
             - azure_endpoints
             - external_endpoints

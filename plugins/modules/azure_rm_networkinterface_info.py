@@ -24,9 +24,11 @@ options:
     name:
         description:
             - Only show results for a specific network interface.
+        type: str
     resource_group:
         description:
             - Name of the resource group containing the network interface(s). Required when searching by name.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.

@@ -20,14 +20,17 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the SAS policy.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the route. Use C(present) to create or update and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -35,15 +38,18 @@ options:
         description:
             - Manage SAS policy for a namespace without C(queue) or C(topic) set.
             - Manage SAS policy for a queue or topic under this namespace.
+        type: str
         required: true
     queue:
         description:
             - Type of the messaging queue.
             - Cannot set C(topc) when this field set.
+        type: str
     topic:
         description:
             - Name of the messaging topic.
             - Cannot set C(queue) when this field set.
+        type: str
     regenerate_primary_key:
         description:
             - Regenerate the SAS policy primary key.
@@ -58,6 +64,7 @@ options:
         description:
             - Claim rights of the SAS policy.
         required: True
+        type: str
         choices:
             - manage
             - listen

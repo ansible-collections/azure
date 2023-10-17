@@ -20,9 +20,11 @@ options:
     resource_group:
         description:
             - Name of an Azure resource group.
+        type: str
     name:
         description:
             - HDInsight cluster name.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -102,6 +104,7 @@ clusters:
         cluster_definition:
             description:
                 - The cluster definition.
+            type: dict
             contains:
                 kind:
                     description:
@@ -135,6 +138,7 @@ clusters:
                 linux_profile:
                     description:
                         - The Linux OS profile.
+                    type: dict
                     contains:
                         username:
                             description:
@@ -175,7 +179,7 @@ clusters:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: {}
 '''
 

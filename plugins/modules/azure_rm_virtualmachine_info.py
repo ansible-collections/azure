@@ -25,9 +25,11 @@ options:
     resource_group:
         description:
             - Name of the resource group containing the virtual machines (required when filtering by vm name).
+        type: str
     name:
         description:
             - Name of the virtual machine.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.

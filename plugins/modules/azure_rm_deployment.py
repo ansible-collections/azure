@@ -25,6 +25,7 @@ options:
     description:
         - The resource group name to use or create to host the deployed template.
     required: true
+    type: str
     aliases:
         - resource_group_name
   name:
@@ -32,16 +33,19 @@ options:
         - The name of the deployment to be tracked in the resource group deployment history.
         - Re-using a deployment name will overwrite the previous value in the resource group's deployment history.
     default: ansible-arm
+    type: str
     aliases:
         - deployment_name
   location:
     description:
         - The geo-locations in which the resource group will be located.
+    type: str
     default: westus
   deployment_mode:
     description:
         - In incremental mode, resources are deployed without deleting existing resources that are not included in the template.
         - In complete mode resources are deployed and existing resources in the resource group not included in the template are deleted.
+    type: str
     default: incremental
     choices:
         - complete
@@ -51,19 +55,25 @@ options:
         - A hash containing the templates inline. This parameter is mutually exclusive with I(template_link).
         - Either I(template) or I(template_link) is required if I(state=present).
     type: dict
+    default: None
   template_link:
     description:
         - Uri of file containing the template body. This parameter is mutually exclusive with I(template).
         - Either I(template) or I(template_link) is required if I(state=present).
+    type: str
+    default: None
   parameters:
     description:
         - A hash of all the required template variables for the deployment template. This parameter is mutually exclusive with I(parameters_link).
         - Either I(parameters_link) or I(parameters) is required if I(state=present).
     type: dict
+    default: None
   parameters_link:
     description:
         - Uri of file containing the parameters body. This parameter is mutually exclusive with I(parameters).
         - Either I(parameters_link) or I(parameters) is required if I(state=present).
+    default: None
+    type: str
   wait_for_deployment_completion:
     description:
         - Whether or not to block until the deployment has completed.
@@ -72,6 +82,7 @@ options:
   wait_for_deployment_polling_period:
     description:
         - Time (in seconds) to wait between polls when waiting for deployment completion.
+    type: int
     default: 10
   state:
     description:
@@ -79,6 +90,7 @@ options:
         - If I(state=present) and deployment exists, it will be updated.
         - If I(state=absent), the resource group will be removed.
     default: present
+    type: int
     choices:
         - present
         - absent

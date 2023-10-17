@@ -20,14 +20,17 @@ options:
         description:
             - Name of a resource group where the vnet exists.
         required: true
+        type: str
     name:
         description:
             - Name of the virtual network peering.
         required: true
+        type: str
     virtual_network:
         description:
             - Name or resource ID of the virtual network to be peered.
         required: true
+        type: raw
     remote_virtual_network:
         description:
             - Remote virtual network to be peered.
@@ -35,31 +38,33 @@ options:
             - It can be remote virtual network resource ID.
             - It can be a dict which contains I(name) and I(resource_group) of remote virtual network.
             - Required when creating.
+        type: raw
     allow_virtual_network_access:
         description:
             - Allows VMs in the remote VNet to access all VMs in the local VNet.
         type: bool
-        default: false
+        default: False
     allow_forwarded_traffic:
         description:
             - Allows forwarded traffic from the VMs in the remote VNet.
         type: bool
-        default: false
+        default: False
     use_remote_gateways:
         description:
             - If remote gateways can be used on this virtual network.
         type: bool
-        default: false
+        default: False
     allow_gateway_transit:
         description:
             - Allows VNet to use the remote VNet's gateway. Remote VNet gateway must have --allow-gateway-transit enabled for remote peering.
             - Only 1 peering can have this flag enabled. Cannot be set if the VNet already has a gateway.
         type: bool
-        default: false
+        default: False
     state:
         description:
             - State of the virtual network peering. Use C(present) to create or update a peering and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present

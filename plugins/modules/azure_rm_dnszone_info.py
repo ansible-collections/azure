@@ -23,9 +23,11 @@ options:
     resource_group:
         description:
             - Limit results by resource group. Required when filtering by name.
+        type: str
     name:
         description:
             - Only show results for a specific zone.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.

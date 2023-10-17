@@ -23,14 +23,17 @@ options:
     resource_group:
         description:
             - Name of resource group where this CDN profile belongs to.
+        type: str
         required: true
     profile_name:
         description:
             - Name of CDN profile.
+        type: str
         required: true
     name:
         description:
             - Limit results to a specific Azure CDN endpoint.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.

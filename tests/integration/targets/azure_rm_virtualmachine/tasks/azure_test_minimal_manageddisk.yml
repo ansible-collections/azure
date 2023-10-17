@@ -45,7 +45,7 @@
   register: vm_output
 
 - name: Assert status succeeded
-  assert:
+  ansible.builtin.assert:
     that:
       - vm_output.changed
 
@@ -62,6 +62,7 @@
     name: "{{ interface_name }}-disk"
     state: absent
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Delete network security group
   azure_rm_securitygroup:

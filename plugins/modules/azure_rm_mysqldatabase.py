@@ -21,22 +21,27 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        required: True
     server_name:
         description:
             - The name of the server.
+        required: True
         required: True
     name:
         description:
             - The name of the database.
         required: True
+        required: True
     charset:
         description:
             - The charset of the database. Check MySQL documentation for possible values.
             - This is only set on creation, use I(force_update) to recreate a database if the values don't match.
+        required: True
     collation:
         description:
             - The collation of the database. Check MySQL documentation for possible values.
             - This is only set on creation, use I(force_update) to recreate a database if the values don't match.
+        required: True
     force_update:
         description:
             - When set to C(true), will delete and recreate the existing MySQL database if any of the properties don't match what is set.
@@ -47,6 +52,7 @@ options:
         description:
             - Assert the state of the MySQL Database. Use C(present) to create or update a database and C(absent) to delete it.
         default: present
+        required: True
         choices:
             - absent
             - present

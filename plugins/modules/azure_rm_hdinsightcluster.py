@@ -21,34 +21,42 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the cluster.
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     cluster_version:
         description:
             - The version of the cluster. For example C(3.6).
+        type: str
     os_type:
         description:
             - The type of operating system.
+        type: str
         choices:
             - 'linux'
     tier:
         description:
             - The cluster tier.
+        type: str
         choices:
             - 'standard'
             - 'premium'
     cluster_definition:
         description:
             - The cluster definition.
+        type: dict
         suboptions:
             kind:
                 description:
                     - The type of cluster.
+                type: str
                 choices:
                     - hadoop
                     - spark
@@ -57,17 +65,21 @@ options:
             gateway_rest_username:
                 description:
                     - Gateway REST user name.
+                type: str
             gateway_rest_password:
                 description:
                     - Gateway REST password.
+                type: str
     compute_profile_roles:
         description:
             - The list of roles in the cluster.
         type: list
+        elments: dict
         suboptions:
             name:
                 description:
                     - The name of the role.
+                type: str
                 choices:
                     - 'headnode'
                     - 'workernode'
@@ -75,44 +87,61 @@ options:
             min_instance_count:
                 description:
                     - The minimum instance count of the cluster.
+                type: int
             target_instance_count:
                 description:
                     - The instance count of the cluster.
-            vm_size:
+                type: int
+            hardware_profile:
                 description:
-                    - The size of the VM.
+                    - The hardware profile.
+                type: dict
+                suboptions:
+                    vm_size:
+                        description:
+                            - The size of the VM.
+                        type: str
             linux_profile:
                 description:
                     - The Linux OS profile.
+                type: dict
                 suboptions:
                     username:
                         description:
                             - SSH user name.
+                        type: str
                     password:
                         description:
                             - SSH password.
+                        type: str
     storage_accounts:
         description:
             - The list of storage accounts in the cluster.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - Blob storage endpoint. For example storage_account_name.blob.core.windows.net.
+                type: str
             is_default:
                 description:
                     - Whether or not the storage account is the default storage account.
+                type: bool
             container:
                 description:
                     - The container in the storage account.
+                type: str
             key:
                 description:
                     - The storage account access key.
+                type: str
     state:
       description:
           - Assert the state of the cluster.
           - Use C(present) to create or update a cluster and C(absent) to delete it.
       default: present
+      type: str
       choices:
           - absent
           - present

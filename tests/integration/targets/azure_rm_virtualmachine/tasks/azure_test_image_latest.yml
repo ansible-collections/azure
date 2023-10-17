@@ -1,4 +1,5 @@
-- include_tasks: setup.yml
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
 
 - name: List available versions for UbuntuServer image
   azure_rm_virtualmachineimage_info:
@@ -9,7 +10,7 @@
   register: image_list
 
 - name: Get latest UbuntuServer image name
-  set_fact:
+  ansible.builtin.set_fact:
     latest_image_name: "{{ (image_list['vmimages'] | map(attribute='name') | sort(reverse=True))[0] }}"
 
 - name: Create minimal VM with defaults
@@ -31,7 +32,7 @@
   register: vm_output
 
 - name: Ensure VM was created using the latest UbuntuServer image version / name
-  assert:
+  ansible.builtin.assert:
     that:
       - vm_output.azure_vm.properties.storageProfile.imageReference.version == latest_image_name
 
@@ -65,5 +66,5 @@
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
-    force_delete_nonempty: yes
+    force_delete_nonempty: true
     state: absent

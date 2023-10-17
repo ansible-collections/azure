@@ -67,6 +67,8 @@ mkdir -p shippable/testresults
 pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
 pip install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
 
+pip install ansible-lint
+
 timeout=90
 
 if [ "$4" = "all" ]
@@ -107,9 +109,14 @@ AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
 AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
 EOF
 
+rm -rf "ansible"
+
 if [ "sanity" = "${group}" ]
 then
+    ls
+    ansible-lint -v --exclude "tests/integration/targets/inventory_azure/playbooks/vars.yml" --force-color -c "tests/lint/ignore-lint.txt"
     ansible-test sanity --color -v --junit
+    #ansible-lint -v --force-color
 else
     ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
 fi

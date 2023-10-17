@@ -24,9 +24,11 @@ options:
         description:
             - The resource group to search for the desired Azure Cache for Redis.
         required: True
+        type: str
     name:
         description:
             - Limit results to a specific Azure Cache for Redis.
+        type: str
     return_access_keys:
         description:
             - Indicate weather to return access keys of the Azure Cache for Redis.

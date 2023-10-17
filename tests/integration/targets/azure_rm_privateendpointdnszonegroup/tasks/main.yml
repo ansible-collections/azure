@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: true
 
@@ -42,7 +42,7 @@
   ignore_errors: true
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.msg is match("Could not load the private endpoint", ignorecase=True)
 
@@ -76,7 +76,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.groups | length == 0
@@ -92,7 +92,7 @@
   register: output
   check_mode: true
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -106,7 +106,7 @@
         private_dns_zone: "privatelink.postgres.database.azure.com"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.id
@@ -134,7 +134,7 @@
         private_dns_zone: "privatelink.postgres.database.azure.com"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -145,7 +145,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.groups | length == 1
@@ -170,7 +170,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.groups | length == 1
@@ -199,7 +199,7 @@
         private_dns_zone: "privatelink.postgres.database.azure.com"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.id
@@ -226,7 +226,7 @@
   register: output
   check_mode: true
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -238,7 +238,7 @@
     state: "absent"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -250,6 +250,6 @@
     state: "absent"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed

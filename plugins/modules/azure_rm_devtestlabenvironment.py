@@ -49,6 +49,7 @@ options:
         description:
             - The parameters of the Azure Resource Manager template.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -146,6 +147,7 @@ class AzureRMDtlEnvironment(AzureRMModuleBase):
             ),
             deployment_parameters=dict(
                 type='list',
+                elements='dict',
                 options=dict(
                     name=dict(
                         type='str'

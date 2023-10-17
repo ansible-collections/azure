@@ -1,9 +1,10 @@
-- set_fact:
+- name: Set variables
+  ansible.builtin.set_fact:
     app_id: "e0a62513-1d81-480e-a6dc-5c99cdd58d9a"
     tenant_id: "72f988bf-86f1-41af-91ab-2d7cd011db47"
     app_object_id: "b52e8275-a1ee-4c4a-86ff-15992e0920ed"
 
-- name: create first ad password by app_id
+- name: Create first ad password by app_id
   azure_rm_adpassword:
     app_id: "{{ app_id }}"
     value: "Password@032900001"
@@ -11,11 +12,12 @@
     state: present
   register: ad_fact
 
-- assert:
+- name: Assert the password created
+  ansible.builtin.assert:
     that:
-         - ad_fact.changed
+      - ad_fact.changed
 
-- name: create second ad password by app_object_id
+- name: Create second ad password by app_object_id
   azure_rm_adpassword:
     value: "Password@032900002"
     tenant: "{{ tenant_id }}"
@@ -23,11 +25,12 @@
     state: present
   register: ad_fact02
 
-- assert:
+- name: Assert the secondary password created
+  ansible.builtin.assert:
     that:
-         - ad_fact02.changed
+      - ad_fact02.changed
 
-- name: create ad service principal
+- name: Create ad service principal
   azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
     tenant: "{{ tenant_id }}"
@@ -38,10 +41,11 @@
     tenant: "{{ tenant_id }}"
     app_id: "{{ app_id }}"
   register: sp_info
-- debug:
+- name: Print Service principals facts
+  ansible.builtin.debug:
     var: sp_info
 
-- name: create third ad password by service_principal_object_id
+- name: Create third ad password by service_principal_object_id
   azure_rm_adpassword:
     value: "Password@032900003"
     tenant: "{{ tenant_id }}"
@@ -49,11 +53,12 @@
     state: present
   register: ad_fact03
 
-- assert:
+- name: Assert the third add password created
+  ansible.builtin.assert:
     that:
-         - ad_fact03.changed
+      - ad_fact03.changed
 
-- name: can't update ad password
+- name: Can't update ad password
   azure_rm_adpassword:
     app_id: "{{ app_id }}"
     value: "Password@032900003"
@@ -62,7 +67,7 @@
     app_object_id: "{{ app_object_id }}"
     state: present
   register: output
-  ignore_errors: True
+  ignore_errors: true
 
 - name: Get ad password info
   azure_rm_adpassword_info:
@@ -72,12 +77,13 @@
     app_object_id: "{{ app_object_id }}"
   register: ad_info
 
-- assert:
+- name: Assert the ad password facts
+  ansible.builtin.assert:
     that:
-        - ad_info.passwords[0].start_date == ad_fact.start_date
-        - ad_info.passwords[0].end_date == ad_fact.end_date
+      - ad_info.passwords[0].start_date == ad_fact.start_date
+      - ad_info.passwords[0].end_date == ad_fact.end_date
 
-- name: delete one ad password
+- name: Delete one ad password
   azure_rm_adpassword:
     app_id: "{{ app_id }}"
     key_id: "{{ ad_fact.key_id }}"
@@ -86,11 +92,12 @@
     state: absent
   register: output
 
-- assert:
+- name: Assert the ad password deleted
+  ansible.builtin.assert:
     that:
-        - output.changed
+      - output.changed
 
-- name: delete all ad password
+- name: Delete all ad password
   azure_rm_adpassword:
     app_id: "{{ app_id }}"
     tenant: "{{ tenant_id }}"
@@ -98,6 +105,7 @@
     state: absent
   register: output
 
-- assert:
+- name: Assert the ad password delete
+  ansible.builtin.assert:
     that:
-        - output.changed
+      - output.changed

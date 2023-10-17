@@ -20,22 +20,27 @@ options:
     resource_group:
         description:
             - The name of the resource group that contains the resource.
+        type: str
         required: True
     server_name:
         description:
             - The name of the server.
+        type: str
         required: True
     name:
         description:
             - The name of the server configuration.
         required: True
+        type: str
     value:
         description:
             - Value of the configuration.
+        type: str
     state:
         description:
             - Assert the state of the MySQL configuration. Use C(present) to update setting, or C(absent) to reset to default value.
         default: present
+        type: str
         choices:
             - absent
             - present

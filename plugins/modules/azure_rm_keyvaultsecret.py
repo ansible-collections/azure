@@ -18,9 +18,10 @@ description:
     - Such as authentication keys, storage account keys, data encryption keys, .PFX files, and passwords.
 options:
     keyvault_uri:
-            description:
-                - URI of the keyvault endpoint.
-            required: true
+        description:
+            - URI of the keyvault endpoint.
+        required: true
+        type:s tr
     content_type:
         description:
             - Type of the secret value such as a password.
@@ -29,9 +30,11 @@ options:
         description:
             - Name of the keyvault secret.
         required: true
+        type:s tr
     secret_value:
         description:
             - Secret to be secured by keyvault.
+        type:s tr
     secret_expiry:
         description:
             - Optional expiry datetime for secret
@@ -44,6 +47,7 @@ options:
         description:
             - Assert the state of the subnet. Use C(present) to create or update a secret and C(absent) to delete a secret .
         default: present
+        type:s tr
         choices:
             - absent
             - present

@@ -20,14 +20,17 @@ options:
     resource_group:
         description:
             - The name of the resource group.
+        type: str
         required: True
     virtual_network_name:
         description:
             - The name of the virtual network.
+        type: str
         required: True
     name:
         description:
             - The name of the subnet.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure

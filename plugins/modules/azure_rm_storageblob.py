@@ -26,18 +26,21 @@ options:
         description:
             - Name of the storage account to use.
         required: true
+        type: str
         aliases:
             - account_name
             - storage_account
     blob:
         description:
             - Name of a blob object within the container.
+        type: str
         aliases:
             - blob_name
     blob_type:
         description:
             - Type of blob object.
         default: block
+        type: str
         choices:
             - block
             - page
@@ -46,29 +49,37 @@ options:
         description:
             - Name of a blob container within the storage account.
         required: true
+        type: str
         aliases:
             - container_name
     content_type:
         description:
             - Set the blob content-type header. For example C(image/png).
+        type: str
     cache_control:
         description:
             - Set the blob cache-control header.
+        type: str
     content_disposition:
         description:
             - Set the blob content-disposition header.
+        type: str
     content_encoding:
         description:
             - Set the blob encoding header.
+        type: str
     content_language:
         description:
             - Set the blob content-language header.
+        type: str
     content_md5:
         description:
             - Set the blob md5 hash value.
+        type: str
     dest:
         description:
             - Destination file path. Use with state C(present) to download a blob.
+        type: path
         aliases:
             - destination
     force:
@@ -79,20 +90,24 @@ options:
     resource_group:
         description:
             - Name of the resource group to use.
+        type: str
         required: true
         aliases:
             - resource_group_name
     src:
         description:
             - Source file path. Use with state C(present) to upload a blob.
+        type: str
         aliases:
             - source
     batch_upload_src:
         description:
             - Batch upload source directory. Use with state C(present) to upload batch of files under the directory.
+        type: str
     batch_upload_dst:
         description:
             - Base directory in container when upload batch of files.
+        type: str
     state:
         description:
             - State of a container or blob.
@@ -105,6 +120,7 @@ options:
               to download. If a blob (uploading) or a file (downloading) already exists, it will not be overwritten
               unless I(force=true).
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -112,6 +128,7 @@ options:
         description:
             - A container's level of public access. By default containers are private.
             - Can only be set at time of container creation.
+        type: str
         choices:
             - container
             - blob

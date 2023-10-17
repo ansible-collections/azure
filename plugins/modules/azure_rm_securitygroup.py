@@ -26,40 +26,50 @@ options:
             - The set of default rules automatically added to a security group at creation.
             - In general default rules will not be modified. Modify rules to shape the flow of traffic to or from a subnet or NIC.
             - See rules below for the makeup of a rule dict.
+        type: list
+        elements: dict
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.
+        type: str
     name:
         description:
             - Name of the security group to operate on.
+        type: str
     purge_default_rules:
         description:
             - Remove any existing rules not matching those defined in the default_rules parameter.
         type: bool
-        default: 'no'
+        default: False
     purge_rules:
         description:
             - Remove any existing rules not matching those defined in the rules parameters.
         type: bool
-        default: 'no'
+        default: False
     resource_group:
         description:
             - Name of the resource group the security group belongs to.
+        type: str
         required: true
     rules:
         description:
             - Set of rules shaping traffic flow to or from a subnet or NIC. Each rule is a dictionary.
+        type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - Unique name for the rule.
+                type: str
                 required: true
             description:
                 description:
                     - Short description of the rule's purpose.
+                type: str
             protocol:
                 description:
                     - Accepted traffic protocol.
+                type: str
                 choices:
                     - Udp
                     - Tcp
@@ -70,11 +80,13 @@ options:
                 description:
                     - Port or range of ports from which traffic originates.
                     - It can accept string type or a list of string type.
+                type: raw
                 default: "*"
             destination_port_range:
                 description:
                     - Port or range of ports to which traffic is headed.
                     - It can accept string type or a list of string type.
+                type: raw
                 default: "*"
             source_address_prefix:
                 description:
@@ -85,6 +97,7 @@ options:
                     - It can accept string type or a list of string type.
                     - Asterisk C(*) and default tags can only be specified as single string type, not as a list of string.
                 default: "*"
+                type: raw
             destination_address_prefix:
                 description:
                     - The destination address prefix.
@@ -94,6 +107,7 @@ options:
                     - It can accept string type or a list of string type.
                     - Asterisk C(*) and default tags can only be specified as single string type, not as a list of string.
                 default: "*"
+                type: raw
             source_application_security_groups:
                 description:
                     - List of the source application security groups.
@@ -115,6 +129,7 @@ options:
             access:
                 description:
                     - Whether or not to allow the traffic flow.
+                type: str
                 choices:
                     - Allow
                     - Deny
@@ -122,10 +137,12 @@ options:
             priority:
                 description:
                     - Order in which to apply the rule. Must a unique integer between 100 and 4096 inclusive.
+                type: str
                 required: true
             direction:
                 description:
                     - Indicates the direction of the traffic flow.
+                type: str
                 choices:
                     - Inbound
                     - Outbound
@@ -134,6 +151,7 @@ options:
         description:
             - Assert the state of the security group. Set to C(present) to create or update a security group. Set to C(absent) to remove a security group.
         default: present
+        type: str
         choices:
             - absent
             - present

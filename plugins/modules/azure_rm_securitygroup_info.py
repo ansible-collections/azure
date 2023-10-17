@@ -24,10 +24,12 @@ options:
     name:
         description:
             - Only show results for a specific security group.
+        type: str
     resource_group:
         description:
             - Name of the resource group to use.
         required: true
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.

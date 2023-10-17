@@ -1,16 +1,17 @@
 - name: Create random ddos protection plan
-  set_fact:
-      ddosprotectionplan: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+  ansible.builtin.set_fact:
+    ddosprotectionplan: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create DDoS protection plan (check mode)
   azure_rm_ddosprotectionplan:
     location: eastus2
     name: "{{ ddosprotectionplan }}"
     resource_group: "{{ resource_group }}"
-  check_mode: yes
+  check_mode: true
   register: results
 
-- assert:
+- name: Assert the ddos protection check mode return
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create DDoS protection plan
@@ -20,7 +21,8 @@
     resource_group: "{{ resource_group }}"
   register: results
 
-- assert:
+- name: Assert the ddos protection created
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Update DDoS protection plan
@@ -32,8 +34,9 @@
       test: modified
   register: results
 
-- assert:
-    that: 
+- name: Assert the ddos protection updated
+  ansible.builtin.assert:
+    that:
       - results.changed
       - results.state.tags.test == 'modified'
 
@@ -44,8 +47,8 @@
   register: results
 
 - name: Assert that facts module returned result
-  assert:
-    that: 
+  ansible.builtin.assert:
+    that:
       - results.ddosprotectionplan[0].tags.test == 'modified'
 
 - name: Test idempotent
@@ -55,7 +58,8 @@
     resource_group: "{{ resource_group }}"
   register: results
 
-- assert:
+- name: Assert the ddos protection created
+  ansible.builtin.assert:
     that:
       - not results.changed
 
@@ -78,5 +82,6 @@
     state: absent
   register: results
 
-- assert:
+- name: Assert the ddos protection plan deleted
+  ansible.builtin.assert:
     that: not results.changed

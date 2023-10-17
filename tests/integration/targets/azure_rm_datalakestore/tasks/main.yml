@@ -1,5 +1,5 @@
 - name: Create data lake store name
-  set_fact:
+  ansible.builtin.set_fact:
     adl_name: "adl{{ resource_group_datalake | hash('md5') | truncate(21, True, '') }}"
     vnet_name: "vnet{{ resource_group_datalake | hash('md5') | truncate(20, True, '') }}"
 
@@ -28,7 +28,7 @@
   register: output
 
 - name: Assert status succeeded and results
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.id is defined
@@ -52,7 +52,7 @@
   register: output
 
 - name: Assert that status has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -66,7 +66,7 @@
   register: output
 
 - name: Assert status succeeded and results include virtual_network_rules
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.virtual_network_rules | length == 1
@@ -79,13 +79,13 @@
     name: "{{ adl_name }}"
     encryption_state: Disabled
   register: output
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert that encryption state cannot change
-  assert:
-    that: 
-    - not output.changed
-    - output.msg == 'Encryption type cannot be updated.'
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.msg == 'Encryption type cannot be updated.'
 
 - name: Update data lake store to add new_tier
   azure_rm_datalakestore:
@@ -95,7 +95,7 @@
   register: output
 
 - name: Assert status succeeded and results include virtual_network_rules
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.current_tier == "Consumption"
@@ -122,12 +122,10 @@
     firewall_state: Enabled
     firewall_allow_azure_ips: Enabled
     firewall_rules:
-      - 
-        name: test_rule_1
+      - name: test_rule_1
         start_ip_address: 192.168.1.1
         end_ip_address: 192.168.1.254
-      - 
-        name: test_rule_2
+      - name: test_rule_2
         start_ip_address: 10.0.0.1
         end_ip_address: 10.1.0.1
     virtual_network_rules:
@@ -135,8 +133,8 @@
         subnet_id: "{{ subnet_output.state.id }}"
   register: output
 
-- name: Assert status succeeded and results include an Id value 
-  assert:
+- name: Assert status succeeded and results include an Id value
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.id is defined
@@ -172,12 +170,10 @@
     firewall_state: Enabled
     firewall_allow_azure_ips: Enabled
     firewall_rules:
-      - 
-        name: test_rule_1
+      - name: test_rule_1
         start_ip_address: 192.168.1.1
         end_ip_address: 192.168.1.254
-      - 
-        name: test_rule_2
+      - name: test_rule_2
         start_ip_address: 10.0.0.1
         end_ip_address: 10.1.0.1
     virtual_network_rules:
@@ -186,7 +182,7 @@
   register: output
 
 - name: Assert that status has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 

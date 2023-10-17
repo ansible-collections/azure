@@ -21,21 +21,25 @@ options:
         description:
             - Name of the resource group to which the resource belongs.
         required: True
+        type: str
 
     name:
         description:
             - Unique name of the app service plan to create or update.
         required: True
+        type: str
 
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
 
     sku:
         description:
             - The pricing tiers, e.g., C(F1), C(D1), C(B1), C(B2), C(B3), C(S1), C(P1), C(P1V2) etc.
             - Please see U(https://azure.microsoft.com/en-us/pricing/details/app-service/plans/) for more detail.
             - For Linux app service plan, please see U(https://azure.microsoft.com/en-us/pricing/details/app-service/linux/) for more detail.
+        type: str
     is_linux:
         description:
             - Describe whether to host webapp on Linux worker.
@@ -45,15 +49,17 @@ options:
     number_of_workers:
         description:
             - Describe number of workers to be allocated.
+        type: str
 
     state:
-      description:
-          - Assert the state of the app service plan.
-          - Use C(present) to create or update an app service plan and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the app service plan.
+            - Use C(present) to create or update an app service plan and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure

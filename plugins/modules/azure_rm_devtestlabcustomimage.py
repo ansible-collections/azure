@@ -21,20 +21,25 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     lab_name:
         description:
             - The name of the lab.
         required: True
+        type: str
     name:
         description:
             - The name of the custom image.
         required: True
+        type: str
     source_vm:
         description:
             - Source DevTest Lab virtual machine name.
+        type: str
     windows_os_state:
         description:
             - The state of the Windows OS.
+        type: str
         choices:
             - 'non_sysprepped'
             - 'sysprep_requested'
@@ -42,6 +47,7 @@ options:
     linux_os_state:
         description:
             - The state of the Linux OS.
+        type: str
         choices:
             - 'non_deprovisioned'
             - 'deprovision_requested'
@@ -49,17 +55,20 @@ options:
     description:
         description:
             - The description of the custom image.
+        type: str
     author:
         description:
             - The author of the custom image.
+        type: str
     state:
-      description:
-          - Assert the state of the Custom Image.
-          - Use C(present) to create or update an Custom Image and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Custom Image.
+            - Use C(present) to create or update an Custom Image and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure

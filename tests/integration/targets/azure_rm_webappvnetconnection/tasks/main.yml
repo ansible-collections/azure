@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: true
 
@@ -42,7 +42,7 @@
   check_mode: true
   register: output
 - name: Assert the resource is well created
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: "Check webapp vnetconnection facts 1"
@@ -51,7 +51,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert the resource has no connections
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.connection | length == 0
@@ -64,7 +64,7 @@
     subnet: subnet{{ rpfx }}
   register: output
 - name: Assert the resource is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.connection.vnet_name == 'vnet{{ rpfx }}'
@@ -77,7 +77,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert the connection exists
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.connection.vnet_name == 'vnet{{ rpfx }}'
@@ -92,7 +92,7 @@
     subnet: subnet{{ rpfx }}
   register: output
 - name: Assert the resource is not changed
-  assert:
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: "Delete webapp vnetconnection"
@@ -102,7 +102,7 @@
     state: "absent"
   register: output
 - name: Assert the connection is deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.connection | length == 0
@@ -113,7 +113,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert the resource has no connections
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.connection | length == 0
@@ -125,5 +125,5 @@
     state: "absent"
   register: output
 - name: Assert the resource is not changed
-  assert:
+  ansible.builtin.assert:
     that: not output.changed

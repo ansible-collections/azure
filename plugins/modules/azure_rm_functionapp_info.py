@@ -19,9 +19,11 @@ options:
     name:
         description:
             - Only show results for a specific Function App.
+        type: str
     resource_group:
         description:
             - Limit results to a resource group. Required when filtering by name.
+        type: str
         aliases:
             - resource_group_name
     tags:

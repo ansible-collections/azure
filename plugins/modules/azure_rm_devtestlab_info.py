@@ -137,8 +137,8 @@ labs:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
-            sample: "{ 'MyTag': 'MyValue' }"
+            type: dict
+            sample: { 'MyTag': 'MyValue' }
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase

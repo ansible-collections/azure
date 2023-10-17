@@ -20,21 +20,26 @@ options:
     resource_group:
         description:
             - The name of the resource group to which the container registry belongs.
+        type: str
         required: True
     registry_name:
         description:
             - The name of the container registry.
+        type: str
         required: True
     replication_name:
         description:
             - The name of the I(replication).
+        type: str
         required: True
     replication:
         description:
             - The parameters for creating a replication.
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure

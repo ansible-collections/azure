@@ -21,28 +21,35 @@ options:
         description:
             - The name of the Resource Group to which the server belongs.
         required: True
+        type: str
     vault_name:
         description:
             - Name of the vault.
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     vault_tenant:
         description:
             - The Azure Active Directory tenant ID that should be used for authenticating requests to the key vault.
+        type: str
     sku:
         description:
             - SKU details.
+        type: dict
         suboptions:
             family:
                 description:
                     - SKU family name.
                 required: True
+                type: str
             name:
                 description:
                     - SKU name to specify whether the key vault is a standard vault or a premium vault.
                 required: True
+                type: str
                 choices:
                     - 'standard'
                     - 'premium'
@@ -50,23 +57,30 @@ options:
         description:
             - An array of 0 to 16 identities that have access to the key vault.
             - All identities in the array must use the same tenant ID as the key vault's tenant ID.
+        type: list
+        elements: dict
         suboptions:
             tenant_id:
                 description:
                     - The Azure Active Directory tenant ID that should be used for authenticating requests to the key vault.
                     - Current keyvault C(tenant_id) value will be used if not specified.
+                type: str
             object_id:
                 description:
                     - The object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault.
                     - The object ID must be unique for the list of access policies.
                     - Please note this is not application id. Object id can be obtained by running "az ad sp show --id <application id>".
                 required: True
+                type: str
             application_id:
                 description:
                     -  Application ID of the client making request on behalf of a principal.
+                type: str
             keys:
                 description:
                     - List of permissions to keys.
+                type: list
+                elements: str
                 choices:
                     - 'encrypt'
                     - 'decrypt'
@@ -87,6 +101,8 @@ options:
             secrets:
                 description:
                     - List of permissions to secrets.
+                type: list
+                elements: str
                 choices:
                     - 'get'
                     - 'list'
@@ -99,6 +115,8 @@ options:
             certificates:
                 description:
                     - List of permissions to certificates.
+                type: list
+                elements: str
                 choices:
                     - 'get'
                     - 'list'
@@ -117,6 +135,8 @@ options:
             storage:
                 description:
                     - List of permissions to storage accounts.
+                type: list
+
     enabled_for_deployment:
         description:
             - Property to specify whether Azure Virtual Machines are permitted to retrieve certificates stored as secrets from the key vault.
@@ -151,6 +171,7 @@ options:
         description:
             - Assert the state of the KeyVault. Use C(present) to create or update an KeyVault and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -237,9 +258,12 @@ class AzureRMVaults(AzureRMModuleBase):
                     object_id=dict(type='str', required=True),
                     application_id=dict(type='str'),
                     # FUTURE: add `choices` support once choices supports lists of values
-                    keys=dict(type='list', no_log=True),
-                    secrets=dict(type='list', no_log=True),
-                    certificates=dict(type='list'),
+                    keys=dict(type='list', no_log=True, choices=['encrypt', 'decrypt', 'unwrapkey', 'restore', 'recover',
+                              'sign', 'verify', 'get', 'list', 'create', 'update', 'import', 'delete', 'backup', 'purge']),
+                    secrets=dict(type='list', no_log=True, chocies=['get', 'list', 'set', 'delete', 'backup', 'restore', 'recover',
+                                 'purge']),
+                    certificates=dict(type='list', choices=['get', 'list', 'delete', 'create', 'import', 'update', 'managecontacts',
+                                      'getissuers', 'listissuers', 'setissuers', 'deleteissuers', 'manageissuers', 'recover', 'purge']),
                     storage=dict(type='list')
                 )
             ),

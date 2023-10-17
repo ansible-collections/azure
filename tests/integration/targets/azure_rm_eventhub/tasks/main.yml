@@ -1,7 +1,7 @@
 - name: Create random event hub and namespace
-  set_fact:
-      namespace_name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
-      name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+  ansible.builtin.set_fact:
+    namespace_name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+    name_rpfx: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create Event Hub Namespace (check mode)
   azure_rm_eventhub:
@@ -9,23 +9,25 @@
     namespace_name: "{{ namespace_name }}"
     resource_group: "{{ resource_group }}"
     sku: "Basic"
-  check_mode: yes
+  check_mode: true
   register: results
 
-- assert:
+- name: Assert the check mode result
+  ansible.builtin.assert:
     that: results.changed
 
-- name: Create Event Hub  (check mode)
+- name: Create Event Hub (check mode)
   azure_rm_eventhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     sku: "Basic"
-  check_mode: yes
+  check_mode: true
   register: results
 
-- assert:
+- name: Assert the check mode result
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create Event Hub Namespace
@@ -36,18 +38,20 @@
     sku: "Basic"
   register: results
 
-- assert:
+- name: Assert the event hub namespace created
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create Event Hub
   azure_rm_eventhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
   register: results
 
-- assert:
+- name: Assert the event hub created
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Update Namespace
@@ -60,8 +64,9 @@
       test: modified
   register: results
 
-- assert:
-    that: 
+- name: Assert the namespace updated
+  ansible.builtin.assert:
+    that:
       - results.changed
       - results.state.tags.test == 'modified'
 
@@ -69,7 +74,7 @@
   azure_rm_eventhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     message_retention_in_days: 4
     state: present
@@ -77,8 +82,9 @@
       test: modified
   register: results
 
-- assert:
-    that: 
+- name: Assert the event hub updated
+  ansible.builtin.assert:
+    that:
       - results.changed
 
 - name: Retrieve Namespace
@@ -97,16 +103,17 @@
       test: modified
   register: results
 
-- assert:
+- name: Assert idempotent success
+  ansible.builtin.assert:
     that:
       - not results.changed
 
-#cleanup
+# cleanup
 - name: Delete Event Hub
   azure_rm_eventhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
 
@@ -114,12 +121,13 @@
   azure_rm_eventhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
   register: results
 
-- assert:
+- name: Assert the event hub deleted
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Delete Namespace
@@ -130,8 +138,9 @@
     state: absent
 
 - name: Pause for 1 minutes to check namespace deleted
-  pause:
+  ansible.builtin.pause:
     minutes: 1
+  changed_when: true
 
 - name: Delete Namespace (idempotent)
   azure_rm_eventhub:
@@ -141,5 +150,6 @@
     state: absent
   register: results
 
-- assert:
+- name: Assert the namespace deleted
+  ansible.builtin.assert:
     that: not results.changed

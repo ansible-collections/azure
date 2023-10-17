@@ -19,14 +19,17 @@ options:
     resource_group:
         description:
             - Name of a resource group where the vnet exists.
+        type: str
         required: True
     virtual_network:
         description:
             - Name or resource ID of a virtual network.
         required: True
+        type: raw
     name:
         description:
             - Name of the virtual network peering.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure

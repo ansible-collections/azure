@@ -20,60 +20,75 @@ options:
     resource_group:
         description:
             - Name of a resource group where the managed Azure Container Services (AKS) exists or will be created.
+        type: str
         required: true
     name:
         description:
             - Name of the managed Azure Container Services (AKS) instance.
+        type: str
         required: true
     state:
         description:
             - Assert the state of the AKS. Use C(present) to create or update an AKS and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.
+        type: str
     dns_prefix:
         description:
             - DNS prefix specified when creating the managed cluster.
+        type: str
     kubernetes_version:
         description:
             - Version of Kubernetes specified when creating the managed cluster.
+        type: str
     linux_profile:
         description:
             - The Linux profile suboptions.
             - Optional, provide if you need an ssh access to the cluster nodes.
+        type: dict
         suboptions:
             admin_username:
                 description:
                     - The Admin Username for the cluster.
+                type: str
                 required: true
             ssh_key:
                 description:
                     - The Public SSH Key used to access the cluster.
+                type: str
                 required: true
     agent_pool_profiles:
         description:
             - The agent pool profile suboptions.
+        type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - Unique name of the agent pool profile in the context of the subscription and resource group.
+                type: str
                 required: true
             count:
                 description:
                     - Number of agents (VMs) to host docker containers.
                     - Allowed values must be in the range of C(1) to C(100) (inclusive).
+                type: str
                 required: true
             vm_size:
                 description:
                     - The VM Size of each of the Agent Pool VM's (e.g. C(Standard_F1) / C(Standard_D2v2)).
+                type: str
                 required: true
             os_disk_size_gb:
                 description:
                     - Size of the OS disk.
+                type: int
             enable_auto_scaling:
                 description:
                     - To enable auto-scaling.
@@ -133,23 +148,27 @@ options:
     service_principal:
         description:
             - The service principal suboptions. If not provided - use system-assigned managed identity.
+        type: dict
         suboptions:
             client_id:
                 description:
                     - The ID for the Service Principal.
+                type: str
                 required: true
             client_secret:
                 description:
                     - The secret password associated with the service principal.
+                type: str
     enable_rbac:
         description:
             - Enable RBAC.
             - Existing non-RBAC enabled AKS clusters cannot currently be updated for RBAC use.
         type: bool
-        default: no
+        default: False
     network_profile:
         description:
             - Profile of network configuration.
+        type: dict
         suboptions:
             network_plugin:
                 description:
@@ -159,11 +178,13 @@ options:
                     - AKS features such as Virtual Nodes or network policies aren't supported with C(kubenet).
                     - C(azure) enables Azure Container Networking Interface(CNI), every pod gets an IP address from the subnet and can be accessed directly.
                 default: kubenet
+                type: str
                 choices:
                     - azure
                     - kubenet
             network_policy:
                 description: Network policy used for building Kubernetes network.
+                type: str
                 choices:
                     - azure
                     - calico
@@ -172,32 +193,34 @@ options:
                     - A CIDR notation IP range from which to assign pod IPs when I(network_plugin=kubenet) is used.
                     - It should be a large address space that isn't in use elsewhere in your network environment.
                     - This address range must be large enough to accommodate the number of nodes that you expect to scale up to.
-                default: "10.244.0.0/16"
+                type: str
             service_cidr:
                 description:
                     - A CIDR notation IP range from which to assign service cluster IPs.
                     - It must not overlap with any Subnet IP ranges.
                     - It should be the *.10 address of your service IP address range.
-                default: "10.0.0.0/16"
+                type: str
             dns_service_ip:
                 description:
                     - An IP address assigned to the Kubernetes DNS service.
                     - It must be within the Kubernetes service address range specified in serviceCidr.
-                default: "10.0.0.10"
+                type: str
             docker_bridge_cidr:
                 description:
                     - A CIDR notation IP range assigned to the Docker bridge network.
                     - It must not overlap with any Subnet IP ranges or the Kubernetes service address range.
-                default: "172.17.0.1/16"
+                type: str
             load_balancer_sku:
                 description:
                     - The load balancer sku for the managed cluster.
+                type: str
                 choices:
                     - standard
                     - basic
             outbound_type:
                 description:
                     - How outbound traffic will be configured for a cluster.
+                default: loadBalancer
                 type: str
                 choices:
                     - loadBalancer
@@ -220,17 +243,22 @@ options:
     aad_profile:
         description:
             - Profile of Azure Active Directory configuration.
+        type: dict
         suboptions:
             client_app_id:
                 description: The client AAD application ID.
+                type: str
             server_app_id:
                 description: The server AAD application ID.
+                type: str
             server_app_secret:
                 description: The server AAD application secret.
+                type: str
             tenant_id:
                 description:
                     - The AAD tenant ID to use for authentication.
                     - If not specified, will use the tenant of the deployment subscription.
+                type: str
             managed:
                 description:
                     - Whether to enable manged AAD.
@@ -271,6 +299,7 @@ options:
                         description:
                             - Where to store the container metrics.
                         required: true
+                        type: str
             virtual_node:
                 description:
                     - With virtual nodes, you have quick provisioning of pods, and only pay per second for their execution time.
@@ -285,6 +314,7 @@ options:
                         description:
                             - Subnet associated to the cluster.
                         required: true
+                        type: str
     node_resource_group:
         description:
             - Name of the resource group containing agent pool nodes.

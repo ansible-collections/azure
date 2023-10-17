@@ -20,14 +20,17 @@ options:
     resource_group:
         description:
             - The name of the resource group.
+        type: str
         required: True
     lab_name:
         description:
             - The name of the lab.
+        type: str
         required: True
     name:
         description:
             - The name of the schedule.
+        type: str
         required: True
         choices:
             - lab_vms_startup
@@ -35,17 +38,20 @@ options:
     time:
         description:
             - The time of day the schedule will occur.
+        type: str
     time_zone_id:
         description:
             - The time zone ID.
+        type: str
     state:
-      description:
-          - Assert the state of the Schedule.
-          - Use C(present) to create or update an Schedule and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Schedule.
+            - Use C(present) to create or update an Schedule and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure

@@ -1,128 +1,140 @@
 - name: Prepare random number
-  set_fact:
-    name: "workspace{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  ansible.builtin.set_fact:
+    name_rpfx: "workspace{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Create workspace (check mode)
   azure_rm_loganalyticsworkspace:
-      name: "{{ name }}"
-      resource_group: "{{ resource_group }}"
-      retention_in_days: 40
-  check_mode: yes
+    name: "{{ name_rpfx }}"
+    resource_group: "{{ resource_group }}"
+    retention_in_days: 40
+  check_mode: true
   register: output
 
-- assert:
-      that:
-          - output.changed
+- name: Assert the workspace check mode
+  ansible.builtin.assert:
+    that:
+      - output.changed
 
 - name: Get workspace
   azure_rm_loganalyticsworkspace_info:
-      name: "{{ name }}"
-      resource_group: "{{ resource_group }}"
+    name: "{{ name_rpfx }}"
+    resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
-      that:
-          - facts.workspaces | length == 0
+- name: Assert the workspace facts
+  ansible.builtin.assert:
+    that:
+      - facts.workspaces | length == 0
 
 - name: Create workspace
   azure_rm_loganalyticsworkspace:
-      name: "{{ name }}"
-      resource_group: "{{ resource_group }}"
-      retention_in_days: 40
+    name: "{{ name_rpfx }}"
+    resource_group: "{{ resource_group }}"
+    retention_in_days: 40
   register: output
 
-- assert:
+- name: Assert the workspace created
+  ansible.builtin.assert:
     that:
-        - output.retention_in_days == 40
-        - output.changed
-        - output.intelligence_packs
+      - output.retention_in_days == 40
+      - output.changed
+      - output.intelligence_packs
 
 - name: Create workspace (idempontent)
   azure_rm_loganalyticsworkspace:
-      name: "{{ name }}"
-      resource_group: "{{ resource_group }}"
-      retention_in_days: 40
+    name: "{{ name_rpfx }}"
+    resource_group: "{{ resource_group }}"
+    retention_in_days: 40
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that:
-        - not output.changed
+      - not output.changed
 
 - name: Get workspace
   azure_rm_loganalyticsworkspace_info:
-      name: "{{ name }}"
-      resource_group: "{{ resource_group }}"
+    name: "{{ name_rpfx }}"
+    resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
-      that:
-          - facts.workspaces | length == 1
-          - facts.workspaces[0].id == output.id
+- name: Assert the loganalytics workspace facts
+  ansible.builtin.assert:
+    that:
+      - facts.workspaces | length == 1
+      - facts.workspaces[0].id == output.id
 
-- set_fact:
-        pack: "{{ pack | default({}) | combine({output.intelligence_packs[0].name: not output.intelligence_packs[0].enabled}) }}"
+- name: Set parameters
+  ansible.builtin.set_fact:
+    pack: "{{ pack | default({}) | combine({output.intelligence_packs[0].name: not output.intelligence_packs[0].enabled}) }}"
 
 - name: Update intelligence pack
   azure_rm_loganalyticsworkspace:
-      name: "{{ name }}"
-      resource_group: "{{ resource_group }}"
-      intelligence_packs: "{{ pack }}"
+    name: "{{ name_rpfx }}"
+    resource_group: "{{ resource_group }}"
+    intelligence_packs: "{{ pack }}"
   register: intelligence
 
-- assert:
-      that:
-          - intelligence.intelligence_packs[0].enabled != output.intelligence_packs[0].enabled
+- name: Assert the loganalytics workspace updated
+  ansible.builtin.assert:
+    that:
+      - intelligence.intelligence_packs[0].enabled != output.intelligence_packs[0].enabled
 
 - name: Remove workspace (check mode)
   azure_rm_loganalyticsworkspace:
-      name: "{{ name }}"
-      resource_group: "{{ resource_group }}"
-      state: absent
-  check_mode: yes
+    name: "{{ name_rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  check_mode: true
   register: output
 
-- assert:
-      that:
-          - output.changed
+- name: Assert the loganalytics workspace check mode
+  ansible.builtin.assert:
+    that:
+      - output.changed
 
 - name: Get workspace
   azure_rm_loganalyticsworkspace_info:
-      name: "{{ name }}"
-      resource_group: "{{ resource_group }}"
+    name: "{{ name_rpfx }}"
+    resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
-      that:
-          - facts.workspaces | length == 1
+- name: Assert the loganalystics workspace facts
+  ansible.builtin.assert:
+    that:
+      - facts.workspaces | length == 1
 
 - name: Remove workspace
   azure_rm_loganalyticsworkspace:
-      name: "{{ name }}"
-      resource_group: "{{ resource_group }}"
-      state: absent
+    name: "{{ name_rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
   register: output
 
-- assert:
-      that:
-          - output.changed
+- name: Assert the loganalytics workspace deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
 
 - name: Get workspace
   azure_rm_loganalyticsworkspace_info:
-      name: "{{ name }}"
-      resource_group: "{{ resource_group }}"
+    name: "{{ name_rpfx }}"
+    resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
-      that:
-          - facts.workspaces | length == 0
+- name: Assert the loganalystics workspace facts
+  ansible.builtin.assert:
+    that:
+      - facts.workspaces | length == 0
 
 - name: Remove workspace (idempontent)
   azure_rm_loganalyticsworkspace:
-      name: "{{ name }}"
-      resource_group: "{{ resource_group }}"
-      state: absent
+    name: "{{ name_rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
   register: output
 
-- assert:
-      that:
-          - not output.changed
+- name: Assert the loganalystics workspace deleted
+  ansible.builtin.assert:
+    that:
+      - not output.changed

@@ -73,36 +73,43 @@ arm_templates:
                 - Resource group name.
             returned: always
             sample: myResourceGroup
+            type: str
         lab_name:
             description:
                 - DevTest Lab name.
             returned: always
             sample: myLab
+            type: str
         artifact_source_name:
             description:
                 - Artifact source name.
             returned: always
             sample: public environment repo
+            type: str
         name:
             description:
                 - ARM Template name.
             returned: always
             sample: WebApp
+            type: str
         display_name:
             description:
                 - The tags of the resource.
             returned: always
             sample: Web App
+            type: str
         description:
             description:
                 - The tags of the resource.
             returned: always
             sample: This template creates an Azure Web App without a data store.
+            type: str
         publisher:
             description:
                 - The tags of the resource.
             returned: always
             sample: Microsoft
+            type: str
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase

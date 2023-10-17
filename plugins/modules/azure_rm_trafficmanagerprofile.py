@@ -19,15 +19,18 @@ options:
     resource_group:
         description:
             - Name of a resource group where the Traffic Manager profile exists or will be created.
+        type: str
         required: true
     name:
         description:
             - Name of the Traffic Manager profile.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the Traffic Manager profile. Use C(present) to create or update a Traffic Manager profile and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -36,10 +39,12 @@ options:
             - Valid Azure location. Defaults to C(global) because in default public Azure cloud, Traffic Manager profile can only be deployed globally.
             - Reference U(https://docs.microsoft.com/en-us/azure/traffic-manager/quickstart-create-traffic-manager-profile#create-a-traffic-manager-profile).
         default: global
+        type: str
     profile_status:
         description:
             - The status of the Traffic Manager profile.
         default: enabled
+        type: str
         choices:
             - enabled
             - disabled
@@ -47,6 +52,7 @@ options:
         description:
             - The traffic routing method of the Traffic Manager profile.
         default: performance
+        type: str
         choices:
             - performance
             - priority
@@ -55,23 +61,26 @@ options:
     dns_config:
         description:
             - The DNS settings of the Traffic Manager profile.
+        type: dict
         suboptions:
             relative_name:
                 description:
                     - The relative DNS name provided by this Traffic Manager profile.
                     - If not provided, name of the Traffic Manager will be used.
+                type: str
             ttl:
                 description:
                     - The DNS Time-To-Live (TTL), in seconds.
                 type: int
-                default: 60
     monitor_config:
         description:
             - The endpoint monitoring settings of the Traffic Manager profile.
+        type: dict
         suboptions:
             protocol:
                 description:
                     - The protocol C(HTTP), C(HTTPS) or C(TCP) used to probe for endpoint health.
+                type: str
                 choices:
                     - HTTP
                     - HTTPS
@@ -79,9 +88,11 @@ options:
             port:
                 description:
                     - The TCP port used to probe for endpoint health.
+                type: int
             path:
                 description:
                     - The path relative to the endpoint domain name used to probe for endpoint health.
+                type: str
             interval:
                 description:
                     - The monitor interval for endpoints in this profile in seconds.
@@ -93,6 +104,7 @@ options:
             tolerated_failures:
                 description:
                     - The number of consecutive failed health check before declaring an endpoint in this profile Degraded after the next failed health check.
+                type: int
         default:
             protocol: HTTP
             port: 80

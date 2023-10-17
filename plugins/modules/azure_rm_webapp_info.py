@@ -23,9 +23,11 @@ options:
     name:
         description:
             - Only show results for a specific web app.
+        type: str
     resource_group:
         description:
             - Limit results by resource group.
+        type: str
     return_publish_profile:
         description:
             - Indicate whether to return publishing profile of the web app.

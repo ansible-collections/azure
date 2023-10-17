@@ -34,6 +34,7 @@ options:
     type:
         description:
             - The type of the endpoint.
+        type: str
         required: true
         choices:
             - azure_endpoints
@@ -83,6 +84,7 @@ options:
         description:
             - Assert the state of the Traffic Manager endpoint. Use C(present) to create or update a Traffic Manager endpoint and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present

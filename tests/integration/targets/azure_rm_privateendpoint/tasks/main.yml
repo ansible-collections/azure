@@ -1,5 +1,5 @@
 - name: Set Private Endpoint Name
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "private{{ resource_group | hash('md5') | truncate(18, True, '') }}"
 
 - name: Create virtual network
@@ -42,7 +42,7 @@
       tier: GeneralPurpose
     location: eastus
     storage_mb: 51200
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
   register: post_output
@@ -70,7 +70,7 @@
   register: output
 
 - name: Assert status succeeded and results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.id is defined
@@ -88,15 +88,16 @@
           - postgresqlServer
     subnet:
       id: "{{ subnet_output.state.id }}"
-    tags: 
+    tags:
       key1: value1
   register: output
 
 - name: Assert status succeeded and results match expectations
-  assert:
-   that:
+  ansible.builtin.assert:
+    that:
       - not output.changed
-  ignore_errors: yes
+  ignore_errors: true
+  register: ignore_errors_register
 
 - name: Update private endpoint with tags
   azure_rm_privateendpoint:
@@ -109,13 +110,13 @@
           - postgresqlServer
     subnet:
       id: "{{ subnet_output.state.id }}"
-    tags: 
+    tags:
       key1: value1
       key2: value2
   register: output
 
 - name: Assert status succeeded and results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.tags | length == 2
@@ -127,7 +128,7 @@
   register: output
 
 - name: Assert private endpoint info
-  assert:
+  ansible.builtin.assert:
     that:
       - output.privateendpoints[0].provisioning_state == "Succeeded"
       - output.privateendpoints[0].tags | length == 2
@@ -140,7 +141,7 @@
   register: output
 
 - name: Assert status succeeded and results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -152,6 +153,6 @@
   register: output
 
 - name: Assert status succeeded and results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed

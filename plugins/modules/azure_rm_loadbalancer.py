@@ -24,43 +24,54 @@ options:
         description:
             - Name of a resource group where the load balancer exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the load balancer.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the load balancer. Use C(present) to create/update a load balancer, or C(absent) to delete one.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     sku:
         description:
             - The load balancer SKU.
+        type: str
         choices:
             - Basic
             - Standard
     frontend_ip_configurations:
         description:
             - List of frontend IPs to be used.
+        type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - Name of the frontend ip configuration.
+                type: str
                 required: True
             public_ip_address:
                 description:
                     - Name of an existing public IP address object in the current resource group to associate with the security group.
+                type: str
             private_ip_address:
                 description:
                     - The reference of the Public IP resource.
+                type: str
             private_ip_allocation_method:
                 description:
                     - The Private IP allocation method.
+                type: str
                 choices:
                     - Static
                     - Dynamic
@@ -68,6 +79,7 @@ options:
                 description:
                     - The reference of the subnet resource.
                     - Should be an existing subnet's resource id.
+                type: str
             zones:
                 description:
                     - list of availability zones denoting the IP allocated for the resource needs to come from.

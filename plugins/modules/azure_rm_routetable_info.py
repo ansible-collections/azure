@@ -23,9 +23,11 @@ options:
     name:
         description:
             - Limit results to a specific route table.
+        type: str
     resource_group:
         description:
             - Limit results in a specific resource group.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.

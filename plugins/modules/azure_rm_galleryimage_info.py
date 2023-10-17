@@ -85,12 +85,12 @@ images:
         os_state:
             description:
                 - The allowed values for OS State are C(generalized).
-            type: OperatingSystemStateTypes
+            type: STR
             sample: "Generalized"
         os_type:
             description:
                 - This property allows you to specify the type of the OS that is included in the disk when creating a VM from a managed image.
-            type: OperatingSystemTypes
+            type: str
             sample: "linux/windows"
         identifier:
             description:

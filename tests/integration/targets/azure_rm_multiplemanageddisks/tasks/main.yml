@@ -1,2 +1,4 @@
-- include_tasks: tasks/test_shared.yml
-- include_tasks: tasks/test_async.yml
+- name: Excute test_shared.yml
+  ansible.builtin.include_tasks: tasks/test_shared.yml
+- name: Excute test_async.yml
+  ansible.builtin.include_tasks: tasks/test_async.yml

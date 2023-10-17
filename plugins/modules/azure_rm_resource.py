@@ -22,45 +22,58 @@ options:
     url:
         description:
             - Azure RM Resource URL.
+        type: str
     api_version:
         description:
             - Specific API version to be used.
+        type: str
     provider:
         description:
             - Provider type.
             - Required if URL is not specified.
+        type: str
     resource_group:
         description:
             - Resource group to be used.
             - Required if URL is not specified.
+        type: str
     resource_type:
         description:
             - Resource type.
             - Required if URL is not specified.
+        type: str
     resource_name:
         description:
             - Resource name.
             - Required if URL Is not specified.
+        type: str
     subresource:
         description:
             - List of subresources.
+        type: list
+        elements: dict
         default: []
         suboptions:
             namespace:
                 description:
                     - Subresource namespace.
+                type: str
             type:
                 description:
                     - Subresource type.
+                type: str
             name:
                 description:
                     - Subresource name.
+                type: str
     body:
         description:
             - The body of the HTTP request/response to the web service.
+        type: raw
     method:
         description:
             - The HTTP method of the request or response. It must be uppercase.
+        type: str
         choices:
             - GET
             - PUT
@@ -74,6 +87,7 @@ options:
         description:
             - A valid, numeric, HTTP status code that signifies success of the request. Can also be comma separated list of status codes.
         type: list
+        elements: int
         default: [ 200, 201, 202 ]
     idempotency:
         description:
@@ -94,6 +108,7 @@ options:
         description:
             - Assert the state of the resource. Use C(present) to create or update resource or C(absent) to delete resource.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -245,6 +260,7 @@ class AzureRMResource(AzureRMModuleBase):
             ),
             subresource=dict(
                 type='list',
+                elements='dict',
                 default=[]
             ),
             api_version=dict(
@@ -260,6 +276,7 @@ class AzureRMResource(AzureRMModuleBase):
             ),
             status_code=dict(
                 type='list',
+                elements=int,
                 default=[200, 201, 202]
             ),
             idempotency=dict(

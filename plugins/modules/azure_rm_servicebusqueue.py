@@ -20,20 +20,24 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the queue.
         required: true
+        type: str
     namespace:
         description:
             - Servicebus namespace name.
             - A namespace is a scoping container for all messaging components.
             - Multiple queues and topics can reside within a single namespace, and namespaces often serve as application containers.
+        type: str
         required: true
     state:
         description:
             - Assert the state of the queue. Use C(present) to create or update and use C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -68,9 +72,11 @@ options:
     forward_dead_lettered_messages_to:
         description:
             - Queue or topic name to forward the Dead Letter message for a queue.
+        type: str
     forward_to:
         description:
             - Queue or topic name to forward the messages for a queue.
+        type: str
     lock_duration_in_seconds:
         description:
             - Timespan duration of a peek-lock.
@@ -106,6 +112,7 @@ options:
     status:
         description:
             - Status of the entity.
+        type: str
         choices:
             - active
             - disabled

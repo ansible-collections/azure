@@ -21,21 +21,25 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the application security group.
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     state:
-      description:
-        - Assert the state of the Application Security Group.
-        - Use C(present) to create or update an Application Security Group and C(absent) to delete it.
-      default: present
-      choices:
-        - absent
-        - present
+        description:
+            - Assert the state of the Application Security Group.
+            - Use C(present) to create or update an Application Security Group and C(absent) to delete it.
+        default: present
+            type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure

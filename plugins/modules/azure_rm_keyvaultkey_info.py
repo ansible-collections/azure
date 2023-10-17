@@ -115,6 +115,7 @@ keyvaults:
         key:
             description:
                 - public part of a key.
+            type: dict
             contains:
                 n:
                     description:
@@ -150,6 +151,7 @@ keyvaults:
         attributes:
             description:
                 - Key attributes.
+            type: list
             contains:
                 created:
                     description:

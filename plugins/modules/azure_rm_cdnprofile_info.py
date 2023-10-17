@@ -23,9 +23,11 @@ options:
     name:
         description:
             - Limit results to a specific CDN profile.
+        type: str
     resource_group:
         description:
             - The resource group to search for the desired CDN profile.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
