@@ -54,7 +54,7 @@
     network_interfaces: "{{ interface_name }}"
     availability_set: "{{ availability_set }}"
     image:
-      offer: 0001-com-ubuntu-server-focal 
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
       sku: 20_04-lts
       version: latest
@@ -220,7 +220,7 @@
     os_type: Linux
     network_interfaces: "{{ interface_name }}"
     image:
-      offer: 0001-com-ubuntu-server-focal 
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
       sku: 20_04-lts
       version: latest
@@ -247,7 +247,7 @@
     os_type: Linux
     network_interfaces: "{{ interface_name }}"
     image:
-      offer: 0001-com-ubuntu-server-focal 
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
       sku: 20_04-lts
       version: latest

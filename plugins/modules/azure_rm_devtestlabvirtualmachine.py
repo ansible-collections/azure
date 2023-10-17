@@ -148,7 +148,7 @@ EXAMPLES = '''
         virtual_network_name: myvn
       disallow_public_ip_address: no
       image:
-        offer: 0001-com-ubuntu-server-focal 
+        offer: 0001-com-ubuntu-server-focal
         publisher: Canonical
         sku: 20_04-lts
         os_type: Linux

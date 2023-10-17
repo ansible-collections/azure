@@ -95,7 +95,7 @@
       name: "vnet-{{ rpfx }}Subnet"
       virtual_network_name: "vnet-{{ rpfx }}"
     image:
-      offer: 0001-com-ubuntu-server-focal 
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
       sku: 20_04-lts
       os_type: Linux

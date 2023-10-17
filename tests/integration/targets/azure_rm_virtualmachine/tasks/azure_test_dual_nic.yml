@@ -42,7 +42,7 @@
     network_interfaces: "{{ nic_list }}"
     availability_set: "{{ availability_set }}"
     image:
-      offer: 0001-com-ubuntu-server-focal 
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
       sku: 20_04-lts
       version: latest
@@ -101,7 +101,7 @@
     network_interfaces: "{{ nic_list }}"
     availability_set: "{{ availability_set }}"
     image:
-      offer: 0001-com-ubuntu-server-focal 
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
       sku: 20_04-lts
       version: latest
