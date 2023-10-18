@@ -242,7 +242,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
                 ad_groups = asyncio.get_event_loop().run_until_complete(self.get_group_list(filter=self.odata_filter))
             elif self.all:
                 ad_groups = asyncio.get_event_loop().run_until_complete(self.get_group_list())
-            self.results['ad_groups'] = [self.set_results(group) for group in ad_groups]            
+            self.results['ad_groups'] = [self.set_results(group) for group in ad_groups]
         except Exception as e:
             self.fail("failed to get ad group info {0}".format(str(e)))
 
@@ -304,14 +304,13 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             results["group_owners"] = [self.result_to_dict(object) for object in ret.value]
 
         if results["object_id"] and self.return_group_members:
-            ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"]))                
+            ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"]))
             results["group_members"] = [self.result_to_dict(object) for object in ret.value]
 
         if results["object_id"] and self.return_member_groups:
             ret = asyncio.get_event_loop().run_until_complete(self.get_member_groups(results["object_id"]))
             results["member_groups"] = [self.result_to_dict(object) for object in list(ret.value)]
-            
-        
+
         if results["object_id"] and self.check_membership:
             filter = "id eq '{0}' ".format(self.check_membership)
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"], filter))
@@ -321,7 +320,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
 
     async def get_group(self, group_id):
         return await self._client.groups.by_group_id(group_id).get()
-    
+
     async def get_group_list(self, filter=None):
         if filter:
             request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
@@ -334,12 +333,12 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             groups = await self._client.groups.get(request_configuration = request_configuration)
         else:
             groups = await self._client.groups.get()
-            
+
         if groups and groups.value:
             return groups.value
-        
+
         return []
-        
+
     async def get_group_owners(self, group_id):
         request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
             query_parameters = GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
@@ -349,7 +348,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             headers = {'ConsistencyLevel' : "eventual",}
             )
         return await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
-    
+
     async def get_group_members(self, group_id, filters=None):
         request_configuration = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetRequestConfiguration(
             query_parameters = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
@@ -361,12 +360,11 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         if filters:
             request_configuration.query_parameters.filter = filters
         return await self._client.groups.by_group_id(group_id).transitive_members.get(request_configuration=request_configuration)
-    
+
     async def get_member_groups(self, obj_id):
         request_body = GetMemberGroupsPostRequestBody(security_enabled_only = False)
         return await self._client.groups.by_group_id(obj_id).get_member_groups.post(body = request_body)
 
-    
 def main():
     AzureRMADGroupInfo()
 

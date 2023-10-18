@@ -134,7 +134,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         applications = []
-    
+
         try:
             self._client = self.get_msgraph_client(self.tenant)
             if self.object_id:
@@ -146,7 +146,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
                 if self.app_id:
                     sub_filters.append("appId eq '{0}'".format(self.app_id))
 
-                apps = asyncio.get_event_loop().run_until_complete(self.get_applications(sub_filters))    
+                apps = asyncio.get_event_loop().run_until_complete(self.get_applications(sub_filters))
                 applications = list(apps.value)
             self.results['applications'] = [self.to_dict(app) for app in applications]
         except APIError as e:
@@ -179,7 +179,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             return await self._client.applications.get(request_configuration = request_configuration)
         else:
             return await self._client.applications.get()
-    
+
 def main():
     AzureRMADApplicationInfo()
 

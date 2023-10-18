@@ -871,7 +871,7 @@ class AzureRMModuleBase(object):
         base_url = self.azure_auth._cloud_environment.endpoints.active_directory_graph_resource_id
         client = GraphRbacManagementClient(cred, tenant_id, base_url)
         return client
-    
+
     def get_msgraph_client(self, tenant_id):
         from msgraph import GraphServiceClient
         return GraphServiceClient(self.azure_auth.azure_credential_track2)

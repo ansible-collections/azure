@@ -171,7 +171,7 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
                 if not self.app_id:
                     self.fail("can't resolve app via service principal object id {0}".format(self.service_principal_object_id))
 
-                apps = asyncio.get_event_loop().run_until_complete(self.get_applications())    
+                apps = asyncio.get_event_loop().run_until_complete(self.get_applications())
                 result = list(apps.value)
                 if result:
                     self.app_object_id = result[0].id

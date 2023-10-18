@@ -312,7 +312,7 @@ class AzureRMADUser(AzureRMModuleBase):
                     if should_update or self.mail_nickname and ad_user.mail_nickname != self.mail_nickname:
                         should_update = True
 
-                    if should_update:                        
+                    if should_update:
                         asyncio.get_event_loop().run_until_complete(self.update_user(ad_user, password))
 
                         self.results['changed'] = True
@@ -353,20 +353,20 @@ class AzureRMADUser(AzureRMModuleBase):
                 ad_user = asyncio.get_event_loop().run_until_complete(self.get_user(self.object_id))
             elif self.attribute_name is not None and self.attribute_value is not None:
                 try:
-                    users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))    
+                    users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
                     ad_users = list(users.value)
                     ad_user = ad_users[0]
                 except Exception as e:
                     # the type doesn't get more specific. Could check the error message but no guarantees that message doesn't change in the future
                     # more stable to try again assuming the first error came from the attribute being a list
                     try:
-                        users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter("{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))    
+                        users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter("{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
                         ad_users = list(users.value)
                         ad_user = ad_users[0]
                     except Exception as sub_e:
                         raise
             elif self.odata_filter is not None:  # run a filter based on user input to return based on any given attribute/query
-                users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(self.odata_filter))    
+                users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(self.odata_filter))
                 ad_users = list(users.value)
                 ad_user = ad_users[0]
         except Exception as e:

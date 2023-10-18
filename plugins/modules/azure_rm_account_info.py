@@ -199,7 +199,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
         user['name'] = user_info.user_principal_name
         user['type'] = user_info.user_type
         return user
-    
+
     async def getAccount(self):
         return await self.get_msgraph_client(None).me.get(
             request_configuration=UserRequestBuilder.UserRequestBuilderGetRequestConfiguration(

@@ -213,7 +213,7 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
                     app_id = self.app_id,
                     account_enabled = True
                 )
-        return await self._client.service_principals.post(body = request_body)    
+        return await self._client.service_principals.post(body = request_body)
 
     async def update_service_principal(self, old_response, request_body):
         return await self._client.service_principals.by_service_principal_id(old_response['object_id']).patch(body = request_body)

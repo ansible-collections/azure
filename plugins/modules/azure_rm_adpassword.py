@@ -240,7 +240,7 @@ class AzureRMADPassword(AzureRMModuleBase):
             if str(pd.key_id) == self.key_id:
                 try:
                     asyncio.get_event_loop().run_until_complete(self.remove_password(pd.key_id))
-                    
+
                     num_of_passwords_after_delete = len(self.get_all_passwords())
                     if num_of_passwords_after_delete != num_of_passwords_before_delete:
                         self.results['changed'] = True
@@ -296,7 +296,7 @@ class AzureRMADPassword(AzureRMModuleBase):
     async def get_application(self):
         return await self._client.applications.by_application_id(self.app_object_id).get()
 
-    async def remove_password(self, key_id):      
+    async def remove_password(self, key_id):
         request_body = RemovePasswordPostRequestBody(
             key_id = key_id,
         )

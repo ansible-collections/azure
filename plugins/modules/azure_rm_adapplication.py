@@ -485,8 +485,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
 
             if self.app_roles:
                 app_roles = self.build_app_roles(self.app_roles)
-            
-            
+
             create_app = Application(
                 sign_in_audience=self.available_to_other_tenants,
                 web = WebApplication(
@@ -505,7 +504,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 optional_claims=self.optional_claims
                 # allow_guests_sign_in=self.allow_guests_sign_in,
             )
-            response = asyncio.get_event_loop().run_until_complete(self.create_application(create_app)) 
+            response = asyncio.get_event_loop().run_until_complete(self.create_application(create_app))
             self.results['changed'] = True
             self.results.update(self.to_dict(response))
             return response
@@ -528,7 +527,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 app_roles = self.build_app_roles(self.app_roles)
 
             app_update_param = Application(
-                sign_in_audience=self.available_to_other_tenants,                
+                sign_in_audience=self.available_to_other_tenants,
                 web = WebApplication(
                     home_page_url=self.homepage,
                     redirect_uris=self.reply_urls,
@@ -545,8 +544,8 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 app_roles=app_roles,
                 optional_claims=self.optional_claims)
             asyncio.get_event_loop().run_until_complete(self.update_application(
-                    appid = old_response['object_id'], update_app = app_update_param)) 
-            
+                    appid = old_response['object_id'], update_app = app_update_param))
+
             self.results['changed'] = True
             self.results.update(self.get_resource())
 
@@ -567,7 +566,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             if self.app_id:
                 ret = asyncio.get_event_loop().run_until_complete(self.get_application_by_app_id(self.app_id))
                 existing_apps = ret.value
-            
+
             if not existing_apps:
                 return False
             result = existing_apps[0]
@@ -677,7 +676,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                            is_enabled=x.get('is_enabled', None), value=x.get('value', None)) # value ? additional_data
             result.append(role)
         return result
-    
+
     async def create_application(self, creat_app):
         return await self._client.applications.post(body = creat_app)
 
@@ -690,7 +689,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 filter = (" appId eq '{0}'".format(app_id)),),
             headers = {'ConsistencyLevel' : "eventual"},
             )
-        
+
         return await self._client.applications.get(request_configuration = request_configuration)
 
     async def delete_application(self, obj_id):

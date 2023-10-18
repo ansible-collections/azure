@@ -118,7 +118,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
 
         try:
             if self.object_id is None:
-                sps = asyncio.get_event_loop().run_until_complete(self.get_service_principals())    
+                sps = asyncio.get_event_loop().run_until_complete(self.get_service_principals())
                 service_principals = list(sps.value)
             else:
                 service_principals = [asyncio.get_event_loop().run_until_complete(self.get_service_principal())]
@@ -145,7 +145,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
                             query_parameters = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
                                 filter = "servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
                             ),
-                        )        
+                        )
         return await self._client.service_principals.get(request_configuration = request_configuration)
 
 def main():
