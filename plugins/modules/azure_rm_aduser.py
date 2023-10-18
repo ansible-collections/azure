@@ -448,7 +448,7 @@ class AzureRMADUser(AzureRMModuleBase):
                             "userType", "onPremisesImmutableId", "usageLocation", "givenName", "surname"],
                     count=True
                 ),
-                headers={'ConsistencyLevel': "eventual",}
+                headers={'ConsistencyLevel': "eventual", }
             )
         )
 
