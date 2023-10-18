@@ -338,9 +338,9 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
             self.log('Error attempting to create the Snapshot instance.')
             self.fail('Error creating the Snapshot instance: {0}'.format(str(exc)))
 
-        if 'body' in dir(response):
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        elif 'context' in dir(response):
+        elif hasattr(response, 'context'):
             response = response.context['deserialized_data']
         else:
             self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
