@@ -1,18 +1,18 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 # ------ setup ------
 
-- name: create virtual network
+- name: Create virtual network
   azure_rm_virtualnetwork:
     name: "vnet-{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     address_prefixes: "10.0.0.0/16"
   register: vnet_output
 
-- name: create web app
+- name: Create web app
   azure_rm_webapp:
     name: "webapp-{{ rpfx }}"
     resource_group: "{{ resource_group }}"
@@ -23,7 +23,7 @@
       sku: S1
   register: webapp_output
 
-- name: create storage account
+- name: Create storage account
   azure_rm_storageaccount:
     name: "storage{{ rpfx }}"
     resource_group: "{{ resource_group }}"
@@ -31,7 +31,7 @@
     kind: StorageV2
   register: storage_output
 
-- name: create second storage account
+- name: Create second storage account
   azure_rm_storageaccount:
     name: "storagesecond{{ rpfx }}"
     resource_group: "{{ resource_group_secondary }}"
@@ -39,13 +39,13 @@
     kind: StorageV2
   register: storage2_output
 
-- name: create event hub namespace
+- name: Create event hub namespace
   azure_rm_eventhub:
     namespace_name: "hub-{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     sku: "Basic"
 
-- name: create log analytics workspace
+- name: Create log analytics workspace
   azure_rm_loganalyticsworkspace:
     name: "analytics-{{ rpfx }}"
     resource_group: "{{ resource_group_secondary }}"
@@ -54,23 +54,23 @@
 
 # ------ tests ------
 
-- name: get diagnostic settings for non-existant resource
+- name: Get diagnostic settings for non-existant resource
   azure_rm_monitordiagnosticsetting_info:
     resource: "123abc"
   register: output
   failed_when: '"failed" not in output.msg | lower'
 
-- name: get diagnostic settings for virtual network
+- name: Get diagnostic settings for virtual network
   azure_rm_monitordiagnosticsetting_info:
     resource: "{{ vnet_output.state.id }}"
   register: output
-- name: assert no settings
-  assert:
+- name: Assert no settings
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.settings | length == 0
 
-- name: create storage-based diagnostic setting for vnet (check mode)
+- name: Create storage-based diagnostic setting for vnet (check mode)
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage"
     resource: "{{ vnet_output.state.id }}"
@@ -81,12 +81,12 @@
       - category: "AllMetrics"
   check_mode: true
   register: output
-- name: assert resource created
-  assert:
+- name: Assert resource created
+  ansible.builtin.assert:
     that:
       - output.changed
 
-- name: create storage-based diagnostic setting for vnet (actually create)
+- name: Create storage-based diagnostic setting for vnet (actually create)
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage"
     resource: "{{ vnet_output.state.id }}"
@@ -96,8 +96,8 @@
     metrics:
       - category: "AllMetrics"
   register: output
-- name: assert resource created
-  assert:
+- name: Assert resource created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.name == 'logs-storage'
@@ -111,7 +111,7 @@
       - not output.state.event_hub
       - not output.state.log_analytics
 
-- name: create storage-based diagnostic setting for vnet (idempotent)
+- name: Create storage-based diagnostic setting for vnet (idempotent)
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage"
     resource: "{{ vnet_output.state.id }}"
@@ -122,12 +122,12 @@
       - category: "AllMetrics"
   check_mode: true
   register: output
-- name: assert resource not changed
-  assert:
+- name: Assert resource not changed
+  ansible.builtin.assert:
     that:
       - not output.changed
 
-- name: create storage-based diagnostic setting for vnet by resource dict (idempotent)
+- name: Create storage-based diagnostic setting for vnet by resource dict (idempotent)
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage"
     resource:
@@ -140,12 +140,12 @@
     metrics:
       - category: "AllMetrics"
   register: output
-- name: assert resource not changed
-  assert:
+- name: Assert resource not changed
+  ansible.builtin.assert:
     that:
       - not output.changed
 
-- name: update storage-based diagnostic setting for vnet
+- name: Update storage-based diagnostic setting for vnet
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage"
     resource: "{{ vnet_output.state.id }}"
@@ -153,8 +153,8 @@
     logs:
       - category_group: "allLogs"
   register: output
-- name: assert resource updated
-  assert:
+- name: Assert resource updated
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.name == 'logs-storage'
@@ -166,7 +166,7 @@
       - not output.state.event_hub
       - not output.state.log_analytics
 
-- name: create second storage-based diagnostic setting for vnet
+- name: Create second storage-based diagnostic setting for vnet
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage2"
     resource: "{{ vnet_output.state.id }}"
@@ -178,8 +178,8 @@
         retention_policy:
           days: 15
   register: output
-- name: assert resource created
-  assert:
+- name: Assert resource created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.name == 'logs-storage2'
@@ -193,7 +193,7 @@
       - not output.state.event_hub
       - not output.state.log_analytics
 
-- name: update second storage-based diagnostic setting for vnet
+- name: Update second storage-based diagnostic setting for vnet
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage2"
     resource: "{{ vnet_output.state.id }}"
@@ -205,13 +205,13 @@
         retention_policy:
           days: 30
   register: output
-- name: assert resource created
-  assert:
+- name: Assert resource created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.logs[0].retention_policy.days == 30
 
-- name: update second storage-based diagnostic setting for vnet (idempotent)
+- name: Update second storage-based diagnostic setting for vnet (idempotent)
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage2"
     resource: "{{ vnet_output.state.id }}"
@@ -223,17 +223,17 @@
         retention_policy:
           days: 30
   register: output
-- name: assert resource not changed
-  assert:
+- name: Assert resource not changed
+  ansible.builtin.assert:
     that:
       - not output.changed
 
-- name: get diagnostic settings for virtual network
+- name: Get diagnostic settings for virtual network
   azure_rm_monitordiagnosticsetting_info:
     resource: "{{ vnet_output.state.id }}"
   register: output
-- name: assert output maches expectations
-  assert:
+- name: Assert output maches expectations
+  ansible.builtin.assert:
     that:
       - output.settings | length == 2
       - output.settings[0].name == 'logs-storage'
@@ -255,13 +255,13 @@
       - not output.settings[1].event_hub
       - not output.settings[1].log_analytics
 
-- name: get specific diagnostic settings for virtual network
+- name: Get specific diagnostic settings for virtual network
   azure_rm_monitordiagnosticsetting_info:
     name: "logs-storage2"
     resource: "{{ vnet_output.state.id }}"
   register: output
-- name: assert output maches expectations
-  assert:
+- name: Assert output maches expectations
+  ansible.builtin.assert:
     that:
       - output.settings | length == 1
       - output.settings[0].name == 'logs-storage2'
@@ -275,17 +275,17 @@
       - not output.settings[0].event_hub
       - not output.settings[0].log_analytics
 
-- name: get non-existant diagnostic setting for virtual network
+- name: Get non-existant diagnostic setting for virtual network
   azure_rm_monitordiagnosticsetting_info:
     name: "does-not-exist"
     resource: "{{ vnet_output.state.id }}"
   register: output
-- name: assert no settings
-  assert:
+- name: Assert no settings
+  ansible.builtin.assert:
     that:
       - output.settings | length == 0
 
-- name: create diagnostic setting for webapp with log analytics, event hub, and storage
+- name: Create diagnostic setting for webapp with log analytics, event hub, and storage
   azure_rm_monitordiagnosticsetting:
     name: "logs"
     resource:
@@ -308,8 +308,8 @@
       - category: "AppServiceIPSecAuditLogs"
       - category: "AppServicePlatformLogs"
   register: output
-- name: assert resource created
-  assert:
+- name: Assert resource created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.name == 'logs'
@@ -326,7 +326,7 @@
       - output.state.logs[5].category == 'AppServicePlatformLogs'
       - output.state.metrics | length == 0
 
-- name: create diagnostic setting for webapp with log analytics, event hub, and storage (idempotent)
+- name: Create diagnostic setting for webapp with log analytics, event hub, and storage (idempotent)
   azure_rm_monitordiagnosticsetting:
     name: "logs"
     resource:
@@ -349,12 +349,12 @@
       - category: "AppServiceIPSecAuditLogs"
       - category: "AppServicePlatformLogs"
   register: output
-- name: assert resource created
-  assert:
+- name: Assert resource created
+  ansible.builtin.assert:
     that:
       - not output.changed
 
-- name: update diagnostic setting to remove storage and log category
+- name: Update diagnostic setting to remove storage and log category
   azure_rm_monitordiagnosticsetting:
     name: "logs"
     resource:
@@ -374,8 +374,8 @@
       - category: "AppServiceIPSecAuditLogs"
       - category: "AppServicePlatformLogs"
   register: output
-- name: assert resource updated
-  assert:
+- name: Assert resource updated
+  ansible.builtin.assert:
     that:
       - output.changed
       - not output.state.storage_account
@@ -386,7 +386,7 @@
       - output.state.logs[3].category == 'AppServiceIPSecAuditLogs'
       - output.state.logs[4].category == 'AppServicePlatformLogs'
 
-- name: delete diagnostic setting via resource dict
+- name: Delete diagnostic setting via resource dict
   azure_rm_monitordiagnosticsetting:
     name: "logs"
     resource:
@@ -395,12 +395,12 @@
       resource_group: "{{ resource_group }}"
     state: "absent"
   register: output
-- name: assert resource delete
-  assert:
+- name: Assert resource delete
+  ansible.builtin.assert:
     that:
       - output.changed
 
-- name: delete diagnostic setting via resource dict (idempotent)
+- name: Delete diagnostic setting via resource dict (idempotent)
   azure_rm_monitordiagnosticsetting:
     name: "logs"
     resource:
@@ -409,95 +409,95 @@
       resource_group: "{{ resource_group }}"
     state: "absent"
   register: output
-- name: assert resource delete
-  assert:
+- name: Assert resource delete
+  ansible.builtin.assert:
     that:
       - not output.changed
 
-- name: delete diagnostic setting (check mode)
+- name: Delete diagnostic setting (check mode)
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage"
     resource: "{{ vnet_output.state.id }}"
     state: "absent"
   check_mode: true
   register: output
-- name: assert resource deleted
-  assert:
+- name: Assert resource deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
-- name: delete diagnostic setting (actually delete)
+- name: Delete diagnostic setting (actually delete)
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage"
     resource: "{{ vnet_output.state.id }}"
     state: "absent"
   register: output
-- name: assert resource deleted
-  assert:
+- name: Assert resource deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
-- name: delete diagnostic setting (idempotent)
+- name: Delete diagnostic setting (idempotent)
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage"
     resource: "{{ vnet_output.state.id }}"
     state: "absent"
   register: output
-- name: assert resource already deleted
-  assert:
+- name: Assert resource already deleted
+  ansible.builtin.assert:
     that:
       - not output.changed
 
-- name: delete second diagnostic setting
+- name: Delete second diagnostic setting
   azure_rm_monitordiagnosticsetting:
     name: "logs-storage2"
     resource: "{{ vnet_output.state.id }}"
     state: "absent"
   register: output
-- name: assert resource deleted
-  assert:
+- name: Assert resource deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
 # ------ teardown ------
 
-- name: delete log analytics workspace
+- name: Delete log analytics workspace
   azure_rm_loganalyticsworkspace:
     name: "analytics-{{ rpfx }}"
     resource_group: "{{ resource_group_secondary }}"
     state: "absent"
 
-- name: delete event hub namespace
+- name: Delete event hub namespace
   azure_rm_eventhub:
     namespace_name: "hub-{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     state: "absent"
 
-- name: delete second storage account
+- name: Delete second storage account
   azure_rm_storageaccount:
     name: "storagesecond{{ rpfx }}"
     resource_group: "{{ resource_group_secondary }}"
     state: "absent"
 
-- name: delete storage account
+- name: Delete storage account
   azure_rm_storageaccount:
     name: "storage{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     state: "absent"
 
-- name: delete web app
+- name: Delete web app
   azure_rm_webapp:
     name: "webapp-{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     state: "absent"
 
-- name: delete web app plan
+- name: Delete web app plan
   azure_rm_appserviceplan:
     name: "webapp-{{ rpfx }}-plan"
     resource_group: "{{ resource_group }}"
     state: "absent"
 
-- name: delete virtual network
+- name: Delete virtual network
   azure_rm_virtualnetwork:
     name: "vnet-{{ rpfx }}"
     resource_group: "{{ resource_group }}"

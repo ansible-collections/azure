@@ -1,5 +1,5 @@
 - name: Create host group name
-  set_fact:
+  ansible.builtin.set_fact:
     group_name: "hostgroup{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create a host group
@@ -14,7 +14,7 @@
   register: results
 
 - name: Assert that host group is created
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create a host group again (Idempotent test)
@@ -29,7 +29,7 @@
   register: results
 
 - name: Assert that output is not changed
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Update a host group
@@ -46,7 +46,7 @@
   register: results
 
 - name: Assert that host group is updated
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Get host group facts
@@ -55,7 +55,8 @@
     name: "{{ group_name }}"
   register: results
 
-- assert:
+- name: Assert the host group facts
+  ansible.builtin.assert:
     that:
       - not results.changed
       - results.hostgroups[0].name == "{{ group_name }}"
@@ -72,7 +73,7 @@
   register: results
 
 - name: Assert that host group is deleted
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Delete host group again (Idempotent test)
@@ -83,5 +84,5 @@
   register: results
 
 - name: Asset that output is not changed
-  assert:
+  ansible.builtin.assert:
     that: not results.changed

@@ -16,28 +16,28 @@
 
 - name: Create virtual machines
   azure_rm_virtualmachine:
-      resource_group: "{{ resource_group_secondary }}"
-      name: "{{ async_virtual_machine_prefix }}-{{ item }}"
-      vm_size: Standard_E2_v3
-      managed_disk_type: Standard_LRS
-      virtual_network: "{{ async_virtual_network }}-{{ item }}"
-      admin_username: adminuser
-      admin_password: "!test123@"
-      os_type: Linux
-      image:
-        offer: 0001-com-ubuntu-server-focal
-        publisher: Canonical
-        sku: 20_04-lts
-        version: latest
-      tags:
-        key: value
+    resource_group: "{{ resource_group_secondary }}"
+    name: "{{ async_virtual_machine_prefix }}-{{ item }}"
+    vm_size: Standard_E2_v3
+    managed_disk_type: Standard_LRS
+    virtual_network: "{{ async_virtual_network }}-{{ item }}"
+    admin_username: adminuser
+    admin_password: "!test123@"
+    os_type: Linux
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
+    tags:
+      key: value
   with_sequence: start=1 end="{{ async_number_virtual_machine }}"
   register: create_vms
   async: 1000
   poll: 0
 
 - name: Wait for Virtual machine to be created
-  async_status:
+  ansible.builtin.async_status:
     jid: "{{ item.ansible_job_id }}"
   register: wait_create_vm
   until: wait_create_vm.finished
@@ -52,7 +52,8 @@
       - key
   register: _vms
 
-- set_fact:
+- name: Set varialbes
+  ansible.builtin.set_fact:
     attach_disk_config: "{{ lookup('template', 'disk_config.j2') | from_yaml }}"
   vars:
     virtual_machines: "{{ _vms.vms }}"
@@ -68,7 +69,7 @@
   with_items: "{{ attach_disk_config }}"
 
 - name: Wait for disks to be created and attached
-  async_status:
+  ansible.builtin.async_status:
     jid: "{{ item.ansible_job_id }}"
   register: attach_disk
   until: attach_disk.finished
@@ -84,7 +85,7 @@
   with_items: "{{ attach_disk_config | map(attribute='disks') | flatten | list }}"
 
 - name: Validate that disks are attached to VMs
-  assert:
+  ansible.builtin.assert:
     that:
       - result.ansible_info.azure_managed_disk[0].managed_by
   with_items: "{{ disks_info.results }}"
@@ -103,7 +104,7 @@
   with_items: "{{ attach_disk_config }}"
 
 - name: Wait for disks to be created and attached
-  async_status:
+  ansible.builtin.async_status:
     jid: "{{ item.ansible_job_id }}"
   register: attach_disk
   until: attach_disk.finished
@@ -119,7 +120,7 @@
   with_items: "{{ attach_disk_config | map(attribute='disks') | flatten | list }}"
 
 - name: Validate that disks are attached to VMs
-  assert:
+  ansible.builtin.assert:
     that:
       - not result.ansible_info.azure_managed_disk[0].managed_by
   with_items: "{{ disks_info.results }}"
@@ -136,7 +137,7 @@
   with_items: "{{ attach_disk_config }}"
 
 - name: Wait for disks to be created and attached
-  async_status:
+  ansible.builtin.async_status:
     jid: "{{ item.ansible_job_id }}"
   register: attach_disk
   until: attach_disk.finished
@@ -152,7 +153,7 @@
   with_items: "{{ attach_disk_config | map(attribute='disks') | flatten | list }}"
 
 - name: Validate that disks are attached to VMs
-  assert:
+  ansible.builtin.assert:
     that:
       - result.ansible_info.azure_managed_disk == []
   with_items: "{{ disks_info.results }}"

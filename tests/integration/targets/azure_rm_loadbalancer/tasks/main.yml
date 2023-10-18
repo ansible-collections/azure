@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     pipaname: "pipa{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     pipbname: "pipb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     lbvnname: "lbvn{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
@@ -8,84 +8,84 @@
     lbname_c1: "lbc1-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     lbname_c2: "lbc2-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     lbname_d: "lbd{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
-- name: create public ip
+- name: Create public ip
   azure_rm_publicipaddress:
     name: "{{ pipbname }}"
     sku: Standard
     allocation_method: Static
     resource_group: '{{ resource_group }}'
 
-- name: create public ip
+- name: Create public ip
   azure_rm_publicipaddress:
     name: "{{ pipaname }}"
     resource_group: '{{ resource_group }}'
 
-- name: clear load balancer
+- name: Clear load balancer
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
     state: absent
 
-- name: create load balancer -- check mode
+- name: Create load balancer -- check mode
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
     public_ip: "{{ pipaname }}"
-  check_mode: yes
+  check_mode: true
   register: output
 
-- name: assert load balancer created
-  assert:
+- name: Assert load balancer created
+  ansible.builtin.assert:
     that: output.changed
 
-- name: create load balancer
+- name: Create load balancer
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
     public_ip: "{{ pipaname }}"
   register: output
 
-- name: assert load balancer created
-  assert:
+- name: Assert load balancer created
+  ansible.builtin.assert:
     that: output.changed
 
-- name: create load balancer -- idempotent
+- name: Create load balancer -- idempotent
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
     public_ip: "{{ pipaname }}"
   register: output
 
-- name: assert no change
-  assert:
+- name: Assert no change
+  ansible.builtin.assert:
     that:
       - not output.changed
 
-- name: delete load balancer
+- name: Delete load balancer
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
     state: absent
   register: output
 
-- name: assert load balancer deleted
-  assert:
+- name: Assert load balancer deleted
+  ansible.builtin.assert:
     that: output.changed
 
-- name: delete load balancer (idempotent)
+- name: Delete load balancer (idempotent)
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
     state: absent
   register: output
 
-- name: assert load balancer deleted (idempotent)
-  assert:
+- name: Assert load balancer deleted (idempotent)
+  ansible.builtin.assert:
     that: not output.changed
 
-- name: create another load balancer with more options
+- name: Create another load balancer with more options
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_b }}"
@@ -106,13 +106,13 @@
     natpool_protocol: Tcp
   register: output
 
-- name: assert complex load balancer created
-  assert:
+- name: Assert complex load balancer created
+  ansible.builtin.assert:
     that:
-    - output.changed
-    - output.state.sku.name == 'Standard'
+      - output.changed
+      - output.state.sku.name == 'Standard'
 
-- name: create load balancer again to check idempotency
+- name: Create load balancer again to check idempotency
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_b }}"
@@ -133,12 +133,12 @@
     natpool_protocol: Tcp
   register: output
 
-- name: assert that output has not changed
-  assert:
+- name: Assert that output has not changed
+  ansible.builtin.assert:
     that:
-    - not output.changed
+      - not output.changed
 
-- name: create load balancer again to check idempotency - change something
+- name: Create load balancer again to check idempotency - change something
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_b }}"
@@ -159,18 +159,18 @@
     natpool_protocol: Tcp
   register: output
 
-- name: assert that output has changed
-  assert:
+- name: Assert that output has changed
+  ansible.builtin.assert:
     that:
-    - output.changed
+      - output.changed
 
-- name: delete load balancer
+- name: Delete load balancer
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_b }}"
     state: absent
 
-- name: create load balancer with multiple parameters
+- name: Create load balancer with multiple parameters
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_c1 }}"
@@ -196,21 +196,21 @@
         frontend_port: 80
         backend_port: 80
         probe: prob0
-        disable_outbound_snat: True
+        disable_outbound_snat: true
   register: output
 
-- name: assert complex load balancer created
-  assert:
+- name: Assert complex load balancer created
+  ansible.builtin.assert:
     that:
       - output.changed
 
-- name: delete load balancer
+- name: Delete load balancer
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_c1 }}"
     state: absent
 
-- name: create load balancer with multiple parameters
+- name: Create load balancer with multiple parameters
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_c2 }}"
@@ -229,7 +229,7 @@
         frontend_port: 80
         backend_port: 80
         probe: prob0
-        disable_outbound_snat: True
+        disable_outbound_snat: true
     inbound_nat_rules:
       - name: inboundnatrule0
         backend_port: 8080
@@ -238,11 +238,11 @@
         frontend_ip_configuration: frontendipconf0
   register: output
 
-- name: assert complex load balancer created
-  assert:
+- name: Assert complex load balancer created
+  ansible.builtin.assert:
     that: output.changed
 
-- name: delete load balancer
+- name: Delete load balancer
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_c2 }}"
@@ -250,19 +250,19 @@
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
-      resource_group: "{{ resource_group }}"
-      name: "{{ lbvnname }}"
-      address_prefixes: "10.10.0.0/16"
+    resource_group: "{{ resource_group }}"
+    name: "{{ lbvnname }}"
+    address_prefixes: "10.10.0.0/16"
 
 - name: Add subnet
   azure_rm_subnet:
-      resource_group: "{{ resource_group }}"
-      name: "lb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}sb"
-      address_prefix: "10.10.0.0/24"
-      virtual_network: "{{ lbvnname }}"
+    resource_group: "{{ resource_group }}"
+    name: "lb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}sb"
+    address_prefix: "10.10.0.0/24"
+    virtual_network: "{{ lbvnname }}"
   register: subnet
 
-- name: create internal loadbalancer
+- name: Create internal loadbalancer
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_d }}"
@@ -295,39 +295,39 @@
         frontend_port: 80
         backend_port: 80
         probe: prob0
-        disable_outbound_snat: False
+        disable_outbound_snat: false
   register: output
 
-- name: assert complex load balancer created
-  assert:
+- name: Assert complex load balancer created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.frontend_ip_configurations[0].zones | length == 3
 
-- name: delete load balancer
+- name: Delete load balancer
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_d }}"
     state: absent
 
-- name: cleanup public ip
+- name: Cleanup public ip
   azure_rm_publicipaddress:
     name: "{{ item }}"
     resource_group: '{{ resource_group }}'
     state: absent
   with_items:
-  - "{{ pipaname }}"
-  - "{{ pipbname }}"
+    - "{{ pipaname }}"
+    - "{{ pipbname }}"
 
-- name: cleanup subnet
+- name: Cleanup subnet
   azure_rm_subnet:
-      resource_group: "{{ resource_group }}"
-      name: "lb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}sb"
-      virtual_network: "{{ lbvnname }}"
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: "lb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}sb"
+    virtual_network: "{{ lbvnname }}"
+    state: absent
 
-- name: cleanup virtual network
+- name: Cleanup virtual network
   azure_rm_virtualnetwork:
-      resource_group: "{{ resource_group }}"
-      name: "{{ lbvnname }}"
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: "{{ lbvnname }}"
+    state: absent
