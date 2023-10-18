@@ -5,6 +5,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 DOCUMENTATION = '''
@@ -225,7 +226,8 @@ try:
     import asyncio
     from msgraph.generated.groups.groups_request_builder import GroupsRequestBuilder
     from msgraph.generated.models.group import Group
-    from msgraph.generated.groups.item.transitive_members.transitive_members_request_builder import TransitiveMembersRequestBuilder
+    from msgraph.generated.groups.item.transitive_members.transitive_members_request_builder import \
+        TransitiveMembersRequestBuilder
     from msgraph.generated.models.reference_create import ReferenceCreate
 except ImportError:
     # This is handled in azure_rm_common
@@ -243,7 +245,8 @@ class AzureRMADGroup(AzureRMModuleBase):
             present_owners=dict(type='list', elements='str'),
             absent_members=dict(type='list', elements='str'),
             absent_owners=dict(type='list', elements='str'),
-            tenant=dict(type='str'), # https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison
+            tenant=dict(type='str'),
+            # https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison
             state=dict(
                 type='str',
                 default='present',
@@ -281,7 +284,7 @@ class AzureRMADGroup(AzureRMModuleBase):
             ad_groups = []
 
             if self.display_name and self.mail_nickname:
-                filter="displayName eq '{0}' and mailNickname eq '{1}'".format(self.display_name, self.mail_nickname)
+                filter = "displayName eq '{0}' and mailNickname eq '{1}'".format(self.display_name, self.mail_nickname)
                 ad_groups = asyncio.get_event_loop().run_until_complete(self.get_group_list(filter))
                 if ad_groups:
                     self.object_id = ad_groups[0].id
@@ -300,18 +303,19 @@ class AzureRMADGroup(AzureRMModuleBase):
                 if self.state == "present":
                     if self.display_name and self.mail_nickname:
                         group = Group(
-                            mail_enabled = False,
-                            security_enabled = True,
-                            group_types = [],
-                            display_name = self.display_name,
-                            mail_nickname = self.mail_nickname,
-                            )
+                            mail_enabled=False,
+                            security_enabled=True,
+                            group_types=[],
+                            display_name=self.display_name,
+                            mail_nickname=self.mail_nickname,
+                        )
 
                         ad_groups = [asyncio.get_event_loop().run_until_complete(self.create_group(group))]
                         self.results["changed"] = True
                     else:
-                        raise ValueError('The group does not exist. Both display_name : {0} and mail_nickname : {1} must be passed to create a new group'
-                                        .format(self.display_name, self.mail_nickname))
+                        raise ValueError(
+                            'The group does not exist. Both display_name : {0} and mail_nickname : {1} must be passed to create a new group'
+                            .format(self.display_name, self.mail_nickname))
                 elif self.state == "absent":
                     self.results["changed"] = False
 
@@ -338,7 +342,8 @@ class AzureRMADGroup(AzureRMModuleBase):
 
             if members_to_add:
                 for member_object_id in members_to_add:
-                    asyncio.get_event_loop().run_until_complete(self.add_group_member(group_id, present_members_by_object_id[member_object_id]))
+                    asyncio.get_event_loop().run_until_complete(
+                        self.add_group_member(group_id, present_members_by_object_id[member_object_id]))
                 self.results["changed"] = True
 
         if self.absent_members:
@@ -363,7 +368,8 @@ class AzureRMADGroup(AzureRMModuleBase):
 
             if owners_to_add:
                 for owner_object_id in owners_to_add:
-                    asyncio.get_event_loop().run_until_complete(self.add_gropup_owner(group_id, present_owners_by_object_id[owner_object_id]))
+                    asyncio.get_event_loop().run_until_complete(
+                        self.add_gropup_owner(group_id, present_owners_by_object_id[owner_object_id]))
                 self.results["changed"] = True
 
         if self.absent_owners:
@@ -443,10 +449,10 @@ class AzureRMADGroup(AzureRMModuleBase):
             results["group_members"] = [self.result_to_dict(object) for object in ret.value]
 
         return results
-    
+
     async def create_group(self, create_group):
-        return await self._client.groups.post(body = create_group)
-    
+        return await self._client.groups.post(body=create_group)
+
     async def delete_group(self, group_id):
         await self._client.groups.by_group_id(group_id).delete()
 
@@ -454,59 +460,61 @@ class AzureRMADGroup(AzureRMModuleBase):
         return await self._client.groups.by_group_id(group_id).get()
 
     async def get_group_list(self, filter=None):
-            if filter:
-                request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
-                    query_parameters = GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
-                        count = True,
-                        filter = filter,
-                    ),
-                    headers = {'ConsistencyLevel' : "eventual",}
-                )
-                groups = await self._client.groups.get(request_configuration = request_configuration)
-            else:
-                groups = await self._client.groups.get()
+        if filter:
+            request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
+                query_parameters=GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
+                    count=True,
+                    filter=filter,
+                ),
+                headers={'ConsistencyLevel': "eventual", }
+            )
+            groups = await self._client.groups.get(request_configuration=request_configuration)
+        else:
+            groups = await self._client.groups.get()
 
-            if groups and groups.value:
-                return groups.value
-            return []
+        if groups and groups.value:
+            return groups.value
+        return []
 
     async def get_group_members(self, group_id, filters=None):
         request_configuration = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetRequestConfiguration(
-            query_parameters = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
-                count = True,
-                ),
-            headers = {'ConsistencyLevel' : "eventual",}
-            )
+            query_parameters=TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
+                count=True,
+            ),
+            headers={'ConsistencyLevel': "eventual", }
+        )
         if filters:
             request_configuration.query_parameters.filter = filters
-        return await self._client.groups.by_group_id(group_id).transitive_members.get(request_configuration=request_configuration)
+        return await self._client.groups.by_group_id(group_id).transitive_members.get(
+            request_configuration=request_configuration)
 
     async def add_group_member(self, group_id, obj_id):
         request_body = ReferenceCreate(
-            odata_id = "https://graph.microsoft.com/v1.0/directoryObjects/{0}".format(obj_id),
+            odata_id="https://graph.microsoft.com/v1.0/directoryObjects/{0}".format(obj_id),
         )
-        await self._client.groups.by_group_id(group_id).members.ref.post(body = request_body)
+        await self._client.groups.by_group_id(group_id).members.ref.post(body=request_body)
 
     async def delete_group_member(self, group_id, member_id):
         await self._client.groups.by_group_id(group_id).members.by_directory_object_id(member_id).ref.delete()
 
     async def get_group_owners(self, group_id):
         request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
-            query_parameters = GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
-                count = True,
-                ),
-            headers = {'ConsistencyLevel' : "eventual",}
-            )
+            query_parameters=GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
+                count=True,
+            ),
+            headers={'ConsistencyLevel': "eventual", }
+        )
         return await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
 
     async def add_gropup_owner(self, group_id, obj_id):
         request_body = ReferenceCreate(
-            odata_id = "https://graph.microsoft.com/v1.0/users/{0}".format(obj_id),
+            odata_id="https://graph.microsoft.com/v1.0/users/{0}".format(obj_id),
         )
-        await self._client.groups.by_group_id(group_id).owners.ref.post(body = request_body)
+        await self._client.groups.by_group_id(group_id).owners.ref.post(body=request_body)
 
     async def remove_gropup_owner(self, group_id, obj_id):
         await self._client.groups.by_group_id(group_id).owners.by_directory_object_id(obj_id).ref.delete()
+
 
 def main():
     AzureRMADGroup()

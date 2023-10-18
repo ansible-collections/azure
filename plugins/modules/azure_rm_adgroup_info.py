@@ -5,6 +5,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 DOCUMENTATION = '''
@@ -175,8 +176,10 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     import asyncio
     from msgraph.generated.groups.groups_request_builder import GroupsRequestBuilder
-    from msgraph.generated.groups.item.transitive_members.transitive_members_request_builder import TransitiveMembersRequestBuilder
-    from msgraph.generated.groups.item.get_member_groups.get_member_groups_post_request_body import GetMemberGroupsPostRequestBody
+    from msgraph.generated.groups.item.transitive_members.transitive_members_request_builder import \
+        TransitiveMembersRequestBuilder
+    from msgraph.generated.groups.item.get_member_groups.get_member_groups_post_request_body import \
+        GetMemberGroupsPostRequestBody
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -195,7 +198,8 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             return_group_members=dict(type='bool', default=False),
             return_member_groups=dict(type='bool', default=False),
             all=dict(type='bool', default=False),
-            tenant=dict(type='str'), # https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison
+            tenant=dict(type='str'),
+            # https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison
         )
 
         self.tenant = None
@@ -237,7 +241,8 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             if self.object_id is not None:
                 ad_groups = [asyncio.get_event_loop().run_until_complete(self.get_group(self.object_id))]
             elif self.attribute_name is not None and self.attribute_value is not None:
-                ad_groups = asyncio.get_event_loop().run_until_complete(self.get_group_list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
+                ad_groups = asyncio.get_event_loop().run_until_complete(
+                    self.get_group_list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
             elif self.odata_filter is not None:  # run a filter based on user input
                 ad_groups = asyncio.get_event_loop().run_until_complete(self.get_group_list(filter=self.odata_filter))
             elif self.all:
@@ -324,13 +329,13 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
     async def get_group_list(self, filter=None):
         if filter:
             request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
-                query_parameters = GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
-                    count = True,
-                    filter = filter,
+                query_parameters=GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
+                    count=True,
+                    filter=filter,
                 ),
-                headers = {'ConsistencyLevel' : "eventual",}
+                headers={'ConsistencyLevel': "eventual", }
             )
-            groups = await self._client.groups.get(request_configuration = request_configuration)
+            groups = await self._client.groups.get(request_configuration=request_configuration)
         else:
             groups = await self._client.groups.get()
 
@@ -341,29 +346,31 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
 
     async def get_group_owners(self, group_id):
         request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
-            query_parameters = GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
-                count = True,
-                select= 'id,displayName,userPrincipalName,mailNickname,mail,accountEnabled,userType,appId,appRoleAssignmentRequired'
-                ),
-            headers = {'ConsistencyLevel' : "eventual",}
-            )
+            query_parameters=GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
+                count=True,
+                select='id,displayName,userPrincipalName,mailNickname,mail,accountEnabled,userType,appId,appRoleAssignmentRequired'
+            ),
+            headers={'ConsistencyLevel': "eventual", }
+        )
         return await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
 
     async def get_group_members(self, group_id, filters=None):
         request_configuration = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetRequestConfiguration(
-            query_parameters = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
-                count = True,
-                select= 'id,displayName,userPrincipalName,mailNickname,mail,accountEnabled,userType,appId,appRoleAssignmentRequired'
-                ),
-            headers = {'ConsistencyLevel' : "eventual",}
-            )
+            query_parameters=TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
+                count=True,
+                select='id,displayName,userPrincipalName,mailNickname,mail,accountEnabled,userType,appId,appRoleAssignmentRequired'
+            ),
+            headers={'ConsistencyLevel': "eventual", }
+        )
         if filters:
             request_configuration.query_parameters.filter = filters
-        return await self._client.groups.by_group_id(group_id).transitive_members.get(request_configuration=request_configuration)
+        return await self._client.groups.by_group_id(group_id).transitive_members.get(
+            request_configuration=request_configuration)
 
     async def get_member_groups(self, obj_id):
-        request_body = GetMemberGroupsPostRequestBody(security_enabled_only = False)
-        return await self._client.groups.by_group_id(obj_id).get_member_groups.post(body = request_body)
+        request_body = GetMemberGroupsPostRequestBody(security_enabled_only=False)
+        return await self._client.groups.by_group_id(obj_id).get_member_groups.post(body=request_body)
+
 
 def main():
     AzureRMADGroupInfo()

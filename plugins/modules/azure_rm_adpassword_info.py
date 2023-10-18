@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-
 DOCUMENTATION = '''
 module: azure_rm_adpassword_info
 
@@ -169,7 +168,8 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
                     sp = asyncio.get_event_loop().run_until_complete(self.get_service_principal())
                     self.app_id = sp.app_id
                 if not self.app_id:
-                    self.fail("can't resolve app via service principal object id {0}".format(self.service_principal_object_id))
+                    self.fail("can't resolve app via service principal object id {0}".format(
+                        self.service_principal_object_id))
 
                 apps = asyncio.get_event_loop().run_until_complete(self.get_applications())
                 result = list(apps.value)
@@ -205,14 +205,15 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
 
     async def get_applications(self):
         request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
-                query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
-                    filter = "appId eq '{0}'".format(self.app_id),
-                ),
-            )
-        return await self._client.applications.get(request_configuration = request_configuration)
+            query_parameters=ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                filter="appId eq '{0}'".format(self.app_id),
+            ),
+        )
+        return await self._client.applications.get(request_configuration=request_configuration)
 
     async def get_application(self):
         return await self._client.applications.by_application_id(self.app_object_id).get()
+
 
 def main():
     AzureRMADPasswordInfo()

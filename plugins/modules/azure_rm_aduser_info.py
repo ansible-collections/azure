@@ -5,6 +5,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 DOCUMENTATION = '''
@@ -212,13 +213,15 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                 ad_users = [asyncio.get_event_loop().run_until_complete(self.get_user(self.object_id))]
             elif self.attribute_name is not None and self.attribute_value is not None:
                 try:
-                    users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
+                    users = asyncio.get_event_loop().run_until_complete(
+                        self.get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
                     ad_users = list(users.value)
                 except Exception as e:
                     # the type doesn't get more specific. Could check the error message but no guarantees that message doesn't change in the future
                     # more stable to try again assuming the first error came from the attribute being a list
                     try:
-                        users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter("{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
+                        users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(
+                            "{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
                         ad_users = list(users.value)
                     except Exception as sub_e:
                         raise
@@ -249,32 +252,32 @@ class AzureRMADUserInfo(AzureRMModuleBase):
 
     async def get_user(self, object):
         request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
-                    query_parameters = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
-                        select = ["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
-                    ),
-                )
-        return await self._client.users.by_user_id(object).get(request_configuration = request_configuration)
+            query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
+            ),
+        )
+        return await self._client.users.by_user_id(object).get(request_configuration=request_configuration)
 
     async def get_users(self):
         request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
-                    query_parameters = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
-                        select = ["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
-                    ),
-                )
-        return await self._client.users.get(request_configuration = request_configuration)
+            query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
+            ),
+        )
+        return await self._client.users.get(request_configuration=request_configuration)
 
     async def get_users_by_filter(self, filter):
-        return await self._client.users.get(request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
-                    query_parameters = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
-                        filter = filter,
-                        select = ["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"],
-                        count = True
-                    ),
-                    headers = {
-			            'ConsistencyLevel' : "eventual",
-                    }
-                )
-            )
+        return await self._client.users.get(
+            request_configuration=UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
+                query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                    filter=filter,
+                    select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
+                            "userType"],
+                    count=True
+                ),
+                headers={'ConsistencyLevel': "eventual", }
+            ))
+
 
 def main():
     AzureRMADUserInfo()

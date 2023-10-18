@@ -205,8 +205,9 @@ class AzureRMAccountInfo(AzureRMModuleBase):
             request_configuration=UserRequestBuilder.UserRequestBuilderGetRequestConfiguration(
                 query_parameters=UserRequestBuilder.UserRequestBuilderGetQueryParameters(
                     select=["userType", "userPrincipalName", "postalCode", "identities"], ),
-                )
             )
+        )
+
 
 def main():
     AzureRMAccountInfo()

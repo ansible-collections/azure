@@ -5,8 +5,8 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
+__metaclass__ = type
 
 DOCUMENTATION = '''
 ---
@@ -399,7 +399,8 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            tenant=dict(type='str'), # https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison
+            tenant=dict(type='str'),
+            # https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison
             app_id=dict(type='str'),
             display_name=dict(type='str', required=True),
             app_roles=dict(type='list', elements='dict', options=app_role_spec),
@@ -409,7 +410,8 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             homepage=dict(type='str'),
             allow_guests_sign_in=dict(type='bool'),
             identifier_uris=dict(type='list', elements='str'),
-            key_type=dict(type='str', default='AsymmetricX509Cert', choices=['AsymmetricX509Cert', 'Password', 'Symmetric']),
+            key_type=dict(type='str', default='AsymmetricX509Cert',
+                          choices=['AsymmetricX509Cert', 'Password', 'Symmetric']),
             key_usage=dict(type='str', default='Verify', choices=['Sign', 'Verify']),
             key_value=dict(type='str', no_log=True),
             native_app=dict(type='bool'),
@@ -478,8 +480,10 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 if self.identifier_uris:
                     self.fail("'identifier_uris' is not required for creating a native application")
             else:
-                password_creds, key_creds = self.build_application_creds(self.password, self.key_value, self.key_type, self.key_usage,
-                                                                         self.start_date, self.end_date, self.credential_description)
+                password_creds, key_creds = self.build_application_creds(self.password, self.key_value, self.key_type,
+                                                                         self.key_usage,
+                                                                         self.start_date, self.end_date,
+                                                                         self.credential_description)
             if self.required_resource_accesses:
                 required_accesses = self.build_application_accesses(self.required_resource_accesses)
 
@@ -488,10 +492,10 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
 
             create_app = Application(
                 sign_in_audience=self.available_to_other_tenants,
-                web = WebApplication(
-                    home_page_url = self.homepage,
-                    redirect_uris = self.reply_urls,
-                    implicit_grant_settings = ImplicitGrantSettings(
+                web=WebApplication(
+                    home_page_url=self.homepage,
+                    redirect_uris=self.reply_urls,
+                    implicit_grant_settings=ImplicitGrantSettings(
                         enable_access_token_issuance=self.oauth2_allow_implicit_flow,
                     ),
                 ),
@@ -518,8 +522,10 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 if self.identifier_uris:
                     self.fail("'identifier_uris' is not required for creating a native application")
             else:
-                password_creds, key_creds = self.build_application_creds(self.password, self.key_value, self.key_type, self.key_usage,
-                                                                         self.start_date, self.end_date, self.credential_description)
+                password_creds, key_creds = self.build_application_creds(self.password, self.key_value, self.key_type,
+                                                                         self.key_usage,
+                                                                         self.start_date, self.end_date,
+                                                                         self.credential_description)
             if self.required_resource_accesses:
                 required_accesses = self.build_application_accesses(self.required_resource_accesses)
 
@@ -528,10 +534,10 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
 
             app_update_param = Application(
                 sign_in_audience=self.available_to_other_tenants,
-                web = WebApplication(
+                web=WebApplication(
                     home_page_url=self.homepage,
                     redirect_uris=self.reply_urls,
-                    implicit_grant_settings = ImplicitGrantSettings(
+                    implicit_grant_settings=ImplicitGrantSettings(
                         enable_access_token_issuance=self.oauth2_allow_implicit_flow,
                     ),
                 ),
@@ -544,7 +550,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 app_roles=app_roles,
                 optional_claims=self.optional_claims)
             asyncio.get_event_loop().run_until_complete(self.update_application(
-                    appid = old_response['object_id'], update_app = app_update_param))
+                appid=old_response['object_id'], update_app=app_update_param))
 
             self.results['changed'] = True
             self.results.update(self.get_resource())
@@ -558,7 +564,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             self.results['changed'] = True
             return True
         except Exception as ge:
-            self.fail("Error deleting application app_id {0} display_name {1} - {2}".format(self.app_id, self.display_name, str(ge)))
+            self.fail(
+                "Error deleting application app_id {0} display_name {1} - {2}".format(self.app_id, self.display_name,
+                                                                                      str(ge)))
 
     def get_resource(self):
         try:
@@ -632,10 +640,12 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         key_creds = None
         if password:
             password_creds = [PasswordCredential(start_date=start_date, end_date=end_date, key_id=str(self.gen_guid()),
-                                                 value=password, custom_key_identifier=custom_key_id)] # value ? secret_text
+                                                 value=password,
+                                                 custom_key_identifier=custom_key_id)]  # value ? secret_text
         elif key_value:
             key_creds = [
-                KeyCredential(start_date=start_date, end_date=end_date, key_id=str(self.gen_guid()), value=key_value,  # value ? key
+                KeyCredential(start_date=start_date, end_date=end_date, key_id=str(self.gen_guid()), value=key_value,
+                              # value ? key
                               usage=key_usage, type=key_type, custom_key_identifier=custom_key_id)]
 
         return (password_creds, key_creds)
@@ -656,7 +666,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             self.log('Getting "requiredResourceAccess" from a full manifest')
             required_resource_accesses = required_resource_accesses.get('required_resource_access', [])
         for x in required_resource_accesses:
-
             accesses = [ResourceAccess(id=y['id'], type=y['type']) for y in x['resource_access']]
             required_accesses.append(RequiredResourceAccess(resource_app_id=x['resource_app_id'],
                                                             resource_access=accesses))
@@ -673,36 +682,36 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             role = AppRole(id=x.get('id', None) or self.gen_guid(),
                            allowed_member_types=x.get('allowed_member_types', None),
                            description=x.get('description', None), display_name=x.get('display_name', None),
-                           is_enabled=x.get('is_enabled', None), value=x.get('value', None)) # value ? additional_data
+                           is_enabled=x.get('is_enabled', None), value=x.get('value', None))  # value ? additional_data
             result.append(role)
         return result
 
     async def create_application(self, creat_app):
-        return await self._client.applications.post(body = creat_app)
+        return await self._client.applications.post(body=creat_app)
 
     async def update_application(self, obj_id, update_app):
-        return await self._client.applications.by_application_id(obj_id).patch(body = update_app)
+        return await self._client.applications.by_application_id(obj_id).patch(body=update_app)
 
     async def get_application_by_app_id(self, app_id):
         request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
-            query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
-                filter = (" appId eq '{0}'".format(app_id)),),
-            headers = {'ConsistencyLevel' : "eventual"},
-            )
+            query_parameters=ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                filter=(" appId eq '{0}'".format(app_id)), ),
+            headers={'ConsistencyLevel': "eventual"},
+        )
 
-        return await self._client.applications.get(request_configuration = request_configuration)
+        return await self._client.applications.get(request_configuration=request_configuration)
 
     async def delete_application(self, obj_id):
         await self._client.applications.by_application_id(obj_id).delete()
 
-    # TODO SDK bug
     async def get_applications(self, filters):
         request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
-            query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
-                filter = (' and '.join(filters)),
-                headers = {'ConsistencyLevel' : "eventual"}
-                ))
-        return await self._client.applications.get(request_configuration = request_configuration)
+            query_parameters=ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                filter=(' and '.join(filters)),
+                headers={'ConsistencyLevel': "eventual"}
+            ))
+        return await self._client.applications.get(request_configuration=request_configuration)
+
 
 def main():
     AzureRMADApplication()

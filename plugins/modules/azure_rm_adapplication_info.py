@@ -6,8 +6,8 @@
 
 
 from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
+__metaclass__ = type
 
 DOCUMENTATION = '''
 module: azure_rm_adapplication_info
@@ -171,14 +171,15 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
     async def get_applications(self, sub_filters):
         if sub_filters:
             request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
-                query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
-                    filter = (' and '.join(sub_filters)),
-                    ),
-                headers = {'ConsistencyLevel' : "eventual"},
-                )
-            return await self._client.applications.get(request_configuration = request_configuration)
+                query_parameters=ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                    filter=(' and '.join(sub_filters)),
+                ),
+                headers={'ConsistencyLevel': "eventual"},
+            )
+            return await self._client.applications.get(request_configuration=request_configuration)
         else:
             return await self._client.applications.get()
+
 
 def main():
     AzureRMADApplicationInfo()

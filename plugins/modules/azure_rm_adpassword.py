@@ -9,7 +9,6 @@ import datetime
 
 __metaclass__ = type
 
-
 DOCUMENTATION = '''
 ---
 module: azure_rm_adpassword
@@ -118,8 +117,10 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     import asyncio
     from msgraph.generated.models.password_credential import PasswordCredential
-    from msgraph.generated.applications.item.add_password.add_password_post_request_body import AddPasswordPostRequestBody
-    from msgraph.generated.applications.item.remove_password.remove_password_post_request_body import RemovePasswordPostRequestBody
+    from msgraph.generated.applications.item.add_password.add_password_post_request_body import \
+        AddPasswordPostRequestBody
+    from msgraph.generated.applications.item.remove_password.remove_password_post_request_body import \
+        RemovePasswordPostRequestBody
     from msgraph.generated.applications.applications_request_builder import ApplicationsRequestBuilder
     from dateutil.relativedelta import relativedelta
 except ImportError:
@@ -194,7 +195,8 @@ class AzureRMADPassword(AzureRMModuleBase):
                     sp = asyncio.get_event_loop().run_until_complete(self.get_service_principal())
                     self.app_id = sp.app_id
                 if not self.app_id:
-                    self.fail("can't resolve app via service principal object id {0}".format(self.service_principal_object_id))
+                    self.fail("can't resolve app via service principal object id {0}".format(
+                        self.service_principal_object_id))
 
                 apps = asyncio.get_event_loop().run_until_complete(self.get_applications())
                 result = list(apps.value)
@@ -256,10 +258,10 @@ class AzureRMADPassword(AzureRMModuleBase):
 
         try:
             request_body = AddPasswordPostRequestBody(
-                password_credential = PasswordCredential(
-                    start_date_time = start_date,
-                    end_date_time = end_date,
-                    display_name = display_name
+                password_credential=PasswordCredential(
+                    start_date_time=start_date,
+                    end_date_time=end_date,
+                    display_name=display_name
                 ),
             )
             pd = asyncio.get_event_loop().run_until_complete(self.add_password(request_body))
@@ -287,23 +289,26 @@ class AzureRMADPassword(AzureRMModuleBase):
 
     async def get_applications(self):
         request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
-                query_parameters = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
-                    filter = "appId eq '{0}'".format(self.app_id),
-                ),
-            )
-        return await self._client.applications.get(request_configuration = request_configuration)
+            query_parameters=ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                filter="appId eq '{0}'".format(self.app_id),
+            ),
+        )
+        return await self._client.applications.get(request_configuration=request_configuration)
 
     async def get_application(self):
         return await self._client.applications.by_application_id(self.app_object_id).get()
 
     async def remove_password(self, key_id):
         request_body = RemovePasswordPostRequestBody(
-            key_id = key_id,
+            key_id=key_id,
         )
-        return await self._client.applications.by_application_id(self.app_object_id).remove_password.post(body = request_body)
+        return await self._client.applications.by_application_id(self.app_object_id).remove_password.post(
+            body=request_body)
 
     async def add_password(self, request_body):
-        return await self._client.applications.by_application_id(self.app_object_id).add_password.post(body = request_body)
+        return await self._client.applications.by_application_id(self.app_object_id).add_password.post(
+            body=request_body)
+
 
 def main():
     AzureRMADPassword()

@@ -5,8 +5,8 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
+__metaclass__ = type
 
 DOCUMENTATION = '''
 module: azure_rm_adserviceprincipal_info
@@ -142,11 +142,12 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
 
     async def get_service_principals(self):
         request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
-                            query_parameters = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
-                                filter = "servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
-                            ),
-                        )
-        return await self._client.service_principals.get(request_configuration = request_configuration)
+            query_parameters=ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
+                filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
+            ),
+        )
+        return await self._client.service_principals.get(request_configuration=request_configuration)
+
 
 def main():
     AzureRMADServicePrincipalInfo()

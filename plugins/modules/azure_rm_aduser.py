@@ -5,6 +5,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 DOCUMENTATION = '''
@@ -286,8 +287,8 @@ class AzureRMADUser(AzureRMModuleBase):
 
                     if self.password_profile:
                         password = PasswordProfile(
-                                    password = self.password_profile,
-                                )
+                            password=self.password_profile,
+                        )
 
                     should_update = False
 
@@ -353,14 +354,16 @@ class AzureRMADUser(AzureRMModuleBase):
                 ad_user = asyncio.get_event_loop().run_until_complete(self.get_user(self.object_id))
             elif self.attribute_name is not None and self.attribute_value is not None:
                 try:
-                    users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
+                    users = asyncio.get_event_loop().run_until_complete(
+                        self.get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
                     ad_users = list(users.value)
                     ad_user = ad_users[0]
                 except Exception as e:
                     # the type doesn't get more specific. Could check the error message but no guarantees that message doesn't change in the future
                     # more stable to try again assuming the first error came from the attribute being a list
                     try:
-                        users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter("{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
+                        users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(
+                            "{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
                         ad_users = list(users.value)
                         ad_user = ad_users[0]
                     except Exception as sub_e:
@@ -372,7 +375,8 @@ class AzureRMADUser(AzureRMModuleBase):
         except Exception as e:
             # User was not found
             err_msg = str(e)
-            if "Resource '{0}' does not exist or one of its queried reference-property objects are not present.".format(self.user_principal_name) in err_msg:
+            if "Resource '{0}' does not exist or one of its queried reference-property objects are not present.".format(
+                    self.user_principal_name) in err_msg:
                 ad_user = None
             else:
                 raise
@@ -391,61 +395,63 @@ class AzureRMADUser(AzureRMModuleBase):
 
     async def update_user(self, ad_user, password):
         request_body = User(
-                on_premises_immutable_id = self.on_premises_immutable_id,
-                usage_location = self.usage_location,
-                given_name = self.given_name,
-                surname = self.surname,
-                user_type = self.user_type,
-                account_enabled = self.account_enabled,
-                display_name = self.display_name,
-                password_profile = password,
-                user_principal_name = self.user_principal_name,
-                mail_nickname = self.mail_nickname
-            )
-        return await self._client.users.by_user_id(ad_user.id).patch(body = request_body)
+            on_premises_immutable_id=self.on_premises_immutable_id,
+            usage_location=self.usage_location,
+            given_name=self.given_name,
+            surname=self.surname,
+            user_type=self.user_type,
+            account_enabled=self.account_enabled,
+            display_name=self.display_name,
+            password_profile=password,
+            user_principal_name=self.user_principal_name,
+            mail_nickname=self.mail_nickname
+        )
+        return await self._client.users.by_user_id(ad_user.id).patch(body=request_body)
 
     async def create_user(self):
         password = PasswordProfile(
-                password = self.password_profile
-            )
-        request_body = User(
-            account_enabled = self.account_enabled,
-            display_name = self.display_name,
-            password_profile = password,
-            user_principal_name = self.user_principal_name,
-            mail_nickname = self.mail_nickname,
-            on_premises_immutable_id = self.on_premises_immutable_id,
-            usage_location = self.usage_location,
-            given_name = self.given_name,
-            surname = self.surname,
-            user_type = self.user_type,
-            mail = self.mail
+            password=self.password_profile
         )
-        return await self._client.users.post(body = request_body)
+        request_body = User(
+            account_enabled=self.account_enabled,
+            display_name=self.display_name,
+            password_profile=password,
+            user_principal_name=self.user_principal_name,
+            mail_nickname=self.mail_nickname,
+            on_premises_immutable_id=self.on_premises_immutable_id,
+            usage_location=self.usage_location,
+            given_name=self.given_name,
+            surname=self.surname,
+            user_type=self.user_type,
+            mail=self.mail
+        )
+        return await self._client.users.post(body=request_body)
 
     async def delete_user(self, ad_user):
         return await self._client.users.by_user_id(ad_user.id).delete()
 
     async def get_user(self, object):
         request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
-                    query_parameters = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
-                        select = ["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType", "onPremisesImmutableId", "usageLocation", "givenName", "surname"]
-                    ),
-                )
-        return await self._client.users.by_user_id(object).get(request_configuration = request_configuration)
+            query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType",
+                        "onPremisesImmutableId", "usageLocation", "givenName", "surname"]
+            ),
+        )
+        return await self._client.users.by_user_id(object).get(request_configuration=request_configuration)
 
     async def get_users_by_filter(self, filter):
-        return await self._client.users.get(request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
-                    query_parameters = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
-                        filter = filter,
-                        select = ["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType", "onPremisesImmutableId", "usageLocation", "givenName", "surname"],
-                        count = True
-                    ),
-                    headers = {
-			            'ConsistencyLevel' : "eventual",
-                    }
-                )
+        return await self._client.users.get(
+            request_configuration=UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
+                query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                    filter=filter,
+                    select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
+                            "userType", "onPremisesImmutableId", "usageLocation", "givenName", "surname"],
+                    count=True
+                ),
+                headers={'ConsistencyLevel': "eventual",}
             )
+        )
+
 
 def main():
     AzureRMADUser()
