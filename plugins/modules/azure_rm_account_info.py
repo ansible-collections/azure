@@ -194,15 +194,10 @@ class AzureRMAccountInfo(AzureRMModuleBase):
         # https://learn.microsoft.com/en-us/graph/api/user-get?view=graph-rest-1.0&tabs=http
 
         user = {}
-        acc = asyncio.get_event_loop().run_until_complete(self.getAccount())
-        import logging
-        logging.basicConfig(filename='./log.log', level=logging.INFO)
-        logging.info("INFO DDD" + str(acc))
 
         user_info = asyncio.get_event_loop().run_until_complete(self.getAccount())
         user['name'] = user_info.user_principal_name
         user['type'] = user_info.user_type
-
         return user
     
     async def getAccount(self):

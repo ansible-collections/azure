@@ -242,8 +242,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
                 ad_groups = asyncio.get_event_loop().run_until_complete(self.get_group_list(filter=self.odata_filter))
             elif self.all:
                 ad_groups = asyncio.get_event_loop().run_until_complete(self.get_group_list())
-            self.results['ad_groups'] = [self.set_results(group) for group in ad_groups]
-            
+            self.results['ad_groups'] = [self.set_results(group) for group in ad_groups]            
         except Exception as e:
             self.fail("failed to get ad group info {0}".format(str(e)))
 
@@ -338,6 +337,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             
         if groups and groups.value:
             return groups.value
+        
         return []
         
     async def get_group_owners(self, group_id):

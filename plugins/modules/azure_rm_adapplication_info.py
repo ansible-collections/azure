@@ -104,7 +104,6 @@ try:
     import asyncio
     from msgraph.generated.applications.applications_request_builder import ApplicationsRequestBuilder
     from kiota_abstractions.api_error import APIError
-    from msgraph.generated.models.o_data_errors.o_data_error import ODataError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -136,7 +135,6 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
 
         applications = []
     
-        
         try:
             self._client = self.get_msgraph_client(self.tenant)
             if self.object_id:

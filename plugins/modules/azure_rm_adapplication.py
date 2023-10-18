@@ -326,7 +326,6 @@ try:
     import dateutil.parser
     import uuid
     import asyncio
-    
     from dateutil.relativedelta import relativedelta
     from msgraph.generated.applications.applications_request_builder import ApplicationsRequestBuilder
     from msgraph.generated.models.application import Application
@@ -489,7 +488,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             
             
             create_app = Application(
-                sign_in_audience=self.available_to_other_tenants,                
+                sign_in_audience=self.available_to_other_tenants,
                 web = WebApplication(
                     home_page_url = self.homepage,
                     redirect_uris = self.reply_urls,
@@ -497,9 +496,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                         enable_access_token_issuance=self.oauth2_allow_implicit_flow,
                     ),
                 ),
-                
-                # allow_guests_sign_in=self.allow_guests_sign_in,
-
                 display_name=self.display_name,
                 identifier_uris=self.identifier_uris,
                 key_credentials=key_creds,
@@ -507,6 +503,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 required_resource_access=required_accesses,
                 app_roles=app_roles,
                 optional_claims=self.optional_claims
+                # allow_guests_sign_in=self.allow_guests_sign_in,
             )
             response = asyncio.get_event_loop().run_until_complete(self.create_application(create_app)) 
             self.results['changed'] = True

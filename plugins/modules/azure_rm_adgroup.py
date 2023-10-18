@@ -303,8 +303,7 @@ class AzureRMADGroup(AzureRMModuleBase):
                             mail_enabled = False,
                             security_enabled = True,
                             group_types = [],
-                            
-                            display_name = self.display_name, 
+                            display_name = self.display_name,
                             mail_nickname = self.mail_nickname,
                             )
                         
