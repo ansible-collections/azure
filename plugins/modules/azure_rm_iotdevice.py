@@ -469,8 +469,9 @@ class AzureRMIoTDevice(AzureRMModuleBase):
         return format_twin
 
     def format_item(self, item):
-        self.fail("message {0}, {1}".format(item, dir(item)))
+        #self.fail("message {0}, {1}".format(item, dir(item)))
         if not item:
+            self.fail('-----------------')
             return None
         format_item = dict(
             authentication=dict(),
@@ -483,6 +484,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             generationId=item.generation_id,
             lastActivityTime=item.last_activity_time
         )
+        self.fail('tttt1111111111111111111111111111111111111')
         if hasattr(item, 'status_updated_time'):
             format_item['statusUpdatedTime'] = item.status_updated_time
         if hasattr(item, 'status_reason'):
