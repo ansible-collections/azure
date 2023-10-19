@@ -386,7 +386,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             self.fail('Error when creating or updating IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
 
     def create_device(self):
-        response = None
+        #response = None
         try:
             if self.auth_method == 'sas':
                 response = self.mgmt_client.create_device_with_sas(self.name, self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
