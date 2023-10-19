@@ -91,6 +91,11 @@
   with_items:
     - 1
     - 2
+  ignore_errors: true
+
+- name: Pause for 5 mimutes
+  Aansible.builtin.command: sleep 601
+  changed_when: true
 
 - name: Query devices
   azure_rm_iotdevice_info:
