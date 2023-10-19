@@ -235,106 +235,106 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     virtual_network: vnet001
     subnet_name: subnet001
-        create_with_security_group: false
-        ip_configurations:
-          - name: ipconfig1
-            primary: true
+      create_with_security_group: false
+      ip_configurations:
+        - name: ipconfig1
+          primary: true
 
-    - name: Create a network interface for use in a Windows host (opens RDP port) with custom RDP port
-      azure_rm_networkinterface:
-        name: nic002
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        os_type: Windows
-        rdp_port: 3399
-        security_group: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Network/networkSecurit
-                         yGroups/nsg001"
-        ip_configurations:
-          - name: ipconfig1
-            public_ip_address_name: publicip001
-            primary: true
+- name: Create a network interface for use in a Windows host (opens RDP port) with custom RDP port
+  azure_rm_networkinterface:
+    name: nic002
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    os_type: Windows
+    rdp_port: 3399
+    security_group: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Network/networkSecurit
+                     yGroups/nsg001"
+    ip_configurations:
+      - name: ipconfig1
+        public_ip_address_name: publicip001
+        primary: true
 
-    - name: Create a network interface using existing security group and public IP
-      azure_rm_networkinterface:
-        name: nic003
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        security_group: secgroup001
-        ip_configurations:
-          - name: ipconfig1
-            public_ip_address_name: publicip001
-            primary: true
+- name: Create a network interface using existing security group and public IP
+  azure_rm_networkinterface:
+    name: nic003
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    security_group: secgroup001
+    ip_configurations:
+      - name: ipconfig1
+        public_ip_address_name: publicip001
+        primary: true
 
-    - name: Create a network with multiple ip configurations
-      azure_rm_networkinterface:
-        name: nic004
-        resource_group: myResourceGroup
-        subnet_name: subnet001
-        virtual_network: vnet001
-        security_group:
-          name: testnic002
-          resource_group: Testing1
-        ip_configurations:
-          - name: ipconfig1
-            public_ip_address_name: publicip001
-            primary: true
-          - name: ipconfig2
-            load_balancer_backend_address_pools:
-              - "{{ loadbalancer001.state.backend_address_pools[0].id }}"
-              - name: backendaddrpool1
-                load_balancer: loadbalancer001
+- name: Create a network with multiple ip configurations
+  azure_rm_networkinterface:
+    name: nic004
+    resource_group: myResourceGroup
+    subnet_name: subnet001
+    virtual_network: vnet001
+    security_group:
+      name: testnic002
+      resource_group: Testing1
+    ip_configurations:
+      - name: ipconfig1
+        public_ip_address_name: publicip001
+        primary: true
+      - name: ipconfig2
+        load_balancer_backend_address_pools:
+          - "{{ loadbalancer001.state.backend_address_pools[0].id }}"
+          - name: backendaddrpool1
+            load_balancer: loadbalancer001
 
-    - name: Create network interface attached to application gateway backend address pool
-      azure_rm_networkinterface:
-        name: nic-appgw
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        create_with_security_group: false
-        public_ip: false
-        ip_configurations:
-          - name: default
-            primary: true
-            application_gateway_backend_address_pools:
-              - name: myApplicationGatewayBackendAddressPool
-                application_gateway: myApplicationGateway
+- name: Create network interface attached to application gateway backend address pool
+  azure_rm_networkinterface:
+    name: nic-appgw
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    create_with_security_group: false
+    public_ip: false
+    ip_configurations:
+      - name: default
+        primary: true
+        application_gateway_backend_address_pools:
+          - name: myApplicationGatewayBackendAddressPool
+            application_gateway: myApplicationGateway
 
-    - name: Create a network interface in accelerated networking mode
-      azure_rm_networkinterface:
-        name: nic005
-        resource_group: myResourceGroup
-        virtual_network_name: vnet001
-        subnet_name: subnet001
-        enable_accelerated_networking: true
+- name: Create a network interface in accelerated networking mode
+  azure_rm_networkinterface:
+    name: nic005
+    resource_group: myResourceGroup
+    virtual_network_name: vnet001
+    subnet_name: subnet001
+    enable_accelerated_networking: true
 
-    - name: Create a network interface with IP forwarding
-      azure_rm_networkinterface:
-        name: nic001
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        ip_forwarding: true
-        ip_configurations:
-          - name: ipconfig1
-            public_ip_address_name: publicip001
-            primary: true
+- name: Create a network interface with IP forwarding
+  azure_rm_networkinterface:
+    name: nic001
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    ip_forwarding: true
+    ip_configurations:
+      - name: ipconfig1
+        public_ip_address_name: publicip001
+        primary: true
 
-    - name: Create a network interface with dns servers
-      azure_rm_networkinterface:
-        name: nic009
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        dns_servers:
-          - 8.8.8.8
+- name: Create a network interface with dns servers
+  azure_rm_networkinterface:
+    name: nic009
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    dns_servers:
+      - 8.8.8.8
 
-    - name: Delete network interface
-      azure_rm_networkinterface:
-        resource_group: myResourceGroup
-        name: nic003
-        state: absent
+- name: Delete network interface
+  azure_rm_networkinterface:
+    resource_group: myResourceGroup
+    name: nic003
+    state: absent
 '''
 
 RETURN = '''

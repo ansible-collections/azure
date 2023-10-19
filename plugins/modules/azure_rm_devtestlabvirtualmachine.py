@@ -146,7 +146,7 @@ EXAMPLES = '''
     lab_subnet:
       name: myvnSubnet
       virtual_network_name: myvn
-    disallow_public_ip_address: no
+    disallow_public_ip_address: false
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: Canonical

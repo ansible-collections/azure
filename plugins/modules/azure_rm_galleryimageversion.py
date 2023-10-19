@@ -224,7 +224,7 @@ EXAMPLES = '''
     location: East  US
     publishing_profile:
       end_of_life_date: "2020-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 1
       storage_account_type: Standard_LRS
       target_regions:

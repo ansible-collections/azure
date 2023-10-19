@@ -57,54 +57,54 @@ include_vm_resource_groups:
 
 # fetches VMs from VMSSs in all resource groups (defaults to no VMSS fetch)
 include_vmss_resource_groups:
-  - '*'
+    - '*'
 
 # places a host in the named group if the associated condition evaluates to true
 conditional_groups:
-  # since this will be true for every host, every host sourced from this inventory plugin config will be in the
-  # group 'all_the_hosts'
-  all_the_hosts: true
-  # if the VM's "name" variable contains "dbserver", it will be placed in the 'db_hosts' group
-  db_hosts: "'dbserver' in name"
+    # since this will be true for every host, every host sourced from this inventory plugin config will be in the
+    # group 'all_the_hosts'
+    all_the_hosts: true
+    # if the VM's "name" variable contains "dbserver", it will be placed in the 'db_hosts' group
+    db_hosts: "'dbserver' in name"
 
 # adds variables to each host found by this inventory plugin, whose values are the result of the associated expression
 hostvar_expressions:
-  my_host_var:
-  # A statically-valued expression has to be both single and double-quoted, or use escaped quotes, since the outer
-  # layer of quotes will be consumed by YAML. Without the second set of quotes, it interprets 'staticvalue' as a
-  # variable instead of a string literal.
-  some_statically_valued_var: "'staticvalue'"
-  # overrides the default ansible_host value with a custom Jinja2 expression, in this case, the first DNS hostname, or
-  # if none are found, the first public IP address.
-  ansible_host: (public_dns_hostnames + public_ipv4_addresses) | first
+    my_host_var:
+    # A statically-valued expression has to be both single and double-quoted, or use escaped quotes, since the outer
+    # layer of quotes will be consumed by YAML. Without the second set of quotes, it interprets 'staticvalue' as a
+    # variable instead of a string literal.
+    some_statically_valued_var: "'staticvalue'"
+    # overrides the default ansible_host value with a custom Jinja2 expression, in this case, the first DNS hostname, or
+    # if none are found, the first public IP address.
+    ansible_host: (public_dns_hostnames + public_ipv4_addresses) | first
 
 # change how inventory_hostname is generated. Each item is a jinja2 expression similar to hostvar_expressions.
 hostnames:
-  - tags.vm_name
-  - default_inventory_hostname + ".domain.tld" # Transfer to fqdn if you use shortnames for VMs
-  - default  # special var that uses the default hashed name
+    - tags.vm_name
+    - default_inventory_hostname + ".domain.tld" # Transfer to fqdn if you use shortnames for VMs
+    - default  # special var that uses the default hashed name
 
 # places hosts in dynamically-created groups based on a variable value.
 keyed_groups:
 # places each host in a group named 'tag_(tag name)_(tag value)' for each tag on a VM.
-  - prefix: tag
-    key: tags
+    - prefix: tag
+        key: tags
 # places each host in a group named 'azure_loc_(location name)', depending on the VM's location
-  - prefix: azure_loc
-    key: location
+    - prefix: azure_loc
+        key: location
 # places host in a group named 'some_tag_X' using the value of the 'sometag' tag on a VM as X, and defaulting to the
 # value 'none' (eg, the group 'some_tag_none') if the 'sometag' tag is not defined for a VM.
-  - prefix: some_tag
-    key: tags.sometag | default('none')
+    - prefix: some_tag
+        key: tags.sometag | default('none')
 
 # excludes a host from the inventory when any of these expressions is true, can refer to any vars defined on the host
 exclude_host_filters:
-# excludes hosts in the eastus region
-  - location in ['eastus']
-  - tags['tagkey'] is defined and tags['tagkey'] == 'tagkey'
-  - tags['tagkey2'] is defined and tags['tagkey2'] == 'tagkey2'
-# excludes hosts that are powered off
-  - powerstate != 'running'
+    # excludes hosts in the eastus region
+    - location in ['eastus']
+    - tags['tagkey'] is defined and tags['tagkey'] == 'tagkey'
+    - tags['tagkey2'] is defined and tags['tagkey2'] == 'tagkey2'
+    # excludes hosts that are powered off
+    - powerstate != 'running'
 '''
 
 # FUTURE: do we need a set of sane default filters, separate from the user-defineable ones?

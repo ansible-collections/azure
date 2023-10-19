@@ -109,27 +109,27 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a Traffic Manager Profile
-      azure_rm_trafficmanagerprofile:
-        name: tmtest
-        resource_group: myResourceGroup
-        location: global
-        profile_status: enabled
-        routing_method: priority
-        dns_config:
-          relative_name: tmtest
-          ttl: 60
-        monitor_config:
-          protocol: HTTPS
-          port: 80
-          path: '/'
-        tags:
-          Environment: Test
+- name: Create a Traffic Manager Profile
+  azure_rm_trafficmanagerprofile:
+    name: tmtest
+    resource_group: myResourceGroup
+    location: global
+    profile_status: enabled
+    routing_method: priority
+    dns_config:
+      relative_name: tmtest
+      ttl: 60
+    monitor_config:
+      protocol: HTTPS
+      port: 80
+      path: '/'
+    tags:
+      Environment: Test
 
-    - name: Delete a Traffic Manager Profile
-      azure_rm_trafficmanagerprofile:
-        state: absent
-        name: tmtest
+- name: Delete a Traffic Manager Profile
+  azure_rm_trafficmanagerprofile:
+    state: absent
+    name: tmtest
         resource_group: myResourceGroup
 '''
 RETURN = '''

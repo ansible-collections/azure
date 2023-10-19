@@ -346,7 +346,7 @@ EXAMPLES = '''
           - x-ms-meta-abc
         exposed_headers:
           - x-ms-meta-*
-            max_age_in_seconds: 200
+        max_age_in_seconds: 200
 '''
 
 

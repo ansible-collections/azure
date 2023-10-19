@@ -153,7 +153,7 @@ EXAMPLES = '''
   azure_rm_securitygroup:
     resource_group: myResourceGroup
     name: mysecgroup
-    purge_rules: yes
+    purge_rules: true
     rules:
       - name: DenySSH
         protocol: Tcp

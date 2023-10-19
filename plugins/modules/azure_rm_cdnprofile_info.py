@@ -41,18 +41,18 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one CDN profile
-      azure_rm_cdnprofile_info:
-        name: Testing
-        resource_group: myResourceGroup
+- name: Get facts for one CDN profile
+  azure_rm_cdnprofile_info:
+    name: Testing
+    resource_group: myResourceGroup
 
-    - name: Get facts for all CDN profiles
-      azure_rm_cdnprofile_info:
+- name: Get facts for all CDN profiles
+  azure_rm_cdnprofile_info:
 
-    - name: Get facts by tags
-      azure_rm_cdnprofile_info:
-        tags:
-          - Environment:Test
+- name: Get facts by tags
+  azure_rm_cdnprofile_info:
+    tags:
+      - Environment:Test
 '''
 
 RETURN = '''

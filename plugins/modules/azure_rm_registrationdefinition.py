@@ -133,7 +133,6 @@ EXAMPLES = '''
   azure_rm_registrationdefinition:
     registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: absent
-
 '''
 
 RETURN = '''
