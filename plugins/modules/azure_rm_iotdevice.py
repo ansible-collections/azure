@@ -398,6 +398,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
 
             return self.format_item(response)
         except Exception as exc:
+            self.fail("message {0}, {1}, {2}".format(self.auth_method, self.name, exc))
             self.fail('Error when creating or updating IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
 
     def delete_device(self, etag):

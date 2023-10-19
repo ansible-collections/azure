@@ -1,7 +1,6 @@
 - name: Set variables
   ansible.builtin.set_fact:
-    rpfx: frediot02
-    #rpfx: "{{ resource_group | hash('md5') | truncate(10, True, '') }}"
+    rpfx: "{{ resource_group | hash('md5') | truncate(10, True, '') }}"
 
 - name: Create IoT Hub (check mode)
   azure_rm_iothub:
