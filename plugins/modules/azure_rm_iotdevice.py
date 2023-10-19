@@ -71,12 +71,17 @@ options:
     status:
         description:
             - Set device status upon creation.
-        type: bool
+        type: str
+        choices:
+            - enabled
+            - disabled
+        default: enabled
     edge_enabled:
         description:
             - Flag indicating edge enablement.
             - Not supported in IoT Hub with Basic tier.
         type: bool
+        default: False
     twin_tags:
         description:
             - A section that the solution back end can read from and write to.
@@ -246,8 +251,8 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             hub_policy_key=dict(type='str', no_log=True, required=True),
             hub=dict(type='str', required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
-            status=dict(type='bool'),
-            edge_enabled=dict(type='bool'),
+            status=dict(type='str', default='enabled', choices=['enabled', 'disabled']),
+            edge_enabled=dict(type='bool', default=False),
             twin_tags=dict(type='dict'),
             desired=dict(type='dict'),
             auth_method=dict(type='str', choices=['self_signed', 'sas', 'certificate_authority'], default='sas'),
@@ -265,8 +270,6 @@ class AzureRMIoTDevice(AzureRMModuleBase):
         self.hub_policy_key = None
         self.hub_policy_name = None
         self.state = None
-        self.status = None
-        self.edge_enabled = None
         self.twin_tags = None
         self.desired = None
         self.auth_method = None
@@ -292,9 +295,6 @@ class AzureRMIoTDevice(AzureRMModuleBase):
 
         device = self.get_device()
 
-        if self.status is not None and not self.status:
-            device['status'] = 'disabled'
-
         if self.state == 'present':
             if not device:
                 changed = True
@@ -303,11 +303,9 @@ class AzureRMIoTDevice(AzureRMModuleBase):
                 if self.edge_enabled is not None and self.edge_enabled != device['capabilities']['iotEdge']:
                     changed = True
                     device['capabilities']['iotEdge'] = self.edge_enabled
-                if self.status is not None:
-                    status = 'enabled' if self.status else 'disabled'
-                    if status != device['status']:
-                        changed = True
-                        device['status'] = status
+                if self.status != device['status']:
+                    changed = True
+                    device['status'] = self.status
             if not self.check_mode:
                 if changed and update_changed:
                     device = self.update_device(device)
