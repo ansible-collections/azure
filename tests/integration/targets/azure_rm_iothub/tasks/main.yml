@@ -93,8 +93,8 @@
     - 2
   ignore_errors: true
 
-- name: Pause for 5 mimutes
-  ansible.builtin.command: sleep 601
+- name: Pause for 10 mimutes
+  ansible.builtin.command: sleep 600
   changed_when: true
 
 - name: Query devices
