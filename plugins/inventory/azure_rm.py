@@ -95,7 +95,7 @@ keyed_groups:
 # places host in a group named 'some_tag_X' using the value of the 'sometag' tag on a VM as X, and defaulting to the
 # value 'none' (eg, the group 'some_tag_none') if the 'sometag' tag is not defined for a VM.
     - prefix: some_tag
-        key: tags.sometag | default('none')
+      key: tags.sometag | default('none')
 
 # excludes a host from the inventory when any of these expressions is true, can refer to any vars defined on the host
 exclude_host_filters:
