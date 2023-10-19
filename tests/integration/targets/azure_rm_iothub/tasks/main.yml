@@ -77,7 +77,6 @@
       name: "mydevice{{ item }}"
       primary_key: "{{ registry_write_key }}"
       secondary_key: "{{ secondary_key }}"
-      edge_enabled: True
       twin_tags:
           location:
               country: US
