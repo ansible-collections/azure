@@ -19,7 +19,6 @@ short_description: Manage application password
 
 description:
     - Manage application password.
-    - The value property is deprecated in MS Graph API since this API will automatically generate the application password.
 
 options:
     app_id:
@@ -33,6 +32,7 @@ options:
     key_id:
         description:
             - The password key ID.
+            - It isn't supported anymore in the create operation. More details: https://learn.microsoft.com/en-us/graph/api/application-addpassword?view=graph-rest-1.0&tabs=http#request-body.
         type: str
     tenant:
         description:
@@ -44,6 +44,11 @@ options:
         description:
             - Date or datemtime after which credentials expire.
             - Default value is one year after current time.
+        type: str
+    value:
+        description:
+            - (deprecated) The application password value.
+            - Length greater than 18 characters.
         type: str
     display_name:
         description:
@@ -138,6 +143,7 @@ class AzureRMADPassword(AzureRMModuleBase):
             app_object_id=dict(type='str'),
             key_id=dict(type='str'),
             tenant=dict(type='str', required=True),
+            value=dict(type='str'),
             display_name=dict(type='str'),
             end_date=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
@@ -149,6 +155,7 @@ class AzureRMADPassword(AzureRMModuleBase):
         self.service_principal_object_id = None
         self.app_object_id = None
         self.key_id = None
+        self.value = None
         self.display_name = None
         self.end_date = None
         self.results = dict(changed=False)
@@ -167,6 +174,9 @@ class AzureRMADPassword(AzureRMModuleBase):
         if self.tenant:
             self.deprecate('tenant ID has been deprecated and will be removed in the future. '
                            'More details: https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison')
+        if self.value:
+            self.deprecate('value has been deprecated and will be removed in the future. '
+                           'More details: https://learn.microsoft.com/en-us/graph/api/application-addpassword?view=graph-rest-1.0&tabs=http#request-body')
 
         self._client = self.get_msgraph_client(self.tenant)
         self.resolve_app_obj_id()

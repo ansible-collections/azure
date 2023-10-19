@@ -63,6 +63,7 @@ options:
         description:
             - The on_premises_immutable_id of the user.
             - Used when either creating or updating a user account.
+            - immutable_id is renamed to on_premises_immutable_id. More details: https://learn.microsoft.com/en-us/graph/api/user-post-users?view=graph-rest-1.0&tabs=http#request-body.
         type: str
     mail:
         description:
