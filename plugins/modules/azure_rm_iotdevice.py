@@ -292,6 +292,14 @@ class AzureRMIoTDevice(AzureRMModuleBase):
 
         device = self.get_device()
 
+        if self.status is None or self.status is True:
+            self.status = 'enabled'
+        else:
+            self.status = 'disabled'
+
+        if self.edge_enabled is None:
+            self.edge_enabled = True
+
         if self.status is not None and not self.status:
             device['status'] = 'disabled'
 
