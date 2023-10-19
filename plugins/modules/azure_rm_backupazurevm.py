@@ -73,7 +73,7 @@ author:
 '''
 
 EXAMPLES = \
-'''
+    '''
 - name: Enabling/Updating protection for the Azure VM
   azure_rm_backupazurevm:
     resource_group: 'myResourceGroup'
@@ -110,7 +110,7 @@ EXAMPLES = \
 '''
 
 RETURN = \
-'''
+    '''
 id:
     description:
         - VM backup protection details.

@@ -41,7 +41,7 @@ author:
 '''
 
 EXAMPLES = \
-'''
+    '''
 - name: Get Recovery Point Details
   azure_rm_backupazurevm_info:
     resource_group: 'myResourceGroup'
