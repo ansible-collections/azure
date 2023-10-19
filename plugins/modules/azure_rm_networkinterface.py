@@ -235,10 +235,10 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     virtual_network: vnet001
     subnet_name: subnet001
-      create_with_security_group: false
-      ip_configurations:
-        - name: ipconfig1
-          primary: true
+    create_with_security_group: false
+    ip_configurations:
+      - name: ipconfig1
+        primary: true
 
 - name: Create a network interface for use in a Windows host (opens RDP port) with custom RDP port
   azure_rm_networkinterface:

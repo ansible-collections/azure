@@ -88,10 +88,10 @@ hostnames:
 keyed_groups:
 # places each host in a group named 'tag_(tag name)_(tag value)' for each tag on a VM.
     - prefix: tag
-        key: tags
+      key: tags
 # places each host in a group named 'azure_loc_(location name)', depending on the VM's location
     - prefix: azure_loc
-        key: location
+      key: location
 # places host in a group named 'some_tag_X' using the value of the 'sometag' tag on a VM as X, and defaulting to the
 # value 'none' (eg, the group 'some_tag_none') if the 'sometag' tag is not defined for a VM.
     - prefix: some_tag

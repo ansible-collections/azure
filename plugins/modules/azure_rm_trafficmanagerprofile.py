@@ -130,7 +130,7 @@ EXAMPLES = '''
   azure_rm_trafficmanagerprofile:
     state: absent
     name: tmtest
-        resource_group: myResourceGroup
+    resource_group: myResourceGroup
 '''
 RETURN = '''
 id:
