@@ -69,7 +69,7 @@
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: canonical
-      sku: 20_04-lts-gen2
+      sku: 20_04-lts
       version: latest
 
 - name: Create VM Extension
