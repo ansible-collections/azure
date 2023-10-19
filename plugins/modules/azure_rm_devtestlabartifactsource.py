@@ -107,7 +107,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
 except ImportError:
     # This is handled in azure_rm_common
@@ -302,7 +301,7 @@ class AzureRMDevTestLabArtifactsSource(AzureRMModuleBase):
                                                                           lab_name=self.lab_name,
                                                                           name=self.name,
                                                                           artifact_source=self.artifact_source)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:

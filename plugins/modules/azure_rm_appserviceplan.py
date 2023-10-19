@@ -104,7 +104,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.web.models import AppServicePlan, SkuDescription
 except ImportError:
     # This is handled in azure_rm_common
@@ -336,7 +335,7 @@ class AzureRMAppServicePlans(AzureRMModuleBase):
                                                                                 name=self.name,
                                                                                 app_service_plan=plan_def)
 
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
             self.log("Response : {0}".format(response))

@@ -950,9 +950,8 @@ import time
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from msrestazure.azure_exceptions import CloudError
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -2626,7 +2625,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             try:
                 subnet = self.network_client.subnets.get(virtual_network_resource_group, virtual_network_name, self.subnet_name)
                 subnet_id = subnet.id
-            except CloudError as exc:
+            except Exception as exc:
                 self.fail("Error: fetching subnet {0} - {1}".format(self.subnet_name, str(exc)))
         else:
             no_subnets_msg = "Error: unable to find a subnet in virtual network {0}. A virtual network " \

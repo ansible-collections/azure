@@ -84,7 +84,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
 except ImportError:
     # This is handled in azure_rm_common
@@ -202,7 +201,7 @@ class AzureRMDevTestLabVirtualNetwork(AzureRMModuleBase):
                 return self.results
             self.delete_virtualnetwork()
             # This currently doesn't work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("Virtual Network instance unchanged")
@@ -229,7 +228,7 @@ class AzureRMDevTestLabVirtualNetwork(AzureRMModuleBase):
                                                                                 lab_name=self.lab_name,
                                                                                 name=self.name,
                                                                                 virtual_network=self.virtual_network)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:

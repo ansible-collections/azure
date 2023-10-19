@@ -202,9 +202,6 @@ HAS_AZURE_EXC = None
 HAS_AZURE_CLI_CORE = True
 HAS_AZURE_CLI_CORE_EXC = None
 
-HAS_MSRESTAZURE = True
-HAS_MSRESTAZURE_EXC = None
-
 try:
     import importlib
 except ImportError:
@@ -224,11 +221,9 @@ except ImportError:
 try:
     from enum import Enum
     from msrestazure.azure_active_directory import AADTokenCredentials
-    from msrestazure.azure_exceptions import CloudError
     from msrestazure.azure_active_directory import MSIAuthentication
-    from azure.cli.core.auth.adal_authentication import MSIAuthenticationWrapper
-    from msrestazure.tools import parse_resource_id, resource_id, is_valid_resource_id
-    from msrestazure import azure_cloud
+    from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
+    from azure.cli.core import cloud as azure_cloud
     from azure.common.credentials import ServicePrincipalCredentials, UserPassCredentials
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource.resources import ResourceManagementClient
@@ -270,7 +265,7 @@ try:
     from azure.mgmt.eventhub import EventHubManagementClient
     from azure.mgmt.datafactory import DataFactoryManagementClient
     import azure.mgmt.datafactory.models as DataFactoryModel
-    from azure.identity._credentials import client_secret, user_password, certificate
+    from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
 
 except ImportError as exc:
     Authentication = object
@@ -399,10 +394,6 @@ class AzureRMModuleBase(object):
         if not HAS_PACKAGING_VERSION:
             self.fail(msg=missing_required_lib('packaging'),
                       exception=HAS_PACKAGING_VERSION_EXC)
-
-        if not HAS_MSRESTAZURE:
-            self.fail(msg=missing_required_lib('msrestazure'),
-                      exception=HAS_MSRESTAZURE_EXC)
 
         if not HAS_AZURE:
             self.fail(msg=missing_required_lib('ansible[azure] (azure >= {0})'.format(AZURE_MIN_RELEASE)),
@@ -583,8 +574,6 @@ class AzureRMModuleBase(object):
         '''
         try:
             return self.rm_client.resource_groups.get(resource_group)
-        except CloudError as cloud_error:
-            self.fail("Error retrieving resource group {0} - {1}".format(resource_group, cloud_error.message))
         except Exception as exc:
             self.fail("Error retrieving resource group {0} - {1}".format(resource_group, str(exc)))
 
@@ -1648,12 +1637,12 @@ class AzureRMAuth(object):
                     self.fail("cloud_environment {0} could not be resolved: {1}".format(_cloud_environment, str(exc)), exception=traceback.format_exc())
 
         credentials = MSIAuthentication(client_id=client_id, cloud_environment=cloud_environment)
-        credential = MSIAuthenticationWrapper(client_id=client_id, cloud_environment=cloud_environment)
+        credential = managed_identity.ManagedIdentityCredential(client_id=client_id, cloud_environment=cloud_environment)
         subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
             try:
                 # use the first subscription of the MSI
-                subscription_client = SubscriptionClient(credentials)
+                subscription_client = SubscriptionClient(credential)
                 subscription = next(subscription_client.subscriptions.list())
                 subscription_id = str(subscription.subscription_id)
             except Exception as exc:

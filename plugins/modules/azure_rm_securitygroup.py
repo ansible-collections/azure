@@ -417,7 +417,7 @@ state:
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.tools import is_valid_resource_id
+    from azure.mgmt.core.tools import is_valid_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass

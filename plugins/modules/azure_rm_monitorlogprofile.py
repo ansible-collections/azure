@@ -119,7 +119,7 @@ try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
     from azure.core.exceptions import HttpResponseError
     from azure.core.polling import LROPoller
-    from msrestazure.tools import is_valid_resource_id
+    from azure.mgmt.core.tools import is_valid_resource_id
     from azure.mgmt.monitor.models import (RetentionPolicy, LogProfileResource)
 except ImportError:
     # This is handled in azure_rm_common

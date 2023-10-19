@@ -104,11 +104,6 @@ versions:
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-try:
-    from msrestazure.azure_exceptions import CloudError
-except Exception:
-    # handled in azure_rm_common
-    pass
 
 
 class AzureRMGalleryImageVersionsInfo(AzureRMModuleBase):
@@ -203,7 +198,7 @@ class AzureRMGalleryImageVersionsInfo(AzureRMModuleBase):
                                               30)
             results = json.loads(response.body())
             # self.log('Response : {0}'.format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return self.format_item(results)
@@ -258,7 +253,7 @@ class AzureRMGalleryImageVersionsInfo(AzureRMModuleBase):
                 if not skiptoken:
                     break
             # self.log('Response : {0}'.format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return [self.format_item(x) for x in results['response']] if results['response'] else []

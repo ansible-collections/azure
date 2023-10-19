@@ -399,11 +399,6 @@ import json
 import random
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # this is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -753,7 +748,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the OpenShiftManagedCluster instance.')
             self.fail('Error creating the OpenShiftManagedCluster instance: {0}'
                       '\n{1}'.format(str(self.body), str(exc)))
@@ -776,7 +771,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the OpenShiftManagedCluster instance.')
             self.fail('Error deleting the OpenShiftManagedCluster instance: {0}'.format(str(e)))
 
@@ -799,7 +794,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             found = True
             self.log("Response : {0}".format(response))
             # self.log("OpenShiftManagedCluster instance : {0} found".format(response.name))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the OpenShiftManagedCluster instance.')
         if found is True:
             return response

@@ -98,7 +98,6 @@ from ansible.module_utils.common.dict_transformations import _snake_to_camel
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
 except ImportError:
     # This is handled in azure_rm_common
@@ -235,7 +234,7 @@ class AzureRMDtlPolicy(AzureRMModuleBase):
 
             self.delete_policy()
             # This currently doesnt' work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("Policy instance unchanged")
@@ -263,7 +262,7 @@ class AzureRMDtlPolicy(AzureRMModuleBase):
                                                                   policy_set_name=self.policy_set_name,
                                                                   name=self.name,
                                                                   policy=self.policy)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:

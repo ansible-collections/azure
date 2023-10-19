@@ -102,7 +102,6 @@ account_info:
 
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.graphrbac import GraphRbacManagementClient
     from azure.graphrbac.models import GraphErrorException
 except ImportError:
@@ -170,7 +169,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
 
         try:
             subscription_list_response = list(self.subscription_client.subscriptions.list())
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list all subscriptions - {0}".format(str(exc)))
 
         results['id'] = subscription_list_response[0].subscription_id

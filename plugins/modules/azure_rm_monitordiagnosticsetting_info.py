@@ -212,7 +212,7 @@ settings:
 '''
 
 try:
-    from msrestazure.tools import (parse_resource_id, resource_id)
+    from azure.mgmt.core.tools import (parse_resource_id, resource_id)
 except Exception:
     # This is handled in azure_rm_common
     pass

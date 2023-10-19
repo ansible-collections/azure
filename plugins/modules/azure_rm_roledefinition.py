@@ -108,7 +108,6 @@ from ansible.module_utils._text import to_native
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.core.polling import LROPoller
     from azure.mgmt.authorization import AuthorizationManagementClient
 
@@ -339,7 +338,7 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
             response = self._client.role_definitions.create_or_update(role_definition_id=self.role['name'] if self.role else str(uuid.uuid4()),
                                                                       scope=self.scope,
                                                                       role_definition=role_definition)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:
@@ -358,7 +357,7 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
         try:
             response = self._client.role_definitions.delete(scope=scope,
                                                             role_definition_id=role_definition_id)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as e:
             self.log('Error attempting to delete the role definition.')
