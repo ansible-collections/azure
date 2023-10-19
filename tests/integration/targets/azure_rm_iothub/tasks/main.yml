@@ -91,7 +91,6 @@
   with_items:
     - 1
     - 2
-  ignore_errors: true
 
 - name: Pause for 10 mimutes
   ansible.builtin.command: sleep 600
