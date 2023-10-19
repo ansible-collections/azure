@@ -43,21 +43,21 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one network interface
-      azure_rm_networkinterface_info:
-        resource_group: myResourceGroup
-        name: nic001
+- name: Get facts for one network interface
+  azure_rm_networkinterface_info:
+    resource_group: myResourceGroup
+    name: nic001
 
-    - name: Get network interfaces within a resource group
-      azure_rm_networkinterface_info:
-        resource_group: myResourceGroup
+- name: Get network interfaces within a resource group
+  azure_rm_networkinterface_info:
+    resource_group: myResourceGroup
 
-    - name: Get network interfaces by tag
-      azure_rm_networkinterface_info:
-        resource_group: myResourceGroup
-        tags:
-          - testing
-          - foo:bar
+- name: Get network interfaces by tag
+  azure_rm_networkinterface_info:
+    resource_group: myResourceGroup
+    tags:
+      - testing
+      - foo:bar
 '''
 
 RETURN = '''

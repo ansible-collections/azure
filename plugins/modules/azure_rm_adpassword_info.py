@@ -61,11 +61,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: get ad password info
-    azure_rm_adpassword_info:
-      app_id: "{{ app_id }}"
-      tenant: "{{ tenant_id }}"
-      key_id: "{{ key_id }}"
+- name: get ad password info
+  azure_rm_adpassword_info:
+    app_id: "{{ app_id }}"
+    tenant: "{{ tenant_id }}"
+    key_id: "{{ key_id }}"
 '''
 
 RETURN = '''

@@ -52,12 +52,12 @@ auth_source: cli
 
 # fetches VMs from an explicit list of resource groups instead of default all (- '*')
 include_vm_resource_groups:
-- myrg1
-- myrg2
+    - myrg1
+    - myrg2
 
 # fetches VMs from VMSSs in all resource groups (defaults to no VMSS fetch)
 include_vmss_resource_groups:
-- '*'
+  - '*'
 
 # places a host in the named group if the associated condition evaluates to true
 conditional_groups:
@@ -87,24 +87,24 @@ hostnames:
 # places hosts in dynamically-created groups based on a variable value.
 keyed_groups:
 # places each host in a group named 'tag_(tag name)_(tag value)' for each tag on a VM.
-- prefix: tag
-  key: tags
+  - prefix: tag
+    key: tags
 # places each host in a group named 'azure_loc_(location name)', depending on the VM's location
-- prefix: azure_loc
-  key: location
+  - prefix: azure_loc
+    key: location
 # places host in a group named 'some_tag_X' using the value of the 'sometag' tag on a VM as X, and defaulting to the
 # value 'none' (eg, the group 'some_tag_none') if the 'sometag' tag is not defined for a VM.
-- prefix: some_tag
-  key: tags.sometag | default('none')
+  - prefix: some_tag
+    key: tags.sometag | default('none')
 
 # excludes a host from the inventory when any of these expressions is true, can refer to any vars defined on the host
 exclude_host_filters:
 # excludes hosts in the eastus region
-- location in ['eastus']
-- tags['tagkey'] is defined and tags['tagkey'] == 'tagkey'
-- tags['tagkey2'] is defined and tags['tagkey2'] == 'tagkey2'
+  - location in ['eastus']
+  - tags['tagkey'] is defined and tags['tagkey'] == 'tagkey'
+  - tags['tagkey2'] is defined and tags['tagkey2'] == 'tagkey2'
 # excludes hosts that are powered off
-- powerstate != 'running'
+  - powerstate != 'running'
 '''
 
 # FUTURE: do we need a set of sane default filters, separate from the user-defineable ones?

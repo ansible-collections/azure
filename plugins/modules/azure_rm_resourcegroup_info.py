@@ -44,23 +44,23 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one resource group
-      azure_rm_resourcegroup_info:
-        name: myResourceGroup
+- name: Get facts for one resource group
+  azure_rm_resourcegroup_info:
+    name: myResourceGroup
 
-    - name: Get facts for all resource groups
-      azure_rm_resourcegroup_info:
+- name: Get facts for all resource groups
+  azure_rm_resourcegroup_info:
 
-    - name: Get facts by tags
-      azure_rm_resourcegroup_info:
-        tags:
-          - testing
-          - foo:bar
+- name: Get facts by tags
+  azure_rm_resourcegroup_info:
+    tags:
+      - testing
+      - foo:bar
 
-    - name: Get facts for one resource group including resources it contains
-      azure_rm_resourcegroup_info:
-        name: myResourceGroup
-        list_resources: yes
+- name: Get facts for one resource group including resources it contains
+  azure_rm_resourcegroup_info:
+    name: myResourceGroup
+    list_resources: true
 '''
 RETURN = '''
 resourcegroups:

@@ -41,14 +41,14 @@ author:
 '''
 
 EXAMPLES = \
-    '''
-    - name: Get Recovery Point Details
-      azure_rm_backupazurevm_info:
-        resource_group: 'myResourceGroup'
-        recovery_vault_name: 'testVault'
-        resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-        resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
-    '''
+'''
+- name: Get Recovery Point Details
+  azure_rm_backupazurevm_info:
+    resource_group: 'myResourceGroup'
+    recovery_vault_name: 'testVault'
+    resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
+                  resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
+'''
 
 RETURN = \
     '''

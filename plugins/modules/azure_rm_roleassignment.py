@@ -65,39 +65,39 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a role assignment
-      azure_rm_roleassignment:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        role_definition_id:
-          "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+- name: Create a role assignment
+  azure_rm_roleassignment:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    role_definition_id:
+      "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-    - name: Create a role assignment
-      azure_rm_roleassignment:
-        name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        role_definition_id:
-          "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+- name: Create a role assignment
+  azure_rm_roleassignment:
+    name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    role_definition_id:
+      "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-    - name: Delete a role assignment
-      azure_rm_roleassignment:
-        name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        state: absent
+- name: Delete a role assignment
+  azure_rm_roleassignment:
+    name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: absent
 
-    - name: Delete a role assignment
-      azure_rm_roleassignment:
-        id: /subscriptions/xxx-sub-guid-xxx/resourceGroups/rgname/providers/Microsoft.Authorization/roleAssignments/xxx-assign-guid-xxx"
-        state: absent
+- name: Delete a role assignment
+  azure_rm_roleassignment:
+    id: /subscriptions/xxx-sub-guid-xxx/resourceGroups/rgname/providers/Microsoft.Authorization/roleAssignments/xxx-assign-guid-xxx"
+    state: absent
 
-    - name: Delete a role assignment
-      azure_rm_roleassignment:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        role_definition_id:
-          "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-        state: absent
+- name: Delete a role assignment
+  azure_rm_roleassignment:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    role_definition_id:
+      "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    state: absent
 '''
 
 RETURN = '''

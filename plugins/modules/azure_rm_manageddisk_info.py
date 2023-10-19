@@ -68,7 +68,7 @@ EXAMPLES = r'''
 - name: Get facts by tags
   azure_rm_manageddisk_info:
     tags:
-    - testing
+      - testing
 '''
 
 RETURN = r'''

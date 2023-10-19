@@ -58,20 +58,20 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a secret
-      azure_rm_keyvaultsecret:
-        secret_name: MySecret
-        secret_value: My_Pass_Sec
-        keyvault_uri: https://contoso.vault.azure.net/
-        tags:
-            testing: testing
-            delete: never
+- name: Create a secret
+  azure_rm_keyvaultsecret:
+    secret_name: MySecret
+    secret_value: My_Pass_Sec
+    keyvault_uri: https://contoso.vault.azure.net/
+    tags:
+      testing: testing
+      delete: never
 
-    - name: Delete a secret
-      azure_rm_keyvaultsecret:
-        secret_name: MySecret
-        keyvault_uri: https://contoso.vault.azure.net/
-        state: absent
+- name: Delete a secret
+  azure_rm_keyvaultsecret:
+    secret_name: MySecret
+    keyvault_uri: https://contoso.vault.azure.net/
+    state: absent
 '''
 
 RETURN = '''

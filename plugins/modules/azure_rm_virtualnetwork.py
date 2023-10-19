@@ -80,25 +80,25 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a virtual network
-      azure_rm_virtualnetwork:
-        resource_group: myResourceGroup
-        name: myVirtualNetwork
-        address_prefixes_cidr:
-            - 10.1.0.0/16
-            - 172.100.0.0/16
-        dns_servers:
-            - 127.0.0.1
-            - 127.0.0.2
-        tags:
-            testing: testing
-            delete: on-exit
+- name: Create a virtual network
+  azure_rm_virtualnetwork:
+    resource_group: myResourceGroup
+    name: myVirtualNetwork
+    address_prefixes_cidr:
+      - 10.1.0.0/16
+      - 172.100.0.0/16
+    dns_servers:
+      - 127.0.0.1
+      - 127.0.0.2
+    tags:
+      testing: testing
+      delete: on-exit
 
-    - name: Delete a virtual network
-      azure_rm_virtualnetwork:
-        resource_group: myResourceGroup
-        name: myVirtualNetwork
-        state: absent
+- name: Delete a virtual network
+  azure_rm_virtualnetwork:
+    resource_group: myResourceGroup
+    name: myVirtualNetwork
+    state: absent
 '''
 RETURN = '''
 state:

@@ -53,31 +53,31 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get latest version of specific secret
-    azure_rm_keyvaultsecret_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: mySecret
+- name: Get latest version of specific secret
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: mySecret
 
-  - name: List all versions of specific secret
-    azure_rm_keyvaultsecret_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: mySecret
-      version: all
+- name: List all versions of specific secret
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: mySecret
+    version: all
 
-  - name: List specific version of specific secret
-    azure_rm_keyvaultsecret_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: mySecret
-      version: fd2682392a504455b79c90dd04a1bf46
+- name: List specific version of specific secret
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: mySecret
+    version: fd2682392a504455b79c90dd04a1bf46
 
-  - name: List all secrets in specific key vault
-    azure_rm_keyvaultsecret_info:
-        vault_uri: "https://myVault.vault.azure.net"
+- name: List all secrets in specific key vault
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
 
-  - name: List deleted secrets in specific key vault
-    azure_rm_keyvaultsecret_info:
-        vault_uri: "https://myVault.vault.azure.net"
-        show_deleted_secret: True
+- name: List deleted secrets in specific key vault
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    show_deleted_secret: true
 '''
 
 RETURN = '''

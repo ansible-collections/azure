@@ -61,20 +61,20 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one account
-      azure_rm_storageaccount_info:
-        resource_group: myResourceGroup
-        name: clh0002
+- name: Get facts for one account
+  azure_rm_storageaccount_info:
+    resource_group: myResourceGroup
+    name: clh0002
 
-    - name: Get facts for all accounts in a resource group
-      azure_rm_storageaccount_info:
-        resource_group: myResourceGroup
+- name: Get facts for all accounts in a resource group
+  azure_rm_storageaccount_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts for all accounts by tags
-      azure_rm_storageaccount_info:
-        tags:
-          - testing
-          - foo:bar
+- name: Get facts for all accounts by tags
+  azure_rm_storageaccount_info:
+    tags:
+      - testing
+      - foo:bar
 '''
 
 RETURN = '''

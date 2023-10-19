@@ -55,20 +55,20 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create a Firewall rule for Azure Cache for Redis
-    azure_rm_rediscachefirewallrule:
-        resource_group: myResourceGroup
-        cache_name: myRedisCache
-        name: myRule
-        start_ip_address: 192.168.1.1
-        end_ip_address: 192.168.1.4
+- name: Create a Firewall rule for Azure Cache for Redis
+  azure_rm_rediscachefirewallrule:
+    resource_group: myResourceGroup
+    cache_name: myRedisCache
+    name: myRule
+    start_ip_address: 192.168.1.1
+    end_ip_address: 192.168.1.4
 
-  - name: Update a Firewall rule for Azure Cache for Redis
-    azure_rm_rediscachefirewallrule:
-        resource_group: myResourceGroup
-        cache_name: myRedisCache
-        name: myRule
-        end_ip_address: 192.168.1.5
+- name: Update a Firewall rule for Azure Cache for Redis
+  azure_rm_rediscachefirewallrule:
+    resource_group: myResourceGroup
+    cache_name: myRedisCache
+    name: myRule
+    end_ip_address: 192.168.1.5
 '''
 
 RETURN = '''

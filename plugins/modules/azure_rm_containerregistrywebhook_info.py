@@ -39,11 +39,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Webhook
-    azure_rm_containerregistrywebhook_info:
-      resource_group: resource_group_name
-      registry_name: registry_name
-      webhook_name: webhook_name
+- name: Get instance of Webhook
+  azure_rm_containerregistrywebhook_info:
+    resource_group: resource_group_name
+    registry_name: registry_name
+    webhook_name: webhook_name
 '''
 
 RETURN = '''

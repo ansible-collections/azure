@@ -60,11 +60,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) MySQL Database
-    azure_rm_mysqldatabase:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: db1
+- name: Create (or update) MySQL Database
+  azure_rm_mysqldatabase:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: db1
 '''
 
 RETURN = '''

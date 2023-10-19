@@ -51,19 +51,19 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a route table
-      azure_rm_routetable:
-        resource_group: myResourceGroup
-        name: myRouteTable
-        disable_bgp_route_propagation: False
-        tags:
-          purpose: testing
+- name: Create a route table
+  azure_rm_routetable:
+    resource_group: myResourceGroup
+    name: myRouteTable
+    disable_bgp_route_propagation: false
+    tags:
+      purpose: testing
 
-    - name: Delete a route table
-      azure_rm_routetable:
-        resource_group: myResourceGroup
-        name: myRouteTable
-        state: absent
+- name: Delete a route table
+  azure_rm_routetable:
+    resource_group: myResourceGroup
+    name: myRouteTable
+    state: absent
 '''
 RETURN = '''
 changed:

@@ -45,13 +45,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) Replication
-    azure_rm_containerregistryreplication:
-      resource_group: myResourceGroup
-      registry_name: myRegistry
-      replication_name: myReplication
-      replication: replication
-      location: eastus
+- name: Create (or update) Replication
+  azure_rm_containerregistryreplication:
+    resource_group: myResourceGroup
+    registry_name: myRegistry
+    replication_name: myReplication
+    replication: replication
+    location: eastus
 '''
 
 RETURN = '''

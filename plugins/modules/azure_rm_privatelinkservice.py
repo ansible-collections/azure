@@ -141,7 +141,7 @@ EXAMPLES = '''
   azure_rm_privatelinkservice:
     name: linkservice-name
     resource_group: myResourceGroup
-    enable_proxy_protocol: True
+    enable_proxy_protocol: true
     fqdns:
       - 'dns01.com'
       - 'dns02.com'
@@ -154,18 +154,18 @@ EXAMPLES = '''
         - xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         - yyyyyy-yyyyy-yyyy-yyyy-yyyyyyyyyyy
     load_balancer_frontend_ip_configurations:
-          - id: load_balancer_frontend_ip_configurations_id
+      - id: load_balancer_frontend_ip_configurations_id
     ip_configurations:
       - name: testSubnet
         properties:
-          primary: False
+          primary: false
           private_ip_allocation_method: 'Dynamic'
           private_ip_address_version: 'IPv4'
           subnet:
             id: subnet_id
       - name: subnetfredprivate-1
         properties:
-          primary: True
+          primary: true
           private_ip_allocation_method: 'Static'
           private_ip_address_version: 'IPv4'
           subnet:

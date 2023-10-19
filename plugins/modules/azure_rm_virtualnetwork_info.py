@@ -43,19 +43,19 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one virtual network
-      azure_rm_virtualnetwork_info:
-        resource_group: myResourceGroup
-        name: secgroup001
+- name: Get facts for one virtual network
+  azure_rm_virtualnetwork_info:
+    resource_group: myResourceGroup
+    name: secgroup001
 
-    - name: Get facts for all virtual networks
-      azure_rm_virtualnetwork_info:
-        resource_group: myResourceGroup
+- name: Get facts for all virtual networks
+  azure_rm_virtualnetwork_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts by tags
-      azure_rm_virtualnetwork_info:
-        tags:
-          - testing
+- name: Get facts by tags
+  azure_rm_virtualnetwork_info:
+    tags:
+      - testing
 '''
 RETURN = '''
 azure_virtualnetworks:

@@ -72,23 +72,23 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create virtual network peering
-      azure_rm_virtualnetworkpeering:
-        resource_group: myResourceGroup
-        virtual_network: myVirtualNetwork
-        name: myPeering
-        remote_virtual_network:
-          resource_group: mySecondResourceGroup
-          name: myRemoteVirtualNetwork
-        allow_virtual_network_access: false
-        allow_forwarded_traffic: true
+- name: Create virtual network peering
+  azure_rm_virtualnetworkpeering:
+    resource_group: myResourceGroup
+    virtual_network: myVirtualNetwork
+    name: myPeering
+    remote_virtual_network:
+      resource_group: mySecondResourceGroup
+      name: myRemoteVirtualNetwork
+    allow_virtual_network_access: false
+    allow_forwarded_traffic: true
 
-    - name: Delete the virtual network peering
-      azure_rm_virtualnetworkpeering:
-        resource_group: myResourceGroup
-        virtual_network: myVirtualNetwork
-        name: myPeering
-        state: absent
+- name: Delete the virtual network peering
+  azure_rm_virtualnetworkpeering:
+    resource_group: myResourceGroup
+    virtual_network: myVirtualNetwork
+    name: myPeering
+    state: absent
 '''
 RETURN = '''
 id:

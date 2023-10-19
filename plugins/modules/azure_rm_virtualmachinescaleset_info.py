@@ -51,21 +51,21 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for a virtual machine scale set
-      azure_rm_virtualmachinescaleset_info:
-        resource_group: myResourceGroup
-        name: testvmss001
-        format: curated
+- name: Get facts for a virtual machine scale set
+  azure_rm_virtualmachinescaleset_info:
+    resource_group: myResourceGroup
+    name: testvmss001
+    format: curated
 
-    - name: Get facts for all virtual networks
-      azure_rm_virtualmachinescaleset_info:
-        resource_group: myResourceGroup
+- name: Get facts for all virtual networks
+  azure_rm_virtualmachinescaleset_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts by tags
-      azure_rm_virtualmachinescaleset_info:
-        resource_group: myResourceGroup
-        tags:
-          - testing
+- name: Get facts by tags
+  azure_rm_virtualmachinescaleset_info:
+    resource_group: myResourceGroup
+    tags:
+      - testing
 '''
 
 RETURN = '''

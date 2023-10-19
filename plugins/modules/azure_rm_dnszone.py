@@ -89,7 +89,6 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: example.com
     state: absent
-
 '''
 
 RETURN = '''

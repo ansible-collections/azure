@@ -169,36 +169,36 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create Cosmos DB Account - min
-    azure_rm_cosmosdbaccount:
-      resource_group: myResourceGroup
-      name: myDatabaseAccount
-      location: westus
-      geo_rep_locations:
-        - name: southcentralus
-          failover_priority: 0
-      database_account_offer_type: Standard
+- name: Create Cosmos DB Account - min
+  azure_rm_cosmosdbaccount:
+    resource_group: myResourceGroup
+    name: myDatabaseAccount
+    location: westus
+    geo_rep_locations:
+      - name: southcentralus
+        failover_priority: 0
+    database_account_offer_type: Standard
 
-  - name: Create Cosmos DB Account - max
-    azure_rm_cosmosdbaccount:
-      resource_group: myResourceGroup
-      name: myDatabaseAccount
-      location: westus
-      kind: mongo_db
-      geo_rep_locations:
-        - name: southcentralus
-          failover_priority: 0
-      database_account_offer_type: Standard
-      ip_rules:
-        - 10.10.10.10
-      enable_multiple_write_locations: yes
-      virtual_network_rules:
-        - subnet: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVi
-                   rtualNetwork/subnets/mySubnet"
-      consistency_policy:
-        default_consistency_level: bounded_staleness
-        max_staleness_prefix: 10
-        max_interval_in_seconds: 1000
+- name: Create Cosmos DB Account - max
+  azure_rm_cosmosdbaccount:
+    resource_group: myResourceGroup
+    name: myDatabaseAccount
+    location: westus
+    kind: mongo_db
+    geo_rep_locations:
+      - name: southcentralus
+        failover_priority: 0
+    database_account_offer_type: Standard
+    ip_rules:
+      - 10.10.10.10
+    enable_multiple_write_locations: true
+    virtual_network_rules:
+      - subnet: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVi
+                 rtualNetwork/subnets/mySubnet"
+    consistency_policy:
+      default_consistency_level: bounded_staleness
+      max_staleness_prefix: 10
+      max_interval_in_seconds: 1000
 '''
 
 RETURN = '''

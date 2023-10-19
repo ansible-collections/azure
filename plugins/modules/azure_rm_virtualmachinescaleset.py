@@ -411,7 +411,7 @@ EXAMPLES = '''
     name: testvmss
     vm_size: Standard_DS1_v2
     capacity: 120
-    single_placement_group: False
+    single_placement_group: false
     virtual_network_name: testvnet
     upgrade_policy: Manual
     subnet_name: testsubnet
@@ -458,9 +458,9 @@ EXAMPLES = '''
     name: testVMSS{{ rpfx }}
     vm_size: Standard_D4s_v3
     admin_username: testuser
-    single_placement_group: False
+    single_placement_group: false
     platform_fault_domain_count: 1
-    public_ip_per_vm: True
+    public_ip_per_vm: true
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
@@ -472,9 +472,9 @@ EXAMPLES = '''
     os_disk_caching: ReadWrite
     security_profile:
       uefi_settings:
-        secure_boot_enabled: True
-        v_tpm_enabled: False
-      encryption_at_host: False
+        secure_boot_enabled: true
+        v_tpm_enabled: false
+      encryption_at_host: false
       security_type: TrustedLaunch
     image:
       offer: 0001-com-ubuntu-server-jammy

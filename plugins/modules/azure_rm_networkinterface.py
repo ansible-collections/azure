@@ -218,27 +218,27 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a network interface with minimal parameters
-      azure_rm_networkinterface:
-        name: nic001
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        ip_configurations:
-          - name: ipconfig1
-            public_ip_address_name: publicip001
-            primary: True
+- name: Create a network interface with minimal parameters
+  azure_rm_networkinterface:
+    name: nic001
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    ip_configurations:
+      - name: ipconfig1
+        public_ip_address_name: publicip001
+        primary: true
 
-    - name: Create a network interface with private IP address only (no Public IP)
-      azure_rm_networkinterface:
-        name: nic001
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        create_with_security_group: False
+- name: Create a network interface with private IP address only (no Public IP)
+  azure_rm_networkinterface:
+    name: nic001
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+        create_with_security_group: false
         ip_configurations:
           - name: ipconfig1
-            primary: True
+            primary: true
 
     - name: Create a network interface for use in a Windows host (opens RDP port) with custom RDP port
       azure_rm_networkinterface:
@@ -253,7 +253,7 @@ EXAMPLES = '''
         ip_configurations:
           - name: ipconfig1
             public_ip_address_name: publicip001
-            primary: True
+            primary: true
 
     - name: Create a network interface using existing security group and public IP
       azure_rm_networkinterface:
@@ -265,7 +265,7 @@ EXAMPLES = '''
         ip_configurations:
           - name: ipconfig1
             public_ip_address_name: publicip001
-            primary: True
+            primary: true
 
     - name: Create a network with multiple ip configurations
       azure_rm_networkinterface:
@@ -279,7 +279,7 @@ EXAMPLES = '''
         ip_configurations:
           - name: ipconfig1
             public_ip_address_name: publicip001
-            primary: True
+            primary: true
           - name: ipconfig2
             load_balancer_backend_address_pools:
               - "{{ loadbalancer001.state.backend_address_pools[0].id }}"
@@ -307,7 +307,7 @@ EXAMPLES = '''
         resource_group: myResourceGroup
         virtual_network_name: vnet001
         subnet_name: subnet001
-        enable_accelerated_networking: True
+        enable_accelerated_networking: true
 
     - name: Create a network interface with IP forwarding
       azure_rm_networkinterface:
@@ -315,11 +315,11 @@ EXAMPLES = '''
         resource_group: myResourceGroup
         virtual_network: vnet001
         subnet_name: subnet001
-        ip_forwarding: True
+        ip_forwarding: true
         ip_configurations:
           - name: ipconfig1
             public_ip_address_name: publicip001
-            primary: True
+            primary: true
 
     - name: Create a network interface with dns servers
       azure_rm_networkinterface:

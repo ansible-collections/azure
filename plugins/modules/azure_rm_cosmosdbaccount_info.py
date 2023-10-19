@@ -49,17 +49,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Database Account
-    azure_rm_cosmosdbaccount_info:
-      resource_group: myResourceGroup
-      name: testaccount
+- name: Get instance of Database Account
+  azure_rm_cosmosdbaccount_info:
+    resource_group: myResourceGroup
+    name: testaccount
 
-  - name: List instances of Database Account
-    azure_rm_cosmosdbaccount_info:
-      resource_group: myResourceGroup
-      tags:
-        - key
-        - key:value
+- name: List instances of Database Account
+  azure_rm_cosmosdbaccount_info:
+    resource_group: myResourceGroup
+    tags:
+      - key
+      - key:value
 '''
 
 RETURN = '''

@@ -34,10 +34,10 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Deployment
-    azure_rm_deployment_info:
-      resource_group: myResourceGroup
-      name: myDeployment
+- name: Get instance of Deployment
+  azure_rm_deployment_info:
+    resource_group: myResourceGroup
+    name: myDeployment
 '''
 
 RETURN = '''

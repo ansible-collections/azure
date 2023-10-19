@@ -42,13 +42,12 @@ author:
 
 
 EXAMPLES = '''
-  - name: Get facts of specific expressroute
-    community.azure.azure_rm_expressroute_info:
-      resource_group: myResourceGroup
-      name: myExpressRoute
-      tags:
-        - key:value
-
+- name: Get facts of specific expressroute
+  community.azure.azure_rm_expressroute_info:
+    resource_group: myResourceGroup
+    name: myExpressRoute
+    tags:
+      - key:value
 '''
 
 RETURN = '''

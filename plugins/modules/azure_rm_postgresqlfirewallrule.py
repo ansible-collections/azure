@@ -52,13 +52,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) PostgreSQL firewall rule
-    azure_rm_postgresqlfirewallrule:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: rule1
-      start_ip_address: 10.0.0.16
-      end_ip_address: 10.0.0.18
+- name: Create (or update) PostgreSQL firewall rule
+  azure_rm_postgresqlfirewallrule:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: rule1
+    start_ip_address: 10.0.0.16
+    end_ip_address: 10.0.0.18
 '''
 
 RETURN = '''

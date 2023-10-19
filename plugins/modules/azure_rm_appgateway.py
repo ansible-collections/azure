@@ -812,8 +812,8 @@ EXAMPLES = '''
         protocol: http
         cookie_based_affinity: enabled
         connection_draining:
-            drain_timeout_in_sec: 60
-            enabled: true
+          drain_timeout_in_sec: 60
+          enabled: true
         name: sample_appgateway_http_settings
     http_listeners:
       - frontend_ip_configuration: sample_gateway_frontend_ip_config
@@ -857,8 +857,8 @@ EXAMPLES = '''
         protocol: http
         cookie_based_affinity: enabled
         connection_draining:
-            drain_timeout_in_sec: 60
-            enabled: true
+          drain_timeout_in_sec: 60
+          enabled: true
         name: sample_appgateway_http_settings
         trusted_root_certificates:
           - "root_cert"
@@ -1205,20 +1205,20 @@ EXAMPLES = '''
                 - header_name: "Foo"
                   header_value: "Bar"
     probes:
-        - name: "http-probe1"
-          interval: 30
-          path: "/abc"
-          protocol: "https"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
-        - name: "http-probe2"
-          interval: 30
-          path: "/xyz"
-          protocol: "http"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
+      - name: "http-probe1"
+        interval: 30
+        path: "/abc"
+        protocol: "https"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+      - name: "http-probe2"
+        interval: 30
+        path: "/xyz"
+        protocol: "http"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
     redirect_configurations:
       - name: "redirect-http"
         redirect_type: "permanent"

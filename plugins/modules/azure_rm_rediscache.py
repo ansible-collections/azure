@@ -193,8 +193,8 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myRedis
     sku:
-        name: basic
-        size: C1
+      name: basic
+      size: C1
 
 - name: Scale up the Azure Cache for Redis
   azure_rm_rediscache:

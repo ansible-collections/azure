@@ -73,16 +73,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a key
-      azure_rm_keyvaultkey:
-        key_name: MyKey
-        keyvault_uri: https://contoso.vault.azure.net/
+- name: Create a key
+  azure_rm_keyvaultkey:
+    key_name: MyKey
+    keyvault_uri: https://contoso.vault.azure.net/
 
-    - name: Delete a key
-      azure_rm_keyvaultkey:
-        key_name: MyKey
-        keyvault_uri: https://contoso.vault.azure.net/
-        state: absent
+- name: Delete a key
+  azure_rm_keyvaultkey:
+    key_name: MyKey
+    keyvault_uri: https://contoso.vault.azure.net/
+    state: absent
 '''
 
 RETURN = '''

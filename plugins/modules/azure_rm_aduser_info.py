@@ -71,37 +71,37 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Using user_principal_name
-      azure.azcollection.azure_rm_aduser_info:
-        user_principal_name: user@contoso.com
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Using user_principal_name
+  azure.azcollection.azure_rm_aduser_info:
+    user_principal_name: user@contoso.com
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Using object_id
-      azure.azcollection.azure_rm_aduser_info:
-        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Using object_id
+  azure.azcollection.azure_rm_aduser_info:
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Using attribute mailNickname - not a collection
-      azure.azcollection.azure_rm_aduser_info:
-        attribute_name: mailNickname
-        attribute_value: users_mailNickname
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Using attribute mailNickname - not a collection
+  azure.azcollection.azure_rm_aduser_info:
+    attribute_name: mailNickname
+    attribute_value: users_mailNickname
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Using attribute proxyAddresses - a collection
-      azure.azcollection.azure_rm_aduser_info:
-        attribute_name: proxyAddresses
-        attribute_value: SMTP:user@contoso.com
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Using attribute proxyAddresses - a collection
+  azure.azcollection.azure_rm_aduser_info:
+    attribute_name: proxyAddresses
+    attribute_value: SMTP:user@contoso.com
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Using Filter mailNickname
-      azure.azcollection.azure_rm_aduser_info:
-        odata_filter: mailNickname eq 'user@contoso.com'
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Using Filter mailNickname
+  azure.azcollection.azure_rm_aduser_info:
+    odata_filter: mailNickname eq 'user@contoso.com'
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Using Filter proxyAddresses
-      azure.azcollection.azure_rm_aduser_info:
-        odata_filter: proxyAddresses/any(c:c eq 'SMTP:user@contoso.com')
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Using Filter proxyAddresses
+  azure.azcollection.azure_rm_aduser_info:
+    odata_filter: proxyAddresses/any(c:c eq 'SMTP:user@contoso.com')
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 RETURN = '''

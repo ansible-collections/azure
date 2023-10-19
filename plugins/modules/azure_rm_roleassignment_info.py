@@ -62,28 +62,28 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get role assignments for specific service principal
-      azure_rm_roleassignment_info:
-        assignee: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Get role assignments for specific service principal
+  azure_rm_roleassignment_info:
+    assignee: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Get role assignments for specific scope that matches specific role definition
-      azure_rm_roleassignment_info:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        role_definition_id: /subscriptions/xxx-sub-guid-xxx/providers/Microsoft.Authorization/roleDefinitions/xxx-role-guid-xxxx
+- name: Get role assignments for specific scope that matches specific role definition
+  azure_rm_roleassignment_info:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    role_definition_id: /subscriptions/xxx-sub-guid-xxx/providers/Microsoft.Authorization/roleDefinitions/xxx-role-guid-xxxx
 
-    - name: Get role assignments for specific scope with no inherited assignments
-      azure_rm_roleassignment_info:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        strict_scope_match: True
+- name: Get role assignments for specific scope with no inherited assignments
+  azure_rm_roleassignment_info:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    strict_scope_match: true
 
-    - name: Get role assignments by name
-      azure_rm_roleassignment_info:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Get role assignments by name
+  azure_rm_roleassignment_info:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Get role assignments by id
-      azure_rm_roleassignment_info:
-        id: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleAssignments/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Get role assignments by id
+  azure_rm_roleassignment_info:
+    id: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleAssignments/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 RETURN = '''

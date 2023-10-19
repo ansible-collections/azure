@@ -62,11 +62,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) MariaDB Database
-    azure_rm_mariadbdatabase:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: db1
+- name: Create (or update) MariaDB Database
+  azure_rm_mariadbdatabase:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: db1
 '''
 
 RETURN = '''

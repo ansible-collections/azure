@@ -97,16 +97,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: create a endpoint for a traffic manager profile
-    azure_rm_trafficmanagerendpoint:
-        resource_group: testresourcegroup
-        profile_name: myprofilename
-        name: testendpoint1
-        type: external_endpoints
-        location: westus
-        priority: 2
-        weight: 1
-        target: 1.2.3.4
+- name: create a endpoint for a traffic manager profile
+  azure_rm_trafficmanagerendpoint:
+    resource_group: testresourcegroup
+    profile_name: myprofilename
+    name: testendpoint1
+    type: external_endpoints
+    location: westus
+    priority: 2
+    weight: 1
+    target: 1.2.3.4
 '''
 
 RETURN = '''

@@ -40,10 +40,10 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get  available versions an AKS can be upgrade to
-      azure_rm_aksagentpoolversion_info:
-        resource_group: myResourceGroup
-        cluster_name: myAKSName
+- name: Get  available versions an AKS can be upgrade to
+  azure_rm_aksagentpoolversion_info:
+    resource_group: myResourceGroup
+    cluster_name: myAKSName
 '''
 
 RETURN = '''

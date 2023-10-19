@@ -77,7 +77,7 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myLogAnalyticsWorkspace
     intelligence_pack:
-        Backup: true
+      Backup: true
 '''
 
 RETURN = '''

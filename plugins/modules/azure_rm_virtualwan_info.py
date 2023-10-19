@@ -32,18 +32,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get Virtual WAN by name
-      azure_rm_virtualwan_info:
-        resource_group: myResouceGroup
-        name: testwan
+- name: Get Virtual WAN by name
+  azure_rm_virtualwan_info:
+    resource_group: myResouceGroup
+    name: testwan
 
-    - name: List all Virtual WANLs by resource group
-      azure_rm_virtualwan_info:
-        resource_group: myResourceGroup
+- name: List all Virtual WANLs by resource group
+  azure_rm_virtualwan_info:
+    resource_group: myResourceGroup
 
-    - name: List all Virtual WANs by subscription_id
-      azure_rm_virtualwan_info:
-
+- name: List all Virtual WANs by subscription_id
+  azure_rm_virtualwan_info:
 '''
 
 RETURN = '''

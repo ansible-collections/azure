@@ -56,19 +56,19 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a CDN profile
-      azure_rm_cdnprofile:
-          resource_group: myResourceGroup
-          name: myCDN
-          sku: standard_akamai
-          tags:
-              testing: testing
+- name: Create a CDN profile
+  azure_rm_cdnprofile:
+    resource_group: myResourceGroup
+    name: myCDN
+    sku: standard_akamai
+    tags:
+      testing: testing
 
-    - name: Delete the CDN profile
-      azure_rm_cdnprofile:
-        resource_group: myResourceGroup
-        name: myCDN
-        state: absent
+- name: Delete the CDN profile
+  azure_rm_cdnprofile:
+    resource_group: myResourceGroup
+    name: myCDN
+    state: absent
 '''
 RETURN = '''
 id:

@@ -48,15 +48,15 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get the information of api
-      azure_rm_apimanagement_info:
-        resource_group: myResourceGroup
-        service_name: myService
-    - name: Get the information of api
-      azure_rm_apimanagement_info:
-        resource_group: myResourceGroup
-        service_name: myService
-        api_id: testApi
+- name: Get the information of api
+  azure_rm_apimanagement_info:
+    resource_group: myResourceGroup
+    service_name: myService
+- name: Get the information of api
+  azure_rm_apimanagement_info:
+    resource_group: myResourceGroup
+    service_name: myService
+    api_id: testApi
 '''
 
 RETURN = '''

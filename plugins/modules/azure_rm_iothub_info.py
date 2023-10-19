@@ -70,22 +70,22 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one IoT Hub
-      azure_rm_iothub_info:
-        name: Testing
-        resource_group: myResourceGroup
+- name: Get facts for one IoT Hub
+  azure_rm_iothub_info:
+    name: Testing
+    resource_group: myResourceGroup
 
-    - name: Get facts for all IoT Hubs
-      azure_rm_iothub_info:
+- name: Get facts for all IoT Hubs
+  azure_rm_iothub_info:
 
-    - name: Get facts for all IoT Hubs in a specific resource group
-      azure_rm_iothub_info:
-        resource_group: myResourceGroup
+- name: Get facts for all IoT Hubs in a specific resource group
+  azure_rm_iothub_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts by tags
-      azure_rm_iothub_info:
-        tags:
-          - testing
+- name: Get facts by tags
+  azure_rm_iothub_info:
+    tags:
+      - testing
 '''
 
 RETURN = '''

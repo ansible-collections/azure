@@ -155,7 +155,6 @@ EXAMPLES = '''
     vhub_name: testhub
     name: Myconnection
     state: absent
-
 '''
 
 RETURN = '''

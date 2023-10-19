@@ -35,10 +35,10 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: View web app access restrictions.
-      azure.azcollection.azure_rm_webappaccessrestriction_info:
-        name: "MyWebapp"
-        resource_group: "MyResourceGroup"
+- name: View web app access restrictions.
+  azure.azcollection.azure_rm_webappaccessrestriction_info:
+    name: "MyWebapp"
+    resource_group: "MyResourceGroup"
 '''
 
 RETURN = '''

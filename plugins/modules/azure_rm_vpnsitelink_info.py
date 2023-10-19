@@ -40,17 +40,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get Vpn Site Link info by the name
-      azure_rm_vpnsitelink_info:
-        resource_group: myResourceGroup
-        name: vpnSiteLink1
-        vpn_site_name: vpnSite1
+- name: Get Vpn Site Link info by the name
+  azure_rm_vpnsitelink_info:
+    resource_group: myResourceGroup
+    name: vpnSiteLink1
+    vpn_site_name: vpnSite1
 
 
-    - name: Get Vpn Site Links by the Vpn Site
-      azure_rm_vpnsitelink_info:
-        resource_group: myResourceGroup
-        vpn_site_name: vpnSite1
+- name: Get Vpn Site Links by the Vpn Site
+  azure_rm_vpnsitelink_info:
+    resource_group: myResourceGroup
+    vpn_site_name: vpnSite1
 '''
 
 RETURN = '''

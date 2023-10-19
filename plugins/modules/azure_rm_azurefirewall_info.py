@@ -41,7 +41,6 @@ EXAMPLES = '''
   azure_rm_azurefirewall_info:
     resource_group: myResourceGroup
     name: myAzureFirewall
-
 '''
 
 RETURN = '''

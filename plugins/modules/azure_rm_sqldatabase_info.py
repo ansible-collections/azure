@@ -46,22 +46,22 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of SQL Database
-    azure_rm_sqldatabase_info:
-      resource_group: testrg
-      server_name: testserver
-      name: testdb
+- name: Get instance of SQL Database
+  azure_rm_sqldatabase_info:
+    resource_group: testrg
+    server_name: testserver
+    name: testdb
 
-  - name: List instances of SQL Database
-    azure_rm_sqldatabase_info:
-      resource_group: testrg
-      server_name: testserver
-      elastic_pool_name: testep
+- name: List instances of SQL Database
+  azure_rm_sqldatabase_info:
+    resource_group: testrg
+    server_name: testserver
+    elastic_pool_name: testep
 
-  - name: List instances of SQL Database
-    azure_rm_sqldatabase_info:
-      resource_group: testrg
-      server_name: testserver
+- name: List instances of SQL Database
+  azure_rm_sqldatabase_info:
+    resource_group: testrg
+    server_name: testserver
 '''
 
 RETURN = '''

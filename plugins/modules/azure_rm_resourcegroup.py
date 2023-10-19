@@ -52,24 +52,24 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a resource group
-      azure_rm_resourcegroup:
-        name: myResourceGroup
-        location: westus
-        tags:
-            testing: testing
-            delete: never
+- name: Create a resource group
+  azure_rm_resourcegroup:
+    name: myResourceGroup
+    location: westus
+    tags:
+      testing: testing
+      delete: never
 
-    - name: Delete a resource group
-      azure_rm_resourcegroup:
-        name: myResourceGroup
-        state: absent
+- name: Delete a resource group
+  azure_rm_resourcegroup:
+    name: myResourceGroup
+    state: absent
 
-    - name: Delete a resource group including resources it contains
-      azure_rm_resourcegroup:
-        name: myResourceGroup
-        force_delete_nonempty: yes
-        state: absent
+- name: Delete a resource group including resources it contains
+  azure_rm_resourcegroup:
+    name: myResourceGroup
+    force_delete_nonempty: true
+    state: absent
 '''
 RETURN = '''
 contains_resources:

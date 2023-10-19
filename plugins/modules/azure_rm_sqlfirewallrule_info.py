@@ -38,16 +38,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of SQL Firewall Rule
-    azure_rm_sqlfirewallrule_info:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: testrule
+- name: Get instance of SQL Firewall Rule
+  azure_rm_sqlfirewallrule_info:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: testrule
 
-  - name: List instances of SQL Firewall Rule
-    azure_rm_sqlfirewallrule_info:
-      resource_group: myResourceGroup
-      server_name: testserver
+- name: List instances of SQL Firewall Rule
+  azure_rm_sqlfirewallrule_info:
+    resource_group: myResourceGroup
+    server_name: testserver
 '''
 
 RETURN = '''

@@ -65,19 +65,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Upgrade instance to the latest image
-    azure_rm_virtualmachinescalesetinstance:
-      resource_group: myResourceGroup
-      vmss_name: myVMSS
-      instance_id: "2"
-      latest_model: yes
+- name: Upgrade instance to the latest image
+  azure_rm_virtualmachinescalesetinstance:
+    resource_group: myResourceGroup
+    vmss_name: myVMSS
+    instance_id: "2"
+    latest_model: true
 
-  - name: Turn on protect from scale in
-    azure_rm_virtualmachinescalesetinstance:
-        resource_group: myResourceGroup
-        vmss_name: myVMSS
-        instance_id: "2"
-        protect_from_scale_in: true
+- name: Turn on protect from scale in
+  azure_rm_virtualmachinescalesetinstance:
+    resource_group: myResourceGroup
+    vmss_name: myVMSS
+    instance_id: "2"
+    protect_from_scale_in: true
 '''
 
 RETURN = '''

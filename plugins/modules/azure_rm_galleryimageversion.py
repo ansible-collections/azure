@@ -179,7 +179,7 @@ EXAMPLES = '''
     location: East US
     publishing_profile:
       end_of_life_date: "2020-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 4
       storage_account_type: Standard_LRS
       target_regions:
@@ -189,7 +189,7 @@ EXAMPLES = '''
           regional_replica_count: 3
           storage_account_type: Standard_LRS
     storage_profile:
-        source_image: /subscriptions/sub123/resourceGroups/group123/providers/Microsoft.Compute/images/myOsImage
+      source_image: /subscriptions/sub123/resourceGroups/group123/providers/Microsoft.Compute/images/myOsImage
 
 - name: Create a gallery image version from another gallery image version
   azure_rm_galleryimageversion:
@@ -200,7 +200,7 @@ EXAMPLES = '''
     location: East US
     publishing_profile:
       end_of_life_date: "2020-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 4
       storage_account_type: Standard_LRS
       target_regions:
@@ -210,10 +210,10 @@ EXAMPLES = '''
           regional_replica_count: 3
           storage_account_type: Standard_LRS
     storage_profile:
-        source_image:
-            version: 1.1.0
-            gallery_name: myGallery2
-            gallery_image_name: myGalleryImage2
+      source_image:
+        version: 1.1.0
+        gallery_name: myGallery2
+        gallery_image_name: myGalleryImage2
 
 - name: Create gallery image by using one os dist snapshot and zero or many data disk snapshots
   azure_rm_galleryimageversion:
@@ -233,13 +233,13 @@ EXAMPLES = '''
           storage_account_type: Standard_LRS
     storage_profile:
       os_disk:
-          source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/os_snapshot_vma"
+        source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/os_snapshot_vma"
       data_disks:
-          - lun: 0
-            source:
-              name: data_snapshot_vma
-          - lun: 1
-            source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/data_snapshot_vmb"
+        - lun: 0
+          source:
+            name: data_snapshot_vma
+        - lun: 1
+          source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/data_snapshot_vmb"
 '''
 
 RETURN = '''

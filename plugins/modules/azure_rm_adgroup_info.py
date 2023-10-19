@@ -73,52 +73,51 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Return a specific group using object_id
-      azure_rm_adgroup_info:
-        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Return a specific group using object_id
+  azure_rm_adgroup_info:
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Return a specific group using object_id and  return the owners of the group
-      azure_rm_adgroup_info:
-        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        return_owners: True
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Return a specific group using object_id and  return the owners of the group
+  azure_rm_adgroup_info:
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    return_owners: true
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Return a specific group using object_id and return the owners and members of the group
-      azure_rm_adgroup_info:
-        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        return_owners: True
-        return_group_members: True
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Return a specific group using object_id and return the owners and members of the group
+  azure_rm_adgroup_info:
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    return_owners: true
+    return_group_members: true
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Return a specific group using object_id and return the groups the group is a member of
-      azure_rm_adgroup_info:
-        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        return_member_groups: True
-        tenant: "{{ tenant_id }}"
+- name: Return a specific group using object_id and return the groups the group is a member of
+  azure_rm_adgroup_info:
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    return_member_groups: True
+    tenant: "{{ tenant_id }}"
 
-    - name: Return a specific group using object_id and check an ID for membership
-      azure_rm_adgroup_info:
-        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        check_membership: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Return a specific group using object_id and check an ID for membership
+  azure_rm_adgroup_info:
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    check_membership: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Return a specific group using displayName for attribute_name
-      azure_rm_adgroup_info:
-        attribute_name: "displayName"
-        attribute_value: "Display-Name-Of-AD-Group"
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Return a specific group using displayName for attribute_name
+  azure_rm_adgroup_info:
+    attribute_name: "displayName"
+    attribute_value: "Display-Name-Of-AD-Group"
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Return groups matching odata_filter
-      azure_rm_adgroup_info:
-        odata_filter: "mailNickname eq 'Mail-Nickname-Of-AD-Group'"
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Return groups matching odata_filter
+  azure_rm_adgroup_info:
+    odata_filter: "mailNickname eq 'Mail-Nickname-Of-AD-Group'"
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Return all groups
-      azure_rm_adgroup_info:
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        all: True
-
+- name: Return all groups
+  azure_rm_adgroup_info:
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    all: true
 '''
 
 RETURN = '''

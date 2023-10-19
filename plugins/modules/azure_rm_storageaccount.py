@@ -288,65 +288,65 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: remove account, if it exists
-      azure_rm_storageaccount:
-        resource_group: myResourceGroup
-        name: clh0002
-        state: absent
+- name: remove account, if it exists
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: clh0002
+    state: absent
 
-    - name: create an account
-      azure_rm_storageaccount:
-        resource_group: myResourceGroup
-        name: clh0002
-        type: Standard_RAGRS
-        tags:
-          testing: testing
-          delete: on-exit
+- name: create an account
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: clh0002
+    type: Standard_RAGRS
+    tags:
+      testing: testing
+      delete: on-exit
 
-    - name: Create an account with kind of FileStorage
-      azure_rm_storageaccount:
-        resource_group: myResourceGroup
-        name: c1h0002
-        type: Premium_LRS
-        kind: FileStorage
-        tags:
-          testing: testing
+- name: Create an account with kind of FileStorage
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: c1h0002
+    type: Premium_LRS
+    kind: FileStorage
+    tags:
+      testing: testing
 
-    - name: configure firewall and virtual networks
-      azure_rm_storageaccount:
-        resource_group: myResourceGroup
-        name: clh0002
-        type: Standard_RAGRS
-        network_acls:
-          bypass: AzureServices,Metrics
-          default_action: Deny
-          virtual_network_rules:
-            - id: /subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet
-              action: Allow
-          ip_rules:
-            - value: 1.2.3.4
-              action: Allow
-            - value: 123.234.123.0/24
-              action: Allow
+- name: configure firewall and virtual networks
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: clh0002
+    type: Standard_RAGRS
+    network_acls:
+      bypass: AzureServices,Metrics
+      default_action: Deny
+      virtual_network_rules:
+        - id: /subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet
+          action: Allow
+      ip_rules:
+        - value: 1.2.3.4
+          action: Allow
+        - value: 123.234.123.0/24
+          action: Allow
 
-    - name: create an account with blob CORS
-      azure_rm_storageaccount:
-        resource_group: myResourceGroup
-        name: clh002
-        type: Standard_RAGRS
-        blob_cors:
-            - allowed_origins:
-                - http://www.example.com/
-              allowed_methods:
-                - GET
-                - POST
-              allowed_headers:
-                - x-ms-meta-data*
-                - x-ms-meta-target*
-                - x-ms-meta-abc
-              exposed_headers:
-                - x-ms-meta-*
-              max_age_in_seconds: 200
+- name: create an account with blob CORS
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: clh002
+    type: Standard_RAGRS
+    blob_cors:
+      - allowed_origins:
+          - http://www.example.com/
+        allowed_methods:
+          - GET
+          - POST
+        allowed_headers:
+          - x-ms-meta-data*
+          - x-ms-meta-target*
+          - x-ms-meta-abc
+        exposed_headers:
+          - x-ms-meta-*
+            max_age_in_seconds: 200
 '''
 
 

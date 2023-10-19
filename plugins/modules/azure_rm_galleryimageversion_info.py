@@ -54,7 +54,6 @@ EXAMPLES = '''
     gallery_name: myGallery
     gallery_image_name: myImage
     name: myVersion
-
 '''
 
 RETURN = '''

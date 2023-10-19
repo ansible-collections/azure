@@ -49,30 +49,29 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for a specific image
-      azure_rm_virtualmachineimage_info:
-        location: eastus
-        publisher: OpenLogic
-        offer: CentOS
-        sku: '7.1'
-        version: '7.1.20160308'
+- name: Get facts for a specific image
+  azure_rm_virtualmachineimage_info:
+    location: eastus
+    publisher: OpenLogic
+    offer: CentOS
+    sku: '7.1'
+    version: '7.1.20160308'
 
-    - name: List available versions
-      azure_rm_virtualmachineimage_info:
-        location: eastus
-        publisher: OpenLogic
-        offer: CentOS
-        sku: '7.1'
+- name: List available versions
+  azure_rm_virtualmachineimage_info:
+    location: eastus
+    publisher: OpenLogic
+    offer: CentOS
+    sku: '7.1'
 
-    - name: List available offers
-      azure_rm_virtualmachineimage_info:
-        location: eastus
-        publisher: OpenLogic
+- name: List available offers
+  azure_rm_virtualmachineimage_info:
+    location: eastus
+    publisher: OpenLogic
 
-    - name: List available publishers
-      azure_rm_virtualmachineimage_info:
-        location: eastus
-
+- name: List available publishers
+  azure_rm_virtualmachineimage_info:
+    location: eastus
 '''
 
 RETURN = '''

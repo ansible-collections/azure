@@ -133,31 +133,31 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) Virtual Machine
-    azure_rm_devtestlabvirtualmachine:
-      resource_group: myrg
-      lab_name: mylab
-      name: myvm
-      notes: Virtual machine notes....
-      os_type: linux
-      vm_size: Standard_A2_v2
-      user_name: vmadmin
-      password: ZSuppas$$21!
-      lab_subnet:
-        name: myvnSubnet
-        virtual_network_name: myvn
-      disallow_public_ip_address: no
-      image:
-        offer: 0001-com-ubuntu-server-focal
-        publisher: Canonical
-        sku: 20_04-lts
-        os_type: Linux
-        version: latest
-      artifacts:
-        - source_name: myartifact
-          source_path: "/Artifacts/linux-install-mongodb"
-      allow_claim: no
-      expiration_date: "2019-02-22T01:49:12.117974Z"
+- name: Create (or update) Virtual Machine
+  azure_rm_devtestlabvirtualmachine:
+    resource_group: myrg
+    lab_name: mylab
+    name: myvm
+    notes: Virtual machine notes....
+    os_type: linux
+    vm_size: Standard_A2_v2
+    user_name: vmadmin
+    password: ZSuppas$$21!
+    lab_subnet:
+      name: myvnSubnet
+      virtual_network_name: myvn
+    disallow_public_ip_address: no
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      os_type: Linux
+      version: latest
+    artifacts:
+      - source_name: myartifact
+        source_path: "/Artifacts/linux-install-mongodb"
+    allow_claim: false
+    expiration_date: "2019-02-22T01:49:12.117974Z"
 '''
 
 RETURN = '''

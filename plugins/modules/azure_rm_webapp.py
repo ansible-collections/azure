@@ -201,121 +201,121 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a windows web app with non-exist app service plan
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myWinWebapp
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-          is_linux: false
-          sku: S1
+- name: Create a windows web app with non-exist app service plan
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myWinWebapp
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+      is_linux: false
+      sku: S1
 
-    - name: Create a docker web app with some app settings, with docker image
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myDockerWebapp
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-          is_linux: true
-          sku: S1
-          number_of_workers: 2
-        app_settings:
-          testkey: testvalue
-          testkey2: testvalue2
-        container_settings:
-          name: ansible/ansible:ubuntu1404
+- name: Create a docker web app with some app settings, with docker image
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myDockerWebapp
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+      is_linux: true
+      sku: S1
+      number_of_workers: 2
+    app_settings:
+      testkey: testvalue
+      testkey2: testvalue2
+    container_settings:
+      name: ansible/ansible:ubuntu1404
 
-    - name: Create a docker web app with private acr registry
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myDockerWebapp
-        plan: myAppServicePlan
-        app_settings:
-          testkey: testvalue
-        container_settings:
-          name: ansible/ubuntu1404
-          registry_server_url: myregistry.io
-          registry_server_user: user
-          registry_server_password: pass
+- name: Create a docker web app with private acr registry
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myDockerWebapp
+    plan: myAppServicePlan
+    app_settings:
+      testkey: testvalue
+    container_settings:
+      name: ansible/ubuntu1404
+      registry_server_url: myregistry.io
+      registry_server_user: user
+      registry_server_password: pass
 
-    - name: Create a multi-container web app
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myMultiContainerWebapp
-        plan: myAppServicePlan
-        app_settings:
-          testkey: testvalue
-        container_settings:
-          name: "COMPOSE|{{ lookup('file', 'docker-compose.yml') | b64encode }}"
+- name: Create a multi-container web app
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myMultiContainerWebapp
+    plan: myAppServicePlan
+    app_settings:
+      testkey: testvalue
+    container_settings:
+      name: "COMPOSE|{{ lookup('file', 'docker-compose.yml') | b64encode }}"
 
-    - name: Create a linux web app with Node 6.6 framework
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myLinuxWebapp
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-        app_settings:
-          testkey: testvalue
-        frameworks:
-          - name: "node"
-            version: "6.6"
+- name: Create a linux web app with Node 6.6 framework
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myLinuxWebapp
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+    app_settings:
+      testkey: testvalue
+    frameworks:
+      - name: "node"
+        version: "6.6"
 
-    - name: Create a windows web app with node, php
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myWinWebapp
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-        app_settings:
-          testkey: testvalue
-        frameworks:
-          - name: "node"
-            version: 6.6
-          - name: "php"
-            version: "7.0"
+- name: Create a windows web app with node, php
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myWinWebapp
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+    app_settings:
+      testkey: testvalue
+    frameworks:
+      - name: "node"
+        version: 6.6
+      - name: "php"
+        version: "7.0"
 
-    - name: Create a stage deployment slot for an existing web app
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myWebapp/slots/stage
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-        app_settings:
-          testkey:testvalue
+- name: Create a stage deployment slot for an existing web app
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myWebapp/slots/stage
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+    app_settings:
+      testkey:testvalue
 
-    - name: Create a linux web app with java framework
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myLinuxWebapp
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-        app_settings:
-          testkey: testvalue
-        frameworks:
-          - name: "java"
-            version: "8"
-            settings:
-              java_container: "Tomcat"
-              java_container_version: "8.5"
+- name: Create a linux web app with java framework
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myLinuxWebapp
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+    app_settings:
+      testkey: testvalue
+    frameworks:
+      - name: "java"
+        version: "8"
+        settings:
+          java_container: "Tomcat"
+          java_container_version: "8.5"
 
-    - name: Create a linux web app with python framework
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myLinuxWebapp
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-        app_settings:
-          testkey: testvalue
-        frameworks:
-          - name: "python"
-            version: "3.10"
+- name: Create a linux web app with python framework
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myLinuxWebapp
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+    app_settings:
+      testkey: testvalue
+    frameworks:
+      - name: "python"
+        version: "3.10"
 '''
 
 RETURN = '''

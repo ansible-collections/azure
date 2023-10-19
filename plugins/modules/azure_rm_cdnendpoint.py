@@ -124,24 +124,24 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a Azure CDN endpoint
-      azure_rm_cdnendpoint:
-          resource_group: myResourceGroup
-          profile_name: myProfile
-          name: myEndpoint
-          origins:
-            - name: TestOrig
-              host_name: "www.example.com"
-          tags:
-              testing: testing
-              delete: on-exit
-              foo: bar
-    - name: Delete a Azure CDN endpoint
-      azure_rm_cdnendpoint:
-          resource_group: myResourceGroup
-          profile_name: myProfile
-          name: myEndpoint
-          state: absent
+- name: Create a Azure CDN endpoint
+  azure_rm_cdnendpoint:
+    resource_group: myResourceGroup
+    profile_name: myProfile
+    name: myEndpoint
+    origins:
+      - name: TestOrig
+        host_name: "www.example.com"
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
+- name: Delete a Azure CDN endpoint
+  azure_rm_cdnendpoint:
+    resource_group: myResourceGroup
+    profile_name: myProfile
+    name: myEndpoint
+    state: absent
 '''
 RETURN = '''
 state:

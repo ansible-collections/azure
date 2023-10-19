@@ -77,8 +77,8 @@ EXAMPLES = '''
 
   - name: List deleted keys in specific key vault
     azure_rm_keyvaultkey_info:
-        vault_uri: "https://myVault.vault.azure.net"
-        show_deleted_key: True
+      vault_uri: "https://myVault.vault.azure.net"
+      show_deleted_key: true
 '''
 
 RETURN = '''

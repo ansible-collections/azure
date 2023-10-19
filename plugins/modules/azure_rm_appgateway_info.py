@@ -33,17 +33,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for application gateway by name.
-      azure_rm_appgateway_info:
-        name: MyAppgw
-        resource_group: MyResourceGroup
+- name: Get facts for application gateway by name.
+  azure_rm_appgateway_info:
+    name: MyAppgw
+    resource_group: MyResourceGroup
 
-    - name: Get facts for application gateways in resource group.
-      azure_rm_appgateway_info:
-        resource_group: MyResourceGroup
+- name: Get facts for application gateways in resource group.
+  azure_rm_appgateway_info:
+    resource_group: MyResourceGroup
 
-    - name: Get facts for all application gateways.
-      azure_rm_appgateway_info:
+- name: Get facts for all application gateways.
+  azure_rm_appgateway_info:
 '''
 
 RETURN = '''

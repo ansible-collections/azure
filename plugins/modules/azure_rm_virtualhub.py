@@ -208,23 +208,23 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a VirtualHub
-      azure_rm_virtualhub:
-        resource_group: myResourceGroup
-        name: my_virtual_hub_name
-        address_prefix: 10.2.0.0/24
-        sku: Standard
-        location: eastus
-        enable_virtual_router_route_propogation: false
-        virtual_wan:
-          id: /subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualWans/fredwan
+- name: Create a VirtualHub
+  azure_rm_virtualhub:
+    resource_group: myResourceGroup
+    name: my_virtual_hub_name
+    address_prefix: 10.2.0.0/24
+    sku: Standard
+    location: eastus
+    enable_virtual_router_route_propogation: false
+    virtual_wan:
+      id: /subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualWans/fredwan
 
-    - name: Delete VirtualHub
-      azure_rm_virtualhub:
-        resource_group: myResourceGroup
-        name: my_virtual_hub_name
-        location: eastus
-        state: absent
+- name: Delete VirtualHub
+  azure_rm_virtualhub:
+    resource_group: myResourceGroup
+    name: my_virtual_hub_name
+    location: eastus
+    state: absent
 '''
 
 RETURN = '''

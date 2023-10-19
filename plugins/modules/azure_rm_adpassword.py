@@ -75,12 +75,12 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: create ad password
-      azure_rm_adpassword:
-        app_id: "{{ app_id }}"
-        state: present
-        value: "$abc12345678"
-        tenant: "{{ tenant_id }}"
+- name: create ad password
+  azure_rm_adpassword:
+    app_id: "{{ app_id }}"
+    state: present
+    value: "$abc12345678"
+    tenant: "{{ tenant_id }}"
 '''
 
 RETURN = '''

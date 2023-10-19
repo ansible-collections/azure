@@ -36,13 +36,13 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get available versions for AKS in location eastus
-      azure_rm_aksversion_info:
-        location: eastus
-    - name: Get  available versions an AKS can be upgrade to
-      azure_rm_aksversion_info:
-        location: eastis
-        version: 1.11.6
+- name: Get available versions for AKS in location eastus
+  azure_rm_aksversion_info:
+    location: eastus
+- name: Get  available versions an AKS can be upgrade to
+  azure_rm_aksversion_info:
+    location: eastis
+    version: 1.11.6
 '''
 
 RETURN = '''

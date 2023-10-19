@@ -47,13 +47,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create application security group
-    azure_rm_applicationsecuritygroup:
-      resource_group: myResourceGroup
-      name: mySecurityGroup
-      location: eastus
-      tags:
-        foo: bar
+- name: Create application security group
+  azure_rm_applicationsecuritygroup:
+    resource_group: myResourceGroup
+    name: mySecurityGroup
+    location: eastus
+    tags:
+      foo: bar
 '''
 
 RETURN = '''

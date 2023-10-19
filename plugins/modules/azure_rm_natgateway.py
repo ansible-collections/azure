@@ -94,7 +94,7 @@ EXAMPLES = """
     name: myNATGateway
     idle_timeout_in_minutes: 10
     location: eastus
-    zones: [ 1 ]
+    zones: [1]
     sku:
       name: standard
 """

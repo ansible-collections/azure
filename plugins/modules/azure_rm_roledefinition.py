@@ -81,17 +81,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a role definition
-      azure_rm_roledefinition:
-        name: myTestRole
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myresourceGroup
-        permissions:
-            - actions:
-                - "Microsoft.Compute/virtualMachines/read"
-              data_actions:
-                - "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
-        assignable_scopes:
-            - "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+- name: Create a role definition
+  azure_rm_roledefinition:
+    name: myTestRole
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myresourceGroup
+    permissions:
+      - actions:
+          - "Microsoft.Compute/virtualMachines/read"
+        data_actions:
+          - "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
+    assignable_scopes:
+      - "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 '''
 
 RETURN = '''

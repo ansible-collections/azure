@@ -46,12 +46,12 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of DevTest Lab Artifact
-    azure_rm_devtestlabartifact_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      artifact_source_name: myArtifactSource
-      name: myArtifact
+- name: Get instance of DevTest Lab Artifact
+  azure_rm_devtestlabartifact_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    artifact_source_name: myArtifactSource
+    name: myArtifact
 '''
 
 RETURN = '''

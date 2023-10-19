@@ -46,17 +46,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Registry
-    azure_rm_containerregistry_info:
-      resource_group: myResourceGroup
-      name: myRegistry
+- name: Get instance of Registry
+  azure_rm_containerregistry_info:
+    resource_group: myResourceGroup
+    name: myRegistry
 
-  - name: List instances of Registry
-    azure_rm_containerregistry_info:
-      resource_group: myResourceGroup
-      tags:
-        - key
-        - key:value
+- name: List instances of Registry
+  azure_rm_containerregistry_info:
+    resource_group: myResourceGroup
+    tags:
+      - key
+      - key:value
 '''
 
 RETURN = '''

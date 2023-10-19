@@ -33,17 +33,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for NAT gateway by name.
-      azure_rm_natgateway_info:
-        name: Mynatgw
-        resource_group: MyResourceGroup
+- name: Get facts for NAT gateway by name.
+  azure_rm_natgateway_info:
+    name: Mynatgw
+    resource_group: MyResourceGroup
 
-    - name: Get facts for all NAT gateways in resource group.
-      azure_rm_natgateway_info:
-        resource_group: MyResourceGroup
+- name: Get facts for all NAT gateways in resource group.
+  azure_rm_natgateway_info:
+    resource_group: MyResourceGroup
 
-    - name: Get facts for all NAT gateways.
-      azure_rm_natgateway_info:
+- name: Get facts for all NAT gateways.
+  azure_rm_natgateway_info:
 '''
 
 RETURN = '''

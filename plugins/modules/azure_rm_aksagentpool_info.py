@@ -41,17 +41,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get node agent pool by cluster name
-      azure_rm_aksagentpool_info:
-        resource_group: myRG
-        cluster_name: testcluster
+- name: Get node agent pool by cluster name
+  azure_rm_aksagentpool_info:
+    resource_group: myRG
+    cluster_name: testcluster
 
-    - name: Get node agent pool by name
-      azure_rm_aksagentpool_info:
-        resource_group: myRG
-        cluster_name: testcluster
-        name: default
-
+- name: Get node agent pool by name
+  azure_rm_aksagentpool_info:
+    resource_group: myRG
+    cluster_name: testcluster
+    name: default
 '''
 
 RETURN = '''
