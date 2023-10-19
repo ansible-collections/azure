@@ -469,6 +469,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
         return format_twin
 
     def format_item(self, item):
+        self.fail("message {0}, {1}".format(item, dir(item)))
         if not item:
             return None
         format_item = dict(
