@@ -26,7 +26,8 @@ options:
         type: str
     tenant:
         description:
-            - The tenant ID.
+            - (deprecated) The tenant ID.
+            - This option has been deprecated, and will be removed in the future.
         type: str
     object_id:
         description:
@@ -134,6 +135,10 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         applications = []
+        
+        if self.tenant:
+            self.deprecate('tenant ID has been deprecated and will be removed in the future. '
+                           'More details: https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison')
 
         try:
             self._client = self.get_msgraph_client(self.tenant)

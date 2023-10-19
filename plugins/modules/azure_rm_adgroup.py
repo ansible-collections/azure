@@ -17,7 +17,8 @@ description:
 options:
     tenant:
         description:
-            - The tenant ID.
+            - (deprecated) The tenant ID.
+            - This option has been deprecated, and will be removed in the future.
         type: str
 
     state:
@@ -246,7 +247,6 @@ class AzureRMADGroup(AzureRMModuleBase):
             absent_members=dict(type='list', elements='str'),
             absent_owners=dict(type='list', elements='str'),
             tenant=dict(type='str'),
-            # https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison
             state=dict(
                 type='str',
                 default='present',
@@ -275,6 +275,11 @@ class AzureRMADGroup(AzureRMModuleBase):
 
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
+            
+        if self.tenant:
+            self.deprecate('tenant ID has been deprecated and will be removed in the future. '
+                           'More details: https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison')
+
 
         # TODO remove ad_groups return. Returns as one object always
         ad_groups = []

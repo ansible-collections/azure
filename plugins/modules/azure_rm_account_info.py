@@ -174,7 +174,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
         results['state'] = subscription_list_response[0].state
         results['managedByTenants'] = self.get_managed_by_tenants_list(subscription_list_response[0].managed_by_tenants)
         results['environmentName'] = self.azure_auth._cloud_environment.name
-        results['user'] = self.get_aduser_info(subscription_list_response[0].tenant_id)
+        results['user'] = self.get_aduser_info()
 
         return results
 
@@ -182,7 +182,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
 
         return [dict(tenantId=item.tenant_id) for item in object_list]
 
-    def get_aduser_info(self, tenant_id):
+    def get_aduser_info(self):
 
         # Create GraphServiceClient for getting
         # "user": {

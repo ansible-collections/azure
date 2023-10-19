@@ -22,7 +22,8 @@ description:
 options:
     tenant:
         description:
-            - The tenant ID.
+            - (deprecated) The tenant ID.
+            - This option has been deprecated, and will be removed in the future.
         type: str
 
     app_id:
@@ -400,7 +401,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
 
         self.module_arg_spec = dict(
             tenant=dict(type='str'),
-            # https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison
             app_id=dict(type='str'),
             display_name=dict(type='str', required=True),
             app_roles=dict(type='list', elements='dict', options=app_role_spec),
@@ -457,6 +457,10 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         self._client = self.get_msgraph_client(self.tenant)
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
+        
+        if self.tenant:
+            self.deprecate('tenant ID has been deprecated and will be removed in the future. '
+                'More details: https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison')
 
         response = self.get_resource()
         if response:
