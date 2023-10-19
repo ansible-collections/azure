@@ -59,12 +59,13 @@ options:
             - The surname for the user.
             - Used when either creating or updating a user account.
         type: str
-    on_premises_immutable_id:
+    immutable_id:
         description:
-            - The on_premises_immutable_id of the user.
+            - The immutable_id of the user.
             - Used when either creating or updating a user account.
-            - immutable_id is renamed to on_premises_immutable_id. More details: https://learn.microsoft.com/en-us/graph/api/user-post-users?view=graph-rest-1.0&tabs=http#request-body.
         type: str
+        aliases:
+            - on_premises_immutable_id
     mail:
         description:
             - The primary email address of the user.
@@ -135,7 +136,7 @@ EXAMPLES = '''
     display_name: "Test_{{ user_principal_name }}_Display_Name"
     password_profile: "password"
     mail_nickname: "Test_{{ user_principal_name }}_mail_nickname"
-    on_premises_immutable_id: "{{ object_id }}"
+    immutable_id: "{{ object_id }}"
     given_name: "First"
     surname: "Last"
     user_type: "Member"
@@ -228,7 +229,7 @@ class AzureRMADUser(AzureRMModuleBase):
             display_name=dict(type='str'),
             password_profile=dict(type='str', no_log=True),
             mail_nickname=dict(type='str'),
-            on_premises_immutable_id=dict(type='str'),
+            immutable_id=dict(type='str', aliases=['on_premises_immutable_id']),
             usage_location=dict(type='str'),
             given_name=dict(type='str'),
             surname=dict(type='str'),
@@ -248,7 +249,7 @@ class AzureRMADUser(AzureRMModuleBase):
         self.display_name = None
         self.password_profile = None
         self.mail_nickname = None
-        self.on_premises_immutable_id = None
+        self.immutable_id = None
         self.usage_location = None
         self.given_name = None
         self.surname = None
@@ -298,7 +299,7 @@ class AzureRMADUser(AzureRMModuleBase):
 
                     should_update = False
 
-                    if self.on_premises_immutable_id and ad_user.on_premises_immutable_id != self.on_premises_immutable_id:
+                    if self.immutable_id and ad_user.on_premises_immutable_id != self.immutable_id:
                         should_update = True
                     if should_update or self.usage_location and ad_user.usage_location != self.usage_location:
                         should_update = True
@@ -401,7 +402,7 @@ class AzureRMADUser(AzureRMModuleBase):
 
     async def update_user(self, ad_user, password):
         request_body = User(
-            on_premises_immutable_id=self.on_premises_immutable_id,
+            on_premises_immutable_id=self.immutable_id,
             usage_location=self.usage_location,
             given_name=self.given_name,
             surname=self.surname,
@@ -424,7 +425,7 @@ class AzureRMADUser(AzureRMModuleBase):
             password_profile=password,
             user_principal_name=self.user_principal_name,
             mail_nickname=self.mail_nickname,
-            on_premises_immutable_id=self.on_premises_immutable_id,
+            on_premises_immutable_id=self.immutable_id,
             usage_location=self.usage_location,
             given_name=self.given_name,
             surname=self.surname,
