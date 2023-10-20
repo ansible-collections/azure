@@ -21,9 +21,11 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the deployment.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -58,31 +60,36 @@ deployments:
                 - Resource group name.
             returned: always
             sample: myResourceGroup
+            type: str
         name:
             description:
                 - Deployment name.
             returned: always
+            type: str
             sample: myDeployment
         provisioning_state:
             description:
                 - Provisioning state of the deployment.
             returned: always
+            type: str
             sample: Succeeded
         template_link:
             description:
                 - Link to the template.
             returned: always
+            type: str
             sample: "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/
                      azuredeploy.json"
         parameters:
             description:
                 - Dictionary containing deployment parameters.
             returned: always
-            type: complex
+            type: dict
         outputs:
             description:
                 - Dictionary containing deployment outputs.
             returned: always
+            type: dict
         output_resources:
             description:
                 - List of resources.

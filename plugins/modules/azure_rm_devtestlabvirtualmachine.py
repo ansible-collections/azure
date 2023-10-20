@@ -21,20 +21,25 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     lab_name:
         description:
             - The name of the lab.
         required: True
+        type: str
     name:
         description:
             - The name of the virtual machine.
         required: True
+        type: str
     notes:
         description:
             - The notes of the virtual machine.
+        type: str
     os_type:
         description:
             - Base type of operating system.
+        type: str
         choices:
             - windows
             - linux
@@ -44,84 +49,110 @@ options:
             - The list of choices varies depending on the subscription and location. Check your subscription for available choices.
             - Available values can be found on this website, link U(https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general).
             - Required when I(state=present).
+        type: str
     user_name:
         description:
             - The user name of the virtual machine.
+        type: str
     password:
         description:
             - The password of the virtual machine administrator.
+        type: str
     ssh_key:
         description:
             - The SSH key of the virtual machine administrator.
+        type: str
     lab_subnet:
         description:
             - An existing subnet within lab's virtual network.
             - It can be the subnet's resource id.
             - It can be a dict which contains C(virtual_network_name) and C(name).
+        type: raw
     disallow_public_ip_address:
         description:
             - Indicates whether the virtual machine is to be created without a public IP address.
+        type: str
     artifacts:
         description:
             - The artifacts to be installed on the virtual machine.
         type: list
+        elements: dict
         suboptions:
+            artifact_id:
+                description:
+                    - The artifact's source name.
+                type: str
             source_name:
                 description:
                     - The artifact's source name.
+                type: str
             source_path:
                 description:
                     - The artifact's path in the source repository.
+                type: str
             parameters:
                 description:
                     - The parameters of the artifact.
                 type: list
+                elements: dict
                 suboptions:
                     name:
                         description:
                             - The name of the artifact parameter.
+                        type: str
                     value:
                         description:
                             - The value of the artifact parameter.
+                        type: str
     image:
         description:
             - The Microsoft Azure Marketplace image reference of the virtual machine.
+        type: dict
         suboptions:
             offer:
                 description:
                     - The offer of the gallery image.
+                type: str
             publisher:
                 description:
                     - The publisher of the gallery image.
+                type: str
             sku:
                 description:
                     - The SKU of the gallery image.
+                type: str
             os_type:
                 description:
                     - The OS type of the gallery image.
+                type: str
             version:
                 description:
                     - The version of the gallery image.
+                type: str
     expiration_date:
         description:
             - The expiration date for VM.
+        type: str
     allow_claim:
         description:
             - Indicates whether another user can take ownership of the virtual machine.
+        type: str
     storage_type:
         description:
             - Storage type to use for virtual machine.
+        type: str
         choices:
             - standard
             - premium
     state:
-      description:
-          - Assert the state of the Virtual Machine.
-          - Use C(present) to create or update an Virtual Machine and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Virtual Machine.
+            - Use C(present) to create or update an Virtual Machine and C(absent) to delete it.
+        type: str
+        default: present
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure

@@ -48,6 +48,7 @@ options:
         description:
             - List of VirtualHubs in the VirtualWAN.
         type: list
+        elements: dict
         suboptions:
             id:
                 description:
@@ -57,6 +58,7 @@ options:
         description:
             - List of VpnSites in the VirtualWAN.
         type: list
+        elements: dict
         suboptions:
             id:
                description:
@@ -254,6 +256,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             ),
             virtual_hubs=dict(
                 type='list',
+                elements='dict',
                 updatable=False,
                 disposition='/virtual_hubs',
                 options=dict(
@@ -265,6 +268,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             ),
             vpn_sites=dict(
                 type='list',
+                elements='dict',
                 updatable=False,
                 disposition='/vpn_sites',
                 options=dict(

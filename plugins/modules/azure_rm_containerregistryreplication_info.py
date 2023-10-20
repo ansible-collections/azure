@@ -21,14 +21,17 @@ options:
         description:
             - The name of the resource group to which the container registry belongs.
         required: True
+        type: str
     registry_name:
         description:
             - The name of the container registry.
         required: True
+        type: str
     replication_name:
         description:
             - The name of the replication.
         required: True
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -136,7 +139,7 @@ class AzureRMReplicationsFacts(AzureRMModuleBase):
         self.resource_group = None
         self.registry_name = None
         self.replication_name = None
-        super(AzureRMReplicationsFacts, self).__init__(self.module_arg_spec, supports_check_mode=True)
+        super(AzureRMReplicationsFacts, self).__init__(self.module_arg_spec, supports_tags=False, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:

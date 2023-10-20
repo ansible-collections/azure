@@ -42,18 +42,21 @@ options:
         required: false
         default: ['Monday']
         type: list
+        elements: str
     weeks:
         description:
             - List of weeks of month.
         required: false
         default: ['First']
         type: list
+        elements: str
     months:
         description:
             - List of months of year of yearly retention policy.
         required: false
         default: ['January']
         type: list
+        elements: str
     count:
         description:
             - Count of duration types. Retention duration is obtained by the counting the duration type Count times.
@@ -235,14 +238,17 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
             ),
             weekdays=dict(
                 type='list',
+                elements='dict',
                 default=['Monday']
             ),
             weeks=dict(
                 type='list',
+                elements='dict',
                 default=['First']
             ),
             months=dict(
                 type='list',
+                elements='dict',
                 default=['January']
             ),
             count=dict(

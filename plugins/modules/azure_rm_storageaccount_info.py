@@ -24,9 +24,11 @@ options:
     name:
         description:
             - Only show results for a specific account.
+        type: str
     resource_group:
         description:
             - Limit results to a resource group. Required when filtering by name.
+        type: str
         aliases:
             - resource_group_name
     tags:
@@ -477,6 +479,7 @@ storageaccounts:
                     description:
                         - The account key for the secondary_endpoints
                     sample: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                    type: str
         georeplication_stats:
             description:
                 - Parameters related to the status of geo-replication.

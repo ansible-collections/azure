@@ -21,17 +21,21 @@ options:
         description:
             - Name of an Azure resource group.
         required: True
+        type: str
     name:
         description:
             - Cosmos DB database account name.
         required: True
+        type: str
     location:
         description:
             - The location of the resource group to which the resource belongs.
             - Required when I(state=present).
+        type: str
     kind:
         description:
             - Indicates the type of database account. This can only be set at database account creation.
+        type: str
         choices:
             - 'global_document_db'
             - 'mongo_db'
@@ -39,11 +43,13 @@ options:
     consistency_policy:
         description:
             - The consistency policy for the Cosmos DB account.
+        type: dict
         suboptions:
             default_consistency_level:
                 description:
                     - The default consistency level and configuration settings of the Cosmos DB account.
                     - Required when I(state=present).
+                type: str
                 choices:
                     - 'eventual'
                     - 'session'
@@ -65,10 +71,12 @@ options:
             - An array that contains the georeplication locations enabled for the Cosmos DB account.
             - Required when I(state=present).
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - The name of the region.
+                type: str
             failover_priority:
                 description:
                     - The failover priority of the region. A failover priority of 0 indicates a write region.
@@ -151,13 +159,14 @@ options:
             - Enables the account to write in multiple locations
         type: bool
     state:
-      description:
-        - Assert the state of the Database Account.
-        - Use C(present) to create or update an Database Account and C(absent) to delete it.
-      default: present
-      choices:
-        - absent
-        - present
+        description:
+            - Assert the state of the Database Account.
+            - Use C(present) to create or update an Database Account and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure

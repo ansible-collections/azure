@@ -23,13 +23,16 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the subnet.
         required: true
+        type: str
     address_prefix_cidr:
         description:
             - CIDR defining the IPv4 address space of the subnet. Must be valid within the context of the virtual network.
+        type: str
         aliases:
             - address_prefix
     address_prefixes_cidr:
@@ -38,7 +41,6 @@ options:
             - If set I(address_prefix), It will not set.
         aliases:
             - address_prefixes
-        type: list
         version_added: "1.0.0"
     security_group:
         description:
@@ -46,12 +48,14 @@ options:
             - It can be the security group name which is in the same resource group.
             - Can be the resource ID of the security group.
             - Can be a dict containing the I(name) and I(resource_group) of the security group.
+        type: raw
         aliases:
             - security_group_name
     state:
         description:
             - Assert the state of the subnet. Use C(present) to create or update a subnet and use C(absent) to delete a subnet.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -59,6 +63,7 @@ options:
         description:
             - Name of an existing virtual network with which the subnet is or will be associated.
         required: true
+        type: str
         aliases:
             - virtual_network
     route_table:
@@ -67,19 +72,23 @@ options:
             - Can be the name or resource ID of the route table.
             - Can be a dict containing the I(name) and I(resource_group) of the route table.
             - Without this configuration, the associated route table will be dissociate. If there is no associated route table, it has no impact.
+        type: raw
     service_endpoints:
         description:
             - An array of service endpoints.
         type: list
+        elements: dict
         suboptions:
             service:
                 description:
                     - The type of the endpoint service.
                 required: True
+                type: str
             locations:
                 description:
                     - A list of locations.
                 type: list
+                elements: str
     private_endpoint_network_policies:
         description:
             - C(Enabled) or C(Disabled) apply network policies on private endpoints in the subnet.
@@ -100,15 +109,18 @@ options:
         description:
             - An array of delegations.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - The name of delegation.
+                type: str
                 required: True
             serviceName:
                 description:
                     - The type of the endpoint service.
                 required: True
+                type: str
                 choices:
                     - Microsoft.Web/serverFarms
                     - Microsoft.ContainerInstance/containerGroups
@@ -143,6 +155,7 @@ options:
                 description:
                     - A list of actions.
                 type: list
+                elements: str
                 default: []
     nat_gateway:
         description:
@@ -341,6 +354,7 @@ delegations_spec = dict(
     ),
     actions=dict(
         type='list',
+        elements='str',
         default=[]
     )
 )

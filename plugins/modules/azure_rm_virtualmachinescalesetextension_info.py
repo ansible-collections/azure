@@ -21,13 +21,16 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     vmss_name:
         description:
             - The name of VMSS containing the extension.
         required: True
+        type: str
     name:
         description:
             - The name of the virtual machine extension.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure

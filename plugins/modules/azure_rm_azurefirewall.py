@@ -34,6 +34,7 @@ options:
         description:
             - Collection of application rule collections used by Azure Firewall.
         type: list
+        elements: dict
         suboptions:
             priority:
                 description:
@@ -50,6 +51,7 @@ options:
                 description:
                     - Collection of rules used by a application rule collection.
                 type: list
+                elements: dict
                 suboptions:
                     name:
                         description:
@@ -84,6 +86,7 @@ options:
         description:
             - Collection of NAT rule collections used by Azure Firewall.
         type: list
+        elements: dict
         suboptions:
             priority:
                 description:
@@ -100,6 +103,7 @@ options:
                 description:
                     - Collection of rules used by a NAT rule collection.
                 type: list
+                elements: dict
                 suboptions:
                     name:
                         description:
@@ -142,6 +146,7 @@ options:
         description:
             - Collection of network rule collections used by Azure Firewall.
         type: list
+        elements: dict
         suboptions:
             priority:
                 description:
@@ -158,6 +163,7 @@ options:
                 description:
                     - Collection of rules used by a network rule collection.
                 type: list
+                elements: dict
                 suboptions:
                     name:
                         description:
@@ -192,6 +198,7 @@ options:
         description:
             - IP configuration of the Azure Firewall resource.
         type: list
+        elements: dict
         suboptions:
             subnet:
                 description:

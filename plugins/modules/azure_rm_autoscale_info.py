@@ -21,9 +21,11 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the Auto Scale Setting.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.

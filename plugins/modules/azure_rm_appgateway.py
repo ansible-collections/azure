@@ -21,13 +21,16 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the application gateway.
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     sku:
         description:
             - SKU of the application gateway resource.
@@ -36,6 +39,7 @@ options:
             name:
                 description:
                     - Name of an application gateway SKU.
+                type: str
                 choices:
                     - 'standard_small'
                     - 'standard_medium'
@@ -47,6 +51,7 @@ options:
             tier:
                 description:
                     - Tier of an application gateway.
+                type: str
                 choices:
                     - 'standard'
                     - 'standard_v2'
@@ -55,6 +60,7 @@ options:
             capacity:
                 description:
                     - Capacity (instance count) of an application gateway.
+                type: int
     ssl_policy:
         description:
             - SSL policy of the application gateway resource.
@@ -72,12 +78,14 @@ options:
             policy_type:
                 description:
                     - Type of SSL Policy.
+                type: str
                 choices:
                     - 'predefined'
                     - 'custom'
             policy_name:
                 description:
                     - Name of Ssl C(predefined) policy.
+                type: str
                 choices:
                     - 'ssl_policy20150501'
                     - 'ssl_policy20170401'
@@ -119,6 +127,7 @@ options:
             min_protocol_version:
                 description:
                     - Minimum version of SSL protocol to be supported on application gateway.
+                type: str
                 choices:
                     - 'tls_v1_0'
                     - 'tls_v1_1'
@@ -146,6 +155,7 @@ options:
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
+                type: str
     authentication_certificates:
         description:
             - Authentication certificates of the application gateway resource.
@@ -158,6 +168,7 @@ options:
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
+                type: str
     redirect_configurations:
         description:
             - Redirect configurations of the application gateway resource.
@@ -167,6 +178,7 @@ options:
             redirect_type:
                 description:
                     - Redirection type.
+                type: str
                 choices:
                     - 'permanent'
                     - 'found'
@@ -175,13 +187,18 @@ options:
             target_listener:
                 description:
                     - Reference to a listener to redirect the request to.
+                type: str
             request_routing_rules:
                 description:
                     - List of c(basic) request routing rule names within the application gateway to which the redirect is bound.
                 version_added: "1.10.0"
+                type: list
+                elements: str
             url_path_maps:
                 description:
                     - List of URL path map names (c(path_based_routing) rules) within the application gateway to which the redirect is bound.
+                type: list
+                elements: str
                 version_added: "1.10.0"
             path_rules:
                 description:
@@ -192,19 +209,24 @@ options:
                     name:
                         description:
                             - Name of the URL rule.
+                        type: str
                     path_map_name:
                         description:
                             - Name of URL path map.
+                        type: str
                 version_added: "1.10.0"
             include_path:
                 description:
                     - Include path in the redirected url.
+                type: bool
             include_query_string:
                 description:
                     - Include query string in the redirected url.
+                type: bool
             name:
                 description:
                     - Name of the resource that is unique within a resource group.
+                type: str
     rewrite_rule_sets:
         description:
             - List of rewrite configurations for the application gateway resource.
@@ -227,10 +249,12 @@ options:
                         description:
                             - Name of the rewrite rule.
                         required: True
+                        type: str
                     rule_sequence:
                         description:
                             - Sequence of the rule that determines the order of execution within the set.
                         required: True
+                        type: int
                     conditions:
                         description:
                             - Conditions based on which the action set execution will be evaluated.
@@ -241,10 +265,12 @@ options:
                             variable:
                                 description:
                                     - The parameter for the condition.
+                                type: str
                                 required: True
                             pattern:
                                 description:
                                     - The pattern, either fixed string or regular expression, that evaluates the truthfulness of the condition.
+                                type: str
                                 required: True
                             ignore_case:
                                 description:
@@ -272,11 +298,13 @@ options:
                                     header_name:
                                         description:
                                             - Name of the header.
+                                        type: str
                                         required: True
                                     header_value:
                                         description:
                                             - Value of the header.
                                             - Leave the parameter unset to remove the header.
+                                        type: str
                                         default: ''
                             response_header_configurations:
                                 description:
@@ -288,11 +316,13 @@ options:
                                     header_name:
                                         description:
                                             - Name of the header.
+                                        type: str
                                         required: True
                                     header_value:
                                         description:
                                             - Value of the header.
                                             - Leave the parameter unset to remove the header.
+                                        type: str
                                         default: ''
                             url_configuration:
                                 description:
@@ -303,10 +333,12 @@ options:
                                         description:
                                             - Value to which the URL path will be rewriten.
                                             - Leave parameter unset to keep the original URL path.
+                                        type: str
                                     modified_query_string:
                                         description:
                                             - Value to which the URL query string will be rewriten.
                                             - Leave parameter unset to keep the original URL query string.
+                                        type: str
                                     reroute:
                                         description:
                                             - If set to true, will re-evaluate the path map provided in path-based request routing rules using modified path.
@@ -426,35 +458,42 @@ options:
             name:
                 description:
                     - Name of the I(probe) that is unique within an Application Gateway.
+                type: str
             protocol:
                 description:
                     - The protocol used for the I(probe).
+                type: str
                 choices:
                     - 'http'
                     - 'https'
             host:
                 description:
                     - Host name to send the I(probe) to.
+                type: str
             path:
                 description:
                     - Relative path of I(probe).
                     - Valid path starts from '/'.
                     - Probe is sent to <Protocol>://<host>:<port><path>.
+                type: str
             timeout:
                 description:
                     - The probe timeout in seconds.
                     - Probe marked as failed if valid response is not received with this timeout period.
                     - Acceptable values are from 1 second to 86400 seconds.
+                type: int
             interval:
                 description:
                     - The probing interval in seconds.
                     - This is the time interval between two consecutive probes.
                     - Acceptable values are from 1 second to 86400 seconds.
+                type: int
             unhealthy_threshold:
                 description:
                     - The I(probe) retry count.
                     - Backend server is marked down after consecutive probe failure count reaches UnhealthyThreshold.
                     - Acceptable values are from 1 second to 20.
+                type: int
             pick_host_name_from_backend_http_settings:
                 description:
                     - Whether host header should be picked from the host name of the backend HTTP settings. Default value is false.
@@ -575,18 +614,22 @@ options:
             name:
                 description:
                     - Name of the resource that is unique within the application gateway. This name can be used to access the resource.
+                type: str
             default_backend_address_pool:
                 description:
                     - Backend address pool resource of the application gateway which will be used if no path matches occur.
                     - Mutually exclusive with I(default_redirect_configuration).
+                type: str
             default_backend_http_settings:
                 description:
                     - Backend http settings resource of the application gateway; used with I(default_backend_address_pool).
+                type: str
             default_rewrite_rule_set:
                 description:
                     - Default rewrite rule set for the path map.
                     - Can be the name of the rewrite rule set or full resource ID.
                 version_added: "1.11.0"
+                type: str
             path_rules:
                 description:
                     - List of URL path rules.
@@ -596,22 +639,27 @@ options:
                     name:
                         description:
                             - Name of the resource that is unique within the path map.
+                        type: str
                     backend_address_pool:
                         description:
                             - Backend address pool resource of the application gateway which will be used if the path is matched.
                             - Mutually exclusive with I(redirect_configuration).
+                        type: str
                     backend_http_settings:
                         description:
                             - Backend http settings resource of the application gateway; used for the path's I(backend_address_pool).
+                        type: str
                     rewrite_rule_set:
                         description:
                             - Rewrite rule set for the path map.
                             - Can be the name of the rewrite rule set or full resource ID.
+                        type: str
                         version_added: "1.11.0"
                     redirect_configuration:
                         description:
                             - Name of redirect configuration resource of the application gateway which will be used if the path is matched.
                             - Mutually exclusive with I(backend_address_pool).
+                        type: str
                         version_added: "1.10.0"
                     paths:
                         description:
@@ -622,6 +670,7 @@ options:
                 description:
                     - Name of redirect configuration resource of the application gateway which will be used if no path matches occur.
                     - Mutually exclusive with I(default_backend_address_pool).
+                type: str
                 version_added: "1.10.0"
     request_routing_rules:
         description:
@@ -770,6 +819,7 @@ options:
         description:
             - Assert the state of the application gateway. Use C(present) to create or update and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present

@@ -20,13 +20,16 @@ options:
         description:
             - Name of a resource group where the Azure CDN endpoint exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the Azure CDN endpoint.
         required: true
+        type: str
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.
+        type: str
     started:
         description:
             - Use with I(state=present) to start the endpoint.
@@ -45,19 +48,24 @@ options:
         description:
             - Name of the CDN profile where the endpoint attached to.
         required: true
+        type: str
     origins:
         description:
             - Set of source of the content being delivered via CDN.
+        elements: dict
+        type: list
         suboptions:
             name:
                 description:
                     - Origin name.
                 required: true
+                type: str
             host_name:
                 description:
                     - The address of the origin.
                     - It can be a domain name, IPv4 address, or IPv6 address.
                 required: true
+                type: str
             http_port:
                 description:
                     - The value of the HTTP port. Must be between C(1) and C(65535).
@@ -66,7 +74,6 @@ options:
                 description:
                     - The value of the HTTPS port. Must be between C(1) and C(65535).
                 type: int
-        required: true
     origin_host_header:
         description:
             - The host header value sent to the origin with each request.

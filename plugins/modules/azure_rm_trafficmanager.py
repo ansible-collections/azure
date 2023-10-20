@@ -20,24 +20,29 @@ options:
         description:
             - Name of a resource group where the Traffic Manager profile exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the Traffic Manager profile.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the Traffic Manager profile. Use C(present) to create or update a Traffic Manager profile and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid azure location. Defaults to 'global'.
+        type: str
     profile_status:
         description:
             - The status of the Traffic Manager profile.
         default: Enabled
+        type: str
         choices:
             - Enabled
             - Disabled
@@ -45,6 +50,7 @@ options:
         description:
             - The traffic routing method of the Traffic Manager profile.
         default: Performance
+        type: str
         choices:
             - Performance
             - Priority
@@ -53,22 +59,26 @@ options:
     dns_config:
         description:
             - The DNS settings of the Traffic Manager profile.
+        type: dict
         suboptions:
             relative_name:
                 description:
                     - The relative DNS name provided by this Traffic Manager profile.
                     - If no provided, name of the Traffic Manager will be used
+                type: str
             ttl:
                 description:
                     - The DNS Time-To-Live (TTL), in seconds.
-                default: 60
+                type: int
     monitor_config:
         description:
             - The endpoint monitoring settings of the Traffic Manager profile.
+        type: dict
         suboptions:
             protocol:
                 description:
                     - The protocol (HTTP, HTTPS or TCP) used to probe for endpoint health.
+                type: str
                 choices:
                     - HTTP
                     - HTTPS
@@ -76,18 +86,23 @@ options:
             port:
                 description:
                     - The TCP port used to probe for endpoint health.
+                type: int
             path:
                 description:
                     - The path relative to the endpoint domain name used to probe for endpoint health.
+                type: str
             interval_in_seconds:
                 description:
                     - The monitor interval for endpoints in this profile.
+                type: int
             timeout_in_seconds:
                 description:
                     - The monitor timeout for endpoints in this profile.
+                type: int
             tolerated_number_of_failures:
                 description:
                     - The number of consecutive failed health check before declaring an endpoint in this profile Degraded after the next failed health check.
+                type: int
         default:
             protocol: HTTP
             port: 80
@@ -95,28 +110,34 @@ options:
     endpoints:
         description:
             - The list of endpoints in the Traffic Manager profile.
+        type: list
+        elements: dict
         suboptions:
             id:
                 description:
                     - Fully qualified resource Id for the resource.
+                type: str
             name:
                 description:
                     - The name of the endpoint.
-                required: true
+                type: str
             type:
                 description:
                     - The type of the endpoint. Ex- Microsoft.network/TrafficManagerProfiles/ExternalEndpoints.
-                required: true
+                type: str
             target_resource_id:
                 description:
                     - The Azure Resource URI of the of the endpoint.
                     - Not applicable to endpoints of type 'ExternalEndpoints'.
+                type: str
             target:
                 description:
                     - The fully-qualified DNS name of the endpoint.
+                type: str
             endpoint_status:
                 description:
                     - The status of the endpoint.
+                type: str
                 choices:
                     - Enabled
                     - Disabled
@@ -124,22 +145,28 @@ options:
                 description:
                     - The weight of this endpoint when using the 'Weighted' traffic routing method.
                     - Possible values are from 1 to 1000.
+                type: int
             priority:
                 description:
                     - The priority of this endpoint when using the 'Priority' traffic routing method.
                     - Possible values are from 1 to 1000, lower values represent higher priority.
                     - This is an optional parameter. If specified, it must be specified on all endpoints.
                     - No two endpoints can share the same priority value.
+                type: int
             endpoint_location:
                 description:
                     - Specifies the location of the external or nested endpoints when using the 'Performance' traffic routing method.
+                type: str
             min_child_endpoints:
                 description:
                     - The minimum number of endpoints that must be available in the child profile in order for the parent profile to be considered available.
                     - Only applicable to endpoint of type 'NestedEndpoints'.
+                type: int
             geo_mapping:
                 description:
                     - The list of countries/regions mapped to this endpoint when using the 'Geographic' traffic routing method.
+                type: list
+                elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure

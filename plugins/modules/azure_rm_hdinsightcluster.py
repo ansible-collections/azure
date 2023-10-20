@@ -21,34 +21,42 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the cluster.
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     cluster_version:
         description:
             - The version of the cluster. For example C(3.6).
+        type: str
     os_type:
         description:
             - The type of operating system.
+        type: str
         choices:
             - 'linux'
     tier:
         description:
             - The cluster tier.
+        type: str
         choices:
             - 'standard'
             - 'premium'
     cluster_definition:
         description:
             - The cluster definition.
+        type: dict
         suboptions:
             kind:
                 description:
                     - The type of cluster.
+                type: str
                 choices:
                     - hadoop
                     - spark
@@ -57,13 +65,16 @@ options:
             gateway_rest_username:
                 description:
                     - Gateway REST user name.
+                type: str
             gateway_rest_password:
                 description:
                     - Gateway REST password.
+                type: str
     compute_profile_roles:
         description:
             - The list of roles in the cluster.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -84,6 +95,7 @@ options:
             linux_profile:
                 description:
                     - The Linux OS profile.
+                type: dict
                 suboptions:
                     username:
                         description:
@@ -95,6 +107,7 @@ options:
         description:
             - The list of storage accounts in the cluster.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -113,6 +126,7 @@ options:
           - Assert the state of the cluster.
           - Use C(present) to create or update a cluster and C(absent) to delete it.
       default: present
+      type: str
       choices:
           - absent
           - present

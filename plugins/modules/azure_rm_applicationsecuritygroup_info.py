@@ -20,9 +20,11 @@ options:
     resource_group:
         description:
             - The name of the resource group.
+        type: str
     name:
         description:
             - The name of the application security group.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.

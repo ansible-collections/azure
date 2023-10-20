@@ -24,6 +24,7 @@ options:
     name:
         description:
             - Limit results to a specific resource group.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -33,6 +34,8 @@ options:
         description:
             - List all resources under the resource group.
             - Note this will cost network overhead for each resource group. Suggest use this when I(name) set.
+        type: bool
+
 
 extends_documentation_fragment:
     - azure.azcollection.azure

@@ -22,6 +22,7 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     address_prefixes_cidr:
         aliases:
             - address_prefixes
@@ -41,10 +42,12 @@ options:
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     name:
         description:
             - Name of the virtual network.
         required: true
+        type: str
     purge_address_prefixes:
         description:
             - Use with I(state=present) to remove any existing I(address_prefixes).
@@ -65,6 +68,7 @@ options:
         description:
             - State of the virtual network. Use C(present) to create or update and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present

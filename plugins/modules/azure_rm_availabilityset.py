@@ -25,21 +25,25 @@ options:
         description:
             - Name of a resource group where the availability set exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the availability set.
+        type: str
         required: true
     state:
         description:
             - Assert the state of the availability set.
             - Use C(present) to create or update a availability set and C(absent) to delete a availability set.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     platform_update_domain_count:
         description:
             - Update domains indicate groups of virtual machines and underlying physical hardware that can be rebooted at the same time.
@@ -59,6 +63,7 @@ options:
         description:
             - Define if the availability set supports managed disks.
         default: Classic
+        type: str
         choices:
             - Classic
             - Aligned

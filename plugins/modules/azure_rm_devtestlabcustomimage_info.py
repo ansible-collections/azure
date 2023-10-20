@@ -31,6 +31,7 @@ options:
         description:
             - The name of the custom image.
         type: str
+        required: True
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -108,7 +109,7 @@ custom_images:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag':'MyValue' }"
 '''
 
