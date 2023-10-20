@@ -24,7 +24,7 @@ options:
     name:
         description:
             - Cosmos DB database account name.
-    type: str
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.

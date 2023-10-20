@@ -48,7 +48,7 @@ options:
             - Assert the state of the Schedule.
             - Use C(present) to create or update an Schedule and C(absent) to delete it.
         default: present
-            type: str
+        type: str
         choices:
             - absent
             - present
