@@ -386,9 +386,9 @@ class AzureRMIoTDevice(AzureRMModuleBase):
     def create_device(self):
         response = None
         try:
+            self.status = 'enabled'
             if self.auth_method == 'sas':
-                response = self.mgmt_client.create_device_with_sas(self.name, self.primary_key, self.secondary_key, 'enabled', iot_edge=False)
-                #response = self.mgmt_client.create_device_with_sas(self.name, self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
+                response = self.mgmt_client.create_device_with_sas(self.name, self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
             elif self.auth_method == 'self_signed':
                 response = self.mgmt_client.create_device_with_certificate_authority(self.name, self.status, iot_edge=self.edge_enabled)
             elif self.auth_method == 'certificate_authority':
@@ -397,7 +397,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
 
             return self.format_item(response)
         except Exception as exc:
-            self.fail('Error when creating or updating IoT Hub device {0}: {1}, {2}, {3}, {4}, {5}'.format(self.name, exc, self.primary_key, self.secondary_key, self.status, self.edge_enabled))
+            self.fail('Error when creating or updating IoT Hub device {0}: {1}, {2}, {3}'.format(self.name, exc, self.status, self.edge_enabled))
 
     def delete_device(self, etag):
         try:
