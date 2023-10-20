@@ -256,8 +256,8 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             twin_tags=dict(type='dict'),
             desired=dict(type='dict'),
             auth_method=dict(type='str', choices=['self_signed', 'sas', 'certificate_authority'], default='sas'),
-            primary_key=dict(type='str', aliases=['primary_thumbprint']),
-            secondary_key=dict(type='str', aliases=['secondary_thumbprint'])
+            primary_key=dict(type='str', no_log=True, aliases=['primary_thumbprint']),
+            secondary_key=dict(type='str', no_log=True, aliases=['secondary_thumbprint'])
         )
 
         self.results = dict(
@@ -387,7 +387,8 @@ class AzureRMIoTDevice(AzureRMModuleBase):
         response = None
         try:
             if self.auth_method == 'sas':
-                response = self.mgmt_client.create_device_with_sas(self.name, self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
+                response = self.mgmt_client.create_device_with_sas(self.name, self.primary_key, self.secondary_key, 'enabled', iot_edge=False)
+                #response = self.mgmt_client.create_device_with_sas(self.name, self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
             elif self.auth_method == 'self_signed':
                 response = self.mgmt_client.create_device_with_certificate_authority(self.name, self.status, iot_edge=self.edge_enabled)
             elif self.auth_method == 'certificate_authority':
