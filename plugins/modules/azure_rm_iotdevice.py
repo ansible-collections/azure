@@ -386,7 +386,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
     def create_device(self):
         response = None
         try:
-            # self.status = 'enabled'
+            self.status = 'enabled'
             self.edge_enabled = False
             if self.auth_method == 'sas':
                 response = self.mgmt_client.create_device_with_sas(self.name, self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
