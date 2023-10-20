@@ -42,7 +42,7 @@ options:
         suboptions:
             enabled:
                 description:
-                    - Whether the key is enabled. 
+                    - Whether the key is enabled.
                 type: bool
             not_before:
                 description:

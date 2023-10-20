@@ -61,9 +61,9 @@ options:
         elements: dict
         suboptions:
             id:
-               description:
-                   - The vpn site resource ID.
-               type: str
+                description:
+                    - The vpn site resource ID.
+                type: str
     allow_branch_to_branch_traffic:
         description:
             - True if branch to branch traffic is allowed.

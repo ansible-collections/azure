@@ -183,14 +183,14 @@ options:
         type: bool
         default: True
     state:
-      description:
-          - Assert the state of the Azure Cache for Redis.
-          - Use C(present) to create or update an Azure Cache for Redis and C(absent) to delete it.
-      default: present
-      type: true
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Azure Cache for Redis.
+            - Use C(present) to create or update an Azure Cache for Redis and C(absent) to delete it.
+        default: present
+        type: true
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
