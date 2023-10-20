@@ -396,7 +396,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
 
             return self.format_item(response)
         except Exception as exc:
-            self.fail('Error when creating or updating IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
+            self.fail('Error when creating or updating IoT Hub device {0}: {1}'.format(self.name, exc))
 
     def delete_device(self, etag):
         try:
@@ -404,7 +404,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             return response
 
         except Exception as exc:
-            self.fail('Error when deleting IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
+            self.fail('Error when deleting IoT Hub device {0}: {1}'.format(self.name, exc))
 
     def get_device(self):
         try:
@@ -420,7 +420,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             response = self.mgmt_client.get_twin(self.name)
             return self.format_twin(response)
         except Exception as exc:
-            self.fail('Error when getting IoT Hub device {0} twin: {1}'.format(self.name, exc.message or str(exc)))
+            self.fail('Error when getting IoT Hub device {0} twin: {1}'.format(self.name, exc))
 
     def update_twin(self, twin):
         try:
