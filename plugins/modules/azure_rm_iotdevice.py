@@ -256,8 +256,8 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             twin_tags=dict(type='dict'),
             desired=dict(type='dict'),
             auth_method=dict(type='str', choices=['self_signed', 'sas', 'certificate_authority'], default='sas'),
-            primary_key=dict(type='str', no_log=True, aliases=['primary_thumbprint']),
-            secondary_key=dict(type='str', no_log=True, aliases=['secondary_thumbprint'])
+            primary_key=dict(type='str', aliases=['primary_thumbprint']),
+            secondary_key=dict(type='str', aliases=['secondary_thumbprint'])
         )
 
         self.results = dict(
