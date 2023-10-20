@@ -20,7 +20,7 @@ options:
     resource_group:
         description:
             - Name of an Azure resource group.
-    type: str
+        type: str
     name:
         description:
             - Cosmos DB database account name.
