@@ -64,6 +64,8 @@ options:
             - The on_premises_immutable_id of the user.
             - Used when either creating or updating a user account.
         type: str
+        aliases:
+            - immutable_id
     mail:
         description:
             - The primary email address of the user.
@@ -227,7 +229,7 @@ class AzureRMADUser(AzureRMModuleBase):
             display_name=dict(type='str'),
             password_profile=dict(type='str', no_log=True),
             mail_nickname=dict(type='str'),
-            on_premises_immutable_id=dict(type='str'),
+            on_premises_immutable_id=dict(type='str', aliases=['immutable_id']),
             usage_location=dict(type='str'),
             given_name=dict(type='str'),
             surname=dict(type='str'),
