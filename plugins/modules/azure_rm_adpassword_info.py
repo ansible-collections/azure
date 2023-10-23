@@ -122,7 +122,7 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
             app_object_id=dict(type='str'),
             service_principal_object_id=dict(type='str'),
             key_id=dict(type='str'),
-            tenant=dict(type='str', required=True),
+            tenant=dict(type='str'),
             value=dict(type='str'),
             end_date=dict(type='str'),
         )

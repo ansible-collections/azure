@@ -95,7 +95,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             app_id=dict(type='str'),
             object_id=dict(type='str'),
-            tenant=dict(type='str', required=True),
+            tenant=dict(type='str'),
         )
 
         self.tenant = None

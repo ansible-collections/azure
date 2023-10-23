@@ -171,7 +171,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             attribute_value=dict(type='str'),
             odata_filter=dict(type='str'),
             all=dict(type='bool'),
-            tenant=dict(type='str', required=True),
+            tenant=dict(type='str'),
         )
 
         self.tenant = None

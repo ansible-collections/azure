@@ -110,7 +110,7 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
 
         self.module_arg_spec = dict(
             app_id=dict(type='str', required=True),
-            tenant=dict(type='str', required=True),
+            tenant=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             app_role_assignment_required=dict(type='bool')
         )

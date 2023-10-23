@@ -235,7 +235,7 @@ class AzureRMADUser(AzureRMModuleBase):
             surname=dict(type='str'),
             user_type=dict(type='str'),
             mail=dict(type='str'),
-            tenant=dict(type='str', required=True),
+            tenant=dict(type='str'),
         )
 
         self.tenant = None
