@@ -100,7 +100,6 @@ options:
     publishing_profile:
         description:
             - Publishing profile.
-        required: true
         type: dict
         suboptions:
             target_regions:
@@ -114,6 +113,7 @@ options:
                         description:
                             - Region name.
                         type: str
+                        required: true
                     regional_replica_count:
                         description:
                             - The number of replicas of the Image Version to be created per region.
@@ -128,10 +128,12 @@ options:
                 description:
                     - Managed image reference, could be resource ID, or dictionary containing I(resource_group) and I(name)
                     - Obsolete since 2.10, use storage_profile instead
+                type: raw
             snapshot:
                 description:
                     - Source snapshot to be used.
                     - Obsolete since 2.10, use storage_profile instead
+                type: raw
             replica_count:
                 description:
                     - The number of replicas of the Image Version to be created per region.

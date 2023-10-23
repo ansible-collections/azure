@@ -64,8 +64,8 @@ options:
             - Server version.
         type: str
         choices:
-            - 10.2
-            - 10.3
+            - '10.2'
+            - '10.3'
     enforce_ssl:
         description:
             - Enable SSL enforcement.

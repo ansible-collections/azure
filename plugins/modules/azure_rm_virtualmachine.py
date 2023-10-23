@@ -328,7 +328,7 @@ options:
             - For Linux hosts, defaults to allowing inbound TCP connections to port 22.
             - For Windows hosts, defaults to opening ports 3389 and 5986.
         type: list
-        elements: int
+        elements: str
     network_interface_names:
         description:
             - Network interface names to add to the VM.
@@ -411,6 +411,7 @@ options:
         description:
             - A list of Availability Zones for your VM.
         type: list
+        elements: str
     license_type:
         description:
             - On-premise license for the image or disk.
@@ -1052,7 +1053,7 @@ linux_configuration_spec = dict(
 )
 
 user_assigned_identities_spec = dict(
-    id=dict(type='list', default=[]),
+    id=dict(type='list', default=[], elements='str'),
     append=dict(type='bool', default=True)
 )
 
@@ -1080,7 +1081,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             admin_username=dict(type='str'),
             admin_password=dict(type='str', no_log=True),
             ssh_password_enabled=dict(type='bool', default=True, no_log=False),
-            ssh_public_keys=dict(type='list'),
+            ssh_public_keys=dict(type='list', elements='dict'),
             image=dict(type='raw'),
             availability_set=dict(type='str'),
             storage_account_name=dict(type='str', aliases=['storage_account']),
@@ -1094,9 +1095,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
             public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static', 'Disabled'], default='Static',
                                              aliases=['public_ip_allocation']),
-            open_ports=dict(type='list'),
+            open_ports=dict(type='list', elements='str'),
             network_interface_names=dict(type='list', aliases=['network_interfaces'], elements='raw'),
-            remove_on_absent=dict(type='list', default=['all']),
+            remove_on_absent=dict(type='list', default=['all'], elements='str'),
             virtual_network_resource_group=dict(type='str'),
             virtual_network_name=dict(type='str', aliases=['virtual_network']),
             subnet_name=dict(type='str', aliases=['subnet']),
@@ -1106,13 +1107,48 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             started=dict(type='bool'),
             force=dict(type='bool', default=False),
             generalized=dict(type='bool', default=False),
-            data_disks=dict(type='list'),
+            data_disks=dict(
+                type='list',
+                elements='dict',
+                options=dict(
+                    lun=dict(type='int', required=True),
+                    disk_size_gb=dict(type='int'),
+                    managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_L     RS', 'Premium_ZRS', 'UltraSSD_LRS']),
+                    storage_account_name=dict(type='str'),
+                    storage_container_name=dict(type='str', default='vhds'),
+                    storage_container_name=dict(type='str'),
+                    caching=dict(type='str', choices=['ReadOnly', 'ReadOnly'])
+                )
+            ),
             plan=dict(type='dict'),
-            zones=dict(type='list'),
+            zones=dict(
+                type='list',
+                elements='str'
+                options=dict(
+                    lun=dict(type='int', required=True),
+                    disk_size_gb=dict(type='int'),
+                    managed_disk_type=dict(
+                        type='str',
+                        choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
+                    storage_account_name=dict(type='str'),
+                    storage_container_name=dict(type='str', default='vhds'),
+                    storage_blob_name=dict(type='str'),
+                    caching=dict(type='str', choices=['ReadOnly', 'ReadWrite'], default='ReadOnly'])
+                )
+            ),
             accept_terms=dict(type='bool', default=False),
             license_type=dict(type='str', choices=['Windows_Server', 'Windows_Client', 'RHEL_BYOS', 'SLES_BYOS']),
             vm_identity=dict(type='dict', options=managed_identity_spec),
-            winrm=dict(type='list'),
+            winrm=dict(
+                type='list',
+                elements='dict',
+                options=dict(
+                    protocol=dict(type='str', required=True, choices=['http', 'https']),
+                    source_vault=dict(type='str'),
+                    certificate_url=dict(type='str'),
+                    certificate_store=dict(type='str')
+                )
+            ),
             boot_diagnostics=dict(
                 type='dict',
                 options=dict(

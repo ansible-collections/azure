@@ -59,14 +59,12 @@ options:
         type: raw
         aliases:
             - virtual_network_name
-        required: true
     subnet_name:
         description:
             - Name of an existing subnet within the specified virtual network. Required when creating a network interface.
             - Use the C(virtual_network)'s resource group.
         aliases:
             - subnet
-        required: true
         type: str
     os_type:
         description:
@@ -126,7 +124,7 @@ options:
               field I(private_ip_address), I(private_ip_allocation_method), I(public_ip_address_name), I(public_ip), I(public_ip_allocation_method), I(name).
         type: list
         elements: dict
-        default: None
+        default: []
         suboptions:
             name:
                 description:
@@ -223,6 +221,7 @@ options:
               connections to the default SSH port C(22), and for a Windows host rules will be added allowing inbound
               access to RDP ports C(3389) and C(5986). Override the default ports by providing a list of open ports.
         type: list
+        elements: str
     enable_ip_forwarding:
         description:
             - Whether to enable IP forwarding.
@@ -235,6 +234,7 @@ options:
             - Which DNS servers should the NIC lookup.
             - List of IP addresses.
         type: list
+        elements: str
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -593,8 +593,8 @@ ip_configuration_spec = dict(
     private_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
     public_ip_address_name=dict(type='str', aliases=['public_ip_address', 'public_ip_name']),
     public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
-    load_balancer_backend_address_pools=dict(type='list'),
-    application_gateway_backend_address_pools=dict(type='list'),
+    load_balancer_backend_address_pools=dict(type='list', type='raw'),
+    application_gateway_backend_address_pools=dict(type='list', elements='raw'),
     primary=dict(type='bool', default=False),
     application_security_groups=dict(type='list', elements='raw')
 )
@@ -619,11 +619,11 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
             subnet_name=dict(type='str', aliases=['subnet']),
             virtual_network=dict(type='raw', aliases=['virtual_network_name']),
             public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
-            ip_configurations=dict(type='list', default=None, elements='dict', options=ip_configuration_spec),
+            ip_configurations=dict(type='list', default=[], elements='dict', options=ip_configuration_spec),
             os_type=dict(type='str', choices=['Windows', 'Linux'], default='Linux'),
-            open_ports=dict(type='list'),
+            open_ports=dict(type='list', elements='str'),
             enable_ip_forwarding=dict(type='bool', aliases=['ip_forwarding'], default=False),
-            dns_servers=dict(type='list'),
+            dns_servers=dict(type='list', elements='str'),
         )
 
         required_if = [

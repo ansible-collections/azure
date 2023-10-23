@@ -121,6 +121,7 @@ options:
             - On an Enterprise Linux host, for example, the I(path=/home/<admin username>/.ssh/authorized_keys).
               Set C(key_data) to the actual value of the public key.
         type: list
+        elements: dict
     image:
         description:
             - Specifies the image used to build the VM.
@@ -131,7 +132,6 @@ options:
               Note that the key I(resource_group) is optional and if omitted, all images in the subscription will be searched for by I(name).
             - Custom image support was added in Ansible 2.5.
         type: raw
-        required: true
     os_disk_caching:
         description:
             - Type of OS disk caching.
@@ -291,6 +291,7 @@ options:
         description:
             - A list of Availability Zones for your virtual machine scale set.
         type: list
+        elements: str
     custom_data:
         description:
             - Data which is made available to the virtual machine and used by e.g., C(cloud-init).
@@ -680,25 +681,31 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             admin_username=dict(type='str'),
             admin_password=dict(type='str', no_log=True),
             ssh_password_enabled=dict(type='bool', default=True),
-            ssh_public_keys=dict(type='list'),
+            ssh_public_keys=dict(type='list', type='dict'),
             image=dict(type='raw'),
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite'],
                                  default='ReadOnly'),
             os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS']),
-            data_disks=dict(type='list'),
+            data_disks=dict(type='list', elements='str', options=dict(
+                lun=dict(type='str', default=0),
+                disk_size_gb=dict(type='int'),
+                caching=dict(type='str', default='ReadOnly', choices=['ReadOnly', 'ReadWrite'])
+                managed_disk_type=dict(type='str', choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS'])
+                )
+            ),
             subnet_name=dict(type='str', aliases=['subnet']),
             public_ip_per_vm=dict(type='bool', default=False),
             load_balancer=dict(type='str'),
             application_gateway=dict(type='str'),
             virtual_network_resource_group=dict(type='str'),
             virtual_network_name=dict(type='str', aliases=['virtual_network']),
-            remove_on_absent=dict(type='list', default=['all']),
+            remove_on_absent=dict(type='list', default=['all'], elements='str'),
             enable_accelerated_networking=dict(type='bool'),
             security_group=dict(type='raw', aliases=['security_group_name']),
             overprovision=dict(type='bool'),
             single_placement_group=dict(type='bool', default=False),
-            zones=dict(type='list'),
+            zones=dict(type='list', elements='str'),
             custom_data=dict(type='str'),
             plan=dict(type='dict', options=dict(publisher=dict(type='str', required=True),
                       product=dict(type='str', required=True), name=dict(type='str', required=True),

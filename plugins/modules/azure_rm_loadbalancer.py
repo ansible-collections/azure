@@ -266,7 +266,7 @@ options:
                     - True is equivalent to "(Recommended) Use outbound rules to provide backend pool members access to the internet" in portal.
                     - False is equivalent to "Use default outbound access" in portal.
                 type: bool
-                default: None
+                default: False
     inbound_nat_rules:
         description:
             - Collection of inbound NAT Rules used by a load balancer.
@@ -302,6 +302,7 @@ options:
                     - Acceptable values are between 0 and 65534.
                     - Note that value 0 enables "Any Port".
                 type: int
+                required: True
             backend_port:
                 description:
                     - The port used for internal connections on the endpoint.
@@ -498,7 +499,8 @@ frontend_ip_configuration_spec = dict(
         type='str'
     ),
     private_ip_allocation_method=dict(
-        type='str'
+        type='str',
+        choices=['Static', 'Dynamic']
     ),
     subnet=dict(
         type='str'
@@ -649,7 +651,7 @@ load_balancing_rule_spec = dict(
     ),
     disable_outbound_snat=dict(
         type='bool',
-        default=None
+        default=False
     ),
 )
 

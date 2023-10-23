@@ -132,10 +132,13 @@ options:
                     - 'manageissuers'
                     - 'recover'
                     - 'purge'
+                    - 'backup'
+                    - 'restore'
             storage:
                 description:
                     - List of permissions to storage accounts.
                 type: list
+                elements: str
     enabled_for_deployment:
         description:
             - Property to specify whether Azure Virtual Machines are permitted to retrieve certificates stored as secrets from the key vault.
@@ -257,10 +260,24 @@ class AzureRMVaults(AzureRMModuleBase):
                     object_id=dict(type='str', required=True),
                     application_id=dict(type='str'),
                     # FUTURE: add `choices` support once choices supports lists of values
-                    keys=dict(type='list', no_log=True),
-                    secrets=dict(type='list', no_log=True),
-                    certificates=dict(type='list'),
-                    storage=dict(type='list')
+                    keys=dict(
+                        type='list',
+                        elements='str',
+                        no_log=True,
+                        choices=['encrypt', 'decrypt', 'wrapkey', 'unwrapkey', 'sign', 'verify', 'get', 'list', 'create', 'update', 'import', 'delete', 'backup', 'restore', 'recover', 'purge']
+                    ),
+                    secrets=dict(
+                        type='list',
+                        elements='str',
+                        no_log=True,
+                        choices=['get', 'list', 'set', 'delete', 'backup', 'restore', 'recover', 'purge']
+                    ),
+                    certificates=dict(
+                        type='list',
+                        elements='str',
+                        choices=['get', 'list', 'delete', 'create', 'import', 'update', 'managecontacts', 'getissuers', 'listissuers', 'setissuers', 'deleteissuers', 'manageissuers', 'recover', 'purge', 'backup', 'restore']
+                    ),
+                    storage=dict(type='list', elements='str')
                 )
             ),
             enabled_for_deployment=dict(

@@ -89,7 +89,6 @@ replications:
                         - The status of the replication at the time the operation was called.
                     returned: always
                     type: complex
-                    sample: status
                     contains:
                         message:
                             description:
@@ -101,7 +100,7 @@ replications:
                             description:
                                 - The timestamp when the status was changed to the current value.
                             returned: always
-                            type: datetime
+                            type: str
                             sample: "2017-03-01T23:15:37.0707808Z"
 '''
 

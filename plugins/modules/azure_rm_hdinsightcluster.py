@@ -79,6 +79,7 @@ options:
             name:
                 description:
                     - The name of the role.
+                type: str
                 choices:
                     - 'headnode'
                     - 'workernode'
@@ -86,12 +87,15 @@ options:
             min_instance_count:
                 description:
                     - The minimum instance count of the cluster.
+                type: int
             target_instance_count:
                 description:
                     - The instance count of the cluster.
+                type: int
             vm_size:
                 description:
                     - The size of the VM.
+                type: str
             linux_profile:
                 description:
                     - The Linux OS profile.
@@ -100,9 +104,11 @@ options:
                     username:
                         description:
                             - SSH user name.
+                        type: str
                     password:
                         description:
                             - SSH password.
+                        type: str
     storage_accounts:
         description:
             - The list of storage accounts in the cluster.
@@ -112,24 +118,28 @@ options:
             name:
                 description:
                     - Blob storage endpoint. For example storage_account_name.blob.core.windows.net.
+                type: str
             is_default:
                 description:
                     - Whether or not the storage account is the default storage account.
+                type: bool
             container:
                 description:
                     - The container in the storage account.
+                type: str
             key:
                 description:
                     - The storage account access key.
+                type: str
     state:
-      description:
-          - Assert the state of the cluster.
-          - Use C(present) to create or update a cluster and C(absent) to delete it.
-      default: present
-      type: str
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the cluster.
+            - Use C(present) to create or update a cluster and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -161,8 +171,7 @@ EXAMPLES = '''
     compute_profile_roles:
       - name: headnode
         target_instance_count: 2
-        hardware_profile:
-          vm_size: Standard_D3
+        vm_size: Standard_D3
         linux_profile:
           username: sshuser
           password: MuABCPassword!!@123
@@ -230,10 +239,31 @@ class AzureRMClusters(AzureRMModuleBase):
                 type='dict'
             ),
             compute_profile_roles=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    name=dict(type='str', choices=['headnode', 'workernode', 'zookepernode']),
+                    win_instance_count=dict(type='int'),
+                    target_instance_count=dict(type='int'),
+                    vm_size=dict(type='str'),
+                    linux_profile=dict(
+                        type='dict',
+                        options=dict(
+                            username=dict(type='str'),
+                            password=dict(type='str', no_log=True)
+                        )
+                    ),
+                )
             ),
             storage_accounts=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    name=dict(type='str'),
+                    is_default=dict(type='bool'),
+                    container=dict(type='str'),
+                    key=dict(type='str')
+                )
             ),
             state=dict(
                 type='str',

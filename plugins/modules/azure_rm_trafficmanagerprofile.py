@@ -77,18 +77,18 @@ options:
             - The endpoint monitoring settings of the Traffic Manager profile.
         type: dict
         suboptions:
+            profile_monitor_status:
+                description:
+                    - The profile-level monitoring status of the Traffic Manager.
+                type: str
             protocol:
                 description:
                     - The protocol C(HTTP), C(HTTPS) or C(TCP) used to probe for endpoint health.
                 type: str
-                choices:
-                    - HTTP
-                    - HTTPS
-                    - TCP
             port:
                 description:
                     - The TCP port used to probe for endpoint health.
-                type: str
+                type: int
             path:
                 description:
                     - The path relative to the endpoint domain name used to probe for endpoint health.

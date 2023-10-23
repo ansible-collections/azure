@@ -767,10 +767,8 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
             state=dict()
         )
 
-        mutually_exclusive = [["source_application_security_group", "source_address_prefix"],
-                              ["source_application_security_group", "source_address_prefixes"],
-                              ["destination_application_security_group", "destination_address_prefix"],
-                              ["destination_application_security_group", "destination_address_prefixes"]]
+        mutually_exclusive = [["source_application_security_groups", "source_address_prefix"],
+                              ["destination_application_security_groups", "destination_address_prefix"]]
 
         super(AzureRMSecurityGroup, self).__init__(self.module_arg_spec,
                                                    supports_check_mode=True,

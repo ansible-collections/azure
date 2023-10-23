@@ -42,6 +42,8 @@ options:
         aliases:
             - address_prefixes
         version_added: "1.0.0"
+        type: list
+        elements: str
     security_group:
         description:
             - Existing security group with which to associate the subnet.
@@ -402,11 +404,16 @@ class AzureRMSubnet(AzureRMModuleBase):
             state=dict(type='str', default='present', choices=['present', 'absent']),
             virtual_network_name=dict(type='str', required=True, aliases=['virtual_network']),
             address_prefix_cidr=dict(type='str', aliases=['address_prefix']),
-            address_prefixes_cidr=dict(type='list', aliases=['address_prefixes']),
+            address_prefixes_cidr=dict(type='list', aliases=['address_prefixes'], elements='str'),
             security_group=dict(type='raw', aliases=['security_group_name']),
             route_table=dict(type='raw'),
             service_endpoints=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    service=dict(type='str', required=True),
+                    locaiton=dict(type='list', elements='str')
+                )
             ),
             private_endpoint_network_policies=dict(
                 type='str',

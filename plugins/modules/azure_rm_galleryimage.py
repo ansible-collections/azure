@@ -329,6 +329,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                 options=dict(
                     disk_types=dict(
                         type='list',
+                        elements='str',
                         disposition='diskTypes'
                     )
                 )

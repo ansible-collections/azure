@@ -35,7 +35,7 @@ options:
     replication:
         description:
             - The parameters for creating a replication.
-        type: str
+        type: dict
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.

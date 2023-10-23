@@ -402,7 +402,7 @@ deployment:
         outputs:
           description:
               - Dictionary of outputs received from the deployment.
-          type: complex
+          type: dict
           returned: always
           sample: { "hostname": { "type": "String", "value": "myvirtualmachine.eastus2.cloudapp.azure.com" } }
 '''

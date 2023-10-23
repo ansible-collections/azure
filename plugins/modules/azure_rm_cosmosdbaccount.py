@@ -77,16 +77,19 @@ options:
                 description:
                     - The name of the region.
                 type: str
+                required: true
             failover_priority:
                 description:
                     - The failover priority of the region. A failover priority of 0 indicates a write region.
                     - The maximum value for a failover priority = (total number of regions - 1).
                     - Failover priority values must be unique for each of the regions in which the database account exists.
                 type: int
+                required: true
     database_account_offer_type:
         description:
             - Database account offer type, for example I(Standard)
             - Required when I(state=present).
+        type: str
     enable_free_tier:
         description:
             - If enabled the account is free-tier.
@@ -99,6 +102,7 @@ options:
             - In CIDR form to be included as the allowed list of client IPs for a given database account.
             - IP addresses/ranges must be comma separated and must not contain any spaces.
             - This value has been deprecated, and will be removed in a later version. Use I(ip_rules) instead.
+        type: str
     ip_rules:
         description:
             - The IP addresses or IP address ranges in CIDR form to be included as the allowed list of client IPs.
@@ -145,11 +149,13 @@ options:
         description:
             - List of Virtual Network ACL rules configured for the Cosmos DB account.
         type: list
+        elements: dict
         suboptions:
             subnet:
                 description:
                     - It can be a string containing resource id of a subnet.
                     - It can be a dictionary containing 'resource_group', 'virtual_network_name' and 'subnet_name'
+                type: raw
             ignore_missing_v_net_service_endpoint:
                 description:
                     - Create Cosmos DB account without existing virtual network service endpoint.
@@ -280,6 +286,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             ),
             geo_rep_locations=dict(
                 type='list',
+                elements='dict',
                 options=dict(
                     name=dict(
                         type='str',
@@ -330,9 +337,10 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             ),
             virtual_network_rules=dict(
                 type='list',
+                elements='dict',
                 options=dict(
-                    id=dict(
-                        type='str',
+                    subnet=dict(
+                        type='raw',
                         required=True
                     ),
                     ignore_missing_v_net_service_endpoint=dict(

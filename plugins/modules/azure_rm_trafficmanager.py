@@ -75,6 +75,10 @@ options:
             - The endpoint monitoring settings of the Traffic Manager profile.
         type: dict
         suboptions:
+            profile_monitor_status:
+                description:
+                    - The profile-level monitoring status of the Traffic Manager.
+                type: str
             protocol:
                 description:
                     - The protocol (HTTP, HTTPS or TCP) used to probe for endpoint health.
@@ -112,7 +116,12 @@ options:
             - The list of endpoints in the Traffic Manager profile.
         type: list
         elements: dict
+        default: []
         suboptions:
+            endpoint_monitor_status:
+                description:
+                    - The monitoring status of the endpoint.
+                type: str
             id:
                 description:
                     - Fully qualified resource Id for the resource.
@@ -173,7 +182,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure_tags
 
 author:
-    - "Hai Cao <t-haicao@microsoft.com>"
+    - Hai Cao (@caohai)
 
 '''
 

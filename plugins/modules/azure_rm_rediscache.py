@@ -63,7 +63,6 @@ options:
                     - P2
                     - P3
                     - P4
-                required: True
     enable_non_ssl_port:
         description:
             - When set I(enable_non_ssl_port=true), the non-ssl Redis server port 6379 will be enabled.
@@ -130,7 +129,7 @@ options:
     static_ip:
         description:
             - Static IP address. Required when deploying an Azure Cache for Redis inside an existing Azure virtual network.
-        type: int
+        type: str
     subnet:
         description:
             - Subnet in a virtual network to deploy the Azure Cache for Redis in.
@@ -187,7 +186,7 @@ options:
             - Assert the state of the Azure Cache for Redis.
             - Use C(present) to create or update an Azure Cache for Redis and C(absent) to delete it.
         default: present
-        type: true
+        type: str
         choices:
             - absent
             - present

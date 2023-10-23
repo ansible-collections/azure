@@ -197,7 +197,7 @@ options:
                         default: 70
                         description:
                             - The threshold of the metric that triggers the scale action.
-                        type: int
+                        type: float
                     type:
                         description:
                             - The type of action that should occur when the scale rule fires.
@@ -222,7 +222,8 @@ options:
                 default: False
                 description:
                     - A value indicating whether to send email to subscription administrator.
-                aliases: email_admin
+                aliases:
+                    - email_admin
             webhooks:
                 description:
                     - The list of webhook notifications service uri.
@@ -233,7 +234,8 @@ options:
                 default: False
                 description:
                     - A value indicating whether to send email to subscription co-administrators.
-                aliases: email_co_admin
+                aliases:
+                    - email_co_admin
     state:
         default: present
         description:

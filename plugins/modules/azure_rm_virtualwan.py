@@ -84,6 +84,7 @@ options:
             - Assert the state of the VirtualWan.
             - Use C(present) to create or update an VirtualWan and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present

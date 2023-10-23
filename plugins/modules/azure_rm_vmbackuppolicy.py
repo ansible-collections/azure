@@ -238,17 +238,17 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
             ),
             weekdays=dict(
                 type='list',
-                elements='dict',
+                elements='str',
                 default=['Monday']
             ),
             weeks=dict(
                 type='list',
-                elements='dict',
-                default=['First']
+                elements='str',
+                default=['str']
             ),
             months=dict(
                 type='list',
-                elements='dict',
+                elements='str',
                 default=['January']
             ),
             count=dict(

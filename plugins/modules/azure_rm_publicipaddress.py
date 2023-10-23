@@ -84,9 +84,13 @@ options:
             type:
                 description:
                     - Sets the ip_tags type.
+                type: str
+                required: true
             value:
                 description:
                     - Sets the ip_tags value.
+                type: str
+                required: true
     idle_timeout:
         description:
             - Idle timeout in minutes.

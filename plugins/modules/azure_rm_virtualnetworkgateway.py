@@ -68,9 +68,9 @@ options:
                     - Private IP allocation method.
                 type: str
                 choices:
-                    - dynamic
-                    - static
-                default: dynamic
+                    - Dynamic
+                    - Static
+                default: Dynamic
             public_ip_address_name:
                 description:
                     - Name of the public IP address. Use 'None' to disable the public IP address.
@@ -79,7 +79,6 @@ options:
                 description:
                     - ID of the gateway subnet for VPN.
                 type: str
-                default: GatewaySubnet
     gateway_type:
         description:
             - The type of this virtual network gateway.

@@ -146,12 +146,15 @@ options:
                     id:
                         description:
                             - Full ID of the subnet resource. Required if I(name) and I(virtual_network_name) are not provided.
+                        type: str
                     name:
                         description:
                             - Name of the subnet. Only used if I(virtual_network_name) is also provided.
+                        type: str
                     virtual_network_name:
                         description:
                             - Name of the virtual network. Only used if I(name) is also provided.
+                        type: str
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
@@ -165,6 +168,7 @@ options:
             data:
                 description:
                     - Certificate public data - base64 encoded pfx.
+                type: str
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
@@ -237,6 +241,7 @@ options:
             name:
                 description:
                     - Name of the rewrite rule set.
+                type: str
                 required: True
             rewrite_rules:
                 description:
@@ -354,13 +359,16 @@ options:
                 description:
                     - Base-64 encoded pfx certificate.
                     - Only applicable in PUT Request.
+                type: str
             password:
                 description:
                     - Password for the pfx file specified in I(data).
                     - Only applicable in PUT request.
+                type: str
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
+                type: str
     trusted_root_certificates:
         version_added: "1.15.0"
         description:
@@ -390,9 +398,11 @@ options:
             private_ip_address:
                 description:
                     - PrivateIPAddress of the network interface IP Configuration.
+                type: str
             private_ip_allocation_method:
                 description:
                     - PrivateIP allocation method.
+                type: str
                 choices:
                     - 'static'
                     - 'dynamic'
@@ -404,18 +414,23 @@ options:
                     id:
                         description:
                             - Full ID of the subnet resource. Required if I(name) and I(virtual_network_name) are not provided.
+                        type: str
                     name:
                         description:
                             - Name of the subnet. Only used if I(virtual_network_name) is also provided.
+                        type: str
                     virtual_network_name:
                         description:
                             - Name of the virtual network. Only used if I(name) is also provided.
+                        type: str
             public_ip_address:
                 description:
                     - Reference of the PublicIP resource.
+                type: raw
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
+                type: str
     frontend_ports:
         description:
             - List of frontend ports of the application gateway resource.
@@ -425,9 +440,11 @@ options:
             port:
                 description:
                     - Frontend port.
+                type: int
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
+                type: str
     backend_address_pools:
         description:
             - List of backend address pool of the application gateway resource.
@@ -443,12 +460,15 @@ options:
                     fqdn:
                         description:
                             - Fully qualified domain name (FQDN).
+                        type: str
                     ip_address:
                         description:
                             - IP address.
+                        type: str
             name:
                 description:
                     - Resource that is unique within a resource group. This name can be used to access the resource.
+                type: str
     probes:
         description:
             - Probes available to the application gateway resource.
@@ -508,18 +528,22 @@ options:
             probe:
                 description:
                     - Probe resource of an application gateway.
+                type: raw
             port:
                 description:
                     - The destination port on the backend.
+                type: int
             protocol:
                 description:
                     - The protocol used to communicate with the backend.
+                type: str
                 choices:
                     - 'http'
                     - 'https'
             cookie_based_affinity:
                 description:
                     - Cookie based affinity.
+                type: str
                 choices:
                     - 'enabled'
                     - 'disabled'
@@ -542,6 +566,7 @@ options:
                     - Request timeout in seconds.
                     - Application Gateway will fail the request if response is not received within RequestTimeout.
                     - Acceptable values are from 1 second to 86400 seconds.
+                type: int
             authentication_certificates:
                 description:
                     - List of references to application gateway authentication certificates.
@@ -552,29 +577,35 @@ options:
                     id:
                         description:
                             - Resource ID.
+                        type: str
             trusted_root_certificates:
                 version_added: "1.15.0"
                 description:
                     - Array of references to application gateway trusted root certificates.
                     - Can be the name of the trusted root certificate or full resource ID.
                 type: list
-                elements: str
+                elements: raw
             host_name:
                 description:
                     - Host header to be sent to the backend servers.
+                type: str
             pick_host_name_from_backend_address:
                 description:
                     - Whether host header should be picked from the host name of the backend server. Default value is false.
+                type: bool
             affinity_cookie_name:
                 description:
                     - Cookie name to use for the affinity cookie.
+                type: str
             path:
                 description:
                     - Path which should be used as a prefix for all C(http) requests.
                     - Null means no path will be prefixed. Default value is null.
+                type: str
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
+                type: str
     http_listeners:
         description:
             - List of HTTP listeners of the application gateway resource.
@@ -584,27 +615,34 @@ options:
             frontend_ip_configuration:
                 description:
                     - Frontend IP configuration resource of an application gateway.
+                type: raw
             frontend_port:
                 description:
                     - Frontend port resource of an application gateway.
+                type: raw
             protocol:
                 description:
                     - Protocol of the C(http) listener.
+                type: str
                 choices:
                     - 'http'
                     - 'https'
             host_name:
                 description:
                     - Host name of C(http) listener.
+                type: str
             ssl_certificate:
                 description:
                     - SSL certificate resource of an application gateway.
+                type: raw
             require_server_name_indication:
                 description:
                     - Applicable only if I(protocol) is C(https). Enables SNI for multi-hosting.
+                type: bool
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
+                type: str
     url_path_maps:
         description:
             - List of URL path maps of the application gateway resource.
@@ -681,31 +719,39 @@ options:
             rule_type:
                 description:
                     - Rule type.
+                type: str
                 choices:
                     - 'basic'
                     - 'path_based_routing'
             backend_address_pool:
                 description:
                     - Backend address pool resource of the application gateway. Not used if I(rule_type) is C(path_based_routing).
+                type: raw
             backend_http_settings:
                 description:
                     - Backend C(http) settings resource of the application gateway.
+                type: raw
             http_listener:
                 description:
                     - Http listener resource of the application gateway.
+                type: raw
             name:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
+                type: str
             redirect_configuration:
                 description:
                     - Redirect configuration resource of the application gateway.
+                type: raw
             url_path_map:
                 description:
                     - URL path map resource of the application gateway. Required if I(rule_type) is C(path_based_routing).
+                type: raw
             rewrite_rule_set:
                 description:
                     - Rewrite rule set for the path map.
                     - Can be the name of the rewrite rule set or full resource ID.
+                type: raw
                 version_added: "1.11.0"
     autoscale_configuration:
         version_added: "1.15.0"
@@ -1453,11 +1499,19 @@ sku_spec = dict(
 
 
 ssl_policy_spec = dict(
-    disabled_ssl_protocols=dict(type='list'),
+    disabled_ssl_protocols=dict(type='list', elements='str', choices=['tls_v1_0', 'tls_v1_1', 'tls_v1_2']),
     policy_type=dict(type='str', choices=['predefined', 'custom']),
     policy_name=dict(type='str', choices=['ssl_policy20150501', 'ssl_policy20170401', 'ssl_policy20170401_s']),
-    cipher_suites=dict(type='list'),
     min_protocol_version=dict(type='str', choices=['tls_v1_0', 'tls_v1_1', 'tls_v1_2'])
+    cipher_suites=dict(type='list', elements='str', choices=['tls_ecdhe_rsa_with_aes_256_gcm_sha384', 'tls_ecdhe_rsa_with_aes_128_gcm_sha256',\
+            'tls_ecdhe_rsa_with_aes_256_cbc_sha384', 'tls_ecdhe_rsa_with_aes_129_cbc_sha256', 'tls_ecdhe_rsa_with_aes_256_cbc_sha', 'tls_ecdhe_rsa_with_aes_128_cbc_sha',\
+            'tls_dhe_rsa_with_aes_256_gcm_sha384', 'tls_dhe_rsa_with_aes_128_gcm_sha256', 'tls_dhe_rsa_with_aes_256_cbc_sha', 'tls_dhe_rsa_with_aes_128_cbc_sha',\
+            'tls_rsa_with_aes_256_gcm_sha384', 'tls_rsa_with_aes_128_gcm_sha256', 'tls_rsa_with_aes_256_cbc_sha256', 'tls_rsa_with_aes_128_cbc_sha256',\
+            'tls_rsa_with_aes_256_cbc_sha', 'tls_rsa_with_aes_128_cbc_sha', 'tls_ecdhe_ecdsa_with_aes_256_gcm_sha384', 'tls_ecdhe_ecdsa_with_aes_128_gcm_sha256',\
+            'tls_ecdhe_ecdsa_with_aes_256_cbc_sha384', 'tls_ecdhe_ecdsa_with_aes_128_cbc_sha256', 'tls_ecdhe_ecdsa_with_aes_256_cbc_sha',\
+            'tls_ecdhe_ecdsa_with_aes_128_cbc_sha', 'tls_dhe_dss_with_aes_256_cbc_sha256', 'tls_dhe_dss_with_aes_128_cbc_sha256',\
+            'tls_dhe_dss_with_aes_256_cbc_sha', 'tls_dhe_dss_with_aes_128_cbc_sha', 'tls_rsa_with_3des_ede_cbc_sha', 'tls_dhe_dss_with_3des_ede_cbc_sha']
+        ),
 )
 
 
@@ -1620,13 +1674,36 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 options=ssl_policy_spec
             ),
             gateway_ip_configurations=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    name=dict(type='str'),
+                    subnet=dict(
+                        type='dict',
+                        options=dict(
+                            id=dict(type='str'),
+                            name=dict(type='name'),
+                            virtual_network_name=dict(type='str')
+                        )
+                    )
+                )
             ),
             authentication_certificates=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    name=dict(type='str'),
+                    data=dict(type='str')
+                ),
             ),
             ssl_certificates=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    data=dict(type='str'),
+                    password=dict(type='str', no_log=True),
+                    name=dict(type='str')
+                )
             ),
             trusted_root_certificates=dict(
                 type='list',
@@ -1644,16 +1721,69 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 options=rewrite_rule_set_spec
             ),
             frontend_ip_configurations=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    private_ip_address=dict(type='str'),
+                    private_ip_allocation_method=dict(type='str', choices=['static', 'dynamic']),
+                    subnet=dict(
+                        type='dict',
+                        options=dict(
+                            id=dict(type='str'),
+                            name=dict(type='str'),
+                            virtual_network_name=dict(type='str')
+                        )
+                    )
+                )
             ),
             frontend_ports=dict(
-                type='list'
+                type='list',
+                options=dict(
+                    port=dict(type='str'),
+                    name=dict(type='str')
+                )
             ),
             backend_address_pools=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    name=dict(type='str'),
+                    backend_addresses=dict(
+                        fqdn=dict(type='str'),
+                        ip_address=dict(type='str')
+                    )
+                )
             ),
             backend_http_settings_collection=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    probe=dict(type='raw'),
+                    port=dict(type='int'),
+                    protocol=dict(type='str', choices=['http', 'https']),
+                    cookie_based_affinity=dict(type='str', choices=['enabled', 'disabled']),
+                    connection_draining=dict(
+                        type='dict',
+                        options=dict(
+                            drain_timeout_in_sec=dict(type='int'),
+                            enabled=dict(type='bool')
+                        )
+                    ),
+                    request_timeout=dict(type='int'),
+                    authentication_certificates=dict(
+                        type='list',
+                        elements='dict',
+                        options=dict(
+                            id=dict(type='str')
+                        )
+                    ),
+                    trusted_root_certificates=dict(type='list', elements='raw'),
+                    host_name=dict(type='str'),
+                    pick_host_name_from_backend_address=dict(type='bool'),
+                    affinity_cookie_name=dict(type='str'),
+                    path=dict(type='str'),
+                    name=dict(type='str')
+                )
             ),
             probes=dict(
                 type='list',
@@ -1661,7 +1791,17 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 options=probe_spec
             ),
             http_listeners=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    frontend_ip_configuration=dict(type='raw'),
+                    frontend_port=dict(type='raw'),
+                    protocol=dict(type='str', choices=['http', 'https']),
+                    host_name=dict(type='str'),
+                    ssl_certificate=dict(type='raw'),
+                    require_server_name_indication=dict(type='bool'),
+                    name=dict(type='str'),
+                )
             ),
             url_path_maps=dict(
                 type='list',
@@ -1672,7 +1812,18 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 required_together=[('default_backend_address_pool', 'default_backend_http_settings')],
             ),
             request_routing_rules=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    rule_type=dict(type='str', choices=['basic', 'path_based_routing']),
+                    backend_address_pool=dict(type='raw'),
+                    backend_http_setting=dict(type='raw'),
+                    http_listener=dict(type='raw'),
+                    name=dict(type='str'),
+                    redirect_configuration=dict(type='raw'),
+                    rewrite_rule_set=dict(type='raw'),
+                    url_path_map=dict(type='raw'),
+                )
             ),
             autoscale_configuration=dict(
                 type='dict',

@@ -46,6 +46,7 @@ options:
     kubernetes_version:
         description:
             - Version of Kubernetes specified when creating the managed cluster.
+        type: str
     linux_profile:
         description:
             - The Linux profile suboptions.
@@ -144,6 +145,29 @@ options:
                     - 1
                     - 2
                     - 3
+            os_type:
+                description:
+                    - The operating system type.
+                type: str
+                choices:
+                    - Linux
+                    - Windows
+            storage_profiles:
+                description:
+                    - Storage profile specifies what kind of storage used.
+                type: str
+                choices:
+                    - StorageAccount
+                    - ManagedDisks
+            ports:
+                description:
+                    - List of the agent pool's port.
+                type: list
+                elements: int
+            dns_prefix:
+                description:
+                    - DNS prefix specified when creating the managed cluster.
+                type: str
     service_principal:
         description:
             - The service principal suboptions. If not provided - use system-assigned managed identity.
@@ -192,7 +216,6 @@ options:
                     - It should be a large address space that isn't in use elsewhere in your network environment.
                     - This address range must be large enough to accommodate the number of nodes that you expect to scale up to.
                 type: str
-                default: "10.244.0.0/16"
             service_cidr:
                 description:
                     - A CIDR notation IP range from which to assign service cluster IPs.
@@ -220,6 +243,7 @@ options:
                 description:
                     - How outbound traffic will be configured for a cluster.
                 type: str
+                default: loadBalancer
                 choices:
                     - loadBalancer
                     - userDefinedRouting
@@ -284,6 +308,7 @@ options:
                         description:
                             - Whether the solution enabled.
                         type: bool
+                        default: true
             monitoring:
                 description:
                     - It gives you performance visibility by collecting memory and processor metrics from controllers, nodes,
@@ -294,6 +319,7 @@ options:
                         description:
                             - Whether the solution enabled.
                         type: bool
+                        default: true
                     log_analytics_workspace_resource_id:
                         description:
                             - Where to store the container metrics.
@@ -309,9 +335,11 @@ options:
                         description:
                             - Whether the solution enabled.
                         type: bool
+                        default: true
                     subnet_resource_id:
                         description:
                             - Subnet associated to the cluster.
+                        type: str
                         required: true
     node_resource_group:
         description:
@@ -639,8 +667,8 @@ agent_pool_profile_spec = dict(
     availability_zones=dict(type='list', elements='int', choices=[1, 2, 3]),
     os_type=dict(type='str', choices=['Linux', 'Windows']),
     orchestrator_version=dict(type='str', required=False),
-    type=dict(type='str', choice=['VirtualMachineScaleSets', 'AvailabilitySet']),
-    mode=dict(type='str', choice=['System', 'User']),
+    type=dict(type='str', choices=['VirtualMachineScaleSets', 'AvailabilitySet']),
+    mode=dict(type='str', choices=['System', 'User']),
     enable_auto_scaling=dict(type='bool'),
     max_count=dict(type='int'),
     node_labels=dict(type='dict'),
@@ -651,12 +679,12 @@ agent_pool_profile_spec = dict(
 
 network_profile_spec = dict(
     network_plugin=dict(type='str', choices=['azure', 'kubenet']),
-    network_policy=dict(type='str'),
+    network_policy=dict(type='str', choices=['azure', 'calico']),
     pod_cidr=dict(type='str'),
     service_cidr=dict(type='str'),
     dns_service_ip=dict(type='str'),
     docker_bridge_cidr=dict(type='str'),
-    load_balancer_sku=dict(type='str'),
+    load_balancer_sku=dict(type='str', choices=['standard', 'basic']),
     outbound_type=dict(type='str', default='loadBalancer', choices=['userDefinedRouting', 'loadBalancer'])
 )
 

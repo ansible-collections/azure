@@ -331,7 +331,13 @@ class AzureRMResourceInfo(AzureRMModuleBase):
             ),
             subresource=dict(
                 type='list',
-                default=[]
+                elements='dict',
+                default=[],
+                options=dict(
+                    namespace=dict(type='str'),
+                    type=dict(type='str'),
+                    name=dict(type='str')
+                )
             ),
             method=dict(
                 type='str',

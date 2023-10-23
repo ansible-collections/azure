@@ -118,6 +118,7 @@ options:
         description:
             - Assert the state of the Azure CDN endpoint. Use C(present) to create or update a Azure CDN endpoint and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present

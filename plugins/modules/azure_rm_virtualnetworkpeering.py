@@ -63,7 +63,7 @@ options:
         description:
             - State of the virtual network peering. Use C(present) to create or update a peering and C(absent) to delete it.
         default: present
-        required: true
+        type: str
         choices:
             - absent
             - present

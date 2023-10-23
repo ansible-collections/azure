@@ -82,10 +82,8 @@ options:
                 description:
                     - The artifact's source name.
                 type: str
-            source_name:
-                description:
-                    - The artifact's source name.
-                type: str
+                aliases:
+                    - source_name
             source_path:
                 description:
                     - The artifact's path in the source repository.
@@ -274,12 +272,17 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             ),
             artifacts=dict(
                 type='list',
+                elements='dict',
                 options=dict(
                     artifact_id=dict(
                         type='str'
                     ),
+                    source_path=dict(
+                        type='str'
+                    ),
                     parameters=dict(
                         type='list',
+                        elements='dict',
                         options=dict(
                             name=dict(
                                 type='str'
