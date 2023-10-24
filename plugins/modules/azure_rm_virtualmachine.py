@@ -306,7 +306,6 @@ options:
                 choices:
                     - ReadOnly
                     - ReadWrite
-                default: ReadOnly
     public_ip_allocation_method:
         description:
             - Allocation method for the public IP of the VM.
@@ -1113,7 +1112,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     lun=dict(type='int', required=True),
                     disk_size_gb=dict(type='int'),
                     managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS',
-                            'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
+                                           'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
                     storage_account_name=dict(type='str'),
                     storage_container_name=dict(type='str', default='vhds'),
                     storage_blob_name=dict(type='str'),

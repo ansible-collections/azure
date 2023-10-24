@@ -276,7 +276,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 options=dict(
                     artifact_id=dict(
                         type='str',
-                        aliases='source_name'
+                        aliases=['source_name']
                     ),
                     source_path=dict(
                         type='str'

@@ -303,6 +303,8 @@ options:
                 description:
                     - The HTTP application routing solution makes it easy to access applications that are deployed to your cluster.
                 type: dict
+                aliases:
+                    - httpApplicationRouting
                 suboptions:
                     enabled:
                         description:
@@ -314,6 +316,8 @@ options:
                     - It gives you performance visibility by collecting memory and processor metrics from controllers, nodes,
                       and containers that are available in Kubernetes through the Metrics API.
                 type: dict
+                aliases:
+                    - omsagent
                 suboptions:
                     enabled:
                         description:
@@ -325,11 +329,15 @@ options:
                             - Where to store the container metrics.
                         type: str
                         required: true
+                        aliases:
+                            - logAnalyticsWorkspaceResourceID
             virtual_node:
                 description:
                     - With virtual nodes, you have quick provisioning of pods, and only pay per second for their execution time.
                     - You don't need to wait for Kubernetes cluster autoscaler to deploy VM compute nodes to run the additional pods.
                 type: dict
+                aliases:
+                    - aciConnector
                 suboptions:
                     enabled:
                         description:
@@ -341,6 +349,8 @@ options:
                             - Subnet associated to the cluster.
                         type: str
                         required: true
+                        aliases:
+                            - SubnetName
     node_resource_group:
         description:
             - Name of the resource group containing agent pool nodes.

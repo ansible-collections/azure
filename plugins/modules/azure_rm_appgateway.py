@@ -1504,15 +1504,15 @@ ssl_policy_spec = dict(
     policy_name=dict(type='str', choices=['ssl_policy20150501', 'ssl_policy20170401', 'ssl_policy20170401_s']),
     min_protocol_version=dict(type='str', choices=['tls_v1_0', 'tls_v1_1', 'tls_v1_2']),
     cipher_suites=dict(type='list', elements='str', choices=['tls_ecdhe_rsa_with_aes_256_gcm_sha384',
-        'tls_ecdhe_rsa_with_aes_128_gcm_sha256', 'tls_ecdhe_rsa_with_aes_256_cbc_sha384', 'tls_ecdhe_rsa_with_aes_129_cbc_sha256',
-        'tls_ecdhe_rsa_with_aes_256_cbc_sha', 'tls_ecdhe_rsa_with_aes_128_cbc_sha', 'tls_dhe_rsa_with_aes_256_gcm_sha384',
-        'tls_dhe_rsa_with_aes_128_gcm_sha256', 'tls_dhe_rsa_with_aes_256_cbc_sha', 'tls_dhe_rsa_with_aes_128_cbc_sha',
-            'tls_rsa_with_aes_256_gcm_sha384', 'tls_rsa_with_aes_128_gcm_sha256', 'tls_rsa_with_aes_256_cbc_sha256',
-            'tls_rsa_with_aes_128_cbc_sha256', 'tls_rsa_with_aes_256_cbc_sha', 'tls_rsa_with_aes_128_cbc_sha',
-            'tls_ecdhe_ecdsa_with_aes_256_gcm_sha384', 'tls_ecdhe_ecdsa_with_aes_128_gcm_sha256', 'tls_ecdhe_ecdsa_with_aes_256_cbc_sha384',
-            'tls_ecdhe_ecdsa_with_aes_128_cbc_sha256', 'tls_ecdhe_ecdsa_with_aes_256_cbc_sha', 'tls_ecdhe_ecdsa_with_aes_128_cbc_sha',
-            'tls_dhe_dss_with_aes_256_cbc_sha256', 'tls_dhe_dss_with_aes_128_cbc_sha256', 'tls_dhe_dss_with_aes_256_cbc_sha',
-            'tls_dhe_dss_with_aes_128_cbc_sha', 'tls_rsa_with_3des_ede_cbc_sha', 'tls_dhe_dss_with_3des_ede_cbc_sha']
+                       'tls_ecdhe_rsa_with_aes_128_gcm_sha256', 'tls_ecdhe_rsa_with_aes_256_cbc_sha384', 'tls_ecdhe_rsa_with_aes_128_cbc_sha256',
+                       'tls_ecdhe_rsa_with_aes_256_cbc_sha', 'tls_ecdhe_rsa_with_aes_128_cbc_sha', 'tls_dhe_rsa_with_aes_256_gcm_sha384',
+                       'tls_dhe_rsa_with_aes_128_gcm_sha256', 'tls_dhe_rsa_with_aes_256_cbc_sha', 'tls_dhe_rsa_with_aes_128_cbc_sha',
+                       'tls_rsa_with_aes_256_gcm_sha384', 'tls_rsa_with_aes_128_gcm_sha256', 'tls_rsa_with_aes_256_cbc_sha256',
+                       'tls_rsa_with_aes_128_cbc_sha256', 'tls_rsa_with_aes_256_cbc_sha', 'tls_rsa_with_aes_128_cbc_sha',
+                       'tls_ecdhe_ecdsa_with_aes_256_gcm_sha384', 'tls_ecdhe_ecdsa_with_aes_128_gcm_sha256', 'tls_ecdhe_ecdsa_with_aes_256_cbc_sha384',
+                       'tls_ecdhe_ecdsa_with_aes_128_cbc_sha256', 'tls_ecdhe_ecdsa_with_aes_256_cbc_sha', 'tls_ecdhe_ecdsa_with_aes_128_cbc_sha',
+                       'tls_dhe_dss_with_aes_256_cbc_sha256', 'tls_dhe_dss_with_aes_128_cbc_sha256', 'tls_dhe_dss_with_aes_256_cbc_sha',
+                       'tls_dhe_dss_with_aes_128_cbc_sha', 'tls_rsa_with_3des_ede_cbc_sha', 'tls_dhe_dss_with_3des_ede_cbc_sha']
         ),
 )
 
@@ -1684,7 +1684,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                         type='dict',
                         options=dict(
                             id=dict(type='str'),
-                            name=dict(type='name'),
+                            name=dict(type='str'),
                             virtual_network_name=dict(type='str')
                         )
                     )
@@ -1754,8 +1754,11 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 options=dict(
                     name=dict(type='str'),
                     backend_addresses=dict(
-                        fqdn=dict(type='str'),
-                        ip_address=dict(type='str')
+                        type='dict',
+                        options=dict(
+                            fqdn=dict(type='str'),
+                            ip_address=dict(type='str')
+                        )
                     )
                 )
             ),
