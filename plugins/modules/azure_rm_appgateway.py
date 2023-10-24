@@ -729,7 +729,7 @@ options:
                 description:
                     - Backend address pool resource of the application gateway. Not used if I(rule_type) is C(path_based_routing).
                 type: raw
-            backend_http_setting:
+            backend_http_settings:
                 description:
                     - Backend C(http) settings resource of the application gateway.
                 type: raw
@@ -1510,12 +1510,12 @@ ssl_policy_spec = dict(
                                 'tls_ecdhe_rsa_with_aes_128_cbc_sha256', 'tls_ecdhe_rsa_with_aes_256_cbc_sha', 'tls_ecdhe_rsa_with_aes_128_cbc_sha',
                                 'tls_dhe_rsa_with_aes_256_gcm_sha384', 'tls_dhe_rsa_with_aes_128_gcm_sha256', 'tls_dhe_rsa_with_aes_256_cbc_sha',
                                 'tls_dhe_rsa_with_aes_128_cbc_sha', 'tls_rsa_with_aes_256_gcm_sha384', 'tls_rsa_with_aes_128_gcm_sha256',
-                                'tls_rsa_with_aes_256_cbc_sha256', 'tls_rsa_with_aes_128_cbc_sha256', 'tls_rsa_with_aes_256_cbc_sha', 'tls_rsa_with_aes_128_cbc_sha',
-                                'tls_ecdhe_ecdsa_with_aes_256_gcm_sha384', 'tls_ecdhe_ecdsa_with_aes_128_gcm_sha256', 'tls_ecdhe_ecdsa_with_aes_256_cbc_sha384',
-                                'tls_ecdhe_ecdsa_with_aes_128_cbc_sha256', 'tls_ecdhe_ecdsa_with_aes_256_cbc_sha', 'tls_ecdhe_ecdsa_with_aes_128_cbc_sha',
-                                'tls_dhe_dss_with_aes_256_cbc_sha256', 'tls_dhe_dss_with_aes_128_cbc_sha256', 'tls_dhe_dss_with_aes_256_cbc_sha',
-                                'tls_dhe_dss_with_aes_128_cbc_sha', 'tls_rsa_with_3des_ede_cbc_sha', 'tls_dhe_dss_with_3des_ede_cbc_sha']
-    ),
+                                'tls_rsa_with_aes_256_cbc_sha256', 'tls_rsa_with_aes_128_cbc_sha256', 'tls_rsa_with_aes_256_cbc_sha',
+                                'tls_rsa_with_aes_128_cbc_sha', 'tls_ecdhe_ecdsa_with_aes_256_gcm_sha384', 'tls_ecdhe_ecdsa_with_aes_128_gcm_sha256',
+                                'tls_ecdhe_ecdsa_with_aes_256_cbc_sha384', 'tls_ecdhe_ecdsa_with_aes_128_cbc_sha256',
+                                'tls_ecdhe_ecdsa_with_aes_256_cbc_sha', 'tls_ecdhe_ecdsa_with_aes_128_cbc_sha', 'tls_dhe_dss_with_aes_256_cbc_sha256',
+                                'tls_dhe_dss_with_aes_128_cbc_sha256', 'tls_dhe_dss_with_aes_256_cbc_sha', 'tls_dhe_dss_with_aes_128_cbc_sha',
+                                'tls_rsa_with_3des_ede_cbc_sha', 'tls_dhe_dss_with_3des_ede_cbc_sha']),
 )
 
 
@@ -1828,7 +1828,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 options=dict(
                     rule_type=dict(type='str', choices=['basic', 'path_based_routing', 'PathBasedRouting', 'Basic']),
                     backend_address_pool=dict(type='raw'),
-                    backend_http_setting=dict(type='raw'),
+                    backend_http_settings=dict(type='raw'),
                     http_listener=dict(type='raw'),
                     name=dict(type='str'),
                     redirect_configuration=dict(type='raw'),

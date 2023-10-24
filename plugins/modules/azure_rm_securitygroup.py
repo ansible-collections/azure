@@ -767,8 +767,8 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
             state=dict()
         )
 
-        mutually_exclusive = [("rules['source_application_security_groups']", "rules['source_address_prefix']"),
-                              ("rules['destination_application_security_groups']", "rules['destination_address_prefix']")]
+        mutually_exclusive = [("rules.source_application_security_groups", "rules.source_address_prefix"),
+                              ("rules.destination_application_security_groups", "rules.destination_address_prefix")]
 
         super(AzureRMSecurityGroup, self).__init__(self.module_arg_spec,
                                                    supports_check_mode=True,
