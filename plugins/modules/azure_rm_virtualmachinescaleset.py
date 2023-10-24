@@ -181,13 +181,15 @@ options:
                 description:
                     - The logical unit number for data disk.
                 default: 0
-                type: int
+                type: str
             disk_size_gb:
                 description:
                     - The initial disk size in GB for blank data disks.
+                type: int
             managed_disk_type:
                 description:
                     - Managed data disk type.
+                type: str
                 choices:
                     - Standard_LRS
                     - Premium_LRS
@@ -198,6 +200,7 @@ options:
             caching:
                 description:
                     - Type of data disk caching.
+                type: str
                 choices:
                     - ReadOnly
                     - ReadWrite
@@ -687,7 +690,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                                  default='ReadOnly'),
             os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS']),
-            data_disks=dict(type='list', elements='str', options=dict(
+            data_disks=dict(type='list', elements='dict', options=dict(
                 lun=dict(type='str', default=0),
                 disk_size_gb=dict(type='int'),
                 caching=dict(type='str', default='ReadOnly', choices=['ReadOnly', 'ReadWrite']),

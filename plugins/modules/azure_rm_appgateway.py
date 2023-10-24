@@ -727,7 +727,7 @@ options:
                 description:
                     - Backend address pool resource of the application gateway. Not used if I(rule_type) is C(path_based_routing).
                 type: raw
-            backend_http_settings:
+            backend_http_setting:
                 description:
                     - Backend C(http) settings resource of the application gateway.
                 type: raw
@@ -1503,14 +1503,16 @@ ssl_policy_spec = dict(
     policy_type=dict(type='str', choices=['predefined', 'custom']),
     policy_name=dict(type='str', choices=['ssl_policy20150501', 'ssl_policy20170401', 'ssl_policy20170401_s']),
     min_protocol_version=dict(type='str', choices=['tls_v1_0', 'tls_v1_1', 'tls_v1_2']),
-    cipher_suites=dict(type='list', elements='str', choices=['tls_ecdhe_rsa_with_aes_256_gcm_sha384', 'tls_ecdhe_rsa_with_aes_128_gcm_sha256',\
-            'tls_ecdhe_rsa_with_aes_256_cbc_sha384', 'tls_ecdhe_rsa_with_aes_129_cbc_sha256', 'tls_ecdhe_rsa_with_aes_256_cbc_sha', 'tls_ecdhe_rsa_with_aes_128_cbc_sha',\
-            'tls_dhe_rsa_with_aes_256_gcm_sha384', 'tls_dhe_rsa_with_aes_128_gcm_sha256', 'tls_dhe_rsa_with_aes_256_cbc_sha', 'tls_dhe_rsa_with_aes_128_cbc_sha',\
-            'tls_rsa_with_aes_256_gcm_sha384', 'tls_rsa_with_aes_128_gcm_sha256', 'tls_rsa_with_aes_256_cbc_sha256', 'tls_rsa_with_aes_128_cbc_sha256',\
-            'tls_rsa_with_aes_256_cbc_sha', 'tls_rsa_with_aes_128_cbc_sha', 'tls_ecdhe_ecdsa_with_aes_256_gcm_sha384', 'tls_ecdhe_ecdsa_with_aes_128_gcm_sha256',\
-            'tls_ecdhe_ecdsa_with_aes_256_cbc_sha384', 'tls_ecdhe_ecdsa_with_aes_128_cbc_sha256', 'tls_ecdhe_ecdsa_with_aes_256_cbc_sha',\
-            'tls_ecdhe_ecdsa_with_aes_128_cbc_sha', 'tls_dhe_dss_with_aes_256_cbc_sha256', 'tls_dhe_dss_with_aes_128_cbc_sha256',\
-            'tls_dhe_dss_with_aes_256_cbc_sha', 'tls_dhe_dss_with_aes_128_cbc_sha', 'tls_rsa_with_3des_ede_cbc_sha', 'tls_dhe_dss_with_3des_ede_cbc_sha']
+    cipher_suites=dict(type='list', elements='str', choices=['tls_ecdhe_rsa_with_aes_256_gcm_sha384',
+        'tls_ecdhe_rsa_with_aes_128_gcm_sha256', 'tls_ecdhe_rsa_with_aes_256_cbc_sha384', 'tls_ecdhe_rsa_with_aes_129_cbc_sha256',
+        'tls_ecdhe_rsa_with_aes_256_cbc_sha', 'tls_ecdhe_rsa_with_aes_128_cbc_sha', 'tls_dhe_rsa_with_aes_256_gcm_sha384',
+        'tls_dhe_rsa_with_aes_128_gcm_sha256', 'tls_dhe_rsa_with_aes_256_cbc_sha', 'tls_dhe_rsa_with_aes_128_cbc_sha',
+            'tls_rsa_with_aes_256_gcm_sha384', 'tls_rsa_with_aes_128_gcm_sha256', 'tls_rsa_with_aes_256_cbc_sha256',
+            'tls_rsa_with_aes_128_cbc_sha256', 'tls_rsa_with_aes_256_cbc_sha', 'tls_rsa_with_aes_128_cbc_sha',
+            'tls_ecdhe_ecdsa_with_aes_256_gcm_sha384', 'tls_ecdhe_ecdsa_with_aes_128_gcm_sha256', 'tls_ecdhe_ecdsa_with_aes_256_cbc_sha384',
+            'tls_ecdhe_ecdsa_with_aes_128_cbc_sha256', 'tls_ecdhe_ecdsa_with_aes_256_cbc_sha', 'tls_ecdhe_ecdsa_with_aes_128_cbc_sha',
+            'tls_dhe_dss_with_aes_256_cbc_sha256', 'tls_dhe_dss_with_aes_128_cbc_sha256', 'tls_dhe_dss_with_aes_256_cbc_sha',
+            'tls_dhe_dss_with_aes_128_cbc_sha', 'tls_rsa_with_3des_ede_cbc_sha', 'tls_dhe_dss_with_3des_ede_cbc_sha']
         ),
 )
 
@@ -1726,6 +1728,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 options=dict(
                     private_ip_address=dict(type='str'),
                     private_ip_allocation_method=dict(type='str', choices=['static', 'dynamic']),
+                    public_ip_address=dict(type='raw'),
+                    name=dict(type='str'),
                     subnet=dict(
                         type='dict',
                         options=dict(
@@ -1738,6 +1742,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             ),
             frontend_ports=dict(
                 type='list',
+                elements='dict',
                 options=dict(
                     port=dict(type='str'),
                     name=dict(type='str')

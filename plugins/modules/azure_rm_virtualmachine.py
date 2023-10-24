@@ -153,7 +153,6 @@ options:
             - For custom images, the name of the image. To narrow the search to a specific resource group, a dict with the keys I(name) and I(resource_group).
             - For Marketplace images, a dict with the keys I(publisher), I(offer), I(sku), and I(version).
             - Set I(version=latest) to get the most recent version of a given image.
-        required: true
         type: raw
     availability_set:
         description:
@@ -1113,7 +1112,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 options=dict(
                     lun=dict(type='int', required=True),
                     disk_size_gb=dict(type='int'),
-                    managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
+                    managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS',
+                            'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
                     storage_account_name=dict(type='str'),
                     storage_container_name=dict(type='str', default='vhds'),
                     storage_blob_name=dict(type='str'),
@@ -1121,21 +1121,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 )
             ),
             plan=dict(type='dict'),
-            zones=dict(
-                type='list',
-                elements='str',
-                options=dict(
-                    lun=dict(type='int', required=True),
-                    disk_size_gb=dict(type='int'),
-                    managed_disk_type=dict(
-                        type='str',
-                        choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
-                    storage_account_name=dict(type='str'),
-                    storage_container_name=dict(type='str', default='vhds'),
-                    storage_blob_name=dict(type='str'),
-                    caching=dict(type='str', choices=['ReadOnly', 'ReadWrite'], default='ReadOnly')
-                )
-            ),
+            zones=dict(type='list', elements='str'),
             accept_terms=dict(type='bool', default=False),
             license_type=dict(type='str', choices=['Windows_Server', 'Windows_Client', 'RHEL_BYOS', 'SLES_BYOS']),
             vm_identity=dict(type='dict', options=managed_identity_spec),

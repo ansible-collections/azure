@@ -264,7 +264,8 @@ class AzureRMVaults(AzureRMModuleBase):
                         type='list',
                         elements='str',
                         no_log=True,
-                        choices=['encrypt', 'decrypt', 'wrapkey', 'unwrapkey', 'sign', 'verify', 'get', 'list', 'create', 'update', 'import', 'delete', 'backup', 'restore', 'recover', 'purge']
+                        choices=['encrypt', 'decrypt', 'wrapkey', 'unwrapkey', 'sign', 'verify', 'get', 
+                            'list', 'create', 'update', 'import', 'delete', 'backup', 'restore', 'recover', 'purge']
                     ),
                     secrets=dict(
                         type='list',
@@ -275,7 +276,8 @@ class AzureRMVaults(AzureRMModuleBase):
                     certificates=dict(
                         type='list',
                         elements='str',
-                        choices=['get', 'list', 'delete', 'create', 'import', 'update', 'managecontacts', 'getissuers', 'listissuers', 'setissuers', 'deleteissuers', 'manageissuers', 'recover', 'purge', 'backup', 'restore']
+                        choices=['get', 'list', 'delete', 'create', 'import', 'update', 'managecontacts',
+                                'getissuers', 'listissuers', 'setissuers', 'deleteissuers', 'manageissuers', 'recover', 'purge', 'backup', 'restore']
                     ),
                     storage=dict(type='list', elements='str')
                 )
