@@ -697,7 +697,10 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
                     lun=dict(type='str', default='0'),
                     disk_size_gb=dict(type='int'),
                     caching=dict(type='str', default='ReadOnly', choices=['ReadOnly', 'ReadWrite']),
-                    managed_disk_type=dict(type='str', choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS'])
+                    managed_disk_type=dict(
+                        type='str',
+                        choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS']
+                    )
                 )
             ),
             subnet_name=dict(type='str', aliases=['subnet']),
