@@ -593,7 +593,7 @@ ip_configuration_spec = dict(
     private_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
     public_ip_address_name=dict(type='str', aliases=['public_ip_address', 'public_ip_name']),
     public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
-    load_balancer_backend_address_pools=dict(type='list', type='raw'),
+    load_balancer_backend_address_pools=dict(type='list', elements='raw'),
     application_gateway_backend_address_pools=dict(type='list', elements='raw'),
     primary=dict(type='bool', default=False),
     application_security_groups=dict(type='list', elements='raw')

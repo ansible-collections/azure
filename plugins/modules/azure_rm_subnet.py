@@ -412,7 +412,7 @@ class AzureRMSubnet(AzureRMModuleBase):
                 elements='dict',
                 options=dict(
                     service=dict(type='str', required=True),
-                    locaiton=dict(type='list', elements='str')
+                    locations=dict(type='list', elements='str')
                 )
             ),
             private_endpoint_network_policies=dict(

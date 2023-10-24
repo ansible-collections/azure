@@ -681,7 +681,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             admin_username=dict(type='str'),
             admin_password=dict(type='str', no_log=True),
             ssh_password_enabled=dict(type='bool', default=True),
-            ssh_public_keys=dict(type='list', type='dict'),
+            ssh_public_keys=dict(type='list', elements='dict'),
             image=dict(type='raw'),
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite'],
                                  default='ReadOnly'),
@@ -690,7 +690,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             data_disks=dict(type='list', elements='str', options=dict(
                 lun=dict(type='str', default=0),
                 disk_size_gb=dict(type='int'),
-                caching=dict(type='str', default='ReadOnly', choices=['ReadOnly', 'ReadWrite'])
+                caching=dict(type='str', default='ReadOnly', choices=['ReadOnly', 'ReadWrite']),
                 managed_disk_type=dict(type='str', choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS'])
                 )
             ),

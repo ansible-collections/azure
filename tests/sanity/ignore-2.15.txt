@@ -1,4 +1,3 @@
-plugins/modules/azure_rm_aks.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_apimanagement.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_dnsrecordset.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_gallery.py validate-modules:invalid-ansiblemodule-schema

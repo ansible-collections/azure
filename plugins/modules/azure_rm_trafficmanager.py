@@ -366,7 +366,7 @@ dns_config_spec = dict(
 
 monitor_config_spec = dict(
     profile_monitor_status=dict(type='str'),
-    protocol=dict(type='str'),
+    protocol=dict(type='str', choices=['HTTP', 'HTTPS', 'TCP']),
     port=dict(type='int'),
     path=dict(type='str'),
     interval_in_seconds=dict(type='int'),
@@ -380,7 +380,7 @@ endpoint_spec = dict(
     type=dict(type='str'),
     target_resource_id=dict(type='str'),
     target=dict(type='str'),
-    endpoint_status=dict(type='str'),
+    endpoint_status=dict(type='str', choices=['Enabled', 'Disabled']),
     weight=dict(type='int'),
     priority=dict(type='int'),
     endpoint_location=dict(type='str'),

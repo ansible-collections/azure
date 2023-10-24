@@ -1113,17 +1113,17 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 options=dict(
                     lun=dict(type='int', required=True),
                     disk_size_gb=dict(type='int'),
-                    managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_L     RS', 'Premium_ZRS', 'UltraSSD_LRS']),
+                    managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
                     storage_account_name=dict(type='str'),
                     storage_container_name=dict(type='str', default='vhds'),
-                    storage_container_name=dict(type='str'),
+                    storage_blob_name=dict(type='str'),
                     caching=dict(type='str', choices=['ReadOnly', 'ReadOnly'])
                 )
             ),
             plan=dict(type='dict'),
             zones=dict(
                 type='list',
-                elements='str'
+                elements='str',
                 options=dict(
                     lun=dict(type='int', required=True),
                     disk_size_gb=dict(type='int'),
@@ -1133,7 +1133,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     storage_account_name=dict(type='str'),
                     storage_container_name=dict(type='str', default='vhds'),
                     storage_blob_name=dict(type='str'),
-                    caching=dict(type='str', choices=['ReadOnly', 'ReadWrite'], default='ReadOnly'])
+                    caching=dict(type='str', choices=['ReadOnly', 'ReadWrite'], default='ReadOnly')
                 )
             ),
             accept_terms=dict(type='bool', default=False),

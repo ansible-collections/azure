@@ -243,7 +243,7 @@ class AzureRMClusters(AzureRMModuleBase):
                 elements='dict',
                 options=dict(
                     name=dict(type='str', choices=['headnode', 'workernode', 'zookepernode']),
-                    win_instance_count=dict(type='int'),
+                    min_instance_count=dict(type='int'),
                     target_instance_count=dict(type='int'),
                     vm_size=dict(type='str'),
                     linux_profile=dict(
@@ -262,7 +262,7 @@ class AzureRMClusters(AzureRMModuleBase):
                     name=dict(type='str'),
                     is_default=dict(type='bool'),
                     container=dict(type='str'),
-                    key=dict(type='str')
+                    key=dict(type='str', no_log=True)
                 )
             ),
             state=dict(

@@ -244,7 +244,7 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
             weeks=dict(
                 type='list',
                 elements='str',
-                default=['str']
+                default=['First']
             ),
             months=dict(
                 type='list',

@@ -547,7 +547,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             ),
             ip_configurations=dict(
                 type='list',
-                elements='str',
+                elements='dict',
                 disposition='/properties/ipConfigurations',
                 options=dict(
                     subnet=dict(

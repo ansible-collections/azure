@@ -156,6 +156,7 @@ options:
                     - It can be a string containing resource id of a subnet.
                     - It can be a dictionary containing 'resource_group', 'virtual_network_name' and 'subnet_name'
                 type: raw
+                required: true
             ignore_missing_v_net_service_endpoint:
                 description:
                     - Create Cosmos DB account without existing virtual network service endpoint.
