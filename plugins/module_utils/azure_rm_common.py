@@ -1527,7 +1527,8 @@ class AzureRMAuth(object):
                                                                      verify=self._cert_validation_mode == 'validate')
             self.azure_credential_track2 = client_secret.ClientSecretCredential(client_id=self.credentials['client_id'],
                                                                                 client_secret=self.credentials['secret'],
-                                                                                tenant_id=self.credentials['tenant'])
+                                                                                tenant_id=self.credentials['tenant'],
+                                                                                authority=self._adfs_authority_url)
 
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None and \
@@ -1543,7 +1544,8 @@ class AzureRMAuth(object):
 
             self.azure_credential_track2 = certificate.CertificateCredential(tenant_id=self.credentials['tenant'],
                                                                              client_id=self.credentials['client_id'],
-                                                                             certificate_path=self.credentials['x509_certificate_path'])
+                                                                             certificate_path=self.credentials['x509_certificate_path'],
+                                                                             authority=self._adfs_authority_url)
 
         elif self.credentials.get('ad_user') is not None and \
                 self.credentials.get('password') is not None and \
@@ -1559,7 +1561,8 @@ class AzureRMAuth(object):
             self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
                                                                                     password=self.credentials['password'],
                                                                                     tenant_id=self.credentials.get('tenant'),
-                                                                                    client_id=self.credentials.get('client_id'))
+                                                                                    client_id=self.credentials.get('client_id'),
+                                                                                    authority=self._adfs_authority_url)
 
         elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
             tenant = self.credentials.get('tenant')
@@ -1577,7 +1580,8 @@ class AzureRMAuth(object):
             self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
                                                                                     password=self.credentials['password'],
                                                                                     tenant_id=self.credentials.get('tenant', 'organizations'),
-                                                                                    client_id=client_id)
+                                                                                    client_id=client_id,
+                                                                                    authority=self._adfs_authority_url)
 
         else:
             self.fail("Failed to authenticate with provided credentials. Some attributes were missing. "
