@@ -31,7 +31,6 @@ options:
         description:
             - The name of the custom image.
         type: str
-        required: True
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -137,7 +136,6 @@ class AzureRMDtlCustomImageInfo(AzureRMModuleBase):
             ),
             name=dict(
                 type='str',
-                required=True
             ),
             tags=dict(
                 type='list',

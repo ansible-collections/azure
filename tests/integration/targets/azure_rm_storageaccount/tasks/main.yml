@@ -45,7 +45,7 @@
       - defaults_output.state.id is defined
       - defaults_output.state.https_only
       - defaults_output.state.access_tier == None
-      - defaults_output.state.allow_blob_public_access == true
+      - defaults_output.state.allow_blob_public_access == false
       - defaults_output.state.minimum_tls_version == "TLS1_0"
 
 - name: Create storage account with static website disabled

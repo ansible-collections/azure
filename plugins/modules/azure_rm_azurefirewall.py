@@ -51,7 +51,7 @@ options:
                 description:
                     - Collection of rules used by a application rule collection.
                 type: list
-                elements: dict
+                elements: raw
                 suboptions:
                     name:
                         description:
@@ -84,7 +84,7 @@ options:
                         description:
                             - List of FQDNs for this rule.
                         type: list
-                        elements: str
+                        elements: raw
                     fqdn_tags:
                         description:
                             - List of FQDN Tags for this rule.
@@ -387,7 +387,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                     ),
                     rules=dict(
                         type='list',
-                        elements='dict',
+                        elements='raw',
                         disposition='properties/*',
                         options=dict(
                             name=dict(
@@ -416,7 +416,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                             ),
                             target_fqdns=dict(
                                 type='list',
-                                elements='str',
+                                elements='raw',
                                 disposition='targetFqdns'
                             ),
                             fqdn_tags=dict(

@@ -1951,7 +1951,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     ev = kwargs[key]
                     for i in range(len(ev)):
                         item = ev[i]
-                        if 'subnet' in item and 'name' in item['subnet'] and 'virtual_network_name' in item['subnet']:
+                        if 'subnet' in item and item['subnet'] is not None and 'name' in item['subnet'] and item['subnet']['name'] is not None and \
+                                'virtual_network_name' in item['subnet'] and item['subnet']['virtual_network_name'] is not None:
                             id = subnet_id(self.subscription_id,
                                            kwargs['resource_group'],
                                            item['subnet']['virtual_network_name'],
@@ -2027,14 +2028,15 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     ev = kwargs[key]
                     for i in range(len(ev)):
                         item = ev[i]
-                        if 'private_ip_allocation_method' in item:
+                        if 'private_ip_allocation_method' in item and item['private_ip_allocation_method'] is not None:
                             item['private_ip_allocation_method'] = _snake_to_camel(item['private_ip_allocation_method'], True)
-                        if 'public_ip_address' in item:
+                        if 'public_ip_address' in item and item['public_ip_address'] is not None:
                             id = public_ip_id(self.subscription_id,
                                               kwargs['resource_group'],
                                               item['public_ip_address'])
                             item['public_ip_address'] = {'id': id}
-                        if 'subnet' in item and 'name' in item['subnet'] and 'virtual_network_name' in item['subnet']:
+                        if 'subnet' in item and item['subnet'] is not None and 'name' in item['subnet'] and item['subnet']['name'] is not None and \
+                                'virtual_network_name' in item['subnet'] and item['subnet']['virtual_network_name'] is not None:
                             id = subnet_id(self.subscription_id,
                                            kwargs['resource_group'],
                                            item['subnet']['virtual_network_name'],
@@ -2049,7 +2051,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     ev = kwargs[key]
                     for i in range(len(ev)):
                         item = ev[i]
-                        if 'protocol' in item:
+                        if 'protocol' in item and item['protocol'] is not None:
                             item['protocol'] = _snake_to_camel(item['protocol'], True)
                         if 'pick_host_name_from_backend_http_settings' in item and item['pick_host_name_from_backend_http_settings'] and 'host' in item:
                             del item['host']
@@ -2058,17 +2060,17 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     ev = kwargs[key]
                     for i in range(len(ev)):
                         item = ev[i]
-                        if 'protocol' in item:
+                        if 'protocol' in item and item['protocol'] is not None:
                             item['protocol'] = _snake_to_camel(item['protocol'], True)
-                        if 'cookie_based_affinity' in item:
+                        if 'cookie_based_affinity' in item and item['cookie_based_affinity'] is not None:
                             item['cookie_based_affinity'] = _snake_to_camel(item['cookie_based_affinity'], True)
-                        if 'probe' in item:
+                        if 'probe' in item and item['probe'] is not None:
                             id = probe_id(self.subscription_id,
                                           kwargs['resource_group'],
                                           kwargs['name'],
                                           item['probe'])
                             item['probe'] = {'id': id}
-                        if 'trusted_root_certificates' in item:
+                        if 'trusted_root_certificates' in item and item['trusted_root_certificates'] is not None:
                             for j in range(len(item['trusted_root_certificates'])):
                                 id = item['trusted_root_certificates'][j]
                                 id = id if is_valid_resource_id(id) else trusted_root_certificate_id(self.subscription_id,
@@ -2081,26 +2083,26 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     ev = kwargs[key]
                     for i in range(len(ev)):
                         item = ev[i]
-                        if 'frontend_ip_configuration' in item:
+                        if 'frontend_ip_configuration' in item and item['frontend_ip_configuration'] is not None:
                             id = frontend_ip_configuration_id(self.subscription_id,
                                                               kwargs['resource_group'],
                                                               kwargs['name'],
                                                               item['frontend_ip_configuration'])
                             item['frontend_ip_configuration'] = {'id': id}
 
-                        if 'frontend_port' in item:
+                        if 'frontend_port' in item and item['frontend_port'] is not None:
                             id = frontend_port_id(self.subscription_id,
                                                   kwargs['resource_group'],
                                                   kwargs['name'],
                                                   item['frontend_port'])
                             item['frontend_port'] = {'id': id}
-                        if 'ssl_certificate' in item:
+                        if 'ssl_certificate' in item and item['ssl_certificate'] is not None:
                             id = ssl_certificate_id(self.subscription_id,
                                                     kwargs['resource_group'],
                                                     kwargs['name'],
                                                     item['ssl_certificate'])
                             item['ssl_certificate'] = {'id': id}
-                        if 'protocol' in item:
+                        if 'protocol' in item and item['protocol'] is not None:
                             item['protocol'] = _snake_to_camel(item['protocol'], True)
                         ev[i] = item
                     self.parameters["http_listeners"] = ev
@@ -2108,7 +2110,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     ev = kwargs[key]
                     for i in range(len(ev)):
                         item = ev[i]
-                        if item['default_backend_address_pool']:
+                        if item['default_backend_address_pool'] and item['default_backend_address_pool'] is not None:
                             id = backend_address_pool_id(self.subscription_id,
                                                          kwargs['resource_group'],
                                                          kwargs['name'],
@@ -2116,7 +2118,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             item['default_backend_address_pool'] = {'id': id}
                         else:
                             del item['default_backend_address_pool']
-                        if item['default_backend_http_settings']:
+                        if item['default_backend_http_settings'] and item['default_backend_http_settings'] is not None:
                             id = backend_http_settings_id(self.subscription_id,
                                                           kwargs['resource_group'],
                                                           kwargs['name'],
@@ -2128,7 +2130,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                             ev2 = item['path_rules']
                             for j in range(len(ev2)):
                                 item2 = ev2[j]
-                                if item2['backend_address_pool']:
+                                if item2['backend_address_pool'] and item2['backend_address_pool'] is not None:
                                     id = backend_address_pool_id(self.subscription_id,
                                                                  kwargs['resource_group'],
                                                                  kwargs['name'],
@@ -2136,7 +2138,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                     item2['backend_address_pool'] = {'id': id}
                                 else:
                                     del item2['backend_address_pool']
-                                if item2['backend_http_settings']:
+                                if item2['backend_http_settings'] and item2['backend_http_settings'] is not None:
                                     id = backend_http_settings_id(self.subscription_id,
                                                                   kwargs['resource_group'],
                                                                   kwargs['name'],
@@ -2144,7 +2146,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                                     item2['backend_http_settings'] = {'id': id}
                                 else:
                                     del item2['backend_http_settings']
-                                if item2['redirect_configuration']:
+                                if item2['redirect_configuration'] and item2['redirect_configuration'] is not None:
                                     id = redirect_configuration_id(self.subscription_id,
                                                                    kwargs['resource_group'],
                                                                    kwargs['name'],
@@ -2185,37 +2187,38 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     ev = kwargs[key]
                     for i in range(len(ev)):
                         item = ev[i]
-                        if 'rule_type' in item and item['rule_type'] == 'path_based_routing' and 'backend_address_pool' in item:
+                        if 'rule_type' in item and item['rule_type'] is not None and item['rule_type'] == 'path_based_routing' and \
+                                'backend_address_pool' in item and item['backend_address_pool'] is not None:
                             del item['backend_address_pool']
-                        if 'backend_address_pool' in item:
+                        if 'backend_address_pool' in item and item['backend_address_pool'] is not None:
                             id = backend_address_pool_id(self.subscription_id,
                                                          kwargs['resource_group'],
                                                          kwargs['name'],
                                                          item['backend_address_pool'])
                             item['backend_address_pool'] = {'id': id}
-                        if 'backend_http_settings' in item:
+                        if 'backend_http_settings' in item and item['backend_http_settings'] is not None:
                             id = backend_http_settings_id(self.subscription_id,
                                                           kwargs['resource_group'],
                                                           kwargs['name'],
                                                           item['backend_http_settings'])
                             item['backend_http_settings'] = {'id': id}
-                        if 'http_listener' in item:
+                        if 'http_listener' in item and item['http_listener'] is not None:
                             id = http_listener_id(self.subscription_id,
                                                   kwargs['resource_group'],
                                                   kwargs['name'],
                                                   item['http_listener'])
                             item['http_listener'] = {'id': id}
-                        if 'protocol' in item:
+                        if 'protocol' in item and item['protocol'] is not None:
                             item['protocol'] = _snake_to_camel(item['protocol'], True)
-                        if 'rule_type' in item:
+                        if 'rule_type' in item and item['rule_type'] is not None:
                             item['rule_type'] = _snake_to_camel(item['rule_type'], True)
-                        if 'redirect_configuration' in item:
+                        if 'redirect_configuration' in item and item['redirect_configuration'] is not None:
                             id = redirect_configuration_id(self.subscription_id,
                                                            kwargs['resource_group'],
                                                            kwargs['name'],
                                                            item['redirect_configuration'])
                             item['redirect_configuration'] = {'id': id}
-                        if 'url_path_map' in item:
+                        if 'url_path_map' in item and item['url_path_map'] is not None:
                             id = url_path_map_id(self.subscription_id,
                                                  kwargs['resource_group'],
                                                  kwargs['name'],
