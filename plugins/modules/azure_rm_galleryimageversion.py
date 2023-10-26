@@ -78,7 +78,7 @@ options:
                     - list of data disk snapshot
                     - Mutual exclusive with source_image
                 type: list
-                elements: dict
+                elements: raw
                 suboptions:
                     source:
                         description:
@@ -107,7 +107,7 @@ options:
                     - The target regions where the Image Version is going to be replicated to.
                     - This property is updatable.
                 type: list
-                elements: dict
+                elements: raw
                 suboptions:
                     name:
                         description:
@@ -348,7 +348,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                     ),
                     data_disks=dict(
                         type='list',
-                        elements='dict',
+                        elements='raw',
                         disposition='dataDiskImages',
                         purgeIfNone=True,
                         options=dict(
@@ -378,7 +378,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                 options=dict(
                     target_regions=dict(
                         type='list',
-                        elements='dict',
+                        elements='raw',
                         disposition='targetRegions',
                         options=dict(
                             name=dict(
