@@ -1482,7 +1482,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             vm_dict['os_profile']['linux_configuration']['disable_password_authentication']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'linuxConfiguration.disablePasswordAuthentication' is not allowed.")
                 else:
-                    self.linux_config = vm_dict['os_profile'].get('linux_configuration')
+                    self.linux_config = vm_dict['os_profile'].get('linux_configuration') if isinstance(vm_dict['os_profile'], dict) else self.linux_config
 
                 # Defaults for boot diagnostics
                 if 'diagnostics_profile' not in vm_dict:
