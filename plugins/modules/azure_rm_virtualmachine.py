@@ -903,7 +903,7 @@ azure_vm:
                 "adminUsername": "chouseknecht",
                 "computerName": "test10",
                 "linuxConfiguration": {
-                    "disablePasswordAuthentication": false
+                    "disable_password_authentication": false
                 },
                 "secrets": []
             },
@@ -1481,8 +1481,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if self.linux_config['disable_password_authentication'] != \
                             vm_dict['os_profile']['linux_configuration']['disable_password_authentication']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'linuxConfiguration.disablePasswordAuthentication' is not allowed.")
-                else:
-                    self.linux_config = vm_dict['os_profile'].get('linux_configuration')
 
                 # Defaults for boot diagnostics
                 if 'diagnostics_profile' not in vm_dict:
@@ -2021,7 +2019,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             )
                         else:
                             vm_resource.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
-                                disable_password_authentication=linux_config.get('disablePasswordAuthentication', False)
+                                disable_password_authentication=linux_config.get('disable_password_authentication', False)
                             )
                         ssh_config = linux_config.get('ssh', None)
                         if ssh_config:
