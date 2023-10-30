@@ -562,7 +562,7 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: http_listener

@@ -722,9 +722,7 @@ options:
                 type: str
                 choices:
                     - 'basic'
-                    - 'Basic'
                     - 'path_based_routing'
-                    - 'PathBasedRouting'
             backend_address_pool:
                 description:
                     - Backend address pool resource of the application gateway. Not used if I(rule_type) is C(path_based_routing).
@@ -918,7 +916,7 @@ EXAMPLES = '''
         frontend_port: ag_frontend_port
         name: sample_http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
@@ -965,7 +963,7 @@ EXAMPLES = '''
         frontend_port: ag_frontend_port
         name: sample_http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
@@ -1006,7 +1004,7 @@ EXAMPLES = '''
         frontend_port: ag_frontend_port
         name: sample_http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
@@ -1368,7 +1366,7 @@ EXAMPLES = '''
         frontend_port: ag_frontend_port
         name: sample_http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
@@ -1407,7 +1405,7 @@ EXAMPLES = '''
         frontend_port: ag_frontend_port
         name: sample_http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
@@ -1826,7 +1824,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 type='list',
                 elements='dict',
                 options=dict(
-                    rule_type=dict(type='str', choices=['basic', 'path_based_routing', 'PathBasedRouting', 'Basic']),
+                    rule_type=dict(type='str', choices=['basic', 'path_based_routing']),
                     backend_address_pool=dict(type='raw'),
                     backend_http_settings=dict(type='raw'),
                     http_listener=dict(type='raw'),
