@@ -291,9 +291,9 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
         try:
             if self.auth_method == 'sas':
                 response = self.mgmt_client.update_module_with_sas(self.device, self.name, self.managed_by, self.etag, self.primary_key, self.secondary_key)
-            elif self.auth_method == 'self_signed':
-                response = self.mgmt_client.update_module_with_certificate_authority(self.device, self.name, self.managed_by, self.etag)
             elif self.auth_method == 'certificate_authority':
+                response = self.mgmt_client.update_module_with_certificate_authority(self.device, self.name, self.managed_by, self.etag)
+            elif self.auth_method == 'self_signed':
                 response = self.mgmt_client.update_module_with_x509(self.device,
                                                                     self.name, self.managed_by, self.etag, self.primary_key, self.secondary_key)
 
@@ -309,9 +309,9 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
         try:
             if self.auth_method == 'sas':
                 response = self.mgmt_client.create_module_with_sas(self.device, self.name, self.managed_by, self.primary_key, self.secondary_key)
-            elif self.auth_method == 'self_signed':
-                response = self.mgmt_client.create_module_with_certificate_authority(self.device, self.name, self.managed_by)
             elif self.auth_method == 'certificate_authority':
+                response = self.mgmt_client.create_module_with_certificate_authority(self.device, self.name, self.managed_by)
+            elif self.auth_method == 'self_signed':
                 response = self.mgmt_client.create_module_with_x509(self.device_id,
                                                                     self.name, self.managed_by, self.primary_key, self.secondary_key)
 
