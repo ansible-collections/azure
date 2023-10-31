@@ -1565,12 +1565,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             vm_dict['os_profile']['linux_configuration']['disable_password_authentication']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'linuxConfiguration.disablePasswordAuthentication' is not allowed.")
 
-                if self.os_disk_encryption_set is not None and \
-                    vm_dict['storage_profile'].get('os_disk') is not None and \
-                    vm_dict['storage_profile']['os_disk'].get('managed_disk') is not None and \
-                    vm_dict['storage_profile']['os_disk']['managed_disk'].get('disk_encryption_set') is not None:
-                    if self.os_disk_encryption_set != \
-                            vm_dict['storage_profile']['os_disk']['managed_disk']['disk_encryption_set']:
+                current_os_des_id = vm_dict['storage_profile'].get('os_disk', {}).get('managed_disk', {}).get('disk_encryption_set', {}).get('id', {})
+                if self.os_disk_encryption_set is not None and current_os_des_id is not None:
+                    if self.os_disk_encryption_set != current_os_des_id:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'storage_profile.os_disk.managed_disk.disk_encryption_set' is not allowed.")
 
                 # Defaults for boot diagnostics
