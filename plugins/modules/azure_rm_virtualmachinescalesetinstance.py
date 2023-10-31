@@ -31,6 +31,7 @@ options:
         description:
             - The instance ID of the virtual machine.
         type: str
+        required: true
     latest_model:
         type: bool
         description:
@@ -122,7 +123,8 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
                 required=True
             ),
             instance_id=dict(
-                type='str'
+                type='str',
+                required=True
             ),
             latest_model=dict(
                 type='bool'
