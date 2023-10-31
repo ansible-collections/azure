@@ -162,6 +162,22 @@ options:
                 description:
                     - The product ID.
                 type: str
+    features:
+        description:
+            - A list of gallery image features.
+        type: list
+        elements: dict
+        suboptions:
+            name:
+                description:
+                    - The name of the gallery image feature..
+                type: str
+                required: True
+            value:
+                description:
+                    - The value of the gallery image feature.
+                type: str
+                required: True
     state:
         description:
             - Assert the state of the GalleryImage.
@@ -352,6 +368,21 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                     )
                 )
             ),
+            features=dict(
+                type='list',
+                disposition='/properties/*',
+                elements='dict',
+                options=dict(
+                    name=dict(
+                        type='str',
+                        required=True
+                    ),
+                    value=dict(
+                        type='str',
+                        required=True
+                    )
+                )
+            )
             state=dict(
                 type='str',
                 default='present',
@@ -373,7 +404,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
 
         self.body = {}
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2019-07-01'
+        self.query_parameters['api-version'] = '2022-03-03'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
