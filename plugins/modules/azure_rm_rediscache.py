@@ -35,6 +35,7 @@ options:
         description:
             - SKU info of Azure Cache for Redis.
         type: dict
+        required: true
         suboptions:
             name:
                 description:
@@ -378,6 +379,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             ),
             sku=dict(
                 type='dict',
+                required=True,
                 options=sku_spec
             ),
             enable_non_ssl_port=dict(
