@@ -85,6 +85,10 @@ options:
                 description:
                     - The protocol C(HTTP), C(HTTPS) or C(TCP) used to probe for endpoint health.
                 type: str
+                choices:
+                    - HTTPS
+                    - HTTP
+                    - TCP
             port:
                 description:
                     - The TCP port used to probe for endpoint health.
@@ -252,7 +256,7 @@ dns_config_spec = dict(
 
 monitor_config_spec = dict(
     profile_monitor_status=dict(type='str'),
-    protocol=dict(type='str'),
+    protocol=dict(type='str', choices=['HTTP', 'HTTPS', 'TCP']),
     port=dict(type='int'),
     path=dict(type='str'),
     interval=dict(type='int'),
