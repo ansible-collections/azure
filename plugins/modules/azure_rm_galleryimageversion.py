@@ -125,6 +125,60 @@ options:
                         description:
                             - Storage account type.
                         type: str
+                    encryption:
+                        description:
+                            - Allows users to provide customer managed keys for encrypting the OS and data disks in the gallery artifact.
+                        type: dict
+                        suboptions:
+                            data_disk_images:
+                                description:
+                                    - A list of encryption specifications for data disk images.
+                                type: list
+                                suboptions:
+                                    disk_encryption_set_id:
+                                        description:
+                                            - A relative URI containing the resource ID of the disk encryption set.
+                                        type: str
+                                    lun:
+                                        description:
+                                            - This property specifies the logical unit number of the data disk.
+                                            - This value is used to identify data disks within the Virtual Machine and
+                                              therefore must be unique for each data disk attached to the Virtual Machine.
+                            os_disk_image:
+                                description:
+                                    - Contains encryption settings for an OS disk image.
+                                type: dict
+                                suboptions:
+                                    disk_encryption_set_id:
+                                        description:
+                                            - A relative URI containing the resource ID of the disk encryption set.
+                                        type: str
+                                    security_profile:
+                                        description:
+                                            - This property specifies the security profile of an OS disk image.
+                                        type: dict
+                                        suboptions:
+                                            confidential_vm_encryption_type:
+                                                description:
+                                                    - Confidential VM encryption types.
+                                                type: dict
+                                                suboptions:
+                                                    encrypted_vm_guest_state_only_with_pmk:
+                                                        description:
+                                                            - VM Guest State Only with PMK.
+                                                        type: str
+                                                    encrypted_with_cmk:
+                                                        description:
+                                                            - Encrypted with CMK.
+                                                        type: str
+                                                    encrypted_with_pmk:
+                                                        description:
+                                                            - Encrypted with PMK.
+                                                        type: str
+                                            secure_vm_disk_encryption_set_id:
+                                                description:
+                                                    - Secure VM disk encryption set id.
+                                                type: str
             managed_image:
                 description:
                     - Managed image reference, could be resource ID, or dictionary containing I(resource_group) and I(name)
@@ -394,6 +448,62 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                             storage_account_type=dict(
                                 type='str',
                                 disposition='storageAccountType'
+                            ),
+                            encryption=dict(
+                                type='dict',
+                                options=dict(
+                                    data_disk_images=dict(
+                                        type='list',
+                                        disposition='dataDiskImages',
+                                        options=dict(
+                                            disk_encryption_set_id=dict(
+                                                type='str',
+                                                disposition='diskEncryptionSetId'
+                                            ),
+                                            lun=dict(
+                                                type='int'
+                                            )
+                                        )
+                                    ),
+                                    os_disk_image=dict(
+                                        type='dict',
+                                        disposition='osDiskImage',
+                                        options=dict(
+                                            disk_encryption_set_id=dict(
+                                                type='str',
+                                                disposition='diskEncryptionSetId'
+                                            ),
+                                            securityProfile=dict(
+                                                type='dict',
+                                                disposition='security_profile',
+                                                options=dict(
+                                                    confidential_vm_encryption_type=dict(
+                                                        type='dict',
+                                                        disposition='confidentialVMEncryptionType',
+                                                        options=dict(
+                                                            encrypted_vm_guest_state_only_with_pmk=dict(
+                                                                type='dict',
+                                                                disposition='EncryptedVMGuestStateOnlyWithPmk'
+                                                            ),
+                                                            encrypted_with_cmk=dict(
+                                                                type='dict',
+                                                                disposition='EncryptedWithCmk'
+                                                            ),
+                                                            encrypted_with_pmk=dict(
+                                                                type='dict',
+                                                                disposition='EncryptedWithPmk'
+                                                            )
+                                                        )
+                                                    ),
+                                                    secure_vm_disk_encryption_set_id=dict(
+                                                        type='str',
+                                                        disposition='secureVMDiskEncryptionSetId'
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
                             )
                         )
                     ),
@@ -455,7 +565,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
         required_if = [('state', 'present', ['storage_profile'])]
         self.body = {}
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2019-07-01'
+        self.query_parameters['api-version'] = '2022-03-03'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
