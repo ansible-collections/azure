@@ -242,7 +242,7 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
         return [self.format_item(x) for x in results['value']] if results['value'] else []
 
     def format_item(self, item):
-        if item is None:
+        if item is None or item == {}:
             return {}
         d = {
             'id': item.get('id'),
@@ -253,12 +253,12 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
             'nat_rule_collections': dict(),
             'network_rule_collections': dict(),
             'ip_configurations': dict(),
-            'provisioning_state': item['properties']['provisioningState']
         }
         if isinstance(item.get('properties'), dict):
             d['nat_rule_collections'] = item.get('properties').get('natRuleCollections')
             d['network_rule_collections'] = item.get('properties').get('networkRuleCollections')
             d['ip_configurations'] = item.get('properties').get('ipConfigurations')
+            d['provisioning_state'] = item.get('properties').get('provisioningState')
         return d
 
 
