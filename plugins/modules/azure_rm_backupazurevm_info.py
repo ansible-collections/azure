@@ -156,10 +156,12 @@ class BackupAzureVMInfo(AzureRMModuleBaseExt):
             self.log('Error in fetching recovery point.')
             self.fail('Error in fetching recovery point {0}'.format(str(e)))
 
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
