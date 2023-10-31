@@ -741,13 +741,25 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            default_rules=dict(type='list', elements='dict', options=rule_spec),
+            default_rules=dict(
+                type='list',
+                elements='dict',
+                options=rule_spec,
+                mutually_exclusive = [("source_application_security_groups", "source_address_prefix"),
+                                      ("destination_application_security_groups", "destination_address_prefix")]
+            ),
             location=dict(type='str'),
             name=dict(type='str', required=True),
             purge_default_rules=dict(type='bool', default=False),
             purge_rules=dict(type='bool', default=False),
             resource_group=dict(required=True, type='str'),
-            rules=dict(type='list', elements='dict', options=rule_spec),
+            rules=dict(
+                type='list',
+                elements='dict',
+                options=rule_spec,
+                mutually_exclusive = [("source_application_security_groups", "source_address_prefix"),
+                                      ("destination_application_security_groups", "destination_address_prefix")]
+                ),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
 

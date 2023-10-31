@@ -50,6 +50,7 @@ options:
             - Can be the resource ID of the virtual network.
             - Can be a dict which contains I(name) and I(resource_group) of the virtual network.
         type: raw
+        required: true
         aliases:
             - virtual_network_name
     ip_configurations:
@@ -274,7 +275,7 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
             enable_bgp=dict(type='bool', default=False),
             sku=dict(type='str', default='VpnGw1', choices=['VpnGw1', 'VpnGw2', 'VpnGw3', 'Standard', 'Basic', 'HighPerformance']),
             bgp_settings=dict(type='dict', options=bgp_spec),
-            virtual_network=dict(type='raw', aliases=['virtual_network_name'])
+            virtual_network=dict(type='raw', aliases=['virtual_network_name'], required=True)
         )
 
         self.resource_group = None

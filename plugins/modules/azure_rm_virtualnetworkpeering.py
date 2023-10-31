@@ -30,6 +30,7 @@ options:
         description:
             - Name or resource ID of the virtual network to be peered.
         type: raw
+        required: true
     remote_virtual_network:
         description:
             - Remote virtual network to be peered.
@@ -181,7 +182,8 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
                 required=True
             ),
             virtual_network=dict(
-                type='raw'
+                type='raw',
+                required=True
             ),
             remote_virtual_network=dict(
                 type='raw'
