@@ -40,6 +40,7 @@ options:
                 description:
                     - Type of Azure Cache for Redis to deploy.
                 type: str
+                required: true
                 choices:
                     - basic
                     - standard
@@ -51,6 +52,7 @@ options:
                     - When I(sku=premium), allowed values are C(P1), C(P2), C(P3), C(P4).
                     - Please see U(https://docs.microsoft.com/en-us/rest/api/redis/redis/create#sku) for allowed values.
                 type: str
+                required: true
                 choices:
                     - C0
                     - C1
@@ -277,9 +279,11 @@ except ImportError:
 sku_spec = dict(
     name=dict(
         type='str',
+        required=True,
         choices=['basic', 'standard', 'premium']),
     size=dict(
         type='str',
+        required=True,
         choices=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'P1', 'P2', 'P3', 'P4']
     )
 )

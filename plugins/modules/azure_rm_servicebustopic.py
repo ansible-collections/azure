@@ -32,6 +32,7 @@ options:
             - A namespace is a scoping container for all messaging components.
             - Multipletopics can reside within a single namespace.
         type: str
+        required: true
     state:
         description:
             - Assert the state of the topic. Use C(present) to create or update and use C(absent) to delete.
@@ -160,7 +161,7 @@ class AzureRMServiceBusTopic(AzureRMModuleBase):
             max_size_in_mb=dict(type='int'),
             max_message_size_in_kb=dict(type='int'),
             name=dict(type='str', required=True),
-            namespace=dict(type='str'),
+            namespace=dict(type='str', required=True),
             requires_duplicate_detection=dict(type='bool'),
             resource_group=dict(type='str', required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
