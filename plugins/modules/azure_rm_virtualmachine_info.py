@@ -247,9 +247,7 @@ vms:
                 - Version of the Azure VM Agent (waagent) running inside the VM.
             returned: always
             type: str
-            sample:
-                - 'Unknown'
-                - '2.9.1.1'
+            sample: '2.9.1.1'
         vm_size:
             description:
                 - Virtual machine size.
