@@ -46,17 +46,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Custom Image
-    azure_rm_devtestlabcustomimage_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myImage
+- name: Get instance of Custom Image
+  azure_rm_devtestlabcustomimage_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myImage
 
-  - name: List instances of Custom Image in the lab
-    azure_rm_devtestlabcustomimage_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myImage
+- name: List instances of Custom Image in the lab
+  azure_rm_devtestlabcustomimage_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myImage
 '''
 
 RETURN = '''

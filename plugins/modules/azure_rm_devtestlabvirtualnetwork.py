@@ -60,12 +60,12 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) Virtual Network
-    azure_rm_devtestlabvirtualnetwork:
-      resource_group: myResourceGroup
-      lab_name: mylab
-      name: myvn
-      description: My Lab Virtual Network
+- name: Create (or update) Virtual Network
+  azure_rm_devtestlabvirtualnetwork:
+    resource_group: myResourceGroup
+    lab_name: mylab
+    name: myvn
+    description: My Lab Virtual Network
 '''
 
 RETURN = '''

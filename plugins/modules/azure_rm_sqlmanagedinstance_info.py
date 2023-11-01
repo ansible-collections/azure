@@ -40,19 +40,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get SQL managed instance by name
-    azure_rm_sqlmanagedinstance_info:
-      resource_group: testrg
-      name: testinstancename
+- name: Get SQL managed instance by name
+  azure_rm_sqlmanagedinstance_info:
+    resource_group: testrg
+    name: testinstancename
 
-  - name: List SQL managed instance by resource group
-    azure_rm_sqlmanagedinstance_info:
-      resource_group: testrg
+- name: List SQL managed instance by resource group
+  azure_rm_sqlmanagedinstance_info:
+    resource_group: testrg
 
-  - name: List SQL manged instance by subscription and filter by tags
-    azure_rm_sqlmanagedinstance_info:
-      tags:
-        - foo
+- name: List SQL manged instance by subscription and filter by tags
+  azure_rm_sqlmanagedinstance_info:
+    tags:
+      - foo
 '''
 
 RETURN = '''

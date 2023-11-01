@@ -47,7 +47,6 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     gallery_name: myGallery
     name: myImage
-
 '''
 
 RETURN = '''

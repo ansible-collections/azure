@@ -46,13 +46,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Schedule
-    azure_rm_devtestlabschedule_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: mySchedule
-      tags:
-        - key:value
+- name: Get instance of Schedule
+  azure_rm_devtestlabschedule_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: mySchedule
+    tags:
+      - key:value
 '''
 
 RETURN = '''

@@ -48,21 +48,20 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: get ad app info by App ID
-    azure_rm_adapplication_info:
-      app_id: "{{ app_id }}"
-      tenant: "{{ tenant_id }}"
+- name: get ad app info by App ID
+  azure_rm_adapplication_info:
+    app_id: "{{ app_id }}"
+    tenant: "{{ tenant_id }}"
 
-  - name: get ad app info ---- by object ID
-    azure_rm_adapplication_info:
-      object_id: "{{ object_id }}"
-      tenant: "{{ tenant_id }}"
+- name: get ad app info ---- by object ID
+  azure_rm_adapplication_info:
+    object_id: "{{ object_id }}"
+    tenant: "{{ tenant_id }}"
 
-  - name: get ad app info ---- by identifier uri
-    azure_rm_adapplication_info:
-      identifier_uri: "{{ identifier_uri }}"
-      tenant: "{{ tenant_id }}"
-
+- name: get ad app info ---- by identifier uri
+  azure_rm_adapplication_info:
+    identifier_uri: "{{ identifier_uri }}"
+    tenant: "{{ tenant_id }}"
 '''
 
 RETURN = '''

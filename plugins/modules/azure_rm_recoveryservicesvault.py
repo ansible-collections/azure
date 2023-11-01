@@ -49,18 +49,18 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create/Update Azure Recovery Service vault
-      azure_rm_recoveryservicesvault:
-        resource_group: 'myResourceGroup'
-        name: 'testVault'
-        location: 'westeurope'
-        state: 'present'
-    - name: Delete Recovery Service Vault
-      azure_rm_recoveryservicesvault:
-        resource_group: 'myResourceGroup'
-        name: 'testVault'
-        location: 'westeurope'
-        state: 'absent'
+- name: Create/Update Azure Recovery Service vault
+  azure_rm_recoveryservicesvault:
+    resource_group: 'myResourceGroup'
+    name: 'testVault'
+    location: 'westeurope'
+    state: 'present'
+- name: Delete Recovery Service Vault
+  azure_rm_recoveryservicesvault:
+    resource_group: 'myResourceGroup'
+    name: 'testVault'
+    location: 'westeurope'
+    state: 'absent'
 '''
 
 RETURN = '''

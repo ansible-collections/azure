@@ -62,11 +62,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) DevTest Lab
-    azure_rm_devtestlab:
-      resource_group: myResourceGroup
-      name: mylab
-      storage_type: standard
+- name: Create (or update) DevTest Lab
+  azure_rm_devtestlab:
+    resource_group: myResourceGroup
+    name: mylab
+    storage_type: standard
 '''
 
 RETURN = '''

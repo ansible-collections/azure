@@ -328,7 +328,6 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myAzureFirewall
     state: absent
-
 '''
 
 RETURN = '''

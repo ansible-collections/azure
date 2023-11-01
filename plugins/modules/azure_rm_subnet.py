@@ -177,59 +177,59 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a subnet
-      azure_rm_subnet:
-        resource_group: myResourceGroup
-        virtual_network_name: myVirtualNetwork
-        name: mySubnet
-        address_prefix_cidr: "10.1.0.0/24"
+- name: Create a subnet
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
+    address_prefix_cidr: "10.1.0.0/24"
 
-    - name: Create a subnet refer nsg from other resource group
-      azure_rm_subnet:
-        resource_group: myResourceGroup
-        virtual_network_name: myVirtualNetwork
-        name: mySubnet
-        address_prefix_cidr: "10.1.0.0/16"
-        security_group:
-          name: secgroupfoo
-          resource_group: mySecondResourceGroup
-        route_table: route
+- name: Create a subnet refer nsg from other resource group
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
+    address_prefix_cidr: "10.1.0.0/16"
+    security_group:
+      name: secgroupfoo
+      resource_group: mySecondResourceGroup
+    route_table: route
 
-    - name: Create a subnet with service endpoint
-      azure_rm_subnet:
-        resource_group: myResourceGroup
-        virtual_network_name: myVirtualNetwork
-        name: mySubnet
-        address_prefix_cidr: "10.1.0.0/16"
-        service_endpoints:
-          - service: "Microsoft.Sql"
-            locations:
-              - "eastus"
+- name: Create a subnet with service endpoint
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
+    address_prefix_cidr: "10.1.0.0/16"
+    service_endpoints:
+      - service: "Microsoft.Sql"
+        locations:
+          - "eastus"
 
-    - name: Create a subnet with delegations
-      azure_rm_subnet:
-        resource_group: myResourceGroup
-        virtual_network_name: myVirtualNetwork
-        name: mySubnet
-        address_prefix_cidr: "10.1.0.0/16"
-        delegations:
-          - name: 'mydeleg'
-            serviceName: 'Microsoft.ContainerInstance/containerGroups'
+- name: Create a subnet with delegations
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
+    address_prefix_cidr: "10.1.0.0/16"
+    delegations:
+      - name: 'mydeleg'
+        serviceName: 'Microsoft.ContainerInstance/containerGroups'
 
-    - name: Create a subnet with an associated NAT Gateway
-      azure_rm_subnet:
-        resource_group: myResourceGroup
-        virtual_network_name: myVirtualNetwork
-        name: mySubnet
-        address_prefix_cidr: "10.1.0.0/16"
-        nat_gateway: myNatGateway
+- name: Create a subnet with an associated NAT Gateway
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
+    address_prefix_cidr: "10.1.0.0/16"
+    nat_gateway: myNatGateway
 
-    - name: Delete a subnet
-      azure_rm_subnet:
-        resource_group: myResourceGroup
-        virtual_network_name: myVirtualNetwork
-        name: mySubnet
-        state: absent
+- name: Delete a subnet
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
+    state: absent
 '''
 
 RETURN = '''

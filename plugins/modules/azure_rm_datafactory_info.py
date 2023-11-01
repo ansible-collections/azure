@@ -46,19 +46,19 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get data factory by name
-      azure_rm_datafactory_info:
-        resource_group: "{{ resource_group }}"
-        name: "{{ name }}"
+- name: Get data factory by name
+  azure_rm_datafactory_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name }}"
 
-    - name: Get data factory by resource group
-      azure_rm_datafactory_info:
-        resource_group: "{{ resource_group }}"
+- name: Get data factory by resource group
+  azure_rm_datafactory_info:
+    resource_group: "{{ resource_group }}"
 
-    - name: Get data factory in relate subscription
-      azure_rm_datafactory_info:
-        tags:
-          - key1
+- name: Get data factory in relate subscription
+  azure_rm_datafactory_info:
+    tags:
+      - key1
 '''
 
 RETURN = '''

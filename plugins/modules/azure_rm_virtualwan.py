@@ -97,21 +97,20 @@ author:
 '''
 
 EXAMPLES = '''
- - name: Create a VirtualWan
-   azure_rm_virtualwan:
-     resource_group: myResouceGroup
-     name: testwan
-     disable_vpn_encryption: true
-     allow_branch_to_branch_traffic: true
-     allow_vnet_to_vnet_traffic: true
-     virtual_wan_type: Standard
+- name: Create a VirtualWan
+  azure_rm_virtualwan:
+    resource_group: myResouceGroup
+    name: testwan
+    disable_vpn_encryption: true
+    allow_branch_to_branch_traffic: true
+    allow_vnet_to_vnet_traffic: true
+    virtual_wan_type: Standard
 
- - name: Delete the VirtualWan
-   azure_rm_virtualwan:
-     resource_group: myResouceGroup
-     name: testwan
-     state: absent
-
+- name: Delete the VirtualWan
+  azure_rm_virtualwan:
+    resource_group: myResouceGroup
+    name: testwan
+    state: absent
 '''
 
 RETURN = '''

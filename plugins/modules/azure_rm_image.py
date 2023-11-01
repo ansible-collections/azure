@@ -88,8 +88,8 @@ EXAMPLES = '''
     name: myImage
     source: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Compute/disks/disk001
     data_disk_sources:
-        - datadisk001
-        - datadisk002
+      - datadisk001
+      - datadisk002
     os_type: Linux
 
 - name: Create an image from os disk via dict
@@ -97,12 +97,12 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myImage
     source:
-        type: disks
-        resource_group: myResourceGroup
-        name: disk001
+      type: disks
+      resource_group: myResourceGroup
+      name: disk001
     data_disk_sources:
-        - datadisk001
-        - datadisk002
+      - datadisk001
+      - datadisk002
     os_type: Linux
 
 - name: Delete an image

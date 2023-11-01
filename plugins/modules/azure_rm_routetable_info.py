@@ -43,20 +43,20 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one route table
-      azure_rm_routetable_info:
-        name: Testing
-        resource_group: myResourceGroup
+- name: Get facts for one route table
+  azure_rm_routetable_info:
+    name: Testing
+    resource_group: myResourceGroup
 
-    - name: Get facts for all route tables
-      azure_rm_routetable_info:
-        resource_group: myResourceGroup
+- name: Get facts for all route tables
+  azure_rm_routetable_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts by tags
-      azure_rm_routetable_info:
-        tags:
-          - testing
-          - foo:bar
+- name: Get facts by tags
+  azure_rm_routetable_info:
+    tags:
+      - testing
+      - foo:bar
 '''
 RETURN = '''
 id:

@@ -49,19 +49,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get facts for all endpoints in CDN profile
-    azure_rm_cdnendpoint_info:
-      resource_group: myResourceGroup
-      profile_name: myCDNProfile
-      tags:
-        - key
-        - key:value
+- name: Get facts for all endpoints in CDN profile
+  azure_rm_cdnendpoint_info:
+    resource_group: myResourceGroup
+    profile_name: myCDNProfile
+    tags:
+      - key
+      - key:value
 
-  - name: Get facts of specific CDN endpoint
-    azure_rm_cdnendpoint_info:
-      resource_group: myResourceGroup
-      profile_name: myCDNProfile
-      name: myEndpoint1
+- name: Get facts of specific CDN endpoint
+  azure_rm_cdnendpoint_info:
+    resource_group: myResourceGroup
+    profile_name: myCDNProfile
+    name: myEndpoint1
 '''
 
 RETURN = '''

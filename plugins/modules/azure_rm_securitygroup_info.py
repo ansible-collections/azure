@@ -46,15 +46,14 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one security group
-      azure_rm_securitygroup_info:
-        resource_group: myResourceGroup
-        name: secgroup001
+- name: Get facts for one security group
+  azure_rm_securitygroup_info:
+    resource_group: myResourceGroup
+    name: secgroup001
 
-    - name: Get facts for all security groups
-      azure_rm_securitygroup_info:
-        resource_group: myResourceGroup
-
+- name: Get facts for all security groups
+  azure_rm_securitygroup_info:
+    resource_group: myResourceGroup
 '''
 
 RETURN = '''

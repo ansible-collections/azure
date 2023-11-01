@@ -80,12 +80,12 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) Webhook
-    azure_rm_containerregistrywebhook:
-      resource_group: myResourceGroup
-      registry_name: myRegistry
-      webhook_name: myWebhook
-      location: eastus
+- name: Create (or update) Webhook
+  azure_rm_containerregistrywebhook:
+    resource_group: myResourceGroup
+    registry_name: myRegistry
+    webhook_name: myWebhook
+    location: eastus
 '''
 
 RETURN = '''

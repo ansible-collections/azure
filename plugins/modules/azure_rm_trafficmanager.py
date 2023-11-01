@@ -187,36 +187,36 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a Traffic Manager Profile
-      azure_rm_trafficmanager:
-        name: tmtest
-        resource_group: tmt
-        location: global
-        profile_status: Enabled
-        traffic_routing_method: Priority
-        dns_config:
-          relative_name: tmtest
-          ttl: 60
-        monitor_config:
-          protocol: HTTPS
-          port: 80
-          path: '/'
-        endpoints:
-          - name: e1
-            type: Microsoft.network/TrafficManagerProfiles/ExternalEndpoints
-            endpoint_location: West US 2
-            endpoint_status: Enabled
-            priority: 2
-            target: 1.2.3.4
-            weight: 1
-        tags:
-          Environment: Test
+- name: Create a Traffic Manager Profile
+  azure_rm_trafficmanager:
+    name: tmtest
+    resource_group: tmt
+    location: global
+    profile_status: Enabled
+    traffic_routing_method: Priority
+    dns_config:
+      relative_name: tmtest
+      ttl: 60
+    monitor_config:
+      protocol: HTTPS
+      port: 80
+      path: '/'
+    endpoints:
+      - name: e1
+        type: Microsoft.network/TrafficManagerProfiles/ExternalEndpoints
+        endpoint_location: West US 2
+        endpoint_status: Enabled
+        priority: 2
+        target: 1.2.3.4
+        weight: 1
+    tags:
+      Environment: Test
 
-    - name: Delete a Traffic Manager Profile
-      azure_rm_trafficmanager:
-        state: absent
-        name: tmtest
-        resource_group: tmt
+- name: Delete a Traffic Manager Profile
+  azure_rm_trafficmanager:
+    state: absent
+    name: tmtest
+    resource_group: tmt
 '''
 RETURN = '''
 state:

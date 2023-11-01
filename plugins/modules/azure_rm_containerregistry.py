@@ -63,22 +63,22 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create an azure container registry
-      azure_rm_containerregistry:
-        name: myRegistry
-        location: eastus
-        resource_group: myResourceGroup
-        admin_user_enabled: true
-        sku: Premium
-        tags:
-            Release: beta1
-            Environment: Production
+- name: Create an azure container registry
+  azure_rm_containerregistry:
+    name: myRegistry
+    location: eastus
+    resource_group: myResourceGroup
+    admin_user_enabled: true
+    sku: Premium
+    tags:
+      Release: beta1
+      Environment: Production
 
-    - name: Remove an azure container registry
-      azure_rm_containerregistry:
-        name: myRegistry
-        resource_group: myResourceGroup
-        state: absent
+- name: Remove an azure container registry
+  azure_rm_containerregistry:
+    name: myRegistry
+    resource_group: myResourceGroup
+    state: absent
 '''
 RETURN = '''
 id:

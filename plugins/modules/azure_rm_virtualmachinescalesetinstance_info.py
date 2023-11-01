@@ -46,10 +46,10 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: List VM instances in Virtual Machine ScaleSet
-    azure_rm_virtualmachinescalesetinstance_info:
-      resource_group: myResourceGroup
-      vmss_name: myVMSS
+- name: List VM instances in Virtual Machine ScaleSet
+  azure_rm_virtualmachinescalesetinstance_info:
+    resource_group: myResourceGroup
+    vmss_name: myVMSS
 '''
 
 RETURN = '''

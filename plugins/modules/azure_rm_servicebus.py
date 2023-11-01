@@ -60,10 +60,10 @@ author:
 EXAMPLES = '''
 - name: Create a namespace
   azure_rm_servicebus:
-      name: deadbeef
-      location: eastus
-      tags:
-        key1: value1
+    name: deadbeef
+    location: eastus
+    tags:
+      key1: value1
 '''
 RETURN = '''
 id:

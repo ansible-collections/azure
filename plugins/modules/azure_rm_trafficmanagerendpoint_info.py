@@ -52,17 +52,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get endpoints facts of a Traffic Manager profile
-      azure_rm_trafficmanagerendpoint_info:
-        resource_group: myResourceGroup
-        profile_name: Testing
+- name: Get endpoints facts of a Traffic Manager profile
+  azure_rm_trafficmanagerendpoint_info:
+    resource_group: myResourceGroup
+    profile_name: Testing
 
-    - name: Get specific endpoint of a Traffic Manager profile
-      azure_rm_trafficmanager_info:
-        resource_group: myResourceGroup
-        profile_name: Testing
-        name: test_external_endpoint
-
+- name: Get specific endpoint of a Traffic Manager profile
+  azure_rm_trafficmanager_info:
+    resource_group: myResourceGroup
+    profile_name: Testing
+    name: test_external_endpoint
 '''
 
 RETURN = '''

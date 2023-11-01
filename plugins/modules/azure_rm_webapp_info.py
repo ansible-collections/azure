@@ -47,20 +47,20 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for web app by name
-      azure_rm_webapp_info:
-        resource_group: myResourceGroup
-        name: winwebapp1
+- name: Get facts for web app by name
+  azure_rm_webapp_info:
+    resource_group: myResourceGroup
+    name: winwebapp1
 
-    - name: Get facts for web apps in resource group
-      azure_rm_webapp_info:
-        resource_group: myResourceGroup
+- name: Get facts for web apps in resource group
+  azure_rm_webapp_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts for web apps with tags
-      azure_rm_webapp_info:
-        tags:
-          - testtag
-          - foo:bar
+- name: Get facts for web apps with tags
+  azure_rm_webapp_info:
+    tags:
+      - testtag
+      - foo:bar
 '''
 
 RETURN = '''

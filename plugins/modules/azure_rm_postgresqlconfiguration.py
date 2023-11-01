@@ -54,12 +54,12 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Update PostgreSQL Server setting
-    azure_rm_postgresqlconfiguration:
-      resource_group: myResourceGroup
-      server_name: myServer
-      name: deadlock_timeout
-      value: 2000
+- name: Update PostgreSQL Server setting
+  azure_rm_postgresqlconfiguration:
+    resource_group: myResourceGroup
+    server_name: myServer
+    name: deadlock_timeout
+    value: 2000
 '''
 
 RETURN = '''

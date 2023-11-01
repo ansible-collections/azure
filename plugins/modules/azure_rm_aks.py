@@ -368,106 +368,106 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create an AKS instance With A System Node Pool & A User Node Pool
-      azure_rm_aks:
-        name: myAKS
-        resource_group: myResourceGroup
-        location: eastus
-        dns_prefix: akstest
-        kubernetes_version: 1.14.6
-        linux_profile:
-          admin_username: azureuser
-          ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAA...
-        service_principal:
-          client_id: "cf72ca99-f6b9-4004-b0e0-bee10c521948"
-          client_secret: "Password1234!"
-        agent_pool_profiles:
-          - name: default
-            count: 1
-            vm_size: Standard_B2s
-            enable_auto_scaling: True
-            type: VirtualMachineScaleSets
-            mode: System
-            max_count: 3
-            min_count: 1
-            enable_rbac: yes
-          - name: user
-            count: 1
-            vm_size: Standard_D2_v2
-            enable_auto_scaling: True
-            type: VirtualMachineScaleSets
-            mode: User
-            max_count: 3
-            min_count: 1
-            enable_rbac: yes
+- name: Create an AKS instance With A System Node Pool & A User Node Pool
+  azure_rm_aks:
+    name: myAKS
+    resource_group: myResourceGroup
+    location: eastus
+    dns_prefix: akstest
+    kubernetes_version: 1.14.6
+    linux_profile:
+      admin_username: azureuser
+      ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAA...
+    service_principal:
+      client_id: "cf72ca99-f6b9-4004-b0e0-bee10c521948"
+      client_secret: "Password1234!"
+    agent_pool_profiles:
+      - name: default
+        count: 1
+        vm_size: Standard_B2s
+        enable_auto_scaling: true
+        type: VirtualMachineScaleSets
+        mode: System
+        max_count: 3
+        min_count: 1
+        enable_rbac: true
+      - name: user
+        count: 1
+        vm_size: Standard_D2_v2
+        enable_auto_scaling: true
+        type: VirtualMachineScaleSets
+        mode: User
+        max_count: 3
+        min_count: 1
+        enable_rbac: true
 
-    - name: Create a managed Azure Container Services (AKS) instance
-      azure_rm_aks:
-        name: myAKS
-        location: eastus
-        resource_group: myResourceGroup
-        dns_prefix: akstest
-        kubernetes_version: 1.14.6
-        linux_profile:
-          admin_username: azureuser
-          ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAA...
-        service_principal:
-          client_id: "cf72ca99-f6b9-4004-b0e0-bee10c521948"
-          client_secret: "Password123!"
-        agent_pool_profiles:
-          - name: default
-            count: 5
-            mode: System
-            vm_size: Standard_B2s
-        tags:
-          Environment: Production
+- name: Create a managed Azure Container Services (AKS) instance
+  azure_rm_aks:
+    name: myAKS
+    location: eastus
+    resource_group: myResourceGroup
+    dns_prefix: akstest
+    kubernetes_version: 1.14.6
+    linux_profile:
+      admin_username: azureuser
+      ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAA...
+    service_principal:
+      client_id: "cf72ca99-f6b9-4004-b0e0-bee10c521948"
+      client_secret: "Password123!"
+    agent_pool_profiles:
+      - name: default
+        count: 5
+        mode: System
+        vm_size: Standard_B2s
+    tags:
+      Environment: Production
 
-    - name: Use minimal parameters and system-assigned identity
-      azure_rm_aks:
-        name: myMinimalCluster
-        location: eastus
-        resource_group: myExistingResourceGroup
-        dns_prefix: akstest
-        agent_pool_profiles:
-          - name: default
-            count: 1
-            vm_size: Standard_D2_v2
+- name: Use minimal parameters and system-assigned identity
+  azure_rm_aks:
+    name: myMinimalCluster
+    location: eastus
+    resource_group: myExistingResourceGroup
+    dns_prefix: akstest
+    agent_pool_profiles:
+      - name: default
+        count: 1
+        vm_size: Standard_D2_v2
 
-    - name: Create AKS with userDefinedRouting "Link:https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall"
-      azure_rm_aks:
-        name: "minimal{{ rpfx }}"
-        location: eastus
-        resource_group: "{{ resource_group }}"
-        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-        dns_prefix: "aks{{ rpfx }}"
-        service_principal:
-          client_id: "{{ client_id }}"
-          client_secret: "{{ client_secret }}"
-        network_profile:
-          network_plugin: azure
-          load_balancer_sku: standard
-          outbound_type: userDefinedRouting
-          service_cidr: "10.41.0.0/16"
-          dns_service_ip: "10.41.0.10"
-          docker_bridge_cidr: "172.17.0.1/16"
-        api_server_access_profile:
-          authorized_ip_ranges:
-            - "20.106.246.252/32"
-          enable_private_cluster: no
-        agent_pool_profiles:
-          - name: default
-            count: 1
-            vm_size: Standard_B2s
-            mode: System
-            vnet_subnet_id: "{{ output.subnets[0].id }}"
-            type: VirtualMachineScaleSets
-            enable_auto_scaling: false
+- name: Create AKS with userDefinedRouting "Link:https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall"
+  azure_rm_aks:
+    name: "minimal{{ rpfx }}"
+    location: eastus
+    resource_group: "{{ resource_group }}"
+    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+    dns_prefix: "aks{{ rpfx }}"
+    service_principal:
+      client_id: "{{ client_id }}"
+      client_secret: "{{ client_secret }}"
+    network_profile:
+      network_plugin: azure
+      load_balancer_sku: standard
+      outbound_type: userDefinedRouting
+      service_cidr: "10.41.0.0/16"
+      dns_service_ip: "10.41.0.10"
+      docker_bridge_cidr: "172.17.0.1/16"
+    api_server_access_profile:
+      authorized_ip_ranges:
+        - "20.106.246.252/32"
+      enable_private_cluster: false
+    agent_pool_profiles:
+      - name: default
+        count: 1
+        vm_size: Standard_B2s
+        mode: System
+        vnet_subnet_id: "{{ output.subnets[0].id }}"
+        type: VirtualMachineScaleSets
+        enable_auto_scaling: false
 
-    - name: Remove a managed Azure Container Services (AKS) instance
-      azure_rm_aks:
-        name: myAKS
-        resource_group: myResourceGroup
-        state: absent
+- name: Remove a managed Azure Container Services (AKS) instance
+  azure_rm_aks:
+    name: myAKS
+    resource_group: myResourceGroup
+    state: absent
 '''
 RETURN = '''
 state:

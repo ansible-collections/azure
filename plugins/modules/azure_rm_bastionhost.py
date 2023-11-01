@@ -139,12 +139,12 @@ EXAMPLES = '''
         private_ip_allocation_method: Dynamic
     sku:
       name: Standard
-    enable_tunneling: False
-    enable_shareable_link: False
-    enable_ip_connect: False
-    enable_file_copy: False
+    enable_tunneling: false
+    enable_shareable_link: false
+    enable_ip_connect: false
+    enable_file_copy: false
     scale_units: 6
-    disable_copy_paste: False
+    disable_copy_paste: false
     tags:
       key1: value1
 
@@ -153,7 +153,6 @@ EXAMPLES = '''
     name: bastion-name
     resource_group: myResourceGroup
     state: absent
-
 '''
 
 RETURN = '''

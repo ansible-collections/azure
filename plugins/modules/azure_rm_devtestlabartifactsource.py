@@ -87,15 +87,15 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) DevTest Labs Artifacts Source
-    azure_rm_devtestlabartifactsource:
-      resource_group: myrg
-      lab_name: mylab
-      name: myartifacts
-      uri: https://github.com/myself/myrepo.git
-      source_type: github
-      folder_path: /
-      security_token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+- name: Create (or update) DevTest Labs Artifacts Source
+  azure_rm_devtestlabartifactsource:
+    resource_group: myrg
+    lab_name: mylab
+    name: myartifacts
+    uri: https://github.com/myself/myrepo.git
+    source_type: github
+    folder_path: /
+    security_token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 '''
 
 RETURN = '''

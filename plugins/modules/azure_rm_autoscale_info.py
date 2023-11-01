@@ -41,17 +41,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Auto Scale Setting
-    azure_rm_autoscale_info:
-      resource_group: myResourceGroup
-      name: auto_scale_name
+- name: Get instance of Auto Scale Setting
+  azure_rm_autoscale_info:
+    resource_group: myResourceGroup
+    name: auto_scale_name
 
-  - name: List instances of Auto Scale Setting
-    azure_rm_autoscale_info:
-      resource_group: myResourceGroup
-      tags:
-        - key
-        - key:value
+- name: List instances of Auto Scale Setting
+  azure_rm_autoscale_info:
+    resource_group: myResourceGroup
+    tags:
+      - key
+      - key:value
 '''
 
 RETURN = '''

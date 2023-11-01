@@ -165,7 +165,7 @@ EXAMPLES = '''
       gateway_rest_password: MuABCPassword!!@123
     storage_accounts:
       - name: myStorageAccount.blob.core.windows.net
-        is_default: yes
+        is_default: true
         container: myContainer
         key: GExmaxH4lDNdHA9nwAsCt8t4AOQas2y9vXQP1kKALTram7Q3/5xLVIab3+nYG1x63Xyak9/VXxQyNBHA9pDWw==
     compute_profile_roles:

@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: true
 
@@ -30,7 +30,7 @@
   register: output
   check_mode: true
 - name: Assert the resource is well created
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: "Create webapp access restriction"
@@ -49,7 +49,7 @@
     scm_ip_security_restrictions_use_main: true
   register: output
 - name: Assert the resource is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.ip_security_restrictions | length == 2
@@ -65,7 +65,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert restrictions
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.ip_security_restrictions | length == 2
@@ -91,7 +91,7 @@
     scm_ip_security_restrictions_use_main: true
   register: output
 - name: Assert the resource is not changed
-  assert:
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: "Delete specific webapp access restriction"
@@ -106,7 +106,7 @@
     scm_ip_security_restrictions_use_main: true
   register: output
 - name: Assert the resource is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.ip_security_restrictions | length == 1
@@ -126,7 +126,7 @@
     scm_ip_security_restrictions_use_main: true
   register: output
 - name: Assert the resource is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.ip_security_restrictions | length == 1
@@ -146,7 +146,7 @@
     scm_ip_security_restrictions_use_main: false
   register: output
 - name: Assert the resource is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.ip_security_restrictions | length == 1
@@ -171,7 +171,7 @@
     scm_ip_security_restrictions_use_main: false
   register: output
 - name: Assert the resource is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.ip_security_restrictions | length == 1
@@ -203,7 +203,7 @@
     scm_ip_security_restrictions_use_main: false
   register: output
 - name: Assert the resource is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.ip_security_restrictions | length == 1
@@ -237,7 +237,7 @@
     scm_ip_security_restrictions_use_main: false
   register: output
 - name: Assert the resource is not changed
-  assert:
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: "Delete webapp access restrictions"
@@ -247,7 +247,7 @@
     state: "absent"
   register: output
 - name: Assert the resource is deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.ip_security_restrictions | length == 0
@@ -260,7 +260,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert no restrictions
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.ip_security_restrictions | length <= 1

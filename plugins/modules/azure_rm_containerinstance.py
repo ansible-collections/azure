@@ -250,82 +250,82 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create sample container group
-    azure_rm_containerinstance:
-      resource_group: myResourceGroup
-      name: myContainerInstanceGroup
-      os_type: linux
-      ip_address: public
-      containers:
-        - name: myContainer1
-          image: httpd
-          memory: 1.5
-          ports:
-            - 80
-            - 81
+- name: Create sample container group
+  azure_rm_containerinstance:
+    resource_group: myResourceGroup
+    name: myContainerInstanceGroup
+    os_type: linux
+    ip_address: public
+    containers:
+      - name: myContainer1
+        image: httpd
+        memory: 1.5
+        ports:
+          - 80
+          - 81
 
-  - name: Create sample container group with azure file share volume
-    azure_rm_containerinstance:
-      resource_group: myResourceGroup
-      name: myContainerInstanceGroupz
-      os_type: linux
-      ip_address: public
-      containers:
-        - name: mycontainer1
-          image: httpd
-          memory: 1
-          volume_mounts:
-            - name: filesharevolume
-              mount_path: "/data/files"
-          ports:
-            - 80
-            - 81
-      volumes:
-        - name: filesharevolume
-          azure_file:
-            storage_account_name: mystorageaccount
-            share_name: acishare
-            storage_account_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+- name: Create sample container group with azure file share volume
+  azure_rm_containerinstance:
+    resource_group: myResourceGroup
+    name: myContainerInstanceGroupz
+    os_type: linux
+    ip_address: public
+    containers:
+      - name: mycontainer1
+        image: httpd
+        memory: 1
+        volume_mounts:
+          - name: filesharevolume
+            mount_path: "/data/files"
+        ports:
+          - 80
+          - 81
+    volumes:
+      - name: filesharevolume
+        azure_file:
+          storage_account_name: mystorageaccount
+          share_name: acishare
+          storage_account_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-  - name: Create sample container group with git repo volume
-    azure_rm_containerinstance:
-      resource_group: myResourceGroup
-      name: myContainerInstanceGroup
-      os_type: linux
-      ip_address: public
-      containers:
-        - name: mycontainer1
-          image: httpd
-          memory: 1
-          volume_mounts:
-            - name: myvolume1
-              mount_path: "/mnt/test"
-          ports:
-            - 80
-            - 81
-      volumes:
-        - name: myvolume1
-          git_repo:
-            repository: "https://github.com/Azure-Samples/aci-helloworld.git"
+- name: Create sample container group with git repo volume
+  azure_rm_containerinstance:
+    resource_group: myResourceGroup
+    name: myContainerInstanceGroup
+    os_type: linux
+    ip_address: public
+    containers:
+      - name: mycontainer1
+        image: httpd
+        memory: 1
+        volume_mounts:
+          - name: myvolume1
+            mount_path: "/mnt/test"
+        ports:
+          - 80
+          - 81
+    volumes:
+      - name: myvolume1
+        git_repo:
+          repository: "https://github.com/Azure-Samples/aci-helloworld.git"
 
-  - name: Create sample container instance with subnet
-    azure_rm_containerinstance:
-      resource_group: myResourceGroup
-      name: myContainerInstanceGroup
-      os_type: linux
-      ip_address: private
-      location: eastus
-      subnet_ids:
-        - "{{ subnet_id }}"
-      ports:
-        - 80
-      containers:
-        - name: mycontainer1
-          image: httpd
-          memory: 1.5
-          ports:
-            - 80
-            - 81
+- name: Create sample container instance with subnet
+  azure_rm_containerinstance:
+    resource_group: myResourceGroup
+    name: myContainerInstanceGroup
+    os_type: linux
+    ip_address: private
+    location: eastus
+    subnet_ids:
+      - "{{ subnet_id }}"
+    ports:
+      - 80
+    containers:
+      - name: mycontainer1
+        image: httpd
+        memory: 1.5
+        ports:
+          - 80
+          - 81
 '''
 RETURN = '''
 id:

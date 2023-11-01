@@ -142,54 +142,54 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create virtual network gateway without bgp settings
-      azure_rm_virtualnetworkgateway:
-        resource_group: myResourceGroup
-        name: myVirtualNetworkGateway
-        ip_configurations:
-          - name: testipconfig
-            private_ip_allocation_method: Dynamic
-            public_ip_address_name: testipaddr
-        virtual_network: myVirtualNetwork
-        tags:
-          common: "xyz"
+- name: Create virtual network gateway without bgp settings
+  azure_rm_virtualnetworkgateway:
+    resource_group: myResourceGroup
+    name: myVirtualNetworkGateway
+    ip_configurations:
+      - name: testipconfig
+        private_ip_allocation_method: Dynamic
+        public_ip_address_name: testipaddr
+    virtual_network: myVirtualNetwork
+    tags:
+      common: "xyz"
 
-    - name: Create virtual network gateway Generation2
-      azure_rm_virtualnetworkgateway:
-        resource_group: myResourceGroup
-        name: myVirtualNetworkGateway
-        sku: vpn_gw2
-        vpn_gateway_generation: Generation2
-        ip_configurations:
-          - name: testipconfig
-            private_ip_allocation_method: Dynamic
-            public_ip_address_name: testipaddr
-        virtual_network: myVirtualNetwork
-        tags:
-          common: "xyz"
+- name: Create virtual network gateway Generation2
+  azure_rm_virtualnetworkgateway:
+    resource_group: myResourceGroup
+    name: myVirtualNetworkGateway
+    sku: vpn_gw2
+    vpn_gateway_generation: Generation2
+    ip_configurations:
+      - name: testipconfig
+        private_ip_allocation_method: Dynamic
+        public_ip_address_name: testipaddr
+    virtual_network: myVirtualNetwork
+    tags:
+      common: "xyz"
 
-    - name: Create virtual network gateway with bgp
-      azure_rm_virtualnetworkgateway:
-        resource_group: myResourceGroup
-        name: myVirtualNetworkGateway
-        sku: vpn_gw1
-        ip_configurations:
-          - name: testipconfig
-            private_ip_allocation_method: Dynamic
-            public_ip_address_name: testipaddr
-        enable_bgp: yes
-        virtual_network: myVirtualNetwork
-        bgp_settings:
-          asn: 65515
-          bgp_peering_address: "169.254.54.209"
-        tags:
-          common: "xyz"
+- name: Create virtual network gateway with bgp
+  azure_rm_virtualnetworkgateway:
+    resource_group: myResourceGroup
+    name: myVirtualNetworkGateway
+    sku: vpn_gw1
+    ip_configurations:
+      - name: testipconfig
+        private_ip_allocation_method: Dynamic
+        public_ip_address_name: testipaddr
+    enable_bgp: true
+    virtual_network: myVirtualNetwork
+    bgp_settings:
+      asn: 65515
+      bgp_peering_address: "169.254.54.209"
+    tags:
+      common: "xyz"
 
-    - name: Delete instance of virtual network gateway
-      azure_rm_virtualnetworkgateway:
-        resource_group: myResourceGroup
-        name: myVirtualNetworkGateway
-        state: absent
+- name: Delete instance of virtual network gateway
+  azure_rm_virtualnetworkgateway:
+    resource_group: myResourceGroup
+    name: myVirtualNetworkGateway
+    state: absent
 '''
 
 RETURN = '''

@@ -204,15 +204,15 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: Testing
     routing_endpoints:
-        - connection_string: "Endpoint=sb://qux.servicebus.windows.net/;SharedAccessKeyName=quux;SharedAccessKey=****;EntityPath=myQueue"
-          name: foo
-          resource_type: queue
-          resource_group: myResourceGroup1
+      - connection_string: "Endpoint=sb://qux.servicebus.windows.net/;SharedAccessKeyName=quux;SharedAccessKey=****;EntityPath=myQueue"
+        name: foo
+        resource_type: queue
+        resource_group: myResourceGroup1
     routes:
-        - name: bar
-          source: device_messages
-          endpoint_name: foo
-          enabled: yes
+      - name: bar
+        source: device_messages
+        endpoint_name: foo
+        enabled: true
 '''
 
 RETURN = '''

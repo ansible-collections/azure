@@ -37,14 +37,14 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of SQL Server
-    azure_rm_sqlserver_info:
-      resource_group: myResourceGroup
-      server_name: server_name
+- name: Get instance of SQL Server
+  azure_rm_sqlserver_info:
+    resource_group: myResourceGroup
+    server_name: server_name
 
-  - name: List instances of SQL Server
-    azure_rm_sqlserver_info:
-      resource_group: myResourceGroup
+- name: List instances of SQL Server
+  azure_rm_sqlserver_info:
+    resource_group: myResourceGroup
 '''
 
 RETURN = '''

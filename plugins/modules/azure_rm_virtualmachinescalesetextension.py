@@ -86,25 +86,25 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Install VMSS Extension
-      azure_rm_virtualmachinescalesetextension:
-        name: myvmssextension
-        location: eastus
-        resource_group: myResourceGroup
-        vmss_name: myvm
-        publisher: Microsoft.Azure.Extensions
-        type: CustomScript
-        type_handler_version: 2.0
-        settings: '{"commandToExecute": "hostname"}'
-        auto_upgrade_minor_version: true
+- name: Install VMSS Extension
+  azure_rm_virtualmachinescalesetextension:
+    name: myvmssextension
+    location: eastus
+    resource_group: myResourceGroup
+    vmss_name: myvm
+    publisher: Microsoft.Azure.Extensions
+    type: CustomScript
+    type_handler_version: 2.0
+    settings: '{"commandToExecute": "hostname"}'
+    auto_upgrade_minor_version: true
 
-    - name: Remove VMSS Extension
-      azure_rm_virtualmachinescalesetextension:
-        name: myvmssextension
-        location: eastus
-        resource_group: myResourceGroup
-        vmss_name: myvm
-        state: absent
+- name: Remove VMSS Extension
+  azure_rm_virtualmachinescalesetextension:
+    name: myvmssextension
+    location: eastus
+    resource_group: myResourceGroup
+    vmss_name: myvm
+    state: absent
 '''
 
 RETURN = '''

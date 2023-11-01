@@ -66,11 +66,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) PostgreSQL Database
-    azure_rm_postgresqldatabase:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: db1
+- name: Create (or update) PostgreSQL Database
+  azure_rm_postgresqldatabase:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: db1
 '''
 
 RETURN = '''

@@ -41,16 +41,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of PostgreSQL Server
-    azure_rm_postgresqlserver_info:
-      resource_group: myResourceGroup
-      name: server_name
+- name: Get instance of PostgreSQL Server
+  azure_rm_postgresqlserver_info:
+    resource_group: myResourceGroup
+    name: server_name
 
-  - name: List instances of PostgreSQL Server
-    azure_rm_postgresqlserver_info:
-      resource_group: myResourceGroup
-      tags:
-        - key
+- name: List instances of PostgreSQL Server
+  azure_rm_postgresqlserver_info:
+    resource_group: myResourceGroup
+    tags:
+      - key
 '''
 
 RETURN = '''

@@ -40,19 +40,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: List application security groups in specific resource group
-    azure_rm_applicationsecuritygroup_info:
-      resource_group: myResourceGroup
+- name: List application security groups in specific resource group
+  azure_rm_applicationsecuritygroup_info:
+    resource_group: myResourceGroup
 
-  - name: List application security groups in specific subscription
-    azure_rm_applicationsecuritygroup_info:
+- name: List application security groups in specific subscription
+  azure_rm_applicationsecuritygroup_info:
 
-  - name: Get application security group by name
-    azure_rm_applicationsecuritygroup_info:
-        resource_group: myResourceGroup
-        name: myApplicationSecurityGroup
-        tags:
-            - foo
+- name: Get application security group by name
+  azure_rm_applicationsecuritygroup_info:
+    resource_group: myResourceGroup
+    name: myApplicationSecurityGroup
+    tags:
+      - foo
 '''
 
 RETURN = '''

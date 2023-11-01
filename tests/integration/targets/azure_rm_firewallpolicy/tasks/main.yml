@@ -1,5 +1,5 @@
 - name: Create firewall policy name
-  set_fact:
+  ansible.builtin.set_fact:
     policy_name: "fp{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create firewall policy
@@ -18,7 +18,7 @@
   register: results
 
 - name: Assert that firewall policy is created
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create a firewall policy again (Idempotent test)
@@ -37,7 +37,7 @@
   register: results
 
 - name: Assert that output is not changed
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Update a firewall policy
@@ -58,7 +58,7 @@
   register: results
 
 - name: Assert that firewall policy is updated
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Get firewall policy facts
@@ -67,7 +67,8 @@
     name: "{{ policy_name }}"
   register: results
 
-- assert:
+- name: Assert the firewall policy facts
+  ansible.builtin.assert:
     that:
       - not results.changed
       - results.firewallpolicies[0].id != None
@@ -85,7 +86,7 @@
   register: results
 
 - name: Assert that firewall policy is deleted
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Delete firewall policy again (Idempotent test)
@@ -96,5 +97,5 @@
   register: results
 
 - name: Asset that output is not changed
-  assert:
+  ansible.builtin.assert:
     that: not results.changed

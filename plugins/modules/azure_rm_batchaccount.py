@@ -85,14 +85,14 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create Batch Account
-    azure_rm_batchaccount:
-        resource_group: MyResGroup
-        name: mybatchaccount
-        location: eastus
-        auto_storage_account:
-          name: mystorageaccountname
-        pool_allocation_mode: batch_service
+- name: Create Batch Account
+  azure_rm_batchaccount:
+    resource_group: MyResGroup
+    name: mybatchaccount
+    location: eastus
+    auto_storage_account:
+      name: mystorageaccountname
+    pool_allocation_mode: batch_service
 '''
 
 RETURN = '''

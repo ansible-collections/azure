@@ -70,28 +70,28 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a windows app service plan
-      azure_rm_appserviceplan:
-        resource_group: myResourceGroup
-        name: myAppPlan
-        location: eastus
-        sku: S1
+- name: Create a windows app service plan
+  azure_rm_appserviceplan:
+    resource_group: myResourceGroup
+    name: myAppPlan
+    location: eastus
+    sku: S1
 
-    - name: Create a linux app service plan
-      azure_rm_appserviceplan:
-        resource_group: myResourceGroup
-        name: myAppPlan
-        location: eastus
-        sku: S1
-        is_linux: true
-        number_of_workers: 1
+- name: Create a linux app service plan
+  azure_rm_appserviceplan:
+    resource_group: myResourceGroup
+    name: myAppPlan
+    location: eastus
+    sku: S1
+    is_linux: true
+    number_of_workers: 1
 
-    - name: update sku of existing windows app service plan
-      azure_rm_appserviceplan:
-        resource_group: myResourceGroup
-        name: myAppPlan
-        location: eastus
-        sku: S2
+- name: update sku of existing windows app service plan
+  azure_rm_appserviceplan:
+    resource_group: myResourceGroup
+    name: myAppPlan
+    location: eastus
+    sku: S2
 '''
 
 RETURN = '''

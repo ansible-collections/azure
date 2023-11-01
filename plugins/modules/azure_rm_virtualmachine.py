@@ -668,7 +668,7 @@ EXAMPLES = '''
     storage_container: osdisk
     storage_blob: osdisk.vhd
     boot_diagnostics:
-      enabled: yes
+      enabled: true
       type: managed
     image:
       offer: 0001-com-ubuntu-server-focal
@@ -763,13 +763,13 @@ EXAMPLES = '''
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: testvm002
-    started: no
+    started: false
 
 - name: Deallocate
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: testvm002
-    allocated: no
+    allocated: false
 
 - name: Power On
   azure_rm_virtualmachine:
@@ -780,7 +780,7 @@ EXAMPLES = '''
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: testvm002
-    restarted: yes
+    restarted: true
 
 - name: Create a VM with an Availability Zone
   azure_rm_virtualmachine:
@@ -802,9 +802,9 @@ EXAMPLES = '''
     admin_password: "{{ password }}"
     security_profile:
       uefi_settings:
-        secure_boot_enabled: True
-        v_tpm_enabled: True
-      encryption_at_host: True
+        secure_boot_enabled: true
+        v_tpm_enabled: true
+      encryption_at_host: true
       security_type: TrustedLaunch
     ssh_public_keys:
       - path: /home/azureuser/.ssh/authorized_keys

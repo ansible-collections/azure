@@ -54,31 +54,31 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get latest version of specific key
-    azure_rm_keyvaultkey_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: myKey
+- name: Get latest version of specific key
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: myKey
 
-  - name: List all versions of specific key
-    azure_rm_keyvaultkey_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: myKey
-      version: all
+- name: List all versions of specific key
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: myKey
+    version: all
 
-  - name: List specific version of specific key
-    azure_rm_keyvaultkey_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: myKey
-      version: fd2682392a504455b79c90dd04a1bf46
+- name: List specific version of specific key
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: myKey
+    version: fd2682392a504455b79c90dd04a1bf46
 
-  - name: List all keys in specific key vault
-    azure_rm_keyvaultkey_info:
-        vault_uri: "https://myVault.vault.azure.net"
+- name: List all keys in specific key vault
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
 
-  - name: List deleted keys in specific key vault
-    azure_rm_keyvaultkey_info:
-        vault_uri: "https://myVault.vault.azure.net"
-        show_deleted_key: True
+- name: List deleted keys in specific key vault
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    show_deleted_key: true
 '''
 
 RETURN = '''

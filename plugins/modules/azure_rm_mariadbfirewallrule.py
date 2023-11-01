@@ -60,13 +60,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) MariaDB firewall rule
-    azure_rm_mariadbfirewallrule:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: rule1
-      start_ip_address: 10.0.0.17
-      end_ip_address: 10.0.0.20
+- name: Create (or update) MariaDB firewall rule
+  azure_rm_mariadbfirewallrule:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: rule1
+    start_ip_address: 10.0.0.17
+    end_ip_address: 10.0.0.20
 '''
 
 RETURN = '''

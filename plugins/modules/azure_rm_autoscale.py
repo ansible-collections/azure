@@ -267,63 +267,63 @@ author:
 EXAMPLES = '''
 - name: Create an auto scale
   azure_rm_autoscale:
-      target: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets/myVmss"
-      enabled: true
-      profiles:
+    target: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets/myVmss"
+    enabled: true
+    profiles:
       - count: '1'
         recurrence_days:
-        - Monday
+          - Monday
         name: Auto created scale condition
         recurrence_timezone: China Standard Time
         recurrence_mins:
-        - '0'
+          - '0'
         min_count: '1'
         max_count: '1'
         recurrence_frequency: Week
         recurrence_hours:
-        - '18'
-      name: scale
-      resource_group: myResourceGroup
+          - '18'
+    name: scale
+    resource_group: myResourceGroup
 
 - name: Create an auto scale with complicated profile
   azure_rm_autoscale:
-      target: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets
+    target: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets
                /myVmss"
-      enabled: true
-      profiles:
+    enabled: true
+    profiles:
       - count: '1'
         recurrence_days:
-        - Monday
+          - Monday
         name: Auto created scale condition 0
         rules:
-        - time_aggregation: Average
-          time_window: 10
-          direction: Increase
-          metric_name: Percentage CPU
-          metric_resource_uri: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtua
+          - time_aggregation: Average
+            time_window: 10
+            direction: Increase
+            metric_name: Percentage CPU
+            metric_resource_uri: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtua
                                 lMachineScaleSets/vmss"
-          value: '1'
-          threshold: 70
-          cooldown: 5
-          time_grain: 1
-          statistic: Average
-          operator: GreaterThan
-          type: ChangeCount
+            value: '1'
+            threshold: 70
+            cooldown: 5
+            time_grain: 1
+            statistic: Average
+            operator: GreaterThan
+            type: ChangeCount
         max_count: '1'
         recurrence_mins:
-        - '0'
+          - '0'
         min_count: '1'
         recurrence_timezone: China Standard Time
         recurrence_frequency: Week
         recurrence_hours:
-        - '6'
-      notifications:
-      - email_admin: True
-        email_co_admin: False
+          - '6'
+    notifications:
+      - email_admin: true
+        email_co_admin: false
         custom_emails:
-        - yuwzho@microsoft.com
-      name: scale
-      resource_group: myResourceGroup
+          - yuwzho@microsoft.com
+    name: scale
+    resource_group: myResourceGroup
 
 - name: Delete an Azure Auto Scale Setting
   azure_rm_autoscale:

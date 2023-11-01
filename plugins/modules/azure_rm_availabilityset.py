@@ -76,28 +76,28 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create an availability set with default options
-      azure_rm_availabilityset:
-        name: myAvailabilitySet
-        location: eastus
-        resource_group: myResourceGroup
+- name: Create an availability set with default options
+  azure_rm_availabilityset:
+    name: myAvailabilitySet
+    location: eastus
+    resource_group: myResourceGroup
 
-    - name: Create an availability set with advanced options
-      azure_rm_availabilityset:
-        name: myAvailabilitySet
-        location: eastus
-        resource_group: myResourceGroup
-        platform_update_domain_count: 5
-        platform_fault_domain_count: 3
-        proximity_placement_group: myProximityPlacementGroup
-        sku: Aligned
+- name: Create an availability set with advanced options
+  azure_rm_availabilityset:
+    name: myAvailabilitySet
+    location: eastus
+    resource_group: myResourceGroup
+    platform_update_domain_count: 5
+    platform_fault_domain_count: 3
+    proximity_placement_group: myProximityPlacementGroup
+    sku: Aligned
 
-    - name: Delete an availability set
-      azure_rm_availabilityset:
-        name: myAvailabilitySet
-        location: eastus
-        resource_group: myResourceGroup
-        state: absent
+- name: Delete an availability set
+  azure_rm_availabilityset:
+    name: myAvailabilitySet
+    location: eastus
+    resource_group: myResourceGroup
+    state: absent
 '''
 
 RETURN = '''

@@ -48,20 +48,20 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get Azure Cache for Redis by name
-      azure_rm_rediscache_info:
-        resource_group: myResourceGroup
-        name: myRedis
+- name: Get Azure Cache for Redis by name
+  azure_rm_rediscache_info:
+    resource_group: myResourceGroup
+    name: myRedis
 
-    - name: Get Azure Cache for Redis with access keys by name
-      azure_rm_rediscache_info:
-        resource_group: myResourceGroup
-        name: myRedis
-        return_access_keys: true
+- name: Get Azure Cache for Redis with access keys by name
+  azure_rm_rediscache_info:
+    resource_group: myResourceGroup
+    name: myRedis
+    return_access_keys: true
 
-    - name: Get Azure Cache for Redis in specific resource group
-      azure_rm_rediscache_info:
-        resource_group: myResourceGroup
+- name: Get Azure Cache for Redis in specific resource group
+  azure_rm_rediscache_info:
+    resource_group: myResourceGroup
 '''
 
 RETURN = '''

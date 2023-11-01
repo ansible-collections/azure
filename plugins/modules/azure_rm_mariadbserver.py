@@ -104,19 +104,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) MariaDB Server
-    azure_rm_mariadbserver:
-      resource_group: myResourceGroup
-      name: testserver
-      sku:
-        name: B_Gen5_1
-        tier: Basic
-      location: eastus
-      storage_mb: 1024
-      enforce_ssl: True
-      version: 10.2
-      admin_username: cloudsa
-      admin_password: password
+- name: Create (or update) MariaDB Server
+  azure_rm_mariadbserver:
+    resource_group: myResourceGroup
+    name: testserver
+    sku:
+      name: B_Gen5_1
+      tier: Basic
+    location: eastus
+    storage_mb: 1024
+    enforce_ssl: true
+    version: 10.2
+    admin_username: cloudsa
+    admin_password: password
 '''
 
 RETURN = '''

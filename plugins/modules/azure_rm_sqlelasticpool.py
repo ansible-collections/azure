@@ -119,25 +119,25 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) SQL Elastic Pool
-    azure_rm_elastic_pool:
-      resource_group: myResourceGroup
-      server_name: sqlcrudtest-5961
-      name: testEP
-      zone_redundant: False
-      sku:
-        name: GP_Gen5
-        family: Gen5
-        capacity: 3
-      tags:
-        key1: value1
+- name: Create (or update) SQL Elastic Pool
+  azure_rm_elastic_pool:
+    resource_group: myResourceGroup
+    server_name: sqlcrudtest-5961
+    name: testEP
+    zone_redundant: false
+    sku:
+      name: GP_Gen5
+      family: Gen5
+      capacity: 3
+    tags:
+      key1: value1
 
-  - name: Delete SQL Elastic Pool
-    azure_rm_elastic_pool:
-      resource_group: myResourceGroup
-      server_name: sqlcrudtest-5961
-      name: testEP
-      state: absent
+- name: Delete SQL Elastic Pool
+  azure_rm_elastic_pool:
+    resource_group: myResourceGroup
+    server_name: sqlcrudtest-5961
+    name: testEP
+    state: absent
 '''
 
 RETURN = '''

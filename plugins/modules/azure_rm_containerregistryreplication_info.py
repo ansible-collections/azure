@@ -42,11 +42,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Replication
-    azure_rm_containerregistryreplication_info:
-      resource_group: resource_group_name
-      registry_name: registry_name
-      replication_name: replication_name
+- name: Get instance of Replication
+  azure_rm_containerregistryreplication_info:
+    resource_group: resource_group_name
+    registry_name: registry_name
+    replication_name: replication_name
 '''
 
 RETURN = '''

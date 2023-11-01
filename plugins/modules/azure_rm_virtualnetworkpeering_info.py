@@ -39,16 +39,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get virtual network peering by name
-      azure_rm_virtualnetworkpeering_info:
-        resource_group: myResourceGroup
-        virtual_network: myVnet1
-        name: myVnetPeer
+- name: Get virtual network peering by name
+  azure_rm_virtualnetworkpeering_info:
+    resource_group: myResourceGroup
+    virtual_network: myVnet1
+    name: myVnetPeer
 
-    - name: List virtual network peering of virtual network
-      azure_rm_virtualnetworkpeering:
-        resource_group: myResourceGroup
-        virtual_network: myVnet1
+- name: List virtual network peering of virtual network
+  azure_rm_virtualnetworkpeering:
+    resource_group: myResourceGroup
+    virtual_network: myVnet1
 '''
 
 RETURN = '''

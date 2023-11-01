@@ -158,61 +158,61 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create managed disk
-      azure_rm_manageddisk:
-        name: mymanageddisk
-        location: eastus
-        resource_group: myResourceGroup
-        disk_size_gb: 4
+- name: Create managed disk
+  azure_rm_manageddisk:
+    name: mymanageddisk
+    location: eastus
+    resource_group: myResourceGroup
+    disk_size_gb: 4
 
-    - name: Create managed operating system disk from page blob
-      azure_rm_manageddisk:
-        name: mymanageddisk
-        location: eastus2
-        resource_group: myResourceGroup
-        create_option: import
-        source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
-        storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
-        os_type: windows
-        storage_account_type: Premium_LRS
+- name: Create managed operating system disk from page blob
+  azure_rm_manageddisk:
+    name: mymanageddisk
+    location: eastus2
+    resource_group: myResourceGroup
+    create_option: import
+    source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
+    storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
+    os_type: windows
+    storage_account_type: Premium_LRS
 
-    - name: Mount the managed disk to VM
-      azure_rm_manageddisk:
-        name: mymanageddisk
-        location: eastus
-        resource_group: myResourceGroup
-        disk_size_gb: 4
-        managed_by: testvm001
-        attach_caching: read_only
+- name: Mount the managed disk to VM
+  azure_rm_manageddisk:
+    name: mymanageddisk
+    location: eastus
+    resource_group: myResourceGroup
+    disk_size_gb: 4
+    managed_by: testvm001
+    attach_caching: read_only
 
-    - name: Mount the managed disk to multiple VMs
-      azure_rm_manageddisk:
-        resource_group: myResourceGroup
-        name: freddisk04
-        max_shares: 4
-        disk_size_gb: 1024
-        storage_account_type: Premium_LRS
-        managed_by_extended:
-          - resource_group: myResourceGroup01
-            name: testVM01
-          - resource_group: myResourceGroup02
-            name: testVM02
-        zone: 1
+- name: Mount the managed disk to multiple VMs
+  azure_rm_manageddisk:
+    resource_group: myResourceGroup
+    name: freddisk04
+    max_shares: 4
+    disk_size_gb: 1024
+    storage_account_type: Premium_LRS
+    managed_by_extended:
+      - resource_group: myResourceGroup01
+        name: testVM01
+      - resource_group: myResourceGroup02
+        name: testVM02
+    zone: 1
 
-    - name: Unmount the managed disk to VM
-      azure_rm_manageddisk:
-        name: mymanageddisk
-        location: eastus
-        resource_group: myResourceGroup
-        managed_by: ''
-        disk_size_gb: 4
+- name: Unmount the managed disk to VM
+  azure_rm_manageddisk:
+    name: mymanageddisk
+    location: eastus
+    resource_group: myResourceGroup
+    managed_by: ''
+    disk_size_gb: 4
 
-    - name: Delete managed disk
-      azure_rm_manageddisk:
-        name: mymanageddisk
-        location: eastus
-        resource_group: myResourceGroup
-        state: absent
+- name: Delete managed disk
+  azure_rm_manageddisk:
+    name: mymanageddisk
+    location: eastus
+    resource_group: myResourceGroup
+    state: absent
 '''
 
 RETURN = '''

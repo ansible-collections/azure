@@ -183,42 +183,41 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) SQL Database
-    azure_rm_sqldatabase:
-      resource_group: myResourceGroup
-      server_name: sqlcrudtest-5961
-      name: testdb
-      location: eastus
+- name: Create (or update) SQL Database
+  azure_rm_sqldatabase:
+    resource_group: myResourceGroup
+    server_name: sqlcrudtest-5961
+    name: testdb
+    location: eastus
 
-  - name: Restore SQL Database
-    azure_rm_sqldatabase:
-      resource_group: myResourceGroup
-      server_name: sqlcrudtest-5961
-      name: restoreddb
-      location: eastus
-      create_mode: restore
-      restorable_dropped_database_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Sql/s
-                                       ervers/testsvr/restorableDroppedDatabases/testdb2,131444841315030000"
+- name: Restore SQL Database
+  azure_rm_sqldatabase:
+    resource_group: myResourceGroup
+    server_name: sqlcrudtest-5961
+    name: restoreddb
+    location: eastus
+    create_mode: restore
+    restorable_dropped_database_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Sql/s
+                                     ervers/testsvr/restorableDroppedDatabases/testdb2,131444841315030000"
 
-  - name: Create SQL Database in Copy Mode
-    azure_rm_sqldatabase:
-      resource_group: myResourceGroup
-      server_name: sqlcrudtest-5961
-      name: copydb
-      location: eastus
-      create_mode: copy
-      source_database_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Sql/servers/tests
-                           vr/databases/testdb"
+- name: Create SQL Database in Copy Mode
+  azure_rm_sqldatabase:
+    resource_group: myResourceGroup
+    server_name: sqlcrudtest-5961
+    name: copydb
+    location: eastus
+    create_mode: copy
+    source_database_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Sql/servers/tests
+                         vr/databases/testdb"
 
-  - name: Create (or update) SQL Database with SKU
-    azure_rm_sqldatabase:
-      resource_group: myResourceGroup
-      server_name: sqlcrudtest-5961
-      name: testdb
-      location: eastus
-      sku:
-        name: S0
-
+- name: Create (or update) SQL Database with SKU
+  azure_rm_sqldatabase:
+    resource_group: myResourceGroup
+    server_name: sqlcrudtest-5961
+    name: testdb
+    location: eastus
+    sku:
+      name: S0
 '''
 
 RETURN = '''

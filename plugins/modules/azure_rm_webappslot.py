@@ -204,46 +204,46 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create a webapp slot
-    azure_rm_webappslot:
-      resource_group: myResourceGroup
-      webapp_name: myJavaWebApp
-      name: stage
-      configuration_source: myJavaWebApp
-      app_settings:
-        testkey: testvalue
+- name: Create a webapp slot
+  azure_rm_webappslot:
+    resource_group: myResourceGroup
+    webapp_name: myJavaWebApp
+    name: stage
+    configuration_source: myJavaWebApp
+    app_settings:
+      testkey: testvalue
 
-  - name: swap the slot with production slot
-    azure_rm_webappslot:
-      resource_group: myResourceGroup
-      webapp_name: myJavaWebApp
-      name: stage
-      swap:
-        action: swap
+- name: swap the slot with production slot
+  azure_rm_webappslot:
+    resource_group: myResourceGroup
+    webapp_name: myJavaWebApp
+    name: stage
+    swap:
+      action: swap
 
-  - name: stop the slot
-    azure_rm_webappslot:
-      resource_group: myResourceGroup
-      webapp_name: myJavaWebApp
-      name: stage
-      app_state: stopped
+- name: stop the slot
+  azure_rm_webappslot:
+    resource_group: myResourceGroup
+    webapp_name: myJavaWebApp
+    name: stage
+    app_state: stopped
 
-  - name: udpate a webapp slot app settings
-    azure_rm_webappslot:
-      resource_group: myResourceGroup
-      webapp_name: myJavaWebApp
-      name: stage
-      app_settings:
-        testkey: testvalue2
+- name: udpate a webapp slot app settings
+  azure_rm_webappslot:
+    resource_group: myResourceGroup
+    webapp_name: myJavaWebApp
+    name: stage
+    app_settings:
+      testkey: testvalue2
 
-  - name: udpate a webapp slot frameworks
-    azure_rm_webappslot:
-      resource_group: myResourceGroup
-      webapp_name: myJavaWebApp
-      name: stage
-      frameworks:
-        - name: "node"
-          version: "10.1"
+- name: udpate a webapp slot frameworks
+  azure_rm_webappslot:
+    resource_group: myResourceGroup
+    webapp_name: myJavaWebApp
+    name: stage
+    frameworks:
+      - name: "node"
+        version: "10.1"
 '''
 
 RETURN = '''

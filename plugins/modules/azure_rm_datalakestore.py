@@ -167,10 +167,10 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create Azure Data Lake Store
-    azure_rm_datalakestore:
-      resource_group: myResourceGroup
-      name: myDataLakeStore
+- name: Create Azure Data Lake Store
+  azure_rm_datalakestore:
+    resource_group: myResourceGroup
+    name: myDataLakeStore
 '''
 
 RETURN = '''

@@ -1,15 +1,15 @@
 - name: Prepare facts
-  set_fact:
+  ansible.builtin.set_fact:
     resource_prefix: "{{ resource_group_secondary | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Fix resource prefix
-  set_fact:
+  ansible.builtin.set_fact:
     linux_app_plan_resource_group: "{{ resource_group_secondary }}"
-    win_app_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}{{ 1000 | random}}winapp"
-    linux_app_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}{{ 1000 | random}}linuxapp"
-    win_plan_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}winplan"
-    linux_plan_name: "{{ (resource_group_secondary | replace('-','x'))[-8:] }}linplan"
+    win_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random }}winapp"
+    linux_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random }}linuxapp"
+    win_plan_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}winplan"
+    linux_plan_name: "{{ (resource_group_secondary | replace('-', 'x'))[-8:] }}linplan"
     slot1_name: "stage1"
 
 - name: Create a windows web app with non-exist app service plan
@@ -29,7 +29,7 @@
     plan: "{{ win_plan_name }}"
   register: output
 
-- name: stop the web app
+- name: Stop the web app
   azure_rm_webapp:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}2"
@@ -37,19 +37,19 @@
     app_state: stopped
   register: output
 
-- name: assert output changed
-  assert:
+- name: Assert output changed
+  ansible.builtin.assert:
     that:
       output.changed
 
-- name: get the web app
+- name: Get the web app
   azure_rm_webapp_info:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}2"
   register: stopped
 
-- name: assert web app is stopped
-  assert:
+- name: Assert web app is stopped
+  ansible.builtin.assert:
     that:
       - stopped.webapps[0].app_state == "Stopped"
 
@@ -63,7 +63,7 @@
       testwebapptag: test
   register: output
 
-- name: get web app with resource group and tag
+- name: Get web app with resource group and tag
   azure_rm_webapp_info:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}3"
@@ -71,7 +71,8 @@
       - testwebapptag
   register: output
 
-- assert:
+- name: Assert the web app facts
+  ansible.builtin.assert:
     that:
       - output.webapps | length == 1
 
@@ -90,17 +91,18 @@
       testkey: "testvalue"
   register: output
 
-- name: assert the web app was created
-  assert:
+- name: Assert web app was created
+  ansible.builtin.assert:
     that: output.changed
 
-- name: get web app with name
+- name: Get web app with name
   azure_rm_webapp_info:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}4"
   register: output
 
-- assert:
+- name: Assert the web app facts
+  ansible.builtin.assert:
     that:
       - output.webapps | length == 1
       - output.webapps[0].app_settings | length == 1
@@ -122,31 +124,32 @@
   register: output
 
 - name: Assert the web app was updated
-  assert:
+  ansible.builtin.assert:
     that:
-    - output.changed
+      - output.changed
 
-- name: get web app with name
+- name: Get web app with name
   azure_rm_webapp_info:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}4"
   register: output
 
 - name: Assert updating
-  assert:
+  ansible.builtin.assert:
     that:
-    - output.webapps[0].app_settings | length == 2
-    - output.webapps[0].app_settings['testkey'] == 'testvalue'
-    - output.webapps[0].app_settings['testkey2'] == 'testvalue2'
+      - output.webapps[0].app_settings | length == 2
+      - output.webapps[0].app_settings['testkey'] == 'testvalue'
+      - output.webapps[0].app_settings['testkey2'] == 'testvalue2'
 
-- name: get web app with return publishing profile
+- name: Get web app with return publishing profile
   azure_rm_webapp_info:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}4"
     return_publish_profile: true
   register: output
 
-- assert:
+- name: Assert the web app facts
+  ansible.builtin.assert:
     that:
       - output.webapps | length == 1
       - output.webapps[0].publishing_username != ""
@@ -161,7 +164,7 @@
   register: output
 
 - name: Assert the web app was updated
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Create a win web app with python run time and php run time
@@ -179,7 +182,7 @@
   register: output
 
 - name: Assert the web app was created
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Create a docker web app with some app settings
@@ -197,7 +200,7 @@
   register: output
 
 - name: Assert the web app was created
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Create a docker web app with private acr registry
@@ -215,7 +218,7 @@
   register: output
 
 - name: Assert the web app was created
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Create a linux web app with nodejs framework
@@ -242,9 +245,10 @@
         version: "6.6"
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that: not output.changed
-    
+
 - name: Update nodejs framework
   azure_rm_webapp:
     resource_group: "{{ resource_group }}"
@@ -258,7 +262,7 @@
   register: output
 
 - name: Assert the web app was created
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Create a linux web app with deployment source github
@@ -275,7 +279,7 @@
   register: output
 
 - name: Assert the web app was created
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Delete web app
@@ -286,10 +290,10 @@
   register: output
 
 - name: Assert the web app was deleted
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
-- name: assert error that java is mutually exclusive with frameworks
+- name: Assert error that java is mutually exclusive with frameworks
   azure_rm_webapp:
     resource_group: "{{ resource_group }}"
     name: "{{ win_app_name }}11"
@@ -302,7 +306,7 @@
   register: fail_win_java_version_mutual_exclusive
   failed_when: 'fail_win_java_version_mutual_exclusive.msg != "Java is mutually exclusive with other frameworks."'
 
-- name: assert error when linux web app, only can specify one framework
+- name: Assert error when linux web app, only can specify one framework
   azure_rm_webapp:
     resource_group: "{{ resource_group }}"
     name: "{{ linux_plan_name }}12"
@@ -333,7 +337,7 @@
   register: output
 
 - name: Assert the web app was created
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Get facts with publish profile
@@ -344,7 +348,7 @@
   register: facts
 
 - name: Assert publish profile returned
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.webapps[0].ftp_publish_url != ''
 
@@ -370,7 +374,7 @@
     ftps_state: "Disabled"
   register: output
 - name: Assert the web app was created
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Create a web app with various site config params - idempotent
@@ -395,7 +399,7 @@
     ftps_state: "Disabled"
   register: output
 - name: Assert the web app not changed
-  assert:
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Get facts for site config params
@@ -404,7 +408,7 @@
     name: "{{ linux_app_name }}-siteconfig"
   register: facts
 - name: Assert site config params meet expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.webapps[0].always_on
       - facts.webapps[0].min_tls_version == '1.2'
@@ -432,7 +436,7 @@
     ftps_state: "FtpsOnly"
   register: output
 - name: Assert the web app was updated
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Get facts for site config params
@@ -441,7 +445,7 @@
     name: "{{ linux_app_name }}-siteconfig"
   register: facts
 - name: Assert site config params meet expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.webapps[0].always_on
       - facts.webapps[0].min_tls_version == '1.2'
@@ -454,12 +458,12 @@
     name: "{{ slot1_name }}"
     configuration_source: "{{ win_app_name }}13"
     app_settings:
-        testkey: testvalue
-  check_mode: yes
+      testkey: testvalue
+  check_mode: true
   register: output
 
 - name: Assert slot check mode creation
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -470,11 +474,11 @@
     name: "{{ slot1_name }}"
     configuration_source: "{{ win_app_name }}13"
     app_settings:
-        testkey: testvalueslot
+      testkey: testvalueslot
   register: output
 
 - name: Assert slot creation
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -484,11 +488,11 @@
     webapp_name: "{{ win_app_name }}13"
     name: "{{ slot1_name }}"
     app_settings:
-        testkey: testvalueslot
+      testkey: testvalueslot
   register: output
 
 - name: Assert idempotence
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -501,11 +505,11 @@
       - name: "node"
         version: "10.1"
     app_settings:
-        testkey: testvalue2
+      testkey: testvalue2
   register: output
 
 - name: Assert updating
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -519,7 +523,7 @@
   register: output
 
 - name: Assert swap
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -532,6 +536,6 @@
   register: output
 
 - name: Assert stopped
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed

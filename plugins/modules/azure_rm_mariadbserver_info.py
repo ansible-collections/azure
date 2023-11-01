@@ -43,16 +43,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of MariaDB Server
-    azure_rm_mariadbserver_info:
-      resource_group: myResourceGroup
-      name: server_name
+- name: Get instance of MariaDB Server
+  azure_rm_mariadbserver_info:
+    resource_group: myResourceGroup
+    name: server_name
 
-  - name: List instances of MariaDB Server
-    azure_rm_mariadbserver_info:
-      resource_group: myResourceGroup
-      tags:
-        - key:value
+- name: List instances of MariaDB Server
+  azure_rm_mariadbserver_info:
+    resource_group: myResourceGroup
+    tags:
+      - key:value
 '''
 
 RETURN = '''

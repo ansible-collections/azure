@@ -51,14 +51,14 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Environment
-    azure_rm_devtestlabenvironment_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      user_name: myUser
-      name: myEnvironment
-      tags:
-        - key:value
+- name: Get instance of Environment
+  azure_rm_devtestlabenvironment_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    user_name: myUser
+    name: myEnvironment
+    tags:
+      - key:value
 '''
 
 RETURN = '''
