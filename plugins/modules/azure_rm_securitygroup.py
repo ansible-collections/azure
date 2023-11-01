@@ -759,7 +759,7 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
                 options=rule_spec,
                 mutually_exclusive=[("source_application_security_groups", "source_address_prefix"),
                                     ("destination_application_security_groups", "destination_address_prefix")]
-                ),
+            ),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
 
