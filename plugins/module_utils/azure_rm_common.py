@@ -1147,7 +1147,7 @@ class AzureRMModuleBase(object):
             self._containerservice_client = self.get_mgmt_svc_client(ContainerServiceClient,
                                                                      base_url=self._cloud_environment.endpoints.resource_manager,
                                                                      is_track2=True,
-                                                                     api_version='2022-05-02-preview')
+                                                                     api_version='2022-01-02-preview')
         return self._containerservice_client
 
     @property
