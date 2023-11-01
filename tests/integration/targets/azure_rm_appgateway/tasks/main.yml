@@ -97,12 +97,12 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -179,12 +179,12 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -346,12 +346,12 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -427,12 +427,12 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -512,12 +512,12 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -607,12 +607,12 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -690,12 +690,12 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -794,12 +794,12 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -877,12 +877,12 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -982,7 +982,7 @@
         http_listener: sample_http_listener
         name: rule1
         url_path_map: path_mappings
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -1073,7 +1073,7 @@
         http_listener: sample_http_listener
         name: rule1
         url_path_map: path_mappings
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule

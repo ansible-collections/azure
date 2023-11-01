@@ -21,13 +21,16 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     vmss_name:
         description:
             - The name of the VM scale set.
         required: True
+        type: str
     instance_id:
         description:
             - The instance ID of the virtual machine.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.

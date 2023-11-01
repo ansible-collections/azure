@@ -17,48 +17,62 @@ description:
     - Such as authentication keys, storage account keys, data encryption keys, .PFX files, and passwords.
 options:
     keyvault_uri:
-            description:
-                - URI of the keyvault endpoint.
-            required: true
+        description:
+            - URI of the keyvault endpoint.
+        required: true
+        type: str
     key_name:
         description:
             - Name of the keyvault key.
         required: true
+        type: str
     key_type:
         description:
             - The type of key to create. For valid values, see JsonWebKeyType. Possible values include EC, EC-HSM, RSA, RSA-HSM, oct
         default: 'RSA'
+        type: str
     key_size:
         description:
             - The key size in bits. For example 2048, 3072, or 4096 for RSA.
+        type: int
     key_attributes:
         description:
             - The attributes of a key managed by the key vault service.
+        type: dict
         suboptions:
             enabled:
-                description: bool
+                description:
+                    - Whether the key is enabled.
+                type: bool
             not_before:
                 description:
                     - not valid before date in UTC ISO format without the Z at the end
+                type: str
             expires:
                 description:
                     - not valid after date in UTC ISO format without the Z at the end
+                type: str
     curve:
         description:
             - Elliptic curve name. For valid values, see JsonWebKeyCurveName. Possible values include P-256, P-384, P-521, P-256K.
+        type: str
     byok_file:
         description:
             - BYOK file.
+        type: str
     pem_file:
         description:
             - PEM file.
+        type: str
     pem_password:
         description:
             - PEM password.
+        type: str
     state:
         description:
             - Assert the state of the key. Use C(present) to create a key and C(absent) to delete a key.
         default: present
+        type: str
         choices:
             - absent
             - present

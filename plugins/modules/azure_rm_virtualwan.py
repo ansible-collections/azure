@@ -48,6 +48,7 @@ options:
         description:
             - List of VirtualHubs in the VirtualWAN.
         type: list
+        elements: dict
         suboptions:
             id:
                 description:
@@ -57,11 +58,12 @@ options:
         description:
             - List of VpnSites in the VirtualWAN.
         type: list
+        elements: dict
         suboptions:
             id:
-               description:
-                   - The vpn site resource ID.
-               type: str
+                description:
+                    - The vpn site resource ID.
+                type: str
     allow_branch_to_branch_traffic:
         description:
             - True if branch to branch traffic is allowed.
@@ -82,6 +84,7 @@ options:
             - Assert the state of the VirtualWan.
             - Use C(present) to create or update an VirtualWan and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -254,6 +257,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             ),
             virtual_hubs=dict(
                 type='list',
+                elements='dict',
                 updatable=False,
                 disposition='/virtual_hubs',
                 options=dict(
@@ -265,6 +269,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             ),
             vpn_sites=dict(
                 type='list',
+                elements='dict',
                 updatable=False,
                 disposition='/vpn_sites',
                 options=dict(

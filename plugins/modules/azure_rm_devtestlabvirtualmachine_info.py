@@ -199,7 +199,7 @@ virtualmachines:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'foo': 'bar' }"
 '''
 

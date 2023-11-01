@@ -20,14 +20,17 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the route table.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the route table. Use C(present) to create or update and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -40,6 +43,7 @@ options:
         description:
             - Region of the resource.
             - Derived from I(resource_group) if not specified.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure

@@ -23,9 +23,11 @@ options:
     name:
         description:
             - Limit results to a specific virtual machine scale set.
+        type: str
     resource_group:
         description:
             - The resource group to search for the desired virtual machine scale set.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -39,6 +41,7 @@ options:
             - In Ansible 2.5 and lower facts are always returned in raw format.
             - Please note that this option will be deprecated in 2.10 when curated format will become the only supported format.
         default: 'raw'
+        type: str
         choices:
             - 'curated'
             - 'raw'

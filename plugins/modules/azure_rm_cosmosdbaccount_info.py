@@ -20,9 +20,11 @@ options:
     resource_group:
         description:
             - Name of an Azure resource group.
+        type: str
     name:
         description:
             - Cosmos DB database account name.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.

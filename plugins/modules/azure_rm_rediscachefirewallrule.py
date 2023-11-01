@@ -21,30 +21,36 @@ options:
         description:
             - Name of the resource group to which the resource belongs.
         required: True
+        type: str
     cache_name:
         description:
             - Name of the Azure Cache for Redis.
         required: True
+        type: str
     name:
         description:
             - Name of the Firewall rule.
         required: True
+        type: str
     start_ip_address:
         description:
             - The start IP address of the Azure Cache for Redis Firewall rule. Must be IPv4 format.
             - Required when creating Firewall rule.
+        type: str
     end_ip_address:
         description:
             - The end IP address of the Azure Cache for Redis Firewall rule. Must be IPv4 format.
             - Required when creating Firewall rule.
+        type: str
     state:
-      description:
-          - Assert the state of the Firewall rule of Azure Cache for Redis.
-          - Use C(present) to create or update Firewall rule of Azure Cache for Redis and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Firewall rule of Azure Cache for Redis.
+            - Use C(present) to create or update Firewall rule of Azure Cache for Redis and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure

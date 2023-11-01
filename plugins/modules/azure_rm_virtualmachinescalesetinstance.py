@@ -21,14 +21,17 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     vmss_name:
         description:
             - The name of the VM scale set.
         required: True
+        type: str
     instance_id:
         description:
             - The instance ID of the virtual machine.
-        required: True
+        type: str
+        required: true
     latest_model:
         type: bool
         description:
@@ -36,6 +39,7 @@ options:
     power_state:
         description:
             - Use this option to change power state of the instance.
+        type: str
         choices:
             - 'running'
             - 'stopped'
@@ -52,6 +56,7 @@ options:
         description:
             - State of the VMSS instance. Use C(present) to update an instance and C(absent) to delete an instance.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -118,7 +123,8 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
                 required=True
             ),
             instance_id=dict(
-                type='str'
+                type='str',
+                required=True
             ),
             latest_model=dict(
                 type='bool'

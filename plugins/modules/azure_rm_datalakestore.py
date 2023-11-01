@@ -471,7 +471,6 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
                                                'Commitment_500TB', 'Commitment_1PB', 'Commitment_5PB']),
             resource_group=dict(type='str', required=True, aliases=['resource_group_name']),
             state=dict(type='str', default='present', choices=['present', 'absent']),
-            tags=dict(type='dict'),
             virtual_network_rules=dict(
                 type='list',
                 elements='dict',
@@ -483,7 +482,6 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
         self.name = None
         self.resource_group = None
         self.location = None
-        self.tags = None
         self.new_tier = None
         self.default_group = None
         self.encryption_config = dict()
@@ -503,7 +501,7 @@ class AzureRMDatalakeStore(AzureRMModuleBase):
 
         super(AzureRMDatalakeStore, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                    supports_check_mode=False,
-                                                   supports_tags=False)
+                                                   supports_tags=True)
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:

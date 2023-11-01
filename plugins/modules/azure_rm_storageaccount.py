@@ -21,16 +21,20 @@ options:
         description:
             - Name of the resource group to use.
         required: true
+        type: str
         aliases:
             - resource_group_name
     name:
         description:
             - Name of the storage account to update or create.
+        type: str
+        required: true
     state:
         description:
             - State of the storage account. Use C(present) to create or update a storage account and use C(absent) to delete an account.
             - C(failover) is used to failover the storage account to its secondary. This process can take up to a hour.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -38,11 +42,13 @@ options:
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     account_type:
         description:
             - Type of storage account. Required when creating a storage account.
             - C(Standard_ZRS) and C(Premium_LRS) accounts cannot be changed to other account types.
             - Other account types cannot be changed to C(Standard_ZRS) or C(Premium_LRS).
+        type: str
         choices:
             - Premium_LRS
             - Standard_GRS
@@ -61,6 +67,7 @@ options:
             - Only one custom domain is supported per storage account at this time.
             - To clear the existing custom domain, use an empty string for the custom domain name property.
             - Can be added to an existing storage account. Will be ignored during storage account creation.
+        type: dict
         aliases:
             - custom_dns_domain_suffix
     kind:
@@ -68,6 +75,7 @@ options:
             - The kind of storage.
             - The C(FileStorage) and (BlockBlobStorage) only used when I(account_type=Premium_LRS) or I(account_type=Premium_ZRS).
         default: 'Storage'
+        type: str
         choices:
             - Storage
             - StorageV2
@@ -82,6 +90,7 @@ options:
     access_tier:
         description:
             - The access tier for this storage account. Required when I(kind=BlobStorage).
+        type: str
         choices:
             - Hot
             - Cool
@@ -101,6 +110,7 @@ options:
         description:
             - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
             - If omitted, new account creation will default to null which is currently interpreted to TLS1_0. Existing accounts will not be modified.
+        type: str
         choices:
             - TLS1_0
             - TLS1_1
@@ -109,6 +119,7 @@ options:
     public_network_access:
         description:
             - Allow or disallow public network access to Storage Account.
+        type: str
         choices:
             - Enabled
             - Disabled
@@ -129,6 +140,7 @@ options:
                 description:
                     - Default firewall traffic rule.
                     - If I(default_action=Allow) no other settings have effect.
+                type: str
                 choices:
                     - Allow
                     - Deny
@@ -140,28 +152,37 @@ options:
                     - It can be any combination of the example C(AzureServices), C(Logging), C(Metrics).
                     - If no Azure components are allowed, explicitly set I(bypass="").
                 default: AzureServices
+                type: str
             virtual_network_rules:
                 description:
                     - A list of subnets and their actions.
+                type: list
+                elements: dict
                 suboptions:
                     id:
                         description:
                             - The complete path to the subnet.
+                        type: str
                     action:
                         description:
                             - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
                         default: 'Allow'
+                        type: str
             ip_rules:
                 description:
                     - A list of IP addresses or ranges in CIDR format.
+                type: list
+                elements: dict
                 suboptions:
                     value:
                         description:
                             - The IP address or range.
+                        type: str
                     action:
                         description:
                             - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
                         default: 'Allow'
+                        type: str
     blob_cors:
         description:
             - Specifies CORS rules for the Blob service.

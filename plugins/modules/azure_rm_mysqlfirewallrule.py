@@ -21,26 +21,30 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the MySQL firewall rule.
         required: True
+        type: str
     start_ip_address:
         description:
             - The start IP address of the MySQL firewall rule. Must be IPv4 format.
-        required: True
+        type: str
     end_ip_address:
         description:
             - The end IP address of the MySQL firewall rule. Must be IPv4 format.
-        required: True
+        type: str
     state:
         description:
             - Assert the state of the MySQL firewall rule. Use C(present) to create or update a rule and C(absent) to ensure it is not present.
         default: present
+        type: str
         choices:
             - absent
             - present

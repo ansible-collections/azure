@@ -20,13 +20,16 @@ options:
         description:
             - Name of a resource group where the vnet exists.
         required: true
+        type: str
     name:
         description:
             - Name of the virtual network peering.
         required: true
+        type: str
     virtual_network:
         description:
             - Name or resource ID of the virtual network to be peered.
+        type: raw
         required: true
     remote_virtual_network:
         description:
@@ -35,6 +38,7 @@ options:
             - It can be remote virtual network resource ID.
             - It can be a dict which contains I(name) and I(resource_group) of remote virtual network.
             - Required when creating.
+        type: raw
     allow_virtual_network_access:
         description:
             - Allows VMs in the remote VNet to access all VMs in the local VNet.
@@ -60,6 +64,7 @@ options:
         description:
             - State of the virtual network peering. Use C(present) to create or update a peering and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -177,7 +182,8 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
                 required=True
             ),
             virtual_network=dict(
-                type='raw'
+                type='raw',
+                required=True
             ),
             remote_virtual_network=dict(
                 type='raw'

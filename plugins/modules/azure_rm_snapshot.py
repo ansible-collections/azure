@@ -24,6 +24,7 @@ options:
     name:
         description:
             - Resource name.
+        required: true
         type: str
     location:
         description:

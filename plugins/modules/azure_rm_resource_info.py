@@ -22,25 +22,32 @@ options:
     url:
         description:
             - Azure RM Resource URL.
+        type: str
     api_version:
         description:
             - Specific API version to be used.
+        type: str
     provider:
         description:
             - Provider type, should be specified in no URL is given.
+        type: str
     resource_group:
         description:
             - Resource group to be used.
             - Required if URL is not specified.
+        type: str
     resource_type:
         description:
             - Resource type.
+        type: str
     resource_name:
         description:
             - Resource name.
+        type: str
     method:
         description:
             - The HTTP method of the request or response. It must be uppercase.
+        type: str
         choices:
             - GET
             - PUT
@@ -53,17 +60,22 @@ options:
     subresource:
         description:
             - List of subresources.
+        type: list
+        elements: dict
         default: []
         suboptions:
             namespace:
                 description:
                     - Subresource namespace.
+                type: str
             type:
                 description:
                     - Subresource type.
+                type: str
             name:
                 description:
                     - Subresource name.
+                type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -319,7 +331,13 @@ class AzureRMResourceInfo(AzureRMModuleBase):
             ),
             subresource=dict(
                 type='list',
-                default=[]
+                elements='dict',
+                default=[],
+                options=dict(
+                    namespace=dict(type='str'),
+                    type=dict(type='str'),
+                    name=dict(type='str')
+                )
             ),
             method=dict(
                 type='str',

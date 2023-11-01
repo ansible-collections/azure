@@ -108,7 +108,7 @@ custom_images:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag':'MyValue' }"
 '''
 
@@ -136,7 +136,6 @@ class AzureRMDtlCustomImageInfo(AzureRMModuleBase):
             ),
             name=dict(
                 type='str',
-                required=True
             ),
             tags=dict(
                 type='list',

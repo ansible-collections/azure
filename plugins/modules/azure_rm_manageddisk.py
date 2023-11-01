@@ -27,20 +27,24 @@ options:
         description:
             - Name of a resource group where the managed disk exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the managed disk.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the managed disk. Use C(present) to create or update a managed disk and C(absent) to delete a managed disk.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     storage_account_type:
         description:
             - Type of storage for the managed disk.
@@ -52,6 +56,7 @@ options:
             - C(Premium_ZRS) is for Premium SSD Zone-redundant.
             - C(UltraSSD_LRS) (added in 2.8) is for Ultra SSD, which is only available on select instance types.
             - See U(https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-types) for more information about disk types.
+        type: str
         choices:
             - Standard_LRS
             - StandardSSD_LRS
@@ -62,6 +67,7 @@ options:
     create_option:
         description:
             - C(import) from a VHD file in I(source_uri) and C(copy) from previous managed disk I(source_uri).
+        type: str
         choices:
             - empty
             - import
@@ -74,6 +80,7 @@ options:
     source_uri:
         description:
             - URI to a valid VHD file to be used or the resource ID of the managed disk to copy.
+        type: str
         aliases:
             - source_resource_uri
     os_type:
@@ -83,6 +90,7 @@ options:
             - If omitted during creation, no value is set.
             - If omitted during an update, no change is made.
             - Once set, this value cannot be cleared.
+        type: str
         choices:
             - linux
             - windows
@@ -90,11 +98,13 @@ options:
         description:
             - Size in GB of the managed disk to be created.
             - If I(create_option=copy) then the value must be greater than or equal to the source's size.
+        type: int
     managed_by:
         description:
             - Name of an existing virtual machine with which the disk is or will be associated, this VM should be in the same resource group.
             - To detach a disk from a vm, explicitly set to ''.
             - If this option is unset, the value will not be changed.
+        type: str
     managed_by_extended:
         description:
             - List of name and resource group of the VMs that have the disk attached.
@@ -119,6 +129,7 @@ options:
         description:
             - Disk caching policy controlled by VM. Will be used when attached to the VM defined by C(managed_by).
             - If this option is different from the current caching policy, the managed disk will be deattached and attached with current caching option again.
+        type: str
         choices:
             - ''
             - read_only
@@ -127,6 +138,7 @@ options:
         description:
             - The Azure managed disk's zone.
             - Allowed values are C(1), C(2), C(3) and C('').
+        type: str
         choices:
             - '1'
             - '2'

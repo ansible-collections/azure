@@ -21,28 +21,34 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     lab_name:
         description:
             - The name of the lab.
         required: True
+        type: str
     name:
         description:
             - The name of the virtual network.
         required: True
+        type: str
     location:
         description:
             - The location of the resource.
+        type: str
     description:
         description:
             - The description of the virtual network.
+        type: str
     state:
-      description:
-          - Assert the state of the Virtual Network.
-          - Use C(present) to create or update an Virtual Network and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Virtual Network.
+            - Use C(present) to create or update an Virtual Network and C(absent) to delete it.
+        type: str
+        default: present
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
