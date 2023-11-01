@@ -52,6 +52,7 @@ options:
     origins:
         description:
             - Set of source of the content being delivered via CDN.
+            - Required when creating.
         elements: dict
         type: list
         suboptions:

@@ -56,6 +56,7 @@ options:
     os_type:
         description:
             - This property allows you to specify the type of the OS that is included in the disk when creating a VM from a managed image.
+            - Required when creating.
         choices:
             - windows
             - linux
@@ -63,6 +64,7 @@ options:
     os_state:
         description:
             - The allowed values for OS State are C(generalized).
+            - Required when creating.
         choices:
             - generalized
             - specialized
@@ -84,6 +86,7 @@ options:
     identifier:
         description:
             - Image identifier.
+            - Required when creating.
         type: dict
         suboptions:
             publisher:

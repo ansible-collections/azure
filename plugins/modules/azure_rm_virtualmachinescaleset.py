@@ -131,6 +131,7 @@ options:
             - If a dict with the keys I(name) and I(resource_group), the image is sourced from a custom image based on the I(name) and I(resource_group) set.
               Note that the key I(resource_group) is optional and if omitted, all images in the subscription will be searched for by I(name).
             - Custom image support was added in Ansible 2.5.
+            - Required when creating.
         type: raw
     os_disk_caching:
         description:

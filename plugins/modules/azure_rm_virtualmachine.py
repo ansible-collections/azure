@@ -153,6 +153,7 @@ options:
             - For custom images, the name of the image. To narrow the search to a specific resource group, a dict with the keys I(name) and I(resource_group).
             - For Marketplace images, a dict with the keys I(publisher), I(offer), I(sku), and I(version).
             - Set I(version=latest) to get the most recent version of a given image.
+            - Required when creating.
         type: raw
     availability_set:
         description:

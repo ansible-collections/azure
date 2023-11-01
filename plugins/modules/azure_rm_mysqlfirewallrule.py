@@ -35,10 +35,12 @@ options:
     start_ip_address:
         description:
             - The start IP address of the MySQL firewall rule. Must be IPv4 format.
+            - Required when creating.
         type: str
     end_ip_address:
         description:
             - The end IP address of the MySQL firewall rule. Must be IPv4 format.
+            - Required when creating.
         type: str
     state:
         description:
