@@ -745,8 +745,8 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
                 type='list',
                 elements='dict',
                 options=rule_spec,
-                mutually_exclusive = [("source_application_security_groups", "source_address_prefix"),
-                                      ("destination_application_security_groups", "destination_address_prefix")]
+                mutually_exclusive=[("source_application_security_groups", "source_address_prefix"),
+                                    ("destination_application_security_groups", "destination_address_prefix")]
             ),
             location=dict(type='str'),
             name=dict(type='str', required=True),
@@ -757,8 +757,8 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
                 type='list',
                 elements='dict',
                 options=rule_spec,
-                mutually_exclusive = [("source_application_security_groups", "source_address_prefix"),
-                                      ("destination_application_security_groups", "destination_address_prefix")]
+                mutually_exclusive=[("source_application_security_groups", "source_address_prefix"),
+                                    ("destination_application_security_groups", "destination_address_prefix")]
                 ),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
