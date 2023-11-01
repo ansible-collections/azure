@@ -151,6 +151,12 @@ options:
         description:
             - Profile of network configuration.
         suboptions:
+            network_plugin_mode:
+                description:
+                    - Network plugin mode used for building the Kubernetes network.
+                type: str
+                choices:
+                    - Overlay
             network_plugin:
                 description:
                     - Network plugin used for building Kubernetes network.
@@ -480,6 +486,7 @@ def create_aks_dict(aks):
 
 def create_network_profiles_dict(network):
     return dict(
+        network_plugin_mode=network.network_plugin_mode,
         network_plugin=network.network_plugin,
         network_policy=network.network_policy,
         pod_cidr=network.pod_cidr,
@@ -622,6 +629,7 @@ agent_pool_profile_spec = dict(
 
 
 network_profile_spec = dict(
+    network_plugin_mode=dict(type='str', choices=['Overlay']),
     network_plugin=dict(type='str', choices=['azure', 'kubenet']),
     network_policy=dict(type='str'),
     pod_cidr=dict(type='str'),

@@ -75,6 +75,7 @@
     network_profile:
       load_balancer_sku: standard
       outbound_type: loadBalancer
+      network_plugin_mode: Overlay
   register: output
 
 - name: Assert idempotent
@@ -105,6 +106,7 @@
     network_profile:
       load_balancer_sku: standard
       outbound_type: loadBalancer
+      network_plugin_mode: Overlay
   register: output
 
 - name: Assert idempotent
