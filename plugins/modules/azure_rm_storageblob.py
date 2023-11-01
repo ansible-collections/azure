@@ -22,6 +22,17 @@ description:
     - the module can work exclusively in three modes, when C(batch_upload_src) is set, it is working in batch upload mode;
       when C(src) is set, it is working in upload mode and when C(dst) is set, it is working in dowload mode.
 options:
+    auth_mode:
+        description:
+            - The mode in which to run the command. C(login) mode will directly use your login credentials for the authentication.
+            - The legacy C(key) mode will attempt to query for an account key if no authentication parameters for the account are provided.
+            - Can also be set via the environment variable C(AZURE_STORAGE_AUTH_MODE).
+        default: key
+        type: str
+        choices:
+            - key
+            - login
+        version_added: "1.19.0"
     storage_account_name:
         description:
             - Name of the storage account to use.
@@ -214,13 +225,19 @@ except ImportError:
     pass
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-
+from ansible.module_utils.basic import env_fallback
 
 class AzureRMStorageBlob(AzureRMModuleBase):
 
     def __init__(self):
 
         self.module_arg_spec = dict(
+            auth_mode=dict(
+                type='str',
+                choices=['key', 'login'],
+                fallback=(env_fallback, ['AZURE_STORAGE_AUTH_MODE']),
+                default="key"
+            ),
             storage_account_name=dict(required=True, type='str', aliases=['account_name', 'storage_account']),
             blob=dict(type='str', aliases=['blob_name']),
             blob_type=dict(type='str', default='block', choices=['block', 'page']),
@@ -281,7 +298,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
         # add file path validation
 
-        self.blob_service_client = self.get_blob_service_client(self.resource_group, self.storage_account_name)
+        self.blob_service_client = self.get_blob_service_client(self.resource_group, self.storage_account_name, self.auth_mode)
         self.container_obj = self.get_container()
         if self.blob:
             self.blob_obj = self.get_blob()
