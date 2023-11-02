@@ -1,11 +1,25 @@
 # Change Log
 
+## v1.19.0 (2023-11-2)
+
+### FEATURE ENHANCEMENT
+  - Update all test case ubuntu version to 20.04-LTS, 16.04-LTS will be deprecated ([#1288](https://github.com/ansible-collections/azure/pull/1288))
+  - Migrate msrestazure to azure-mgmt-core and azure-identity ([#1267](https://github.com/ansible-collections/azure/pull/1267))
+  - Support ansible-lint test to ansible-collections ([#1292](https://github.com/ansible-collections/azure/pull/1292))
+
+### BUG FIXING
+  - plugins/module_utls/azure_rm_common.py: Add authority to create track2 credentials ([#1299](https://github.com/ansible-collections/azure/pull/1299))
+  - azure_rm_virtualmachine: Restore azure_rm_virtualmachine change ([#1301](https://github.com/ansible-collections/azure/pull/1301))
+  - azure_rm_azurefiewall_info: Update azurefirewall info returns ([#1308](https://github.com/ansible-collections/azure/pull/1308))
+  - azure_rm_*.py: Fixed sanity errors in the module ([#1296](https://github.com/ansible-collections/azure/pull/1296))
+  - Add required description to document ([#1314](https://github.com/ansible-collections/azure/pull/1314))
+
+
 ## v1.18.1 (2023-9-25)
 
 ### BUG FIXING
-- inventory/azure_rm: - Fix authorization initialization bug. [#1271](https://github.com/ansible-collections/azure/pull/1271) 
-
-- azure_rm_managementgroup_info: - Fix `azure_object.type` to equal `Microsoft.Management/managementGroups`. [#1252](https://github.com/ansible-collections/azure/pull/1252) 
+  - inventory/azure_rm: Fix authorization initialization bug. [#1271](https://github.com/ansible-collections/azure/pull/1271)
+  - azure_rm_managementgroup_info: Fix `azure_object.type` to equal `Microsoft.Management/managementGroups`. [#1252](https://github.com/ansible-collections/azure/pull/1252)
 
 ## v1.18.0 (2023-9-22)
 
