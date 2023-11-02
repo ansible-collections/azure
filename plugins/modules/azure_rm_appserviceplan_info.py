@@ -23,9 +23,11 @@ options:
     name:
         description:
             - Only show results for a specific app service plan.
+        type: str
     resource_group:
         description:
             - Limit results by resource group.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -40,20 +42,20 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for app service plan by name
-      azure_rm_appserviceplan_info:
-        resource_group: myResourceGroup
-        name: myAppServicePlan
+- name: Get facts for app service plan by name
+  azure_rm_appserviceplan_info:
+    resource_group: myResourceGroup
+    name: myAppServicePlan
 
-    - name: Get azure_rm_appserviceplan_facts for app service plan in resource group
-      azure_rm_appserviceplan_info:
-        resource_group: myResourceGroup
+- name: Get azure_rm_appserviceplan_facts for app service plan in resource group
+  azure_rm_appserviceplan_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts for app service plan with tags
-      azure_rm_appserviceplan_info:
-        tags:
-          - testtag
-          - foo:bar
+- name: Get facts for app service plan with tags
+  azure_rm_appserviceplan_info:
+    tags:
+      - testtag
+      - foo:bar
 '''
 
 RETURN = '''

@@ -1,6 +1,7 @@
-- include_tasks: setup.yml
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
 
-- name: create proximity placement group
+- name: Create proximity placement group
   azure_rm_proximityplacementgroup:
     resource_group: "{{ resource_group }}"
     name: testproximityplacement
@@ -19,9 +20,9 @@
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     vm_size: Standard_DS2_v2
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20_04-lts
       version: latest
   register: vm_output
 
@@ -32,13 +33,14 @@
   register: vm_state
 
 - name: Pause for 10 mimutes to VM updating
-  shell: sleep 600
+  ansible.builtin.command: sleep 600
+  changed_when: true
 
 - name: Generalize VM
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
-    generalized: yes
+    generalized: true
 
 - name: Create an image from VM
   azure_rm_image:
@@ -48,7 +50,8 @@
     os_type: Linux
   register: output
 
-- assert:
+- name: Assert the VM created
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -63,11 +66,12 @@
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     vm_size: Standard_DS2_v2
     os_disk_caching: ReadOnly
-    ephemeral_os_disk: True
+    ephemeral_os_disk: true
     image: testimage
   register: output
 
-- assert:
+- name: Assert the vm created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.ansible_facts.azure_vm.properties.storageProfile.osDisk.diffDiskSettings.option == 'Local'
@@ -83,11 +87,12 @@
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     vm_size: Standard_DS2_v2
     os_disk_caching: ReadOnly
-    ephemeral_os_disk: True
+    ephemeral_os_disk: true
     image: testimage
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -102,12 +107,13 @@
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     vm_size: Standard_DS2_v2
     os_disk_caching: ReadOnly
-    ephemeral_os_disk: False
+    ephemeral_os_disk: false
     image: testimage
-  ignore_errors: yes
+  ignore_errors: true
   register: ouput
 
-- assert:
+- name: Assert the vm updated
+  ansible.builtin.assert:
     that:
       - not output.changed
 

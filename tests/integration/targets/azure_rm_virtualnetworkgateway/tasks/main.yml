@@ -1,13 +1,13 @@
 # FIXME: needs minimal tests (check mode?) that can run quickly, VNG creation takes > 20min
 
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     vnetname: "vnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     vngname: "vng{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     pubipname: "testPublicIP{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Create virtual network gateway without bgp settings (check mode)
-  check_mode: yes
+  check_mode: true
   azure_rm_virtualnetworkgateway:
     resource_group: "{{ resource_group }}"
     name: "{{ vngname }}"
@@ -20,11 +20,12 @@
       common: "xyz"
   register: output
 
-- assert:
+- name: Assert the virtual network gateway check mode
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Create virtual network gateway Generation2 (check mode)
-  check_mode: yes
+  check_mode: true
   azure_rm_virtualnetworkgateway:
     resource_group: "{{ resource_group }}"
     name: "{{ vngname }}"
@@ -38,153 +39,159 @@
     tags:
       common: "xyz"
 
-- assert:
+- name: Assert the virtual network gateway check mode
+  ansible.builtin.assert:
     that: output.changed
 
-
-- name: long-running virtualnetworkgateway tests [run with `--tags long_run,untagged` to enable]
+- name: Long-running virtualnetworkgateway tests [run with `--tags long_run,untagged` to enable]
   tags: [long_run, never]
   block:
-  - name: Create virtual network
-    azure_rm_virtualnetwork:
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}"
         name: "{{ vnetname }}"
         address_prefixes: "10.0.0.0/16"
 
-  - name: Add subnet
-    azure_rm_subnet:
+    - name: Add subnet
+      azure_rm_subnet:
         resource_group: "{{ resource_group }}"
         name: GatewaySubnet
         address_prefix: "10.0.2.0/24"
         virtual_network: "{{ vnetname }}"
 
-  - name: Create public IP address
-    azure_rm_publicipaddress:
+    - name: Create public IP address
+      azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}"
         allocation_method: Dynamic
         name: "{{ pubipname }}"
 
-  - name: Create virtual network gateway without bgp settings
-    azure_rm_virtualnetworkgateway:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vngname }}"
-      ip_configurations:
-        - name: testipconfig
-          private_ip_allocation_method: Dynamic
-          public_ip_address_name: testPublicIP
-      virtual_network: "{{ vnetname }}"
-      tags:
-        common: "xyz"
-    register: output
+    - name: Create virtual network gateway without bgp settings
+      azure_rm_virtualnetworkgateway:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vngname }}"
+        ip_configurations:
+          - name: testipconfig
+            private_ip_allocation_method: Dynamic
+            public_ip_address_name: testPublicIP
+        virtual_network: "{{ vnetname }}"
+        tags:
+          common: "xyz"
+      register: output
 
-  - assert:
-      that: output.changed
+    - name: Assert the virtual network gateway created
+      ansible.builtin.assert:
+        that: output.changed
 
-  - name: Create virtual network gateway without bgp settings - idempotent
-    azure_rm_virtualnetworkgateway:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vngname }}"
-      ip_configurations:
-        - name: testipconfig
-          private_ip_allocation_method: Dynamic
-          public_ip_address_name: "{{ pubipname }}"
-      virtual_network: "{{ vnetname }}"
-      tags:
-        common: "xyz"
-    register: output
+    - name: Create virtual network gateway without bgp settings - idempotent
+      azure_rm_virtualnetworkgateway:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vngname }}"
+        ip_configurations:
+          - name: testipconfig
+            private_ip_allocation_method: Dynamic
+            public_ip_address_name: "{{ pubipname }}"
+        virtual_network: "{{ vnetname }}"
+        tags:
+          common: "xyz"
+      register: output
 
-  - assert:
-      that: not output.changed
+    - name: Assert the idempotent
+      ansible.builtin.assert:
+        that: not output.changed
 
-  - name: Update virtual network gateway
-    azure_rm_virtualnetworkgateway:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vngname }}"
-      ip_configurations:
-        - name: testipconfig
-          private_ip_allocation_method: Dynamic
-          public_ip_address_name: "{{ pubipname }}"
-      virtual_network: "{{ vnetname }}"
-      tags:
-        common: "mno"
-    register: output
-  - assert:
-      that: output.changed
+    - name: Update virtual network gateway
+      azure_rm_virtualnetworkgateway:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vngname }}"
+        ip_configurations:
+          - name: testipconfig
+            private_ip_allocation_method: Dynamic
+            public_ip_address_name: "{{ pubipname }}"
+        virtual_network: "{{ vnetname }}"
+        tags:
+          common: "mno"
+      register: output
+    - name: Assert the virtual network gateway updated
+      ansible.builtin.assert:
+        that: output.changed
 
-  - name: Delete virtual network gateway
-    azure_rm_virtualnetworkgateway:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vngname }}"
-      state: absent
-    register: output
-  - assert:
-      that: output.changed
+    - name: Delete virtual network gateway
+      azure_rm_virtualnetworkgateway:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vngname }}"
+        state: absent
+      register: output
+    - name: Assert the virtual network gateway deleted
+      ansible.builtin.assert:
+        that: output.changed
 
-- name: long-running generation virtualnetworkgateway tests [run with `--tags long_run_gen,untagged` to enable]
+- name: Long-running generation virtualnetworkgateway tests [run with `--tags long_run_gen,untagged` to enable]
   tags: [long_run_gen, never]
   block:
-  - name: Create virtual network
-    azure_rm_virtualnetwork:
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}"
         name: "{{ vnetname }}"
         address_prefixes: "10.0.0.0/16"
 
-  - name: Add subnet
-    azure_rm_subnet:
+    - name: Add subnet
+      azure_rm_subnet:
         resource_group: "{{ resource_group }}"
         name: GatewaySubnet
         address_prefix: "10.0.2.0/24"
         virtual_network: "{{ vnetname }}"
 
-  - name: Create public IP address
-    azure_rm_publicipaddress:
+    - name: Create public IP address
+      azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}"
         allocation_method: Dynamic
         name: "{{ pubipname }}"
 
-  - name: Create virtual network gateway w/ sku and Generation2
-    azure_rm_virtualnetworkgateway:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vngname }}"
-      sku: VpnGw2
-      vpn_gateway_generation: Generation2
-      ip_configurations:
-        - name: testipconfig
-          private_ip_allocation_method: Dynamic
-          public_ip_address_name: "{{ pubipname }}"
-      virtual_network: "{{ vnetname }}"
-      tags:
-        common: "xyz"
+    - name: Create virtual network gateway w/ sku and Generation2
+      azure_rm_virtualnetworkgateway:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vngname }}"
+        sku: VpnGw2
+        vpn_gateway_generation: Generation2
+        ip_configurations:
+          - name: testipconfig
+            private_ip_allocation_method: Dynamic
+            public_ip_address_name: "{{ pubipname }}"
+        virtual_network: "{{ vnetname }}"
+        tags:
+          common: "xyz"
 
-  - assert:
-      that: output.changed
+    - name: Assert the virtual network gateay created
+      ansible.builtin.assert:
+        that: output.changed
 
-  - name: Update virtual network gateway
-    azure_rm_virtualnetworkgateway:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vngname }}"
-      sku: VpnGw2
-      vpn_gateway_generation: Generation2
-      ip_configurations:
-        - name: testipconfig
-          private_ip_allocation_method: Dynamic
-          public_ip_address_name: "{{ pubipname }}"
-      virtual_network: "{{ vnetname }}"
-      tags:
-        common: "mno"
+    - name: Update virtual network gateway
+      azure_rm_virtualnetworkgateway:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vngname }}"
+        sku: VpnGw2
+        vpn_gateway_generation: Generation2
+        ip_configurations:
+          - name: testipconfig
+            private_ip_allocation_method: Dynamic
+            public_ip_address_name: "{{ pubipname }}"
+        virtual_network: "{{ vnetname }}"
+        tags:
+          common: "mno"
+      register: output
+    - name: Assert the virtual network gateway updated
+      ansible.builtin.assert:
+        that: output.changed
 
-    register: output
-  - assert:
-      that: output.changed
-
-  - name: Delete virtual network gateway
-    azure_rm_virtualnetworkgateway:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vngname }}"
-      state: absent
-    register: output
-  - assert:
-      that: output.changed
+    - name: Delete virtual network gateway
+      azure_rm_virtualnetworkgateway:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vngname }}"
+        state: absent
+      register: output
+    - name: Assert the virtual network gateway deleted
+      ansible.builtin.assert:
+        that: output.changed
 
 - name: Delete virtual network gateway - idempotent
   azure_rm_virtualnetworkgateway:
@@ -192,7 +199,8 @@
     name: "{{ vngname }}"
     state: absent
   register: output
-- assert:
+- name: Assert the virtual network gateway deleted
+  ansible.builtin.assert:
     that: not output.changed
 
 # Clean up networking components after test
@@ -202,7 +210,6 @@
     name: GatewaySubnet
     virtual_network: "{{ vnetname }}"
     state: absent
-  
 
 - name: Delete public IP address
   azure_rm_publicipaddress:

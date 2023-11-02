@@ -24,13 +24,16 @@ options:
         description:
             - Name of resource group where this CDN profile belongs to.
         required: true
+        type: str
     profile_name:
         description:
             - Name of CDN profile.
         required: true
+        type: str
     name:
         description:
             - Limit results to a specific Azure CDN endpoint.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -46,19 +49,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get facts for all endpoints in CDN profile
-    azure_rm_cdnendpoint_info:
-      resource_group: myResourceGroup
-      profile_name: myCDNProfile
-      tags:
-        - key
-        - key:value
+- name: Get facts for all endpoints in CDN profile
+  azure_rm_cdnendpoint_info:
+    resource_group: myResourceGroup
+    profile_name: myCDNProfile
+    tags:
+      - key
+      - key:value
 
-  - name: Get facts of specific CDN endpoint
-    azure_rm_cdnendpoint_info:
-      resource_group: myResourceGroup
-      profile_name: myCDNProfile
-      name: myEndpoint1
+- name: Get facts of specific CDN endpoint
+  azure_rm_cdnendpoint_info:
+    resource_group: myResourceGroup
+    profile_name: myCDNProfile
+    name: myEndpoint1
 '''
 
 RETURN = '''
@@ -149,6 +152,7 @@ cdnendpoints:
                 "https_port": null,
                 "name": "xxxxxxxx-blob-core-windows-net"
             }
+            type: dict
         origin_host_header:
             description:
                 - The host header value sent to the origin with each request.

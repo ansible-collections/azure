@@ -500,7 +500,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             mode=agent_pool.mode,
             orchestrator_version=agent_pool.orchestrator_version,
             node_image_version=agent_pool.node_image_version,
-            upgrade_settings=agent_pool.upgrade_settings,
+            upgrade_settings=dict(),
             provisioning_state=agent_pool.provisioning_state,
             availability_zones=[],
             enable_node_public_ip=agent_pool.enable_node_public_ip,
@@ -510,6 +510,9 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             node_labels=agent_pool.node_labels,
             node_taints=agent_pool.node_taints,
         )
+
+        if agent_pool.upgrade_settings is not None:
+            agent_pool_dict['upgrade_settings']['max_surge'] = agent_pool.upgrade_settings.max_surge
 
         if agent_pool.availability_zones is not None:
             for key in agent_pool.availability_zones:

@@ -113,9 +113,9 @@ EXAMPLES = '''
     allow_classic_operations: true
     global_reach_enabled: false
     tags:
-       - a: b
+      - a: b
     authorizations:
-       - name: authorization_test
+      - name: authorization_test
     service_provider_properties:
       service_provider_name: Aryaka Networks
       peering_location: Seattle
@@ -129,7 +129,6 @@ EXAMPLES = '''
     resource_group: rg
     name: exp
     state: absent
-
 '''
 
 RETURN = '''

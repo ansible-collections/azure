@@ -5,8 +5,8 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
+
 
 DOCUMENTATION = '''
 ---
@@ -100,6 +100,7 @@ account_info:
                     sample: "User"
 '''
 
+
 try:
     import asyncio
     from msrestazure.azure_exceptions import CloudError
@@ -164,7 +165,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
 
         try:
             subscription_list_response = list(self.subscription_client.subscriptions.list())
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list all subscriptions - {0}".format(str(exc)))
 
         results['id'] = subscription_list_response[0].subscription_id

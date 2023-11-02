@@ -21,20 +21,25 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     lab_name:
         description:
             - The name of the lab.
         required: True
+        type: str
     name:
         description:
             - The name of the custom image.
         required: True
+        type: str
     source_vm:
         description:
             - Source DevTest Lab virtual machine name.
+        type: str
     windows_os_state:
         description:
             - The state of the Windows OS.
+        type: str
         choices:
             - 'non_sysprepped'
             - 'sysprep_requested'
@@ -42,6 +47,7 @@ options:
     linux_os_state:
         description:
             - The state of the Linux OS.
+        type: str
         choices:
             - 'non_deprovisioned'
             - 'deprovision_requested'
@@ -49,17 +55,20 @@ options:
     description:
         description:
             - The description of the custom image.
+        type: str
     author:
         description:
             - The author of the custom image.
+        type: str
     state:
-      description:
-          - Assert the state of the Custom Image.
-          - Use C(present) to create or update an Custom Image and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Custom Image.
+            - Use C(present) to create or update an Custom Image and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -95,7 +104,6 @@ from ansible.module_utils.common.dict_transformations import _snake_to_camel
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
 except ImportError:
     # This is handled in azure_rm_common
@@ -236,7 +244,7 @@ class AzureRMDtlCustomImage(AzureRMModuleBase):
 
             self.delete_customimage()
             # This currently doesnt' work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("Custom Image instance unchanged")
@@ -262,7 +270,7 @@ class AzureRMDtlCustomImage(AzureRMModuleBase):
                                                                              lab_name=self.lab_name,
                                                                              name=self.name,
                                                                              custom_image=self.custom_image)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:

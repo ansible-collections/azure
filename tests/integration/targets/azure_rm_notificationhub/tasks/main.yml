@@ -1,7 +1,7 @@
 - name: Create random notification hub and namespace
-  set_fact:
-      namespace_name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
-      name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+  ansible.builtin.set_fact:
+    namespace_name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+    name_rpfx: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create Notification Hub Namespace (check mode)
   azure_rm_notificationhub:
@@ -9,23 +9,25 @@
     namespace_name: "{{ namespace_name }}"
     resource_group: "{{ resource_group }}"
     sku: "free"
-  check_mode: yes
+  check_mode: true
   register: results
 
-- assert:
+- name: Assert the notification hub check mode
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create Notification Hub  (check mode)
   azure_rm_notificationhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     sku: "free"
-  check_mode: yes
+  check_mode: true
   register: results
 
-- assert:
+- name: Assert the notfication hub check mode
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create Namespace Hub
@@ -36,19 +38,21 @@
     sku: "free"
   register: results
 
-- assert:
+- name: Assert the notification hub created
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create Notification Hub
   azure_rm_notificationhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     sku: "free"
   register: results
 
-- assert:
+- name: Assert the notification hub created
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Update Namespace
@@ -60,24 +64,25 @@
       test: modified
   register: results
 
-- assert:
-    that: 
+- name: Assert the namespace updated
+  ansible.builtin.assert:
+    that:
       - results.changed
       - results.state.tags.test == 'modified'
-
 
 - name: Update Notification Hub
   azure_rm_notificationhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     tags:
       test: modified
   register: results
 
-- assert:
-    that: 
+- name: Assert the notification hub updated
+  ansible.builtin.assert:
+    that:
       - results.changed
       - results.state.tags.test == 'modified'
 
@@ -88,8 +93,8 @@
   register: results
 
 - name: Assert that facts module returned result
-  assert:
-    that: 
+  ansible.builtin.assert:
+    that:
       - results.namespace[0].tags.test == 'modified'
 
 - name: Test idempotent
@@ -98,7 +103,8 @@
     resource_group: "{{ resource_group }}"
   register: results
 
-- assert:
+- name: Assert the notification hub check mode
+  ansible.builtin.assert:
     that:
       - not results.changed
 
@@ -114,8 +120,9 @@
     state: absent
 
 - name: Pause for 3 minutes to make sure delete successfully
-  pause:
+  ansible.builtin.pause:
     minutes: 3
+  changed_when: true
 
 - name: Delete Namespace (idempotent)
   azure_rm_notificationhub:
@@ -125,29 +132,32 @@
     state: absent
   register: results
 
-- assert:
+- name: Assert the namespace deleted
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Delete Notification Hub
   azure_rm_notificationhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
 
 - name: Pause for 3 minutes to make sure delete successfully
-  pause:
+  ansible.builtin.pause:
     minutes: 3
+  changed_when: true
 
 - name: Delete Notification Hub (idempotent)
   azure_rm_notificationhub:
     location: eastus2
     namespace_name: "{{ namespace_name }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
   register: results
 
-- assert:
+- name: Assert the notificationhub deleted
+  ansible.builtin.assert:
     that: not results.changed

@@ -37,20 +37,24 @@ options:
         description:
             - name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the DNS zone.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the zone. Use C(present) to create or update and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
     type:
         description:
             - The type of this DNS zone (C(public) or C(private)).
+        type: str
         choices:
             - public
             - private
@@ -89,7 +93,6 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: example.com
     state: absent
-
 '''
 
 RETURN = '''

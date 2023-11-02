@@ -23,9 +23,11 @@ options:
     name:
         description:
             - Limit results to a specific Traffic Manager profile.
+        type: str
     resource_group:
         description:
             - The resource group to search for the desired Traffic Manager profile.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -41,18 +43,18 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one Traffic Manager profile
-      azure_rm_trafficmanager_info:
-        name: Testing
-        resource_group: myResourceGroup
+- name: Get facts for one Traffic Manager profile
+  azure_rm_trafficmanager_info:
+    name: Testing
+    resource_group: myResourceGroup
 
-    - name: Get facts for all Traffic Manager profiles
-      azure_rm_trafficmanager_info:
+- name: Get facts for all Traffic Manager profiles
+  azure_rm_trafficmanager_info:
 
-    - name: Get facts by tags
-      azure_rm_trafficmanager_info:
-        tags:
-          - Environment:Test
+- name: Get facts by tags
+  azure_rm_trafficmanager_info:
+    tags:
+      - Environment:Test
 '''
 
 RETURN = '''

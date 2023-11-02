@@ -43,11 +43,10 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: get ad sp info
-    azure_rm_adserviceprincipal_info:
-      app_id: "{{ app_id }}"
-      tenant: "{{ tenant_id }}"
-
+- name: get ad sp info
+  azure_rm_adserviceprincipal_info:
+    app_id: "{{ app_id }}"
+    tenant: "{{ tenant_id }}"
 '''
 
 RETURN = '''

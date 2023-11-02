@@ -102,11 +102,6 @@ import time
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -285,7 +280,7 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the ApiManagementService instance.')
             self.fail('Error creating the ApiManagementService instance: {0}'.format(str(exc)))
 
@@ -308,7 +303,7 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the ApiManagementService instance.')
             self.fail('Error deleting the ApiManagementService instance: {0}'.format(str(e)))
 
@@ -328,7 +323,7 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
                                               30)
             found = True
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the ApiManagementService instance.')
         if found is True:
             return json.loads(response.body())

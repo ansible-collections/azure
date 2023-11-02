@@ -205,16 +205,15 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create VpnSite
-      azure_rm_vpnsite:
-        resource_group: myResourceGroup
-        name: vpnSite_name
+- name: Create VpnSite
+  azure_rm_vpnsite:
+    resource_group: myResourceGroup
+    name: vpnSite_name
 
-    - name: Delete Vpn Site
-      azure_rm_vpnsite:
-        resource_group: myResourceGroup
-        name: vpnSite_name
-
+- name: Delete Vpn Site
+  azure_rm_vpnsite:
+    resource_group: myResourceGroup
+    name: vpnSite_name
 '''
 
 RETURN = '''
@@ -300,7 +299,6 @@ state:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
 except ImportError:
@@ -572,7 +570,7 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
             response = self.network_client.vpn_sites.begin_create_or_update(resource_group_name=self.resource_group,
                                                                             vpn_site_name=self.name,
                                                                             vpn_site_parameters=self.body)
-            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
             self.log('Error attempting to create the VpnSite instance.')

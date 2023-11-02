@@ -15,7 +15,6 @@ version_added: '1.12.0'
 requirements:
     - requests
     - azure
-    - msrest
 short_description: Read secret from Azure Key Vault.
 description:
   - This lookup returns the content of secret saved in Azure Key Vault.
@@ -101,9 +100,9 @@ EXAMPLE = """
           key_data: "{{ ssh_key }}"
       network_interfaces: "{{ vm_name }}"
       image:
-        offer: UbuntuServer
+        offer: 0001-com-ubuntu-server-focal
         publisher: Canonical
-        sku: 16.04-LTS
+        sku: 20_04-lts
         version: latest
 """
 
@@ -158,8 +157,6 @@ except Exception:
 
 
 def lookup_secret_non_msi(terms, vault_url, kwargs):
-    logging.getLogger('msrestazure.azure_active_directory').addHandler(logging.NullHandler())
-    logging.getLogger('msrest.service_client').addHandler(logging.NullHandler())
 
     client_id = kwargs['client_id'] if kwargs.get('client_id') else None
     secret = kwargs['secret'] if kwargs.get('secret') else None

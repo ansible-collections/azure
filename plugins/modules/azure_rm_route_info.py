@@ -45,18 +45,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get route
-      azure_rm_route_info:
-        resource_group: myResourceGroup
-        name: routename
-        route_table_name: routetabename
+- name: Get route
+  azure_rm_route_info:
+    resource_group: myResourceGroup
+    name: routename
+    route_table_name: routetabename
 
 
-    - name: List routes
-      azure_rm_route_info:
-        resource_group: myResourceGroup
-        route_table_name: routetabename
-
+- name: List routes
+  azure_rm_route_info:
+    resource_group: myResourceGroup
+    route_table_name: routetabename
 '''
 
 RETURN = '''

@@ -68,7 +68,7 @@ EXAMPLES = '''
     namespace_name: myNamespace
     name: myhub
     tags:
-       - a: b
+      - a: b
     sku: free
 
 - name: Delete Notification Hub
@@ -83,7 +83,7 @@ EXAMPLES = '''
     location: eastus
     namespace_name: myNamespace
     tags:
-       - a: b
+      - a: b
     sku: free
 
 - name: Delete Notification Hub Namespace
@@ -91,7 +91,6 @@ EXAMPLES = '''
     resource_group: testgroupans
     namespace_name: myNamespace
     state: absent
-
 '''
 
 RETURN = '''

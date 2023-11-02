@@ -42,19 +42,19 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one private endpoint
-      azure_rm_privateendpoint_info:
-        resource_group: myResourceGroup
-        name: testprivateendpoint
+- name: Get facts for one private endpoint
+  azure_rm_privateendpoint_info:
+    resource_group: myResourceGroup
+    name: testprivateendpoint
 
-    - name: Get all private endpoint under the resource group
-      azure_rm_privateendpoint_info:
-        resource_group: myResourceGroup
+- name: Get all private endpoint under the resource group
+  azure_rm_privateendpoint_info:
+    resource_group: myResourceGroup
 
-    - name: Get all private endpoint under subscription
-      azure_rm_virtualnetwork_info:
-        tags:
-          - key1:value1
+- name: Get all private endpoint under subscription
+  azure_rm_virtualnetwork_info:
+    tags:
+      - key1:value1
 '''
 
 RETURN = '''

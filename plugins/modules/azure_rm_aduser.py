@@ -155,7 +155,6 @@ EXAMPLES = '''
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
     state: "absent"
-
 '''
 
 RETURN = '''

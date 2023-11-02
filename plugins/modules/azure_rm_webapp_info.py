@@ -23,9 +23,11 @@ options:
     name:
         description:
             - Only show results for a specific web app.
+        type: str
     resource_group:
         description:
             - Limit results by resource group.
+        type: str
     return_publish_profile:
         description:
             - Indicate whether to return publishing profile of the web app.
@@ -45,20 +47,20 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for web app by name
-      azure_rm_webapp_info:
-        resource_group: myResourceGroup
-        name: winwebapp1
+- name: Get facts for web app by name
+  azure_rm_webapp_info:
+    resource_group: myResourceGroup
+    name: winwebapp1
 
-    - name: Get facts for web apps in resource group
-      azure_rm_webapp_info:
-        resource_group: myResourceGroup
+- name: Get facts for web apps in resource group
+  azure_rm_webapp_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts for web apps with tags
-      azure_rm_webapp_info:
-        tags:
-          - testtag
-          - foo:bar
+- name: Get facts for web apps with tags
+  azure_rm_webapp_info:
+    tags:
+      - testtag
+      - foo:bar
 '''
 
 RETURN = '''

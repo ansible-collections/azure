@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
 
 - name: Create virtual network
@@ -29,7 +29,7 @@
       testing: testing
       delete: on-exit
       foo: bar
-    purge_rules: yes
+    purge_rules: true
     rules:
       - name: DenySSH
         protocol: Tcp
@@ -83,7 +83,7 @@
   register: output
 
 - name: Assert the resource instance is not exist
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -108,7 +108,7 @@
   register: output
 
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -132,7 +132,7 @@
   register: output
 
 - name: Assert the resource instance no changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -158,7 +158,7 @@
   register: output
 
 - name: Assert the resource instance is update
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -169,7 +169,7 @@
   register: output
 
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.sql_managed_instance[0].tags | length == 1
       - output.sql_managed_instance[0].storage_size_in_gb == 256

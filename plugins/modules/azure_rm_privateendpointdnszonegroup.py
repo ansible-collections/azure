@@ -182,7 +182,7 @@ state:
 '''
 
 try:
-    from msrestazure.tools import resource_id
+    from azure.mgmt.core.tools import resource_id
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
 except ImportError:

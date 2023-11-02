@@ -34,17 +34,15 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get Registration Assignment
-      azure_rm_registrationassignment_info:
-        registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        scope: subscription/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
+- name: Get Registration Assignment
+  azure_rm_registrationassignment_info:
+    registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    scope: subscription/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
 
 
-    - name: Get All Registration Assignments in scope(subscription)
-      azure_rm_registrationassignment_info:
-        scope: subscription/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-
-
+- name: Get All Registration Assignments in scope(subscription)
+  azure_rm_registrationassignment_info:
+    scope: subscription/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 RETURN = '''

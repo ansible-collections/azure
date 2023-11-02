@@ -1,4 +1,5 @@
-- include_tasks: setup.yml
+- name: Set parameters
+  ansible.builtin.include_tasks: setup.yml
 
 - name: Create minimal VM with defaults
   azure_rm_virtualmachine:
@@ -12,9 +13,9 @@
     vm_size: Standard_B1ms
     virtual_network: "{{ network_name }}"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20_04-lts
       version: latest
   register: vm_output
 
@@ -25,18 +26,19 @@
   register: vm_state
 
 - name: Pause for 10 mimutes to VM updating
-  shell: sleep 600
+  ansible.builtin.command: sleep 600
+  changed_when: true
 
 - name: Restart the virtual machine
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
-    restarted: yes
+    restarted: true
     vm_size: Standard_B1ms
   register: restart_result
 
 - name: Ensue VM was restarted
-  assert:
+  ansible.builtin.assert:
     that:
       - "azure_vm.powerstate in ['starting', 'running']"
       - restart_result is changed
@@ -45,12 +47,12 @@
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
-    allocated: no
+    allocated: false
     vm_size: Standard_B1ms
   register: deallocate_result
 
 - name: Ensure VM was deallocated
-  assert:
+  ansible.builtin.assert:
     that:
       - azure_vm.powerstate == 'deallocated'
       - deallocate_result is changed
@@ -60,11 +62,11 @@
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
-    started: True
+    started: true
   register: start_result
 
 - name: Ensure VM was started
-  assert:
+  ansible.builtin.assert:
     that:
       - "azure_vm.powerstate in ['starting', 'running']"
       - start_result is changed
@@ -99,5 +101,5 @@
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
-    force_delete_nonempty: yes
+    force_delete_nonempty: false
     state: absent

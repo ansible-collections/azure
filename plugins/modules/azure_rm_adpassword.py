@@ -5,9 +5,9 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-import datetime
 
 __metaclass__ = type
+
 
 DOCUMENTATION = '''
 ---
@@ -71,7 +71,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     haiyuan_zhang (@haiyuazhang)
@@ -80,12 +79,12 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: create ad password
-      azure_rm_adpassword:
-        app_id: "{{ app_id }}"
-        state: present
-        display_name: "Password friendly name"
-        tenant: "{{ tenant_id }}"
+- name: create ad password
+  azure_rm_adpassword:
+    app_id: "{{ app_id }}"
+    state: present
+    display_name: "Password friendly name"
+    tenant: "{{ tenant_id }}"
 '''
 
 RETURN = '''
@@ -95,7 +94,7 @@ end_date:
         - Default value is one year after current time.
     type: str
     returned: always
-    sample: 2021-06-28T06:00:32.637070+00:00
+    sample: "2021-06-28T06:00:32.637070+00:00"
 key_id:
     description:
         - The password key ID
@@ -108,7 +107,7 @@ start_date:
         - Default value is current time.
     type: str
     returned: always
-    sample: 2020-06-28T06:00:32.637070+00:00
+    sample: "2020-06-28T06:00:32.637070+00:00"
 secret_text:
     description:
         - The application password value.
@@ -119,6 +118,7 @@ secret_text:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+import datetime
 
 try:
     import asyncio

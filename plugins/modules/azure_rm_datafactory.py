@@ -114,7 +114,6 @@ EXAMPLES = '''
       collaboration_branch: testbranch
       root_folder: "./"
       repository_name: vault
-
 '''
 
 RETURN = '''

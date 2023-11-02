@@ -33,17 +33,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get Registration Definition
-      azure_rm_registrationdefinition_info:
-        registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Get Registration Definition
+  azure_rm_registrationdefinition_info:
+    registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Get All Registration Definitions from AzureRMAuth's subscription
-      azure_rm_registrationdefinition_info:
+- name: Get All Registration Definitions from AzureRMAuth's subscription
+  azure_rm_registrationdefinition_info:
 
-    - name: Get All Registration Definitions in the subscription levle
-      azure_rm_registrationdefinition_info:
-          scope: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-
+- name: Get All Registration Definitions in the subscription levle
+  azure_rm_registrationdefinition_info:
+    scope: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 RETURN = '''

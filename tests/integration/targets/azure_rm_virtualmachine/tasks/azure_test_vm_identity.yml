@@ -35,22 +35,22 @@
     - "ansible-test-vm-identity-2"
 
 - name: Set identities IDs to test. Identities ansible-test-vm-identity and ansible-test-vm-identity-2 have to be created previously
-  set_fact:
+  ansible.builtin.set_fact:
     user_identity_1: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-vm-identity"
     user_identity_2: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-vm-identity-2"
 
-- name: Create minimal VM with UserAssigned Identity 
+- name: Create minimal VM with UserAssigned Identity
   azure_rm_virtualmachine:
-    allocated: no
+    allocated: false
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     vm_identity:
       type: UserAssigned
       user_assigned_identities:
         id:
-        - "{{ user_identity_1 }}"
+          - "{{ user_identity_1 }}"
     admin_username: "testuser"
-    ssh_password_enabled: false    
+    ssh_password_enabled: false
     public_ip_allocation_method: Disabled
     location: westeurope
     network_interface_names:
@@ -62,15 +62,15 @@
     vm_size: Standard_D4s_v3
     virtual_network: "{{ network_name }}-identity"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20_04-lts
       version: latest
   register: vm_output
 
 - name: Assert User identity assigned
-  assert:
-    that:      
+  ansible.builtin.assert:
+    that:
       - vm_output.ansible_facts.azure_vm.identity.type == 'UserAssigned'
       - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
 
@@ -81,14 +81,14 @@
     vm_identity:
       type: "UserAssigned"
       user_assigned_identities:
-        id: 
-        - "{{ user_identity_2 }}"
+        id:
+          - "{{ user_identity_2 }}"
         append: true
   register: vm_output
 
 - name: Assert appended user identity
-  assert:
-    that:      
+  ansible.builtin.assert:
+    that:
       - vm_output.ansible_facts.azure_vm.identity.type == 'UserAssigned'
       - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
       - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
@@ -104,8 +104,8 @@
   register: vm_output
 
 - name: Assert System identity assigned
-  assert:
-    that:      
+  ansible.builtin.assert:
+    that:
       - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
       - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
       - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
@@ -117,14 +117,14 @@
     vm_identity:
       type: "SystemAssigned, UserAssigned"
       user_assigned_identities:
-        id: 
-        - "{{ user_identity_2 }}"
+        id:
+          - "{{ user_identity_2 }}"
         append: false
   register: vm_output
 
 - name: Assert appended user identity
-  assert:
-    that:      
+  ansible.builtin.assert:
+    that:
       - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
       - "\"{{ user_identity_1 }}\" not in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
       - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
@@ -138,8 +138,8 @@
   register: vm_output
 
 - name: Assert removed user identities
-  assert:
-    that:      
+  ansible.builtin.assert:
+    that:
       - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned'
       - "'user_assigned_identities' not in vm_output.ansible_facts.azure_vm.identity"
 
@@ -152,9 +152,9 @@
   register: vm_output
 
 - name: Assert no managed identities
-  assert:
-    that:      
-      - "'identity' not in vm_output.ansible_facts.azure_vm"      
+  ansible.builtin.assert:
+    that:
+      - "'identity' not in vm_output.ansible_facts.azure_vm"
 
 - name: Delete VM
   azure_rm_virtualmachine:
@@ -169,6 +169,7 @@
     name: "{{ interface_name }}-identity"
     state: absent
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Delete network security group
   azure_rm_securitygroup:

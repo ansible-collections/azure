@@ -1,9 +1,11 @@
 ---
-- hosts: localhost
+- name: Empty inventory file
+  hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: false
   tasks:
-    - name: write inventory config file
-      copy:
+    - name: Write inventory config file
+      ansible.builtin.copy:
         dest: ../test.azure_rm.yml
         content: ""
+        mode: preserve

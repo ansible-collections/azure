@@ -4,7 +4,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
   register: fail_invalid_image_dict
   failed_when: 'fail_invalid_image_dict.msg != "parameter error: expecting image to contain [publisher, offer, sku, version], [name, resource_group] or [id]"'
 

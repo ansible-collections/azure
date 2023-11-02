@@ -25,21 +25,25 @@ options:
         description:
             - Name of a resource group where the availability set exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the availability set.
+        type: str
         required: true
     state:
         description:
             - Assert the state of the availability set.
             - Use C(present) to create or update a availability set and C(absent) to delete a availability set.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     platform_update_domain_count:
         description:
             - Update domains indicate groups of virtual machines and underlying physical hardware that can be rebooted at the same time.
@@ -59,6 +63,7 @@ options:
         description:
             - Define if the availability set supports managed disks.
         default: Classic
+        type: str
         choices:
             - Classic
             - Aligned
@@ -71,28 +76,28 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create an availability set with default options
-      azure_rm_availabilityset:
-        name: myAvailabilitySet
-        location: eastus
-        resource_group: myResourceGroup
+- name: Create an availability set with default options
+  azure_rm_availabilityset:
+    name: myAvailabilitySet
+    location: eastus
+    resource_group: myResourceGroup
 
-    - name: Create an availability set with advanced options
-      azure_rm_availabilityset:
-        name: myAvailabilitySet
-        location: eastus
-        resource_group: myResourceGroup
-        platform_update_domain_count: 5
-        platform_fault_domain_count: 3
-        proximity_placement_group: myProximityPlacementGroup
-        sku: Aligned
+- name: Create an availability set with advanced options
+  azure_rm_availabilityset:
+    name: myAvailabilitySet
+    location: eastus
+    resource_group: myResourceGroup
+    platform_update_domain_count: 5
+    platform_fault_domain_count: 3
+    proximity_placement_group: myProximityPlacementGroup
+    sku: Aligned
 
-    - name: Delete an availability set
-      azure_rm_availabilityset:
-        name: myAvailabilitySet
-        location: eastus
-        resource_group: myResourceGroup
-        state: absent
+- name: Delete an availability set
+  azure_rm_availabilityset:
+    name: myAvailabilitySet
+    location: eastus
+    resource_group: myResourceGroup
+    state: absent
 '''
 
 RETURN = '''
@@ -152,7 +157,7 @@ changed:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common

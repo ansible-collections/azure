@@ -41,16 +41,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of MySQL Firewall Rule
-    azure_rm_mysqlfirewallrule_info:
-      resource_group: myResourceGroup
-      server_name: server_name
-      name: firewall_rule_name
+- name: Get instance of MySQL Firewall Rule
+  azure_rm_mysqlfirewallrule_info:
+    resource_group: myResourceGroup
+    server_name: server_name
+    name: firewall_rule_name
 
-  - name: List instances of MySQL Firewall Rule
-    azure_rm_mysqlfirewallrule_info:
-      resource_group: myResourceGroup
-      server_name: server_name
+- name: List instances of MySQL Firewall Rule
+  azure_rm_mysqlfirewallrule_info:
+    resource_group: myResourceGroup
+    server_name: server_name
 '''
 
 RETURN = '''

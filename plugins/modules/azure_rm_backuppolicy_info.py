@@ -45,12 +45,12 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get backup policy information
-      azure_rm_backuppolicy_info:
-        vault_name: Vault_Name
-        name: Policy_Name
-        resource_group: Resource_Group_Name
-      register: backup_policy
+- name: Get backup policy information
+  azure_rm_backuppolicy_info:
+    vault_name: Vault_Name
+    name: Policy_Name
+    resource_group: Resource_Group_Name
+  register: backup_policy
 '''
 
 RETURN = '''

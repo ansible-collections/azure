@@ -61,11 +61,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: get ad password info
-    azure_rm_adpassword_info:
-      app_id: "{{ app_id }}"
-      tenant: "{{ tenant_id }}"
-      key_id: "{{ key_id }}"
+- name: get ad password info
+  azure_rm_adpassword_info:
+    app_id: "{{ app_id }}"
+    tenant: "{{ tenant_id }}"
+    key_id: "{{ key_id }}"
 '''
 
 RETURN = '''
@@ -85,9 +85,9 @@ passwords:
             description:
                 - Date or datemtime after which credentials expire.
                 - Default value is one year after current time.
-            type: datetime
+            type: str
             returned: always
-            sample: 2021-06-18T06:51:25.508304+00:00
+            sample: "2021-06-18T06:51:25.508304+00:00"
         key_id:
             description:
                 - The password key ID.
@@ -98,9 +98,9 @@ passwords:
             description:
                 - Date or datetime at which credentials become valid.
                 - Default value is current time
-            type: datetime
+            type: str
             returned: always
-            sample: 2020-06-18T06:51:25.508304+00:00
+            sample: "2020-06-18T06:51:25.508304+00:00"
 
 '''
 

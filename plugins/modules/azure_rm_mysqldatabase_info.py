@@ -41,16 +41,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of MySQL Database
-    azure_rm_mysqldatabase_info:
-      resource_group: myResourceGroup
-      server_name: server_name
-      name: database_name
+- name: Get instance of MySQL Database
+  azure_rm_mysqldatabase_info:
+    resource_group: myResourceGroup
+    server_name: server_name
+    name: database_name
 
-  - name: List instances of MySQL Database
-    azure_rm_mysqldatabase_info:
-      resource_group: myResourceGroup
-      server_name: server_name
+- name: List instances of MySQL Database
+  azure_rm_mysqldatabase_info:
+    resource_group: myResourceGroup
+    server_name: server_name
 '''
 
 RETURN = '''

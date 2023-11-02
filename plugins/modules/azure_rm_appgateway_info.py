@@ -33,17 +33,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for application gateway by name.
-      azure_rm_appgateway_info:
-        name: MyAppgw
-        resource_group: MyResourceGroup
+- name: Get facts for application gateway by name.
+  azure_rm_appgateway_info:
+    name: MyAppgw
+    resource_group: MyResourceGroup
 
-    - name: Get facts for application gateways in resource group.
-      azure_rm_appgateway_info:
-        resource_group: MyResourceGroup
+- name: Get facts for application gateways in resource group.
+  azure_rm_appgateway_info:
+    resource_group: MyResourceGroup
 
-    - name: Get facts for all application gateways.
-      azure_rm_appgateway_info:
+- name: Get facts for all application gateways.
+  azure_rm_appgateway_info:
 '''
 
 RETURN = '''
@@ -116,7 +116,7 @@ from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass

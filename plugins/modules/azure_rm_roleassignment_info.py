@@ -22,6 +22,7 @@ options:
         description:
             - Object id of a user, group or service principal.
             - Mutually exclusive with I(name) and I(id).
+        type: str
         aliases:
           - assignee_object_id
     id:
@@ -29,14 +30,17 @@ options:
             - Fqid of role assignment to look up.
             - If set, I(role_definition_id) and I(scope) will be silently ignored.
             - Mutually exclusive with I(assignee) and I(name).
+        type: str
     name:
         description:
             - Name of role assignment.
             - Requires that I(scope) also be set.
             - Mutual exclusive with I(assignee) and I(id).
+        type: str
     role_definition_id:
         description:
             - Resource id of role definition.
+        type: str
     scope:
         description:
             - The scope to query for role assignments.
@@ -44,6 +48,7 @@ options:
             - /subscriptions/{subscription-id}/resourceGroups/{resourcegroup-name} for a resource group.
             - /subscriptions/{subscription-id}/resourceGroups/{resourcegroup-name}/providers/{resource-provider}/{resource-type}/{resource-name} for a resource.
             - By default will return all inhereted assignments from parent scopes, see I(strict_scope_match).
+        type: str
     strict_scope_match:
         description:
             - If strict_scope_match is True, role assignments will only be returned for the exact scope defined.
@@ -62,28 +67,28 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get role assignments for specific service principal
-      azure_rm_roleassignment_info:
-        assignee: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Get role assignments for specific service principal
+  azure_rm_roleassignment_info:
+    assignee: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Get role assignments for specific scope that matches specific role definition
-      azure_rm_roleassignment_info:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        role_definition_id: /subscriptions/xxx-sub-guid-xxx/providers/Microsoft.Authorization/roleDefinitions/xxx-role-guid-xxxx
+- name: Get role assignments for specific scope that matches specific role definition
+  azure_rm_roleassignment_info:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    role_definition_id: /subscriptions/xxx-sub-guid-xxx/providers/Microsoft.Authorization/roleDefinitions/xxx-role-guid-xxxx
 
-    - name: Get role assignments for specific scope with no inherited assignments
-      azure_rm_roleassignment_info:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        strict_scope_match: True
+- name: Get role assignments for specific scope with no inherited assignments
+  azure_rm_roleassignment_info:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    strict_scope_match: true
 
-    - name: Get role assignments by name
-      azure_rm_roleassignment_info:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Get role assignments by name
+  azure_rm_roleassignment_info:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Get role assignments by id
-      azure_rm_roleassignment_info:
-        id: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleAssignments/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Get role assignments by id
+  azure_rm_roleassignment_info:
+    id: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleAssignments/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 RETURN = '''

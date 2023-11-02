@@ -1,5 +1,5 @@
 - name: Set Facts for Tests
-  set_fact:
+  ansible.builtin.set_fact:
     vault_name: "rsv{{ resource_group | hash('md5') | truncate(22, True, '') }}"
     location: "eastus"
     policy_name_daily: "bp-daily-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}"
@@ -34,13 +34,13 @@
   register: backup_policy_exists
 
 - name: Assert success on daily backup policy creation
-  assert:
+  ansible.builtin.assert:
     that:
       - daily_policy_output.changed
       - daily_policy_output.name == policy_name_daily
 
 - name: Assert Policy Success Retrieving Info
-  assert:
+  ansible.builtin.assert:
     that:
       - backup_policy_exists.id == daily_policy_output.id
       - backup_policy_exists.location == daily_policy_output.location
@@ -62,7 +62,7 @@
   register: daily_policy_output_update
 
 - name: Assert success on update of daily policy
-  assert:
+  ansible.builtin.assert:
     that:
       - daily_policy_output_update.changed
       - daily_policy_output_update.name == policy_name_daily
@@ -86,7 +86,7 @@
   register: weekly_policy_output
 
 - name: Assert success on weekly backup policy creation
-  assert:
+  ansible.builtin.assert:
     that:
       - weekly_policy_output.changed
       - weekly_policy_output.name == policy_name_weekly
@@ -110,7 +110,7 @@
   register: weekly_policy_output_update
 
 - name: Assert success on update of weekly policy
-  assert:
+  ansible.builtin.assert:
     that:
       - weekly_policy_output_update.changed
       - weekly_policy_output_update.name == policy_name_weekly
@@ -124,7 +124,7 @@
   register: daily_policy_output_delete
 
 - name: Assert success on daily backup policy deletion
-  assert:
+  ansible.builtin.assert:
     that:
       - daily_policy_output_delete.changed
 
@@ -137,7 +137,7 @@
   register: weekly_policy_output_delete
 
 - name: Assert success on weekly backup policy deletion
-  assert:
+  ansible.builtin.assert:
     that:
       - weekly_policy_output_delete.changed
 
@@ -150,7 +150,7 @@
   register: daily_policy_output_delete_idempotent
 
 - name: Assert that there is no change after second deletion of daily backup policy
-  assert:
+  ansible.builtin.assert:
     that:
       - not daily_policy_output_delete_idempotent.changed
 
@@ -163,6 +163,6 @@
   register: weekly_policy_output_delete_idempotent
 
 - name: Assert that there is no change after second deletion of weekly backup policy
-  assert:
+  ansible.builtin.assert:
     that:
       - not weekly_policy_output_delete_idempotent.changed

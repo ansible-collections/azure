@@ -34,10 +34,10 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get Azure Recovery Services Vault Details.
-      azure_rm_recoveryservicesvault_info:
-        resource_group: 'myResourceGroup'
-        name: 'testVault'
+- name: Get Azure Recovery Services Vault Details.
+  azure_rm_recoveryservicesvault_info:
+    resource_group: 'myResourceGroup'
+    name: 'testVault'
 '''
 
 RETURN = '''

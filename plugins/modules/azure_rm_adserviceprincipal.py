@@ -47,7 +47,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     haiyuan_zhang (@haiyuazhang)
@@ -55,11 +54,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: create ad sp
-    azure_rm_adserviceprincipal:
-      app_id: "{{ app_id }}"
-      state: present
-      tenant: "{{ tenant_id }}"
+- name: create ad sp
+  azure_rm_adserviceprincipal:
+    app_id: "{{ app_id }}"
+    state: present
+    tenant: "{{ tenant_id }}"
 '''
 
 RETURN = '''
