@@ -452,7 +452,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
         self.status_code = [200, 201, 202]
         self.to_do = Actions.NoAction
 
-        required_if = [('state', 'present', ['storage_profile'])
+        required_if = [('state', 'present', ['storage_profile'])]
         self.body = {}
         self.query_parameters = {}
         self.query_parameters['api-version'] = '2019-07-01'
