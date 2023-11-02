@@ -58,12 +58,12 @@ options:
     regenerate_secondary_key:
         description:
             - Regenerate the SAS policy secondary key.
-            - Required when creating.
         type: bool
         default: False
     rights:
         description:
             - Claim rights of the SAS policy.
+            - Required when creating.
         type: str
         choices:
             - manage
