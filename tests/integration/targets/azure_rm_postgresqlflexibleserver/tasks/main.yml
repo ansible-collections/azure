@@ -79,7 +79,7 @@
       backup_retention_days: 7
       geo_redundant_backup: Disabled
     network:
-      public_network_access: Disabled 
+      public_network_access: Disabled
     maintenance_window:
       custom_window: Enabled
       start_hour: 8
@@ -136,7 +136,7 @@
   register: output
 
 - name: Assert the post gresql server is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.servers[0].tags | length == 2
       - output.servers[0].storage.storage_size_gb == 256
@@ -285,7 +285,7 @@
     that:
       - output.changed
 
-- name: list the post gresql flexible config facts
+- name: List the post gresql flexible config facts
   azure_rm_postgresqlflexibleconfiguration_info:
     resource_group: "{{ resource_group }}"
     server_name: postflexible{{ rpfx }}
@@ -309,7 +309,8 @@
       - output.changed
 
 - name: Pause for 10 mimutes
-  ansible.builtin.shell: sleep 600
+  ansible.builtin.pause:
+    minutes: 10
   changed_when: true
 
 - name: Restart post gresql flexible server
