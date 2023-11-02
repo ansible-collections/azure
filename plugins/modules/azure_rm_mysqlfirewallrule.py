@@ -35,10 +35,12 @@ options:
     start_ip_address:
         description:
             - The start IP address of the MySQL firewall rule. Must be IPv4 format.
+            - Required when creating.
         type: str
     end_ip_address:
         description:
             - The end IP address of the MySQL firewall rule. Must be IPv4 format.
+            - Required when creating.
         type: str
     state:
         description:
@@ -128,6 +130,7 @@ class AzureRMMySqlFirewallRule(AzureRMModuleBase):
         self.start_ip_address = None
         self.end_ip_address = None
 
+        required_if = [('state', 'present', ['start_ip_address', 'end_ip_address'])]
         self.results = dict(changed=False)
         self.state = None
         self.parameters = dict()
@@ -135,6 +138,7 @@ class AzureRMMySqlFirewallRule(AzureRMModuleBase):
 
         super(AzureRMMySqlFirewallRule, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                        supports_check_mode=True,
+                                                       required_if=required_if,
                                                        supports_tags=False)
 
     def exec_module(self, **kwargs):

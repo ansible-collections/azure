@@ -56,6 +56,7 @@ options:
             - Make sure your virtual network is in the same resource group as NIC when you give only the name.
             - It can be the virtual network's resource id.
             - It can be a dict which contains I(name) and I(resource_group) of the virtual network.
+            - Required when creating.
         type: raw
         aliases:
             - virtual_network_name
@@ -63,6 +64,7 @@ options:
         description:
             - Name of an existing subnet within the specified virtual network. Required when creating a network interface.
             - Use the C(virtual_network)'s resource group.
+            - Required when creating.
         aliases:
             - subnet
         type: str
