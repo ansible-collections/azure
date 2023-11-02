@@ -45,7 +45,6 @@ options:
     storage_profile:
         description:
             - Storage profile
-            - Required when creating.
         type: dict
         suboptions:
             source_image:
@@ -452,7 +451,6 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
         self.status_code = [200, 201, 202]
         self.to_do = Actions.NoAction
 
-        required_if = [('state', 'present', ['storage_profile'])]
         self.body = {}
         self.query_parameters = {}
         self.query_parameters['api-version'] = '2019-07-01'
@@ -461,7 +459,6 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
 
         super(AzureRMGalleryImageVersions, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                           supports_check_mode=True,
-                                                          required_if=required_if,
                                                           supports_tags=True)
 
     def exec_module(self, **kwargs):
