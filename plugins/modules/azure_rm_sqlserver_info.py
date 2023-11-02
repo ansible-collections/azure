@@ -20,10 +20,12 @@ options:
     resource_group:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
+        type: str
         required: True
     server_name:
         description:
             - The name of the server.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -35,14 +37,14 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of SQL Server
-    azure_rm_sqlserver_info:
-      resource_group: myResourceGroup
-      server_name: server_name
+- name: Get instance of SQL Server
+  azure_rm_sqlserver_info:
+    resource_group: myResourceGroup
+    server_name: server_name
 
-  - name: List instances of SQL Server
-    azure_rm_sqlserver_info:
-      resource_group: myResourceGroup
+- name: List instances of SQL Server
+  azure_rm_sqlserver_info:
+    resource_group: myResourceGroup
 '''
 
 RETURN = '''

@@ -24,9 +24,11 @@ options:
     name:
         description:
             - Only show results for a specific account.
+        type: str
     resource_group:
         description:
             - Limit results to a resource group. Required when filtering by name.
+        type: str
         aliases:
             - resource_group_name
     tags:
@@ -61,20 +63,20 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one account
-      azure_rm_storageaccount_info:
-        resource_group: myResourceGroup
-        name: clh0002
+- name: Get facts for one account
+  azure_rm_storageaccount_info:
+    resource_group: myResourceGroup
+    name: clh0002
 
-    - name: Get facts for all accounts in a resource group
-      azure_rm_storageaccount_info:
-        resource_group: myResourceGroup
+- name: Get facts for all accounts in a resource group
+  azure_rm_storageaccount_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts for all accounts by tags
-      azure_rm_storageaccount_info:
-        tags:
-          - testing
-          - foo:bar
+- name: Get facts for all accounts by tags
+  azure_rm_storageaccount_info:
+    tags:
+      - testing
+      - foo:bar
 '''
 
 RETURN = '''
@@ -477,6 +479,7 @@ storageaccounts:
                     description:
                         - The account key for the secondary_endpoints
                     sample: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                    type: str
         georeplication_stats:
             description:
                 - Parameters related to the status of geo-replication.
@@ -533,11 +536,6 @@ storageaccounts:
                     sample: error.html
 '''
 
-try:
-    from azure.core.exceptions import ResourceNotFoundError
-except Exception:
-    # This is handled in azure_rm_common
-    pass
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils._text import to_native
@@ -609,7 +607,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         account = None
         try:
             expand = None
-            if(self.show_georeplication_stats):
+            if (self.show_georeplication_stats):
                 expand = 'georeplicationstats'
             account = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name, expand=expand)
             return [account]

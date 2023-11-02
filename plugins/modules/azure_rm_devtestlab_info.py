@@ -39,19 +39,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: List instances of DevTest Lab by resource group
-    azure_rm_devtestlab_info:
-      resource_group: testrg
-      tags:
-        - key:value
+- name: List instances of DevTest Lab by resource group
+  azure_rm_devtestlab_info:
+    resource_group: testrg
+    tags:
+      - key:value
 
-  - name: List instances of DevTest Lab in subscription
-    azure_rm_devtestlab_info:
+- name: List instances of DevTest Lab in subscription
+  azure_rm_devtestlab_info:
 
-  - name: Get instance of DevTest Lab
-    azure_rm_devtestlab_info:
-      resource_group: testrg
-      name: testlab
+- name: Get instance of DevTest Lab
+  azure_rm_devtestlab_info:
+    resource_group: testrg
+    name: testlab
 '''
 
 RETURN = '''
@@ -137,7 +137,7 @@ labs:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag': 'MyValue' }"
 '''
 
@@ -145,7 +145,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common

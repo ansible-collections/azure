@@ -54,31 +54,31 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get latest version of specific key
-    azure_rm_keyvaultkey_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: myKey
+- name: Get latest version of specific key
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: myKey
 
-  - name: List all versions of specific key
-    azure_rm_keyvaultkey_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: myKey
-      version: all
+- name: List all versions of specific key
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: myKey
+    version: all
 
-  - name: List specific version of specific key
-    azure_rm_keyvaultkey_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: myKey
-      version: fd2682392a504455b79c90dd04a1bf46
+- name: List specific version of specific key
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: myKey
+    version: fd2682392a504455b79c90dd04a1bf46
 
-  - name: List all keys in specific key vault
-    azure_rm_keyvaultkey_info:
-        vault_uri: "https://myVault.vault.azure.net"
+- name: List all keys in specific key vault
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
 
-  - name: List deleted keys in specific key vault
-    azure_rm_keyvaultkey_info:
-        vault_uri: "https://myVault.vault.azure.net"
-        show_deleted_key: True
+- name: List deleted keys in specific key vault
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    show_deleted_key: true
 '''
 
 RETURN = '''
@@ -115,6 +115,7 @@ keyvaults:
         key:
             description:
                 - public part of a key.
+            type: dict
             contains:
                 n:
                     description:
@@ -150,6 +151,7 @@ keyvaults:
         attributes:
             description:
                 - Key attributes.
+            type: dict
             contains:
                 created:
                     description:
@@ -193,10 +195,7 @@ keyvaults:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from azure.keyvault import KeyVaultClient, KeyVaultId, KeyVaultAuthentication, KeyId
-    from azure.keyvault.models import KeyAttributes, JsonWebKey
-    from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
-    from msrestazure.azure_active_directory import MSIAuthentication
+    from azure.keyvault.keys import KeyClient
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -204,20 +203,20 @@ except ImportError:
 
 def keybundle_to_dict(bundle):
     return dict(
-        tags=bundle.tags,
-        managed=bundle.managed,
+        tags=bundle.properties.tags,
+        managed=bundle.properties.managed,
         attributes=dict(
-            enabled=bundle.attributes.enabled,
-            not_before=bundle.attributes.not_before,
-            expires=bundle.attributes.expires,
-            created=bundle.attributes.created,
-            updated=bundle.attributes.updated,
-            recovery_level=bundle.attributes.recovery_level
+            enabled=bundle.properties.enabled,
+            not_before=bundle.properties.not_before,
+            expires=bundle.properties.expires_on,
+            created=bundle.properties.created_on,
+            updated=bundle.properties.updated_on,
+            recovery_level=bundle.properties.recovery_level
         ),
-        kid=bundle.key.kid,
-        version=KeyVaultId.parse_key_id(bundle.key.kid).version,
-        type=bundle.key.kty,
-        permitted_operations=bundle.key.key_ops,
+        kid=bundle.id,
+        version=bundle.properties.version,
+        type=bundle.key_type,
+        permitted_operations=bundle.key_operations,
         key=dict(
             n=bundle.key.n if hasattr(bundle.key, 'n') else None,
             e=bundle.key.e if hasattr(bundle.key, 'e') else None,
@@ -228,35 +227,96 @@ def keybundle_to_dict(bundle):
     )
 
 
+def delete_keybundle_to_dict(bundle):
+    return dict(
+        tags=bundle._tags,
+        managed=bundle._managed,
+        attributes=dict(
+            enabled=bundle.enabled,
+            not_before=bundle.not_before,
+            expires=bundle.expires_on,
+            created=bundle.created_on,
+            updated=bundle.updated_on,
+            recovery_level=bundle.recovery_level
+        ),
+        kid=bundle._id,
+        version=bundle.version,
+    )
+
+
+def delete_properties_to_dict(bundle):
+    return dict(
+        tags=bundle.tags,
+        managed=bundle.managed,
+        attributes=dict(
+            enabled=bundle.enabled,
+            not_before=bundle.not_before,
+            expires=bundle.expires_on,
+            created=bundle.created_on,
+            updated=bundle.updated_on,
+            recovery_level=bundle.recovery_level
+        ),
+        kid=bundle.id,
+        version=bundle.version,
+    )
+
+
 def deletedkeybundle_to_dict(bundle):
-    keybundle = keybundle_to_dict(bundle)
-    keybundle['recovery_id'] = bundle.recovery_id,
-    keybundle['scheduled_purge_date'] = bundle.scheduled_purge_date,
+    keybundle = delete_properties_to_dict(bundle.properties)
+    keybundle['type'] = bundle.key_type
+    keybundle['permitted_operations'] = bundle.key_operations
+    keybundle['recovery_id'] = bundle.recovery_id
+    keybundle['scheduled_purge_date'] = bundle.scheduled_purge_date
     keybundle['deleted_date'] = bundle.deleted_date
+    keybundle['key'] = dict(n=bundle.key.n if hasattr(bundle.key, 'n') else None,
+                            e=bundle.key.e if hasattr(bundle.key, 'e') else None,
+                            crv=bundle.key.crv if hasattr(bundle.key, 'crv') else None,
+                            x=bundle.key.x if hasattr(bundle.key, 'x') else None,
+                            y=bundle.key.y if hasattr(bundle.key, 'y') else None)
+    keybundle['id'] = bundle.id
     return keybundle
 
 
 def keyitem_to_dict(keyitem):
     return dict(
-        kid=keyitem.kid,
-        version=KeyVaultId.parse_key_id(keyitem.kid).version,
-        tags=keyitem.tags,
-        manged=keyitem.managed,
+        kid=keyitem._id,
+        version=keyitem.version,
+        tags=keyitem._tags,
+        manged=keyitem._managed,
         attributes=dict(
-            enabled=keyitem.attributes.enabled,
-            not_before=keyitem.attributes.not_before,
-            expires=keyitem.attributes.expires,
-            created=keyitem.attributes.created,
-            updated=keyitem.attributes.updated,
-            recovery_level=keyitem.attributes.recovery_level
+            enabled=keyitem.enabled,
+            not_before=keyitem.not_before,
+            expires=keyitem.expires_on,
+            created=keyitem.created_on,
+            updated=keyitem.updated_on,
+            recovery_level=keyitem.recovery_level
+        )
+    )
+
+
+def delete_item_to_dict(bundle):
+    return dict(
+        tags=bundle.properties._tags,
+        kid=bundle.properties.id,
+        version=bundle.properties.version,
+        managed=bundle.properties.managed,
+        attributes=dict(
+            enabled=bundle.properties.enabled,
+            not_before=bundle.properties.not_before,
+            expires=bundle.properties.expires_on,
+            created=bundle.properties.created_on,
+            updated=bundle.properties.updated_on,
+            recovery_level=bundle.properties.recovery_level
+
+
         )
     )
 
 
 def deletedkeyitem_to_dict(keyitem):
-    item = keyitem_to_dict(keyitem)
-    item['recovery_id'] = keyitem.recovery_id,
-    item['scheduled_purge_date'] = keyitem.scheduled_purge_date,
+    item = delete_item_to_dict(keyitem)
+    item['recovery_id'] = keyitem.recovery_id
+    item['scheduled_purge_date'] = keyitem.scheduled_purge_date
     item['deleted_date'] = keyitem.deleted_date
     return item
 
@@ -312,45 +372,8 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
         return self.results
 
     def get_keyvault_client(self):
-        kv_url = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
-        # Don't use MSI credentials if the auth_source isn't set to MSI.  The below will Always result in credentials when running on an Azure VM.
-        if self.module.params['auth_source'] == 'msi':
-            try:
-                self.log("Get KeyVaultClient from MSI")
-                credentials = MSIAuthentication(resource="https://{0}".format(kv_url))
-                return KeyVaultClient(credentials)
-            except Exception:
-                self.log("Get KeyVaultClient from service principal")
-        elif self.module.params['auth_source'] in ['auto', 'cli']:
-            try:
-                profile = get_cli_profile()
-                credentials, subscription_id, tenant = profile.get_login_credentials(
-                    subscription_id=self.credentials['subscription_id'], resource="https://{0}".format(kv_url))
-                return KeyVaultClient(credentials)
-            except Exception as exc:
-                self.log("Get KeyVaultClient from service principal")
-                # self.fail("Failed to load CLI profile {0}.".format(str(exc)))
 
-        # Create KeyVault Client using KeyVault auth class and auth_callback
-        def auth_callback(server, resource, scope):
-            if self.credentials['client_id'] is None or self.credentials['secret'] is None:
-                self.fail('Please specify client_id, secret and tenant to access azure Key Vault.')
-
-            tenant = self.credentials.get('tenant')
-            if not self.credentials['tenant']:
-                tenant = "common"
-
-            authcredential = ServicePrincipalCredentials(
-                client_id=self.credentials['client_id'],
-                secret=self.credentials['secret'],
-                tenant=tenant,
-                cloud_environment=self._cloud_environment,
-                resource="https://{0}".format(kv_url))
-
-            token = authcredential.token
-            return token['token_type'], token['access_token']
-
-        return KeyVaultClient(KeyVaultAuthentication(auth_callback))
+        return KeyClient(vault_url=self.vault_uri, credential=self.azure_auth.azure_credential_track2)
 
     def get_key(self):
         '''
@@ -363,19 +386,20 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
         results = []
         try:
             if self.version == 'current':
-                response = self._client.get_key(vault_base_url=self.vault_uri,
-                                                key_name=self.name,
-                                                key_version='')
+                response = self._client.get_key(name=self.name,
+                                                version=None)
             else:
-                response = self._client.get_key(vault_base_url=self.vault_uri,
-                                                key_name=self.name,
-                                                key_version=self.version)
+                response = self._client.get_key(name=self.name,
+                                                version=self.version)
 
-            if response and self.has_tags(response.tags, self.tags):
-                self.log("Response : {0}".format(response))
-                results.append(keybundle_to_dict(response))
+            if response:
+                response = keybundle_to_dict(response)
+                if self.has_tags(response['tags'], self.tags):
+                    self.log("Response : {0}".format(response))
+                    results.append(response)
 
         except Exception as e:
+            self.fail(e)
             self.log("Did not find the key vault key {0}: {1}".format(self.name, str(e)))
         return results
 
@@ -389,14 +413,14 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
 
         results = []
         try:
-            response = self._client.get_key_versions(vault_base_url=self.vault_uri,
-                                                     key_name=self.name)
+            response = self._client.list_properties_of_key_versions(name=self.name)
             self.log("Response : {0}".format(response))
 
             if response:
                 for item in response:
-                    if self.has_tags(item.tags, self.tags):
-                        results.append(keyitem_to_dict(item))
+                    item = keyitem_to_dict(item)
+                    if self.has_tags(item['tags'], self.tags):
+                        results.append(item)
         except Exception as e:
             self.log("Did not find key versions {0} : {1}.".format(self.name, str(e)))
         return results
@@ -411,13 +435,14 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
 
         results = []
         try:
-            response = self._client.get_keys(vault_base_url=self.vault_uri)
+            response = self._client.list_properties_of_keys()
             self.log("Response : {0}".format(response))
 
             if response:
                 for item in response:
-                    if self.has_tags(item.tags, self.tags):
-                        results.append(keyitem_to_dict(item))
+                    item = keyitem_to_dict(item)
+                    if self.has_tags(item['tags'], self.tags):
+                        results.append(item)
         except Exception as e:
             self.log("Did not find key vault in current subscription {0}.".format(str(e)))
         return results
@@ -432,12 +457,13 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
 
         results = []
         try:
-            response = self._client.get_deleted_key(vault_base_url=self.vault_uri,
-                                                    key_name=self.name)
+            response = self._client.get_deleted_key(name=self.name)
 
-            if response and self.has_tags(response.tags, self.tags):
-                self.log("Response : {0}".format(response))
-                results.append(deletedkeybundle_to_dict(response))
+            if response:
+                response = deletedkeybundle_to_dict(response)
+                if self.has_tags(response['tags'], self.tags):
+                    self.log("Response : {0}".format(response))
+                    results.append(response)
 
         except Exception as e:
             self.log("Did not find the key vault key {0}: {1}".format(self.name, str(e)))
@@ -453,13 +479,14 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
 
         results = []
         try:
-            response = self._client.get_deleted_keys(vault_base_url=self.vault_uri)
+            response = self._client.list_deleted_keys()
             self.log("Response : {0}".format(response))
 
             if response:
                 for item in response:
-                    if self.has_tags(item.tags, self.tags):
-                        results.append(deletedkeyitem_to_dict(item))
+                    item = deletedkeyitem_to_dict(item)
+                    if self.has_tags(item['tags'], self.tags):
+                        results.append(item)
         except Exception as e:
             self.log("Did not find key vault in current subscription {0}.".format(str(e)))
         return results

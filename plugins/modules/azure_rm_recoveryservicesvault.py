@@ -49,18 +49,18 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create/Update Azure Recovery Service vault
-      azure_rm_recoveryservicesvault:
-        resource_group: 'myResourceGroup'
-        name: 'testVault'
-        location: 'westeurope'
-        state: 'present'
-    - name: Delete Recovery Service Vault
-      azure_rm_recoveryservicesvault:
-        resource_group: 'myResourceGroup'
-        name: 'testVault'
-        location: 'westeurope'
-        state: 'absent'
+- name: Create/Update Azure Recovery Service vault
+  azure_rm_recoveryservicesvault:
+    resource_group: 'myResourceGroup'
+    name: 'testVault'
+    location: 'westeurope'
+    state: 'present'
+- name: Delete Recovery Service Vault
+  azure_rm_recoveryservicesvault:
+    resource_group: 'myResourceGroup'
+    name: 'testVault'
+    location: 'westeurope'
+    state: 'absent'
 '''
 
 RETURN = '''
@@ -121,9 +121,7 @@ response:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-import re
 import json
-import time
 
 
 class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
@@ -210,6 +208,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         old_response = self.get_resource()
@@ -249,9 +248,9 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
             self.fail('Error in creating Azure Recovery Service Vault {0}'.format(str(e)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.context['deserialized_data']}
 
         return response
 
@@ -272,12 +271,6 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
             self.log('Error attempting to delete Azure Recovery Service Vault.')
             self.fail('Error while deleting Azure Recovery Service Vault: {0}'.format(str(e)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
-        return response
-
     def get_resource(self):
         # self.log('Get Recovery Service Vault Name {0}'.format(self.))
         found = False
@@ -296,7 +289,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         except Exception as e:
             self.log('Recovery Service Vault Does not exist.')
         if found is True:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             return response
         else:
             return False

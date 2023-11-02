@@ -165,77 +165,77 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create managed operating system disks from page blob and attach them to a list of VMs
-      azure_rm_multiplemanageddisks:
-        managed_disks:
-            - name: mymanageddisk1
-              location: eastus2
-              resource_group: myResourceGroup
-              create_option: import
-              source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
-              storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
-              os_type: windows
-              storage_account_type: Premium_LRS
-            - name: mymanageddisk2
-              location: eastus2
-              resource_group: myResourceGroup
-              create_option: import
-              source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
-              storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
-              os_type: windows
-              storage_account_type: Premium_LRS
-        managed_by_extended:
-            - resource_group: myResourceGroupTest
-              name: TestVM
+- name: Create managed operating system disks from page blob and attach them to a list of VMs
+  azure_rm_multiplemanageddisks:
+    managed_disks:
+      - name: mymanageddisk1
+        location: eastus2
+        resource_group: myResourceGroup
+        create_option: import
+        source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
+        storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
+        os_type: windows
+        storage_account_type: Premium_LRS
+      - name: mymanageddisk2
+        location: eastus2
+        resource_group: myResourceGroup
+        create_option: import
+        source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
+        storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
+        os_type: windows
+        storage_account_type: Premium_LRS
+    managed_by_extended:
+      - resource_group: myResourceGroupTest
+        name: TestVM
 
-    - name: Detach disks from the VMs specified in the list
-      azure_rm_multiplemanageddisks:
-        state: absent
-        managed_disks:
-            - name: mymanageddisk1
-              location: eastus2
-              resource_group: myResourceGroup
-              create_option: import
-              source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
-              storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
-              os_type: windows
-              storage_account_type: Premium_LRS
-            - name: mymanageddisk2
-              location: eastus2
-              resource_group: myResourceGroup
-              create_option: import
-              source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
-              storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
-              os_type: windows
-              storage_account_type: Premium_LRS
-        managed_by_extended:
-            - resource_group: myResourceGroupTest
-              name: TestVM1
-            - resource_group: myResourceGroupTest
-              name: TestVM2
+- name: Detach disks from the VMs specified in the list
+  azure_rm_multiplemanageddisks:
+    state: absent
+    managed_disks:
+      - name: mymanageddisk1
+        location: eastus2
+        resource_group: myResourceGroup
+        create_option: import
+        source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
+        storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
+        os_type: windows
+        storage_account_type: Premium_LRS
+      - name: mymanageddisk2
+        location: eastus2
+        resource_group: myResourceGroup
+        create_option: import
+        source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
+        storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
+        os_type: windows
+        storage_account_type: Premium_LRS
+    managed_by_extended:
+      - resource_group: myResourceGroupTest
+        name: TestVM1
+      - resource_group: myResourceGroupTest
+        name: TestVM2
 
-    - name: Detach managed disks from all VMs without deletion
-      azure_rm_multiplemanageddisks:
-        state: present
-        managed_disks:
-            - name: mymanageddisk1
-              location: eastus2
-              resource_group: myResourceGroup
-            - name: mymanageddisk2
-              location: eastus2
-              resource_group: myResourceGroup
-        managed_by_extended: []
+- name: Detach managed disks from all VMs without deletion
+  azure_rm_multiplemanageddisks:
+    state: present
+    managed_disks:
+      - name: mymanageddisk1
+        location: eastus2
+        resource_group: myResourceGroup
+      - name: mymanageddisk2
+        location: eastus2
+        resource_group: myResourceGroup
+    managed_by_extended: []
 
-    - name: Detach managed disks from all VMs and delete them
-      azure_rm_multiplemanageddisks:
-        state: absent
-        managed_disks:
-            - name: mymanageddisk1
-              location: eastus2
-              resource_group: myResourceGroup
-            - name: mymanageddisk2
-              location: eastus2
-              resource_group: myResourceGroup
+- name: Detach managed disks from all VMs and delete them
+  azure_rm_multiplemanageddisks:
+    state: absent
+    managed_disks:
+      - name: mymanageddisk1
+        location: eastus2
+        resource_group: myResourceGroup
+      - name: mymanageddisk2
+        location: eastus2
+        resource_group: myResourceGroup
 '''
 
 RETURN = '''
@@ -312,7 +312,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 try:
     from azure.core.exceptions import ResourceNotFoundError, AzureError
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
     import time
 except ImportError:
     # This is handled in azure_rm_common
@@ -456,7 +456,7 @@ class AzureRMMultipleManagedDisk(AzureRMModuleBase):
         if create_option == 'import':
             creation_data['create_option'] = self.compute_models.DiskCreateOption.import_enum
             creation_data['source_uri'] = source_uri
-            creation_data['source_account_id'] = storage_account_id
+            creation_data['storage_account_id'] = storage_account_id
         elif create_option == 'copy':
             creation_data['create_option'] = self.compute_models.DiskCreateOption.copy
             creation_data['source_resource_id'] = source_uri

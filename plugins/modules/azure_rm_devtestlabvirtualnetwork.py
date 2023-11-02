@@ -21,28 +21,34 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     lab_name:
         description:
             - The name of the lab.
         required: True
+        type: str
     name:
         description:
             - The name of the virtual network.
         required: True
+        type: str
     location:
         description:
             - The location of the resource.
+        type: str
     description:
         description:
             - The description of the virtual network.
+        type: str
     state:
-      description:
-          - Assert the state of the Virtual Network.
-          - Use C(present) to create or update an Virtual Network and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Virtual Network.
+            - Use C(present) to create or update an Virtual Network and C(absent) to delete it.
+        type: str
+        default: present
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -54,12 +60,12 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) Virtual Network
-    azure_rm_devtestlabvirtualnetwork:
-      resource_group: myResourceGroup
-      lab_name: mylab
-      name: myvn
-      description: My Lab Virtual Network
+- name: Create (or update) Virtual Network
+  azure_rm_devtestlabvirtualnetwork:
+    resource_group: myResourceGroup
+    lab_name: mylab
+    name: myvn
+    description: My Lab Virtual Network
 '''
 
 RETURN = '''
@@ -79,16 +85,12 @@ external_provider_resource_id:
              rtualNetworks/myvn"
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -205,7 +207,7 @@ class AzureRMDevTestLabVirtualNetwork(AzureRMModuleBase):
                 return self.results
             self.delete_virtualnetwork()
             # This currently doesn't work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("Virtual Network instance unchanged")
@@ -232,7 +234,7 @@ class AzureRMDevTestLabVirtualNetwork(AzureRMModuleBase):
                                                                                 lab_name=self.lab_name,
                                                                                 name=self.name,
                                                                                 virtual_network=self.virtual_network)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:

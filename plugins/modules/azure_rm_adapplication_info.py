@@ -48,21 +48,20 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: get ad app info by App ID
-    azure_rm_adapplication_info:
-      app_id: "{{ app_id }}"
-      tenant: "{{ tenant_id }}"
+- name: get ad app info by App ID
+  azure_rm_adapplication_info:
+    app_id: "{{ app_id }}"
+    tenant: "{{ tenant_id }}"
 
-  - name: get ad app info ---- by object ID
-    azure_rm_adapplication_info:
-      object_id: "{{ object_id }}"
-      tenant: "{{ tenant_id }}"
+- name: get ad app info ---- by object ID
+  azure_rm_adapplication_info:
+    object_id: "{{ object_id }}"
+    tenant: "{{ tenant_id }}"
 
-  - name: get ad app info ---- by identifier uri
-    azure_rm_adapplication_info:
-      identifier_uri: "{{ identifier_uri }}"
-      tenant: "{{ tenant_id }}"
-
+- name: get ad app info ---- by identifier uri
+  azure_rm_adapplication_info:
+    identifier_uri: "{{ identifier_uri }}"
+    tenant: "{{ tenant_id }}"
 '''
 
 RETURN = '''
@@ -101,7 +100,6 @@ applications:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.graphrbac.models import GraphErrorException
 except ImportError:
     # This is handled in azure_rm_common

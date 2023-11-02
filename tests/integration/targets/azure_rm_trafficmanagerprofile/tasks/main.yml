@@ -1,127 +1,127 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     tmname: "tm{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     endpointname1: "ep1{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     endpointname2: "ep2{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 
 - name: Create a Traffic Manager profile(check mode)
   azure_rm_trafficmanagerprofile:
-      resource_group: "{{ resource_group }}"
-      name: "{{ tmname }}"
-      tags:
-          testing: testing
-          delete: on-exit
-          foo: bar
-      location: global
-      profile_status: enabled
-      routing_method: performance
-      dns_config: 
-        relative_name: "{{ tmname }}"
-        ttl: 60
-      monitor_config:
-        protocol: HTTPS
-        port: 80
-        path: '/'
-  check_mode: yes
+    resource_group: "{{ resource_group }}"
+    name: "{{ tmname }}"
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
+    location: global
+    profile_status: enabled
+    routing_method: performance
+    dns_config:
+      relative_name: "{{ tmname }}"
+      ttl: 60
+    monitor_config:
+      protocol: HTTPS
+      port: 80
+      path: '/'
+  check_mode: true
 
 - name: Check there is no Traffic Manager profile created
   azure_rm_trafficmanagerprofile_info:
-      resource_group: "{{ resource_group }}"
-      name: "{{ tmname }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ tmname }}"
   register: fact
 
 - name: Check there is no Traffic Manager profile created
-  assert: { that: "{{ fact.tms | length }} == 0" }
+  ansible.builtin.assert: { that: "{{ fact.tms | length }} == 0" }
 
 - name: Create a Traffic Manager profile
   azure_rm_trafficmanagerprofile:
-      resource_group: "{{ resource_group }}"
-      name: "{{ tmname }}"
-      tags:
-          testing: testing
-          delete: on-exit
-          foo: bar
-      location: global
-      profile_status: enabled
-      routing_method: performance
-      dns_config: 
-        relative_name: "{{ tmname }}"
-        ttl: 60
-      monitor_config:
-        protocol: HTTPS
-        port: 80
-        path: '/'
+    resource_group: "{{ resource_group }}"
+    name: "{{ tmname }}"
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
+    location: global
+    profile_status: enabled
+    routing_method: performance
+    dns_config:
+      relative_name: "{{ tmname }}"
+      ttl: 60
+    monitor_config:
+      protocol: HTTPS
+      port: 80
+      path: '/'
   register: tm
 
 - name: Assert the Traffic Manager profile is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - tm.changed
 
 - name: Gather Traffic Manager profile facts
   azure_rm_trafficmanagerprofile_info:
-      resource_group: "{{ resource_group }}"
-      name: "{{ tmname }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ tmname }}"
   register: fact
 
 - name: Assert fact returns the created one
-  assert:
-      that:
-        - "fact.tms | length == 1"
-        - fact.tms[0].id == tm.id
-        - fact.tms[0].endpoints | length == 0
+  ansible.builtin.assert:
+    that:
+      - "fact.tms | length == 1"
+      - fact.tms[0].id == tm.id
+      - fact.tms[0].endpoints | length == 0
 
 - name: Create a Traffic Manager profile (idempotent)
   azure_rm_trafficmanagerprofile:
-      resource_group: "{{ resource_group }}"
-      name: "{{ tmname }}"
-      tags:
-          testing: testing
-          delete: on-exit
-          foo: bar
-      location: global
-      profile_status: enabled
-      routing_method: performance
-      dns_config: 
-        relative_name: "{{ tmname }}"
-        ttl: 60
-      monitor_config:
-        protocol: HTTPS
-        port: 80
-        path: '/'
+    resource_group: "{{ resource_group }}"
+    name: "{{ tmname }}"
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
+    location: global
+    profile_status: enabled
+    routing_method: performance
+    dns_config:
+      relative_name: "{{ tmname }}"
+      ttl: 60
+    monitor_config:
+      protocol: HTTPS
+      port: 80
+      path: '/'
   register: output
 
 - name: Assert idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
 - name: Update the Traffic Manager profile
   azure_rm_trafficmanagerprofile:
-      resource_group: "{{ resource_group }}"
-      name: "{{ tmname }}"
-      tags:
-          testing: testing
-          delete: on-exit
-          foo: bar
-      location: global
-      profile_status: disabled
-      routing_method: priority
-      dns_config: 
-        relative_name: "{{ tmname }}"
-        ttl: 60
-      monitor_config:
-        protocol: HTTPS
-        port: 80
-        path: '/'
+    resource_group: "{{ resource_group }}"
+    name: "{{ tmname }}"
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
+    location: global
+    profile_status: disabled
+    routing_method: priority
+    dns_config:
+      relative_name: "{{ tmname }}"
+      ttl: 60
+    monitor_config:
+      protocol: HTTPS
+      port: 80
+      path: '/'
   register: output
 
 - name: Assert the Traffic Manager profile is updated
-  assert:
+  ansible.builtin.assert:
     that:
-      - output.changed 
+      - output.changed
 
 - name: Create Traffic Manager endpoint(check mode)
   azure_rm_trafficmanagerendpoint:
@@ -133,11 +133,11 @@
     priority: 2
     weight: 1
     target: 1.2.3.4
-  check_mode: yes
+  check_mode: true
   register: output
 
 - name: Assert check mode changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -148,7 +148,7 @@
   register: facts
 
 - name: Check no endpoint created in check mode
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.endpoints | length == 0
 
@@ -165,7 +165,7 @@
   register: output
 
 - name: Assert endpoint create changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -176,7 +176,7 @@
   register: facts
 
 - name: Check endpoint created
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.endpoints | length == 1
       - facts.endpoints[0].name == "{{ endpointname1 }}"
@@ -199,7 +199,7 @@
   register: facts
 
 - name: Check 2 endpoint in profile
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.endpoints | length == 2
 
@@ -216,7 +216,7 @@
   register: output
 
 - name: Assert endpoint creation idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
 
@@ -230,7 +230,7 @@
   register: output
 
 - name: Assert endpoint deletion changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -241,7 +241,7 @@
   register: facts
 
 - name: Check 1 endpoint left in profile
-  assert:
+  ansible.builtin.assert:
     that:
       - facts.endpoints | length == 1
 
@@ -250,20 +250,20 @@
     resource_group: "{{ resource_group }}"
     name: "{{ tmname }}"
     state: absent
-  check_mode: yes
+  check_mode: true
 
 - name: Gather Traffic Manager profile facts
   azure_rm_trafficmanagerprofile_info:
-      resource_group: "{{ resource_group }}"
-      name: "{{ tmname }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ tmname }}"
   register: fact
 
 - name: Assert the traffic manager profile is still there
-  assert:
-      that:
-        - "fact.tms | length == 1"
-        - fact.tms[0].id == tm.id
-        - fact.tms[0].endpoints | length == 1
+  ansible.builtin.assert:
+    that:
+      - "fact.tms | length == 1"
+      - fact.tms[0].id == tm.id
+      - fact.tms[0].endpoints | length == 1
 
 - name: Delete the Traffic Manager profile
   azure_rm_trafficmanagerprofile:
@@ -273,17 +273,17 @@
   register: output
 
 - name: Assert the Traffic Manager profile is well deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Get Traffic Manager profile fact
   azure_rm_trafficmanagerprofile_info:
-      resource_group: "{{ resource_group }}"
-      name: "{{ tmname }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ tmname }}"
   register: fact
 
 - name: Assert fact returns empty
-  assert:
+  ansible.builtin.assert:
     that:
       - "fact.tms | length == 0"

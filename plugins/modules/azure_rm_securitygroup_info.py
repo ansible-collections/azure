@@ -24,10 +24,12 @@ options:
     name:
         description:
             - Only show results for a specific security group.
+        type: str
     resource_group:
         description:
             - Name of the resource group to use.
         required: true
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -44,15 +46,14 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one security group
-      azure_rm_securitygroup_info:
-        resource_group: myResourceGroup
-        name: secgroup001
+- name: Get facts for one security group
+  azure_rm_securitygroup_info:
+    resource_group: myResourceGroup
+    name: secgroup001
 
-    - name: Get facts for all security groups
-      azure_rm_securitygroup_info:
-        resource_group: myResourceGroup
-
+- name: Get facts for all security groups
+  azure_rm_securitygroup_info:
+    resource_group: myResourceGroup
 '''
 
 RETURN = '''

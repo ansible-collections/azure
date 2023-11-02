@@ -21,14 +21,17 @@ options:
         description:
             - The name of the resource group to which the container registry belongs.
         required: True
+        type: str
     registry_name:
         description:
             - The name of the container registry.
         required: True
+        type: str
     webhook_name:
         description:
             - The name of the webhook.
         required: True
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -39,11 +42,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Webhook
-    azure_rm_containerregistrywebhook_info:
-      resource_group: resource_group_name
-      registry_name: registry_name
-      webhook_name: webhook_name
+- name: Get instance of Webhook
+  azure_rm_containerregistrywebhook_info:
+    resource_group: resource_group_name
+    registry_name: registry_name
+    webhook_name: webhook_name
 '''
 
 RETURN = '''
@@ -136,7 +139,7 @@ class AzureRMWebhooksFacts(AzureRMModuleBase):
         self.resource_group = None
         self.registry_name = None
         self.webhook_name = None
-        super(AzureRMWebhooksFacts, self).__init__(self.module_arg_spec, supports_check_mode=True)
+        super(AzureRMWebhooksFacts, self).__init__(self.module_arg_spec, supports_tags=False, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:

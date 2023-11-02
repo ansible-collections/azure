@@ -20,13 +20,16 @@ options:
         description:
             - Name of a resource group where the vnet exists.
         required: True
+        type: str
     virtual_network:
         description:
             - Name or resource ID of a virtual network.
         required: True
+        type: raw
     name:
         description:
             - Name of the virtual network peering.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -36,16 +39,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get virtual network peering by name
-      azure_rm_virtualnetworkpeering_info:
-        resource_group: myResourceGroup
-        virtual_network: myVnet1
-        name: myVnetPeer
+- name: Get virtual network peering by name
+  azure_rm_virtualnetworkpeering_info:
+    resource_group: myResourceGroup
+    virtual_network: myVnet1
+    name: myVnetPeer
 
-    - name: List virtual network peering of virtual network
-      azure_rm_virtualnetworkpeering:
-        resource_group: myResourceGroup
-        virtual_network: myVnet1
+- name: List virtual network peering of virtual network
+  azure_rm_virtualnetworkpeering:
+    resource_group: myResourceGroup
+    virtual_network: myVnet1
 '''
 
 RETURN = '''

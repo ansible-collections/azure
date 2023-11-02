@@ -1,4 +1,5 @@
-- include_tasks: setup.yml
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
 
 - name: Create minimal VM with defaults
   azure_rm_virtualmachine:
@@ -13,9 +14,9 @@
     virtual_network: "{{ network_name }}"
     created_nsg: false
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20_04-lts
       version: latest
   register: vm_output
 
@@ -26,7 +27,7 @@
   register: nsg_result
 
 - name: Assert that security group were not exist before deleting
-  assert:
+  ansible.builtin.assert:
     that:
       - nsg_result.securitygroups | length == 0
 
@@ -50,7 +51,7 @@
   register: pip_result
 
 - name: Assert that autocreated resources were deleted
-  assert:
+  ansible.builtin.assert:
     that:
       # what about the default storage group?
       - nic_result.networkinterfaces | length == 0
@@ -79,5 +80,5 @@
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
-    force_delete_nonempty: yes
+    force_delete_nonempty: true
     state: absent

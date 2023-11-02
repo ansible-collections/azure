@@ -1,5 +1,5 @@
-- name: set location
-  set_fact:
+- name: Set location
+  ansible.builtin.set_fact:
     location: eastus
 
 - name: Get specific size information for a specific location
@@ -8,13 +8,15 @@
     name: Standard_A1_v2
   register: output
 
-- assert:
-      that: output['sizes'] | length == 1
+- name: Assert the virtuam machine size
+  ansible.builtin.assert:
+    that: output['sizes'] | length == 1
 
 - name: Get available sizes for a specific location
   azure_rm_virtualmachinesize_info:
     location: "{{ location }}"
   register: output
 
-- assert:
-      that: output['sizes'] | length > 0
+- name: Assert the virtualmachine size
+  ansible.builtin.assert:
+    that: output['sizes'] | length > 0

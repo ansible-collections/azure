@@ -43,16 +43,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of MariaDB Firewall Rule
-    azure_rm_mariadbfirewallrule_info:
-      resource_group: myResourceGroup
-      server_name: server_name
-      name: firewall_rule_name
+- name: Get instance of MariaDB Firewall Rule
+  azure_rm_mariadbfirewallrule_info:
+    resource_group: myResourceGroup
+    server_name: server_name
+    name: firewall_rule_name
 
-  - name: List instances of MariaDB Firewall Rule
-    azure_rm_mariadbfirewallrule_info:
-      resource_group: myResourceGroup
-      server_name: server_name
+- name: List instances of MariaDB Firewall Rule
+  azure_rm_mariadbfirewallrule_info:
+    resource_group: myResourceGroup
+    server_name: server_name
 '''
 
 RETURN = '''
@@ -97,9 +97,7 @@ rules:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

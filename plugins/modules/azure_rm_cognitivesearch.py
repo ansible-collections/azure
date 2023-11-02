@@ -116,10 +116,10 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create Azure Cognitive Search
-    azure_rm_cognitivesearch:
-      resource_group: myResourceGroup
-      name: myAzureSearch
+- name: Create Azure Cognitive Search
+  azure_rm_cognitivesearch:
+    resource_group: myResourceGroup
+    name: myAzureSearch
 '''
 
 RETURN = '''

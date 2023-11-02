@@ -1,5 +1,5 @@
 - name: Create random domain name
-  set_fact:
+  ansible.builtin.set_fact:
     domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create a private DNS zone (check mode)
@@ -9,7 +9,8 @@
   register: results
   check_mode: true
 
-- assert:
+- name: Assert there is no private dns zone resource
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create a private DNS zone
@@ -18,7 +19,8 @@
     name: "{{ domain_name }}.com"
   register: results
 
-- assert:
+- name: Assert the private dns zone created
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Update private DNS zone with tags
@@ -29,7 +31,8 @@
       test: modified
   register: results
 
-- assert:
+- name: Assert the private dns zone updated
+  ansible.builtin.assert:
     that:
       - results.changed
       - results.state.tags.test == 'modified'
@@ -40,7 +43,8 @@
     resource_group: "{{ resource_group }}"
   register: results
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that:
       - not results.changed
 
@@ -51,7 +55,7 @@
   register: zones
 
 - name: Assert that facts module returned result
-  assert:
+  ansible.builtin.assert:
     that:
       - zones.privatednszones[0].tags.test == 'modified'
       - zones.privatednszones[0].number_of_record_sets == 1
@@ -63,7 +67,7 @@
 - name: Delete private DNS zone
   azure_rm_privatednszone:
     resource_group: "{{ resource_group }}"
-    name:  "{{ domain_name }}.com"
+    name: "{{ domain_name }}.com"
     state: absent
 
 - name: Delete private DNS zone (idempotent)
@@ -73,5 +77,6 @@
     state: absent
   register: results
 
-- assert:
+- name: Assert the private dns zone deleted
+  ansible.builtin.assert:
     that: not results.changed

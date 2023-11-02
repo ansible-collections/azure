@@ -20,23 +20,28 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the servicebus namespace.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the servicebus. Use C(present) to create or update and use C(absen) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - The servicebus's location.
+        type: str
     sku:
         description:
             - Namespace SKU.
+        type: str
         choices:
             - standard
             - basic
@@ -55,10 +60,10 @@ author:
 EXAMPLES = '''
 - name: Create a namespace
   azure_rm_servicebus:
-      name: deadbeef
-      location: eastus
-      tags:
-        key1: value1
+    name: deadbeef
+    location: eastus
+    tags:
+      key1: value1
 '''
 RETURN = '''
 id:
@@ -75,7 +80,6 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
-from ansible.module_utils.common.dict_transformations import _snake_to_camel, _camel_to_snake
 from ansible.module_utils._text import to_native
 from datetime import datetime, timedelta
 

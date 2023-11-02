@@ -41,16 +41,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of MySQL Server
-    azure_rm_mysqlserver_info:
-      resource_group: myResourceGroup
-      name: server_name
-      tags:
-        - key
+- name: Get instance of MySQL Server
+  azure_rm_mysqlserver_info:
+    resource_group: myResourceGroup
+    name: server_name
+    tags:
+      - key
 
-  - name: List instances of MySQL Server
-    azure_rm_mysqlserver_info:
-      resource_group: myResourceGroup
+- name: List instances of MySQL Server
+  azure_rm_mysqlserver_info:
+    resource_group: myResourceGroup
 '''
 
 RETURN = '''
@@ -178,7 +178,6 @@ servers:
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.core.exceptions import ResourceNotFoundError
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

@@ -38,17 +38,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get Azure Cognitive Search info from resource group 'myResourceGroup' and name 'myAzureSearch'
-    azure_rm_cognitivesearch_info:
-      resource_group: myResourceGroup
-      name: myAzureSearch
+- name: Get Azure Cognitive Search info from resource group 'myResourceGroup' and name 'myAzureSearch'
+  azure_rm_cognitivesearch_info:
+    resource_group: myResourceGroup
+    name: myAzureSearch
 
-  - name: Get Azure Cognitive Search info from resource group 'myResourceGroup'
-    azure_rm_cognitivesearch_info:
-      resource_group: myResourceGroup
+- name: Get Azure Cognitive Search info from resource group 'myResourceGroup'
+  azure_rm_cognitivesearch_info:
+    resource_group: myResourceGroup
 
-  - name: Get all Azure Cognitive Search info
-    azure_rm_cognitivesearch_info:
+- name: Get all Azure Cognitive Search info
+  azure_rm_cognitivesearch_info:
 '''
 
 RETURN = '''

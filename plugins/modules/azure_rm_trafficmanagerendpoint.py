@@ -35,6 +35,7 @@ options:
         description:
             - The type of the endpoint.
         required: true
+        type: str
         choices:
             - azure_endpoints
             - external_endpoints
@@ -83,6 +84,7 @@ options:
         description:
             - Assert the state of the Traffic Manager endpoint. Use C(present) to create or update a Traffic Manager endpoint and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -97,16 +99,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: create a endpoint for a traffic manager profile
-    azure_rm_trafficmanagerendpoint:
-        resource_group: testresourcegroup
-        profile_name: myprofilename
-        name: testendpoint1
-        type: external_endpoints
-        location: westus
-        priority: 2
-        weight: 1
-        target: 1.2.3.4
+- name: create a endpoint for a traffic manager profile
+  azure_rm_trafficmanagerendpoint:
+    resource_group: testresourcegroup
+    profile_name: myprofilename
+    name: testendpoint1
+    type: external_endpoints
+    location: westus
+    priority: 2
+    weight: 1
+    target: 1.2.3.4
 '''
 
 RETURN = '''
@@ -119,14 +121,12 @@ id:
         "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/trafficManagerProfiles/testProfil
         e/externalEndpoints/testendpoint"
 '''
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, normalize_location_name
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.mgmt.trafficmanager.models import (
-        Endpoint, DnsConfig, MonitorConfig
-    )
+    from azure.mgmt.trafficmanager.models import Endpoint
 except ImportError:
     # This is handled in azure_rm_common
     pass

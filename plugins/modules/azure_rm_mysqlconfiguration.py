@@ -21,21 +21,26 @@ options:
         description:
             - The name of the resource group that contains the resource.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the server configuration.
         required: True
+        type: str
     value:
         description:
             - Value of the configuration.
+        type: str
     state:
         description:
             - Assert the state of the MySQL configuration. Use C(present) to update setting, or C(absent) to reset to default value.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -49,12 +54,12 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Update SQL Server setting
-    azure_rm_mysqlconfiguration:
-      resource_group: myResourceGroup
-      server_name: myServer
-      name: event_scheduler
-      value: "ON"
+- name: Update SQL Server setting
+  azure_rm_mysqlconfiguration:
+    resource_group: myResourceGroup
+    server_name: myServer
+    name: event_scheduler
+    value: "ON"
 '''
 
 RETURN = '''
@@ -67,13 +72,10 @@ id:
              gurations/event_scheduler"
 '''
 
-import time
-
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

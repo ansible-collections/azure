@@ -21,13 +21,16 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     virtual_network_name:
         description:
             - The name of the virtual network.
         required: True
+        type: str
     name:
         description:
             - The name of the subnet.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -38,17 +41,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get facts of specific subnet
-    azure_rm_subnet_info:
-      resource_group: myResourceGroup
-      virtual_network_name: myVirtualNetwork
-      name: mySubnet
+- name: Get facts of specific subnet
+  azure_rm_subnet_info:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
 
-  - name: List facts for all subnets in virtual network
-    azure_rm_subnet_info:
-      resource_group: myResourceGroup
-      virtual_network_name: myVirtualNetwork
-      name: mySubnet
+- name: List facts for all subnets in virtual network
+  azure_rm_subnet_info:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
 '''
 
 RETURN = '''
@@ -192,7 +195,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

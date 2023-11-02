@@ -39,6 +39,7 @@ options:
             - The web app's HTTP access restrictions.
         type: list
         elements: dict
+        default: []
         suboptions:
             name:
                 description:
@@ -73,6 +74,7 @@ options:
                 the SCM restrictions will be configured but not used.
         type: list
         elements: dict
+        default: []
         suboptions:
             name:
                 description:
@@ -116,26 +118,26 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Configure web app access restrictions.
-      azure.azcollection.azure_rm_webappaccessrestriction:
-        name: "MyWebapp"
-        resource_group: "MyResourceGroup"
-        ip_security_restrictions:
-          - name: "Datacenter 1"
-            action: "Allow"
-            ip_address: "1.1.1.1/24"
-            priority: 1
-          - name: "Datacenter 2"
-            action: "Allow"
-            ip_address: "2.2.2.2/24"
-            priority: 2
-        scm_ip_security_restrictions_use_main: true
+- name: Configure web app access restrictions.
+  azure.azcollection.azure_rm_webappaccessrestriction:
+    name: "MyWebapp"
+    resource_group: "MyResourceGroup"
+    ip_security_restrictions:
+      - name: "Datacenter 1"
+        action: "Allow"
+        ip_address: "1.1.1.1/24"
+        priority: 1
+      - name: "Datacenter 2"
+        action: "Allow"
+        ip_address: "2.2.2.2/24"
+        priority: 2
+    scm_ip_security_restrictions_use_main: true
 
-    - name: Delete web app network access restrictions.
-      azure.azcollection.azure_rm_webappaccessrestriction:
-        name: "MyWebapp"
-        resource_group: "MyResourceGroup"
-        state: "absent"
+- name: Delete web app network access restrictions.
+  azure.azcollection.azure_rm_webappaccessrestriction:
+    name: "MyWebapp"
+    resource_group: "MyResourceGroup"
+    state: "absent"
 '''
 
 RETURN = '''

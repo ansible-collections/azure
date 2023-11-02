@@ -80,14 +80,14 @@ EXAMPLES = '''
 - name: Get facts for one management group by id with direct children
   azure_rm_managementgroup_info:
     id: /providers/Microsoft.Management/managementGroups/contoso-group
-    children: True
+    children: true
 
 - name: Get facts for one management group by name with all children, flattened into top list
   azure_rm_managementgroup_info:
     name: "contoso-group"
-    children: True
-    recurse: True
-    flatten: True
+    children: true
+    recurse: true
+    flatten: true
 '''
 
 RETURN = '''
@@ -257,7 +257,7 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
     def to_dict(self, azure_object):
         if not azure_object:
             return []
-        if azure_object.type == '/providers/Microsoft.Management/managementGroups':
+        if azure_object.type == 'Microsoft.Management/managementGroups':
             return_dict = dict(
                 display_name=azure_object.display_name,
                 id=azure_object.id,

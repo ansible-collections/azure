@@ -19,11 +19,13 @@ options:
     name:
         description:
             - Only show results for a specific Function App.
+        type: str
     resource_group:
         description:
             - Limit results to a resource group. Required when filtering by name.
         aliases:
             - resource_group_name
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -38,19 +40,19 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one Function App
-      azure_rm_functionapp_info:
-        resource_group: myResourceGroup
-        name: myfunctionapp
+- name: Get facts for one Function App
+  azure_rm_functionapp_info:
+    resource_group: myResourceGroup
+    name: myfunctionapp
 
-    - name: Get facts for all Function Apps in a resource group
-      azure_rm_functionapp_info:
-        resource_group: myResourceGroup
+- name: Get facts for all Function Apps in a resource group
+  azure_rm_functionapp_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts for all Function Apps by tags
-      azure_rm_functionapp_info:
-        tags:
-          - testing
+- name: Get facts for all Function Apps by tags
+  azure_rm_functionapp_info:
+    tags:
+      - testing
 '''
 
 RETURN = '''

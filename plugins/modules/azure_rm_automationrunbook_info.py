@@ -66,8 +66,7 @@ EXAMPLES = '''
     resource_group: "{{ resource_group }}"
     automation_account_name: "{{ account-name }}"
     name: "{{ runbook-name }}"
-    show_content: True
-
+    show_content: true
 '''
 
 RETURN = '''

@@ -42,13 +42,13 @@ author:
 
 EXAMPLES = \
     '''
-    - name: Get Recovery Point Details
-      azure_rm_backupazurevm_info:
-        resource_group: 'myResourceGroup'
-        recovery_vault_name: 'testVault'
-        resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-        resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
-    '''
+- name: Get Recovery Point Details
+  azure_rm_backupazurevm_info:
+    resource_group: 'myResourceGroup'
+    recovery_vault_name: 'testVault'
+    resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
+                  resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
+'''
 
 RETURN = \
     '''
@@ -62,9 +62,7 @@ id:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-import re
 import json
-import time
 
 
 class Actions:
@@ -132,6 +130,7 @@ class BackupAzureVMInfo(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         response = self.get_recovery_point_info()
@@ -158,9 +157,9 @@ class BackupAzureVMInfo(AzureRMModuleBaseExt):
             self.fail('Error in fetching recovery point {0}'.format(str(e)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.context['deserialized_data']}
 
         return response
 

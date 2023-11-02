@@ -1,4 +1,5 @@
-- debug:
+- name: Set variables
+  ansible.builtin.debug:
     msg: "UID is {{ uid_short }}"
 
 - name: SETUP | Create storage account

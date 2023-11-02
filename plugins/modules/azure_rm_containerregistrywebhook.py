@@ -21,26 +21,33 @@ options:
         description:
             - The name of the resource group to which the container registry belongs.
         required: True
+        type: str
     registry_name:
         description:
             - The name of the container registry.
         required: True
+        type: str
     webhook_name:
         description:
             - The name of the webhook.
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     service_uri:
         description:
             - The service URI for the webhook to post notifications.
+        type: str
     custom_headers:
         description:
             - Custom headers that will be added to the webhook notifications.
+        type: dict
     status:
         description:
             - The status of the webhook at the time the operation was called.
+        type: str
         choices:
             - 'enabled'
             - 'disabled'
@@ -48,10 +55,21 @@ options:
         description:
             - "The scope of repositories where the event can be triggered. For example, 'foo:*' means events for all tags under repository 'foo'. 'foo:bar' m
               eans events for 'foo:bar' only. 'foo' is equivalent to 'foo:latest'. Empty means all events."
+        type: str
     actions:
         description:
             - The list of actions that trigger the webhook to post notifications.
         type: list
+        elements: str
+    state:
+        description:
+            - Assert the state of the Container registery replication.
+            - Use C(present) to create or update Container registery replication and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -62,12 +80,12 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) Webhook
-    azure_rm_containerregistrywebhook:
-      resource_group: myResourceGroup
-      registry_name: myRegistry
-      webhook_name: myWebhook
-      location: eastus
+- name: Create (or update) Webhook
+  azure_rm_containerregistrywebhook:
+    resource_group: myResourceGroup
+    registry_name: myRegistry
+    webhook_name: myWebhook
+    location: eastus
 '''
 
 RETURN = '''
@@ -150,7 +168,8 @@ class AzureRMWebhooks(AzureRMModuleBase):
                 type='str'
             ),
             actions=dict(
-                type='list'
+                type='list',
+                elements='str'
             ),
             state=dict(
                 type='str',

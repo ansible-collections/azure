@@ -20,23 +20,28 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the workspace.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the image. Use C(present) to create or update a image and C(absent) to delete an image.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Resource location.
+        type: str
     sku:
         description:
             - The SKU of the workspace.
+        type: str
         choices:
             - free
             - standard
@@ -51,6 +56,7 @@ options:
             - The workspace data retention in days.
             - -1 means Unlimited retention for I(sku=unlimited).
             - 730 days is the maximum allowed for all other SKUs.
+        type: int
     intelligence_packs:
         description:
             - Manage intelligence packs possible for this workspace.
@@ -77,7 +83,7 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myLogAnalyticsWorkspace
     intelligence_pack:
-        Backup: true
+      Backup: true
 '''
 
 RETURN = '''
@@ -154,8 +160,7 @@ usages:
 from ansible.module_utils.common.dict_transformations import _snake_to_camel, _camel_to_snake
 
 try:
-    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
-    from msrestazure.tools import parse_resource_id
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common

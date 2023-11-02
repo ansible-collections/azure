@@ -5,7 +5,6 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-import datetime
 
 __metaclass__ = type
 
@@ -62,11 +61,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: get ad password info
-    azure_rm_adpassword_info:
-      app_id: "{{ app_id }}"
-      tenant: "{{ tenant_id }}"
-      key_id: "{{ key_id }}"
+- name: get ad password info
+  azure_rm_adpassword_info:
+    app_id: "{{ app_id }}"
+    tenant: "{{ tenant_id }}"
+    key_id: "{{ key_id }}"
 '''
 
 RETURN = '''
@@ -86,9 +85,9 @@ passwords:
             description:
                 - Date or datemtime after which credentials expire.
                 - Default value is one year after current time.
-            type: datetime
+            type: str
             returned: always
-            sample: 2021-06-18T06:51:25.508304+00:00
+            sample: "2021-06-18T06:51:25.508304+00:00"
         key_id:
             description:
                 - The password key ID.
@@ -99,19 +98,16 @@ passwords:
             description:
                 - Date or datetime at which credentials become valid.
                 - Default value is current time
-            type: datetime
+            type: str
             returned: always
-            sample: 2020-06-18T06:51:25.508304+00:00
+            sample: "2020-06-18T06:51:25.508304+00:00"
 
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.graphrbac.models import GraphErrorException
-    from azure.graphrbac.models import PasswordCredential
-    from azure.graphrbac.models import ApplicationUpdateParameters
 except ImportError:
     # This is handled in azure_rm_common
     pass

@@ -1,17 +1,17 @@
 - name: Prepare facts
-  set_fact:
+  ansible.builtin.set_fact:
     tenant_id: "{{ azure_tenant }}"
     user_id: "user{{ 999999999999999999994 | random | to_uuid }}@contoso.com"
     object_id: "{{ 999999999999999999994 | random | to_uuid }}"
     user_principal_name: "{{ 999999999999999999994 | random | to_uuid }}"
-  run_once: yes
+  run_once: true
 
 - name: Create test user
   azure_rm_aduser:
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
     state: "present"
-    account_enabled: "True"
+    account_enabled: true
     display_name: "Test_{{ user_principal_name }}_Display_Name"
     password_profile: "password"
     mail_nickname: "Test_{{ user_principal_name }}_mail_nickname"
@@ -36,18 +36,18 @@
   register: attempted_update_with_no_changes_should_pass
 
 - name: Assert Nothing Changed
-  assert:
+  ansible.builtin.assert:
     that:
       - attempted_update_with_no_changes_should_pass["changed"] == False
 
-- name: user_principal_name Should Pass
+- name: User_principal_name Should Pass
   azure_rm_aduser_info:
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
   register: get_user_should_pass
 
 - name: Assert user was created and account is enabled
-  assert:
+  ansible.builtin.assert:
     that:
       - "create_user_should_pass['ad_users'][0]['account_enabled'] == True"
       - "get_user_should_pass['ad_users'][0]['account_enabled'] == True"
@@ -57,17 +57,17 @@
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
     state: "present"
-    account_enabled: "False"
+    account_enabled: false
   register: update_user_should_pass
 
-- name: user_principal_name on updated user Should Pass
+- name: User_principal_name on updated user Should Pass
   azure_rm_aduser_info:
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
   register: get_updated_user_should_pass
 
 - name: Assert user was updated and account is disabled
-  assert:
+  ansible.builtin.assert:
     that:
       - "update_user_should_pass['ad_users'][0]['account_enabled'] == False"
       - "get_updated_user_should_pass['ad_users'][0]['account_enabled'] == False"
@@ -79,7 +79,7 @@
     state: "absent"
   register: delete_user_should_pass
 
-- name: user_principal_name Should Fail
+- name: User_principal_name Should Fail
   azure_rm_aduser_info:
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
@@ -87,30 +87,30 @@
   ignore_errors: true
 
 - name: Assert task failed
-  assert:
+  ansible.builtin.assert:
     that:
       - "get_user_should_fail['failed'] == True"
 
 - name: Run with bad tenant Should Fail
   azure_rm_aduser_info:
-    user_principal_name: "{{user_id}}"
+    user_principal_name: "{{ user_id }}"
     tenant: None
   register: missing_tenant
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert task failed
-  assert:
+  ansible.builtin.assert:
     that:
       - "missing_tenant['failed'] == True"
 
 - name: Missing any identifiers Should Fail
   azure_rm_aduser_info:
     tenant: "{{ tenant_id }}"
-    register: missing_any_identifiers
-  ignore_errors: yes
+  register: missing_any_identifiers
+  ignore_errors: true
 
 - name: Assert task failed
-  assert:
+  ansible.builtin.assert:
     that:
       - "missing_any_identifiers is undefined"
 
@@ -119,11 +119,11 @@
     user_principal_name: "{{ user_id }}"
     object_id: "{{ object_id }}"
     tenant: "{{ tenant_id }}"
-    register: too_many_identifiers
-  ignore_errors: yes
+  register: too_many_identifiers
+  ignore_errors: true
 
 - name: Assert task failed
-  assert:
+  ansible.builtin.assert:
     that:
       - "too_many_identifiers is undefined"
 
@@ -131,35 +131,35 @@
   azure_rm_aduser_info:
     attribute_name: proxyAddresses
     tenant: "{{ tenant_id }}"
-    register: missing attribute_value
-  ignore_errors: yes
+  register: missing_attribute_value
+  ignore_errors: true
 
 - name: Assert task failed
-  assert:
+  ansible.builtin.assert:
     that:
-      - "attribute_value is undefined"
+      - "missing_attribute_value is undefined"
 
 - name: Missing attribute_name Should Fail
   azure_rm_aduser_info:
     attribute_value: SMTP:user@contoso.com
     tenant: "{{ tenant_id }}"
-    register: missing attribute_name
-  ignore_errors: yes
+  register: missing_attribute_name
+  ignore_errors: true
 
 - name: Assert task failed
-  assert:
+  ansible.builtin.assert:
     that:
-      - "attribute_name is undefined"
+      - "missing_attribute_name is undefined"
 
 - name: Using all with principal name should fail
   azure_rm_aduser_info:
-    all: True
+    all: true
     user_principal_name: "{{ user_id }}"
     tenant: "{{ tenant_id }}"
-    register: using_all_with_principal_name
-  ignore_errors: yes
+  register: using_all_with_principal_name
+  ignore_errors: true
 
 - name: Assert task failed
-  assert:
+  ansible.builtin.assert:
     that:
       - "using_all_with_principal_name is undefined"

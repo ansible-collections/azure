@@ -41,17 +41,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get specific Container Instance facts
-    azure_rm_containerinstance_info:
-      resource_group: myResourceGroup
-      name: myContainer
+- name: Get specific Container Instance facts
+  azure_rm_containerinstance_info:
+    resource_group: myResourceGroup
+    name: myContainer
 
-  - name: List Container Instances in a specified resource group name
-    azure_rm_containerinstance_info:
-      resource_group: myResourceGroup
-      tags:
-        - key
-        - key:value
+- name: List Container Instances in a specified resource group name
+  azure_rm_containerinstance_info:
+    resource_group: myResourceGroup
+    tags:
+      - key
+      - key:value
 '''
 
 RETURN = '''

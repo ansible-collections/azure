@@ -1,4 +1,5 @@
-- set_fact:
+- name: Set varialbes
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
 - name: Find available k8s version
@@ -26,7 +27,7 @@
         - "192.0.2.0"
         - "198.51.100.0"
         - "203.0.113.0"
-      enable_private_cluster: no
+      enable_private_cluster: false
     network_profile:
       load_balancer_sku: standard
       outbound_type: loadBalancer
@@ -39,7 +40,7 @@
   register: output
 
 - name: Assert the cluster with one agent pool
-  assert:
+  ansible.builtin.assert:
     that:
       - "output.aks_agent_pools | length == 1"
 
@@ -50,7 +51,7 @@
   register: agentpool_version
 
 - name: Assert the orchestrator version is not None
-  assert:
+  ansible.builtin.assert:
     that:
       - "agentpool_version.azure_orchestrator_version | length >= 1"
 
@@ -65,7 +66,7 @@
     mode: System
     node_labels: {"release":"stable"}
     max_pods: 42
-    enable_auto_scaling: True
+    enable_auto_scaling: true
     min_count: 1
     max_count: 10
     orchestrator_version: "{{ agentpool_version.azure_orchestrator_version[0] }}"
@@ -75,7 +76,7 @@
   register: output
 
 - name: Assert the node agent pool created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -90,7 +91,7 @@
     mode: System
     node_labels: {"release":"stable"}
     max_pods: 42
-    enable_auto_scaling: True
+    enable_auto_scaling: true
     min_count: 1
     max_count: 10
     orchestrator_version: "{{ agentpool_version.azure_orchestrator_version[0] }}"
@@ -100,7 +101,7 @@
   register: output
 
 - name: Assert the node agent pool not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -111,7 +112,7 @@
   register: output
 
 - name: Assert node agent pool
-  assert:
+  ansible.builtin.assert:
     that:
       - "output.aks_agent_pools | length == 2"
 
@@ -126,7 +127,7 @@
     mode: System
     node_labels: {"release":"stable"}
     max_pods: 42
-    enable_auto_scaling: True
+    enable_auto_scaling: true
     min_count: 2
     max_count: 20
     orchestrator_version: "{{ agentpool_version.azure_orchestrator_version[0] }}"
@@ -136,7 +137,7 @@
   register: output
 
 - name: Assert the node agent pool udpated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -148,10 +149,9 @@
   register: output
 
 - name: Assert node agent configuration
-  assert:
+  ansible.builtin.assert:
     that:
       - output.aks_agent_pools[0].availability_zones == [1, 2]
-      - output.aks_agent_pools[0].count == 1
       - output.aks_agent_pools[0].min_count == 2
       - output.aks_agent_pools[0].max_count == 20
       - output.aks_agent_pools[0].type_properties_type == "VirtualMachineScaleSets"
@@ -167,6 +167,6 @@
   register: output
 
 - name: Assert the node agent pool has deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed

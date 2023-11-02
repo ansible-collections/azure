@@ -1,4 +1,5 @@
-- include_tasks: setup.yml
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
 
 - name: Create virtual network in secondary resource group
   azure_rm_virtualnetwork:
@@ -42,18 +43,18 @@
     network_interfaces: "{{ nic_list }}"
     availability_set: "{{ availability_set }}"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20_04-lts
       version: latest
     tags:
       abc: def
 
 - name: Ensure VM was created properly
-  assert:
+  ansible.builtin.assert:
     that:
-      - azure_vm.properties.availabilitySet.id
-      - azure_vm.properties.storageProfile.osDisk.name == 'testosdiskxx'
+      - azure_vm.availability_set.id
+      - azure_vm.storage_profile.os_disk.name == 'testosdiskxx'
 
 - name: Retrieve VM facts (filtering by name)
   azure_rm_virtualmachine_info:
@@ -62,7 +63,7 @@
   register: vm_facts_results
 
 - name: Ensure facts module returned the second VM
-  assert:
+  ansible.builtin.assert:
     that:
       - vm_facts_results.vms | length == 1
       - vm_facts_results.vms[0].name == "{{ vm_name }}"
@@ -78,7 +79,7 @@
   register: facts_by_tags_results
 
 - name: Assert that facts module returned the second VM
-  assert:
+  ansible.builtin.assert:
     that:
       - facts_by_tags_results.vms | length >= 1
 
@@ -101,14 +102,14 @@
     network_interfaces: "{{ nic_list }}"
     availability_set: "{{ availability_set }}"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20_04-lts
       version: latest
   register: dual_nics_result
 
 - name: Ensure nothing changed
-  assert:
+  ansible.builtin.assert:
     that: dual_nics_result is not changed
 
 - name: Get VM facts
@@ -118,13 +119,14 @@
   register: vm_state
 
 - name: Pause for 10 mimutes to VM updating
-  shell: sleep 600
+  ansible.builtin.command: sleep 600
+  changed_when: true
 
 - name: Generalize VM
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
-    generalized: yes
+    generalized: true
 
 - name: Gather facts and check if machine is generalized
   azure_rm_virtualmachine_info:
@@ -133,7 +135,7 @@
   register: generalized_output
 
 - name: Ensure power state is generalized
-  assert:
+  ansible.builtin.assert:
     that: generalized_output.vms[0].power_state == 'generalized'
 
 - name: Delete dual NIC VM

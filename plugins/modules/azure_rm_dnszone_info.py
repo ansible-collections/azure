@@ -23,9 +23,11 @@ options:
     resource_group:
         description:
             - Limit results by resource group. Required when filtering by name.
+        type: str
     name:
         description:
             - Only show results for a specific zone.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -81,14 +83,17 @@ dnszones:
             description:
                 - id of the DNS Zone.
             sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/dnszones/azure.com"
+            type: str
         name:
             description:
                 - name of the DNS zone.
             sample: azure.com
+            type: str
         type:
             description:
                 - The type of this DNS zone (C(public) or C(private)).
             sample: private
+            type: str
         registration_virtual_networks:
             description:
                 - A list of references to virtual networks that register hostnames in this DNS zone.

@@ -24,6 +24,7 @@ options:
     name:
         description:
             - Limit results to a specific resource group.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -33,6 +34,8 @@ options:
         description:
             - List all resources under the resource group.
             - Note this will cost network overhead for each resource group. Suggest use this when I(name) set.
+        type: bool
+
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -44,23 +47,23 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one resource group
-      azure_rm_resourcegroup_info:
-        name: myResourceGroup
+- name: Get facts for one resource group
+  azure_rm_resourcegroup_info:
+    name: myResourceGroup
 
-    - name: Get facts for all resource groups
-      azure_rm_resourcegroup_info:
+- name: Get facts for all resource groups
+  azure_rm_resourcegroup_info:
 
-    - name: Get facts by tags
-      azure_rm_resourcegroup_info:
-        tags:
-          - testing
-          - foo:bar
+- name: Get facts by tags
+  azure_rm_resourcegroup_info:
+    tags:
+      - testing
+      - foo:bar
 
-    - name: Get facts for one resource group including resources it contains
-      azure_rm_resourcegroup_info:
-        name: myResourceGroup
-        list_resources: yes
+- name: Get facts for one resource group including resources it contains
+  azure_rm_resourcegroup_info:
+    name: myResourceGroup
+    list_resources: true
 '''
 RETURN = '''
 resourcegroups:

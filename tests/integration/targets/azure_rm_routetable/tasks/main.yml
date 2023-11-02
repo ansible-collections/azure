@@ -1,55 +1,59 @@
 - name: Prepare random number
-  set_fact:
-    name: "table{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  ansible.builtin.set_fact:
+    name_rpfx: "table{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     route_name: "route{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Create a route table (check mode)
   azure_rm_routetable:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     tags:
       purpose: testing
-  check_mode: yes
+  check_mode: true
   register: output
 
-- assert:
+- name: Assert check mode
+  ansible.builtin.assert:
     that:
       - not output.id
       - output.changed
 
 - name: Create a route table
   azure_rm_routetable:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     tags:
-      purpose: testing    
+      purpose: testing
   register: output
 
-- assert:
+- name: Assert the route table created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
 
 - name: Create a route table (idemponent)
   azure_rm_routetable:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     tags:
       purpose: testing
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that:
       - not output.changed
 
 - name: Get facts of the table
   azure_rm_routetable_info:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- name: Assert the route table facts
+  ansible.builtin.assert:
     that:
       - "output.route_tables | length == 1"
       - "output.route_tables[0].routes | length == 0"
@@ -60,11 +64,12 @@
     resource_group: "{{ resource_group }}"
     next_hop_type: virtual_network_gateway
     address_prefix: "10.1.0.0/16"
-    route_table_name: "{{ name }}"
-  check_mode: yes
+    route_table_name: "{{ name_rpfx }}"
+  check_mode: true
   register: output
 
-- assert:
+- name: Assert check mode
+  ansible.builtin.assert:
     that:
       - output.changed
       - not output.id
@@ -75,10 +80,11 @@
     resource_group: "{{ resource_group }}"
     next_hop_type: virtual_network_gateway
     address_prefix: "10.1.0.0/16"
-    route_table_name: "{{ name }}"
+    route_table_name: "{{ name_rpfx }}"
   register: output
 
-- assert:
+- name: Assert the route created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
@@ -89,23 +95,25 @@
     resource_group: "{{ resource_group }}"
     next_hop_type: virtual_network_gateway
     address_prefix: "10.1.0.0/16"
-    route_table_name: "{{ name }}"
+    route_table_name: "{{ name_rpfx }}"
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that:
       - not output.changed
 
-- name: update route
+- name: Update route
   azure_rm_route:
     name: "{{ route_name }}"
     resource_group: "{{ resource_group }}"
     next_hop_type: virtual_network_gateway
     address_prefix: "10.1.0.0/24"
-    route_table_name: "{{ name }}"
+    route_table_name: "{{ name_rpfx }}"
   register: output
 
-- assert:
+- name: Assert the route updated
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -113,21 +121,23 @@
   azure_rm_route_info:
     name: "{{ route_name }}"
     resource_group: "{{ resource_group }}"
-    route_table_name: "{{ name }}"
+    route_table_name: "{{ name_rpfx }}"
   register: output
 
-- assert:
+- name: Assert the route facts
+  ansible.builtin.assert:
     that:
       - output.routes[0].address_prefix == "10.1.0.0/24"
       - output.routes[0].next_hop_type == "VirtualNetworkGateway"
 
 - name: Get facts of the table
   azure_rm_routetable_info:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- name: Assert the route table facts
+  ansible.builtin.assert:
     that:
       - "output.route_tables | length == 1"
       - "output.route_tables[0].routes | length == 1"
@@ -137,19 +147,20 @@
   azure_rm_route:
     name: "{{ route_name }}"
     resource_group: "{{ resource_group }}"
-    route_table_name: "{{ name }}"
+    route_table_name: "{{ name_rpfx }}"
     state: absent
-  check_mode: yes
+  check_mode: true
 
 - name: Delete route
   azure_rm_route:
     name: "{{ route_name }}"
     resource_group: "{{ resource_group }}"
     state: absent
-    route_table_name: "{{ name }}"
+    route_table_name: "{{ name_rpfx }}"
   register: output
 
-- assert:
+- name: Assert the route deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -158,38 +169,41 @@
     name: "{{ route_name }}"
     resource_group: "{{ resource_group }}"
     state: absent
-    route_table_name: "{{ name }}"
+    route_table_name: "{{ name_rpfx }}"
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that:
       - not output.changed
 
 - name: Delete route table (check mode)
   azure_rm_routetable:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
-  check_mode: yes
+  check_mode: true
 
 - name: Delete route table
   azure_rm_routetable:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
   register: output
 
-- assert:
+- name: Assert the route table deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Delete route table (idemponent)
   azure_rm_routetable:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that:
       - not output.changed

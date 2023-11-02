@@ -28,14 +28,14 @@ options:
             - Resource location. If not set, location from the resource group will be used as default.
         type: str
     state:
-      description:
-          - Assert the state of the DDoS protection plan.
-          - Use C(present) to create or update an DDoS protection plan and C(absent) to delete it.
-      type: str
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the DDoS protection plan.
+            - Use C(present) to create or update an DDoS protection plan and C(absent) to delete it.
+        type: str
+        default: present
+        choices:
+            - absent
+            - present
     log_path:
         description:
             - parent argument.
@@ -87,7 +87,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.mgmt.network import NetworkManagementClient
 except ImportError:
     # This is handled in azure_rm_common
     pass

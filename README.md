@@ -1,5 +1,5 @@
 # Ansible collection for Azure
-[![Doc](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://docs.ansible.com/ansible/latest/modules/list_of_cloud_modules.html#azure)
+[![Doc](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://docs.ansible.com/ansible/latest/collections/azure/azcollection/index.html)
 [![Code of conduct](https://img.shields.io/badge/code%20of%20conduct-Ansible-silver.svg)](https://docs.ansible.com/ansible/latest/community/code_of_conduct.html)
 [![License](https://img.shields.io/badge/license-GPL%20v3.0-brightgreen.svg)](LICENSE)
 
@@ -50,7 +50,7 @@ To use a module from Azure collection, please reference the full namespace, coll
         account_type: Standard_LRS
 ```
 
-Or you can add full namepsace and collection name in the `collections` element:
+Or you can add full namespace and collection name in the `collections` element:
 
 ```yaml
 ---

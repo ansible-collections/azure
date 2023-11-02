@@ -21,21 +21,25 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the application security group.
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     state:
-      description:
-        - Assert the state of the Application Security Group.
-        - Use C(present) to create or update an Application Security Group and C(absent) to delete it.
-      default: present
-      choices:
-        - absent
-        - present
+        description:
+            - Assert the state of the Application Security Group.
+            - Use C(present) to create or update an Application Security Group and C(absent) to delete it.
+        type: str
+        default: present
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -47,13 +51,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create application security group
-    azure_rm_applicationsecuritygroup:
-      resource_group: myResourceGroup
-      name: mySecurityGroup
-      location: eastus
-      tags:
-        foo: bar
+- name: Create application security group
+  azure_rm_applicationsecuritygroup:
+    resource_group: myResourceGroup
+    name: mySecurityGroup
+    location: eastus
+    tags:
+      foo: bar
 '''
 
 RETURN = '''
@@ -71,7 +75,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from msrestazure.azure_operation import AzureOperationPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -193,7 +196,7 @@ class AzureRMApplicationSecurityGroup(AzureRMModuleBase):
             response = self.network_client.application_security_groups.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                               application_security_group_name=self.name,
                                                                                               parameters=param)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:
