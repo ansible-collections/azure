@@ -74,100 +74,99 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create Group
-      azure_rm_adgroup:
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        display_name: "Group-Name"
-        mail_nickname: "Group-Mail-Nickname"
-        state: 'present'
+- name: Create Group
+  azure_rm_adgroup:
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    display_name: "Group-Name"
+    mail_nickname: "Group-Mail-Nickname"
+    state: 'present'
 
-    - name: Delete Group using display_name and mail_nickname
-      azure_rm_adgroup:
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        display_name: "Group-Name"
-        mail_nickname: "Group-Mail-Nickname"
-        state: 'absent'
+- name: Delete Group using display_name and mail_nickname
+  azure_rm_adgroup:
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    display_name: "Group-Name"
+    mail_nickname: "Group-Mail-Nickname"
+    state: 'absent'
 
-    - name: Delete Group using object_id
-      azure_rm_adgroup:
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        state: 'absent'
+- name: Delete Group using object_id
+  azure_rm_adgroup:
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: 'absent'
 
-    - name: Ensure Users are Members of a Group using display_name and mail_nickname
-      azure_rm_adgroup:
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        display_name: "Group-Name"
-        mail_nickname: "Group-Mail-Nickname"
-        state: 'present'
-        present_members:
-          - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
-          - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
+- name: Ensure Users are Members of a Group using display_name and mail_nickname
+  azure_rm_adgroup:
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    display_name: "Group-Name"
+    mail_nickname: "Group-Mail-Nickname"
+    state: 'present'
+    present_members:
+      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
+      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
 
-    - name: Ensure Users are Members of a Group using object_id
-      azure_rm_adgroup:
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        state: 'present'
-        present_members:
-          - "https://graph.windows.net/{{ ad_object_1_tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
-          - "https://graph.windows.net/{{ ad_object_2_tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
+- name: Ensure Users are Members of a Group using object_id
+  azure_rm_adgroup:
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: 'present'
+    present_members:
+      - "https://graph.windows.net/{{ ad_object_1_tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
+      - "https://graph.windows.net/{{ ad_object_2_tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
 
-    - name: Ensure Users are not Members of a Group using display_name and mail_nickname
-      azure_rm_adgroup:
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        display_name: "Group-Name"
-        mail_nickname: "Group-Mail-Nickname"
-        state: 'present'
-        absent_members:
-          - "{{ ad_object_1_object_id }}"
+- name: Ensure Users are not Members of a Group using display_name and mail_nickname
+  azure_rm_adgroup:
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    display_name: "Group-Name"
+    mail_nickname: "Group-Mail-Nickname"
+    state: 'present'
+    absent_members:
+      - "{{ ad_object_1_object_id }}"
 
-    - name: Ensure Users are Members of a Group using object_id
-      azure_rm_adgroup:
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        state: 'present'
-        absent_members:
-          - "{{ ad_object_1_object_id }}"
+- name: Ensure Users are Members of a Group using object_id
+  azure_rm_adgroup:
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: 'present'
+    absent_members:
+      - "{{ ad_object_1_object_id }}"
 
-    - name: Ensure Users are Owners of a Group using display_name and mail_nickname
-      azure_rm_adgroup:
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        display_name: "Group-Name"
-        mail_nickname: "Group-Mail-Nickname"
-        state: 'present'
-        present_owners:
-          - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
-          - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
+- name: Ensure Users are Owners of a Group using display_name and mail_nickname
+  azure_rm_adgroup:
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    display_name: "Group-Name"
+    mail_nickname: "Group-Mail-Nickname"
+    state: 'present'
+    present_owners:
+      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
+      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
 
-    - name: Ensure Users are Owners of a Group using object_id
-      azure_rm_adgroup:
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        state: 'present'
-        present_owners:
-          - "https://graph.windows.net/{{ ad_object_1_tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
-          - "https://graph.windows.net/{{ ad_object_2_tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
+- name: Ensure Users are Owners of a Group using object_id
+  azure_rm_adgroup:
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: 'present'
+    present_owners:
+      - "https://graph.windows.net/{{ ad_object_1_tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
+      - "https://graph.windows.net/{{ ad_object_2_tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
 
-    - name: Ensure Users are not Owners of a Group using display_name and mail_nickname
-      azure_rm_adgroup:
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        display_name: "Group-Name"
-        mail_nickname: "Group-Mail-Nickname"
-        state: 'present'
-        absent_owners:
-          - "{{ ad_object_1_object_id }}"
-          - "{{ ad_object_2_object_id }}"
+- name: Ensure Users are not Owners of a Group using display_name and mail_nickname
+  azure_rm_adgroup:
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    display_name: "Group-Name"
+    mail_nickname: "Group-Mail-Nickname"
+    state: 'present'
+    absent_owners:
+      - "{{ ad_object_1_object_id }}"
+      - "{{ ad_object_2_object_id }}"
 
-    - name: Ensure Users are Owners of a Group using object_id
-      azure_rm_adgroup:
-        tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        state: 'present'
-        absent_owners:
-          - "{{ ad_object_1_object_id }}"
-          - "{{ ad_object_2_object_id }}"
-
+- name: Ensure Users are Owners of a Group using object_id
+  azure_rm_adgroup:
+    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: 'present'
+    absent_owners:
+      - "{{ ad_object_1_object_id }}"
+      - "{{ ad_object_2_object_id }}"
 '''
 
 RETURN = '''
@@ -222,7 +221,6 @@ group_members:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.graphrbac.models import GraphErrorException
     from azure.graphrbac.models import GroupCreateParameters
 except ImportError:

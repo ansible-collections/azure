@@ -1,5 +1,5 @@
 - name: Create Azure Search name
-  set_fact:
+  ansible.builtin.set_fact:
     search_name: "search{{ resource_group | hash('md5') | truncate(16, True, '') }}"
     search_name_secondary: "search{{ resource_group | hash('md5') | truncate(16, True, '') }}-secondary"
 
@@ -9,11 +9,11 @@
     resource_group: "{{ resource_group }}"
     hosting_mode: highDensity
   register: invalid_hosting_name
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert task failed
-  assert:
-    that: 
+  ansible.builtin.assert:
+    that:
       - invalid_hosting_name.failed == True
 
 - name: Create invalid Azure Search - Partition Count High Density
@@ -24,11 +24,11 @@
     hosting_mode: highDensity
     partition_count: 4
   register: invalid_partition_count
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert task failed
-  assert:
-    that: 
+  ansible.builtin.assert:
+    that:
       - invalid_partition_count.failed == True
 
 - name: Create invalid Azure Search - Partition Count
@@ -37,11 +37,11 @@
     resource_group: "{{ resource_group }}"
     partition_count: 7
   register: invalid_partition_count
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert task failed
-  assert:
-    that: 
+  ansible.builtin.assert:
+    that:
       - invalid_partition_count.failed == True
 
 - name: Create invalid Azure Search - Replica Count
@@ -51,11 +51,11 @@
     sku: standard
     replica_count: 13
   register: invalid_replica_count
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert task failed
-  assert:
-    that: 
+  ansible.builtin.assert:
+    that:
       - invalid_replica_count.failed == True
 
 - name: Create invalid Azure Search - Replica Count SKU basic
@@ -65,11 +65,11 @@
     replica_count: 4
     sku: basic
   register: invalid_replica_count
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Assert task failed
-  assert:
-    that: 
+  ansible.builtin.assert:
+    that:
       - invalid_replica_count.failed == True
 
 - name: Create basic Azure Search
@@ -79,7 +79,7 @@
   register: search_info
 
 - name: Assert status succeeded and results
-  assert:
+  ansible.builtin.assert:
     that:
       - search_info.changed
       - search_info.state.id is defined
@@ -101,7 +101,7 @@
   register: search_info_module
 
 - name: Assert status succeeded and results
-  assert:
+  ansible.builtin.assert:
     that:
       - search_info_module.search.id is defined
       - search_info_module.search.identity.type == "None"
@@ -122,7 +122,7 @@
   register: search_info
 
 - name: Assert that idempotence is ok
-  assert:
+  ansible.builtin.assert:
     that:
       - not search_info.changed
 
@@ -132,7 +132,7 @@
     resource_group: "{{ resource_group }}"
     state: absent
 
-- name: Create Azure Search '{{ search_name }}' not default parameters
+- name: Create Azure Search not default parameters
   azure_rm_cognitivesearch:
     name: "{{ search_name_secondary }}"
     resource_group: "{{ resource_group }}"
@@ -150,7 +150,7 @@
   register: search_info
 
 - name: Assert status succeeded and results
-  assert:
+  ansible.builtin.assert:
     that:
       - search_info.changed
       - search_info.state.id is defined
@@ -164,7 +164,7 @@
       - search_info.state.provisioning_state == "succeeded"
       - search_info.state.status == "running"
 
-- name: Update Azure Search '{{ search_name }}' not default parameters (Idempotence)
+- name: Update Azure Search not default parameters (Idempotence)
   azure_rm_cognitivesearch:
     name: "{{ search_name_secondary }}"
     resource_group: "{{ resource_group }}"
@@ -182,7 +182,7 @@
   register: search_info
 
 - name: Assert that idempotence is ok
-  assert:
+  ansible.builtin.assert:
     that:
       - not search_info.changed
 
@@ -191,4 +191,3 @@
     name: "{{ search_name_secondary }}"
     resource_group: "{{ resource_group }}"
     state: absent
-  

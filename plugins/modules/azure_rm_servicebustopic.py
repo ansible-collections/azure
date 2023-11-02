@@ -20,20 +20,24 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the topic.
         required: true
+        type: str
     namespace:
         description:
             - Servicebus namespace name.
             - A namespace is a scoping container for all messaging components.
             - Multipletopics can reside within a single namespace.
+        type: str
         required: true
     state:
         description:
             - Assert the state of the topic. Use C(present) to create or update and use C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -85,6 +89,7 @@ options:
     status:
         description:
             - Status of the entity.
+        type: str
         choices:
             - active
             - disabled
@@ -156,7 +161,7 @@ class AzureRMServiceBusTopic(AzureRMModuleBase):
             max_size_in_mb=dict(type='int'),
             max_message_size_in_kb=dict(type='int'),
             name=dict(type='str', required=True),
-            namespace=dict(type='str'),
+            namespace=dict(type='str', required=True),
             requires_duplicate_detection=dict(type='bool'),
             resource_group=dict(type='str', required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),

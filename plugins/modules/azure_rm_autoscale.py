@@ -21,10 +21,12 @@ options:
             - The identifier of the resource to apply autoscale setting.
             - It could be the resource id string.
             - It also could be a dict contains the C(name), C(subscription_id), C(namespace), C(types), C(resource_group) of the resource.
+        type: raw
     resource_group:
         required: true
         description:
             - Resource group of the resource.
+        type: str
     enabled:
         type: bool
         description:
@@ -34,29 +36,36 @@ options:
         description:
             - The collection of automatic scaling profiles that specify different scaling parameters for different time periods.
             - A maximum of 20 profiles can be specified.
+        type: list
+        elements: dict
         suboptions:
             name:
                 required: true
                 description:
                     - The name of the profile.
+                type: str
             count:
                 required: true
                 description:
                     - The number of instances that will be set if metrics are not available for evaluation.
                     - The default is only used if the current instance count is lower than the default.
+                type: str
             min_count:
                 description:
                     - The minimum number of instances for the resource.
+                type: str
             max_count:
                 description:
                     - The maximum number of instances for the resource.
                     - The actual maximum number of instances is limited by the cores that are available in the subscription.
+                type: str
             recurrence_frequency:
                 default: None
                 description:
                     - How often the schedule profile should take effect.
                     - If this value is C(Week), meaning each week will have the same set of profiles.
                     - This element is not used if the FixedDate element is used.
+                type: str
                 choices:
                     - None
                     - Second
@@ -70,39 +79,52 @@ options:
                 description:
                     - The timezone of repeating times at which this profile begins.
                     - This element is not used if the FixedDate element is used.
+                type: str
             recurrence_days:
                 description:
                     - The days of repeating times at which this profile begins.
                     - This element is not used if the FixedDate element is used.
+                type: list
+                elements: str
             recurrence_hours:
                 description:
                     - The hours of repeating times at which this profile begins.
                     - This element is not used if the FixedDate element is used.
+                type: list
+                elements: str
             recurrence_mins:
                 description:
                     - The mins of repeating times at which this profile begins.
                     - This element is not used if the FixedDate element is used.
+                type: list
+                elements: str
             fixed_date_timezone:
                 description:
                     - The specific date-time timezone for the profile.
                     - This element is not used if the Recurrence element is used.
+                type: str
             fixed_date_start:
                 description:
                     - The specific date-time start for the profile.
                     - This element is not used if the Recurrence element is used.
+                type: str
             fixed_date_end:
                 description:
                     - The specific date-time end for the profile.
                     - This element is not used if the Recurrence element is used.
+                type: str
             rules:
                 description:
                     - The collection of rules that provide the triggers and parameters for the scaling action.
                     - A maximum of 10 rules can be specified.
+                type: list
+                elements: dict
                 suboptions:
                     time_aggregation:
                         default: Average
                         description:
                             - How the data that is collected should be combined over time.
+                        type: str
                         choices:
                             - Average
                             - Minimum
@@ -115,9 +137,11 @@ options:
                             - The range of time(minutes) in which instance data is collected.
                             - This value must be greater than the delay in metric collection, which can vary from resource-to-resource.
                             - Must be between 5 ~ 720.
+                        type: float
                     direction:
                         description:
                             - Whether the scaling action increases or decreases the number of instances.
+                        type: str
                         choices:
                             - Increase
                             - Decrease
@@ -125,17 +149,21 @@ options:
                         required: true
                         description:
                             - The name of the metric that defines what the rule monitors.
+                        type: str
                     metric_resource_uri:
                         description:
                             - The resource identifier of the resource the rule monitors.
+                        type: str
                     value:
                         description:
                             - The number of instances that are involved in the scaling action.
                             - This value must be 1 or greater.
+                        type: str
                     operator:
                         default: GreaterThan
                         description:
                             - The operator that is used to compare the metric data and the threshold.
+                        type: str
                         choices:
                             - Equals
                             - NotEquals
@@ -147,16 +175,19 @@ options:
                         description:
                             - The amount of time (minutes) to wait since the last scaling action before this action occurs.
                             - It must be between 1 ~ 10080.
+                        type: float
                     time_grain:
                         required: true
                         description:
                             - The granularity(minutes) of metrics the rule monitors.
                             - Must be one of the predefined values returned from metric definitions for the metric.
                             - Must be between 1 ~ 720.
+                        type: float
                     statistic:
                         default: Average
                         description:
                             - How the metrics from multiple instances are combined.
+                        type: str
                         choices:
                             - Average
                             - Min
@@ -166,9 +197,11 @@ options:
                         default: 70
                         description:
                             - The threshold of the metric that triggers the scale action.
+                        type: float
                     type:
                         description:
                             - The type of action that should occur when the scale rule fires.
+                        type: str
                         choices:
                             - PercentChangeCount
                             - ExactCount
@@ -176,37 +209,50 @@ options:
     notifications:
         description:
             - The collection of notifications.
+        type: list
+        elements: dict
         suboptions:
             custom_emails:
                 description:
                     - The custom e-mails list. This value can be null or empty, in which case this attribute will be ignored.
+                type: list
+                elements: str
             send_to_subscription_administrator:
                 type: bool
                 default: False
                 description:
                     - A value indicating whether to send email to subscription administrator.
+                aliases:
+                    - email_admin
             webhooks:
                 description:
                     - The list of webhook notifications service uri.
+                type: list
+                elements: str
             send_to_subscription_co_administrators:
                 type: bool
                 default: False
                 description:
                     - A value indicating whether to send email to subscription co-administrators.
+                aliases:
+                    - email_co_admin
     state:
         default: present
         description:
             - Assert the state of the virtual network. Use C(present) to create or update and C(absent) to delete.
+        type: str
         choices:
             - present
             - absent
     location:
         description:
             - location of the resource.
+        type: str
     name:
         required: true
         description:
             - name of the resource.
+        type: str
 
 
 extends_documentation_fragment:
@@ -221,63 +267,63 @@ author:
 EXAMPLES = '''
 - name: Create an auto scale
   azure_rm_autoscale:
-      target: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets/myVmss"
-      enabled: true
-      profiles:
+    target: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets/myVmss"
+    enabled: true
+    profiles:
       - count: '1'
         recurrence_days:
-        - Monday
+          - Monday
         name: Auto created scale condition
         recurrence_timezone: China Standard Time
         recurrence_mins:
-        - '0'
+          - '0'
         min_count: '1'
         max_count: '1'
         recurrence_frequency: Week
         recurrence_hours:
-        - '18'
-      name: scale
-      resource_group: myResourceGroup
+          - '18'
+    name: scale
+    resource_group: myResourceGroup
 
 - name: Create an auto scale with complicated profile
   azure_rm_autoscale:
-      target: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets
+    target: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets
                /myVmss"
-      enabled: true
-      profiles:
+    enabled: true
+    profiles:
       - count: '1'
         recurrence_days:
-        - Monday
+          - Monday
         name: Auto created scale condition 0
         rules:
-        - time_aggregation: Average
-          time_window: 10
-          direction: Increase
-          metric_name: Percentage CPU
-          metric_resource_uri: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtua
+          - time_aggregation: Average
+            time_window: 10
+            direction: Increase
+            metric_name: Percentage CPU
+            metric_resource_uri: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtua
                                 lMachineScaleSets/vmss"
-          value: '1'
-          threshold: 70
-          cooldown: 5
-          time_grain: 1
-          statistic: Average
-          operator: GreaterThan
-          type: ChangeCount
+            value: '1'
+            threshold: 70
+            cooldown: 5
+            time_grain: 1
+            statistic: Average
+            operator: GreaterThan
+            type: ChangeCount
         max_count: '1'
         recurrence_mins:
-        - '0'
+          - '0'
         min_count: '1'
         recurrence_timezone: China Standard Time
         recurrence_frequency: Week
         recurrence_hours:
-        - '6'
-      notifications:
-      - email_admin: True
-        email_co_admin: False
+          - '6'
+    notifications:
+      - email_admin: true
+        email_co_admin: false
         custom_emails:
-        - yuwzho@microsoft.com
-      name: scale
-      resource_group: myResourceGroup
+          - yuwzho@microsoft.com
+    name: scale
+    resource_group: myResourceGroup
 
 - name: Delete an Azure Auto Scale Setting
   azure_rm_autoscale:

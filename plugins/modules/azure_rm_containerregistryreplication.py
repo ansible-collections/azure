@@ -21,20 +21,34 @@ options:
         description:
             - The name of the resource group to which the container registry belongs.
         required: True
+        type: str
     registry_name:
         description:
             - The name of the container registry.
         required: True
+        type: str
     replication_name:
         description:
             - The name of the I(replication).
         required: True
+        type: str
     replication:
         description:
             - The parameters for creating a replication.
+        type: dict
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
+    state:
+        description:
+            - Assert the state of the Container registery replication.
+             - Use C(present) to create or update Container registery replication and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -45,13 +59,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) Replication
-    azure_rm_containerregistryreplication:
-      resource_group: myResourceGroup
-      registry_name: myRegistry
-      replication_name: myReplication
-      replication: replication
-      location: eastus
+- name: Create (or update) Replication
+  azure_rm_containerregistryreplication:
+    resource_group: myResourceGroup
+    registry_name: myRegistry
+    replication_name: myReplication
+    replication: replication
+    location: eastus
 '''
 
 RETURN = '''

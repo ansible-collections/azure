@@ -45,15 +45,13 @@ _raw:
 """
 
 from ansible.errors import AnsibleError
-from ansible.plugins import AnsiblePlugin
 from ansible.plugins.lookup import LookupBase
 from ansible.module_utils._text import to_native
 
 try:
     from azure.common.credentials import ServicePrincipalCredentials
     from azure.graphrbac import GraphRbacManagementClient
-    from msrestazure import azure_cloud
-    from msrestazure.azure_exceptions import CloudError
+    from azure.cli.core import cloud as azure_cloud
 except ImportError:
     raise AnsibleError(
         "The lookup azure_service_principal_attribute requires azure.graphrbac, msrest")
@@ -89,6 +87,6 @@ class LookupModule(LookupBase):
             sp = response[0]
 
             return sp.object_id.split(',')
-        except CloudError as ex:
+        except Exception as ex:
             raise AnsibleError("Failed to get service principal object id: %s" % to_native(ex))
         return False

@@ -23,21 +23,25 @@ options:
             - The object id of assignee. This maps to the ID inside the Active Directory.
             - It can point to a user, service principal or security group.
             - Required when creating role assignment.
+        type: str
         aliases:
           - assignee
     id:
         description:
             - Fully qualified id of assignment to delete or create.
             - Mutually Exclusive with I(scope) and I(name)
+        type: str
     name:
         description:
             - Unique name of role assignment.
             - The role assignment name must be a GUID, sample as "3ce0cbb0-58c4-4e6d-a16d-99d86a78b3ca".
             - Mutually Exclusive with I(id)
+        type: str
     role_definition_id:
         description:
             - The role definition id used in the role assignment.
             - Required when creating role assignment.
+        type: str
     scope:
         description:
             - The scope of the role assignment to create.
@@ -45,12 +49,14 @@ options:
             - /subscriptions/{subscription-id}/resourceGroups/{resource-group-name} for resource group.
             - /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}/providers/{resource-provider}/{resource-type}/{resource-name} for resource.
             - Mutually Exclusive with I(id)
+        type: str
     state:
         description:
             - Assert the state of the role assignment.
             - Use C(present) to create or update a role assignment and C(absent) to delete it.
             - If C(present), then I(role_definition_id) and I(assignee_object_id) are both required
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -65,39 +71,39 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a role assignment
-      azure_rm_roleassignment:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        role_definition_id:
-          "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+- name: Create a role assignment
+  azure_rm_roleassignment:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    role_definition_id:
+      "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-    - name: Create a role assignment
-      azure_rm_roleassignment:
-        name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        role_definition_id:
-          "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+- name: Create a role assignment
+  azure_rm_roleassignment:
+    name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    role_definition_id:
+      "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-    - name: Delete a role assignment
-      azure_rm_roleassignment:
-        name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        state: absent
+- name: Delete a role assignment
+  azure_rm_roleassignment:
+    name: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: absent
 
-    - name: Delete a role assignment
-      azure_rm_roleassignment:
-        id: /subscriptions/xxx-sub-guid-xxx/resourceGroups/rgname/providers/Microsoft.Authorization/roleAssignments/xxx-assign-guid-xxx"
-        state: absent
+- name: Delete a role assignment
+  azure_rm_roleassignment:
+    id: /subscriptions/xxx-sub-guid-xxx/resourceGroups/rgname/providers/Microsoft.Authorization/roleAssignments/xxx-assign-guid-xxx"
+    state: absent
 
-    - name: Delete a role assignment
-      azure_rm_roleassignment:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        role_definition_id:
-          "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-        state: absent
+- name: Delete a role assignment
+  azure_rm_roleassignment:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    assignee_object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    role_definition_id:
+      "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/providers/Microsoft.Authorization/roleDefinitions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    state: absent
 '''
 
 RETURN = '''

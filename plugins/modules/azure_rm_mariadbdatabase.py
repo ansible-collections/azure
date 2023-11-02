@@ -22,32 +22,38 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the database.
         required: True
+        type: str
     charset:
         description:
             - The charset of the database. Check MariaDB documentation for possible values.
             - This is only set on creation, use I(force_update) to recreate a database if the values don't match.
+        type: str
     collation:
         description:
             - The collation of the database. Check MariaDB documentation for possible values.
             - This is only set on creation, use I(force_update) to recreate a database if the values don't match.
+        type: str
     force_update:
-      description:
-          - When set to C(true), will delete and recreate the existing MariaDB database if any of the properties don't match what is set.
-          - When set to C(false), no change will occur to the database even if any of the properties do not match.
-      type: bool
-      default: 'no'
+        description:
+            - When set to C(true), will delete and recreate the existing MariaDB database if any of the properties don't match what is set.
+            - When set to C(false), no change will occur to the database even if any of the properties do not match.
+        type: bool
+        default: 'no'
     state:
         description:
             - Assert the state of the MariaDB Database. Use C(present) to create or update a database and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -62,11 +68,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) MariaDB Database
-    azure_rm_mariadbdatabase:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: db1
+- name: Create (or update) MariaDB Database
+  azure_rm_mariadbdatabase:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: db1
 '''
 
 RETURN = '''
@@ -90,7 +96,6 @@ try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

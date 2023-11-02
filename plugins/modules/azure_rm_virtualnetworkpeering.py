@@ -20,13 +20,16 @@ options:
         description:
             - Name of a resource group where the vnet exists.
         required: true
+        type: str
     name:
         description:
             - Name of the virtual network peering.
         required: true
+        type: str
     virtual_network:
         description:
             - Name or resource ID of the virtual network to be peered.
+        type: raw
         required: true
     remote_virtual_network:
         description:
@@ -35,6 +38,7 @@ options:
             - It can be remote virtual network resource ID.
             - It can be a dict which contains I(name) and I(resource_group) of remote virtual network.
             - Required when creating.
+        type: raw
     allow_virtual_network_access:
         description:
             - Allows VMs in the remote VNet to access all VMs in the local VNet.
@@ -60,6 +64,7 @@ options:
         description:
             - State of the virtual network peering. Use C(present) to create or update a peering and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -72,23 +77,23 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create virtual network peering
-      azure_rm_virtualnetworkpeering:
-        resource_group: myResourceGroup
-        virtual_network: myVirtualNetwork
-        name: myPeering
-        remote_virtual_network:
-          resource_group: mySecondResourceGroup
-          name: myRemoteVirtualNetwork
-        allow_virtual_network_access: false
-        allow_forwarded_traffic: true
+- name: Create virtual network peering
+  azure_rm_virtualnetworkpeering:
+    resource_group: myResourceGroup
+    virtual_network: myVirtualNetwork
+    name: myPeering
+    remote_virtual_network:
+      resource_group: mySecondResourceGroup
+      name: myRemoteVirtualNetwork
+    allow_virtual_network_access: false
+    allow_forwarded_traffic: true
 
-    - name: Delete the virtual network peering
-      azure_rm_virtualnetworkpeering:
-        resource_group: myResourceGroup
-        virtual_network: myVirtualNetwork
-        name: myPeering
-        state: absent
+- name: Delete the virtual network peering
+  azure_rm_virtualnetworkpeering:
+    resource_group: myResourceGroup
+    virtual_network: myVirtualNetwork
+    name: myPeering
+    state: absent
 '''
 RETURN = '''
 id:
@@ -107,7 +112,7 @@ peering_sync_level:
 '''
 
 try:
-    from msrestazure.tools import is_valid_resource_id
+    from azure.mgmt.core.tools import is_valid_resource_id
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
 except ImportError:
@@ -177,7 +182,8 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
                 required=True
             ),
             virtual_network=dict(
-                type='raw'
+                type='raw',
+                required=True
             ),
             remote_virtual_network=dict(
                 type='raw'

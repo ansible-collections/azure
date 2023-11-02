@@ -46,7 +46,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     haiyuan_zhang (@haiyuazhang)
@@ -54,11 +53,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: create ad sp
-    azure_rm_adserviceprincipal:
-      app_id: "{{ app_id }}"
-      state: present
-      tenant: "{{ tenant_id }}"
+- name: create ad sp
+  azure_rm_adserviceprincipal:
+    app_id: "{{ app_id }}"
+    state: present
+    tenant: "{{ tenant_id }}"
 '''
 
 RETURN = '''
@@ -92,12 +91,10 @@ object_id:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
     from azure.graphrbac.models import ServicePrincipalCreateParameters
-    from azure.graphrbac.models import ServicePrincipalUpdateParameters
 except Exception:
     pass
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.graphrbac.models import GraphErrorException
 except ImportError:
     # This is handled in azure_rm_common

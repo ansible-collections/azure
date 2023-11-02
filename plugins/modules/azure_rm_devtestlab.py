@@ -21,16 +21,20 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the lab.
         required: True
+        type: str
     location:
         description:
             - The location of the resource.
+        type: str
     storage_type:
         description:
             - Type of storage used by the lab. It can be either C(premium) or C(standard).
+        type: str
         choices:
             - 'standard'
             - 'premium'
@@ -39,13 +43,14 @@ options:
             - Allow creation of premium data disks.
         type: bool
     state:
-      description:
-          - Assert the state of the DevTest Lab.
-          - Use C(present) to create or update an DevTest Lab and C(absent) to delete it.
-      default: present
-      choices:
-        - absent
-        - present
+        description:
+            - Assert the state of the DevTest Lab.
+            - Use C(present) to create or update an DevTest Lab and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -57,11 +62,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) DevTest Lab
-    azure_rm_devtestlab:
-      resource_group: myResourceGroup
-      name: mylab
-      storage_type: standard
+- name: Create (or update) DevTest Lab
+  azure_rm_devtestlab:
+    resource_group: myResourceGroup
+    name: mylab
+    storage_type: standard
 '''
 
 RETURN = '''
@@ -73,16 +78,13 @@ id:
     sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourcegroups/myResourceGroup/providers/microsoft.devtestlab/labs/mylab
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -200,7 +202,7 @@ class AzureRMDevTestLab(AzureRMModuleBase):
 
             self.delete_devtestlab()
             # This currently doesnt' work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("DevTest Lab instance unchanged")
@@ -225,7 +227,7 @@ class AzureRMDevTestLab(AzureRMModuleBase):
             response = self.mgmt_client.labs.begin_create_or_update(resource_group_name=self.resource_group,
                                                                     name=self.name,
                                                                     lab=self.lab)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:

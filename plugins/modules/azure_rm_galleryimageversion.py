@@ -45,7 +45,6 @@ options:
     storage_profile:
         description:
             - Storage profile
-        required: true
         type: dict
         suboptions:
             source_image:
@@ -59,12 +58,12 @@ options:
                 description:
                     - os disk snapshot
                     - Mutual exclusive with source_image
-                type: raw
+                type: dict
                 suboptions:
                     source:
                         description:
                             - Reference to os disk snapshot. Could be resource ID or dictionary containing I(resource_group) and I(name)
-                        type: str
+                        type: raw
                     host_caching:
                         description:
                             - host disk caching
@@ -79,11 +78,12 @@ options:
                     - list of data disk snapshot
                     - Mutual exclusive with source_image
                 type: list
+                elements: raw
                 suboptions:
                     source:
                         description:
                             - Reference to data disk snapshot. Could be resource ID or dictionary containing I(resource_group) and I(name)
-                        type: str
+                        type: raw
                     lun:
                         description:
                             - lun of the data disk
@@ -100,7 +100,6 @@ options:
     publishing_profile:
         description:
             - Publishing profile.
-        required: true
         type: dict
         suboptions:
             target_regions:
@@ -108,17 +107,19 @@ options:
                     - The target regions where the Image Version is going to be replicated to.
                     - This property is updatable.
                 type: list
+                elements: raw
                 suboptions:
                     name:
                         description:
                             - Region name.
                         type: str
+                        required: true
                     regional_replica_count:
                         description:
                             - The number of replicas of the Image Version to be created per region.
                             - This property would take effect for a region when regionalReplicaCount is not specified.
                             - This property is updatable.
-                        type: str
+                        type: int
                     storage_account_type:
                         description:
                             - Storage account type.
@@ -127,10 +128,12 @@ options:
                 description:
                     - Managed image reference, could be resource ID, or dictionary containing I(resource_group) and I(name)
                     - Obsolete since 2.10, use storage_profile instead
+                type: raw
             snapshot:
                 description:
                     - Source snapshot to be used.
                     - Obsolete since 2.10, use storage_profile instead
+                type: raw
             replica_count:
                 description:
                     - The number of replicas of the Image Version to be created per region.
@@ -152,6 +155,9 @@ options:
                     - Specifies the storage account type to be used to store the image.
                     - This property is not updatable.
                 type: str
+                choices:
+                    - Standard_LRS
+                    - Standard_ZRS
     state:
         description:
             - Assert the state of the GalleryImageVersion.
@@ -179,7 +185,7 @@ EXAMPLES = '''
     location: East US
     publishing_profile:
       end_of_life_date: "2020-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 4
       storage_account_type: Standard_LRS
       target_regions:
@@ -189,7 +195,7 @@ EXAMPLES = '''
           regional_replica_count: 3
           storage_account_type: Standard_LRS
     storage_profile:
-        source_image: /subscriptions/sub123/resourceGroups/group123/providers/Microsoft.Compute/images/myOsImage
+      source_image: /subscriptions/sub123/resourceGroups/group123/providers/Microsoft.Compute/images/myOsImage
 
 - name: Create a gallery image version from another gallery image version
   azure_rm_galleryimageversion:
@@ -200,7 +206,7 @@ EXAMPLES = '''
     location: East US
     publishing_profile:
       end_of_life_date: "2020-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 4
       storage_account_type: Standard_LRS
       target_regions:
@@ -210,10 +216,10 @@ EXAMPLES = '''
           regional_replica_count: 3
           storage_account_type: Standard_LRS
     storage_profile:
-        source_image:
-            version: 1.1.0
-            gallery_name: myGallery2
-            gallery_image_name: myGalleryImage2
+      source_image:
+        version: 1.1.0
+        gallery_name: myGallery2
+        gallery_image_name: myGalleryImage2
 
 - name: Create gallery image by using one os dist snapshot and zero or many data disk snapshots
   azure_rm_galleryimageversion:
@@ -224,7 +230,7 @@ EXAMPLES = '''
     location: East  US
     publishing_profile:
       end_of_life_date: "2020-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 1
       storage_account_type: Standard_LRS
       target_regions:
@@ -233,13 +239,13 @@ EXAMPLES = '''
           storage_account_type: Standard_LRS
     storage_profile:
       os_disk:
-          source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/os_snapshot_vma"
+        source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/os_snapshot_vma"
       data_disks:
-          - lun: 0
-            source:
-              name: data_snapshot_vma
-          - lun: 1
-            source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/data_snapshot_vmb"
+        - lun: 0
+          source:
+            name: data_snapshot_vma
+        - lun: 1
+          source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/data_snapshot_vmb"
 '''
 
 RETURN = '''
@@ -256,11 +262,6 @@ import time
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -347,6 +348,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                     ),
                     data_disks=dict(
                         type='list',
+                        elements='raw',
                         disposition='dataDiskImages',
                         purgeIfNone=True,
                         options=dict(
@@ -376,6 +378,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                 options=dict(
                     target_regions=dict(
                         type='list',
+                        elements='raw',
                         disposition='targetRegions',
                         options=dict(
                             name=dict(
@@ -481,6 +484,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -574,14 +578,14 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the GalleryImageVersion instance.')
             self.fail('Error creating the GalleryImageVersion instance: {0}'.format(str(exc)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.context['deserialized_data']}
 
         while response['properties']['provisioningState'] == 'Creating':
             time.sleep(60)
@@ -600,7 +604,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the GalleryImageVersion instance.')
             self.fail('Error deleting the GalleryImageVersion instance: {0}'.format(str(e)))
         return True
@@ -617,11 +621,11 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             found = True
             self.log("Response : {0}".format(response))
             # self.log("AzureFirewall instance : {0} found".format(response.name))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the AzureFirewall instance.')
         if found is True:
             return response

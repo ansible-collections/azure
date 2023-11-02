@@ -20,9 +20,11 @@ options:
     resource_group:
         description:
             - The name of the resource group.
+        type: str
     name:
         description:
             - The name of the application security group.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -38,19 +40,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: List application security groups in specific resource group
-    azure_rm_applicationsecuritygroup_info:
-      resource_group: myResourceGroup
+- name: List application security groups in specific resource group
+  azure_rm_applicationsecuritygroup_info:
+    resource_group: myResourceGroup
 
-  - name: List application security groups in specific subscription
-    azure_rm_applicationsecuritygroup_info:
+- name: List application security groups in specific subscription
+  azure_rm_applicationsecuritygroup_info:
 
-  - name: Get application security group by name
-    azure_rm_applicationsecuritygroup_info:
-        resource_group: myResourceGroup
-        name: myApplicationSecurityGroup
-        tags:
-            - foo
+- name: Get application security group by name
+  azure_rm_applicationsecuritygroup_info:
+    resource_group: myResourceGroup
+    name: myApplicationSecurityGroup
+    tags:
+      - foo
 '''
 
 RETURN = '''
@@ -90,7 +92,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass

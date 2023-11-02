@@ -23,9 +23,11 @@ options:
     name:
         description:
             - Only show results for a specific app service plan.
+        type: str
     resource_group:
         description:
             - Limit results by resource group.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -40,20 +42,20 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for app service plan by name
-      azure_rm_appserviceplan_info:
-        resource_group: myResourceGroup
-        name: myAppServicePlan
+- name: Get facts for app service plan by name
+  azure_rm_appserviceplan_info:
+    resource_group: myResourceGroup
+    name: myAppServicePlan
 
-    - name: Get azure_rm_appserviceplan_facts for app service plan in resource group
-      azure_rm_appserviceplan_info:
-        resource_group: myResourceGroup
+- name: Get azure_rm_appserviceplan_facts for app service plan in resource group
+  azure_rm_appserviceplan_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts for app service plan with tags
-      azure_rm_appserviceplan_info:
-        tags:
-          - testtag
-          - foo:bar
+- name: Get facts for app service plan with tags
+  azure_rm_appserviceplan_info:
+    tags:
+      - testtag
+      - foo:bar
 '''
 
 RETURN = '''
@@ -217,14 +219,14 @@ class AzureRMAppServicePlanInfo(AzureRMModuleBase):
         curated_output = dict()
         curated_output['id'] = plan_facts['id']
         curated_output['name'] = plan_facts['name']
-        curated_output['resource_group'] = plan_facts['properties']['resourceGroup']
+        curated_output['resource_group'] = plan_facts['resource_group']
         curated_output['location'] = plan_facts['location']
         curated_output['tags'] = plan_facts.get('tags', None)
         curated_output['is_linux'] = False
         curated_output['kind'] = plan_facts['kind']
         curated_output['sku'] = plan_facts['sku']
 
-        if plan_facts['properties'].get('reserved', None):
+        if plan_facts.get('reserved', None):
             curated_output['is_linux'] = True
 
         return curated_output

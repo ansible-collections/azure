@@ -21,31 +21,37 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     lab_name:
         description:
             - The name of the lab.
         required: True
+        type: str
     name:
         description:
             - The name of the schedule.
         required: True
+        type: str
         choices:
             - lab_vms_startup
             - lab_vms_shutdown
     time:
         description:
             - The time of day the schedule will occur.
+        type: str
     time_zone_id:
         description:
             - The time zone ID.
+        type: str
     state:
-      description:
-          - Assert the state of the Schedule.
-          - Use C(present) to create or update an Schedule and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Schedule.
+            - Use C(present) to create or update an Schedule and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -57,13 +63,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) DevTest Lab Schedule
-    azure_rm_devtestlabschedule:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: lab_vms_shutdown
-      time: "1030"
-      time_zone_id: "UTC+12"
+- name: Create (or update) DevTest Lab Schedule
+  azure_rm_devtestlabschedule:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: lab_vms_shutdown
+    time: "1030"
+    time_zone_id: "UTC+12"
 '''
 
 RETURN = '''
@@ -76,16 +82,12 @@ id:
              abVmsShutdown"
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -211,7 +213,7 @@ class AzureRMSchedule(AzureRMModuleBase):
 
             self.delete_schedule()
             # This currently doesn't work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("Schedule instance unchanged")
@@ -237,7 +239,7 @@ class AzureRMSchedule(AzureRMModuleBase):
                                                                    lab_name=self.lab_name,
                                                                    name=self.name,
                                                                    schedule=self.schedule)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:

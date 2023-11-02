@@ -25,9 +25,11 @@ options:
     resource_group:
         description:
             - Name of the resource group containing the virtual machines (required when filtering by vm name).
+        type: str
     name:
         description:
             - Name of the virtual machine.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -44,21 +46,21 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get facts for all virtual machines of a resource group
-    azure_rm_virtualmachine_info:
-      resource_group: myResourceGroup
+- name: Get facts for all virtual machines of a resource group
+  azure_rm_virtualmachine_info:
+    resource_group: myResourceGroup
 
-  - name: Get facts by name
-    azure_rm_virtualmachine_info:
-      resource_group: myResourceGroup
-      name: myVm
+- name: Get facts by name
+  azure_rm_virtualmachine_info:
+    resource_group: myResourceGroup
+    name: myVm
 
-  - name: Get facts by tags
-    azure_rm_virtualmachine_info:
-      resource_group: myResourceGroup
-      tags:
-        - testing
-        - foo:bar
+- name: Get facts by tags
+  azure_rm_virtualmachine_info:
+    resource_group: myResourceGroup
+    tags:
+      - testing
+      - foo:bar
 '''
 
 RETURN = '''
@@ -312,7 +314,7 @@ vms:
 '''
 
 try:
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
     from azure.core.exceptions import ResourceNotFoundError
 except Exception:
     # This is handled in azure_rm_common
@@ -445,13 +447,13 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
             code = instance['statuses'][index]['code'].split('/')
             if code[0] == 'PowerState':
                 power_state = code[1]
-                display_status = instance['statuses'][index]['displayStatus']
+                display_status = instance['statuses'][index]['display_status']
             elif code[0] == 'OSState' and code[1] == 'generalized':
-                display_status = instance['statuses'][index]['displayStatus']
+                display_status = instance['statuses'][index]['display_status']
                 power_state = 'generalized'
                 break
             elif code[0] == 'ProvisioningState' and code[1] == 'failed':
-                display_status = instance['statuses'][index]['displayStatus']
+                display_status = instance['statuses'][index]['display_status']
                 power_state = ''
                 break
 
@@ -478,13 +480,13 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         new_result['name'] = vm.name
         new_result['state'] = 'present'
         new_result['location'] = vm.location
-        new_result['vm_size'] = result['properties']['hardwareProfile']['vmSize']
-        new_result['proximityPlacementGroup'] = result['properties'].get('proximityPlacementGroup')
+        new_result['vm_size'] = result['hardware_profile']['vm_size']
+        new_result['proximityPlacementGroup'] = result.get('proximity_placement_group')
         new_result['zones'] = result.get('zones', None)
-        os_profile = result['properties'].get('osProfile')
+        os_profile = result.get('os_profile')
         if os_profile is not None:
-            new_result['admin_username'] = os_profile.get('adminUsername')
-        image = result['properties']['storageProfile'].get('imageReference')
+            new_result['admin_username'] = os_profile.get('admin_username')
+        image = result['storage_profile'].get('image_reference')
         if image is not None:
             if image.get('publisher', None) is not None:
                 new_result['image'] = {
@@ -499,40 +501,40 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                 }
 
         new_result['boot_diagnostics'] = {
-            'enabled': 'diagnosticsProfile' in result['properties'] and
-                       'bootDiagnostics' in result['properties']['diagnosticsProfile'] and
-                       result['properties']['diagnosticsProfile']['bootDiagnostics']['enabled'] or False,
-            'storage_uri': 'diagnosticsProfile' in result['properties'] and
-                           'bootDiagnostics' in result['properties']['diagnosticsProfile'] and
-                           result['properties']['diagnosticsProfile']['bootDiagnostics'].get('storageUri', None)
+            'enabled': 'diagnostics_profile' in result and
+                       'boot_diagnostics' in result['diagnostics_profile'] and
+                       result['diagnostics_profile']['boot_diagnostics']['enabled'] or False,
+            'storage_uri': 'diagnostics_profile' in result and
+                           'boot_diagnostics' in result['diagnostics_profile'] and
+                           result['diagnostics_profile']['boot_diagnostics'].get('storageUri', None)
         }
         if new_result['boot_diagnostics']['enabled']:
-            new_result['boot_diagnostics']['console_screenshot_uri'] = result['properties']['instanceView']['bootDiagnostics'].get('consoleScreenshotBlobUri')
-            new_result['boot_diagnostics']['serial_console_log_uri'] = result['properties']['instanceView']['bootDiagnostics'].get('serialConsoleLogBlobUri')
+            new_result['boot_diagnostics']['console_screenshot_uri'] = result['instance_view']['boot_diagnostics'].get('console_screenshot_blob_uri')
+            new_result['boot_diagnostics']['serial_console_log_uri'] = result['instance_view']['boot_diagnostics'].get('serial_console_log_blob_uri')
 
-        vhd = result['properties']['storageProfile']['osDisk'].get('vhd')
+        vhd = result['storage_profile']['os_disk'].get('vhd')
         if vhd is not None:
             url = urlparse(vhd['uri'])
             new_result['storage_account_name'] = url.netloc.split('.')[0]
             new_result['storage_container_name'] = url.path.split('/')[1]
             new_result['storage_blob_name'] = url.path.split('/')[-1]
 
-        new_result['os_disk_caching'] = result['properties']['storageProfile']['osDisk']['caching']
-        new_result['os_type'] = result['properties']['storageProfile']['osDisk']['osType']
+        new_result['os_disk_caching'] = result['storage_profile']['os_disk']['caching']
+        new_result['os_type'] = result['storage_profile']['os_disk']['os_type']
         new_result['data_disks'] = []
-        disks = result['properties']['storageProfile']['dataDisks']
+        disks = result['storage_profile']['data_disks']
         for disk_index in range(len(disks)):
             new_result['data_disks'].append({
                 'lun': disks[disk_index].get('lun'),
                 'name': disks[disk_index].get('name'),
-                'disk_size_gb': disks[disk_index].get('diskSizeGB'),
-                'managed_disk_type': disks[disk_index].get('managedDisk', {}).get('storageAccountType'),
-                'managed_disk_id': disks[disk_index].get('managedDisk', {}).get('id'),
+                'disk_size_gb': disks[disk_index].get('disk_size_gb'),
+                'managed_disk_type': disks[disk_index].get('managed_disk', {}).get('storage_account_type'),
+                'managed_disk_id': disks[disk_index].get('managed_disk', {}).get('id'),
                 'caching': disks[disk_index].get('caching')
             })
 
         new_result['network_interface_names'] = []
-        nics = result['properties']['networkProfile']['networkInterfaces']
+        nics = result['network_profile']['network_interfaces']
         for nic_index in range(len(nics)):
             new_result['network_interface_names'].append(re.sub('.*networkInterfaces/', '', nics[nic_index]['id']))
 

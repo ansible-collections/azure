@@ -1,7 +1,7 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Create instance of PostgreSQL Server -- check mode
   azure_rm_postgresqlserver:
@@ -12,13 +12,13 @@
       tier: Basic
     location: westus2
     storage_mb: 51200
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -31,12 +31,12 @@
       tier: Basic
     location: westus2
     storage_mb: 51200
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state == 'Ready'
@@ -50,12 +50,12 @@
       tier: Basic
     location: westus2
     storage_mb: 51200
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
       - output.state == 'Ready'
@@ -69,16 +69,17 @@
       tier: Basic
     location: westus2
     storage_mb: 128000
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state == 'Ready'
-- debug:
+- name: Print the postgresql server states
+  ansible.builtin.debug:
     var: output
 
 - name: Gather facts postgresql Server
@@ -87,7 +88,7 @@
     name: postgresqlsrv{{ rpfx }}
   register: output
 - name: Assert that storage size is correct
-  assert:
+  ansible.builtin.assert:
     that:
       - output.servers[0]['storage_mb'] == 128000
 
@@ -100,8 +101,8 @@
       tier: Basic
     location: westus2
     storage_mb: 51200
-    enforce_ssl: True
-    storage_autogrow: True
+    enforce_ssl: true
+    storage_autogrow: true
     backup_retention_days: 7
     admin_username: zimxyz
     admin_password: Password123!
@@ -117,8 +118,8 @@
       tier: Basic
     location: westus2
     storage_mb: 51200
-    enforce_ssl: True
-    storage_autogrow: True
+    enforce_ssl: true
+    storage_autogrow: true
     backup_retention_days: 7
     admin_username: zimxyz
     admin_password: Password123!
@@ -132,7 +133,7 @@
   register: output
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.servers[0]['id'] != None
@@ -153,7 +154,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.servers[0]['id'] != None
@@ -185,10 +186,10 @@
     name: testdatabase
     charset: UTF8
     collation: English_United States.1252
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -201,7 +202,7 @@
     collation: English_United States.1252
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.name == 'testdatabase'
@@ -215,7 +216,7 @@
     collation: English_United States.1252
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
       - output.name == 'testdatabase'
@@ -227,10 +228,10 @@
     name: testdatabase
     charset: utf8
     collation: en_US.utf8
-  ignore_errors: yes
+  ignore_errors: true
   register: output
 - name: Assert that nothing has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
 
@@ -241,10 +242,10 @@
     name: testdatabase
     charset: utf8
     collation: en_US.utf8
-    force_update: yes
+    force_update: true
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.name == 'testdatabase'
@@ -263,7 +264,7 @@
   register: output
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.databases[0]['server_name'] != None
@@ -277,7 +278,7 @@
     server_name: postgresqlsrv{{ rpfx }}
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.databases[0]['server_name'] != None
@@ -295,10 +296,10 @@
     server_name: postgresqlsrv{{ rpfx }}
     name: testdatabase
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -310,7 +311,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -322,7 +323,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -337,10 +338,10 @@
     name: firewallrule{{ rpfx }}
     start_ip_address: 172.28.10.136
     end_ip_address: 172.28.10.138
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -353,7 +354,7 @@
     end_ip_address: 172.28.10.138
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -366,7 +367,7 @@
     end_ip_address: 172.28.10.138
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -385,7 +386,7 @@
     name: firewallrule{{ rpfx }}
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.rules[0].id != None
@@ -401,7 +402,7 @@
     server_name: postgresqlsrv{{ rpfx }}
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.rules[0].id != None
@@ -421,10 +422,10 @@
     server_name: postgresqlsrv{{ rpfx }}
     name: firewallrule{{ rpfx }}
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -436,7 +437,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -448,7 +449,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -466,7 +467,7 @@
     name: firewallrule{{ rpfx }}
   register: output
 - name: Assert that empty list was returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - "output.rules | length == 0"
@@ -480,10 +481,10 @@
     server_name: postgresqlsrv{{ rpfx }}
     name: deadlock_timeout
     value: 2000
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert that change was registered
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -495,7 +496,7 @@
     value: 2000
   register: output
 - name: Assert that change was registered
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -507,7 +508,7 @@
     value: 2000
   register: output
 - name: Assert that change was not registered
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -519,7 +520,7 @@
     state: absent
   register: output
 - name: Assert that change was registered
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -531,7 +532,7 @@
     state: absent
   register: output
 - name: Assert that change was registered
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -542,7 +543,7 @@
     name: deadlock_timeout
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.settings[0].id != None
@@ -558,7 +559,7 @@
     server_name: postgresqlsrv{{ rpfx }}
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.settings[0].id != None
@@ -577,10 +578,10 @@
     resource_group: "{{ resource_group }}"
     name: postgresqlsrv{{ rpfx }}
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -591,7 +592,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -602,7 +603,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 

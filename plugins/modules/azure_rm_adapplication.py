@@ -234,26 +234,26 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create ad application
-    azure_rm_adapplication:
-      tenant: "{{ tenant_id }}"
-      display_name: "{{ display_name }}"
+- name: Create ad application
+  azure_rm_adapplication:
+    tenant: "{{ tenant_id }}"
+    display_name: "{{ display_name }}"
 
-  - name: Create application with more parameter
-    azure_rm_adapplication:
-      tenant: "{{ tenant_id }}"
-      display_name: "{{ display_name }}"
-      available_to_other_tenants: False
-      credential_description: "for test"
-      end_date: 2021-10-01
-      start_date: 2021-05-18
-      identifier_uris: fredtest02.com
+- name: Create application with more parameter
+  azure_rm_adapplication:
+    tenant: "{{ tenant_id }}"
+    display_name: "{{ display_name }}"
+    available_to_other_tenants: false
+    credential_description: "for test"
+    end_date: 2021-10-01
+    start_date: 2021-05-18
+    identifier_uris: fredtest02.com
 
-  - name: delete ad application
-    azure_rm_adapplication:
-      tenant: "{{ tenant_id }}"
-      app_id: "{{ app_id }}"
-      state: absent
+- name: delete ad application
+  azure_rm_adapplication:
+    tenant: "{{ tenant_id }}"
+    app_id: "{{ app_id }}"
+    state: absent
 '''
 
 RETURN = '''
@@ -322,7 +322,6 @@ output:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.graphrbac.models import GraphErrorException
     import datetime
     from dateutil.relativedelta import relativedelta

@@ -59,7 +59,6 @@ options:
         choices:
             - windows
             - linux
-        required: true
         type: str
     os_state:
         description:
@@ -67,7 +66,6 @@ options:
         choices:
             - generalized
             - specialized
-        required: true
         type: str
     hypervgeneration:
         description:
@@ -86,7 +84,6 @@ options:
     identifier:
         description:
             - Image identifier.
-        required: true
         type: dict
         suboptions:
             publisher:
@@ -144,6 +141,7 @@ options:
                 description:
                     - A list of disallowed disk types.
                 type: list
+                elements: str
     purchase_plan:
         description:
             - Purchase plan.
@@ -205,15 +203,8 @@ id:
 
 import time
 import json
-import re
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-from copy import deepcopy
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -338,6 +329,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                 options=dict(
                     disk_types=dict(
                         type='list',
+                        elements='str',
                         disposition='diskTypes'
                     )
                 )
@@ -399,6 +391,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -492,14 +485,14 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the GalleryImage instance.')
             self.fail('Error creating the GalleryImage instance: {0}'.format(str(exc)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.context['deserialized_data']}
 
         return response
 
@@ -514,7 +507,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the GalleryImage instance.')
             self.fail('Error deleting the GalleryImage instance: {0}'.format(str(e)))
 
@@ -532,11 +525,11 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             found = True
             self.log("Response : {0}".format(response))
             # self.log("AzureFirewall instance : {0} found".format(response.name))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the AzureFirewall instance.')
         if found is True:
             return response

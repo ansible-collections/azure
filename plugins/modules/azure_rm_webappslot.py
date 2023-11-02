@@ -21,28 +21,35 @@ options:
         description:
             - Name of the resource group to which the resource belongs.
         required: True
+        type: str
     name:
         description:
             - Unique name of the deployment slot to create or update.
         required: True
+        type: str
     webapp_name:
         description:
             - Web app name which this deployment slot belongs to.
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     configuration_source:
         description:
             - Source slot to clone configurations from when creating slot. Use webapp's name to refer to the production slot.
+        type: str
     auto_swap_slot_name:
         description:
             - Used to configure target slot name to auto swap, or disable auto swap.
             - Set it target slot name to auto swap.
             - Set it to False to disable auto slot swap.
+        type: raw
     swap:
         description:
             - Swap deployment slots of a web app.
+        type: dict
         suboptions:
             action:
                 description:
@@ -50,6 +57,7 @@ options:
                     - C(preview) is to apply target slot settings on source slot first.
                     - C(swap) is to complete swapping.
                     - C(reset) is to reset the swap.
+                type: str
                 choices:
                     - preview
                     - swap
@@ -58,6 +66,7 @@ options:
             target_slot:
                 description:
                     - Name of target slot to swap. If set to None, then swap with production slot.
+                type: str
             preserve_vnet:
                 description:
                     - C(True) to preserve virtual network to the slot during swap. Otherwise C(False).
@@ -67,6 +76,8 @@ options:
         description:
             - Set of run time framework settings. Each setting is a dictionary.
             - See U(https://docs.microsoft.com/en-us/azure/app-service/app-service-web-overview) for more info.
+        type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -77,6 +88,8 @@ options:
                     - Linux web apps support C(java), C(ruby), C(php), C(dotnetcore), and C(node) from June 2018.
                     - Linux web apps support only one framework.
                     - Java framework is mutually exclusive with others.
+                type: str
+                required: true
                 choices:
                     - java
                     - net_framework
@@ -95,40 +108,55 @@ options:
                     - C(dotnetcore) supported value sample, C(1.0), C(1.1), C(1.2).
                     - C(ruby) supported value sample, 2.3.
                     - C(java) supported value sample, C(1.9) for Windows web app. C(1.8) for Linux web app.
+                type: str
+                required: true
             settings:
                 description:
                     - List of settings of the framework.
+                type: dict
                 suboptions:
                     java_container:
                         description:
                             - Name of Java container. This is supported by specific framework C(java) onlys, for example C(Tomcat), C(Jetty).
+                        type: str
+                        required: true
                     java_container_version:
                         description:
                             - Version of Java container. This is supported by specific framework C(java) only.
                             - For C(Tomcat), for example C(8.0), C(8.5), C(9.0). For C(Jetty), for example C(9.1), C(9.3).
+                        type: str
+                        required: true
     container_settings:
         description:
             - Web app slot container settings.
+        type: dict
         suboptions:
             name:
                 description:
                     - Name of container, for example C(imagename:tag).
+                type: str
+                required: true
             registry_server_url:
                 description:
                     - Container registry server URL, for example C(mydockerregistry.io).
+                type: str
             registry_server_user:
                 description:
                     - The container registry server user name.
+                type: str
             registry_server_password:
                 description:
                     - The container registry server password.
+                type: str
     startup_file:
         description:
             - The slot startup file.
             - This only applies for Linux web app slot.
+        type: str
     app_settings:
         description:
             - Configure web app slot application settings. Suboptions are in key value pair format.
+        type: dict
     purge_app_settings:
         description:
             - Purge any existing application settings. Replace slot application settings with app_settings.
@@ -137,13 +165,16 @@ options:
     deployment_source:
         description:
             - Deployment source for git.
+        type: dict
         suboptions:
             url:
                 description:
                     - Repository URL of deployment source.
+                type: str
             branch:
                 description:
                     - The branch name of the repository.
+                type: str
     app_state:
         description:
             - Start/Stop/Restart the slot.
@@ -154,13 +185,14 @@ options:
             - restarted
         default: started
     state:
-      description:
-          - State of the Web App deployment slot.
-          - Use C(present) to create or update a  slot and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - State of the Web App deployment slot.
+            - Use C(present) to create or update a  slot and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -172,46 +204,46 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create a webapp slot
-    azure_rm_webappslot:
-      resource_group: myResourceGroup
-      webapp_name: myJavaWebApp
-      name: stage
-      configuration_source: myJavaWebApp
-      app_settings:
-        testkey: testvalue
+- name: Create a webapp slot
+  azure_rm_webappslot:
+    resource_group: myResourceGroup
+    webapp_name: myJavaWebApp
+    name: stage
+    configuration_source: myJavaWebApp
+    app_settings:
+      testkey: testvalue
 
-  - name: swap the slot with production slot
-    azure_rm_webappslot:
-      resource_group: myResourceGroup
-      webapp_name: myJavaWebApp
-      name: stage
-      swap:
-        action: swap
+- name: swap the slot with production slot
+  azure_rm_webappslot:
+    resource_group: myResourceGroup
+    webapp_name: myJavaWebApp
+    name: stage
+    swap:
+      action: swap
 
-  - name: stop the slot
-    azure_rm_webappslot:
-      resource_group: myResourceGroup
-      webapp_name: myJavaWebApp
-      name: stage
-      app_state: stopped
+- name: stop the slot
+  azure_rm_webappslot:
+    resource_group: myResourceGroup
+    webapp_name: myJavaWebApp
+    name: stage
+    app_state: stopped
 
-  - name: udpate a webapp slot app settings
-    azure_rm_webappslot:
-      resource_group: myResourceGroup
-      webapp_name: myJavaWebApp
-      name: stage
-      app_settings:
-        testkey: testvalue2
+- name: udpate a webapp slot app settings
+  azure_rm_webappslot:
+    resource_group: myResourceGroup
+    webapp_name: myJavaWebApp
+    name: stage
+    app_settings:
+      testkey: testvalue2
 
-  - name: udpate a webapp slot frameworks
-    azure_rm_webappslot:
-      resource_group: myResourceGroup
-      webapp_name: myJavaWebApp
-      name: stage
-      frameworks:
-        - name: "node"
-          version: "10.1"
+- name: udpate a webapp slot frameworks
+  azure_rm_webappslot:
+    resource_group: myResourceGroup
+    webapp_name: myJavaWebApp
+    name: stage
+    frameworks:
+      - name: "node"
+        version: "10.1"
 '''
 
 RETURN = '''
@@ -223,7 +255,6 @@ id:
     sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Web/sites/testapp/slots/stage1
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:

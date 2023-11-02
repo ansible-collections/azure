@@ -53,31 +53,31 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get latest version of specific secret
-    azure_rm_keyvaultsecret_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: mySecret
+- name: Get latest version of specific secret
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: mySecret
 
-  - name: List all versions of specific secret
-    azure_rm_keyvaultsecret_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: mySecret
-      version: all
+- name: List all versions of specific secret
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: mySecret
+    version: all
 
-  - name: List specific version of specific secret
-    azure_rm_keyvaultsecret_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: mySecret
-      version: fd2682392a504455b79c90dd04a1bf46
+- name: List specific version of specific secret
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: mySecret
+    version: fd2682392a504455b79c90dd04a1bf46
 
-  - name: List all secrets in specific key vault
-    azure_rm_keyvaultsecret_info:
-        vault_uri: "https://myVault.vault.azure.net"
+- name: List all secrets in specific key vault
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
 
-  - name: List deleted secrets in specific key vault
-    azure_rm_keyvaultsecret_info:
-        vault_uri: "https://myVault.vault.azure.net"
-        show_deleted_secret: True
+- name: List deleted secrets in specific key vault
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    show_deleted_secret: true
 '''
 
 RETURN = '''
@@ -200,8 +200,8 @@ def deleted_bundle_to_dict(bundle):
 
 def deletedsecretbundle_to_dict(bundle):
     secretbundle = deleted_bundle_to_dict(bundle.properties)
-    secretbundle['recovery_id'] = bundle._recovery_id,
-    secretbundle['scheduled_purge_date'] = bundle._scheduled_purge_date,
+    secretbundle['recovery_id'] = bundle._recovery_id
+    secretbundle['scheduled_purge_date'] = bundle._scheduled_purge_date
     secretbundle['deleted_date'] = bundle._deleted_date
     return secretbundle
 
@@ -221,8 +221,8 @@ def secretitem_to_dict(secretitem):
 
 def deletedsecretitem_to_dict(secretitem):
     item = secretitem_to_dict(secretitem.properties)
-    item['recovery_id'] = secretitem._recovery_id,
-    item['scheduled_purge_date'] = secretitem._scheduled_purge_date,
+    item['recovery_id'] = secretitem._recovery_id
+    item['scheduled_purge_date'] = secretitem._scheduled_purge_date
     item['deleted_date'] = secretitem._deleted_date
     return item
 

@@ -11,66 +11,80 @@
 #
 # ----------------------------------------------------------------------------
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     storage_account_name: "st{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     batch_account_name: "ba{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Create Storage Account
   azure_rm_storageaccount:
-      resource_group: "{{ resource_group }}"
-      name: "{{ storage_account_name }}"
-      location: eastus
-      account_type: Standard_LRS
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name }}"
+    location: eastus
+    account_type: Standard_LRS
 
 - name: Create Batch Account
   azure_rm_batchaccount:
-      resource_group: "{{ resource_group }}"
-      name: "{{ batch_account_name }}"
-      location: eastus
-      auto_storage_account:
-        name: "{{ storage_account_name }}"
-      pool_allocation_mode: batch_service
+    resource_group: "{{ resource_group }}"
+    name: "{{ batch_account_name }}"
+    location: eastus
+    auto_storage_account:
+      name: "{{ storage_account_name }}"
+    pool_allocation_mode: batch_service
+    tags:
+      key1: value1
+      key2: value2
   register: output
 
 - name: Assert the resource was created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Create Batch Account -- idempotent
   azure_rm_batchaccount:
-      resource_group: "{{ resource_group }}"
-      name: "{{ batch_account_name }}"
-      location: eastus
-      auto_storage_account:
-        name: "{{ storage_account_name }}"
-      pool_allocation_mode: batch_service
+    resource_group: "{{ resource_group }}"
+    name: "{{ batch_account_name }}"
+    location: eastus
+    auto_storage_account:
+      name: "{{ storage_account_name }}"
+    pool_allocation_mode: batch_service
+    tags:
+      key1: value1
+      key2: value2
   register: output
 
 - name: Assert the resource was created
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
+- name: Get Batch Account facts
+  azure_rm_batchaccount_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ batch_account_name }}"
+  register: output
+
+- name: Assert the facts
+  ansible.builtin.assert:
+    that:
+      - output.batch_account | length == 1
+      - output.batch_account[0].tags | length == 2
+
 - name: Delete Batch Account
   azure_rm_batchaccount:
-      resource_group: "{{ resource_group }}"
-      name: "{{ batch_account_name }}"
-      location: eastus
-      auto_storage_account:
-        name: "{{ storage_account_name }}"
-      pool_allocation_mode: batch_service
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: "{{ batch_account_name }}"
+    state: absent
   register: output
 
 - name: Assert that state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Clean up storage account
   azure_rm_storageaccount:
-      resource_group: "{{ resource_group }}"
-      name: "{{ storage_account_name }}"
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name }}"
+    state: absent

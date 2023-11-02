@@ -1,5 +1,5 @@
 - name: Create IP group name
-  set_fact:
+  ansible.builtin.set_fact:
     group_name: "ipgroup{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create IP group (check mode)
@@ -14,7 +14,7 @@
     tags:
       key1: "value1"
     state: present
-  check_mode: yes
+  check_mode: true
 
 - name: Create IP group
   azure_rm_ipgroup:
@@ -31,7 +31,7 @@
   register: results
 
 - name: Assert that IP group is created
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Create same IP group again (Idempotent test)
@@ -49,7 +49,7 @@
   register: results
 
 - name: Assert that output is not changed
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Update IP group
@@ -64,7 +64,7 @@
   register: results
 
 - name: Assert that IP group is updated
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Get IP group facts
@@ -73,7 +73,8 @@
     name: "{{ group_name }}"
   register: results
 
-- assert:
+- name: Assert the ip group facts
+  ansible.builtin.assert:
     that:
       - not results.changed
       - results.ipgroups[0].id != None
@@ -91,7 +92,7 @@
   register: results
 
 - name: Assert that IP group is deleted
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Delete IP group again (Idempotent test)
@@ -102,5 +103,5 @@
   register: results
 
 - name: Asset that output is not changed
-  assert:
+  ansible.builtin.assert:
     that: not results.changed

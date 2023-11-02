@@ -33,9 +33,10 @@
     resource_group: "{{ resource_group }}"
     address_prefix_cidr: "10.1.0/24"
   register: output
-  ignore_errors: yes
+  ignore_errors: true
 
-- assert:
+- name: Assert created fail
+  ansible.builtin.assert:
     that: output.failed
 
 - name: Add the subnet back
@@ -46,7 +47,8 @@
     address_prefix_cidr: "10.1.0.0/24"
   register: output
 
-- assert:
+- name: Assert the subnet created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.address_prefix == "10.1.0.0/24"
@@ -58,7 +60,8 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Create network security group
@@ -94,7 +97,8 @@
           - westus
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Able to completely remove service endpoints
@@ -106,7 +110,8 @@
     service_endpoints: []
   register: output
 
-- assert:
+- name: Assert the subnet updated
+  ansible.builtin.assert:
     that: output.state.service_endpoints is not defined
 
 - name: Create network security group in another resource group
@@ -127,10 +132,11 @@
       resource_group: "{{ resource_group_secondary }}"
   register: output
 
-- assert:
-    that: 
-    - output.changed
-    - output.state.network_security_group.id == nsg.state.id
+- name: Assert the subnet update
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state.network_security_group.id == nsg.state.id
 
 - name: Update the subnet (idempotent)
   azure_rm_subnet:
@@ -142,7 +148,8 @@
     security_group: "{{ nsg.state.id }}"
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Create subnet with IPv4 and IPv6
@@ -155,7 +162,8 @@
       - "fdda:e69b:1587:495e::/64"
   register: output
 
-- assert:
+- name: Assert the subnet created
+  ansible.builtin.assert:
     that:
       - output.changed
       - not output.state.address_prefix
@@ -171,7 +179,8 @@
       - "fdda:e69b:1587:495e::/64"
   register: output
 
-- assert:
+- name: Assert the subnet updated
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Update the subnet's IPv4 and IPv6 address
@@ -185,7 +194,8 @@
     security_group: "{{ nsg.state.id }}"
   register: output
 
-- assert:
+- name: Assert the subnet update
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -198,7 +208,8 @@
     private_endpoint_network_policies: Enabled
   register: output
 
-- assert:
+- name: Assert the subnet updated
+  ansible.builtin.assert:
     that: output
 
 - name: The subnet with network policies should be idempotent
@@ -210,7 +221,8 @@
     private_endpoint_network_policies: Enabled
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Update the subnet with delegations
@@ -223,7 +235,8 @@
         serviceName: 'Microsoft.ContainerInstance/containerGroups'
   register: output
 
-- assert:
+- name: Assert the subnet updated
+  ansible.builtin.assert:
     that: output
 
 - name: The subnet with delegations should be idempotent
@@ -236,7 +249,8 @@
         serviceName: 'Microsoft.ContainerInstance/containerGroups'
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Get subnet facts
@@ -247,7 +261,7 @@
   register: output
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.subnets[0]['id'] != None
@@ -270,7 +284,7 @@
   register: output
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.subnets[0]['id'] != None
@@ -297,7 +311,8 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Remove subnet

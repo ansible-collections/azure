@@ -21,14 +21,17 @@ options:
         description:
             - The name of the resource group to which the container registry belongs.
         required: True
+        type: str
     registry_name:
         description:
             - The name of the container registry.
         required: True
+        type: str
     replication_name:
         description:
             - The name of the replication.
         required: True
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -39,11 +42,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Replication
-    azure_rm_containerregistryreplication_info:
-      resource_group: resource_group_name
-      registry_name: registry_name
-      replication_name: replication_name
+- name: Get instance of Replication
+  azure_rm_containerregistryreplication_info:
+    resource_group: resource_group_name
+    registry_name: registry_name
+    replication_name: replication_name
 '''
 
 RETURN = '''
@@ -86,7 +89,6 @@ replications:
                         - The status of the replication at the time the operation was called.
                     returned: always
                     type: complex
-                    sample: status
                     contains:
                         message:
                             description:
@@ -98,7 +100,7 @@ replications:
                             description:
                                 - The timestamp when the status was changed to the current value.
                             returned: always
-                            type: datetime
+                            type: str
                             sample: "2017-03-01T23:15:37.0707808Z"
 '''
 
@@ -106,7 +108,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -137,7 +138,7 @@ class AzureRMReplicationsFacts(AzureRMModuleBase):
         self.resource_group = None
         self.registry_name = None
         self.replication_name = None
-        super(AzureRMReplicationsFacts, self).__init__(self.module_arg_spec, supports_check_mode=True)
+        super(AzureRMReplicationsFacts, self).__init__(self.module_arg_spec, supports_tags=False, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:

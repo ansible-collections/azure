@@ -1,7 +1,8 @@
-- include_tasks: setup.yml
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
 
-- name: Set specific UbuntuServer image version
-  set_fact:
+- name: Set specific 0001-com-ubuntu-server-focal image version
+  ansible.builtin.set_fact:
     specific_image_name: "16.04.202104140"
 
 - name: Create minimal VM with defaults
@@ -16,14 +17,14 @@
     vm_size: Standard_B1ms
     virtual_network: "{{ network_name }}"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20_04-lts
       version: "{{ specific_image_name }}"
   register: vm_output
 
-- name: Ensure VM was created using the specific UbuntuServer image version / name
-  assert:
+- name: Ensure VM was created using the specific 0001-com-ubuntu-server-focal image version / name
+  ansible.builtin.assert:
     that:
       - vm_output.azure_vm.properties.storageProfile.imageReference.version == specific_image_name
 
@@ -57,5 +58,5 @@
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
-    force_delete_nonempty: yes
+    force_delete_nonempty: true
     state: absent

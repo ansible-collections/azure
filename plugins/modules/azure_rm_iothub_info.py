@@ -70,22 +70,22 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one IoT Hub
-      azure_rm_iothub_info:
-        name: Testing
-        resource_group: myResourceGroup
+- name: Get facts for one IoT Hub
+  azure_rm_iothub_info:
+    name: Testing
+    resource_group: myResourceGroup
 
-    - name: Get facts for all IoT Hubs
-      azure_rm_iothub_info:
+- name: Get facts for all IoT Hubs
+  azure_rm_iothub_info:
 
-    - name: Get facts for all IoT Hubs in a specific resource group
-      azure_rm_iothub_info:
-        resource_group: myResourceGroup
+- name: Get facts for all IoT Hubs in a specific resource group
+  azure_rm_iothub_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts by tags
-      azure_rm_iothub_info:
-        tags:
-          - testing
+- name: Get facts by tags
+  azure_rm_iothub_info:
+    tags:
+      - testing
 '''
 
 RETURN = '''
@@ -396,7 +396,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
 except Exception:
     # handled in azure_rm_common
     pass

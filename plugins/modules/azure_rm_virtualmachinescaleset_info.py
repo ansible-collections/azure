@@ -23,9 +23,11 @@ options:
     name:
         description:
             - Limit results to a specific virtual machine scale set.
+        type: str
     resource_group:
         description:
             - The resource group to search for the desired virtual machine scale set.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -39,6 +41,7 @@ options:
             - In Ansible 2.5 and lower facts are always returned in raw format.
             - Please note that this option will be deprecated in 2.10 when curated format will become the only supported format.
         default: 'raw'
+        type: str
         choices:
             - 'curated'
             - 'raw'
@@ -51,21 +54,21 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for a virtual machine scale set
-      azure_rm_virtualmachinescaleset_info:
-        resource_group: myResourceGroup
-        name: testvmss001
-        format: curated
+- name: Get facts for a virtual machine scale set
+  azure_rm_virtualmachinescaleset_info:
+    resource_group: myResourceGroup
+    name: testvmss001
+    format: curated
 
-    - name: Get facts for all virtual networks
-      azure_rm_virtualmachinescaleset_info:
-        resource_group: myResourceGroup
+- name: Get facts for all virtual networks
+  azure_rm_virtualmachinescaleset_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts by tags
-      azure_rm_virtualmachinescaleset_info:
-        resource_group: myResourceGroup
-        tags:
-          - testing
+- name: Get facts by tags
+  azure_rm_virtualmachinescaleset_info:
+    resource_group: myResourceGroup
+    tags:
+      - testing
 '''
 
 RETURN = '''
@@ -329,34 +332,34 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
                 ssh_password_enabled = False
 
                 try:
-                    subnet_id = (vmss['properties']['virtualMachineProfile']['networkProfile']['networkInterfaceConfigurations'][0]
-                                 ['properties']['ipConfigurations'][0]['properties']['subnet']['id'])
+                    subnet_id = (vmss['virtual_machine_profile']['network_profile']['network_interface_configurations'][0]
+                                 ['ipConfigurations'][0]['subnet']['id'])
                     subnet_name = re.sub('.*subnets\\/', '', subnet_id)
                 except Exception:
                     self.log('Could not extract subnet name')
 
                 try:
-                    backend_address_pool_id = (vmss['properties']['virtualMachineProfile']['networkProfile']['networkInterfaceConfigurations'][0]
-                                               ['properties']['ipConfigurations'][0]['properties']['loadBalancerBackendAddressPools'][0]['id'])
+                    backend_address_pool_id = (vmss['virtual_machine_profile']['network_profile']['network_interface_configurations'][0]
+                                               ['ip_configurations'][0]['load_balancer_backend_address_pools'][0]['id'])
                     load_balancer_name = re.sub('\\/backendAddressPools.*', '', re.sub('.*loadBalancers\\/', '', backend_address_pool_id))
                     virtual_network_name = re.sub('.*virtualNetworks\\/', '', re.sub('\\/subnets.*', '', subnet_id))
                 except Exception:
                     self.log('Could not extract load balancer / virtual network name')
 
                 try:
-                    ssh_password_enabled = (not vmss['properties']['virtualMachineProfile']['osProfile']
-                                                    ['linuxConfiguration']['disablePasswordAuthentication'])
+                    ssh_password_enabled = (not vmss['virtual_machine_profile']['os_profile']
+                                                    ['linux_configuration']['disable_password_authentication'])
                 except Exception:
                     self.log('Could not extract SSH password enabled')
 
-                data_disks = vmss['properties']['virtualMachineProfile']['storageProfile'].get('dataDisks', [])
+                data_disks = vmss['virtual_machine_profile']['storage_profile'].get('data_disks', [])
 
                 for disk_index in range(len(data_disks)):
                     old_disk = data_disks[disk_index]
                     new_disk = {
                         'lun': old_disk['lun'],
-                        'disk_size_gb': old_disk['diskSizeGB'],
-                        'managed_disk_type': old_disk['managedDisk']['storageAccountType'],
+                        'disk_size_gb': old_disk['disk_size_gb'],
+                        'managed_disk_type': old_disk['managed_disk']['storage_account_type'],
                         'caching': old_disk['caching']
                     }
                     data_disks[disk_index] = new_disk
@@ -370,17 +373,17 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
                     'vm_size': vmss['sku']['name'],
                     'capacity': vmss['sku']['capacity'],
                     'tier': vmss['sku']['tier'],
-                    'upgrade_policy': vmss['properties'].get('upgradePolicy'),
-                    'orchestrationMode': vmss['properties'].get('orchestrationMode'),
-                    'platformFaultDomainCount': vmss['properties'].get('platformFaultDomainCount'),
-                    'admin_username': vmss['properties']['virtualMachineProfile']['osProfile']['adminUsername'],
-                    'admin_password': vmss['properties']['virtualMachineProfile']['osProfile'].get('adminPassword'),
+                    'upgrade_policy': vmss.get('upgrade_policy'),
+                    'orchestrationMode': vmss.get('orchestration_mode'),
+                    'platformFaultDomainCount': vmss.get('platform_fault_domain_count'),
+                    'admin_username': vmss['virtual_machine_profile']['os_profile']['admin_username'],
+                    'admin_password': vmss['virtual_machine_profile']['os_profile'].get('admin_password'),
                     'ssh_password_enabled': ssh_password_enabled,
-                    'image': vmss['properties']['virtualMachineProfile']['storageProfile']['imageReference'],
-                    'os_disk_caching': vmss['properties']['virtualMachineProfile']['storageProfile']['osDisk']['caching'],
-                    'os_type': 'Linux' if (vmss['properties']['virtualMachineProfile']['osProfile'].get('linuxConfiguration') is not None) else 'Windows',
-                    'overprovision': vmss['properties'].get('overprovision'),
-                    'managed_disk_type': vmss['properties']['virtualMachineProfile']['storageProfile']['osDisk']['managedDisk']['storageAccountType'],
+                    'image': vmss['virtual_machine_profile']['storage_profile']['image_reference'],
+                    'os_disk_caching': vmss['virtual_machine_profile']['storage_profile']['os_disk']['caching'],
+                    'os_type': 'Linux' if (vmss['virtual_machine_profile']['os_profile'].get('linux_configuration') is not None) else 'Windows',
+                    'overprovision': vmss.get('overprovision'),
+                    'managed_disk_type': vmss['virtual_machine_profile']['storage_profile']['os_disk']['managed_disk']['storage_account_type'],
                     'data_disks': data_disks,
                     'virtual_network_name': virtual_network_name,
                     'subnet_name': subnet_name,

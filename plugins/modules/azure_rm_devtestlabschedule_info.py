@@ -46,13 +46,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Schedule
-    azure_rm_devtestlabschedule_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: mySchedule
-      tags:
-        - key:value
+- name: Get instance of Schedule
+  azure_rm_devtestlabschedule_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: mySchedule
+    tags:
+      - key:value
 '''
 
 RETURN = '''
@@ -103,7 +103,7 @@ schedules:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag': 'MyValue' }"
 '''
 
@@ -113,7 +113,6 @@ from ansible.module_utils.common.dict_transformations import _camel_to_snake, _s
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

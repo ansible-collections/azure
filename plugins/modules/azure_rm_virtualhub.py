@@ -208,23 +208,23 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a VirtualHub
-      azure_rm_virtualhub:
-        resource_group: myResourceGroup
-        name: my_virtual_hub_name
-        address_prefix: 10.2.0.0/24
-        sku: Standard
-        location: eastus
-        enable_virtual_router_route_propogation: false
-        virtual_wan:
-          id: /subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualWans/fredwan
+- name: Create a VirtualHub
+  azure_rm_virtualhub:
+    resource_group: myResourceGroup
+    name: my_virtual_hub_name
+    address_prefix: 10.2.0.0/24
+    sku: Standard
+    location: eastus
+    enable_virtual_router_route_propogation: false
+    virtual_wan:
+      id: /subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualWans/fredwan
 
-    - name: Delete VirtualHub
-      azure_rm_virtualhub:
-        resource_group: myResourceGroup
-        name: my_virtual_hub_name
-        location: eastus
-        state: absent
+- name: Delete VirtualHub
+  azure_rm_virtualhub:
+    resource_group: myResourceGroup
+    name: my_virtual_hub_name
+    location: eastus
+    state: absent
 '''
 
 RETURN = '''
@@ -493,7 +493,6 @@ state:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
 except ImportError:
@@ -733,7 +732,7 @@ class AzureRMVirtualHub(AzureRMModuleBaseExt):
             response = self.network_client.virtual_hubs.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                virtual_hub_name=self.name,
                                                                                virtual_hub_parameters=self.body)
-            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
             self.log('Error attempting to create the VirtualHub instance.')

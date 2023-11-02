@@ -48,15 +48,15 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get the information of api
-      azure_rm_apimanagement_info:
-        resource_group: myResourceGroup
-        service_name: myService
-    - name: Get the information of api
-      azure_rm_apimanagement_info:
-        resource_group: myResourceGroup
-        service_name: myService
-        api_id: testApi
+- name: Get the information of api
+  azure_rm_apimanagement_info:
+    resource_group: myResourceGroup
+    service_name: myService
+- name: Get the information of api
+  azure_rm_apimanagement_info:
+    resource_group: myResourceGroup
+    service_name: myService
+    api_id: testApi
 '''
 
 RETURN = '''
@@ -100,15 +100,7 @@ api:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from copy import deepcopy
-import time
 import json
-import re
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class AzureApiManagementInfo(AzureRMModuleBaseExt):
@@ -163,6 +155,7 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
                 self.body[key] = kwargs[key]
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if (self.resource_group is not None and
@@ -210,10 +203,10 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get the information.{0}'.format(e))
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
             return None
 
@@ -233,10 +226,10 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for the given api tags {0}'.format(e))
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
             return None
 
@@ -256,8 +249,8 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-            response = json.loads(response.text)
-        except CloudError as e:
+            response = json.loads(response.body())
+        except Exception as e:
             self.log('Could not get info for a given services.{0}'.format(e))
         try:
             response = json.loads(response.text)

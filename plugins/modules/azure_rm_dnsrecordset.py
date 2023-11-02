@@ -151,9 +151,9 @@ EXAMPLES = '''
     record_type: "{{ item.type }}"
     records: "{{ item.records }}"
   with_items:
-    - { name: 'servera', type: 'A', records: [ { entry: '10.10.10.20' }, { entry: '10.10.10.21' }] }
-    - { name: 'serverb', type: 'A', records: [ { entry: '10.10.10.30' }, { entry: '10.10.10.41' }] }
-    - { name: 'serverc', type: 'A', records: [ { entry: '10.10.10.40' }, { entry: '10.10.10.41' }] }
+    - {name: 'servera', type: 'A', records: [{entry: '10.10.10.20'}, {entry: '10.10.10.21'}]}
+    - {name: 'serverb', type: 'A', records: [{entry: '10.10.10.30'}, {entry: '10.10.10.41'}]}
+    - {name: 'serverc', type: 'A', records: [{entry: '10.10.10.40'}, {entry: '10.10.10.41'}]}
 
 - name: create SRV records in a new record set
   azure_rm_dnsrecordset:
@@ -163,11 +163,11 @@ EXAMPLES = '''
     time_to_live: 7200
     record_type: SRV
     records:
-    - entry: sip.testing.com
-      preference: 10
-      priority: 20
-      weight: 10
-      port: 5060
+      - entry: sip.testing.com
+        preference: 10
+        priority: 20
+        weight: 10
+        port: 5060
 
 - name: create PTR record in a new record set
   azure_rm_dnsrecordset:
@@ -176,7 +176,7 @@ EXAMPLES = '''
     zone_name: testing.com
     record_type: PTR
     records:
-    - entry: servera.testing.com
+      - entry: servera.testing.com
 
 - name: create TXT record in a new record set
   azure_rm_dnsrecordset:
@@ -185,7 +185,7 @@ EXAMPLES = '''
     zone_name: testing.com
     record_type: TXT
     records:
-    - entry: 'v=spf1 a -all'
+      - entry: 'v=spf1 a -all'
 
 - name: Update SOA record
   azure_rm_dnsrecordset:
@@ -201,7 +201,6 @@ EXAMPLES = '''
         retry_time: 399
         expire_time: 2419299
         minimum_ttl: 399
-
 '''
 
 RETURN = '''
@@ -277,12 +276,9 @@ state:
         ]
 '''
 
-import inspect
-import sys
 import copy
 
 from ansible.module_utils.basic import _load_params
-from ansible.module_utils.six import iteritems
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, HAS_AZURE
 
 try:

@@ -69,9 +69,15 @@ EXAMPLES = '''
       hub_policy_name: registryRead
       hub_policy_key: XXXXXXXXXXXXXXXXXXXX
 
+- name: Query devices
+  azure_rm_iotdevice_info:
+      hub: "hub{{ rpfx }}"
+      query: "SELECT * FROM devices"
+      hub_policy_name: "{{ registry_write_name }}"
+      hub_policy_key: "{{ registry_write_key }}"
+
 - name: Query all device modules in an IoT Hub
   azure_rm_iotdevice_info:
-      query: "SELECT * FROM devices.modules"
       hub: MyIoTHub
       hub_policy_name: registryRead
       hub_policy_key: XXXXXXXXXXXXXXXXXXXX
@@ -170,14 +176,10 @@ iot_devices:
     }
 '''  # NOQA
 
-import json
-
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
-from ansible.module_utils.common.dict_transformations import _snake_to_camel, _camel_to_snake
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.tools import parse_resource_id
-    from msrestazure.azure_exceptions import CloudError
+    from azure.iot.hub import IoTHubRegistryManager
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -208,16 +210,11 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
         self.hub_policy_name = None
         self.hub_policy_key = None
         self.top = None
+        self.query = None
 
-        self._mgmt_client = None
+        self.mgmt_client = None
         self._base_url = None
-        self.query_parameters = {
-            'api-version': '2018-06-30'
-        }
-        self.header_parameters = {
-            'Content-Type': 'application/json; charset=utf-8',
-            'accept-language': 'en-US'
-        }
+
         super(AzureRMIoTDeviceFacts, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
@@ -226,21 +223,16 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         self._base_url = '{0}.azure-devices.net'.format(self.hub)
-        config = {
-            'base_url': self._base_url,
-            'key': self.hub_policy_key,
-            'policy': self.hub_policy_name
-        }
-        if self.top:
-            self.query_parameters['top'] = self.top
-        self._mgmt_client = self.get_data_svc_client(**config)
+
+        connect_str = "HostName={0};SharedAccessKeyName={1};SharedAccessKey={2}".format(self._base_url, self.hub_policy_name, self.hub_policy_key)
+        self.mgmt_client = IoTHubRegistryManager.from_connection_string(connect_str)
 
         response = []
         if self.module_id:
             response = [self.get_device_module()]
         elif self.name:
             response = [self.get_device()]
-        elif self.query:
+        elif self.query is not None:
             response = self.hub_query()
         else:
             response = self.list_devices()
@@ -248,56 +240,140 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
         self.results['iot_devices'] = response
         return self.results
 
-    def hub_query(self):
-        try:
-            url = '/devices/query'
-            request = self._mgmt_client.post(url, self.query_parameters)
-            query = {
-                'query': self.query
-            }
-            response = self._mgmt_client.send(request=request, headers=self.header_parameters, content=query)
-            if response.status_code not in [200]:
-                raise CloudError(response)
-            return json.loads(response.text)
-        except Exception as exc:
-            self.fail('Error when running query "{0}" in IoT Hub {1}: {2}'.format(self.query, self.hub, exc.message or str(exc)))
-
     def get_device(self):
         try:
-            url = '/devices/{0}'.format(self.name)
-            device = self._https_get(url, self.query_parameters, self.header_parameters)
-            device['modules'] = self.list_device_modules()
-            return device
+            response = self.mgmt_client.get_device(self.name)
+
+            response = self.format_item(response)
+            return response
         except Exception as exc:
-            self.fail('Error when getting IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
+            self.fail('Error when getting IoT Hub device {0}: {1}'.format(self.name, exc))
 
     def get_device_module(self):
         try:
-            url = '/devices/{0}/modules/{1}'.format(self.name, self.module_id)
-            return self._https_get(url, self.query_parameters, self.header_parameters)
+            response = self.mgmt_client.get_module(self.name, self.module_id)
+            return self.format_module(response)
         except Exception as exc:
-            self.fail('Error when getting IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
+            self.fail('Error when getting IoT Hub device {0}: {1}'.format(self.name, exc))
 
     def list_device_modules(self):
         try:
-            url = '/devices/{0}/modules'.format(self.name)
-            return self._https_get(url, self.query_parameters, self.header_parameters)
+            response = self.mgmt_client.get_modules(self.name)
+
+            return [self.format_module(item) for item in response]
         except Exception as exc:
-            self.fail('Error when getting IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
+            self.fail('Error when getting IoT Hub device {0}: {1}'.format(self.name, exc))
 
     def list_devices(self):
         try:
-            url = '/devices'
-            return self._https_get(url, self.query_parameters, self.header_parameters)
-        except Exception as exc:
-            self.fail('Error when listing IoT Hub devices in {0}: {1}'.format(self.hub, exc.message or str(exc)))
+            response = None
+            response = self.mgmt_client.get_devices(max_number_of_devices=1000)
 
-    def _https_get(self, url, query_parameters, header_parameters):
-        request = self._mgmt_client.get(url, query_parameters)
-        response = self._mgmt_client.send(request=request, headers=header_parameters, content=None)
-        if response.status_code not in [200]:
-            raise CloudError(response)
-        return json.loads(response.text)
+            response = [self.format_item(item) for item in response]
+            if self.top is not None:
+                return response[self.top - 1]
+            else:
+                return response
+        except Exception as exc:
+            if hasattr(exc, 'message'):
+                pass
+            else:
+                self.fail('Error when listing IoT Hub devices in {0}: {1}'.format(self.hub, exc))
+
+    def hub_query(self):
+        try:
+            response = None
+            response = self.mgmt_client.query_iot_hub(dict(query=self.query))
+
+            return [self.format_twin(item) for item in response.items]
+
+        except Exception as exc:
+            if hasattr(exc, 'message'):
+                pass
+            else:
+                self.fail('Error when listing IoT Hub devices in {0}: {1}'.format(self.hub, exc))
+
+    def format_module(self, item):
+        if not item:
+            return None
+        format_item = dict(
+            authentication=dict(),
+            cloudToDeviceMessageCount=item.cloud_to_device_message_count,
+            connectionState=item.connection_state,
+            connectionStateUpdatedTime=item.connection_state_updated_time,
+            deviceId=item.device_id,
+            etag=item.etag,
+            generationId=item.generation_id,
+            lastActivityTime=item.last_activity_time,
+            managedBy=item.managed_by,
+            moduleId=item.module_id
+        )
+        if item.authentication:
+            format_item['authentication']['symmetricKey'] = dict()
+            format_item['authentication']['symmetricKey']['primaryKey'] = item.authentication.symmetric_key.primary_key
+            format_item['authentication']['symmetricKey']['secondaryKey'] = item.authentication.symmetric_key.secondary_key
+
+            format_item['authentication']['type'] = item.authentication.type
+            format_item['authentication']["x509Thumbprint"] = dict()
+            format_item['authentication']["x509Thumbprint"]["primaryThumbprint"] = item.authentication.x509_thumbprint.primary_thumbprint
+            format_item['authentication']["x509Thumbprint"]['secondaryThumbprint'] = item.authentication.x509_thumbprint.secondary_thumbprint
+
+        return format_item
+
+    def format_item(self, item):
+        if not item:
+            return None
+        format_item = dict(
+            authentication=dict(),
+            capabilities=dict(),
+            cloudToDeviceMessageCount=item.cloud_to_device_message_count,
+            connectionState=item.connection_state,
+            connectionStateUpdatedTime=item.connection_state_updated_time,
+            deviceId=item.device_id,
+            etag=item.etag,
+            generationId=item.generation_id,
+            lastActivityTime=item.last_activity_time,
+            status=item.status,
+            statusReason=item.status_reason
+        )
+        if hasattr(item, 'status_updated_time'):
+            format_item['statusUpdatedTime'] = item.status_updated_time
+        if hasattr(item, 'modules'):
+            format_item['modules'] = item.modules
+        if item.authentication:
+            format_item['authentication']['symmetricKey'] = dict()
+            format_item['authentication']['symmetricKey']['primaryKey'] = item.authentication.symmetric_key.primary_key
+            format_item['authentication']['symmetricKey']['secondaryKey'] = item.authentication.symmetric_key.secondary_key
+
+            format_item['authentication']['type'] = item.authentication.type
+            format_item['authentication']["x509Thumbprint"] = dict()
+            format_item['authentication']["x509Thumbprint"]["primaryThumbprint"] = item.authentication.x509_thumbprint.primary_thumbprint
+            format_item['authentication']["x509Thumbprint"]['secondaryThumbprint'] = item.authentication.x509_thumbprint.secondary_thumbprint
+        if item.capabilities:
+            format_item['capabilities']["iotEdge"] = item.capabilities.iot_edge
+
+        return format_item
+
+    def format_twin(self, item):
+        if not item:
+            return None
+        format_twin = dict(
+            device_id=item.device_id,
+            module_id=item.module_id,
+            tags=item.tags,
+            properties=dict(),
+            etag=item.etag,
+            version=item.version,
+            device_etag=item.device_etag,
+            status=item.status,
+            cloud_to_device_message_count=item.cloud_to_device_message_count,
+            authentication_type=item.authentication_type,
+        )
+        if item.properties is not None:
+            format_twin['properties']['desired'] = item.properties.desired
+            format_twin['properties']['reported'] = item.properties.reported
+
+        return format_twin
 
 
 def main():

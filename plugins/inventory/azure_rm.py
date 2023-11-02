@@ -52,59 +52,59 @@ auth_source: cli
 
 # fetches VMs from an explicit list of resource groups instead of default all (- '*')
 include_vm_resource_groups:
-- myrg1
-- myrg2
+    - myrg1
+    - myrg2
 
 # fetches VMs from VMSSs in all resource groups (defaults to no VMSS fetch)
 include_vmss_resource_groups:
-- '*'
+    - '*'
 
 # places a host in the named group if the associated condition evaluates to true
 conditional_groups:
-  # since this will be true for every host, every host sourced from this inventory plugin config will be in the
-  # group 'all_the_hosts'
-  all_the_hosts: true
-  # if the VM's "name" variable contains "dbserver", it will be placed in the 'db_hosts' group
-  db_hosts: "'dbserver' in name"
+    # since this will be true for every host, every host sourced from this inventory plugin config will be in the
+    # group 'all_the_hosts'
+    all_the_hosts: true
+    # if the VM's "name" variable contains "dbserver", it will be placed in the 'db_hosts' group
+    db_hosts: "'dbserver' in name"
 
 # adds variables to each host found by this inventory plugin, whose values are the result of the associated expression
 hostvar_expressions:
-  my_host_var:
-  # A statically-valued expression has to be both single and double-quoted, or use escaped quotes, since the outer
-  # layer of quotes will be consumed by YAML. Without the second set of quotes, it interprets 'staticvalue' as a
-  # variable instead of a string literal.
-  some_statically_valued_var: "'staticvalue'"
-  # overrides the default ansible_host value with a custom Jinja2 expression, in this case, the first DNS hostname, or
-  # if none are found, the first public IP address.
-  ansible_host: (public_dns_hostnames + public_ipv4_addresses) | first
+    my_host_var:
+    # A statically-valued expression has to be both single and double-quoted, or use escaped quotes, since the outer
+    # layer of quotes will be consumed by YAML. Without the second set of quotes, it interprets 'staticvalue' as a
+    # variable instead of a string literal.
+    some_statically_valued_var: "'staticvalue'"
+    # overrides the default ansible_host value with a custom Jinja2 expression, in this case, the first DNS hostname, or
+    # if none are found, the first public IP address.
+    ansible_host: (public_dns_hostnames + public_ipv4_addresses) | first
 
 # change how inventory_hostname is generated. Each item is a jinja2 expression similar to hostvar_expressions.
 hostnames:
-  - tags.vm_name
-  - default_inventory_hostname + ".domain.tld" # Transfer to fqdn if you use shortnames for VMs
-  - default  # special var that uses the default hashed name
+    - tags.vm_name
+    - default_inventory_hostname + ".domain.tld" # Transfer to fqdn if you use shortnames for VMs
+    - default  # special var that uses the default hashed name
 
 # places hosts in dynamically-created groups based on a variable value.
 keyed_groups:
 # places each host in a group named 'tag_(tag name)_(tag value)' for each tag on a VM.
-- prefix: tag
-  key: tags
+    - prefix: tag
+      key: tags
 # places each host in a group named 'azure_loc_(location name)', depending on the VM's location
-- prefix: azure_loc
-  key: location
+    - prefix: azure_loc
+      key: location
 # places host in a group named 'some_tag_X' using the value of the 'sometag' tag on a VM as X, and defaulting to the
 # value 'none' (eg, the group 'some_tag_none') if the 'sometag' tag is not defined for a VM.
-- prefix: some_tag
-  key: tags.sometag | default('none')
+    - prefix: some_tag
+      key: tags.sometag | default('none')
 
 # excludes a host from the inventory when any of these expressions is true, can refer to any vars defined on the host
 exclude_host_filters:
-# excludes hosts in the eastus region
-- location in ['eastus']
-- tags['tagkey'] is defined and tags['tagkey'] == 'tagkey'
-- tags['tagkey2'] is defined and tags['tagkey2'] == 'tagkey2'
-# excludes hosts that are powered off
-- powerstate != 'running'
+    # excludes hosts in the eastus region
+    - location in ['eastus']
+    - tags['tagkey'] is defined and tags['tagkey'] == 'tagkey'
+    - tags['tagkey2'] is defined and tags['tagkey2'] == 'tagkey2'
+    # excludes hosts that are powered off
+    - powerstate != 'running'
 '''
 
 # FUTURE: do we need a set of sane default filters, separate from the user-defineable ones?
@@ -123,7 +123,6 @@ except ImportError:
     from Queue import Queue, Empty
 
 from collections import namedtuple
-from ansible import release
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable
 from ansible.module_utils.six import iteritems
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMAuth
@@ -133,21 +132,19 @@ from ansible.module_utils._text import to_native, to_bytes, to_text
 from itertools import chain
 
 try:
-    from msrest import ServiceClient, Serializer, Deserializer
-    from msrestazure import AzureConfiguration
-    from msrestazure.polling.arm_polling import ARMPolling
-    from msrestazure.tools import parse_resource_id
+    from azure.core._pipeline_client import PipelineClient
+    from azure.core.pipeline.policies import BearerTokenCredentialPolicy
+    from azure.core.configuration import Configuration
+    from azure.mgmt.core.tools import parse_resource_id
 except ImportError:
-    AzureConfiguration = object
-    ARMPolling = object
+    Configuration = object
     parse_resource_id = object
-    ServiceClient = object
-    Serializer = object
-    Deserializer = object
+    PipelineClient = object
+    BearerTokenCredentialPolicy = object
     pass
 
 
-class AzureRMRestConfiguration(AzureConfiguration):
+class AzureRMRestConfiguration(Configuration):
     def __init__(self, credentials, subscription_id, base_url=None):
 
         if credentials is None:
@@ -157,10 +154,11 @@ class AzureRMRestConfiguration(AzureConfiguration):
         if not base_url:
             base_url = 'https://management.azure.com'
 
-        super(AzureRMRestConfiguration, self).__init__(base_url)
+        credential_scopes = base_url + '/.default'
 
-        self.add_user_agent('ansible-dynamic-inventory/{0}'.format(release.__version__))
+        super(AzureRMRestConfiguration, self).__init__()
 
+        self.authentication_policy = BearerTokenCredentialPolicy(credentials, credential_scopes)
         self.credentials = credentials
         self.subscription_id = subscription_id
 
@@ -176,8 +174,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
     def __init__(self):
         super(InventoryModule, self).__init__()
 
-        self._serializer = Serializer()
-        self._deserializer = Deserializer()
         self._hosts = []
         self._filters = None
 
@@ -238,14 +234,16 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             cloud_environment=self.get_option('cloud_environment'),
             cert_validation_mode=self.get_option('cert_validation_mode'),
             api_profile=self.get_option('api_profile'),
+            track1_cred=True,
             adfs_authority_url=self.get_option('adfs_authority_url')
         )
 
         self.azure_auth = AzureRMAuth(**auth_options)
 
-        self._clientconfig = AzureRMRestConfiguration(self.azure_auth.azure_credentials, self.azure_auth.subscription_id,
+        self._clientconfig = AzureRMRestConfiguration(self.azure_auth.azure_credential_track2, self.azure_auth.subscription_id,
                                                       self.azure_auth._cloud_environment.endpoints.resource_manager)
-        self._client = ServiceClient(self._clientconfig.credentials, self._clientconfig)
+
+        self.new_client = PipelineClient(self.azure_auth._cloud_environment.endpoints.resource_manager, config=self._clientconfig)
 
     def _enqueue_get(self, url, api_version, handler, handler_args=None):
         if not handler_args:
@@ -401,7 +399,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
                     name = str(uuid.uuid4())
                     query_parameters = {'api-version': item.api_version}
-                    req = self._client.get(item.url, query_parameters)
+                    header_parameters = {'x-ms-client-request-id': str(uuid.uuid4()), 'Content-Type': 'application/json; charset=utf-8'}
+                    body = {}
+                    req = self.new_client.get(item.url, query_parameters, header_parameters, body)
                     batch_requests.append(dict(httpMethod="GET", url=req.url, name=name))
                     batch_response_handlers[name] = item
                     batch_item_index += 1
@@ -433,36 +433,25 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
     def _send_batch(self, batched_requests):
         url = '/batch'
         query_parameters = {'api-version': '2015-11-01'}
-
-        body_obj = dict(requests=batched_requests)
-
-        body_content = self._serializer.body(body_obj, 'object')
+        header_parameters = {'x-ms-client-request-id': str(uuid.uuid4()), 'Content-Type': 'application/json; charset=utf-8'}
+        body_content = dict(requests=batched_requests)
 
         header = {'x-ms-client-request-id': str(uuid.uuid4())}
         header.update(self._default_header_parameters)
 
-        request = self._client.post(url, query_parameters)
-        initial_response = self._client.send(request, header, body_content)
+        request_new = self.new_client.post(url, query_parameters, header_parameters, body_content)
+        response = self.new_client.send_request(request_new)
 
-        # FUTURE: configurable timeout?
-        poller = ARMPolling(timeout=2)
-        poller.initialize(client=self._client,
-                          initial_response=initial_response,
-                          deserialization_callback=lambda r: self._deserializer('object', r))
-
-        poller.run()
-
-        return poller.resource()
+        return json.loads(response.body())
 
     def send_request(self, url, api_version):
         query_parameters = {'api-version': api_version}
-        req = self._client.get(url, query_parameters)
-        resp = self._client.send(req, self._default_header_parameters, stream=False)
+        header_parameters = {'x-ms-client-request-id': str(uuid.uuid4()), 'Content-Type': 'application/json; charset=utf-8'}
+        body = {}
+        request_new = self.new_client.get(url, query_parameters, header_parameters)
+        response = self.new_client.send_request(request_new)
 
-        resp.raise_for_status()
-        content = resp.content
-
-        return json.loads(content)
+        return json.loads(response.body())
 
     @staticmethod
     def _legacy_script_compatible_group_sanitization(name):

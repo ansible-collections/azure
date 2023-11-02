@@ -155,7 +155,6 @@ EXAMPLES = '''
     vhub_name: testhub
     name: Myconnection
     state: absent
-
 '''
 
 RETURN = '''
@@ -289,7 +288,6 @@ state:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 try:
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
 except ImportError:
@@ -467,7 +465,7 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
                                                                                                   virtual_hub_name=self.vhub_name,
                                                                                                   connection_name=self.name,
                                                                                                   hub_virtual_network_connection_parameters=self.body)
-            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
             self.log('Error attempting to create the VirtualHub instance.')

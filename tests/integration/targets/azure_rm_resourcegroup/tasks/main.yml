@@ -1,50 +1,55 @@
 - name: Get resource group datalake info
   azure_rm_resourcegroup_info:
-      name: "{{ resource_group_datalake }}"
-      list_resources: yes
+    name: "{{ resource_group_datalake }}"
+    list_resources: true
   register: rg
 
-- assert:
+- name: Assert the resource group facts
+  ansible.builtin.assert:
     that:
-        - rg.resourcegroups | length == 1
-        - rg.resourcegroups[0].resources | length >= 0
+      - rg.resourcegroups | length == 1
+      - rg.resourcegroups[0].resources | length >= 0
 
 - name: Get resource group info
   azure_rm_resourcegroup_info:
   register: rg
 
-- assert:
+- name: Assert all resource group facts
+  ansible.builtin.assert:
     that:
-        - rg.resourcegroups | length >= 1
+      - rg.resourcegroups | length >= 1
 
 - name: Get resource group info
   azure_rm_resourcegroup_info:
-      name: "{{ resource_group }}"
-      list_resources: yes
+    name: "{{ resource_group }}"
+    list_resources: true
   register: rg
 
-- assert:
+- name: Assert the resource group facts
+  ansible.builtin.assert:
     that:
-        - rg.resourcegroups | length == 1
-        - rg.resourcegroups[0].resources | length >= 0
+      - rg.resourcegroups | length == 1
+      - rg.resourcegroups[0].resources | length >= 0
 
 - name: Create resource group (idempontent)
   azure_rm_resourcegroup:
-      name: "{{ resource_group }}"
-      location: "{{ rg.resourcegroups[0].location }}"
+    name: "{{ resource_group }}"
+    location: "{{ rg.resourcegroups[0].location }}"
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that:
-        - not output.changed
+      - not output.changed
 
-- name: delete resource group
+- name: Delete resource group
   azure_rm_resourcegroup:
-      name: "{{ resource_group }}"
-      state: absent
-  check_mode: yes
+    name: "{{ resource_group }}"
+    state: absent
+  check_mode: true
   register: output
 
-- assert:
+- name: Assert the resource group deleted
+  ansible.builtin.assert:
     that:
-        - output.changed
+      - output.changed

@@ -43,22 +43,22 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one load balancer
-      azure_rm_loadbalancer_info:
-        name: Testing
-        resource_group: myResourceGroup
+- name: Get facts for one load balancer
+  azure_rm_loadbalancer_info:
+    name: Testing
+    resource_group: myResourceGroup
 
-    - name: Get facts for all load balancers
-      azure_rm_loadbalancer_info:
+- name: Get facts for all load balancers
+  azure_rm_loadbalancer_info:
 
-    - name: Get facts for all load balancers in a specific resource group
-      azure_rm_loadbalancer_info:
-        resource_group: myResourceGroup
+- name: Get facts for all load balancers in a specific resource group
+  azure_rm_loadbalancer_info:
+    resource_group: myResourceGroup
 
-    - name: Get facts by tags
-      azure_rm_loadbalancer_info:
-        tags:
-          - testing
+- name: Get facts by tags
+  azure_rm_loadbalancer_info:
+    tags:
+      - testing
 '''
 
 RETURN = '''
@@ -116,7 +116,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.common import AzureHttpError
 except Exception:
     # handled in azure_rm_common
     pass

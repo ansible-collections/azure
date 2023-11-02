@@ -1,5 +1,5 @@
 - name: Set Private Link Service Names
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
     azure_subscription_id: f64d4ee8-be94-457d-ba26-3fa6b6506cef
 
@@ -27,14 +27,14 @@
     private_endpoint_network_policies: Disabled
   register: subnet_output
 
-- name: create public ip
+- name: Create public ip
   azure_rm_publicipaddress:
     resource_group: '{{ resource_group }}'
     name: "pip{{ rpfx }}"
     sku: Standard
     allocation_method: Static
 
-- name: create load balancer with frontend_ip_configurations
+- name: Create load balancer with frontend_ip_configurations
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "lb{{ rpfx }}"
@@ -66,54 +66,55 @@
   azure_rm_privatelinkservice:
     name: "lsp{{ rpfx }}"
     resource_group: "{{ resource_group }}"
-    enable_proxy_protocol: True
+    enable_proxy_protocol: true
     fqdns:
       - 'dns01.com'
       - 'dns02.com'
     visibility:
-       subscriptions:
-         - "{{ azure_subscription_id }}"
+      subscriptions:
+        - "{{ azure_subscription_id }}"
     auto_approval:
-       subscriptions:
-         - "{{ azure_subscription_id }}"
+      subscriptions:
+        - "{{ azure_subscription_id }}"
     load_balancer_frontend_ip_configurations:
       - id: "{{ lb_output.state.frontend_ip_configurations[0].id }}"
     ip_configurations:
       - name: ip_configuration01
         properties:
-          primary: True
+          primary: true
           private_ip_allocation_method: 'Dynamic'
           private_ip_address_version: 'IPv4'
           subnet:
             id: "{{ subnet_output.state.id }}"
     tags:
       key1: value1
-  check_mode: True
+  check_mode: true
   register: output
 
-- assert:
+- name: Assert there is no private link service
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Create private link service
   azure_rm_privatelinkservice:
     name: "lsp{{ rpfx }}"
     resource_group: "{{ resource_group }}"
-    enable_proxy_protocol: True
+    enable_proxy_protocol: true
     fqdns:
       - 'dns01.com'
       - 'dns02.com'
     visibility:
-       subscriptions:
-         - "{{ azure_subscription_id }}"
+      subscriptions:
+        - "{{ azure_subscription_id }}"
     auto_approval:
-       subscriptions:
-         - "{{ azure_subscription_id }}"
+      subscriptions:
+        - "{{ azure_subscription_id }}"
     load_balancer_frontend_ip_configurations:
       - id: "{{ lb_output.state.frontend_ip_configurations[0].id }}"
     ip_configurations:
       - name: ip_configuration01
         properties:
-          primary: True
+          primary: true
           private_ip_allocation_method: 'Dynamic'
           private_ip_address_version: 'IPv4'
           subnet:
@@ -122,29 +123,30 @@
       key1: value1
   register: output
 
-- assert:
+- name: Assert the private link service created
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Create private link service (Idempotent test)
   azure_rm_privatelinkservice:
     name: "lsp{{ rpfx }}"
     resource_group: "{{ resource_group }}"
-    enable_proxy_protocol: True
+    enable_proxy_protocol: true
     fqdns:
       - 'dns01.com'
       - 'dns02.com'
     visibility:
-       subscriptions:
-         - "{{ azure_subscription_id }}"
+      subscriptions:
+        - "{{ azure_subscription_id }}"
     auto_approval:
-       subscriptions:
-         - "{{ azure_subscription_id }}"
+      subscriptions:
+        - "{{ azure_subscription_id }}"
     load_balancer_frontend_ip_configurations:
       - id: "{{ lb_output.state.frontend_ip_configurations[0].id }}"
     ip_configurations:
       - name: ip_configuration01
         properties:
-          primary: True
+          primary: true
           private_ip_allocation_method: 'Dynamic'
           private_ip_address_version: 'IPv4'
           subnet:
@@ -153,29 +155,30 @@
       key1: value1
   register: output
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Update private link service
   azure_rm_privatelinkservice:
     name: "lsp{{ rpfx }}"
     resource_group: "{{ resource_group }}"
-    enable_proxy_protocol: False
+    enable_proxy_protocol: false
     fqdns:
       - 'dns03.com'
       - 'dns04.com'
     visibility:
-       subscriptions:
-         - "{{ azure_subscription_id }}"
+      subscriptions:
+        - "{{ azure_subscription_id }}"
     auto_approval:
-       subscriptions:
-         - "{{ azure_subscription_id }}"
+      subscriptions:
+        - "{{ azure_subscription_id }}"
     load_balancer_frontend_ip_configurations:
       - id: "{{ lb_output.state.frontend_ip_configurations[0].id }}"
     ip_configurations:
       - name: ip_configuration01
         properties:
-          primary: True
+          primary: true
           private_ip_allocation_method: 'Dynamic'
           private_ip_address_version: 'IPv4'
           subnet:
@@ -185,7 +188,8 @@
       key3: value3
   register: output
 
-- assert:
+- name: Assert the private link service update
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Get private link service info by name
@@ -194,7 +198,8 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- name: Assert the private link service facts
+  ansible.builtin.assert:
     that:
       - output.link_service[0].tags | length == 3
       - output.link_service[0].fqdns | length == 4
@@ -217,7 +222,8 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- name: Assert the private endpoint connection facts
+  ansible.builtin.assert:
     that:
       - output.endpoint_connection[0].private_link_service_connection_state.actions_required == "None"
       - output.endpoint_connection[0].private_link_service_connection_state.description == "Approved"
@@ -234,7 +240,8 @@
       actions_required: "actions required"
   register: output
 
-- assert:
+- name: Assert the private endpoint connection updated
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Get private endpoint connection info by name
@@ -244,7 +251,8 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- name: Assert the private endpoint connection facts
+  ansible.builtin.assert:
     that:
       - output.endpoint_connection[0].private_link_service_connection_state.actions_required == "actions required"
       - output.endpoint_connection[0].private_link_service_connection_state.description == "Rejected"
@@ -258,7 +266,8 @@
     state: absent
   register: output
 
-- assert:
+- name: Assert the private endpoint connection deleted
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Delete private endpoint
@@ -267,11 +276,13 @@
     resource_group: "{{ resource_group }}"
     state: absent
 
-- assert:
+- name: Assert the private endpoint deleted
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Pause for 5 mimutes to waiting
-  shell: sleep 300
+  ansible.builtin.command: sleep 300
+  changed_when: true
 
 - name: Delete private link service
   azure_rm_privatelinkservice:
@@ -280,5 +291,6 @@
     state: absent
   register: output
 
-- assert:
+- name: Assert the private link service deleted
+  ansible.builtin.assert:
     that: output.changed

@@ -54,31 +54,31 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get latest version of specific key
-    azure_rm_keyvaultkey_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: myKey
+- name: Get latest version of specific key
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: myKey
 
-  - name: List all versions of specific key
-    azure_rm_keyvaultkey_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: myKey
-      version: all
+- name: List all versions of specific key
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: myKey
+    version: all
 
-  - name: List specific version of specific key
-    azure_rm_keyvaultkey_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: myKey
-      version: fd2682392a504455b79c90dd04a1bf46
+- name: List specific version of specific key
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: myKey
+    version: fd2682392a504455b79c90dd04a1bf46
 
-  - name: List all keys in specific key vault
-    azure_rm_keyvaultkey_info:
-        vault_uri: "https://myVault.vault.azure.net"
+- name: List all keys in specific key vault
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
 
-  - name: List deleted keys in specific key vault
-    azure_rm_keyvaultkey_info:
-        vault_uri: "https://myVault.vault.azure.net"
-        show_deleted_key: True
+- name: List deleted keys in specific key vault
+  azure_rm_keyvaultkey_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    show_deleted_key: true
 '''
 
 RETURN = '''
@@ -115,6 +115,7 @@ keyvaults:
         key:
             description:
                 - public part of a key.
+            type: dict
             contains:
                 n:
                     description:
@@ -150,6 +151,7 @@ keyvaults:
         attributes:
             description:
                 - Key attributes.
+            type: dict
             contains:
                 created:
                     description:
@@ -271,7 +273,7 @@ def deletedkeybundle_to_dict(bundle):
                             crv=bundle.key.crv if hasattr(bundle.key, 'crv') else None,
                             x=bundle.key.x if hasattr(bundle.key, 'x') else None,
                             y=bundle.key.y if hasattr(bundle.key, 'y') else None)
-    keybundle['id'] = bundle.id,
+    keybundle['id'] = bundle.id
     return keybundle
 
 
@@ -313,8 +315,8 @@ def delete_item_to_dict(bundle):
 
 def deletedkeyitem_to_dict(keyitem):
     item = delete_item_to_dict(keyitem)
-    item['recovery_id'] = keyitem.recovery_id,
-    item['scheduled_purge_date'] = keyitem.scheduled_purge_date,
+    item['recovery_id'] = keyitem.recovery_id
+    item['scheduled_purge_date'] = keyitem.scheduled_purge_date
     item['deleted_date'] = keyitem.deleted_date
     return item
 

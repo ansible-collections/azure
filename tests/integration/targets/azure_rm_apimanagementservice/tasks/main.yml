@@ -1,11 +1,11 @@
 - name: Fix resource prefix
-  set_fact:
-    name: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+  ansible.builtin.set_fact:
+    name_rpfx: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
-- name: To create API Management service
+- name: To create api management service
   azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     publisher_email: user@example.com
     publisher_name: Username
     sku_name: Developer
@@ -13,15 +13,15 @@
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == True
       - output.failed == False
 
-- name: Recreate API Management service( Idempotent test)
+- name: Recreate api management service idempotent test
   azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     publisher_email: user@example.com
     publisher_name: Username
     sku_name: Developer
@@ -29,7 +29,7 @@
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.failed == False
@@ -37,22 +37,22 @@
 - name: Get api management service information
   azure_rm_apimanagementservice_info:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
-      - output.api_management_service.name == "{{ name }}"
+      - output.api_management_service.name == "{{ name_rpfx }}"
 
 - name: To delete an api management service
   azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     state: absent
   register: output
 
 - name: Assert the changes
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == True

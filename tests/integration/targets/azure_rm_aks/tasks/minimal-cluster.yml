@@ -1,4 +1,5 @@
-- set_fact:
+- name: Set varialbles
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
 - name: Find available k8s version
@@ -26,30 +27,30 @@
         - "192.0.2.0"
         - "198.51.100.0"
         - "203.0.113.0"
-      enable_private_cluster: no
+      enable_private_cluster: false
     network_profile:
       load_balancer_sku: standard
       outbound_type: loadBalancer
   register: output
 
 - name: Assert the AKS instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.provisioning_state == 'Succeeded'
 
 - name: Get AKS fact
   azure_rm_aks_info:
-     name: "minimal{{ rpfx }}"
-     resource_group: "{{ resource_group }}"
+    name: "minimal{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
   register: fact
 
 - name: Assert fact returns the created one
-  assert:
+  ansible.builtin.assert:
     that:
       - "fact.aks | length == 1"
       - fact.aks[0].id == output.id
-      - fact.aks[0].properties.aadProfile.managed == true
+      - fact.aks[0].aad_profile.managed == true
 
 - name: Use minimal parameters and system-assigned identity (idempotent)
   azure_rm_aks:
@@ -71,14 +72,14 @@
         - "192.0.2.0"
         - "198.51.100.0"
         - "203.0.113.0"
-      enable_private_cluster: no
+      enable_private_cluster: false
     network_profile:
       load_balancer_sku: standard
       outbound_type: loadBalancer
   register: output
 
 - name: Assert idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -101,14 +102,14 @@
         - "192.0.2.0"
         - "198.51.100.0"
         - "203.0.113.0"
-      enable_private_cluster: no
+      enable_private_cluster: false
     network_profile:
       load_balancer_sku: standard
       outbound_type: loadBalancer
   register: output
 
 - name: Assert idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -120,7 +121,7 @@
   register: output
 
 - name: Assert the AKS instance is well deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -131,6 +132,6 @@
   register: fact
 
 - name: Assert fact returns empty
-  assert:
+  ansible.builtin.assert:
     that:
       - "fact.aks | length == 0"

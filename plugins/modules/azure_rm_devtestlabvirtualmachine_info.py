@@ -46,13 +46,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of DTL Virtual Machine
-    azure_rm_devtestlabvirtualmachine_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myVm
-      tags:
-        - key:value
+- name: Get instance of DTL Virtual Machine
+  azure_rm_devtestlabvirtualmachine_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myVm
+    tags:
+      - key:value
 '''
 
 RETURN = '''
@@ -128,7 +128,7 @@ virtualmachines:
                         - The SKU of the gallery image.
                     returned: when created from gallery image
                     type: str
-                    sample: 16.04-LTS
+                    sample: 20_04-lts
                 publisher:
                     description:
                         - The publisher of the gallery image.
@@ -199,7 +199,7 @@ virtualmachines:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'foo': 'bar' }"
 '''
 
@@ -208,7 +208,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

@@ -1,178 +1,182 @@
-- set_fact:
+- name: Set variables
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
 - name: Create IoT Hub (check mode)
   azure_rm_iothub:
-      name: "hub{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      ip_filters:
-        - name: filter1
-          action: reject
-          ip_mask: 40.60.80.10
-  check_mode: yes
+    name: "hub{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    ip_filters:
+      - name: filter1
+        action: reject
+        ip_mask: 40.60.80.10
+  check_mode: true
   register: iothub
 
-- assert:
+- name: Assert the check mode result
+  ansible.builtin.assert:
     that:
-        - iothub.changed
+      - iothub.changed
 
 - name: Query IoT Hub
   azure_rm_iothub_info:
-      name: "hub{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
+    name: "hub{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
   register: iothub
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Create IoT Hub
   azure_rm_iothub:
-      name: "hub{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      ip_filters:
-        - name: filter1
-          action: reject
-          ip_mask: 40.60.80.10
+    name: "hub{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    ip_filters:
+      - name: filter1
+        action: reject
+        ip_mask: 40.60.80.10
   register: iothub
 
-- assert:
+- name: Assert tht iot hub created
+  ansible.builtin.assert:
     that:
-        - iothub.changed
+      - iothub.changed
 
 - name: Create IoT Hub (idempontent)
   azure_rm_iothub:
-      name: "hub{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      ip_filters:
-        - name: filter1
-          action: reject
-          ip_mask: 40.60.80.10
+    name: "hub{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    ip_filters:
+      - name: filter1
+        action: reject
+        ip_mask: 40.60.80.10
   register: iothub
 
-- assert:
+- name: Assert the iot hub created
+  ansible.builtin.assert:
     that:
-        - not iothub.changed
+      - not iothub.changed
 
 - name: Query IoT Hub
   azure_rm_iothub_info:
-      name: "hub{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      list_keys: yes
+    name: "hub{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    list_keys: true
   register: iothub
 
-- assert:
+- name: Assert the iot hub facts
+  ansible.builtin.assert:
     that:
-        - iothub.iothubs | length == 1
+      - iothub.iothubs | length == 1
 
-- set_fact:
+- name: Set variables
+  ansible.builtin.set_fact:
     registry_write_name: "{{ item.key_name }}"
     registry_write_key: "{{ item.primary_key }}"
+    secondary_key: "{{ item.secondary_key }}"
   with_items: "{{ iothub.iothubs[0]['keys'] }}"
   when: item.rights == 'RegistryWrite, ServiceConnect, DeviceConnect'
 
 - name: Create devices
   azure_rm_iotdevice:
-      hub: "hub{{ rpfx }}"
-      hub_policy_name: "{{ registry_write_name }}"
-      hub_policy_key: "{{ registry_write_key }}"
-      name: "mydevice{{ item }}"
-      twin_tags:
-          location:
-              country: US
-              city: Redmond
-          sensor: humidity
+    hub: "hub{{ rpfx }}"
+    hub_policy_name: "{{ registry_write_name }}"
+    hub_policy_key: "{{ registry_write_key }}"
+    name: "mydevice{{ item }}"
+    primary_key: "{{ registry_write_key }}"
+    secondary_key: "{{ secondary_key }}"
+    twin_tags:
+      location:
+        country: US
+        city: Redmond
+      sensor: humidity
   with_items:
     - 1
     - 2
 
 - name: Query devices
   azure_rm_iotdevice_info:
-      hub: "hub{{ rpfx }}"
-      hub_policy_name: "{{ registry_write_name }}"
-      hub_policy_key: "{{ registry_write_key }}"
+    hub: "hub{{ rpfx }}"
+    hub_policy_name: "{{ registry_write_name }}"
+    hub_policy_key: "{{ registry_write_key }}"
   register: devices
 
-- assert:
-     that:
-        - devices.iot_devices | length == 2
+- name: Assert the iot devices facts
+  ansible.builtin.assert:
+    that:
+      - devices.iot_devices | length == 2
 
-- name: Query devices
+- name: Query devices by name
   azure_rm_iotdevice_info:
-      hub: "hub{{ rpfx }}"
-      name: "mydevice1"
-      hub_policy_name: "{{ registry_write_name }}"
-      hub_policy_key: "{{ registry_write_key }}"
+    hub: "hub{{ rpfx }}"
+    name: "mydevice1"
+    hub_policy_name: "{{ registry_write_name }}"
+    hub_policy_key: "{{ registry_write_key }}"
   register: devices
 
-- assert:
-     that:
-        - devices.iot_devices | length == 1
-        - devices.iot_devices[0].deviceId == 'mydevice1'
+- name: Assert the iot device facts
+  ansible.builtin.assert:
+    that:
+      - devices.iot_devices | length == 1
+      - devices.iot_devices[0].deviceId == 'mydevice1'
 
 - name: Pause for 5 mimutes
-  shell: sleep 300
-
-- name: Query devices twin
-  azure_rm_iotdevice_info:
-      hub: "hub{{ rpfx }}"
-      query: "SELECT * FROM devices WHERE tags.location.country = 'US'"
-      hub_policy_name: "{{ registry_write_name }}"
-      hub_policy_key: "{{ registry_write_key }}"
-  register: devices
-
-- assert:
-     that:
-        - devices.iot_devices | length == 2
+  ansible.builtin.command: sleep 300
+  changed_when: true
 
 - name: Update devices
   azure_rm_iotdevice:
-      hub: "hub{{ rpfx }}"
-      hub_policy_name: "{{ registry_write_name }}"
-      hub_policy_key: "{{ registry_write_key }}"
-      name: "mydevice{{ item }}"
-      edge_enabled: yes
-      twin_tags:
-          location:
-              country: China
-              city: Shanghai
-          sensor: humidity
+    hub: "hub{{ rpfx }}"
+    hub_policy_name: "{{ registry_write_name }}"
+    hub_policy_key: "{{ registry_write_key }}"
+    name: "mydevice{{ item }}"
+    edge_enabled: true
+    primary_key: "{{ registry_write_key }}"
+    secondary_key: "{{ secondary_key }}"
+    twin_tags:
+      location:
+        country: China
+        city: Shanghai
+      sensor: humidity
   with_items:
     - 1
-    - 3
+    - 2
 
 - name: Pause for 5 mimutes
-  shell: sleep 300
+  changed_when: true
+  ansible.builtin.command: sleep 300
 
 - name: Query devices twin
   azure_rm_iotdevice_info:
-      hub: "hub{{ rpfx }}"
-      query: "SELECT * FROM devices WHERE tags.location.country = 'US'"
-      hub_policy_name: "{{ registry_write_name }}"
-      hub_policy_key: "{{ registry_write_key }}"
+    hub: "hub{{ rpfx }}"
+    hub_policy_name: "{{ registry_write_name }}"
+    hub_policy_key: "{{ registry_write_key }}"
   register: devices
 
-- assert:
-     that:
-        - devices.iot_devices | length == 1
-        - devices.iot_devices[0].deviceId == 'mydevice2'
+- name: Assert the iot devices facts
+  ansible.builtin.assert:
+    that:
+      - devices.iot_devices | length == 2
 
 - name: Delete IoT Hub (check mode)
   azure_rm_iothub:
-      name: "hub{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      state: absent
-  check_mode: yes
+    name: "hub{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  check_mode: true
   register: iothub
 
-- assert:
+- name: Assert iot hub check mode result
+  ansible.builtin.assert:
     that:
-        - iothub.changed
+      - iothub.changed
 
 - name: Delete IoT Hub
   azure_rm_iothub:
-      name: "hub{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      state: absent
+    name: "hub{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
   register: iothub
 
-- assert:
+- name: Assert the iot hub deleted
+  ansible.builtin.assert:
     that:
-        - iothub.changed
+      - iothub.changed

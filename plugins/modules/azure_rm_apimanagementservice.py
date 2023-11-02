@@ -100,15 +100,8 @@ id:
 
 import time
 import json
-import re
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from copy import deepcopy
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -197,6 +190,7 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -286,14 +280,14 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the ApiManagementService instance.')
             self.fail('Error creating the ApiManagementService instance: {0}'.format(str(exc)))
 
         try:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
         except Exception:
-            response = {'text': response.text}
+            response = {'text': response.context['deserialized_data']}
             pass
 
         return response
@@ -309,7 +303,7 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the ApiManagementService instance.')
             self.fail('Error deleting the ApiManagementService instance: {0}'.format(str(e)))
 
@@ -329,10 +323,10 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
                                               30)
             found = True
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the ApiManagementService instance.')
         if found is True:
-            return json.loads(response.text)
+            return json.loads(response.body())
 
         return False
 
