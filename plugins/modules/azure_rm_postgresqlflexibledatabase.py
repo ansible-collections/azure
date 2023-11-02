@@ -59,19 +59,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) PostgreSQL Flexible Database
-    azure_rm_postgresqlflexibledatabase:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: db1
-      charset: UTF8
-      collation: en_US.utf8
+- name: Create (or update) PostgreSQL Flexible Database
+  azure_rm_postgresqlflexibledatabase:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: db1
+    charset: UTF8
+    collation: en_US.utf8
 
-  - name: Delete PostgreSQL Flexible Database
-    azure_rm_postgresqlflexibledatabase:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: db1
+- name: Delete PostgreSQL Flexible Database
+  azure_rm_postgresqlflexibledatabase:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: db1
 '''
 
 RETURN = '''

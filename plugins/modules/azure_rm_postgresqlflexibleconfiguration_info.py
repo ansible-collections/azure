@@ -42,16 +42,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get specific setting of PostgreSQL configuration
-    azure_rm_postgresqlflexibleconfiguration_info:
-      resource_group: myResourceGroup
-      server_name: testpostgresqlserver
-      name: deadlock_timeout
+- name: Get specific setting of PostgreSQL configuration
+  azure_rm_postgresqlflexibleconfiguration_info:
+    resource_group: myResourceGroup
+    server_name: testpostgresqlserver
+    name: deadlock_timeout
 
-  - name: Get all settings of PostgreSQL Flexible Configuration
-    azure_rm_postgresqlflexibleconfiguration_info:
-      resource_group: myResourceGroup
-      server_name: testpostgresqlserver
+- name: Get all settings of PostgreSQL Flexible Configuration
+  azure_rm_postgresqlflexibleconfiguration_info:
+    resource_group: myResourceGroup
+    server_name: testpostgresqlserver
 '''
 
 RETURN = '''

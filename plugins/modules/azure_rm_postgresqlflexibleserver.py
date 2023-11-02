@@ -213,36 +213,36 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) PostgreSQL Flexible Server
-    azure_rm_postgresqlflexibleserver:
-      resource_group: myResourceGroup
-      name: testserver
-      sku:
-        name: Standard_B1ms
-        tier: Burstable
-      administrator_login: azureuser
-      administrator_login_password: Fred@0329
-      version: 12
-      storage:
-        storage_size_gb: 128
-      fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
-      backup:
-        backup_retention_days: 7
-        geo_redundant_backup: Disabled
-      maintenance_window:
-        custom_window: Enabled
-        start_hour: 8
-        start_minute: 0
-        day_of_week: 0
-      point_in_time_utc: 2023-05-31T00:28:17.7279547+00:00
-      availability_zone: 1
-      create_mode: Default
+- name: Create (or update) PostgreSQL Flexible Server
+  azure_rm_postgresqlflexibleserver:
+    resource_group: myResourceGroup
+    name: testserver
+    sku:
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: Fred@0329
+    version: 12
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup:
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 0
+      day_of_week: 0
+    point_in_time_utc: 2023-05-31T00:28:17.7279547+00:00
+    availability_zone: 1
+    create_mode: Default
 
-  - name: Delete PostgreSQL Flexible Server
-    azure_rm_postgresqlflexibleserver:
-      resource_group: myResourceGroup
-      name: testserver
-      state: absent
+- name: Delete PostgreSQL Flexible Server
+  azure_rm_postgresqlflexibleserver:
+    resource_group: myResourceGroup
+    name: testserver
+    state: absent
 '''
 
 RETURN = '''

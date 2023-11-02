@@ -1,7 +1,7 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
-  run_once: yes
+  run_once: true
 
 - name: Create post gresql flexible server (check mode)
   azure_rm_postgresqlflexibleserver:
@@ -16,11 +16,11 @@
     storage:
       storage_size_gb: 128
     fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
-    backup: 
+    backup:
       backup_retention_days: 7
       geo_redundant_backup: Disabled
     network:
-      public_network_access: Disabled      
+      public_network_access: Disabled
     maintenance_window:
       custom_window: Enabled
       start_hour: 8
@@ -28,7 +28,7 @@
       day_of_week: 3
     availability_zone: 1
     create_mode: Create
-  check_mode: yes
+  check_mode: true
 
 - name: Create post gresql flexible server
   azure_rm_postgresqlflexibleserver:
@@ -43,11 +43,11 @@
     storage:
       storage_size_gb: 128
     fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
-    backup: 
+    backup:
       backup_retention_days: 7
       geo_redundant_backup: Disabled
     network:
-      public_network_access: Disabled      
+      public_network_access: Disabled
     maintenance_window:
       custom_window: Enabled
       start_hour: 8
@@ -58,7 +58,7 @@
   register: output
 
 - name: Assert the post grep sql server create success
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -75,11 +75,11 @@
     storage:
       storage_size_gb: 128
     fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
-    backup: 
+    backup:
       backup_retention_days: 7
       geo_redundant_backup: Disabled
     network:
-      public_network_access: Disabled      
+      public_network_access: Disabled 
     maintenance_window:
       custom_window: Enabled
       start_hour: 8
@@ -90,7 +90,7 @@
   register: output
 
 - name: Assert the post grep sql server create success
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -107,11 +107,11 @@
     storage:
       storage_size_gb: 256
     fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
-    backup: 
+    backup:
       backup_retention_days: 7
       geo_redundant_backup: Disabled
     network:
-      public_network_access: Disabled      
+      public_network_access: Disabled
     maintenance_window:
       custom_window: Enabled
       start_hour: 10
@@ -125,7 +125,7 @@
   register: output
 
 - name: Assert the post grep sql server update success
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -152,7 +152,7 @@
     name: database{{ rpfx }}
     collation: en_US.utf8
     charset: UTF8
-  check_mode: yes
+  check_mode: true
 
 - name: Create a post gresql flexible database
   azure_rm_postgresqlflexibledatabase:
@@ -164,7 +164,7 @@
   register: output
 
 - name: Assert the post gresql flexible database created success
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -178,7 +178,7 @@
   register: output
 
 - name: Assert the post gresql flexible database no changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -190,7 +190,7 @@
   register: output
 
 - name: Assert the post gresql flexible database facts
-  assert:
+  ansible.builtin.assert:
     that:
       - output.databases[0].collation == 'en_US.utf8'
       - output.databases[0].charset == 'UTF8'
@@ -204,7 +204,7 @@
   register: output
 
 - name: Assert the post gresql flexible database deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -215,7 +215,7 @@
     name: firewall{{ rpfx }}
     start_ip_address: 10.0.0.15
     end_ip_address: 10.0.0.20
-  check_mode: yes
+  check_mode: true
 
 - name: Create the post gresql flexible firwall rule
   azure_rm_postgresqlflexiblefirewallrule:
@@ -227,7 +227,7 @@
   register: output
 
 - name: Assert the post grepsql flexible firewall rule created well
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -241,7 +241,7 @@
   register: output
 
 - name: Assert the post grepsql flexible firewall rule support idempotent test
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -255,7 +255,7 @@
   register: output
 
 - name: Assert the post grepsql flexible server update well
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -267,7 +267,7 @@
   register: output
 
 - name: Assert the post gresql flexible firewall rule facts
-  assert:
+  ansible.builtin.assert:
     that:
       - output.firewall_rules[0].start_ip_address == '10.0.0.16'
       - output.firewall_rules[0].end_ip_address == '10.0.0.18'
@@ -281,7 +281,7 @@
   register: output
 
 - name: Assert the post grepsql flexible server delete well
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -292,7 +292,7 @@
   register: output
 
 - name: Assert the post gresql flexible server configuration
-  assert:
+  ansible.builtin.assert:
     that:
       - output.settings | length > 0
 
@@ -300,26 +300,27 @@
   azure_rm_postgresqlflexibleserver:
     resource_group: "{{ resource_group }}"
     name: postflexible{{ rpfx }}
-    is_stop: True
+    is_stop: true
   register: output
 
 - name: Assert the post grep sql server stop success
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Pause for 10 mimutes
-  shell: sleep 600
+  ansible.builtin.shell: sleep 600
+  changed_when: true
 
-- name: restart post gresql flexible server
+- name: Restart post gresql flexible server
   azure_rm_postgresqlflexibleserver:
     resource_group: "{{ resource_group }}"
     name: postflexible{{ rpfx }}
-    is_restart: True
+    is_restart: true
   register: output
 
 - name: Assert the post grep sql server restart success
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -330,8 +331,7 @@
     state: absent
   register: output
 
-
 - name: Assert the post gresql server is well deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed

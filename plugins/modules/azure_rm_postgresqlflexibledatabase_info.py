@@ -42,16 +42,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: List instance of PostgreSQL Flexible Database by server name
-    azure_rm_postgresqlflexibledatabase_info:
-      resource_group: myResourceGroup
-      server_name: server_name
+- name: List instance of PostgreSQL Flexible Database by server name
+  azure_rm_postgresqlflexibledatabase_info:
+    resource_group: myResourceGroup
+    server_name: server_name
 
-  - name: Get instances of PostgreSQL Flexible Database
-    azure_rm_postgresqlflexibledatabase_info:
-      resource_group: myResourceGroup
-      server_name: server_name
-      name: database_name
+- name: Get instances of PostgreSQL Flexible Database
+  azure_rm_postgresqlflexibledatabase_info:
+    resource_group: myResourceGroup
+    server_name: server_name
+    name: database_name
 '''
 
 RETURN = '''
