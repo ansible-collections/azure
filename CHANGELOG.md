@@ -14,7 +14,6 @@
   - azure_rm_*.py: Fixed sanity errors in the module ([#1296](https://github.com/ansible-collections/azure/pull/1296))
   - Add required description to the document ([#1314](https://github.com/ansible-collections/azure/pull/1314))
 
-
 ## v1.18.1 (2023-9-25)
 
 ### BUG FIXING
