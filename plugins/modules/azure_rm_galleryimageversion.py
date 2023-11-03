@@ -134,6 +134,7 @@ options:
                                 description:
                                     - A list of encryption specifications for data disk images.
                                 type: list
+                                elements: dict
                                 suboptions:
                                     disk_encryption_set_id:
                                         description:
@@ -144,6 +145,7 @@ options:
                                             - This property specifies the logical unit number of the data disk.
                                             - This value is used to identify data disks within the Virtual Machine and
                                               therefore must be unique for each data disk attached to the Virtual Machine.
+                                        type: int
                             os_disk_image:
                                 description:
                                     - Contains encryption settings for an OS disk image.
@@ -455,6 +457,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                     data_disk_images=dict(
                                         type='list',
                                         disposition='dataDiskImages',
+                                        elements='dict',
                                         options=dict(
                                             disk_encryption_set_id=dict(
                                                 type='str',
@@ -473,24 +476,24 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                                 type='str',
                                                 disposition='diskEncryptionSetId'
                                             ),
-                                            securityProfile=dict(
+                                            security_profile=dict(
                                                 type='dict',
-                                                disposition='security_profile',
+                                                disposition='securityProfile',
                                                 options=dict(
                                                     confidential_vm_encryption_type=dict(
                                                         type='dict',
                                                         disposition='confidentialVMEncryptionType',
                                                         options=dict(
                                                             encrypted_vm_guest_state_only_with_pmk=dict(
-                                                                type='dict',
+                                                                type='str',
                                                                 disposition='EncryptedVMGuestStateOnlyWithPmk'
                                                             ),
                                                             encrypted_with_cmk=dict(
-                                                                type='dict',
+                                                                type='str',
                                                                 disposition='EncryptedWithCmk'
                                                             ),
                                                             encrypted_with_pmk=dict(
-                                                                type='dict',
+                                                                type='str',
                                                                 disposition='EncryptedWithPmk'
                                                             )
                                                         )
