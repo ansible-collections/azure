@@ -453,7 +453,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     def exec_module(self, **kwargs):
         self._client = self.get_msgraph_client(self.tenant)
         for key in list(self.module_arg_spec.keys()):
-            setattr(self, key, kwargs[key])        
+            setattr(self, key, kwargs[key])
 
         if self.tenant:
             self.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
