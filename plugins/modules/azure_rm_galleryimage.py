@@ -170,7 +170,7 @@ options:
         suboptions:
             name:
                 description:
-                    - The name of the gallery image feature..
+                    - The name of the gallery image feature.
                 type: str
                 required: True
             value:
@@ -382,7 +382,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                         required=True
                     )
                 )
-            )
+            ),
             state=dict(
                 type='str',
                 default='present',
