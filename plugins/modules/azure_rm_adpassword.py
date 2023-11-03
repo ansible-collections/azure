@@ -32,7 +32,8 @@ options:
     key_id:
         description:
             - The password key ID.
-            - It isn't supported anymore in the create operation. More details: https://learn.microsoft.com/en-us/graph/api/application-addpassword?view=graph-rest-1.0&tabs=http#request-body.
+            - It isn't supported anymore in the create operation. 
+              More details: U(https://learn.microsoft.com/en-us/graph/api/application-addpassword?view=graph-rest-1.0&tabs=http#request-body).
         type: str
     tenant:
         description:
