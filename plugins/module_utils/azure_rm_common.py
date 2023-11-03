@@ -679,11 +679,11 @@ class AzureRMModuleBase(object):
         try:
             self.log("Getting storage account detail")
             account = self.storage_client.storage_accounts.get_properties(resource_group_name=resource_group_name, account_name=storage_account_name)
-            if auth_mode == 'key':
+            if auth_mode == 'login' and self.azure_auth.credentials.get('credential'):
+                credential = self.azure_auth.credentials['credential']
+            else:
                 account_keys = self.storage_client.storage_accounts.list_keys(resource_group_name=resource_group_name, account_name=storage_account_name)
                 credential = account_keys.keys[0].value
-            else:
-                credential = self.azure_auth.credentials['credential']
         except Exception as exc:
             self.fail("Error getting storage account detail for {0}: {1}".format(storage_account_name, str(exc)))
 
