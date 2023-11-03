@@ -485,8 +485,8 @@ class AzureRMModuleBase(object):
         '''
         self.module.fail_json(msg=msg, **kwargs)
 
-    def deprecate(self, msg, version=None):
-        self.module.deprecate(msg, version, collection_name="azure.azcollection")
+    def deprecate(self, msg, version=None, collection_name='azure.azcollection'):
+        self.module.deprecate(msg, version, collection_name=collection_name)
 
     def log(self, msg, pretty_print=False):
         if pretty_print:

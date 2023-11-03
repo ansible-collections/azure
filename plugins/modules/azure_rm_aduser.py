@@ -275,7 +275,8 @@ class AzureRMADUser(AzureRMModuleBase):
         if self.tenant:
             self.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
                            'https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison',
-                           version='v2.0.0')
+                           version='v2.0.0',
+                           collection_name='azure.azcollection')
 
         try:
             self._client = self.get_msgraph_client(self.tenant)
