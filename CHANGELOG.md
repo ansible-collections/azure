@@ -3,16 +3,16 @@
 ## v1.19.0 (2023-11-2)
 
 ### FEATURE ENHANCEMENT
-  - Update all test case ubuntu version to 20.04-LTS, 16.04-LTS will be deprecated ([#1288](https://github.com/ansible-collections/azure/pull/1288))
-  - Migrate msrestazure to azure-mgmt-core and azure-identity ([#1267](https://github.com/ansible-collections/azure/pull/1267))
-  - Support ansible-lint test to ansible-collections ([#1292](https://github.com/ansible-collections/azure/pull/1292))
+  - Update all test case Ubuntu Image version to 20.04-LTS, 16.04-LTS will be deprecated ([#1288](https://github.com/ansible-collections/azure/pull/1288))
+  - Migrate `msrestazure` to `azure-mgmt-core` and `azure-identity` ([#1267](https://github.com/ansible-collections/azure/pull/1267))
+  - Support `ansible-lint` test to `azure.azcollection` ([#1292](https://github.com/ansible-collections/azure/pull/1292))
 
 ### BUG FIXING
-  - plugins/module_utls/azure_rm_common.py: Add authority to create track2 credentials ([#1299](https://github.com/ansible-collections/azure/pull/1299))
-  - azure_rm_virtualmachine: Restore azure_rm_virtualmachine change ([#1301](https://github.com/ansible-collections/azure/pull/1301))
-  - azure_rm_azurefiewall_info: Update azurefirewall info returns ([#1308](https://github.com/ansible-collections/azure/pull/1308))
+  - plugins/module_utls/azure_rm_common.py: Add support for custom ADFS endpoint ([#1299](https://github.com/ansible-collections/azure/pull/1299))
+  - azure_rm_virtualmachine: Fix `disable_password_authentication` not set bug ([#1301](https://github.com/ansible-collections/azure/pull/1301))
+  - azure_rm_azurefiewall_info: Fix `nat_rule_collections` not set bug ([#1308](https://github.com/ansible-collections/azure/pull/1308))
   - azure_rm_*.py: Fixed sanity errors in the module ([#1296](https://github.com/ansible-collections/azure/pull/1296))
-  - Add required description to document ([#1314](https://github.com/ansible-collections/azure/pull/1314))
+  - Add required description to the document ([#1314](https://github.com/ansible-collections/azure/pull/1314))
 
 
 ## v1.18.1 (2023-9-25)
