@@ -39,7 +39,6 @@ options:
             - (deprecated) The tenant ID.
             - This option has been deprecated, and will be removed in the future.
         type: str
-        required: True
     end_date:
         description:
             - Date or datemtime after which credentials expire.
@@ -84,7 +83,6 @@ EXAMPLES = '''
     app_id: "{{ app_id }}"
     state: present
     display_name: "Password friendly name"
-    tenant: "{{ tenant_id }}"
 '''
 
 RETURN = '''

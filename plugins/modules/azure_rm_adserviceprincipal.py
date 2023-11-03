@@ -30,7 +30,6 @@ options:
             - (deprecated) The tenant ID.
             - This option has been deprecated, and will be removed in the future.
         type: str
-        required: True
     app_role_assignment_required:
         description:
             - Whether the Role of the Service Principal is set.
@@ -58,7 +57,6 @@ EXAMPLES = '''
   azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
     state: present
-    tenant: "{{ tenant_id }}"
 '''
 
 RETURN = '''

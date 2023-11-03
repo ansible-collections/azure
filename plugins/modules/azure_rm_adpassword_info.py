@@ -36,7 +36,6 @@ options:
             - (deprecated) The tenant ID.
             - This option has been deprecated, and will be removed in the future.
         type: str
-        required: True
     end_date:
         description:
             - Date or datemtime after which credentials expire.
@@ -64,7 +63,6 @@ EXAMPLES = '''
 - name: get ad password info
   azure_rm_adpassword_info:
     app_id: "{{ app_id }}"
-    tenant: "{{ tenant_id }}"
     key_id: "{{ key_id }}"
 '''
 

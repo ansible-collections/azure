@@ -78,27 +78,23 @@ author:
 EXAMPLES = '''
 - name: Create Group
   azure_rm_adgroup:
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     display_name: "Group-Name"
     mail_nickname: "Group-Mail-Nickname"
     state: 'present'
 
 - name: Delete Group using display_name and mail_nickname
   azure_rm_adgroup:
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     display_name: "Group-Name"
     mail_nickname: "Group-Mail-Nickname"
     state: 'absent'
 
 - name: Delete Group using object_id
   azure_rm_adgroup:
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: 'absent'
 
 - name: Ensure Users are Members of a Group using display_name and mail_nickname
   azure_rm_adgroup:
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     display_name: "Group-Name"
     mail_nickname: "Group-Mail-Nickname"
     state: 'present'
@@ -108,7 +104,6 @@ EXAMPLES = '''
 
 - name: Ensure Users are Members of a Group using object_id
   azure_rm_adgroup:
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: 'present'
     present_members:
@@ -117,7 +112,6 @@ EXAMPLES = '''
 
 - name: Ensure Users are not Members of a Group using display_name and mail_nickname
   azure_rm_adgroup:
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     display_name: "Group-Name"
     mail_nickname: "Group-Mail-Nickname"
     state: 'present'
@@ -126,7 +120,6 @@ EXAMPLES = '''
 
 - name: Ensure Users are Members of a Group using object_id
   azure_rm_adgroup:
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: 'present'
     absent_members:
@@ -134,7 +127,6 @@ EXAMPLES = '''
 
 - name: Ensure Users are Owners of a Group using display_name and mail_nickname
   azure_rm_adgroup:
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     display_name: "Group-Name"
     mail_nickname: "Group-Mail-Nickname"
     state: 'present'
@@ -144,7 +136,6 @@ EXAMPLES = '''
 
 - name: Ensure Users are Owners of a Group using object_id
   azure_rm_adgroup:
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: 'present'
     present_owners:
@@ -153,7 +144,6 @@ EXAMPLES = '''
 
 - name: Ensure Users are not Owners of a Group using display_name and mail_nickname
   azure_rm_adgroup:
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     display_name: "Group-Name"
     mail_nickname: "Group-Mail-Nickname"
     state: 'present'
@@ -163,7 +153,6 @@ EXAMPLES = '''
 
 - name: Ensure Users are Owners of a Group using object_id
   azure_rm_adgroup:
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: 'present'
     absent_owners:

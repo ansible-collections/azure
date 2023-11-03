@@ -28,7 +28,6 @@ options:
             - (deprecated) The tenant ID.
             - This option has been deprecated, and will be removed in the future.
         type: str
-        required: True
     object_id:
         description:
             - It's service principal's object ID.
@@ -46,7 +45,6 @@ EXAMPLES = '''
 - name: get ad sp info
   azure_rm_adserviceprincipal_info:
     app_id: "{{ app_id }}"
-    tenant: "{{ tenant_id }}"
 '''
 
 RETURN = '''

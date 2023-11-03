@@ -24,7 +24,6 @@ options:
             - (deprecated) The tenant ID.
             - This option has been deprecated, and will be removed in the future.
         type: str
-        required: True
     state:
         description:
             - State of the ad user. Use C(present) to create or update an ad user and C(absent) to delete an ad user.
@@ -130,7 +129,6 @@ EXAMPLES = '''
 - name: Create user
   azure_rm_aduser:
     user_principal_name: "{{ user_id }}"
-    tenant: "{{ tenant_id }}"
     state: "present"
     account_enabled: "True"
     display_name: "Test_{{ user_principal_name }}_Display_Name"
@@ -146,14 +144,12 @@ EXAMPLES = '''
 - name: Update user with new value for account_enabled
   azure_rm_aduser:
     user_principal_name: "{{ user_id }}"
-    tenant: "{{ tenant_id }}"
     state: "present"
     account_enabled: "False"
 
 - name: Delete user
   azure_rm_aduser:
     user_principal_name: "{{ user_id }}"
-    tenant: "{{ tenant_id }}"
     state: "absent"
 '''
 

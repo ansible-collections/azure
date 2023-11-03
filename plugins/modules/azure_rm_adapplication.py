@@ -237,12 +237,10 @@ author:
 EXAMPLES = '''
 - name: Create ad application
   azure_rm_adapplication:
-    tenant: "{{ tenant_id }}"
     display_name: "{{ display_name }}"
 
 - name: Create application with more parameter
   azure_rm_adapplication:
-    tenant: "{{ tenant_id }}"
     display_name: "{{ display_name }}"
     available_to_other_tenants: false
     credential_description: "for test"
@@ -252,7 +250,6 @@ EXAMPLES = '''
 
 - name: delete ad application
   azure_rm_adapplication:
-    tenant: "{{ tenant_id }}"
     app_id: "{{ app_id }}"
     state: absent
 '''
