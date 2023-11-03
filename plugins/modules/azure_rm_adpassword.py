@@ -171,11 +171,13 @@ class AzureRMADPassword(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         if self.tenant:
-            self.deprecate('tenant ID has been deprecated and will be removed in the future. '
-                           'More details: https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison')
+            self.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
+                           'https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison',
+                           version='v2.0.0')
         if self.value:
-            self.deprecate('value has been deprecated and will be removed in the future. '
-                           'More details: https://learn.microsoft.com/en-us/graph/api/application-addpassword?view=graph-rest-1.0&tabs=http#request-body')
+            self.deprecate('value has been deprecated and will be removed in the future. See the Azure documentation for more information: '
+                           'https://learn.microsoft.com/en-us/graph/api/application-addpassword?view=graph-rest-1.0&tabs=http#request-body',
+                           version='v2.0.0')
 
         self._client = self.get_msgraph_client(self.tenant)
         self.resolve_app_obj_id()

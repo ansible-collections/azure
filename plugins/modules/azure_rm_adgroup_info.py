@@ -223,10 +223,11 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
 
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-    
+
         if self.tenant:
-            self.deprecate('tenant ID has been deprecated and will be removed in the future. '
-                           'More details: https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison')
+            self.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
+                           'https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison',
+                           version='v2.0.0')
 
         ad_groups = []
 

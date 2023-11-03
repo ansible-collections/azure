@@ -453,12 +453,12 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     def exec_module(self, **kwargs):
         self._client = self.get_msgraph_client(self.tenant)
         for key in list(self.module_arg_spec.keys()):
-            setattr(self, key, kwargs[key])
-        
-        if self.tenant:
-            self.deprecate('tenant ID has been deprecated and will be removed in the future. '
-                'More details: https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison')
+            setattr(self, key, kwargs[key])        
 
+        if self.tenant:
+            self.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
+                           'https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison',
+                           version='v2.0.0')
         response = self.get_resource()
         if response:
             if self.state == 'present':
