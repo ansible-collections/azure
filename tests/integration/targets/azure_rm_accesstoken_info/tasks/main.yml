@@ -1,0 +1,13 @@
+- name: Get access token for graphql
+  azure.azcollection.azure_rm_accesstoken_info:
+    scopes:
+      - https://graph.microsoft.com/.default
+  register: result
+
+- name: Assert the facts
+  ansible.builtin.assert:
+    that:
+      - result is not changed
+      - result is not failed
+      - "'access_token' in result"
+      - "'expires_on' in result"
