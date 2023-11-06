@@ -1,6 +1,6 @@
 # Change Log
 
-## v1.19.0 (2023-11-2)
+## v1.19.0 (2023-11-6)
 
 ### FEATURE ENHANCEMENT
   - Update all test case Ubuntu Image version to 20.04-LTS, 16.04-LTS will be deprecated ([#1288](https://github.com/ansible-collections/azure/pull/1288))
