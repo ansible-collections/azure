@@ -675,7 +675,7 @@ class AzureRMModuleBase(object):
                 self.fail("Error {0} has a provisioning state of {1}. Expecting state to be {2}.".format(
                     azure_object.name, azure_object.provisioning_state, AZURE_SUCCESS_STATE))
 
-    def get_blob_service_client(self, resource_group_name, storage_account_name, auth_mode = 'key'):
+    def get_blob_service_client(self, resource_group_name, storage_account_name, auth_mode='key'):
         try:
             self.log("Getting storage account detail")
             account = self.storage_client.storage_accounts.get_properties(resource_group_name=resource_group_name, account_name=storage_account_name)
