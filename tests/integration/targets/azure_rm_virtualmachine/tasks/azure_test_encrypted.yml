@@ -16,6 +16,7 @@
     vm_size: Standard_B1ms
     virtual_network: "{{ network_name }}"
     os_disk_encryption_set: "{{ des_results.state.id }}"
+    managed_disk_type: Standard_LRS
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: Canonical

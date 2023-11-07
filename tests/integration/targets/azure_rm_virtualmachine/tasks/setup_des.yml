@@ -1,4 +1,3 @@
-
 - name: Lookup service principal object id
   ansible.builtin.set_fact:
     object_id: "{{ lookup('azure_service_principal_attribute',

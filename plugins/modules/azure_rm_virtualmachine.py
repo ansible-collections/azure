@@ -1215,8 +1215,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             ansible_facts=dict(azure_vm=None)
         )
 
+        required_if = [('os_disk_encryption_set', '*', ['managed_disk_type'])]
+
         super(AzureRMVirtualMachine, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                    supports_check_mode=True)
+                                                    supports_check_mode=True, required_if=required_if)
 
     @property
     def boot_diagnostics_present(self):
@@ -1565,7 +1567,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             vm_dict['os_profile']['linux_configuration']['disable_password_authentication']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'linuxConfiguration.disablePasswordAuthentication' is not allowed.")
 
-                current_os_des_id = vm_dict['storage_profile'].get('os_disk', {}).get('managed_disk', {}).get('disk_encryption_set', {}).get('id', {})
+                current_os_des_id = vm_dict['storage_profile'].get('os_disk', {}).get('managed_disk', {}).get('disk_encryption_set', {}).get('id', None)
                 if self.os_disk_encryption_set is not None and current_os_des_id is not None:
                     if self.os_disk_encryption_set != current_os_des_id:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'storage_profile.os_disk.managed_disk.disk_encryption_set' is not allowed.")
