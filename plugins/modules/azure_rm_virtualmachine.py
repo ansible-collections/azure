@@ -1116,6 +1116,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 options=dict(
                     lun=dict(type='int', required=True),
                     disk_size_gb=dict(type='int'),
+                    disk_encryption_set=dict(type='str'),
                     managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS',
                                            'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
                     storage_account_name=dict(type='str'),
