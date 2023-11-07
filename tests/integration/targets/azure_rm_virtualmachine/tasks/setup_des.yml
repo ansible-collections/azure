@@ -1,3 +1,7 @@
+- name: Set vault name
+  ansible.builtin.set_fact:
+    vault_name: "kv{{ uid_short }}{{ '%m%d%H%M%S' | strftime }}"
+
 - name: Lookup service principal object id
   ansible.builtin.set_fact:
     object_id: "{{ lookup('azure_service_principal_attribute',
@@ -9,8 +13,9 @@
 - name: Create a key vault
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
-    vault_name: "myvault{{ des_name }}"
+    vault_name: "{{ vault_name }}"
     enabled_for_disk_encryption: true
+    enable_purge_protection: true
     vault_tenant: "{{ azure_tenant }}"
     sku:
       name: standard
@@ -35,11 +40,11 @@
 - name: Create a key in key vault
   azure_rm_keyvaultkey:
     key_name: testkey
-    keyvault_uri: https://myvault{{ des_name }}.vault.azure.net
+    keyvault_uri: https://{{ vault_name }}.vault.azure.net
 
 - name: Get latest version of key
   azure_rm_keyvaultkey_info:
-    vault_uri: https://myvault{{ des_name }}.vault.azure.net
+    vault_uri: https://{{ vault_name }}.vault.azure.net
     name: testkey
   register: results
 
@@ -51,7 +56,39 @@
   azure_rm_diskencryptionset:
     resource_group: "{{ resource_group }}"
     name: "{{ des_name }}"
-    source_vault: "myvault{{ des_name }}"
+    source_vault: "{{ vault_name }}"
     key_url: "{{ key_url }}"
     state: present
   register: des_results
+
+- name: Grant DES access to key vault
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    vault_name: "{{ vault_name }}"
+    enabled_for_disk_encryption: true
+    enable_purge_protection: true
+    vault_tenant: "{{ azure_tenant }}"
+    sku:
+      name: standard
+      family: A
+    access_policies:
+      - tenant_id: "{{ azure_tenant }}"
+        object_id: "{{ object_id }}"
+        keys:
+          - get
+          - list
+          - wrapkey
+          - unwrapkey
+          - create
+          - update
+          - import
+          - delete
+          - backup
+          - restore
+          - recover
+          - purge
+      - object_id: "{{ des_results.state.identity.principal_id }}"
+        keys:
+          - get
+          - wrapkey
+          - unwrapkey

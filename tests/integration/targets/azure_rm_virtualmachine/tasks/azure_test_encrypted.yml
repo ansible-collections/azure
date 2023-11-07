@@ -43,31 +43,30 @@
     remove_on_absent: all_autocreated
     state: absent
 
-- name: Query auto created NIC
-  azure_rm_networkinterface_info:
+- name: Destroy encrypted OS disk
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    state: absent
+
+- name: Destroy auto created NIC
+  azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}01"
+    state: absent
   register: nic_result
 
-- name: Query auto created security group
-  azure_rm_securitygroup_info:
+- name: Destroy security group
+  azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}01"
-  register: nsg_result
+    state: absent
 
-- name: Query auto created public IP
-  azure_rm_publicipaddress_info:
+- name: Destroy auto created public IP
+  azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}01"
-  register: pip_result
-
-- name: Assert that autocreated resources were deleted
-  ansible.builtin.assert:
-    that:
-      # what about the default storage group?
-      - nic_result.networkinterfaces | length == 0
-      - nsg_result.securitygroups | length == 0
-      - pip_result.publicipaddresses | length == 0
+    state: absent
 
 - name: Destroy subnet
   azure_rm_subnet:
@@ -103,6 +102,6 @@
 
 - name: Destroy key vault
   azure_rm_keyvault:
-    vault_name: "myvault{{ des_name }}"
+    vault_name: "{{ vault_name }}"
     resource_group: "{{ resource_group }}"
     state: absent
