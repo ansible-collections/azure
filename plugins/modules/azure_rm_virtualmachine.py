@@ -315,10 +315,10 @@ options:
                 choices:
                     - ReadOnly
                     - ReadWrite
-                default: ReadOnly
             disk_encryption_set_id:
                 description:
                     - Disk encryption set ID that the data disk should be encrypted with.
+                type: str
     public_ip_allocation_method:
         description:
             - Allocation method for the public IP of the VM.
@@ -1130,7 +1130,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     storage_account_name=dict(type='str'),
                     storage_container_name=dict(type='str', default='vhds'),
                     storage_blob_name=dict(type='str'),
-                    caching=dict(type='str', choices=['ReadOnly', 'ReadOnly'])
+                    caching=dict(type='str', choices=['ReadOnly', 'ReadOnly']),
+                    disk_encryption_set_id=dict(type='str')
                 )
             ),
             plan=dict(type='dict'),
