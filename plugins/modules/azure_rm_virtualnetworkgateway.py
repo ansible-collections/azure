@@ -49,8 +49,8 @@ options:
             - Must be in the same resource group as VPN gateway when specified by name.
             - Can be the resource ID of the virtual network.
             - Can be a dict which contains I(name) and I(resource_group) of the virtual network.
+            - Required when creating.
         type: raw
-        required: true
         aliases:
             - virtual_network_name
     ip_configurations:
@@ -275,7 +275,7 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
             enable_bgp=dict(type='bool', default=False),
             sku=dict(type='str', default='VpnGw1', choices=['VpnGw1', 'VpnGw2', 'VpnGw3', 'Standard', 'Basic', 'HighPerformance']),
             bgp_settings=dict(type='dict', options=bgp_spec),
-            virtual_network=dict(type='raw', aliases=['virtual_network_name'], required=True)
+            virtual_network=dict(type='raw', aliases=['virtual_network_name'])
         )
 
         self.resource_group = None
@@ -290,12 +290,14 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
         self.vpn_gateway_generation = None
         self.bgp_settings = None
 
+        required_if = [('state', 'present', ['virtual_network'])]
         self.results = dict(
             changed=False,
             state=dict()
         )
 
         super(AzureRMVirtualNetworkGateway, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                           required_if=required_if,
                                                            supports_check_mode=True)
 
     def exec_module(self, **kwargs):
