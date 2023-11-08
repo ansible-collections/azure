@@ -128,19 +128,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) PostgreSQL Server
-    azure_rm_postgresqlserver:
-      resource_group: myResourceGroup
-      name: testserver
-      sku:
-        name: B_Gen5_1
-        tier: Basic
-      location: eastus
-      storage_mb: 1024
-      enforce_ssl: True
-      storage_autogrow: True
-      admin_username: cloudsa
-      admin_password: password
+- name: Create (or update) PostgreSQL Server
+  azure_rm_postgresqlserver:
+    resource_group: myResourceGroup
+    name: testserver
+    sku:
+      name: B_Gen5_1
+      tier: Basic
+    location: eastus
+    storage_mb: 1024
+    enforce_ssl: true
+    storage_autogrow: true
+    admin_username: cloudsa
+    admin_password: password
 '''
 
 RETURN = '''

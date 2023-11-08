@@ -119,7 +119,7 @@ EXAMPLES = '''
     hub_policy_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    edge_enabled: yes
+    edge_enabled: true
 
 - name: Create Azure IoT Hub device with device twin properties and tag
   azure_rm_iotdevice:
@@ -130,12 +130,12 @@ EXAMPLES = '''
     primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     twin_tags:
-        location:
-            country: US
-            city: Redmond
-        sensor: humidity
+      location:
+        country: US
+        city: Redmond
+      sensor: humidity
     desired:
-        period: 100
+      period: 100
 '''
 
 RETURN = '''

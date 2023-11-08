@@ -40,17 +40,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get Key Vault by name
-    azure_rm_keyvault_info:
-      resource_group: myResourceGroup
-      name: myVault
+- name: Get Key Vault by name
+  azure_rm_keyvault_info:
+    resource_group: myResourceGroup
+    name: myVault
 
-  - name: List Key Vaults in specific resource group
-    azure_rm_keyvault_info:
-      resource_group: myResourceGroup
+- name: List Key Vaults in specific resource group
+  azure_rm_keyvault_info:
+    resource_group: myResourceGroup
 
-  - name: List Key Vaults in current subscription
-    azure_rm_keyvault_info:
+- name: List Key Vaults in current subscription
+  azure_rm_keyvault_info:
 '''
 
 RETURN = '''

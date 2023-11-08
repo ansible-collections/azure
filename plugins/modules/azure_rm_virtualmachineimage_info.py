@@ -26,18 +26,23 @@ options:
             - Azure location value, for example C(westus), C(eastus), C(eastus2), C(northcentralus), etc.
             - Supplying only a location value will yield a list of available publishers for the location.
         required: true
+        type: str
     publisher:
         description:
             - Name of an image publisher. List image offerings associated with a particular publisher.
+        type: str
     offer:
         description:
             - Name of an image offering. Combine with SKU to see a list of available image versions.
+        type: str
     sku:
         description:
             - Image offering SKU. Combine with offer to see a list of available versions.
+        type: str
     version:
         description:
             - Specific version number of an image.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -49,30 +54,29 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for a specific image
-      azure_rm_virtualmachineimage_info:
-        location: eastus
-        publisher: OpenLogic
-        offer: CentOS
-        sku: '7.1'
-        version: '7.1.20160308'
+- name: Get facts for a specific image
+  azure_rm_virtualmachineimage_info:
+    location: eastus
+    publisher: OpenLogic
+    offer: CentOS
+    sku: '7.1'
+    version: '7.1.20160308'
 
-    - name: List available versions
-      azure_rm_virtualmachineimage_info:
-        location: eastus
-        publisher: OpenLogic
-        offer: CentOS
-        sku: '7.1'
+- name: List available versions
+  azure_rm_virtualmachineimage_info:
+    location: eastus
+    publisher: OpenLogic
+    offer: CentOS
+    sku: '7.1'
 
-    - name: List available offers
-      azure_rm_virtualmachineimage_info:
-        location: eastus
-        publisher: OpenLogic
+- name: List available offers
+  azure_rm_virtualmachineimage_info:
+    location: eastus
+    publisher: OpenLogic
 
-    - name: List available publishers
-      azure_rm_virtualmachineimage_info:
-        location: eastus
-
+- name: List available publishers
+  azure_rm_virtualmachineimage_info:
+    location: eastus
 '''
 
 RETURN = '''

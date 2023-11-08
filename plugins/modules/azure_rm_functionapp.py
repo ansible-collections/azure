@@ -22,13 +22,16 @@ options:
         required: true
         aliases:
             - resource_group_name
+        type: str
     name:
         description:
             - Name of the Azure Function App.
         required: true
+        type: str
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     plan:
         description:
             - App service plan.
@@ -38,35 +41,46 @@ options:
             - It can be a dict which contains C(name), C(resource_group).
             - C(name). Name of app service plan.
             - C(resource_group). Resource group name of app service plan.
+        type: raw
     container_settings:
-        description: Web app container settings.
+        description:
+            - Web app container settings.
+        type: dict
         suboptions:
             name:
                 description:
                     - Name of container. For example "imagename:tag".
+                required: True
+                type: str
             registry_server_url:
                 description:
                     - Container registry server url. For example C(mydockerregistry.io).
+                type: str
             registry_server_user:
                 description:
                     - The container registry server user name.
+                type: str
             registry_server_password:
                 description:
                     - The container registry server password.
+                type: str
     storage_account:
         description:
             - Name of the storage account to use.
-        required: true
+            - Required when creating.
+        type: str
         aliases:
             - storage
             - storage_account_name
     app_settings:
         description:
             - Dictionary containing application settings.
+        type: dict
     state:
         description:
             - Assert the state of the Function App. Use C(present) to create or update a Function App and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present

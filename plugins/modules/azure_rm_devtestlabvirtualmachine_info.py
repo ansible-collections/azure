@@ -46,13 +46,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of DTL Virtual Machine
-    azure_rm_devtestlabvirtualmachine_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myVm
-      tags:
-        - key:value
+- name: Get instance of DTL Virtual Machine
+  azure_rm_devtestlabvirtualmachine_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myVm
+    tags:
+      - key:value
 '''
 
 RETURN = '''
@@ -199,7 +199,7 @@ virtualmachines:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'foo': 'bar' }"
 '''
 

@@ -21,13 +21,16 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     vmss_name:
         description:
             - The name of VMSS containing the extension.
         required: True
+        type: str
     name:
         description:
             - The name of the virtual machine extension.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -38,16 +41,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get information on specific Virtual Machine Scale Set Extension
-    azure_rm_virtualmachineextension_info:
-      resource_group: myResourceGroup
-      vmss_name: myvmss
-      name: myextension
+- name: Get information on specific Virtual Machine Scale Set Extension
+  azure_rm_virtualmachineextension_info:
+    resource_group: myResourceGroup
+    vmss_name: myvmss
+    name: myextension
 
-  - name: List installed Virtual Machine Scale Set Extensions
-    azure_rm_virtualmachineextension_info:
-      resource_group: myrg
-      vmss_name: myvmss
+- name: List installed Virtual Machine Scale Set Extensions
+  azure_rm_virtualmachineextension_info:
+    resource_group: myrg
+    vmss_name: myvmss
 '''
 
 RETURN = '''

@@ -1,5 +1,5 @@
 - name: Fix resource prefix
-  set_fact:
+  ansible.builtin.set_fact:
     resource_group: 'MyResourceGroup'
     recovery_vault_name: 'MyRecoveryVault'
     resource_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/MyVM"
@@ -15,7 +15,7 @@
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -30,10 +30,10 @@
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
-      
+
 - name: Stop protection but retain existing data
   azure_rm_backupazurevm:
     resource_group: "{{ resource_group }}"
@@ -44,7 +44,7 @@
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -56,7 +56,7 @@
   register: output
 
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.response.id != None
       - output.response.name != None
@@ -69,8 +69,8 @@
     backup_policy_id: "{{ backup_policy_id }}"
     state: "delete"
   register: output
-  
+
 - name: Assert that output has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed

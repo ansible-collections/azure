@@ -41,7 +41,6 @@ EXAMPLES = '''
   azure_rm_gallery_info:
     resource_group: myResourceGroup
     name: myGallery
-
 '''
 
 RETURN = '''

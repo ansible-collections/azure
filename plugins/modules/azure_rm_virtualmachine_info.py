@@ -25,9 +25,11 @@ options:
     resource_group:
         description:
             - Name of the resource group containing the virtual machines (required when filtering by vm name).
+        type: str
     name:
         description:
             - Name of the virtual machine.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -44,21 +46,21 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get facts for all virtual machines of a resource group
-    azure_rm_virtualmachine_info:
-      resource_group: myResourceGroup
+- name: Get facts for all virtual machines of a resource group
+  azure_rm_virtualmachine_info:
+    resource_group: myResourceGroup
 
-  - name: Get facts by name
-    azure_rm_virtualmachine_info:
-      resource_group: myResourceGroup
-      name: myVm
+- name: Get facts by name
+  azure_rm_virtualmachine_info:
+    resource_group: myResourceGroup
+    name: myVm
 
-  - name: Get facts by tags
-    azure_rm_virtualmachine_info:
-      resource_group: myResourceGroup
-      tags:
-        - testing
-        - foo:bar
+- name: Get facts by tags
+  azure_rm_virtualmachine_info:
+    resource_group: myResourceGroup
+    tags:
+      - testing
+      - foo:bar
 '''
 
 RETURN = '''

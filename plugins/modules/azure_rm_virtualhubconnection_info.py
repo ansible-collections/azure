@@ -40,16 +40,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get virtual hub connection info by name
-      azure_rm_virtualhubconnection_info:
-        resource_group: myResourceGroup
-        virtual_hub_name: virtualHub
-        name: vhubname
+- name: Get virtual hub connection info by name
+  azure_rm_virtualhubconnection_info:
+    resource_group: myResourceGroup
+    virtual_hub_name: virtualHub
+    name: vhubname
 
-    - name: Get virtual hub connection info by resource group
-      azure_rm_virtualhubconnection_info:
-        resource_group: myResourceGroup
-        virtual_hub_name: virtualHub
+- name: Get virtual hub connection info by resource group
+  azure_rm_virtualhubconnection_info:
+    resource_group: myResourceGroup
+    virtual_hub_name: virtualHub
 '''
 
 RETURN = '''

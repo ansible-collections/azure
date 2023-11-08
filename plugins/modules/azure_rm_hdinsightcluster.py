@@ -21,34 +21,42 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the cluster.
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     cluster_version:
         description:
             - The version of the cluster. For example C(3.6).
+        type: str
     os_type:
         description:
             - The type of operating system.
+        type: str
         choices:
             - 'linux'
     tier:
         description:
             - The cluster tier.
+        type: str
         choices:
             - 'standard'
             - 'premium'
     cluster_definition:
         description:
             - The cluster definition.
+        type: dict
         suboptions:
             kind:
                 description:
                     - The type of cluster.
+                type: str
                 choices:
                     - hadoop
                     - spark
@@ -57,17 +65,21 @@ options:
             gateway_rest_username:
                 description:
                     - Gateway REST user name.
+                type: str
             gateway_rest_password:
                 description:
                     - Gateway REST password.
+                type: str
     compute_profile_roles:
         description:
             - The list of roles in the cluster.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - The name of the role.
+                type: str
                 choices:
                     - 'headnode'
                     - 'workernode'
@@ -75,47 +87,59 @@ options:
             min_instance_count:
                 description:
                     - The minimum instance count of the cluster.
+                type: int
             target_instance_count:
                 description:
                     - The instance count of the cluster.
+                type: int
             vm_size:
                 description:
                     - The size of the VM.
+                type: str
             linux_profile:
                 description:
                     - The Linux OS profile.
+                type: dict
                 suboptions:
                     username:
                         description:
                             - SSH user name.
+                        type: str
                     password:
                         description:
                             - SSH password.
+                        type: str
     storage_accounts:
         description:
             - The list of storage accounts in the cluster.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - Blob storage endpoint. For example storage_account_name.blob.core.windows.net.
+                type: str
             is_default:
                 description:
                     - Whether or not the storage account is the default storage account.
+                type: bool
             container:
                 description:
                     - The container in the storage account.
+                type: str
             key:
                 description:
                     - The storage account access key.
+                type: str
     state:
-      description:
-          - Assert the state of the cluster.
-          - Use C(present) to create or update a cluster and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the cluster.
+            - Use C(present) to create or update a cluster and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -141,14 +165,13 @@ EXAMPLES = '''
       gateway_rest_password: MuABCPassword!!@123
     storage_accounts:
       - name: myStorageAccount.blob.core.windows.net
-        is_default: yes
+        is_default: true
         container: myContainer
         key: GExmaxH4lDNdHA9nwAsCt8t4AOQas2y9vXQP1kKALTram7Q3/5xLVIab3+nYG1x63Xyak9/VXxQyNBHA9pDWw==
     compute_profile_roles:
       - name: headnode
         target_instance_count: 2
-        hardware_profile:
-          vm_size: Standard_D3
+        vm_size: Standard_D3
         linux_profile:
           username: sshuser
           password: MuABCPassword!!@123
@@ -216,10 +239,31 @@ class AzureRMClusters(AzureRMModuleBase):
                 type='dict'
             ),
             compute_profile_roles=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    name=dict(type='str', choices=['headnode', 'workernode', 'zookepernode']),
+                    min_instance_count=dict(type='int'),
+                    target_instance_count=dict(type='int'),
+                    vm_size=dict(type='str'),
+                    linux_profile=dict(
+                        type='dict',
+                        options=dict(
+                            username=dict(type='str'),
+                            password=dict(type='str', no_log=True)
+                        )
+                    ),
+                )
             ),
             storage_accounts=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    name=dict(type='str'),
+                    is_default=dict(type='bool'),
+                    container=dict(type='str'),
+                    key=dict(type='str', no_log=True)
+                )
             ),
             state=dict(
                 type='str',

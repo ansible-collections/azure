@@ -1,9 +1,9 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     nsgname: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     storageaccountname: "stacc{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     dbname: "mdb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Call REST API
   azure_rm_resource:
@@ -14,11 +14,11 @@
     resource_name: "{{ nsgname }}"
     body:
       location: eastus
-    idempotency: yes
+    idempotency: true
   register: output
 
 - name: Assert that something has changed
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Call REST API
@@ -30,11 +30,11 @@
     resource_name: "{{ nsgname }}"
     body:
       location: eastus
-    idempotency: yes
+    idempotency: true
   register: output
 
 - name: Assert that nothing has changed
-  assert:
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Call REST API
@@ -49,11 +49,11 @@
       tags:
         a: "abc"
         b: "cde"
-    idempotency: yes
+    idempotency: true
   register: output
 
 - name: Assert that something has changed
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Try to get information about account
@@ -66,7 +66,7 @@
   register: output
 
 - name: Assert value was returned
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.response[0]['name'] != None
@@ -80,7 +80,7 @@
     resource_type: networksecuritygroups
   register: output
 - name: Assert value was returned
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.response[0]['name'] != None
@@ -93,7 +93,7 @@
     resource_type: networksecuritygroups
   register: output
 - name: Assert value was returned
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.response[0]['name'] != None
@@ -105,7 +105,7 @@
     resource_type: resources
   register: output
 - name: Assert value was returned
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.response | length >= 1
@@ -127,7 +127,7 @@
   register: output
 
 - name: Assert that storage was successfully created
-  assert:
+  ansible.builtin.assert:
     that: "output['response']['name'] == '{{ storageaccountname }}'"
 
 
@@ -144,7 +144,7 @@
   register: keys
 
 - name: Assert that key was returned
-  assert:
+  ansible.builtin.assert:
     that: keys['response']['keys'][0]['value'] | length > 0
 
 - name: Delete storage - without API version

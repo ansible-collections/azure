@@ -56,18 +56,18 @@ options:
     os_type:
         description:
             - This property allows you to specify the type of the OS that is included in the disk when creating a VM from a managed image.
+            - Required when creating.
         choices:
             - windows
             - linux
-        required: true
         type: str
     os_state:
         description:
             - The allowed values for OS State are C(generalized).
+            - Required when creating.
         choices:
             - generalized
             - specialized
-        required: true
         type: str
     hypervgeneration:
         description:
@@ -86,7 +86,7 @@ options:
     identifier:
         description:
             - Image identifier.
-        required: true
+            - Required when creating.
         type: dict
         suboptions:
             publisher:
@@ -144,6 +144,7 @@ options:
                 description:
                     - A list of disallowed disk types.
                 type: list
+                elements: str
     purchase_plan:
         description:
             - Purchase plan.
@@ -331,6 +332,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                 options=dict(
                     disk_types=dict(
                         type='list',
+                        elements='str',
                         disposition='diskTypes'
                     )
                 )

@@ -41,18 +41,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one availability set
-      azure_rm_availabilityset_info:
-        name: Testing
-        resource_group: myResourceGroup
+- name: Get facts for one availability set
+  azure_rm_availabilityset_info:
+    name: Testing
+    resource_group: myResourceGroup
 
-    - name: Get facts for all availability sets in a specific resource group
-      azure_rm_availabilityset_info:
-        resource_group: myResourceGroup
-        tags:
-          - key
-          - key:value
-
+- name: Get facts for all availability sets in a specific resource group
+  azure_rm_availabilityset_info:
+    resource_group: myResourceGroup
+    tags:
+      - key
+      - key:value
 '''
 
 RETURN = '''

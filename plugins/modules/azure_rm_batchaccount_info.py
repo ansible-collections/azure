@@ -39,15 +39,15 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get the Batch Account by name
-    azure_rm_batchaccount_info:
-      resource_group: MyResGroup
-      name: mybatchaccount
+- name: Get the Batch Account by name
+  azure_rm_batchaccount_info:
+    resource_group: MyResGroup
+    name: mybatchaccount
 
-  - name: List the Batch Account by subscription
-    azure_rm_batchaccount_info:
-      tags:
-        - key1
+- name: List the Batch Account by subscription
+  azure_rm_batchaccount_info:
+    tags:
+      - key1
 '''
 
 RETURN = '''

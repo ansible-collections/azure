@@ -48,16 +48,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of SQL Elastic Pool
-    azure_rm_sqlelasticpool_info:
-      resource_group: testrg
-      server_name: testserver
-      name: testEP
+- name: Get instance of SQL Elastic Pool
+  azure_rm_sqlelasticpool_info:
+    resource_group: testrg
+    server_name: testserver
+    name: testEP
 
-  - name: List instances of SQL Elastic Pool
-    azure_rm_sqlelasticpool_info:
-      resource_group: testrg
-      server_name: testserver
+- name: List instances of SQL Elastic Pool
+  azure_rm_sqlelasticpool_info:
+    resource_group: testrg
+    server_name: testserver
 '''
 
 RETURN = '''

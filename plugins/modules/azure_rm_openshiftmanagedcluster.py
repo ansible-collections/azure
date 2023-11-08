@@ -104,6 +104,7 @@ options:
         description:
             - Configuration for OpenShift worker Vms.
         type: list
+        elements: dict
         suboptions:
             name:
                 description: name of the worker profile (immutable).
@@ -156,6 +157,7 @@ options:
         description:
             - Ingress profiles configuration. only one profile is supported at the current API version.
         type: list
+        elements: dict
         suboptions:
             visibility:
                 description:
@@ -197,34 +199,34 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create openshift cluster
-      azure_rm_openshiftmanagedcluster:
-        resource_group: "myResourceGroup"
-        name: "myCluster"
-        location: "eastus"
-        cluster_profile:
-          cluster_resource_group_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/clusterResourceGroup"
-          domain: "mydomain"
-        service_principal_profile:
-          client_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-          client_secret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        network_profile:
-          pod_cidr: "10.128.0.0/14"
-          service_cidr: "172.30.0.0/16"
-        worker_profiles:
-          - vm_size : "Standard_D4s_v3"
-            subnet_id : "/subscriptions/xx-xx-xx-xx-xx/resourceGroups/myResourceGroup/Microsoft.Network/virtualNetworks/myVnet/subnets/worker"
-            disk_size : 128
-            count : 3
-        master_profile:
-          vm_size : "Standard_D8s_v3"
-          subnet_id: "/subscriptions/xx-xx-xx-xx-xx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/master"
-    - name: Delete OpenShift Managed Cluster
-      azure_rm_openshiftmanagedcluster:
-        resource_group: myResourceGroup
-        name: myCluster
-        location: eastus
-        state: absent
+- name: Create openshift cluster
+  azure_rm_openshiftmanagedcluster:
+    resource_group: "myResourceGroup"
+    name: "myCluster"
+    location: "eastus"
+    cluster_profile:
+      cluster_resource_group_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/clusterResourceGroup"
+      domain: "mydomain"
+    service_principal_profile:
+      client_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      client_secret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    network_profile:
+      pod_cidr: "10.128.0.0/14"
+      service_cidr: "172.30.0.0/16"
+    worker_profiles:
+      - vm_size: "Standard_D4s_v3"
+        subnet_id: "/subscriptions/xx-xx-xx-xx-xx/resourceGroups/myResourceGroup/Microsoft.Network/virtualNetworks/myVnet/subnets/worker"
+        disk_size: 128
+        count: 3
+    master_profile:
+      vm_size: "Standard_D8s_v3"
+      subnet_id: "/subscriptions/xx-xx-xx-xx-xx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/master"
+- name: Delete OpenShift Managed Cluster
+  azure_rm_openshiftmanagedcluster:
+    resource_group: myResourceGroup
+    name: myCluster
+    location: eastus
+    state: absent
 '''
 
 RETURN = '''
@@ -520,6 +522,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             ),
             worker_profiles=dict(
                 type='list',
+                elements='dict',
                 disposition='/properties/workerProfiles',
                 options=dict(
                     name=dict(
@@ -581,6 +584,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             ),
             ingress_profiles=dict(
                 type='list',
+                elements='dict',
                 disposition='/properties/ingressProfiles',
                 options=dict(
                     name=dict(

@@ -38,10 +38,11 @@ author:
 '''
 
 EXAMPLES = '''
-   azure_rm_backvmuppolicy_info:
-     name: 'myBackupPolicy'
-     vault_name: 'myVault'
-     resource_group: 'myResourceGroup'
+- name: Get backvm policy facts
+  azure_rm_backvmuppolicy_info:
+    name: 'myBackupPolicy'
+    vault_name: 'myVault'
+    resource_group: 'myResourceGroup'
 '''
 
 RETURN = '''

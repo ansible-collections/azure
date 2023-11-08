@@ -18,9 +18,10 @@ description:
     - Such as authentication keys, storage account keys, data encryption keys, .PFX files, and passwords.
 options:
     keyvault_uri:
-            description:
-                - URI of the keyvault endpoint.
-            required: true
+        description:
+            - URI of the keyvault endpoint.
+        required: true
+        type: str
     content_type:
         description:
             - Type of the secret value such as a password.
@@ -29,9 +30,11 @@ options:
         description:
             - Name of the keyvault secret.
         required: true
+        type: str
     secret_value:
         description:
             - Secret to be secured by keyvault.
+        type: str
     secret_expiry:
         description:
             - Optional expiry datetime for secret
@@ -43,6 +46,7 @@ options:
     state:
         description:
             - Assert the state of the subnet. Use C(present) to create or update a secret and C(absent) to delete a secret .
+        type: str
         default: present
         choices:
             - absent
@@ -58,20 +62,20 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a secret
-      azure_rm_keyvaultsecret:
-        secret_name: MySecret
-        secret_value: My_Pass_Sec
-        keyvault_uri: https://contoso.vault.azure.net/
-        tags:
-            testing: testing
-            delete: never
+- name: Create a secret
+  azure_rm_keyvaultsecret:
+    secret_name: MySecret
+    secret_value: My_Pass_Sec
+    keyvault_uri: https://contoso.vault.azure.net/
+    tags:
+      testing: testing
+      delete: never
 
-    - name: Delete a secret
-      azure_rm_keyvaultsecret:
-        secret_name: MySecret
-        keyvault_uri: https://contoso.vault.azure.net/
-        state: absent
+- name: Delete a secret
+  azure_rm_keyvaultsecret:
+    secret_name: MySecret
+    keyvault_uri: https://contoso.vault.azure.net/
+    state: absent
 '''
 
 RETURN = '''

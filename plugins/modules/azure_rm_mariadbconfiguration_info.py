@@ -43,16 +43,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get specific setting of MariaDB Server
-    azure_rm_mariadbconfiguration_info:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: deadlock_timeout
+- name: Get specific setting of MariaDB Server
+  azure_rm_mariadbconfiguration_info:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: deadlock_timeout
 
-  - name: Get all settings of MariaDB Server
-    azure_rm_mariadbconfiguration_info:
-      resource_group: myResourceGroup
-      server_name: server_name
+- name: Get all settings of MariaDB Server
+  azure_rm_mariadbconfiguration_info:
+    resource_group: myResourceGroup
+    server_name: server_name
 '''
 
 RETURN = '''

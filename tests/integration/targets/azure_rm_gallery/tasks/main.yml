@@ -1,7 +1,7 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
@@ -54,7 +54,9 @@
   register: output
 
 - name: Pause for 10 mimutes to VM updating
-  shell: sleep 600
+  ansible.builtin.command:
+    sleep 600
+  changed_when: true
 
 - name: Create a snapshot by importing an unmanaged blob from the same subscription.
   azure_rm_snapshot:
@@ -66,8 +68,9 @@
       source_uri: 'https://{{ output.vms[0].storage_account_name }}.blob.core.windows.net/{{ output.vms[0].storage_container_name }}/{{ output.vms[0].storage_blob_name }}'
   register: output
 
-- assert:
-    that: 
+- name: Assert the snapshot created
+  ansible.builtin.assert:
+    that:
       - output.changed
 
 - name: Create a managed disk
@@ -82,13 +85,14 @@
     resource_group: "{{ resource_group }}"
     name: "mySnapshot-{{ rpfx }}02"
     location: eastus
-    incremental: True
+    incremental: true
     creation_data:
       create_option: Copy
       source_id: "{{ disk_output.state.id }}"
   register: output
 
-- assert:
+- name: Assert the snapshot idempotent result
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -96,7 +100,7 @@
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
-    generalized: yes
+    generalized: true
 - name: Create custom image
   azure_rm_image:
     resource_group: "{{ resource_group }}"
@@ -110,8 +114,9 @@
     description: This is the gallery description.
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery created
+  ansible.builtin.assert:
+    that:
       - output.changed
 
 - name: Create or update a simple gallery - idempotent
@@ -122,8 +127,9 @@
     description: This is the gallery description.
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery created
+  ansible.builtin.assert:
+    that:
       - not output.changed
 
 - name: Create or update a simple gallery - change description
@@ -134,8 +140,9 @@
     description: This is the gallery description - xxx.
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery updated
+  ansible.builtin.assert:
+    that:
       - output.changed
 
 - name: Get a gallery info.
@@ -144,8 +151,9 @@
     name: myGallery{{ rpfx }}
   register: output
 
-- assert:
-    that: 
+- name: Assedrt the gallery facts
+  ansible.builtin.assert:
+    that:
       - not output.changed
       - output.galleries['id'] != None
       - output.galleries['name'] != None
@@ -168,8 +176,9 @@
     description: Image Description
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery image created
+  ansible.builtin.assert:
+    that:
       - output.changed
 
 - name: Create or update gallery image - idempotent
@@ -187,8 +196,9 @@
     description: Image Description
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery image idempotent result
+  ansible.builtin.assert:
+    that:
       - not output.changed
 
 - name: Create or update gallery image - change description
@@ -206,8 +216,9 @@
     description: Image Description XXXs
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery image updated
+  ansible.builtin.assert:
+    that:
       - output.changed
 
 - name: Get a gallery image info.
@@ -217,8 +228,9 @@
     name: myImage
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery image facts
+  ansible.builtin.assert:
+    that:
       - not output.changed
       - output.images['id'] != None
       - output.images['name'] != None
@@ -236,7 +248,7 @@
     location: eastus
     publishing_profile:
       end_of_life_date: "2050-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 3
       storage_account_type: Standard_LRS
       target_regions:
@@ -250,8 +262,9 @@
         resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery image version created
+  ansible.builtin.assert:
+    that:
       - output.changed
 
 - name: Create or update a simple gallery Image Version - idempotent
@@ -263,7 +276,7 @@
     location: eastus
     publishing_profile:
       end_of_life_date: "2050-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 3
       storage_account_type: Standard_LRS
       target_regions:
@@ -277,8 +290,9 @@
         resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery image version result
+  ansible.builtin.assert:
+    that:
       - not output.changed
 
 - name: Create or update a simple gallery Image Version - change end of life
@@ -290,7 +304,7 @@
     location: eastus
     publishing_profile:
       end_of_life_date: "2051-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 3
       storage_account_type: Standard_LRS
       target_regions:
@@ -304,8 +318,9 @@
         resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery image version updated
+  ansible.builtin.assert:
+    that:
       - output.changed
 
 - name: Get a simple gallery Image Version info.
@@ -316,8 +331,9 @@
     name: 10.1.3
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery image version facts
+  ansible.builtin.assert:
+    that:
       - not output.changed
       - output.versions['id'] != None
       - output.versions['name'] != None
@@ -334,13 +350,15 @@
     state: absent
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery image version deleted
+  ansible.builtin.assert:
+    that:
       - output.changed
 
-- name: pasue 2 minutes, wait for deletion complete
-  pause:
+- name: Pasue 2 minutes, wait for deletion complete
+  ansible.builtin.pause:
     minutes: 2
+  changed_when: true
 
 - name: Delete gallery image
   azure_rm_galleryimage:
@@ -350,13 +368,15 @@
     state: absent
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery image deleted
+  ansible.builtin.assert:
+    that:
       - output.changed
 
-- name: pasue 2 minutes, wait for deletion complete
-  pause:
+- name: Pasue 2 minutes, wait for deletion complete
+  ansible.builtin.pause:
     minutes: 2
+  changed_when: true
 
 - name: Delete gallery
   azure_rm_gallery:
@@ -365,6 +385,7 @@
     state: absent
   register: output
 
-- assert:
-    that: 
+- name: Assert the gallery deleted
+  ansible.builtin.assert:
+    that:
       - output.changed

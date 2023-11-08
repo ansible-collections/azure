@@ -54,27 +54,26 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Delete Registration Assignment
-      azure_rm_registrationassignment:
-        scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        state: absent
+- name: Delete Registration Assignment
+  azure_rm_registrationassignment:
+    scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: absent
 
 
-    - name: Create Registration Assignment in subscription level
-      azure_rm_registrationassignment:
-        scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        properties:
-          registration_definition_id: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxx-xxx
+- name: Create Registration Assignment in subscription level
+  azure_rm_registrationassignment:
+    scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    properties:
+      registration_definition_id: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxx-xxx
 
 
-    - name: Create Registration Assignment in resourcegroup level with randomly generating registration_assignment_id
-      azure_rm_registrationassignment:
-        scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
-        properties:
-          registration_definition_id: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxx-xxx
-
+- name: Create Registration Assignment in resourcegroup level with randomly generating registration_assignment_id
+  azure_rm_registrationassignment:
+    scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
+    properties:
+      registration_definition_id: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxx-xxx
 '''
 
 RETURN = '''

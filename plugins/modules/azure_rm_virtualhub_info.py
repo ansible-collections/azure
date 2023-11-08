@@ -33,18 +33,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get virtual hub info by name
-      azure_rm_virtualhub_info:
-        resource_group: myResourceGroup
-        name: virtualHub
+- name: Get virtual hub info by name
+  azure_rm_virtualhub_info:
+    resource_group: myResourceGroup
+    name: virtualHub
 
-    - name: Get virtual hub info by resource group
-      azure_rm_virtualhub_info:
-        resource_group: myResourceGroup
+- name: Get virtual hub info by resource group
+  azure_rm_virtualhub_info:
+    resource_group: myResourceGroup
 
-    - name: Get birtual hub info by sub
-      azure_rm_virtualhub_info:
-
+- name: Get birtual hub info by sub
+  azure_rm_virtualhub_info:
 '''
 
 RETURN = '''

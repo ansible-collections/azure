@@ -92,7 +92,6 @@ EXAMPLES = '''
   azure_rm_managementgroup:
     group_id: ChildGroup
     state: absent
-
 '''
 
 RETURN = '''

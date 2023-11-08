@@ -46,11 +46,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of DevTest Lab Artifact Source
-    azure_rm_devtestlabartifactsource_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myArtifactSource
+- name: Get instance of DevTest Lab Artifact Source
+  azure_rm_devtestlabartifactsource_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myArtifactSource
 '''
 
 RETURN = '''
@@ -131,7 +131,7 @@ artifactsources:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag': 'MyValue' }"
 '''
 

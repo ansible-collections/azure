@@ -41,7 +41,6 @@ EXAMPLES = '''
   azure_rm_azurefirewall_info:
     resource_group: myResourceGroup
     name: myAzureFirewall
-
 '''
 
 RETURN = '''
@@ -242,17 +241,23 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
         return [self.format_item(x) for x in results['value']] if results['value'] else []
 
     def format_item(self, item):
+        if item is None or item == {}:
+            return {}
         d = {
-            'id': item['id'],
-            'name': item['name'],
-            'location': item['location'],
-            'etag': item['etag'],
+            'id': item.get('id'),
+            'name': item.get('name'),
+            'location': item.get('location'),
+            'etag': item.get('etag'),
             'tags': item.get('tags'),
-            'nat_rule_collections': item['properties']['natRuleCollections'],
-            'network_rule_collections': item['properties']['networkRuleCollections'],
-            'ip_configurations': item['properties']['ipConfigurations'],
-            'provisioning_state': item['properties']['provisioningState']
+            'nat_rule_collections': dict(),
+            'network_rule_collections': dict(),
+            'ip_configurations': dict(),
         }
+        if isinstance(item.get('properties'), dict):
+            d['nat_rule_collections'] = item.get('properties').get('natRuleCollections')
+            d['network_rule_collections'] = item.get('properties').get('networkRuleCollections')
+            d['ip_configurations'] = item.get('properties').get('ipConfigurations')
+            d['provisioning_state'] = item.get('properties').get('provisioningState')
         return d
 
 

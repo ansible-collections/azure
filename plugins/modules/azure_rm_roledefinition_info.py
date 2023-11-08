@@ -47,14 +47,14 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: List Role Definitions in scope
-      azure_rm_roledefinition_info:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
+- name: List Role Definitions in scope
+  azure_rm_roledefinition_info:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
 
-    - name: Get Role Definition by name
-      azure_rm_roledefinition_info:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
-        role_name: myRoleDefinition
+- name: Get Role Definition by name
+  azure_rm_roledefinition_info:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
+    role_name: myRoleDefinition
 '''
 
 RETURN = '''

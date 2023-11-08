@@ -63,13 +63,13 @@ EXAMPLES = '''
 
 - name: Get facts for all subscriptions, including ones that are disabled.
   azure_rm_subscription_info:
-    all: True
+    all: true
 
 - name: Get facts for subscriptions containing tags provided.
   azure_rm_subscription_info:
     tags:
-        - testing
-        - foo:bar
+      - testing
+      - foo:bar
 '''
 
 RETURN = '''

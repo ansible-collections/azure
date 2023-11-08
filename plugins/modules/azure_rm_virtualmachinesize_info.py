@@ -40,14 +40,14 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get all virtual machine size info in eastus
-    azure_rm_virtualmachinesize_info:
-      location: eastus
+- name: Get all virtual machine size info in eastus
+  azure_rm_virtualmachinesize_info:
+    location: eastus
 
-  - name: Get virtual machine size info for eastus for Standard_A1_v2
-    azure_rm_virtualmachinesize_info:
-      location: eastus
-      name: Standard_A1_v2
+- name: Get virtual machine size info for eastus for Standard_A1_v2
+  azure_rm_virtualmachinesize_info:
+    location: eastus
+    name: Standard_A1_v2
 '''
 
 RETURN = '''

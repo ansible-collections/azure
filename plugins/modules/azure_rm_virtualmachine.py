@@ -30,16 +30,19 @@ options:
         description:
             - Name of the resource group containing the VM.
         required: true
+        type: str
     name:
         description:
             - Name of the VM.
         required: true
+        type: str
     custom_data:
         description:
             - Data made available to the VM and used by C(cloud-init).
             - Only used on Linux images with C(cloud-init) enabled.
             - Consult U(https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init#cloud-init-overview) for cloud-init ready images.
             - To enable cloud-init on a Linux image, follow U(https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloudinit-prepare-custom-image).
+        type: str
     state:
         description:
             - State of the VM.
@@ -47,6 +50,7 @@ options:
             - Set to C(absent) to remove a VM.
             - Does not affect power state. Use I(started)/I(allocated)/I(restarted) parameters to change the power state of a VM.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -83,19 +87,23 @@ options:
     location:
         description:
             - Valid Azure location for the VM. Defaults to location of the resource group.
+        type: str
     short_hostname:
         description:
             - Name assigned internally to the host. On a Linux VM this is the name returned by the C(hostname) command.
             - When creating a VM, short_hostname defaults to I(name).
+        type: str
     vm_size:
         description:
             - A valid Azure VM size value. For example, C(Standard_D4).
             - Choices vary depending on the subscription and location. Check your subscription for available choices.
             - Required when creating a VM.
+        type: str
     priority:
         description:
             - Priority of the VM.
             - C(None) is the equivalent of Regular VM.
+        type: str
         choices:
             - None
             - Spot
@@ -103,6 +111,7 @@ options:
         description:
             - Specifies the eviction policy for the Azure Spot virtual machine.
             - Requires priority to be set to Spot.
+        type: str
         choices:
             - Deallocate
             - Delete
@@ -112,15 +121,18 @@ options:
             - This price is in US Dollars.
             - C(-1) indicates default price to be up-to on-demand.
             - Requires priority to be set to Spot.
+        type: float
         default: -1
     admin_username:
         description:
             - Admin username used to access the VM after it is created.
             - Required when creating a VM.
+        type: str
     admin_password:
         description:
             - Password for the admin username.
             - Not required if the I(os_type=Linux) and SSH password authentication is disabled by setting I(ssh_password_enabled=false).
+        type: str
     ssh_password_enabled:
         description:
             - Whether to enable or disable SSH passwords.
@@ -133,16 +145,20 @@ options:
             - Accepts a list of dicts where each dictionary contains two keys, I(path) and I(key_data).
             - Set I(path) to the default location of the authorized_keys files. For example, I(path=/home/<admin username>/.ssh/authorized_keys).
             - Set I(key_data) to the actual value of the public key.
+        type: list
+        elements: dict
     image:
         description:
             - The image used to build the VM.
             - For custom images, the name of the image. To narrow the search to a specific resource group, a dict with the keys I(name) and I(resource_group).
             - For Marketplace images, a dict with the keys I(publisher), I(offer), I(sku), and I(version).
             - Set I(version=latest) to get the most recent version of a given image.
-        required: true
+            - Required when creating.
+        type: raw
     availability_set:
         description:
             - Name or ID of an existing availability set to add the VM to. The I(availability_set) should be in the same resource group as VM.
+        type: str
     proximity_placement_group:
         description:
             - The name or ID of the proximity placement group the VM should be associated with.
@@ -164,6 +180,7 @@ options:
         description:
             - Name of a storage account that supports creation of VHD blobs.
             - If not specified for a new VM, a new storage account named <vm name>01 will be created using storage type C(Standard_LRS).
+        type: str
         aliases:
             - storage_account
     storage_container_name:
@@ -171,6 +188,7 @@ options:
             - Name of the container to use within the storage account to store VHD blobs.
             - If not specified, a default container will be created.
         default: vhds
+        type: str
         aliases:
             - storage_container
     storage_blob_name:
@@ -178,6 +196,7 @@ options:
             - Name of the storage blob used to hold the OS disk image of the VM.
             - Must end with '.vhd'.
             - If not specified, defaults to the VM name + '.vhd'.
+        type: str
         aliases:
             - storage_blob
     managed_disk_type:
@@ -185,6 +204,7 @@ options:
             - Managed OS disk type.
             - Create OS disk with managed disk if defined.
             - If not defined, the OS disk will be created with virtual hard disk (VHD).
+        type: str
         choices:
             - Standard_LRS
             - StandardSSD_LRS
@@ -195,9 +215,11 @@ options:
     os_disk_name:
         description:
             - OS disk name.
+        type: str
     os_disk_caching:
         description:
             - Type of OS disk caching.
+        type: str
         choices:
             - ReadOnly
             - ReadWrite
@@ -206,9 +228,11 @@ options:
     os_disk_size_gb:
         description:
             - Size of OS disk in GB.
+        type: int
     os_type:
         description:
             - Base type of operating system.
+        type: str
         choices:
             - Windows
             - Linux
@@ -222,22 +246,27 @@ options:
         description:
             - Describes list of data disks.
             - Use M(azure.azcollection.azure_rm_mangeddisk) to manage the specific disk.
+        type: list
+        elements: dict
         suboptions:
             lun:
                 description:
                     - The logical unit number for data disk.
                     - This value is used to identify data disks within the VM and therefore must be unique for each data disk attached to a VM.
                 required: true
+                type: int
             disk_size_gb:
                 description:
                     - The initial disk size in GB for blank data disks.
                     - This value cannot be larger than C(1023) GB.
                     - Size can be changed only when the virtual machine is deallocated.
                     - Not sure when I(managed_disk_id) defined.
+                type: int
             managed_disk_type:
                 description:
                     - Managed data disk type.
                     - Only used when OS disk created with managed disk.
+                type: str
                 choices:
                     - Standard_LRS
                     - StandardSSD_LRS
@@ -252,6 +281,7 @@ options:
                     - Only used when OS disk created with virtual hard disk (VHD).
                     - Used when I(managed_disk_type) not defined.
                     - Cannot be updated unless I(lun) updated.
+                type: str
             storage_container_name:
                 description:
                     - Name of the container to use within the storage account to store VHD blobs.
@@ -259,6 +289,7 @@ options:
                     - Only used when OS disk created with virtual hard disk (VHD).
                     - Used when I(managed_disk_type) not defined.
                     - Cannot be updated unless I(lun) updated.
+                type: str
                 default: vhds
             storage_blob_name:
                 description:
@@ -268,19 +299,21 @@ options:
                     - Only used when OS disk created with virtual hard disk (VHD).
                     - Used when I(managed_disk_type) not defined.
                     - Cannot be updated unless I(lun) updated.
+                type: str
             caching:
                 description:
                     - Type of data disk caching.
+                type: str
                 choices:
                     - ReadOnly
                     - ReadWrite
-                default: ReadOnly
     public_ip_allocation_method:
         description:
             - Allocation method for the public IP of the VM.
             - Used only if a network interface is not specified.
             - When set to C(Dynamic), the public IP address may change any time the VM is rebooted or power cycled.
             - The C(Disabled) choice was added in Ansible 2.6.
+        type: str
         choices:
             - Dynamic
             - Static
@@ -293,6 +326,8 @@ options:
             - List of ports to open in the security group for the VM, when a security group and network interface are created with a VM.
             - For Linux hosts, defaults to allowing inbound TCP connections to port 22.
             - For Windows hosts, defaults to opening ports 3389 and 5986.
+        type: list
+        elements: str
     network_interface_names:
         description:
             - Network interface names to add to the VM.
@@ -301,16 +336,19 @@ options:
             - If a network interface name is not provided when the VM is created, a default network interface will be created.
             - To create a new network interface, at least one Virtual Network with one Subnet must exist.
         type: list
+        elements: raw
         aliases:
             - network_interfaces
     virtual_network_resource_group:
         description:
             - The resource group to use when creating a VM with another resource group's virtual network.
+        type: str
     virtual_network_name:
         description:
             - The virtual network to use when creating a VM.
             - If not specified, a new network interface will be created and assigned to the first virtual network found in the resource group.
             - Use with I(virtual_network_resource_group) to place the virtual network in another resource group.
+        type: str
         aliases:
             - virtual_network
     subnet_name:
@@ -318,6 +356,7 @@ options:
             - Subnet for the VM.
             - Defaults to the first subnet found in the virtual network or the subnet of the I(network_interface_name), if provided.
             - If the subnet is in another resource group, specify the resource group with I(virtual_network_resource_group).
+        type: str
         aliases:
             - subnet
     created_nsg:
@@ -334,6 +373,7 @@ options:
             - To remove only specific resources, set to C(network_interfaces), C(virtual_storage) or C(public_ips).
             - Any other input will be ignored.
         type: list
+        elements: str
         default: ['all']
     plan:
         description:
@@ -344,17 +384,21 @@ options:
                 description:
                     - Billing plan name.
                 required: true
+                type: str
             product:
                 description:
                     - Product name.
                 required: true
+                type: str
             publisher:
                 description:
                     - Publisher offering the plan.
                 required: true
+                type: str
             promotion_code:
                 description:
                     - Optional promotion code.
+                type: str
     accept_terms:
         description:
             - Accept terms for Marketplace images that require it.
@@ -366,11 +410,13 @@ options:
         description:
             - A list of Availability Zones for your VM.
         type: list
+        elements: str
     license_type:
         description:
             - On-premise license for the image or disk.
             - Only used for images that contain the Windows Server operating system.
             - To remove all license type settings, set to the string C(None).
+        type: str
         choices:
             - Windows_Server
             - Windows_Client
@@ -403,6 +449,7 @@ options:
                             - List of the user assigned identities IDs associated to the VM
                         required: false
                         type: list
+                        elements: str
                         default: []
                     append:
                         description:
@@ -413,24 +460,30 @@ options:
     winrm:
         description:
             - List of Windows Remote Management configurations of the VM.
+        type: list
+        elements: dict
         suboptions:
             protocol:
                 description:
                     - The protocol of the winrm listener.
                 required: true
+                type: str
                 choices:
                     - http
                     - https
             source_vault:
                 description:
                     - The relative URL of the Key Vault containing the certificate.
+                type: str
             certificate_url:
                 description:
                     - The URL of a certificate that has been uploaded to Key Vault as a secret.
+                type: str
             certificate_store:
                 description:
                     - The certificate store on the VM to which the certificate should be added.
                     - The specified certificate store is implicitly in the LocalMachine account.
+                type: str
     boot_diagnostics:
         type: dict
         description:
@@ -465,6 +518,7 @@ options:
     linux_config:
         description:
             - Specifies the Linux operating system settings on the virtual machine.
+        type: dict
         suboptions:
             disable_password_authentication:
                 description:
@@ -473,6 +527,7 @@ options:
     windows_config:
         description:
             - Specifies Windows operating system settings on the virtual machine.
+        type: dict
         suboptions:
             provision_vm_agent:
                 description:
@@ -614,7 +669,7 @@ EXAMPLES = '''
     storage_container: osdisk
     storage_blob: osdisk.vhd
     boot_diagnostics:
-      enabled: yes
+      enabled: true
       type: managed
     image:
       offer: 0001-com-ubuntu-server-focal
@@ -709,13 +764,13 @@ EXAMPLES = '''
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: testvm002
-    started: no
+    started: false
 
 - name: Deallocate
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: testvm002
-    allocated: no
+    allocated: false
 
 - name: Power On
   azure_rm_virtualmachine:
@@ -726,7 +781,7 @@ EXAMPLES = '''
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: testvm002
-    restarted: yes
+    restarted: true
 
 - name: Create a VM with an Availability Zone
   azure_rm_virtualmachine:
@@ -748,9 +803,9 @@ EXAMPLES = '''
     admin_password: "{{ password }}"
     security_profile:
       uefi_settings:
-        secure_boot_enabled: True
-        v_tpm_enabled: True
-      encryption_at_host: True
+        secure_boot_enabled: true
+        v_tpm_enabled: true
+      encryption_at_host: true
       security_type: TrustedLaunch
     ssh_public_keys:
       - path: /home/azureuser/.ssh/authorized_keys
@@ -903,7 +958,7 @@ azure_vm:
                 "adminUsername": "chouseknecht",
                 "computerName": "test10",
                 "linuxConfiguration": {
-                    "disablePasswordAuthentication": false
+                    "disable_password_authentication": false
                 },
                 "secrets": []
             },
@@ -997,7 +1052,7 @@ linux_configuration_spec = dict(
 )
 
 user_assigned_identities_spec = dict(
-    id=dict(type='list', default=[]),
+    id=dict(type='list', default=[], elements='str'),
     append=dict(type='bool', default=True)
 )
 
@@ -1025,7 +1080,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             admin_username=dict(type='str'),
             admin_password=dict(type='str', no_log=True),
             ssh_password_enabled=dict(type='bool', default=True, no_log=False),
-            ssh_public_keys=dict(type='list'),
+            ssh_public_keys=dict(type='list', elements='dict'),
             image=dict(type='raw'),
             availability_set=dict(type='str'),
             storage_account_name=dict(type='str', aliases=['storage_account']),
@@ -1039,9 +1094,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
             public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static', 'Disabled'], default='Static',
                                              aliases=['public_ip_allocation']),
-            open_ports=dict(type='list'),
+            open_ports=dict(type='list', elements='str'),
             network_interface_names=dict(type='list', aliases=['network_interfaces'], elements='raw'),
-            remove_on_absent=dict(type='list', default=['all']),
+            remove_on_absent=dict(type='list', default=['all'], elements='str'),
             virtual_network_resource_group=dict(type='str'),
             virtual_network_name=dict(type='str', aliases=['virtual_network']),
             subnet_name=dict(type='str', aliases=['subnet']),
@@ -1051,13 +1106,35 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             started=dict(type='bool'),
             force=dict(type='bool', default=False),
             generalized=dict(type='bool', default=False),
-            data_disks=dict(type='list'),
+            data_disks=dict(
+                type='list',
+                elements='dict',
+                options=dict(
+                    lun=dict(type='int', required=True),
+                    disk_size_gb=dict(type='int'),
+                    managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS',
+                                           'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
+                    storage_account_name=dict(type='str'),
+                    storage_container_name=dict(type='str', default='vhds'),
+                    storage_blob_name=dict(type='str'),
+                    caching=dict(type='str', choices=['ReadOnly', 'ReadOnly'])
+                )
+            ),
             plan=dict(type='dict'),
-            zones=dict(type='list'),
+            zones=dict(type='list', elements='str'),
             accept_terms=dict(type='bool', default=False),
             license_type=dict(type='str', choices=['Windows_Server', 'Windows_Client', 'RHEL_BYOS', 'SLES_BYOS']),
             vm_identity=dict(type='dict', options=managed_identity_spec),
-            winrm=dict(type='list'),
+            winrm=dict(
+                type='list',
+                elements='dict',
+                options=dict(
+                    protocol=dict(type='str', required=True, choices=['http', 'https']),
+                    source_vault=dict(type='str'),
+                    certificate_url=dict(type='str'),
+                    certificate_store=dict(type='str')
+                )
+            ),
             boot_diagnostics=dict(
                 type='dict',
                 options=dict(
@@ -1481,8 +1558,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if self.linux_config['disable_password_authentication'] != \
                             vm_dict['os_profile']['linux_configuration']['disable_password_authentication']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'linuxConfiguration.disablePasswordAuthentication' is not allowed.")
-                else:
-                    self.linux_config = vm_dict['os_profile'].get('linux_configuration')
 
                 # Defaults for boot diagnostics
                 if 'diagnostics_profile' not in vm_dict:
@@ -2021,7 +2096,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             )
                         else:
                             vm_resource.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
-                                disable_password_authentication=linux_config.get('disablePasswordAuthentication', False)
+                                disable_password_authentication=linux_config.get('disable_password_authentication', False)
                             )
                         ssh_config = linux_config.get('ssh', None)
                         if ssh_config:

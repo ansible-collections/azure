@@ -132,23 +132,23 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) MySQL Server
-    azure_rm_mysqlserver:
-      resource_group: myResourceGroup
-      name: testserver
-      sku:
-        name: B_Gen5_1
-        tier: Basic
-      location: eastus
-      storage_profile:
-        storage_mb: 51200
-        backup_retention_days: 7
-        geo_redundant_backup: Disabled
-        storage_autogrow: Disabled
-      enforce_ssl: True
-      version: 5.7
-      admin_username: cloudsa
-      admin_password: password
+- name: Create (or update) MySQL Server
+  azure_rm_mysqlserver:
+    resource_group: myResourceGroup
+    name: testserver
+    sku:
+      name: B_Gen5_1
+      tier: Basic
+    location: eastus
+    storage_profile:
+      storage_mb: 51200
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+      storage_autogrow: Disabled
+    enforce_ssl: true
+    version: 5.7
+    admin_username: cloudsa
+    admin_password: password
 '''
 
 RETURN = '''

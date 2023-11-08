@@ -80,14 +80,14 @@ EXAMPLES = '''
 - name: Get facts for one management group by id with direct children
   azure_rm_managementgroup_info:
     id: /providers/Microsoft.Management/managementGroups/contoso-group
-    children: True
+    children: true
 
 - name: Get facts for one management group by name with all children, flattened into top list
   azure_rm_managementgroup_info:
     name: "contoso-group"
-    children: True
-    recurse: True
-    flatten: True
+    children: true
+    recurse: true
+    flatten: true
 '''
 
 RETURN = '''

@@ -55,12 +55,12 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Update SQL Server setting
-    azure_rm_mariadbconfiguration:
-      resource_group: myResourceGroup
-      server_name: myServer
-      name: event_scheduler
-      value: "ON"
+- name: Update SQL Server setting
+  azure_rm_mariadbconfiguration:
+    resource_group: myResourceGroup
+    server_name: myServer
+    name: event_scheduler
+    value: "ON"
 '''
 
 RETURN = '''
