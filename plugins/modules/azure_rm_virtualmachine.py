@@ -1117,7 +1117,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     storage_account_name=dict(type='str'),
                     storage_container_name=dict(type='str', default='vhds'),
                     storage_blob_name=dict(type='str'),
-                    caching=dict(type='str', choices=['ReadOnly', 'ReadOnly'])
+                    caching=dict(type='str', choices=['ReadOnly', 'ReadWrite'])
                 )
             ),
             plan=dict(type='dict'),
