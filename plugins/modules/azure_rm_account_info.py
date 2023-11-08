@@ -201,7 +201,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
         return user
 
     async def getAccount(self):
-        return await self.get_msgraph_client(None).me.get(
+        return await self.get_msgraph_client().me.get(
             request_configuration=UserRequestBuilder.UserRequestBuilderGetRequestConfiguration(
                 query_parameters=UserRequestBuilder.UserRequestBuilderGetQueryParameters(
                     select=["userType", "userPrincipalName", "postalCode", "identities"], ),

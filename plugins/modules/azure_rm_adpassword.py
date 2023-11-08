@@ -181,7 +181,7 @@ class AzureRMADPassword(AzureRMModuleBase):
                            version='2.0.0',
                            collection_name='azure.azcollection')
 
-        self._client = self.get_msgraph_client(self.tenant)
+        self._client = self.get_msgraph_client()
         self.resolve_app_obj_id()
         passwords = self.get_all_passwords()
 

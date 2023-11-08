@@ -139,7 +139,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
                            collection_name='azure.azcollection')
 
         try:
-            self._client = self.get_msgraph_client(self.tenant)
+            self._client = self.get_msgraph_client()
             if self.object_id:
                 applications = [asyncio.get_event_loop().run_until_complete(self.get_application(self.object_id))]
             else:

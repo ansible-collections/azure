@@ -205,7 +205,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         ad_users = []
 
         try:
-            self._client = self.get_msgraph_client(self.tenant)
+            self._client = self.get_msgraph_client()
 
             if self.user_principal_name is not None:
                 ad_users = [asyncio.get_event_loop().run_until_complete(self.get_user(self.user_principal_name))]

@@ -116,7 +116,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
                            version='2.0.0',
                            collection_name='azure.azcollection')
 
-        self._client = self.get_msgraph_client(self.tenant)
+        self._client = self.get_msgraph_client()
 
         service_principals = []
 

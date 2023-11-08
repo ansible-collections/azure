@@ -279,7 +279,7 @@ class AzureRMADUser(AzureRMModuleBase):
                            collection_name='azure.azcollection')
 
         try:
-            self._client = self.get_msgraph_client(self.tenant)
+            self._client = self.get_msgraph_client()
 
             ad_user = self.get_exisiting_user()
 

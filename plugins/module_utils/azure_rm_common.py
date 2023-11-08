@@ -267,6 +267,7 @@ try:
     import azure.mgmt.datafactory.models as DataFactoryModel
     from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
     from azure.identity import AzureCliCredential
+    from msgraph import GraphServiceClient
 
 except ImportError as exc:
     Authentication = object
@@ -861,8 +862,7 @@ class AzureRMModuleBase(object):
         client = GraphRbacManagementClient(cred, tenant_id, base_url)
         return client
 
-    def get_msgraph_client(self, tenant_id):
-        from msgraph import GraphServiceClient
+    def get_msgraph_client(self):
         return GraphServiceClient(self.azure_auth.azure_credential_track2)
 
     def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False, is_track2=False):

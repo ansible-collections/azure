@@ -233,7 +233,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         ad_groups = []
 
         try:
-            self._client = self.get_msgraph_client(self.tenant)
+            self._client = self.get_msgraph_client()
 
             if self.object_id is not None:
                 ad_groups = [asyncio.get_event_loop().run_until_complete(self.get_group(self.object_id))]

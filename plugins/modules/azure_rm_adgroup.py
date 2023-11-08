@@ -273,7 +273,7 @@ class AzureRMADGroup(AzureRMModuleBase):
         ad_groups = []
 
         try:
-            self._client = self.get_msgraph_client(self.tenant)
+            self._client = self.get_msgraph_client()
             ad_groups = []
 
             if self.display_name and self.mail_nickname:

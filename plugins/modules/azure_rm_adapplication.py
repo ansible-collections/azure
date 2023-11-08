@@ -451,7 +451,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                                                    is_ad_resource=True)
 
     def exec_module(self, **kwargs):
-        self._client = self.get_msgraph_client(self.tenant)
+        self._client = self.get_msgraph_client()
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
