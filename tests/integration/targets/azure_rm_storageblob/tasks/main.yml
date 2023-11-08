@@ -11,12 +11,14 @@
 
 - name: Create container
   azure_rm_storageblob:
+    auth_mode: login
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
     container_name: my-blobs
 
 - name: Force upload blob
   azure_rm_storageblob:
+    auth_mode: login
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
     container_name: my-blobs

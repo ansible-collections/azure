@@ -675,11 +675,15 @@ class AzureRMModuleBase(object):
                 self.fail("Error {0} has a provisioning state of {1}. Expecting state to be {2}.".format(
                     azure_object.name, azure_object.provisioning_state, AZURE_SUCCESS_STATE))
 
-    def get_blob_service_client(self, resource_group_name, storage_account_name):
+    def get_blob_service_client(self, resource_group_name, storage_account_name, auth_mode='key'):
         try:
             self.log("Getting storage account detail")
             account = self.storage_client.storage_accounts.get_properties(resource_group_name=resource_group_name, account_name=storage_account_name)
-            account_keys = self.storage_client.storage_accounts.list_keys(resource_group_name=resource_group_name, account_name=storage_account_name)
+            if auth_mode == 'login' and self.azure_auth.credentials.get('credential'):
+                credential = self.azure_auth.credentials['credential']
+            else:
+                account_keys = self.storage_client.storage_accounts.list_keys(resource_group_name=resource_group_name, account_name=storage_account_name)
+                credential = account_keys.keys[0].value
         except Exception as exc:
             self.fail("Error getting storage account detail for {0}: {1}".format(storage_account_name, str(exc)))
 
@@ -687,7 +691,7 @@ class AzureRMModuleBase(object):
             self.log("Create blob service client")
             return BlobServiceClient(
                 account_url=account.primary_endpoints.blob,
-                credential=account_keys.keys[0].value,
+                credential=credential,
             )
         except Exception as exc:
             self.fail("Error creating blob service client for storage account {0} - {1}".format(storage_account_name, str(exc)))
