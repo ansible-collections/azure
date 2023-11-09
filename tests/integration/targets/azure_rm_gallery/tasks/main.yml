@@ -209,7 +209,7 @@
     name: myGallery{{ rpfx }}
   register: output
 
-- name: Assedrt the gallery facts
+- name: Assert the gallery facts
   ansible.builtin.assert:
     that:
       - not output.changed
@@ -232,6 +232,10 @@
       offer: myOfferName
       sku: mySkuName
     description: Image Description
+    hypervgeneration: V2
+    features:
+      - name: SecurityType
+        value: TrustedLaunch
   register: output
 
 - name: Assert the gallery image created
@@ -252,6 +256,10 @@
       offer: myOfferName
       sku: mySkuName
     description: Image Description
+    hypervgeneration: V2
+    features:
+      - name: SecurityType
+        value: TrustedLaunch
   register: output
 
 - name: Assert the gallery image idempotent result
@@ -272,6 +280,10 @@
       offer: myOfferName
       sku: mySkuName
     description: Image Description XXXs
+    hypervgeneration: V2
+    features:
+      - name: SecurityType
+        value: TrustedLaunch
   register: output
 
 - name: Assert the gallery image updated
