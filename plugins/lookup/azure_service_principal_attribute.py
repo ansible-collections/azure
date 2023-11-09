@@ -12,7 +12,7 @@ requirements:
     - azure-graphrbac
 
 author:
-    - Yunge Zhu <yungez@microsoft.com>
+    - Yunge Zhu (@yungezz)
 
 version_added: "2.7"
 
@@ -54,8 +54,7 @@ try:
     from azure.graphrbac import GraphRbacManagementClient
     from azure.cli.core import cloud as azure_cloud
 except ImportError:
-    raise AnsibleError("The lookup azure_service_principal_attribute requires azure.graphrbac, msrest")
-
+    pass
 
 class LookupModule(LookupBase):
     def run(self, terms, variables, **kwargs):
