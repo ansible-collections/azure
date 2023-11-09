@@ -5,13 +5,14 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 DOCUMENTATION = """
-lookup: azure_service_principal_attribute
+---
+name: azure_service_principal_attribute
 
 requirements:
-  - azure-graphrbac
+    - azure-graphrbac
 
 author:
-  - Yunge Zhu <yungez@microsoft.com>
+    - Yunge Zhu <yungez@microsoft.com>
 
 version_added: "2.7"
 
@@ -53,8 +54,7 @@ try:
     from azure.graphrbac import GraphRbacManagementClient
     from azure.cli.core import cloud as azure_cloud
 except ImportError:
-    raise AnsibleError(
-        "The lookup azure_service_principal_attribute requires azure.graphrbac, msrest")
+    raise AnsibleError("The lookup azure_service_principal_attribute requires azure.graphrbac, msrest")
 
 
 class LookupModule(LookupBase):
