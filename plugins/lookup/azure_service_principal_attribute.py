@@ -14,7 +14,7 @@ requirements:
 author:
     - Yunge Zhu (@yungezz)
 
-version_added: "2.7"
+version_added: "1.12.0"
 
 short_description: Look up Azure service principal attributes.
 
