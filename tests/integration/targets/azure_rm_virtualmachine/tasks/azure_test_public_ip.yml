@@ -63,6 +63,10 @@
       #!/bin/sh
       echo "custom_data was executed" > /tmp/custom_data.txt
 
+- name: Pause for 10 mimutes to VM updating
+  ansible.builtin.command: sleep 600
+  changed_when: true
+
 - name: Ensure VM was created properly
   ansible.builtin.assert:
     that:
@@ -91,10 +95,6 @@
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
   register: vm_state
-
-- name: Pause for 10 mimutes to VM updating
-  ansible.builtin.command: sleep 600
-  changed_when: true
 
 - name: Enable boot diagnostics on an existing VM for the first time without specifying a storage account
   azure_rm_virtualmachine:
