@@ -1601,6 +1601,29 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         vm_dict['tags']['_own_sa_'] = own_sa
                         changed = True
 
+                if self.proximity_placement_group is not None:
+                    if vm_dict.get('proximity_placement_group') is None:
+                        changed = True
+                        differences.append('proximity_placement_group')
+                        if self.proximity_placement_group.get('name') is not None and self.proximity_placement_group.get('resource_group') is not None:
+                            proximity_placement_group = self.get_proximity_placement_group(self.proximity_placement_group.get('resource_group'),
+                                                                                           self.proximity_placement_group.get('name'))
+                            self.proximity_placement_group['id'] = proximity_placement_group.id
+
+                    elif self.proximity_placement_group.get('id') is not None:
+                        if vm_dict['proximity_placement_group'].get('id', "").lower() != self.proximity_placement_group['id'].lower():
+                            changed = True
+                            differences.append('proximity_placement_group')
+                    elif self.proximity_placement_group.get('name') is not None and self.proximity_placement_group.get('resource_group') is not None:
+                        proximity_placement_group = self.get_proximity_placement_group(self.proximity_placement_group.get('resource_group'),
+                                                                                       self.proximity_placement_group.get('name'))
+                        if vm_dict['proximity_placement_group'].get('id', "").lower() != proximity_placement_group.id.lower():
+                            changed = True
+                            differences.append('proximity_placement_group')
+                            self.proximity_placement_group['id'] = proximity_placement_group.id
+                    else:
+                        self.fail("Parameter error: Please recheck your proximity placement group ")
+
                 self.differences = differences
 
             elif self.state == 'absent':
@@ -1938,11 +1961,18 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         )
 
                     proximity_placement_group_resource = None
-                    try:
-                        proximity_placement_group_resource = self.compute_models.SubResource(id=vm_dict['proximity_placement_group'].get('id'))
-                    except Exception:
-                        # pass if the proximity Placement Group
-                        pass
+                    if self.proximity_placement_group is not None:
+                        try:
+                            proximity_placement_group_resource = self.compute_models.SubResource(id=self.proximity_placement_group.get('id'))
+                        except Exception:
+                            # pass if the proximity Placement Group
+                            pass
+                    else:
+                        try:
+                            proximity_placement_group_resource = self.compute_models.SubResource(id=vm_dict['proximity_placement_group'].get('id'))
+                        except Exception:
+                            # pass if the proximity Placement Group
+                            pass
 
                     availability_set_resource = None
                     try:
