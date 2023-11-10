@@ -416,10 +416,12 @@ class AzureRMResource(AzureRMModuleBase):
                                               self.polling_timeout,
                                               self.polling_interval)
             if self.state == 'present' and self.method != 'DELETE':
-                try:
+                if hasattr(response, 'body'):
                     response = json.loads(response.body())
-                except Exception:
+                elif hasattr(response, 'context'):
                     response = response.context['deserialized_data']
+                else:
+                    self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
             else:
                 response = None
 

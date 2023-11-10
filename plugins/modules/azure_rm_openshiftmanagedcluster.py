@@ -756,11 +756,12 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             self.log('Error attempting to create the OpenShiftManagedCluster instance.')
             self.fail('Error creating the OpenShiftManagedCluster instance: {0}'
                       '\n{1}'.format(str(self.body), str(exc)))
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
-            pass
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 

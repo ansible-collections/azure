@@ -296,10 +296,12 @@ class BackupAzureVM(AzureRMModuleBaseExt):
             self.fail(
                 'Error in creating/updating protection for Azure VM {0}'.format(str(e)))
 
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -322,10 +324,12 @@ class BackupAzureVM(AzureRMModuleBaseExt):
             self.log('Error attempting to stop protection.')
             self.fail('Error in disabling the protection: {0}'.format(str(e)))
 
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -348,10 +352,12 @@ class BackupAzureVM(AzureRMModuleBaseExt):
             self.log('Error attempting to delete backup.')
             self.fail('Error deleting the azure backup: {0}'.format(str(e)))
 
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -375,10 +381,12 @@ class BackupAzureVM(AzureRMModuleBaseExt):
             self.fail(
                 'Error while taking on-demand backup: {0}'.format(str(e)))
 
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
