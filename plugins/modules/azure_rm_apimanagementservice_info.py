@@ -143,7 +143,7 @@ class AzureRMApiManagementServiceInfo(AzureRMModuleBaseExt):
         self.status_code = [200]
 
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2020-06-01-preview'
+        self.query_parameters['api-version'] = '2022-08-01'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
