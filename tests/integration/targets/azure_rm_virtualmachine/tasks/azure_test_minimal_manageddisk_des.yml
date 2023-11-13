@@ -1,0 +1,136 @@
+- name: Create virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "{{ network_name }}-disk"
+    address_prefixes: "{{ network }}"
+    location: westeurope
+
+- name: Create subnet
+  azure_rm_subnet:
+    resource_group: "{{ resource_group }}"
+    name: "{{ subnet_name }}"
+    address_prefix: "{{ subnet }}"
+    virtual_network: "{{ network_name }}-disk"
+
+- name: Create network interface
+  azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}"
+    name: "{{ interface_name }}-disk"
+    virtual_network: "{{ network_name }}-disk"
+    subnet: "{{ subnet_name }}"
+    location: westeurope
+
+- name: Create key vault
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    vault_name: "{{ keyvault_name }}"
+    enabled_for_disk_encryption: true
+    sku:
+      name: standard
+      family: A
+
+- name: Get key vault info
+  azure_rm_keyvault_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ keyvault_name }}"
+  register: vm_keyvault
+
+- name: Create key for disk encryption
+  azure_rm_keyvaultkey:
+    key_name: "{{ vm_name }}-des-key"
+    keyvault_uri: "{{ vm_keyvault.keyvaults[0].vault_uri }}"
+
+- name: Get latest version of specific key
+  azure_rm_keyvaultkey_info:
+    vault_uri: "{{ vm_keyvault.keyvaults[0].vault_uri }}"
+    name: "{{ vm_name }}-des-key"
+  register: vm_keyvault_key
+
+- name: Create disk encryption set
+  azure_rm_diskencryptionset:
+    resource_group: "{{ resource_group }}"
+    name: "{{ disk_encryption_set }}"
+    source_vault: "{{ vm_keyvault_key.keyvaults[0].kid }}"
+
+- name: Create minimal VM with defaults and a custom managed disk type
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    admin_username: "testuser"
+    ssh_password_enabled: false
+    managed_disk_type: StandardSSD_ZRS
+    os_disk_encryption_set:
+      id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ resource_group }}/providers/Microsoft.Compute/diskEncryptionSets/{{ disk_encryption_set }}"
+    public_ip_allocation_method: Disabled
+    location: westeurope
+    network_interface_names:
+      - name: "{{ interface_name }}-disk"
+        resource_group: "{{ resource_group }}"
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    vm_size: Standard_D4s_v3
+    virtual_network: "{{ network_name }}-disk"
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
+  register: vm_output
+
+- name: Assert status succeeded
+  ansible.builtin.assert:
+    that:
+      - vm_output.changed
+
+- name: Delete VM
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    remove_on_absent: all_autocreated
+    state: absent
+
+- name: Destroy NIC
+  azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}"
+    name: "{{ interface_name }}-disk"
+    state: absent
+  ignore_errors: true
+  register: ignore_errors_register
+
+- name: Delete network security group
+  azure_rm_securitygroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ interface_name }}-disk"
+    state: absent
+
+- name: Destroy disk
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    state: absent
+
+- name: Delete disk encryption set
+  azure_rm_diskencryptionset:
+    resource_group: "{{ resource_group }}"
+    name: "{{ disk_encryption_set }}"
+    state: absent
+
+- name: Delete key vault
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    vault_name: "{{ keyvault_name }}"
+    state: absent
+
+- name: Destroy subnet
+  azure_rm_subnet:
+    resource_group: "{{ resource_group }}"
+    virtual_network: "{{ network_name }}"
+    name: "{{ subnet_name }}-disk"
+    state: absent
+
+- name: Destroy virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "{{ network_name }}-disk"
+    state: absent
