@@ -55,6 +55,8 @@ all:
     security_group: "{{ 'sg' ~ uid_short }}"
     public_ip_name: "{{ 'ip' ~ uid_short }}"
     interface_name: "{{ 'int' ~ uid_short }}"
+    keyvault_name: "{{ 'kv' ~ uid_short }}"
+    disk_encryption_set: "{{ 'des' ~ uid_short }}"
 
     ssh_keys:
       - path: '/home/chouseknecht/.ssh/authorized_keys'
