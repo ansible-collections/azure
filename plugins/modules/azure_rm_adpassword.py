@@ -113,7 +113,7 @@ secret_text:
         - API only returns the application password value at creation.
     type: str
     returned: created
-    sample: abM8Q~.S87LV3yWI0dP~.C4hOQWeONi6sysZgaYp
+    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase

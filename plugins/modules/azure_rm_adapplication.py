@@ -607,13 +607,13 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             object_id=object.id,
             display_name=object.display_name,
             app_roles=app_roles,
-            # available_to_other_tenants=object.available_to_other_tenants,
-            # homepage=object.homepage,
+            available_to_other_tenants=object.sign_in_audience,
+            homepage=object.web.home_page_url,
             identifier_uris=object.identifier_uris,
-            # oauth2_allow_implicit_flow=object.oauth2_allow_implicit_flow,
+            oauth2_allow_implicit_flow=object.web.implicit_grant_settings.enable_access_token_issuance,
             optional_claims=object.optional_claims,
             # allow_guests_sign_in=object.allow_guests_sign_in,
-            # reply_urls=object.reply_urls
+            reply_urls=object.web.redirect_uris
         )
 
     def build_application_creds(self, password=None, key_value=None, key_type=None, key_usage=None,
