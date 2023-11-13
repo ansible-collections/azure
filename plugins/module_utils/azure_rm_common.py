@@ -266,6 +266,8 @@ try:
     from azure.mgmt.datafactory import DataFactoryManagementClient
     import azure.mgmt.datafactory.models as DataFactoryModel
     from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
+    from azure.identity import AzureCliCredential
+    from msgraph import GraphServiceClient
 
 except ImportError as exc:
     Authentication = object
@@ -484,8 +486,8 @@ class AzureRMModuleBase(object):
         '''
         self.module.fail_json(msg=msg, **kwargs)
 
-    def deprecate(self, msg, version=None):
-        self.module.deprecate(msg, version)
+    def deprecate(self, msg, version=None, collection_name='azure.azcollection'):
+        self.module.deprecate(msg, version, collection_name=collection_name)
 
     def log(self, msg, pretty_print=False):
         if pretty_print:
@@ -862,8 +864,10 @@ class AzureRMModuleBase(object):
         cred = self.azure_auth.azure_credentials
         base_url = self.azure_auth._cloud_environment.endpoints.active_directory_graph_resource_id
         client = GraphRbacManagementClient(cred, tenant_id, base_url)
-
         return client
+
+    def get_msgraph_client(self):
+        return GraphServiceClient(self.azure_auth.azure_credential_track2)
 
     def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False, is_track2=False):
         self.log('Getting management service client {0}'.format(client_type.__name__))
@@ -1673,12 +1677,13 @@ class AzureRMAuth(object):
         except Exception as exc:
             self.fail("Failed to load CLI profile {0}.".format(str(exc)))
 
-        credentials, subscription_id, tenant = profile.get_login_credentials(
-            subscription_id=subscription_id, resource=resource)
+        cred, subscription_id, tenant = profile.get_login_credentials(
+            subscription_id=subscription_id)
         cloud_environment = get_cli_active_cloud()
 
+        az_cli = AzureCliCredential()
         cli_credentials = {
-            'credentials': credentials,
+            'credentials': az_cli,
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment
         }

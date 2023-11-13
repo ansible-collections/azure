@@ -69,7 +69,7 @@ pip install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
 
 pip install ansible-lint
 
-timeout=90
+timeout=180
 
 if [ "$4" = "all" ]
 then

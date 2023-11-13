@@ -5,6 +5,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 DOCUMENTATION = '''
@@ -20,9 +21,9 @@ description:
 options:
     tenant:
         description:
-            - The tenant ID.
+            - (deprecated) The tenant ID.
+            - This option has been deprecated, and will be removed in the future.
         type: str
-        required: True
     object_id:
         description:
             - The object id for the user.
@@ -74,34 +75,28 @@ EXAMPLES = '''
 - name: Using user_principal_name
   azure.azcollection.azure_rm_aduser_info:
     user_principal_name: user@contoso.com
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 - name: Using object_id
   azure.azcollection.azure_rm_aduser_info:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 - name: Using attribute mailNickname - not a collection
   azure.azcollection.azure_rm_aduser_info:
     attribute_name: mailNickname
     attribute_value: users_mailNickname
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 - name: Using attribute proxyAddresses - a collection
   azure.azcollection.azure_rm_aduser_info:
     attribute_name: proxyAddresses
     attribute_value: SMTP:user@contoso.com
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 - name: Using Filter mailNickname
   azure.azcollection.azure_rm_aduser_info:
     odata_filter: mailNickname eq 'user@contoso.com'
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 - name: Using Filter proxyAddresses
   azure.azcollection.azure_rm_aduser_info:
     odata_filter: proxyAddresses/any(c:c eq 'SMTP:user@contoso.com')
-    tenant: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 RETURN = '''
@@ -152,7 +147,8 @@ user_type:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from azure.graphrbac.models import GraphErrorException
+    import asyncio
+    from msgraph.generated.users.users_request_builder import UsersRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -168,7 +164,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             attribute_value=dict(type='str'),
             odata_filter=dict(type='str'),
             all=dict(type='bool'),
-            tenant=dict(type='str', required=True),
+            tenant=dict(type='str'),
         )
 
         self.tenant = None
@@ -200,40 +196,52 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
+        if self.tenant:
+            self.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
+                           'https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison',
+                           version='2.0.0',
+                           collection_name='azure.azcollection')
+
         ad_users = []
 
         try:
-            client = self.get_graphrbac_client(self.tenant)
+            self._client = self.get_msgraph_client()
 
             if self.user_principal_name is not None:
-                ad_users = [client.users.get(self.user_principal_name)]
+                ad_users = [asyncio.get_event_loop().run_until_complete(self.get_user(self.user_principal_name))]
             elif self.object_id is not None:
-                ad_users = [client.users.get(self.object_id)]
+                ad_users = [asyncio.get_event_loop().run_until_complete(self.get_user(self.object_id))]
             elif self.attribute_name is not None and self.attribute_value is not None:
                 try:
-                    ad_users = list(client.users.list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
-                except GraphErrorException as e:
+                    users = asyncio.get_event_loop().run_until_complete(
+                        self.get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
+                    ad_users = list(users.value)
+                except Exception as e:
                     # the type doesn't get more specific. Could check the error message but no guarantees that message doesn't change in the future
                     # more stable to try again assuming the first error came from the attribute being a list
                     try:
-                        ad_users = list(client.users.list(filter="{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
-                    except GraphErrorException as sub_e:
+                        users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(
+                            "{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
+                        ad_users = list(users.value)
+                    except Exception as sub_e:
                         raise
             elif self.odata_filter is not None:  # run a filter based on user input to return based on any given attribute/query
-                ad_users = list(client.users.list(filter=self.odata_filter))
+                users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(self.odata_filter))
+                ad_users = list(users.value)
             elif self.all:
-                ad_users = list(client.users.list())
+                users = asyncio.get_event_loop().run_until_complete(self.get_users())
+                ad_users = list(users.value)
 
             self.results['ad_users'] = [self.to_dict(user) for user in ad_users]
 
-        except GraphErrorException as e:
+        except Exception as e:
             self.fail("failed to get ad user info {0}".format(str(e)))
 
         return self.results
 
     def to_dict(self, object):
         return dict(
-            object_id=object.object_id,
+            object_id=object.id,
             display_name=object.display_name,
             user_principal_name=object.user_principal_name,
             mail_nickname=object.mail_nickname,
@@ -241,6 +249,34 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             account_enabled=object.account_enabled,
             user_type=object.user_type
         )
+
+    async def get_user(self, object):
+        request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
+            query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
+            ),
+        )
+        return await self._client.users.by_user_id(object).get(request_configuration=request_configuration)
+
+    async def get_users(self):
+        request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
+            query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
+            ),
+        )
+        return await self._client.users.get(request_configuration=request_configuration)
+
+    async def get_users_by_filter(self, filter):
+        return await self._client.users.get(
+            request_configuration=UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
+                query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                    filter=filter,
+                    select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
+                            "userType"],
+                    count=True
+                ),
+                headers={'ConsistencyLevel': "eventual", }
+            ))
 
 
 def main():
