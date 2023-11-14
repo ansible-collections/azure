@@ -15,10 +15,6 @@ import inspect
 import traceback
 import json
 
-try:
-    from azure.graphrbac import GraphRbacManagementClient
-except Exception:
-    pass
 from os.path import expanduser
 
 from ansible.module_utils.basic import \
@@ -220,11 +216,8 @@ except ImportError:
 
 try:
     from enum import Enum
-    from msrestazure.azure_active_directory import AADTokenCredentials
-    from msrestazure.azure_active_directory import MSIAuthentication
     from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
     from azure.cli.core import cloud as azure_cloud
-    from azure.common.credentials import ServicePrincipalCredentials, UserPassCredentials
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource.resources import ResourceManagementClient
     from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
@@ -860,11 +853,12 @@ class AzureRMModuleBase(object):
         # wrap basic strings in a dict that just defines the default
         return dict(default_api_version=profile_raw)
 
-    def get_graphrbac_client(self, tenant_id):
-        cred = self.azure_auth.azure_credentials
-        base_url = self.azure_auth._cloud_environment.endpoints.active_directory_graph_resource_id
-        client = GraphRbacManagementClient(cred, tenant_id, base_url)
-        return client
+    # The graphrbac has deprecated, migrate to msgraph
+    # def get_graphrbac_client(self, tenant_id):
+    #    cred = self.azure_auth.azure_credentials
+    #    base_url = self.azure_auth._cloud_environment.endpoints.active_directory_graph_resource_id
+    #    client = GraphRbacManagementClient(cred, tenant_id, base_url)
+    #    return client
 
     def get_msgraph_client(self):
         return GraphServiceClient(self.azure_auth.azure_credential_track2)
@@ -891,16 +885,10 @@ class AzureRMModuleBase(object):
 
         # Some management clients do not take a subscription ID as parameters.
         if suppress_subscription_id:
-            if is_track2:
-                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, base_url=base_url, credential_scopes=[base_url + ".default"])
-            else:
-                client_kwargs = dict(credentials=self.azure_auth.azure_credentials, base_url=base_url)
+            client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, base_url=base_url, credential_scopes=[base_url + ".default"])
         else:
-            if is_track2:
-                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2,
-                                     subscription_id=mgmt_subscription_id, base_url=base_url, credential_scopes=[base_url + ".default"])
-            else:
-                client_kwargs = dict(credentials=self.azure_auth.azure_credentials, subscription_id=mgmt_subscription_id, base_url=base_url)
+            client_kwargs = dict(credential=self.azure_auth.azure_credential_track2,
+                                 subscription_id=mgmt_subscription_id, base_url=base_url, credential_scopes=[base_url + ".default"])
 
         api_profile_dict = {}
 
@@ -934,13 +922,8 @@ class AzureRMModuleBase(object):
             setattr(client, '_ansible_models', importlib.import_module(client_type.__module__).models)
             client.models = types.MethodType(_ansible_get_models, client)
 
-        if not is_track2:
-            client.config = self.add_user_agent(client.config)
-            if self.azure_auth._cert_validation_mode == 'ignore':
-                client.config.session_configuration_callback = self._validation_ignore_callback
-        else:
-            if self.azure_auth._cert_validation_mode == 'ignore':
-                client._config.session_configuration_callback = self._validation_ignore_callback
+        if self.azure_auth._cert_validation_mode == 'ignore':
+            client._config.session_configuration_callback = self._validation_ignore_callback
 
         return client
 
@@ -1477,7 +1460,7 @@ class AzureRMAuth(object):
 
         # if cloud_environment specified, look up/build Cloud object
         raw_cloud_env = self.credentials.get('cloud_environment')
-        if self.credentials.get('credentials') is not None and raw_cloud_env is not None:
+        if self.credentials.get('credential') is not None and raw_cloud_env is not None:
             self._cloud_environment = raw_cloud_env
         elif not raw_cloud_env:
             self._cloud_environment = azure_cloud.AZURE_PUBLIC_CLOUD  # SDK default
@@ -1512,27 +1495,13 @@ class AzureRMAuth(object):
 
         if self.credentials.get('auth_source') == 'msi':
             # MSI Credentials
-            if is_ad_resource or track1_cred:
-                self.azure_credentials = self.credentials['credentials']
             self.azure_credential_track2 = self.credentials['credential']
         elif self.credentials.get('credentials') is not None:
             # AzureCLI credentials
-            if is_ad_resource or track1_cred:
-                self.azure_credentials = self.credentials['credentials']
             self.azure_credential_track2 = self.credentials['credentials']
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
-
-            graph_resource = self._cloud_environment.endpoints.active_directory_graph_resource_id
-            rm_resource = self._cloud_environment.endpoints.resource_manager
-            if is_ad_resource or track1_cred:
-                self.azure_credentials = ServicePrincipalCredentials(client_id=self.credentials['client_id'],
-                                                                     secret=self.credentials['secret'],
-                                                                     tenant=self.credentials['tenant'],
-                                                                     cloud_environment=self._cloud_environment,
-                                                                     resource=graph_resource if self.is_ad_resource else rm_resource,
-                                                                     verify=self._cert_validation_mode == 'validate')
             self.azure_credential_track2 = client_secret.ClientSecretCredential(client_id=self.credentials['client_id'],
                                                                                 client_secret=self.credentials['secret'],
                                                                                 tenant_id=self.credentials['tenant'],
@@ -1542,14 +1511,6 @@ class AzureRMAuth(object):
                 self.credentials.get('tenant') is not None and \
                 self.credentials.get('thumbprint') is not None and \
                 self.credentials.get('x509_certificate_path') is not None:
-            if is_ad_resource or track1_cred:
-                self.azure_credentials = self.acquire_token_with_client_certificate(
-                    self._adfs_authority_url,
-                    self.credentials['x509_certificate_path'],
-                    self.credentials['thumbprint'],
-                    self.credentials['client_id'],
-                    self.credentials['tenant'])
-
             self.azure_credential_track2 = certificate.CertificateCredential(tenant_id=self.credentials['tenant'],
                                                                              client_id=self.credentials['client_id'],
                                                                              certificate_path=self.credentials['x509_certificate_path'],
@@ -1559,13 +1520,6 @@ class AzureRMAuth(object):
                 self.credentials.get('password') is not None and \
                 self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None:
-            if is_ad_resource or track1_cred:
-                self.azure_credentials = self.acquire_token_with_username_password(
-                    self._adfs_authority_url,
-                    self.credentials['ad_user'],
-                    self.credentials['password'],
-                    self.credentials['client_id'],
-                    self.credentials['tenant'])
             self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
                                                                                     password=self.credentials['password'],
                                                                                     tenant_id=self.credentials.get('tenant'),
@@ -1573,17 +1527,6 @@ class AzureRMAuth(object):
                                                                                     authority=self._adfs_authority_url)
 
         elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
-            tenant = self.credentials.get('tenant')
-            if not tenant:
-                tenant = 'common'  # SDK default
-
-            if is_ad_resource or track1_cred:
-                self.azure_credentials = UserPassCredentials(self.credentials['ad_user'],
-                                                             self.credentials['password'],
-                                                             tenant=tenant,
-                                                             cloud_environment=self._cloud_environment,
-                                                             verify=self._cert_validation_mode == 'validate')
-
             client_id = self.credentials.get('client_id', '04b07795-8ddb-461a-bbee-02f9e1bf7b46')
             self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
                                                                                     password=self.credentials['password'],
@@ -1648,7 +1591,6 @@ class AzureRMAuth(object):
                 except Exception as exc:
                     self.fail("cloud_environment {0} could not be resolved: {1}".format(_cloud_environment, str(exc)), exception=traceback.format_exc())
 
-        credentials = MSIAuthentication(client_id=client_id, cloud_environment=cloud_environment)
         credential = managed_identity.ManagedIdentityCredential(client_id=client_id, cloud_environment=cloud_environment)
         subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
@@ -1661,7 +1603,6 @@ class AzureRMAuth(object):
                 self.fail("Failed to get MSI token: {0}. "
                           "Please check whether your machine enabled MSI or grant access to any subscription.".format(str(exc)))
         return {
-            'credentials': credentials,
             'credential': credential,
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment,
@@ -1770,42 +1711,6 @@ class AzureRMAuth(object):
             self.log('Error getting AzureCLI profile credentials - {0}'.format(ce))
 
         return None
-
-    def acquire_token_with_username_password(self, authority, username, password, client_id, tenant):
-        authority_uri = authority
-
-        if tenant is not None:
-            authority_uri = authority + '/' + tenant
-
-        context = ClientApplication(client_id=client_id, authority=authority_uri)
-        base_url = self._cloud_environment.endpoints.resource_manager
-        if not base_url.endswith("/"):
-            base_url += "/"
-        scopes = [base_url + ".default"]
-        token_response = context.acquire_token_by_username_password(username, password, scopes)
-
-        return AADTokenCredentials(token_response)
-
-    def acquire_token_with_client_certificate(self, authority, x509_private_key_path, thumbprint, client_id, tenant):
-        authority_uri = authority
-
-        if tenant is not None:
-            authority_uri = authority + '/' + tenant
-
-        x509_private_key = None
-        with open(x509_private_key_path, 'r') as pem_file:
-            x509_private_key = pem_file.read()
-
-        base_url = self._cloud_environment.endpoints.resource_manager
-        if not base_url.endswith("/"):
-            base_url += "/"
-        scopes = [base_url + ".default"]
-        client_credential = {"thumbprint": thumbprint, "private_key": x509_private_key}
-        context = ConfidentialClientApplication(client_id=client_id, authority=authority_uri, client_credential=client_credential)
-
-        token_response = context.acquire_token_for_client(scopes=scopes)
-
-        return AADTokenCredentials(token_response)
 
     def log(self, msg, pretty_print=False):
         pass
