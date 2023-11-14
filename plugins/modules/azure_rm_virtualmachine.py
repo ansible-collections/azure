@@ -229,6 +229,10 @@ options:
         description:
             - Size of OS disk in GB.
         type: int
+    os_disk_encryption_set:
+        description:
+            - ID of disk encryption set for OS disk.
+        type: str
     os_type:
         description:
             - Base type of operating system.
@@ -1088,6 +1092,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             storage_blob_name=dict(type='str', aliases=['storage_blob']),
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite']),
             os_disk_size_gb=dict(type='int'),
+            os_disk_encryption_set=dict(type='str'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
             os_disk_name=dict(type='str'),
             proximity_placement_group=dict(type='dict', options=proximity_placement_group_spec),
@@ -1172,6 +1177,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.os_type = None
         self.os_disk_caching = None
         self.os_disk_size_gb = None
+        self.os_disk_encryption_set = None
         self.managed_disk_type = None
         self.os_disk_name = None
         self.proximity_placement_group = None
@@ -1209,8 +1215,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             ansible_facts=dict(azure_vm=None)
         )
 
+        required_if = [('os_disk_encryption_set', '*', ['managed_disk_type'])]
+
         super(AzureRMVirtualMachine, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                    supports_check_mode=True)
+                                                    supports_check_mode=True, required_if=required_if)
 
     @property
     def boot_diagnostics_present(self):
@@ -1559,6 +1567,11 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             vm_dict['os_profile']['linux_configuration']['disable_password_authentication']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'linuxConfiguration.disablePasswordAuthentication' is not allowed.")
 
+                current_os_des_id = vm_dict['storage_profile'].get('os_disk', {}).get('managed_disk', {}).get('disk_encryption_set', {}).get('id', None)
+                if self.os_disk_encryption_set is not None and current_os_des_id is not None:
+                    if self.os_disk_encryption_set != current_os_des_id:
+                        self.fail("(PropertyChangeNotAllowed) Changing property 'storage_profile.os_disk.managed_disk.disk_encryption_set' is not allowed.")
+
                 # Defaults for boot diagnostics
                 if 'diagnostics_profile' not in vm_dict:
                     vm_dict['diagnostics_profile'] = {}
@@ -1699,6 +1712,11 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     else:
                         vhd = self.compute_models.VirtualHardDisk(uri=requested_vhd_uri)
                         managed_disk = None
+
+                    if managed_disk and self.os_disk_encryption_set:
+                        managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
+                            id=self.os_disk_encryption_set
+                        )
 
                     plan = None
                     if self.plan:

@@ -7,3 +7,4 @@ venv*
 .vscode
 ansible_collections/
 .idea/
+tests/integration/inventory
