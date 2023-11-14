@@ -266,6 +266,10 @@ options:
                     - Size can be changed only when the virtual machine is deallocated.
                     - Not sure when I(managed_disk_id) defined.
                 type: int
+            disk_encryption_set:
+                description:
+                    - ID of disk encryption set for data disk.
+                type: str
             managed_disk_type:
                 description:
                     - Managed data disk type.
@@ -1117,6 +1121,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 options=dict(
                     lun=dict(type='int', required=True),
                     disk_size_gb=dict(type='int'),
+                    disk_encryption_set=dict(type='str'),
                     managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS',
                                            'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
                     storage_account_name=dict(type='str'),
@@ -1883,6 +1888,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             else:
                                 data_disk_vhd = None
                                 data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=data_disk['managed_disk_type'])
+                                if data_disk.get('disk_encryption_set'):
+                                    data_disk_managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
+                                        id=data_disk['disk_encryption_set']
+                                    )
                                 disk_name = self.name + "-datadisk-" + str(count)
                                 count += 1
 
@@ -2134,6 +2143,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             if data_disk.get('managed_disk'):
                                 managed_disk_type = data_disk['managed_disk'].get('storage_account_type')
                                 data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=managed_disk_type)
+                                if data_disk.get('disk_encryption_set'):
+                                    data_disk_managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
+                                        id=data_disk['disk_encryption_set']
+                                    )
                                 data_disk_vhd = None
                             else:
                                 data_disk_vhd = data_disk['vhd']['uri']
