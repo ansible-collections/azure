@@ -19,24 +19,26 @@ description:
 options:
     allow_shared_key_access:
         description:
-            - when Allow storage account key access is disabled, any requests to the account that are authorized with shared key, including shared access signature (SAS), will be denied.
-        type: boolean
+            - When disabled, storage account key access denies all requests authorized by shared key or SAS.
+        type: bool
         default: True
     identity:
         description:
             - Identity for the resource.
         type: dict
-        contains:
+        suboptions:
             type:
                 description:
-                    - The identity type. Required. Known values are: "None", "SystemAssigned", "UserAssigned", and "SystemAssigned,UserAssigned".
+                    - The identity type. Required.
                 type: str
-                sample: true
+                choices:
+                    - None
+                    - SystemAssigned
+                    - UserAssigned
             user_assigned_identities:
                 description:
-                    - Gets or sets a list of key value pairs that describe the set of User Assigned identities that will be used with this storage account. The key is the ARM resource identifier of the identity. Only 1 User Assigned identity is permitted here.
+                    - Sets a single User Assigned identity for the account, using key-value pairs where the key is the identity's ARM resource ID.
                 type: str
-                sample: true
     resource_group:
         description:
             - Name of the resource group to use.
@@ -318,24 +320,27 @@ options:
                 description:
                   - list of Microsoft Keyvault properties needed in order to create Storage account with encryption enabled with Microsoft KeyVault for CMK.
                 type: dict
-                contains:
+                suboptions:
                   key_vault_uri:
                     description:
                         - The Uri of KeyVault.
                     type: str
+                    required: true
                   key_name:
                     description:
                       - The name of KeyVault key.
                     type: str
+                    required: true
                   key_version:
                     description:
                       - The version of KeyVault key.
                     type: str
+
             encryption_identity:
                 description:
                     - The identity to be used with service-side encryption at rest.
                 type: dict
-                contains:
+                suboptions:
                   encryption_user_assigned_identity:
                     description:
                       - Resource identifier of the UserAssigned identity to be associated with server-side encryption on the storage account.
@@ -779,11 +784,11 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict'),
             static_website=dict(type='dict', options=static_website_spec),
             is_hns_enabled=dict(type='bool'),
-            allow_shared_key_access=dict(type='bool'),
+            allow_shared_key_access=dict(type='bool', default='True'),
             identity=dict(
                 type='dict',
                 options=dict(
-                    type=dict(type='str', choices=["SystemAssigned", "UserAssigned", "None"]),
+                    type=dict(type='str', choices=['SystemAssigned', 'UserAssigned', 'None']),
                     user_assigned_identities=dict(type='str', required=False)
                 )
             ),
@@ -816,10 +821,10 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                     key_vault_properties=dict(
                         type='dict',
                         options=dict(
-                            key_vault_uri=dict(type='str', required=True),
+                            key_vault_uri=dict(type='str', required=True, no_log=True),
                             key_name=dict(type='str', required=True),
-                            key_version=dict(type='str')
-                        )
+                            key_version=dict(type='str', no_log=True)
+                        ), no_log=True
                     ),
                     encryption_identity=dict(
                         type='dict',
