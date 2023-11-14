@@ -196,6 +196,7 @@
     priority: Spot
     eviction_policy: Deallocate
     single_placement_group: true
+    orchestration_mode: Uniform
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
@@ -253,6 +254,7 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     single_placement_group: true
+    orchestration_mode: Uniform
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
@@ -297,6 +299,7 @@
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
     single_placement_group: true
+    orchestration_mode: Uniform
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
@@ -346,6 +349,7 @@
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
     single_placement_group: true
+    orchestration_mode: Uniform
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
@@ -383,6 +387,7 @@
     os_disk_caching: ReadWrite
     custom_data: "#cloud-config"
     single_placement_group: true
+    orchestration_mode: Uniform
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
@@ -455,6 +460,7 @@
     data_disks: "{{ body.data_disks }}"
     overprovision: "{{ body.overprovision }}"
     single_placement_group: true
+    orchestration_mode: Uniform
   register: results
 
 - name: Assert that nothing was changed
@@ -608,6 +614,7 @@
     security_group: testNetworkSecurityGroup
     enable_accelerated_networking: true
     single_placement_group: true
+    orchestration_mode: Uniform
   register: results
   check_mode: true
 
@@ -635,6 +642,7 @@
     security_group: testNetworkSecurityGroup
     enable_accelerated_networking: true
     single_placement_group: true
+    orchestration_mode: Uniform
   register: results
 
 - name: Assert that VMSS ran
@@ -664,6 +672,7 @@
     security_group: testNetworkSecurityGroup
     enable_accelerated_networking: true
     single_placement_group: true
+    orchestration_mode: Uniform
   register: results
 
 - name: Assert that nothing has changed
@@ -691,6 +700,7 @@
     security_group: testNetworkSecurityGroup
     enable_accelerated_networking: true
     single_placement_group: true
+    orchestration_mode: Uniform
   register: results
 
 - name: Assert that something has changed
@@ -719,6 +729,7 @@
       name: testNetworkSecurityGroup2
       resource_group: "{{ resource_group_secondary }}"
     single_placement_group: true
+    orchestration_mode: Uniform
   register: results
 
 # disable for now
@@ -756,6 +767,7 @@
       name: testNetworkSecurityGroup2
       resource_group: "{{ resource_group_secondary }}"
     single_placement_group: true
+    orchestration_mode: Uniform
   register: results
 
 - name: Assert vmss created
@@ -786,6 +798,7 @@
       name: testNetworkSecurityGroup2
       resource_group: "{{ resource_group_secondary }}"
     single_placement_group: true
+    orchestration_mode: Uniform
   ignore_errors: true
   register: ignore_errors_register
 
@@ -815,6 +828,7 @@
     upgrade_policy: Manual
     enable_accelerated_networking: true
     single_placement_group: true
+    orchestration_mode: Uniform
   register: results
   ignore_errors: true
 
