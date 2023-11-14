@@ -17,6 +17,26 @@ short_description: Manage Azure storage accounts
 description:
     - Create, update or delete a storage account.
 options:
+    allow_shared_key_access:
+        description:
+            - when Allow storage account key access is disabled, any requests to the account that are authorized with shared key, including shared access signature (SAS), will be denied.
+        type: boolean
+        default: True
+    identity:
+        description:
+            - Identity for the resource.
+        type: dict
+        contains:
+            type:
+                description:
+                    - The identity type. Required. Known values are: "None", "SystemAssigned", "UserAssigned", and "SystemAssigned,UserAssigned".
+                type: str
+                sample: true
+            user_assigned_identities:
+                description:
+                    - Gets or sets a list of key value pairs that describe the set of User Assigned identities that will be used with this storage account. The key is the ARM resource identifier of the identity. Only 1 User Assigned identity is permitted here.
+                type: str
+                sample: true
     resource_group:
         description:
             - Name of the resource group to use.
@@ -294,10 +314,39 @@ options:
                 choices:
                     - Microsoft.Storage
                     - Microsoft.Keyvault
+            key_vault_properties:
+                description:
+                  - list of Microsoft Keyvault properties needed in order to create Storage account with encryption enabled with Microsoft KeyVault for CMK.
+                type: dict
+                contains:
+                  key_vault_uri:
+                    description:
+                        - The Uri of KeyVault.
+                    type: str
+                  key_name:
+                    description:
+                      - The name of KeyVault key.
+                    type: str
+                  key_version:
+                    description:
+                      - The version of KeyVault key.
+                    type: str
+            encryption_identity:
+                description:
+                    - The identity to be used with service-side encryption at rest.
+                type: dict
+                contains:
+                  encryption_user_assigned_identity:
+                    description:
+                      - Resource identifier of the UserAssigned identity to be associated with server-side encryption on the storage account.
+                    type: str
+
+
             require_infrastructure_encryption:
                 description:
                     - A boolean indicating whether or not the service applies a secondary layer of encryption with platform managed keys for data at rest.
                 type: bool
+
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -450,6 +499,25 @@ state:
                             type: dict
                             returned: always
                             sample: {'enabled': true}
+                key_vault_properties:
+                    description:
+                      - list of Microsoft Keyvault properties needed in order to create Storage account with encryption enabled with Microsoft KeyVault for CMK.
+                    type: dict
+                    sample: false
+                    contains:
+                      key_vault_uri:
+                        description:
+                            - The Uri of KeyVault.
+                        type: str
+                      key_name:
+                        description:
+                          - The name of KeyVault key.
+                        type: str
+                      key_version:
+                        description:
+                          - The version of KeyVault key.
+                        type: str
+
         id:
             description:
                 - Resource ID.
@@ -845,8 +913,6 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 # Convert the string to a dictionary
                 identity_resource_id = self.identity['user_assigned_identities']
                 self.identity['user_assigned_identities'] = {identity_resource_id: {}}
-
-
         return self.results
 
     def check_name_availability(self):
