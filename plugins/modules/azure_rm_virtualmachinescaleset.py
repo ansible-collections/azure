@@ -334,6 +334,7 @@ options:
         choices:
             - Flexible
             - Uniform
+        default: Flexible
     security_profile:
         description:
             - Specifies the Security related profile settings for the virtual machine sclaset.
@@ -723,7 +724,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             scale_in_policy=dict(type='str', choices=['Default', 'OldestVM', 'NewestVM']),
             terminate_event_timeout_minutes=dict(type='int'),
             ephemeral_os_disk=dict(type='bool'),
-            orchestration_mode=dict(type='str', choices=['Uniform', 'Flexible']),
+            orchestration_mode=dict(type='str',
+                                    choices=['Uniform', 'Flexible'],
+                                    default='Flexible',),
             platform_fault_domain_count=dict(type='int', default=1),
             os_disk_size_gb=dict(type='int'),
             security_profile=dict(
