@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: true
 
@@ -42,7 +42,7 @@
   ignore_errors: true
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.msg is match("Could not load the private endpoint", ignorecase=True)
 
@@ -76,7 +76,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.groups | length == 0
@@ -92,7 +92,7 @@
   register: output
   check_mode: true
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -106,7 +106,7 @@
         private_dns_zone: "privatelink.postgres.database.azure.com"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.id
@@ -118,7 +118,7 @@
       - output.state.private_dns_zone_configs[0].record_sets | length == 1
       - output.state.private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
       - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
-      - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('^10.1.*')
+      - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('10.1.*')
       - output.state.private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
       - output.state.private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
       - output.state.private_dns_zone_configs[0].record_sets[0].record_type == 'A'
@@ -134,7 +134,7 @@
         private_dns_zone: "privatelink.postgres.database.azure.com"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -145,7 +145,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.groups | length == 1
@@ -158,7 +158,7 @@
       - output.groups[0].private_dns_zone_configs[0].record_sets | length == 1
       - output.groups[0].private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
       - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('^10.1.*')
+      - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('10.1.*')
       - output.groups[0].private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
       - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
       - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_type == 'A'
@@ -170,7 +170,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.groups | length == 1
@@ -183,7 +183,7 @@
       - output.groups[0].private_dns_zone_configs[0].record_sets | length == 1
       - output.groups[0].private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
       - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('^10.1.*')
+      - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('10.1.*')
       - output.groups[0].private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
       - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
       - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_type == 'A'
@@ -199,7 +199,7 @@
         private_dns_zone: "privatelink.postgres.database.azure.com"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.id
@@ -211,7 +211,7 @@
       - output.state.private_dns_zone_configs[0].record_sets | length == 1
       - output.state.private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
       - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
-      - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('^10.1.*')
+      - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('10.1.*')
       - output.state.private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
       - output.state.private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
       - output.state.private_dns_zone_configs[0].record_sets[0].record_type == 'A'
@@ -226,7 +226,7 @@
   register: output
   check_mode: true
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -238,7 +238,7 @@
     state: "absent"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -250,6 +250,6 @@
     state: "absent"
   register: output
 - name: Assert results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed

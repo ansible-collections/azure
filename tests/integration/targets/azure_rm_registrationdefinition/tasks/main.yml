@@ -1,12 +1,12 @@
-- name: set facts
-  set_fact:
-     subscription_id: "{{ azure_subscription_id }}"
-     subscription_sec_id: "{{ azure_subscription_sec_id }}"
-     managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
-     principal_id: "{{ azure_principal_id }}"
-     role_definition_id: "{{ azure_role_definition_id }}"
-     reg_def_name: test_name
-  run_once: yes
+- name: Set facts
+  ansible.builtin.set_fact:
+    subscription_id: "{{ azure_subscription_id }}"
+    subscription_sec_id: "{{ azure_subscription_sec_id }}"
+    managed_by_tenant_id: "{{ azure_managed_by_tenant_id }}"
+    principal_id: "{{ azure_principal_id }}"
+    role_definition_id: "{{ azure_role_definition_id }}"
+    reg_def_name: test_name
+  run_once: true
 
 - name: Create a RegistrationDefinition -- check mode
   azure_rm_registrationdefinition:
@@ -17,11 +17,11 @@
           role_definition_id: "{{ role_definition_id }}"
       managed_by_tenant_id: "{{ managed_by_tenant_id }}"
       registration_definition_name: "{{ reg_def_name }}"
-  check_mode: yes
+  check_mode: true
   register: output
 
 - name: Assert creating registration definition check mode
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -38,7 +38,7 @@
   register: output2
 
 - name: Assert creating registration definition
-  assert:
+  ansible.builtin.assert:
     that:
       - output2.changed
 
@@ -54,7 +54,7 @@
   register: output1
 
 - name: Assert creating registration definition
-  assert:
+  ansible.builtin.assert:
     that:
       - output1.changed
 
@@ -71,7 +71,7 @@
   register: output
 
 - name: Assert creating registration definition
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -88,17 +88,17 @@
   register: output
 
 - name: Assert creating registration definition
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Get the Registration Definition info
   azure_rm_registrationdefinition_info:
-    registration_definition_id:  "{{ output1.state.name }}"
+    registration_definition_id: "{{ output1.state.name }}"
   register: output
 
 - name: Assert the registration definition info
-  assert:
+  ansible.builtin.assert:
     that:
       - output.registration_definitions[0].name == "{{ output1.state.name }}"
       - output.registration_definitions[0].properties.authorizations[0].principal_id == "{{ principal_id }}"
@@ -109,11 +109,11 @@
 
 - name: Get All Registration Definition info in the subscription
   azure_rm_registrationdefinition_info:
-    scope:  "{{ subscription_id }}"
+    scope: "{{ subscription_id }}"
   register: output
 
 - name: Assert all the registration definition info
-  assert:
+  ansible.builtin.assert:
     that:
       - output.registration_definitions | length >=1
 
@@ -124,7 +124,7 @@
   register: output
 
 - name: Assert delete registration definition success
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 

@@ -1,115 +1,118 @@
 - name: Create storage account name
-  set_fact:
-      vm_name: "vm{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}x"
-      public_ip_name: "pip{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-      security_group_name: "sg{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-      empty_disk_name: "emptydisk{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  ansible.builtin.set_fact:
+    vm_name: "vm{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}x"
+    public_ip_name: "pip{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    security_group_name: "sg{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    empty_disk_name: "emptydisk{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vm_name }}"
-      address_prefixes: "10.10.0.0/16"
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    address_prefixes: "10.10.0.0/16"
 
 - name: Add subnet
   azure_rm_subnet:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vm_name }}"
-      address_prefix: "10.10.0.0/24"
-      virtual_network: "{{ vm_name }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    address_prefix: "10.10.0.0/24"
+    virtual_network: "{{ vm_name }}"
 
 - name: Create public ip
   azure_rm_publicipaddress:
-      resource_group: "{{ resource_group }}"
-      allocation_method: Static
-      name: "{{ public_ip_name }}"
+    resource_group: "{{ resource_group }}"
+    allocation_method: Static
+    name: "{{ public_ip_name }}"
 
 - name: Create security group
   azure_rm_securitygroup:
-      resource_group: "{{ resource_group }}"
-      name: "{{ security_group_name }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ security_group_name }}"
 
 - name: Create NIC
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vm_name }}"
-      virtual_network: "{{ vm_name }}"
-      subnet: "{{ vm_name }}"
-      public_ip_name: "{{ public_ip_name }}"
-      security_group: "{{ security_group_name }}"
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    virtual_network: "{{ vm_name }}"
+    subnet: "{{ vm_name }}"
+    public_ip_name: "{{ public_ip_name }}"
+    security_group: "{{ security_group_name }}"
 
 - name: Create virtual machine
   azure_rm_virtualmachine:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vm_name }}"
-      vm_size: Standard_B1ms
-      managed_disk_type: Standard_LRS
-      admin_username: adminuser
-      ssh_password_enabled: false
-      ssh_public_keys:
-        - path: /home/adminuser/.ssh/authorized_keys
-          key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-      os_type: Linux
-      network_interfaces: "{{ vm_name }}"
-      image:
-        offer: UbuntuServer
-        publisher: Canonical
-        sku: 16.04-LTS
-        version: latest
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    vm_size: Standard_B1ms
+    managed_disk_type: Standard_LRS
+    admin_username: adminuser
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/adminuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    os_type: Linux
+    network_interfaces: "{{ vm_name }}"
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
   register: vm
 
 - name: Create new empty managed disk
   azure_rm_manageddisk:
-      resource_group: "{{ resource_group }}"
-      name: "{{ empty_disk_name }}"
-      storage_account_type: "Standard_LRS"
-      disk_size_gb: 1
+    resource_group: "{{ resource_group }}"
+    name: "{{ empty_disk_name }}"
+    storage_account_type: "Standard_LRS"
+    disk_size_gb: 1
   register: emptydisk
 
 - name: Create an image from VM (check mode)
   azure_rm_image:
-      resource_group: "{{ resource_group }}"
-      source: "{{ vm.ansible_facts.azure_vm.properties.storageProfile.osDisk.managedDisk.id }}"
-      name: testimage001
-      os_type: Linux
-      hyper_v_generation: V1
-      data_disk_sources:
-          - "{{ empty_disk_name }}"
-  check_mode: yes
+    resource_group: "{{ resource_group }}"
+    source: "{{ vm.ansible_facts.azure_vm.storage_profile.os_disk.managed_disk.id }}"
+    name: testimage001
+    os_type: Linux
+    hyper_v_generation: V1
+    data_disk_sources:
+      - "{{ empty_disk_name }}"
+  check_mode: true
   register: output
 
-- assert:
-      that: output.changed
+- name: Assert the image check mode
+  ansible.builtin.assert:
+    that: output.changed
 
 - name: Create an image from VM
   azure_rm_image:
-      resource_group: "{{ resource_group }}"
-      source:
-        name: "{{ vm_name }}"
-        type: disks
-      name: testimage001
-      hyper_v_generation: V1
-      os_type: Linux
+    resource_group: "{{ resource_group }}"
+    source:
+      name: "{{ vm_name }}"
+      type: disks
+    name: testimage001
+    hyper_v_generation: V1
+    os_type: Linux
   register: output
 
-- assert:
-      that:
-          - output.changed
-          - output.id
+- name: Assert the image created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
 
 - name: Create an image from VM (idempotent)
   azure_rm_image:
-      resource_group: "{{ resource_group }}"
-      source: "{{ vm.ansible_facts.azure_vm.properties.storageProfile.osDisk.managedDisk.id }}"
-      name: testimage001
-      hyper_v_generation: V1
-      os_type: Linux
+    resource_group: "{{ resource_group }}"
+    source: "{{ vm.ansible_facts.azure_vm.storage_profile.os_disk.managed_disk.id }}"
+    name: testimage001
+    hyper_v_generation: V1
+    os_type: Linux
   register: output
 
-- assert:
-      that:
-          - not output.changed
-          - output.id
+- name: Assert the image created
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.id
 
 - name: Gather information about image created
   azure_rm_image_info:
@@ -117,62 +120,66 @@
     name: testimage001
   register: output
 
-- assert:
-      that:
-          - output.images != []
-          - output.images[0].hyper_v_generation == 'V1'
+- name: Assert the image facts
+  ansible.builtin.assert:
+    that:
+      - output.images != []
+      - output.images[0].hyper_v_generation == 'V1'
 
 - name: Delete image (check mode)
   azure_rm_image:
-      resource_group: "{{ resource_group }}"
-      name: testimage001
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: testimage001
+    state: absent
   register: output
-  check_mode: yes
+  check_mode: true
 
-- assert:
+- name: Assert the image check mode
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Delete image
   azure_rm_image:
-      resource_group: "{{ resource_group }}"
-      name: testimage001
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: testimage001
+    state: absent
   register: output
 
-- assert:
+- name: Assert the imaged deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Delete image (idempotent)
   azure_rm_image:
-      resource_group: "{{ resource_group }}"
-      name: testimage001
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: testimage001
+    state: absent
   register: output
 
-- assert:
+- name: Assert the image has deleted
+  ansible.builtin.assert:
     that:
       - not output.changed
 
 - name: Delete empty disk
   azure_rm_manageddisk:
-      resource_group: "{{ resource_group }}"
-      name: "{{ empty_disk_name }}"
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: "{{ empty_disk_name }}"
+    state: absent
 
 - name: Delete VM
   azure_rm_virtualmachine:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vm_name }}"
-      state: absent
-      vm_size: Standard_A0
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    state: absent
+    vm_size: Standard_A0
   register: output
 
 - name: Delete public ip
   azure_rm_publicipaddress:
-      resource_group: "{{ resource_group }}"
-      allocation_method: Static
-      name: "{{ public_ip_name }}"
-      state: absent
+    resource_group: "{{ resource_group }}"
+    allocation_method: Static
+    name: "{{ public_ip_name }}"
+    state: absent

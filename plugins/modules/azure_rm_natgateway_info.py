@@ -33,17 +33,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for NAT gateway by name.
-      azure_rm_natgateway_info:
-        name: Mynatgw
-        resource_group: MyResourceGroup
+- name: Get facts for NAT gateway by name.
+  azure_rm_natgateway_info:
+    name: Mynatgw
+    resource_group: MyResourceGroup
 
-    - name: Get facts for all NAT gateways in resource group.
-      azure_rm_natgateway_info:
-        resource_group: MyResourceGroup
+- name: Get facts for all NAT gateways in resource group.
+  azure_rm_natgateway_info:
+    resource_group: MyResourceGroup
 
-    - name: Get facts for all NAT gateways.
-      azure_rm_natgateway_info:
+- name: Get facts for all NAT gateways.
+  azure_rm_natgateway_info:
 '''
 
 RETURN = '''
@@ -114,7 +114,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass

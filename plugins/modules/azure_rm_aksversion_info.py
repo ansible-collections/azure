@@ -24,9 +24,11 @@ options:
         description:
             - Get the versions available for creating a managed Kubernetes cluster.
         required: true
+        type: str
     version:
         description:
             - Get the upgrade versions available for a managed Kubernetes cluster version.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -36,13 +38,13 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get available versions for AKS in location eastus
-      azure_rm_aksversion_info:
-        location: eastus
-    - name: Get  available versions an AKS can be upgrade to
-      azure_rm_aksversion_info:
-        location: eastis
-        version: 1.11.6
+- name: Get available versions for AKS in location eastus
+  azure_rm_aksversion_info:
+    location: eastus
+- name: Get  available versions an AKS can be upgrade to
+  azure_rm_aksversion_info:
+    location: eastis
+    version: 1.11.6
 '''
 
 RETURN = '''
@@ -53,13 +55,6 @@ azure_aks_versions:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-
-try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.common import AzureHttpError
-except Exception:
-    # handled in azure_rm_common
-    pass
 
 
 class AzureRMAKSVersion(AzureRMModuleBase):

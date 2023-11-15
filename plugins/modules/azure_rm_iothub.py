@@ -204,15 +204,15 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: Testing
     routing_endpoints:
-        - connection_string: "Endpoint=sb://qux.servicebus.windows.net/;SharedAccessKeyName=quux;SharedAccessKey=****;EntityPath=myQueue"
-          name: foo
-          resource_type: queue
-          resource_group: myResourceGroup1
+      - connection_string: "Endpoint=sb://qux.servicebus.windows.net/;SharedAccessKeyName=quux;SharedAccessKey=****;EntityPath=myQueue"
+        name: foo
+        resource_type: queue
+        resource_group: myResourceGroup1
     routes:
-        - name: bar
-          source: device_messages
-          endpoint_name: foo
-          enabled: yes
+      - name: bar
+        source: device_messages
+        endpoint_name: foo
+        enabled: true
 '''
 
 RETURN = '''
@@ -507,15 +507,9 @@ routes:
             sample: "true"
 '''  # NOQA
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils.common.dict_transformations import _snake_to_camel, _camel_to_snake
 import re
-
-try:
-    from msrestazure.tools import parse_resource_id
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 ip_filter_spec = dict(

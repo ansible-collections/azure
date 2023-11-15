@@ -39,6 +39,7 @@ options:
             - List of data disk sources, including unmanaged blob URI, managed disk id or name, or snapshot id or name.
         type: list
         elements: str
+        default: []
     location:
         description:
             - Location of the image. Derived from I(resource_group) if not specified.
@@ -87,8 +88,8 @@ EXAMPLES = '''
     name: myImage
     source: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Compute/disks/disk001
     data_disk_sources:
-        - datadisk001
-        - datadisk002
+      - datadisk001
+      - datadisk002
     os_type: Linux
 
 - name: Create an image from os disk via dict
@@ -96,12 +97,12 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myImage
     source:
-        type: disks
-        resource_group: myResourceGroup
-        name: disk001
+      type: disks
+      resource_group: myResourceGroup
+      name: disk001
     data_disk_sources:
-        - datadisk001
-        - datadisk002
+      - datadisk001
+      - datadisk002
     os_type: Linux
 
 - name: Delete an image
@@ -124,7 +125,7 @@ id:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
 
 try:
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common

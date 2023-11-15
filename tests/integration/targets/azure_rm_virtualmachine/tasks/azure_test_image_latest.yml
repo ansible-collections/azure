@@ -1,15 +1,16 @@
-- include_tasks: setup.yml
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
 
-- name: List available versions for UbuntuServer image
+- name: List available versions for 0001-com-ubuntu-server-focal image
   azure_rm_virtualmachineimage_info:
     location: eastus
     publisher: Canonical
-    offer: UbuntuServer
-    sku: 16.04-LTS
+    offer: 0001-com-ubuntu-server-focal
+    sku: 20_04-lts
   register: image_list
 
-- name: Get latest UbuntuServer image name
-  set_fact:
+- name: Get latest 0001-com-ubuntu-server-focal image name
+  ansible.builtin.set_fact:
     latest_image_name: "{{ (image_list['vmimages'] | map(attribute='name') | sort(reverse=True))[0] }}"
 
 - name: Create minimal VM with defaults
@@ -24,14 +25,14 @@
     vm_size: Standard_B1ms
     virtual_network: "{{ network_name }}"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20_04-lts
       version: latest
   register: vm_output
 
-- name: Ensure VM was created using the latest UbuntuServer image version / name
-  assert:
+- name: Ensure VM was created using the latest 0001-com-ubuntu-server-focal image version / name
+  ansible.builtin.assert:
     that:
       - vm_output.azure_vm.properties.storageProfile.imageReference.version == latest_image_name
 
@@ -65,5 +66,5 @@
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
-    force_delete_nonempty: yes
+    force_delete_nonempty: true
     state: absent

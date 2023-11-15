@@ -24,6 +24,7 @@ options:
     name:
         description:
             - Resource name.
+        required: true
         type: str
     location:
         description:
@@ -130,11 +131,6 @@ import time
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # this is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -252,6 +248,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -328,6 +325,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
 
     def create_update_resource(self):
         # self.log('Creating / Updating the Snapshot instance {0}'.format(self.))
+        response = None
         try:
             response = self.mgmt_client.query(url=self.url,
                                               method='PUT',
@@ -337,14 +335,16 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
                                               expected_status_codes=self.status_code,
                                               polling_timeout=600,
                                               polling_interval=30)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Snapshot instance.')
             self.fail('Error creating the Snapshot instance: {0}'.format(str(exc)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -359,7 +359,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
                                               expected_status_codes=self.status_code,
                                               polling_timeout=600,
                                               polling_interval=30)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Snapshot instance.')
             self.fail('Error deleting the Snapshot instance: {0}'.format(str(e)))
 
@@ -377,11 +377,11 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
                                               expected_status_codes=self.status_code,
                                               polling_timeout=600,
                                               polling_interval=30)
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             found = True
             self.log("Response : {0}".format(response))
             # self.log("Snapshot instance : {0} found".format(response.name))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the Snapshot instance.')
         if found is True:
             return response

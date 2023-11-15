@@ -1,6 +1,6 @@
 - name: Get list of all subscriptions
   azure_rm_subscription_info:
-    all: True
+    all: true
   register: az_all_subscriptions
 
 - name: Get a subscription by id
@@ -16,9 +16,9 @@
     name: "{{ az_all_subscriptions.subscriptions[0].display_name }}"
     id: "{{ az_all_subscriptions.subscriptions[0].subscription_id }}"
   register: invalid_name
-  ignore_errors: yes  
+  ignore_errors: true
 
 - name: Assert task failed
-  assert: 
-    that: 
+  ansible.builtin.assert:
+    that:
       - "invalid_name['failed'] == True"

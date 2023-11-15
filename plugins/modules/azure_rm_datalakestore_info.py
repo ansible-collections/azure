@@ -37,17 +37,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get Azure Data Lake Store info from resource group 'myResourceGroup' and name 'myDataLakeStore'
-    azure_rm_datalakestore_info:
-      resource_group: myResourceGroup
-      name: myDataLakeStore
+- name: Get Azure Data Lake Store info from resource group 'myResourceGroup' and name 'myDataLakeStore'
+  azure_rm_datalakestore_info:
+    resource_group: myResourceGroup
+    name: myDataLakeStore
 
-  - name: Get Azure Data Lake Store info from resource group 'myResourceGroup'
-    azure_rm_datalakestore_info:
-      resource_group: myResourceGroup
+- name: Get Azure Data Lake Store info from resource group 'myResourceGroup'
+  azure_rm_datalakestore_info:
+    resource_group: myResourceGroup
 
-  - name: Get Azure Data Lake Store info
-    azure_rm_datalakestore_info:
+- name: Get Azure Data Lake Store info
+  azure_rm_datalakestore_info:
 '''
 
 RETURN = '''

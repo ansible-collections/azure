@@ -21,16 +21,20 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the database.
+        type: str
     elastic_pool_name:
         description:
             - The name of the elastic pool.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -46,22 +50,22 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of SQL Database
-    azure_rm_sqldatabase_info:
-      resource_group: testrg
-      server_name: testserver
-      name: testdb
+- name: Get instance of SQL Database
+  azure_rm_sqldatabase_info:
+    resource_group: testrg
+    server_name: testserver
+    name: testdb
 
-  - name: List instances of SQL Database
-    azure_rm_sqldatabase_info:
-      resource_group: testrg
-      server_name: testserver
-      elastic_pool_name: testep
+- name: List instances of SQL Database
+  azure_rm_sqldatabase_info:
+    resource_group: testrg
+    server_name: testserver
+    elastic_pool_name: testep
 
-  - name: List instances of SQL Database
-    azure_rm_sqldatabase_info:
-      resource_group: testrg
-      server_name: testserver
+- name: List instances of SQL Database
+  azure_rm_sqldatabase_info:
+    resource_group: testrg
+    server_name: testserver
 '''
 
 RETURN = '''

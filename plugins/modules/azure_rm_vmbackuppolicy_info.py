@@ -38,10 +38,11 @@ author:
 '''
 
 EXAMPLES = '''
-   azure_rm_backvmuppolicy_info:
-     name: 'myBackupPolicy'
-     vault_name: 'myVault'
-     resource_group: 'myResourceGroup'
+- name: Get backvm policy facts
+  azure_rm_backvmuppolicy_info:
+    name: 'myBackupPolicy'
+    vault_name: 'myVault'
+    resource_group: 'myResourceGroup'
 '''
 
 RETURN = '''
@@ -215,6 +216,7 @@ class BackupPolicyVMInfo(AzureRMModuleBaseExt):
         self.url = self.get_url()
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         response = self.get_resource()
@@ -241,10 +243,12 @@ class BackupPolicyVMInfo(AzureRMModuleBaseExt):
         except Exception as e:
             self.log('Backup policy does not exist.')
             self.fail('Error in fetching VM Backup Policy {0}'.format(str(e)))
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 

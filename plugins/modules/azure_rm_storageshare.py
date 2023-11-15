@@ -57,7 +57,23 @@ options:
             - The maximum size of the file share, in gigabytes. Must be greater than 0, and less than or equal to 5TB (5120).
               For large file shares, the maximum size is 102400. By default 102400
         type: int
-
+    enabled_protocols:
+        description:
+            - The authentication protocol that is used for the file share.
+            - Can only be specified when creating a share.
+        type: str
+        choices:
+            - SMB
+            - NFS
+    root_squash:
+        description:
+            - The property is for NFS share only.
+            - The default is C(NoRootSquash).
+        type: str
+        choices:
+            - NoRootSquash
+            - RootSquash
+            - AllSquash
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -79,6 +95,15 @@ EXAMPLES = '''
     metadata:
       key1: value1
       key2: value2
+
+- name: Create share with enalbed protocols
+  azure_rm_storageshare:
+    name: "{{ share_name }}"
+    resource_group: "{{ resource_group }}"
+    account_name: "{{ storage_account }}"
+    access_tier: "{{ access_tier }}"
+    root_squash: RootSquash
+    enabled_protocols: NFS
 
 - name: Delete storage share
   azure_rm_storageshare:
@@ -184,6 +209,8 @@ class AzureRMStorageShare(AzureRMModuleBase):
                              choices=['TransactionOptimized', 'Hot', 'Cool', 'Premium']),
             quota=dict(type='int', default=None),
             metadata=dict(type='dict', default=None),
+            root_squash=dict(type='str', choices=['NoRootSquash', 'RootSquash', 'AllSquash']),
+            enabled_protocols=dict(type='str', choices=['SMB', 'NFS']),
         )
         self.results = dict(
             changed=False,
@@ -196,6 +223,8 @@ class AzureRMStorageShare(AzureRMModuleBase):
         self.state = None
         self.quota = None
         self.metadata = None
+        self.root_squash = None
+        self.enabled_protocols = None
 
         self.to_do = Actions.NoAction
 
@@ -259,7 +288,9 @@ class AzureRMStorageShare(AzureRMModuleBase):
         '''
         return ((self.access_tier is not None) and (self.access_tier != old_response.get('access_tier')) or
                 (self.quota is not None) and (self.quota != old_response.get('share_quota')) or
-                (self.metadata is not None) and (self.metadata != old_response.get('metadata')))
+                (self.metadata is not None) and (self.metadata != old_response.get('metadata')) or
+                (self.root_squash is not None) and (self.root_squash != old_response.get('root_squash')) or
+                (self.enabled_protocols is not None) and (self.enabled_protocols != old_response.get('enabled_protocols')))
 
     def get_share(self):
         '''
@@ -294,6 +325,8 @@ class AzureRMStorageShare(AzureRMModuleBase):
             share_quota=storage_share.share_quota,
             access_tier=storage_share.access_tier,
             access_tier_change_time=storage_share.access_tier_change_time,
+            root_squash=storage_share.root_squash,
+            enabled_protocols=storage_share.enabled_protocols
         )
 
     def create_storage_share(self):
@@ -308,7 +341,9 @@ class AzureRMStorageShare(AzureRMModuleBase):
                                                    share_name=self.name,
                                                    file_share=dict(access_tier=self.access_tier,
                                                                    share_quota=self.quota,
-                                                                   metadata=self.metadata))
+                                                                   metadata=self.metadata,
+                                                                   root_squash=self.root_squash,
+                                                                   enabled_protocols=self.enabled_protocols))
         except Exception as e:
             self.fail("Error creating file share {0} : {1}".format(self.name, str(e)))
         return self.get_share()
@@ -323,7 +358,9 @@ class AzureRMStorageShare(AzureRMModuleBase):
         file_share_details = dict(
             access_tier=self.access_tier if self.access_tier else old_responce.get('access_tier'),
             share_quota=self.quota if self.quota else old_responce.get('share_quota'),
-            metadata=self.metadata if self.metadata else old_responce.get('metadata')
+            metadata=self.metadata if self.metadata else old_responce.get('metadata'),
+            enabled_protocols=self.enabled_protocols if self.enabled_protocols else old_responce.get('enabled_protocols'),
+            root_squash=self.root_squash if self.root_squash else old_responce.get('self.root_squash')
         )
         try:
             self.storage_client.file_shares.update(resource_group_name=self.resource_group,

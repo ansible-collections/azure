@@ -46,16 +46,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get information on specific Virtual Machine Extension
-    azure_rm_virtualmachineextension_info:
-      resource_group: myResourceGroup
-      virtual_machine_name: myvm
-      name: myextension
+- name: Get information on specific Virtual Machine Extension
+  azure_rm_virtualmachineextension_info:
+    resource_group: myResourceGroup
+    virtual_machine_name: myvm
+    name: myextension
 
-  - name: List installed Virtual Machine Extensions
-    azure_rm_virtualmachineextension_info:
-      resource_group: myResourceGroup
-      virtual_machine_name: myvm
+- name: List installed Virtual Machine Extensions
+  azure_rm_virtualmachineextension_info:
+    resource_group: myResourceGroup
+    virtual_machine_name: myvm
 '''
 
 RETURN = '''
@@ -138,7 +138,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

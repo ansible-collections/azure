@@ -39,11 +39,11 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get available upgrade versions for AKS instance
-      azure_rm_aksupgrade_info:
-        name: myAKS
-        resource_group: myResourceGroup
-      register: myAKSupgrades
+- name: Get available upgrade versions for AKS instance
+  azure_rm_aksupgrade_info:
+    name: myAKS
+    resource_group: myResourceGroup
+  register: myAKSupgrades
 '''
 
 RETURN = '''

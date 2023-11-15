@@ -1,11 +1,11 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     random_postfix: "{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     tenant_id: "{{ azure_tenant }}"
     run_azuread_tests: false
     azuread_group_name: "Test Security Group"
     azuread_group_id: "00000000-0000-0000-0000-000000000000"
-  run_once: yes
+  run_once: true
 
 - name: Create instance of SQL Server -- check mode
   azure_rm_sqlserver:
@@ -14,10 +14,10 @@
     location: eastus
     admin_username: mylogin
     admin_password: Password123!
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -32,7 +32,7 @@
       aaa: bbb
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state == 'Ready'
@@ -46,7 +46,7 @@
     admin_password: Password123!
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
       - output.state == 'Ready'
@@ -65,7 +65,7 @@
       aaa: bbb
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state == 'Ready'
@@ -84,7 +84,7 @@
       aaa: bbb
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.state == 'Ready'
@@ -98,7 +98,7 @@
     change_admin_password: true
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -118,7 +118,7 @@
   register: output
   when: run_azuread_tests | bool
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state == 'Ready'
@@ -140,7 +140,7 @@
   register: output
   when: run_azuread_tests | bool
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.state == 'Ready'
@@ -154,7 +154,7 @@
     server_name: "sqlsrv{{ random_postfix }}"
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.servers.sqlsrv{{ random_postfix }}.id != None
@@ -175,7 +175,7 @@
     server_name: "sqlsrv-extended-{{ random_postfix }}"
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.servers['sqlsrv-extended-{{ random_postfix }}'].id != None
@@ -200,7 +200,7 @@
   register: output
   when: run_azuread_tests | bool
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.servers['sqlsrv-azuread-{{ random_postfix }}'].id != None
@@ -227,7 +227,7 @@
     server_name: "unexisting"
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.servers == {}
@@ -237,7 +237,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.servers.sqlsrv{{ random_postfix }}.id != None
@@ -257,10 +257,10 @@
     server_name: sqlsrv{{ random_postfix }}
     name: database{{ random_postfix }}
     location: eastus
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -275,7 +275,7 @@
       aaa: bbb
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.status == 'Online'
@@ -291,7 +291,7 @@
       aaa: bbb
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
       - output.status == 'Online'
@@ -305,9 +305,9 @@
   register: output
   until: output.databases[0].earliest_restore_date != None
   retries: 10
-  delay: 20
+  delay: 60
 - name: Assert that it can be restored from
-  assert:
+  ansible.builtin.assert:
     that:
       - output.databases[0].id != None
       - output.databases[0].earliest_restore_date != None
@@ -323,7 +323,7 @@
     location: eastus
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -335,7 +335,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -354,7 +354,7 @@
     name: database{{ random_postfix }}
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.databases[0].id != None
@@ -372,7 +372,7 @@
     server_name: sqlsrv{{ random_postfix }}
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.databases[0].id != None
@@ -406,10 +406,10 @@
     server_name: sqlsrv{{ random_postfix }}
     name: database{{ random_postfix }}
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -421,7 +421,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -433,7 +433,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -447,14 +447,14 @@
     sku:
       name: S0
       tier: Standard
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
-- name: Create SQL Database with sku 
+- name: Create SQL Database with sku
   azure_rm_sqldatabase:
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
@@ -467,11 +467,11 @@
       tier: Standard
   register: output
 - name: Assert the resource instance is well created with good SKU
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.status == 'Online'
- 
+
 - name: Gather facts SQL Database with good SKU
   azure_rm_sqldatabase_info:
     resource_group: "{{ resource_group }}"
@@ -479,7 +479,7 @@
     name: database{{ random_postfix }}2
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.databases[0].id != None
@@ -490,7 +490,7 @@
       - output.databases[0].sku.capacity != None
       - output.databases[0].kind != None
       - output.databases[0].status != None
-     
+
 - name: Create again instance of SQL Database with same SKU
   azure_rm_sqldatabase:
     resource_group: "{{ resource_group }}"
@@ -504,7 +504,7 @@
       tier: Standard
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
       - output.status == 'Online'
@@ -522,7 +522,7 @@
       tier: Premium
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.status == 'Online'
@@ -534,7 +534,7 @@
     name: database{{ random_postfix }}2
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.databases[0].id != None
@@ -554,7 +554,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -566,7 +566,7 @@
     name: database{{ random_postfix }}2
   register: output
 - name: Assert that empty dictionary was returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.databases | length == 0
@@ -577,7 +577,7 @@
     server_name: sqlsrv{{ random_postfix }}
   register: output
 - name: Assert that empty dictionary was returned (one database is there by default)
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.databases | length == 1
@@ -591,10 +591,10 @@
     name: firewallrule{{ random_postfix }}
     start_ip_address: 172.28.10.136
     end_ip_address: 172.28.10.138
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -607,7 +607,7 @@
     end_ip_address: 172.28.10.138
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -620,7 +620,7 @@
     end_ip_address: 172.28.10.138
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -643,7 +643,7 @@
     name: firewallrule{{ random_postfix }}
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.rules[0].id != None
@@ -659,7 +659,7 @@
     server_name: sqlsrv{{ random_postfix }}
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.rules[0].id != None
@@ -696,7 +696,7 @@
     name: firewallrule{{ random_postfix }}
   register: output
 - name: Assert that empty dictionary was returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.rules | length == 0
@@ -708,13 +708,13 @@
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
     name: EP{{ random_postfix }}
-    zone_redundant: False
+    zone_redundant: false
     tags:
       aaa: bbb
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -723,13 +723,13 @@
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
     name: EP{{ random_postfix }}
-    zone_redundant: False
+    zone_redundant: false
     tags:
       aaa: bbb
   register: output
 
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -738,13 +738,13 @@
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
     name: EP{{ random_postfix }}
-    zone_redundant: False
+    zone_redundant: false
     tags:
       aaa: bbb
   register: output
 
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -753,13 +753,13 @@
     resource_group: "{{ resource_group }}"
     server_name: sqlsrv{{ random_postfix }}
     name: EP{{ random_postfix }}
-    zone_redundant: True
+    zone_redundant: true
     tags:
       aaa1: bbb1
   register: output
 
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -771,7 +771,7 @@
   register: output
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.elastic_pool[0].zone_redundant == true
@@ -786,7 +786,7 @@
   register: output
 
 - name: Assert the resource instance is deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -797,10 +797,10 @@
     resource_group: "{{ resource_group }}"
     name: "sqlsrv{{ random_postfix }}"
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -811,7 +811,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -822,7 +822,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 

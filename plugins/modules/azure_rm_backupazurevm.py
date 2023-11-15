@@ -74,40 +74,40 @@ author:
 
 EXAMPLES = \
     '''
-    - name: Enabling/Updating protection for the Azure VM
-      azure_rm_backupazurevm:
-        resource_group: 'myResourceGroup'
-        recovery_vault_name: 'testVault'
-        resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-        resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
-        backup_policy_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-        resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy'
-        state: 'create'
-    - name: Stop protection but retain existing data
-      azure_rm_backupazurevm:
-        resource_group: 'myResourceGroup'
-        recovery_vault_name: 'testVault'
-        resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-        resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
-        state: 'stop'
-    - name: Stop protection and delete data
-      azure_rm_backupazurevm:
-        resource_group: 'myResourceGroup'
-        recovery_vault_name: 'testVault'
-        resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-        resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
-        state: 'delete'
-    - name: Trigger an on-demand backup for a protected Azure VM
-      azure_rm_backupazurevm:
-        resource_group: 'myResourceGroup'
-        recovery_vault_name: 'testVault'
-        resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-        resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
-        backup_policy_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-        resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy'
-        recovery_point_expiry_time: '2023-02-09T06:00:00Z'
-        state: 'backup'
-    '''
+- name: Enabling/Updating protection for the Azure VM
+  azure_rm_backupazurevm:
+    resource_group: 'myResourceGroup'
+    recovery_vault_name: 'testVault'
+    resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
+    resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
+    backup_policy_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
+    resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy'
+    state: 'create'
+- name: Stop protection but retain existing data
+  azure_rm_backupazurevm:
+    resource_group: 'myResourceGroup'
+    recovery_vault_name: 'testVault'
+    resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
+    resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
+    state: 'stop'
+- name: Stop protection and delete data
+  azure_rm_backupazurevm:
+    resource_group: 'myResourceGroup'
+    recovery_vault_name: 'testVault'
+    resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
+                  resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
+    state: 'delete'
+- name: Trigger an on-demand backup for a protected Azure VM
+  azure_rm_backupazurevm:
+    resource_group: 'myResourceGroup'
+    recovery_vault_name: 'testVault'
+    resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
+                  resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
+    backup_policy_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
+                       resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy'
+    recovery_point_expiry_time: '2023-02-09T06:00:00Z'
+    state: 'backup'
+'''
 
 RETURN = \
     '''
@@ -121,9 +121,7 @@ id:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-import re
 import json
-import time
 
 
 class Actions:
@@ -186,8 +184,11 @@ class BackupAzureVM(AzureRMModuleBaseExt):
         return '2019-05-13' if self.state == 'create' or self.state == 'update' or self.state == 'delete' or self.state == 'stop' else '2016-12-01'
 
     def get_url(self):
+        sub_id = self.subscription_id
+        if self.module.params.get('subscription_id'):
+            sub_id = self.module.params.get('subscription_id')
         if self.state == 'create' or self.state == 'update' or self.state == 'delete' or self.state == 'stop':
-            return '/subscriptions' + '/' + self.subscription_id \
+            return '/subscriptions' + '/' + sub_id \
                    + '/resourceGroups' + '/' + self.resource_group + '/providers' \
                    + '/Microsoft.RecoveryServices' + '/vaults' + '/' \
                    + self.recovery_vault_name \
@@ -197,7 +198,7 @@ class BackupAzureVM(AzureRMModuleBaseExt):
                    + 'vm;iaasvmcontainerv2;' + self.parse_resource_to_dict(self.resource_id)['resource_group'] + ';' \
                    + self.parse_resource_to_dict(self.resource_id)['name']
         if self.state == 'backup':
-            return '/subscriptions' + '/' + self.subscription_id \
+            return '/subscriptions' + '/' + sub_id \
                    + '/resourceGroups' + '/' + self.resource_group + '/providers' \
                    + '/Microsoft.RecoveryServices' + '/vaults' + '/' \
                    + self.recovery_vault_name \
@@ -254,6 +255,7 @@ class BackupAzureVM(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         changed = False
@@ -294,10 +296,12 @@ class BackupAzureVM(AzureRMModuleBaseExt):
             self.fail(
                 'Error in creating/updating protection for Azure VM {0}'.format(str(e)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -320,10 +324,12 @@ class BackupAzureVM(AzureRMModuleBaseExt):
             self.log('Error attempting to stop protection.')
             self.fail('Error in disabling the protection: {0}'.format(str(e)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -346,10 +352,12 @@ class BackupAzureVM(AzureRMModuleBaseExt):
             self.log('Error attempting to delete backup.')
             self.fail('Error deleting the azure backup: {0}'.format(str(e)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -373,10 +381,12 @@ class BackupAzureVM(AzureRMModuleBaseExt):
             self.fail(
                 'Error while taking on-demand backup: {0}'.format(str(e)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 

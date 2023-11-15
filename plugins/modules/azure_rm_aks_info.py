@@ -23,9 +23,11 @@ options:
     name:
         description:
             - Limit results to a specific resource group.
+        type: str
     resource_group:
         description:
             - The resource group to search for the desired Azure Kubernetes Service
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -35,6 +37,7 @@ options:
         description:
             - Show kubeconfig of the AKS cluster.
             - Note the operation will cost more network overhead, not recommended when listing AKS.
+        type: str
         choices:
             - user
             - admin
@@ -47,18 +50,18 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one Azure Kubernetes Service
-      azure_rm_aks_info:
-        name: Testing
-        resource_group: myResourceGroup
+- name: Get facts for one Azure Kubernetes Service
+  azure_rm_aks_info:
+    name: Testing
+    resource_group: myResourceGroup
 
-    - name: Get facts for all Azure Kubernetes Services
-      azure_rm_aks_info:
+- name: Get facts for all Azure Kubernetes Services
+  azure_rm_aks_info:
 
-    - name: Get facts by tags
-      azure_rm_aks_info:
-        tags:
-          - testing
+- name: Get facts by tags
+  azure_rm_aks_info:
+    tags:
+      - testing
 '''
 
 RETURN = '''
@@ -118,10 +121,12 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
         for key in self.module_args:
             setattr(self, key, kwargs[key])
 
-        self.results['aks'] = (
-            self.get_item() if self.name
-            else self.list_items()
-        )
+        if self.name is not None and self.resource_group is not None:
+            self.results['aks'] = self.get_item()
+        elif self.resource_group is not None:
+            self.results['aks'] = self.list_by_resourcegroup()
+        else:
+            self.results['aks'] = self.list_items()
 
         return self.results
 
@@ -145,13 +150,13 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
 
         return result
 
-    def list_items(self):
+    def list_by_resourcegroup(self):
         """Get all Azure Kubernetes Services"""
 
-        self.log('List all Azure Kubernetes Services')
+        self.log('List all Azure Kubernetes Services under resource group')
 
         try:
-            response = self.managedcluster_client.managed_clusters.list(self.resource_group)
+            response = self.managedcluster_client.managed_clusters.list_by_resource_group(self.resource_group)
         except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
@@ -161,6 +166,26 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
                 item_dict = self.serialize_obj(item, AZURE_OBJECT_CLASS)
                 if self.show_kubeconfig:
                     item_dict['kube_config'] = self.get_aks_kubeconfig(self.resource_group, item.name)
+                results.append(item_dict)
+
+        return results
+
+    def list_items(self):
+        """Get all Azure Kubernetes Services"""
+
+        self.log('List all Azure Kubernetes Services')
+
+        try:
+            response = self.managedcluster_client.managed_clusters.list()
+        except Exception as exc:
+            self.fail('Failed to list all items - {0}'.format(str(exc)))
+
+        results = []
+        for item in response:
+            if self.has_tags(item.tags, self.tags):
+                item_dict = self.serialize_obj(item, AZURE_OBJECT_CLASS)
+                if self.show_kubeconfig:
+                    item_dict['kube_config'] = self.get_aks_kubeconfig(item.resource_group, item.name)
                 results.append(item_dict)
 
         return results

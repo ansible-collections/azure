@@ -30,16 +30,19 @@ options:
         description:
             - Name of the resource group containing the VM.
         required: true
+        type: str
     name:
         description:
             - Name of the VM.
         required: true
+        type: str
     custom_data:
         description:
             - Data made available to the VM and used by C(cloud-init).
             - Only used on Linux images with C(cloud-init) enabled.
             - Consult U(https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init#cloud-init-overview) for cloud-init ready images.
             - To enable cloud-init on a Linux image, follow U(https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloudinit-prepare-custom-image).
+        type: str
     state:
         description:
             - State of the VM.
@@ -47,14 +50,22 @@ options:
             - Set to C(absent) to remove a VM.
             - Does not affect power state. Use I(started)/I(allocated)/I(restarted) parameters to change the power state of a VM.
         default: present
+        type: str
         choices:
             - absent
             - present
     started:
         description:
             - Whether the VM is started or stopped.
-            - Set to (true) with I(state=present) to start the VM.
+            - Set to C(true) with I(state=present) to start the VM.
             - Set to C(false) to stop the VM.
+        type: bool
+    force:
+        description:
+            - Use more force during stop of VM
+            - Set to C(true) with I(started=false) to stop the VM forcefully (hard poweroff -- skip_shutdown)
+            - Set to C(false) to power off gracefully
+        default: false
         type: bool
     allocated:
         description:
@@ -76,19 +87,23 @@ options:
     location:
         description:
             - Valid Azure location for the VM. Defaults to location of the resource group.
+        type: str
     short_hostname:
         description:
             - Name assigned internally to the host. On a Linux VM this is the name returned by the C(hostname) command.
             - When creating a VM, short_hostname defaults to I(name).
+        type: str
     vm_size:
         description:
             - A valid Azure VM size value. For example, C(Standard_D4).
             - Choices vary depending on the subscription and location. Check your subscription for available choices.
             - Required when creating a VM.
+        type: str
     priority:
         description:
             - Priority of the VM.
             - C(None) is the equivalent of Regular VM.
+        type: str
         choices:
             - None
             - Spot
@@ -96,6 +111,7 @@ options:
         description:
             - Specifies the eviction policy for the Azure Spot virtual machine.
             - Requires priority to be set to Spot.
+        type: str
         choices:
             - Deallocate
             - Delete
@@ -105,15 +121,18 @@ options:
             - This price is in US Dollars.
             - C(-1) indicates default price to be up-to on-demand.
             - Requires priority to be set to Spot.
+        type: float
         default: -1
     admin_username:
         description:
             - Admin username used to access the VM after it is created.
             - Required when creating a VM.
+        type: str
     admin_password:
         description:
             - Password for the admin username.
             - Not required if the I(os_type=Linux) and SSH password authentication is disabled by setting I(ssh_password_enabled=false).
+        type: str
     ssh_password_enabled:
         description:
             - Whether to enable or disable SSH passwords.
@@ -126,16 +145,20 @@ options:
             - Accepts a list of dicts where each dictionary contains two keys, I(path) and I(key_data).
             - Set I(path) to the default location of the authorized_keys files. For example, I(path=/home/<admin username>/.ssh/authorized_keys).
             - Set I(key_data) to the actual value of the public key.
+        type: list
+        elements: dict
     image:
         description:
             - The image used to build the VM.
             - For custom images, the name of the image. To narrow the search to a specific resource group, a dict with the keys I(name) and I(resource_group).
             - For Marketplace images, a dict with the keys I(publisher), I(offer), I(sku), and I(version).
             - Set I(version=latest) to get the most recent version of a given image.
-        required: true
+            - Required when creating.
+        type: raw
     availability_set:
         description:
             - Name or ID of an existing availability set to add the VM to. The I(availability_set) should be in the same resource group as VM.
+        type: str
     proximity_placement_group:
         description:
             - The name or ID of the proximity placement group the VM should be associated with.
@@ -157,6 +180,7 @@ options:
         description:
             - Name of a storage account that supports creation of VHD blobs.
             - If not specified for a new VM, a new storage account named <vm name>01 will be created using storage type C(Standard_LRS).
+        type: str
         aliases:
             - storage_account
     storage_container_name:
@@ -164,6 +188,7 @@ options:
             - Name of the container to use within the storage account to store VHD blobs.
             - If not specified, a default container will be created.
         default: vhds
+        type: str
         aliases:
             - storage_container
     storage_blob_name:
@@ -171,6 +196,7 @@ options:
             - Name of the storage blob used to hold the OS disk image of the VM.
             - Must end with '.vhd'.
             - If not specified, defaults to the VM name + '.vhd'.
+        type: str
         aliases:
             - storage_blob
     managed_disk_type:
@@ -178,6 +204,7 @@ options:
             - Managed OS disk type.
             - Create OS disk with managed disk if defined.
             - If not defined, the OS disk will be created with virtual hard disk (VHD).
+        type: str
         choices:
             - Standard_LRS
             - StandardSSD_LRS
@@ -188,9 +215,11 @@ options:
     os_disk_name:
         description:
             - OS disk name.
+        type: str
     os_disk_caching:
         description:
             - Type of OS disk caching.
+        type: str
         choices:
             - ReadOnly
             - ReadWrite
@@ -199,9 +228,15 @@ options:
     os_disk_size_gb:
         description:
             - Size of OS disk in GB.
+        type: int
+    os_disk_encryption_set:
+        description:
+            - ID of disk encryption set for OS disk.
+        type: str
     os_type:
         description:
             - Base type of operating system.
+        type: str
         choices:
             - Windows
             - Linux
@@ -215,22 +250,31 @@ options:
         description:
             - Describes list of data disks.
             - Use M(azure.azcollection.azure_rm_mangeddisk) to manage the specific disk.
+        type: list
+        elements: dict
         suboptions:
             lun:
                 description:
                     - The logical unit number for data disk.
                     - This value is used to identify data disks within the VM and therefore must be unique for each data disk attached to a VM.
                 required: true
+                type: int
             disk_size_gb:
                 description:
                     - The initial disk size in GB for blank data disks.
                     - This value cannot be larger than C(1023) GB.
                     - Size can be changed only when the virtual machine is deallocated.
                     - Not sure when I(managed_disk_id) defined.
+                type: int
+            disk_encryption_set:
+                description:
+                    - ID of disk encryption set for data disk.
+                type: str
             managed_disk_type:
                 description:
                     - Managed data disk type.
                     - Only used when OS disk created with managed disk.
+                type: str
                 choices:
                     - Standard_LRS
                     - StandardSSD_LRS
@@ -245,6 +289,7 @@ options:
                     - Only used when OS disk created with virtual hard disk (VHD).
                     - Used when I(managed_disk_type) not defined.
                     - Cannot be updated unless I(lun) updated.
+                type: str
             storage_container_name:
                 description:
                     - Name of the container to use within the storage account to store VHD blobs.
@@ -252,6 +297,7 @@ options:
                     - Only used when OS disk created with virtual hard disk (VHD).
                     - Used when I(managed_disk_type) not defined.
                     - Cannot be updated unless I(lun) updated.
+                type: str
                 default: vhds
             storage_blob_name:
                 description:
@@ -261,19 +307,21 @@ options:
                     - Only used when OS disk created with virtual hard disk (VHD).
                     - Used when I(managed_disk_type) not defined.
                     - Cannot be updated unless I(lun) updated.
+                type: str
             caching:
                 description:
                     - Type of data disk caching.
+                type: str
                 choices:
                     - ReadOnly
                     - ReadWrite
-                default: ReadOnly
     public_ip_allocation_method:
         description:
             - Allocation method for the public IP of the VM.
             - Used only if a network interface is not specified.
             - When set to C(Dynamic), the public IP address may change any time the VM is rebooted or power cycled.
             - The C(Disabled) choice was added in Ansible 2.6.
+        type: str
         choices:
             - Dynamic
             - Static
@@ -286,6 +334,8 @@ options:
             - List of ports to open in the security group for the VM, when a security group and network interface are created with a VM.
             - For Linux hosts, defaults to allowing inbound TCP connections to port 22.
             - For Windows hosts, defaults to opening ports 3389 and 5986.
+        type: list
+        elements: str
     network_interface_names:
         description:
             - Network interface names to add to the VM.
@@ -294,16 +344,19 @@ options:
             - If a network interface name is not provided when the VM is created, a default network interface will be created.
             - To create a new network interface, at least one Virtual Network with one Subnet must exist.
         type: list
+        elements: raw
         aliases:
             - network_interfaces
     virtual_network_resource_group:
         description:
             - The resource group to use when creating a VM with another resource group's virtual network.
+        type: str
     virtual_network_name:
         description:
             - The virtual network to use when creating a VM.
             - If not specified, a new network interface will be created and assigned to the first virtual network found in the resource group.
             - Use with I(virtual_network_resource_group) to place the virtual network in another resource group.
+        type: str
         aliases:
             - virtual_network
     subnet_name:
@@ -311,6 +364,7 @@ options:
             - Subnet for the VM.
             - Defaults to the first subnet found in the virtual network or the subnet of the I(network_interface_name), if provided.
             - If the subnet is in another resource group, specify the resource group with I(virtual_network_resource_group).
+        type: str
         aliases:
             - subnet
     created_nsg:
@@ -327,6 +381,7 @@ options:
             - To remove only specific resources, set to C(network_interfaces), C(virtual_storage) or C(public_ips).
             - Any other input will be ignored.
         type: list
+        elements: str
         default: ['all']
     plan:
         description:
@@ -337,17 +392,21 @@ options:
                 description:
                     - Billing plan name.
                 required: true
+                type: str
             product:
                 description:
                     - Product name.
                 required: true
+                type: str
             publisher:
                 description:
                     - Publisher offering the plan.
                 required: true
+                type: str
             promotion_code:
                 description:
                     - Optional promotion code.
+                type: str
     accept_terms:
         description:
             - Accept terms for Marketplace images that require it.
@@ -359,11 +418,13 @@ options:
         description:
             - A list of Availability Zones for your VM.
         type: list
+        elements: str
     license_type:
         description:
             - On-premise license for the image or disk.
             - Only used for images that contain the Windows Server operating system.
             - To remove all license type settings, set to the string C(None).
+        type: str
         choices:
             - Windows_Server
             - Windows_Client
@@ -372,30 +433,67 @@ options:
     vm_identity:
         description:
             - Identity for the VM.
-        choices:
-            - SystemAssigned
+        type: dict
+        suboptions:
+            type:
+                description:
+                    - Type of the managed identity
+                required: true
+                choices:
+                    - SystemAssigned
+                    - UserAssigned
+                    - SystemAssigned, UserAssigned
+                    - None
+                type: str
+            user_assigned_identities:
+                description:
+                    - User Assigned Managed Identities and its options
+                required: false
+                type: dict
+                default: {}
+                suboptions:
+                    id:
+                        description:
+                            - List of the user assigned identities IDs associated to the VM
+                        required: false
+                        type: list
+                        elements: str
+                        default: []
+                    append:
+                        description:
+                            - If the list of identities has to be appended to current identities (true) or if it has to replace current identities (false)
+                        required: false
+                        type: bool
+                        default: True
     winrm:
         description:
             - List of Windows Remote Management configurations of the VM.
+        type: list
+        elements: dict
         suboptions:
             protocol:
                 description:
                     - The protocol of the winrm listener.
                 required: true
+                type: str
                 choices:
                     - http
                     - https
             source_vault:
                 description:
                     - The relative URL of the Key Vault containing the certificate.
+                type: str
             certificate_url:
                 description:
                     - The URL of a certificate that has been uploaded to Key Vault as a secret.
+                type: str
             certificate_store:
                 description:
                     - The certificate store on the VM to which the certificate should be added.
                     - The specified certificate store is implicitly in the LocalMachine account.
+                type: str
     boot_diagnostics:
+        type: dict
         description:
             - Manage boot diagnostics settings for a VM.
             - Boot diagnostics includes a serial console and remote console screenshots.
@@ -403,21 +501,32 @@ options:
             enabled:
                 description:
                     - Flag indicating if boot diagnostics are enabled.
-                required: true
                 type: bool
+            type:
+                description:
+                    - Should the storage account be managed by azure or a custom storage account
+                    - It is mutually exclusive with suboption I(storage_account) and I(resource_group)
+                required: false
+                type: str
+                choices:
+                    - managed
             storage_account:
                 description:
                     - The name of an existing storage account to use for boot diagnostics.
                     - If not specified, uses I(storage_account_name) defined one level up.
                     - If storage account is not specified anywhere, and C(enabled) is C(true), a default storage account is created for boot diagnostics data.
+                    - It is mutually exclusive with I(type)
+                type: str
                 required: false
             resource_group:
                 description:
                     - Resource group where the storage account is located.
+                    - It is mutually exclusive with I(type)
                 type: str
     linux_config:
         description:
             - Specifies the Linux operating system settings on the virtual machine.
+        type: dict
         suboptions:
             disable_password_authentication:
                 description:
@@ -426,6 +535,7 @@ options:
     windows_config:
         description:
             - Specifies Windows operating system settings on the virtual machine.
+        type: dict
         suboptions:
             provision_vm_agent:
                 description:
@@ -567,7 +677,8 @@ EXAMPLES = '''
     storage_container: osdisk
     storage_blob: osdisk.vhd
     boot_diagnostics:
-      enabled: yes
+      enabled: true
+      type: managed
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: canonical
@@ -661,13 +772,13 @@ EXAMPLES = '''
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: testvm002
-    started: no
+    started: false
 
 - name: Deallocate
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: testvm002
-    allocated: no
+    allocated: false
 
 - name: Power On
   azure_rm_virtualmachine:
@@ -678,7 +789,7 @@ EXAMPLES = '''
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: testvm002
-    restarted: yes
+    restarted: true
 
 - name: Create a VM with an Availability Zone
   azure_rm_virtualmachine:
@@ -700,9 +811,9 @@ EXAMPLES = '''
     admin_password: "{{ password }}"
     security_profile:
       uefi_settings:
-        secure_boot_enabled: True
-        v_tpm_enabled: True
-      encryption_at_host: True
+        secure_boot_enabled: true
+        v_tpm_enabled: true
+      encryption_at_host: true
       security_type: TrustedLaunch
     ssh_public_keys:
       - path: /home/azureuser/.ssh/authorized_keys
@@ -855,7 +966,7 @@ azure_vm:
                 "adminUsername": "chouseknecht",
                 "computerName": "test10",
                 "linuxConfiguration": {
-                    "disablePasswordAuthentication": false
+                    "disable_password_authentication": false
                 },
                 "secrets": []
             },
@@ -902,9 +1013,8 @@ import time
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from msrestazure.azure_exceptions import CloudError
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -949,6 +1059,16 @@ linux_configuration_spec = dict(
     disable_password_authentication=dict(type='bool')
 )
 
+user_assigned_identities_spec = dict(
+    id=dict(type='list', default=[], elements='str'),
+    append=dict(type='bool', default=True)
+)
+
+managed_identity_spec = dict(
+    type=dict(type='str', choices=['SystemAssigned', 'UserAssigned', 'SystemAssigned, UserAssigned', 'None'], required=True),
+    user_assigned_identities=dict(type='dict', options=user_assigned_identities_spec, default={}),
+)
+
 
 class AzureRMVirtualMachine(AzureRMModuleBase):
 
@@ -968,7 +1088,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             admin_username=dict(type='str'),
             admin_password=dict(type='str', no_log=True),
             ssh_password_enabled=dict(type='bool', default=True, no_log=False),
-            ssh_public_keys=dict(type='list'),
+            ssh_public_keys=dict(type='list', elements='dict'),
             image=dict(type='raw'),
             availability_set=dict(type='str'),
             storage_account_name=dict(type='str', aliases=['storage_account']),
@@ -976,15 +1096,16 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             storage_blob_name=dict(type='str', aliases=['storage_blob']),
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite']),
             os_disk_size_gb=dict(type='int'),
+            os_disk_encryption_set=dict(type='str'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
             os_disk_name=dict(type='str'),
             proximity_placement_group=dict(type='dict', options=proximity_placement_group_spec),
             os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
             public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static', 'Disabled'], default='Static',
                                              aliases=['public_ip_allocation']),
-            open_ports=dict(type='list'),
+            open_ports=dict(type='list', elements='str'),
             network_interface_names=dict(type='list', aliases=['network_interfaces'], elements='raw'),
-            remove_on_absent=dict(type='list', default=['all']),
+            remove_on_absent=dict(type='list', default=['all'], elements='str'),
             virtual_network_resource_group=dict(type='str'),
             virtual_network_name=dict(type='str', aliases=['virtual_network']),
             subnet_name=dict(type='str', aliases=['subnet']),
@@ -992,15 +1113,48 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             allocated=dict(type='bool', default=True),
             restarted=dict(type='bool', default=False),
             started=dict(type='bool'),
+            force=dict(type='bool', default=False),
             generalized=dict(type='bool', default=False),
-            data_disks=dict(type='list'),
+            data_disks=dict(
+                type='list',
+                elements='dict',
+                options=dict(
+                    lun=dict(type='int', required=True),
+                    disk_size_gb=dict(type='int'),
+                    disk_encryption_set=dict(type='str'),
+                    managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS',
+                                           'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
+                    storage_account_name=dict(type='str'),
+                    storage_container_name=dict(type='str', default='vhds'),
+                    storage_blob_name=dict(type='str'),
+                    caching=dict(type='str', choices=['ReadOnly', 'ReadWrite'])
+                )
+            ),
             plan=dict(type='dict'),
-            zones=dict(type='list'),
+            zones=dict(type='list', elements='str'),
             accept_terms=dict(type='bool', default=False),
             license_type=dict(type='str', choices=['Windows_Server', 'Windows_Client', 'RHEL_BYOS', 'SLES_BYOS']),
-            vm_identity=dict(type='str', choices=['SystemAssigned']),
-            winrm=dict(type='list'),
-            boot_diagnostics=dict(type='dict'),
+            vm_identity=dict(type='dict', options=managed_identity_spec),
+            winrm=dict(
+                type='list',
+                elements='dict',
+                options=dict(
+                    protocol=dict(type='str', required=True, choices=['http', 'https']),
+                    source_vault=dict(type='str'),
+                    certificate_url=dict(type='str'),
+                    certificate_store=dict(type='str')
+                )
+            ),
+            boot_diagnostics=dict(
+                type='dict',
+                options=dict(
+                    enabled=dict(type='bool'),
+                    type=dict(type='str', choices=['managed']),
+                    storage_account=dict(type='str'),
+                    resource_group=dict(type='str'),
+                ),
+                mutually_exclusive=[('type', 'storage_account'), ('type', 'resource_group')],
+            ),
             ephemeral_os_disk=dict(type='bool'),
             windows_config=dict(type='dict', options=windows_configuration_spec),
             linux_config=dict(type='dict', options=linux_configuration_spec),
@@ -1028,6 +1182,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.os_type = None
         self.os_disk_caching = None
         self.os_disk_size_gb = None
+        self.os_disk_encryption_set = None
         self.managed_disk_type = None
         self.os_disk_name = None
         self.proximity_placement_group = None
@@ -1065,12 +1220,14 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             ansible_facts=dict(azure_vm=None)
         )
 
+        required_if = [('os_disk_encryption_set', '*', ['managed_disk_type'])]
+
         super(AzureRMVirtualMachine, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                    supports_check_mode=True)
+                                                    supports_check_mode=True, required_if=required_if)
 
     @property
     def boot_diagnostics_present(self):
-        return self.boot_diagnostics is not None and 'enabled' in self.boot_diagnostics
+        return self.boot_diagnostics is not None and self.boot_diagnostics.get('enabled') is not None
 
     def get_boot_diagnostics_storage_account(self, limited=False, vm_dict=None):
         """
@@ -1095,8 +1252,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
           - if not there, None
         """
         bsa = None
-        if 'storage_account' in self.boot_diagnostics:
-            if 'resource_group' in self.boot_diagnostics:
+        if self.boot_diagnostics is not None and self.boot_diagnostics.get('storage_account') is not None:
+            if self.boot_diagnostics.get('resource_group') is not None:
                 bsa = self.get_storage_account(self.boot_diagnostics['resource_group'], self.boot_diagnostics['storage_account'])
             else:
                 bsa = self.get_storage_account(self.resource_group, self.boot_diagnostics['storage_account'])
@@ -1235,18 +1392,18 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 differences = []
                 current_nics = []
                 results = vm_dict
-                current_osdisk = vm_dict['properties']['storageProfile']['osDisk']
-                current_ephemeral = current_osdisk.get('diffDiskSettings', None)
-                current_properties = vm_dict['properties']
+                current_osdisk = vm_dict['storage_profile']['os_disk']
+                current_ephemeral = current_osdisk.get('diff_disk_ettings', None)
+                current_properties = vm_dict
 
                 if self.priority and self.priority != current_properties.get('priority', 'None'):
                     self.fail('VM Priority is not updatable: requested virtual machine priority is {0}'.format(self.priority))
                 if self.eviction_policy and \
-                   self.eviction_policy != current_properties.get('evictionPolicy', None):
+                   self.eviction_policy != current_properties.get('eviction_policy', None):
                     self.fail('VM Eviction Policy is not updatable: requested virtual machine eviction policy is {0}'.format(self.eviction_policy))
                 if self.max_price and \
-                   vm_dict['properties'].get('billingProfile', None) and \
-                   self.max_price != vm_dict['properties']['billingProfile'].get('maxPrice', None):
+                   vm_dict.get('billing_profile', None) and \
+                   self.max_price != vm_dict['billing_profile'].get('max_price', None):
                     self.fail('VM Maximum Price is not updatable: requested virtual machine maximum price is {0}'.format(self.max_price))
 
                 if self.ephemeral_os_disk and current_ephemeral is None:
@@ -1256,7 +1413,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                 # Try to determine if the VM needs to be updated
                 if self.network_interface_names:
-                    for nic in vm_dict['properties']['networkProfile']['networkInterfaces']:
+                    for nic in vm_dict['network_profile']['network_interfaces']:
                         current_nics.append(nic['id'])
 
                     if set(current_nics) != set(network_interfaces):
@@ -1264,47 +1421,47 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         differences.append('Network Interfaces')
                         updated_nics = [dict(id=id, primary=(i == 0))
                                         for i, id in enumerate(network_interfaces)]
-                        vm_dict['properties']['networkProfile']['networkInterfaces'] = updated_nics
+                        vm_dict['network_profile']['network_interfaces'] = updated_nics
                         changed = True
 
                 if self.os_disk_caching and \
-                   self.os_disk_caching != vm_dict['properties']['storageProfile']['osDisk']['caching']:
+                   self.os_disk_caching != vm_dict['storage_profile']['os_disk']['caching']:
                     self.log('CHANGED: virtual machine {0} - OS disk caching'.format(self.name))
                     differences.append('OS Disk caching')
                     changed = True
-                    vm_dict['properties']['storageProfile']['osDisk']['caching'] = self.os_disk_caching
+                    vm_dict['storage_profile']['os_disk']['caching'] = self.os_disk_caching
 
                 if self.os_disk_name and \
-                   self.os_disk_name != vm_dict['properties']['storageProfile']['osDisk']['name']:
+                   self.os_disk_name != vm_dict['storage_profile']['os_disk']['name']:
                     self.log('CHANGED: virtual machine {0} - OS disk name'.format(self.name))
                     differences.append('OS Disk name')
                     changed = True
-                    vm_dict['properties']['storageProfile']['osDisk']['name'] = self.os_disk_name
+                    vm_dict['storage_profile']['os_disk']['name'] = self.os_disk_name
 
                 if self.os_disk_size_gb and \
-                   self.os_disk_size_gb != vm_dict['properties']['storageProfile']['osDisk'].get('diskSizeGB'):
+                   self.os_disk_size_gb != vm_dict['storage_profile']['os_disk'].get('disk_size_gb'):
                     self.log('CHANGED: virtual machine {0} - OS disk size '.format(self.name))
                     differences.append('OS Disk size')
                     changed = True
-                    vm_dict['properties']['storageProfile']['osDisk']['diskSizeGB'] = self.os_disk_size_gb
+                    vm_dict['storage_profile']['os_disk']['disk_size_gb'] = self.os_disk_size_gb
 
                 if self.vm_size and \
-                   self.vm_size != vm_dict['properties']['hardwareProfile']['vmSize']:
+                   self.vm_size != vm_dict['hardware_profile']['vm_size']:
                     self.log('CHANGED: virtual machine {0} - size '.format(self.name))
                     differences.append('VM size')
                     changed = True
-                    vm_dict['properties']['hardwareProfile']['vmSize'] = self.vm_size
+                    vm_dict['hardware_profile']['vm_size'] = self.vm_size
 
                 update_tags, vm_dict['tags'] = self.update_tags(vm_dict.get('tags', dict()))
                 if update_tags:
                     differences.append('Tags')
                     changed = True
 
-                if self.short_hostname and self.short_hostname != vm_dict['properties']['osProfile']['computerName']:
+                if self.short_hostname and self.short_hostname != vm_dict['os_profile']['computer_name']:
                     self.log('CHANGED: virtual machine {0} - short hostname'.format(self.name))
                     differences.append('Short Hostname')
                     changed = True
-                    vm_dict['properties']['osProfile']['computerName'] = self.short_hostname
+                    vm_dict['os_orofile']['computer_name'] = self.short_hostname
 
                 if self.started and vm_dict['powerstate'] not in ['starting', 'running'] and self.allocated:
                     self.log("CHANGED: virtual machine {0} not running and requested state 'running'".format(self.name))
@@ -1335,74 +1492,113 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     differences.append('Zones')
                     changed = True
 
-                if self.license_type is not None and vm_dict['properties'].get('licenseType') != self.license_type:
+                if self.license_type is not None and vm_dict.get('licenseType') != self.license_type:
                     differences.append('License Type')
                     changed = True
 
+                if self.vm_identity:
+                    update_vm_identity = False
+                    # If type set to None, and VM has no current identities, nothing to do
+                    if 'None' in self.vm_identity.get('type') and 'identity' not in vm_dict:
+                        pass
+                    # If type different to None, and VM has no current identities, update identities
+                    elif 'identity' not in vm_dict:
+                        update_vm_identity = True
+                    # If type in module args different from type of vm_dict, update identities
+                    elif vm_dict['identity']['type'] != self.vm_identity.get('type'):
+                        update_vm_identity = True
+                    # If type in module args contains 'UserAssigned'
+                    elif 'UserAssigned' in self.vm_identity.get('type'):
+                        # Create sets with current user identities and module args identities
+                        new_managed_identities = set(self.vm_identity.get('user_assigned_identities', {}).get('id', []))
+                        current_managed_identities = set(vm_dict['identity']['user_assigned_identities'].keys())
+                        # If new identities have to be appended to VM
+                        if self.vm_identity.get('user_assigned_identities', {}).get('append', False) is True:
+                            # and the union of identities is longer
+                            if len(current_managed_identities) != len(new_managed_identities.union(current_managed_identities)):
+                                # update identities
+                                update_vm_identity = True
+                        # If new identities have to overwrite current identities
+                        else:
+                            # Check if module args identities are different as current ones
+                            if current_managed_identities.difference(new_managed_identities) != set():
+                                update_vm_identity = True
+                    if update_vm_identity:
+                        differences.append('Managed Identities')
+                        changed = True
+
                 if self.security_profile is not None:
                     update_security_profile = False
-                    if 'securityProfile' not in vm_dict['properties'].keys():
+                    if 'securityProfile' not in vm_dict.keys():
                         update_security_profile = True
                         differences.append('security_profile')
                     else:
                         if self.security_profile.get('encryption_at_host') is not None:
-                            if bool(self.security_profile.get('encryption_at_host')) != bool(vm_dict['properties']['securityProfile']['encryptionAtHost']):
-                                update_security_profle = True
+                            if bool(self.security_profile.get('encryption_at_host')) != bool(vm_dict['security_profile']['encryption_at_host']):
+                                update_security_profile = True
                             else:
-                                self.security_profile['encryption_at_host'] = vm_dict['properties']['securityProfile']['encryptionAtHost']
+                                self.security_profile['encryption_at_host'] = vm_dict['security_profile']['encryption_at_host']
                         if self.security_profile.get('security_type') is not None:
-                            if self.security_profile.get('security_type') != vm_dict['properties']['securityProfile']['securityType']:
+                            if self.security_profile.get('security_type') != vm_dict['security_profile']['security_type']:
                                 update_security_profile = True
                         if self.security_profile.get('uefi_settings') is not None:
                             if self.security_profile['uefi_settings'].get('secure_boot_enabled') is not None:
                                 if bool(self.security_profile['uefi_settings']['secure_boot_enabled']) != \
-                                        bool(vm_dict['properties']['securityProfile']['uefiSettings']['secureBootEnabled']):
+                                        bool(vm_dict['security_profile']['uefi_settings']['secure_boot_enabled']):
                                     update_security_profile = True
                             else:
                                 self.security_profile['uefi_settings']['secure_boot_enabled'] = \
-                                    vm_dict['properties']['securityProfile']['uefiSettings']['secureBootEnabled']
+                                    vm_dict['security_profile']['uefi_settings']['secure_soot_enabled']
                             if self.security_profile['uefi_settings'].get('v_tpm_enabled') is not None:
                                 if bool(self.security_profile['uefi_settings']['v_tpm_enabled']) != \
-                                        bool(vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']):
+                                        bool(vm_dict['security_profile']['uefi_settings']['v_tpm_enabled']):
                                     update_security_profile = True
                             else:
                                 self.security_profile['uefi_settings']['v_tpm_enabled'] = \
-                                    vm_dict['properties']['securityProfile']['uefiSettings']['vTpmEnabled']
-                        if update_security_profile:
-                            changed = True
-                            differences.append('security_profile')
+                                    vm_dict['security_profile']['uefi_settings']['v_tpm_enabled']
+                    if update_security_profile:
+                        changed = True
+                        differences.append('security_profile')
 
-                if self.windows_config is not None and vm_dict['properties']['osProfile'].get('windowsConfiguration') is not None:
-                    if self.windows_config['enable_automatic_updates'] != vm_dict['properties']['osProfile']['windowsConfiguration']['enableAutomaticUpdates']:
+                if self.windows_config is not None and vm_dict['os_profile'].get('windows_configuration') is not None:
+                    if self.windows_config['enable_automatic_updates'] != vm_dict['os_profile']['windows_configuration']['enable_automatic_updates']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'windowsConfiguration.enableAutomaticUpdates' is not allowed.")
 
-                    if self.windows_config['provision_vm_agent'] != vm_dict['properties']['osProfile']['windowsConfiguration']['provisionVMAgent']:
+                    if self.windows_config['provision_vm_agent'] != vm_dict['os_profile']['windows_configuration']['provision_vm_agent']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'windowsConfiguration.provisionVMAgent' is not allowed.")
 
-                if self.linux_config is not None and vm_dict['properties']['osProfile'].get('linuxConfiguration') is not None:
+                if self.linux_config is not None and vm_dict['os_profile'].get('linux_configuration') is not None:
                     if self.linux_config['disable_password_authentication'] != \
-                            vm_dict['properties']['osProfile']['linuxConfiguration']['disablePasswordAuthentication']:
+                            vm_dict['os_profile']['linux_configuration']['disable_password_authentication']:
                         self.fail("(PropertyChangeNotAllowed) Changing property 'linuxConfiguration.disablePasswordAuthentication' is not allowed.")
 
+                current_os_des_id = vm_dict['storage_profile'].get('os_disk', {}).get('managed_disk', {}).get('disk_encryption_set', {}).get('id', None)
+                if self.os_disk_encryption_set is not None and current_os_des_id is not None:
+                    if self.os_disk_encryption_set != current_os_des_id:
+                        self.fail("(PropertyChangeNotAllowed) Changing property 'storage_profile.os_disk.managed_disk.disk_encryption_set' is not allowed.")
+
                 # Defaults for boot diagnostics
-                if 'diagnosticsProfile' not in vm_dict['properties']:
-                    vm_dict['properties']['diagnosticsProfile'] = {}
-                if 'bootDiagnostics' not in vm_dict['properties']['diagnosticsProfile']:
-                    vm_dict['properties']['diagnosticsProfile']['bootDiagnostics'] = {
+                if 'diagnostics_profile' not in vm_dict:
+                    vm_dict['diagnostics_profile'] = {}
+                if 'boot_diagnostics' not in vm_dict['diagnostics_profile']:
+                    vm_dict['diagnostics_profile']['boot_diagnostics'] = {
                         'enabled': False,
                         'storageUri': None
                     }
                 if self.boot_diagnostics_present:
-                    current_boot_diagnostics = vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']
+                    current_boot_diagnostics = vm_dict['diagnostics_profile']['boot_diagnostics']
                     boot_diagnostics_changed = False
 
                     if self.boot_diagnostics['enabled'] != current_boot_diagnostics['enabled']:
                         current_boot_diagnostics['enabled'] = self.boot_diagnostics['enabled']
                         boot_diagnostics_changed = True
 
-                    boot_diagnostics_storage_account = self.get_boot_diagnostics_storage_account(
-                        limited=not self.boot_diagnostics['enabled'], vm_dict=vm_dict)
-                    boot_diagnostics_blob = boot_diagnostics_storage_account.primary_endpoints.blob if boot_diagnostics_storage_account else None
+                    if self.boot_diagnostics.get('type') is not None and self.boot_diagnostics['type'] == 'managed':
+                        boot_diagnostics_blob = None
+                    else:
+                        boot_diagnostics_storage_account = self.get_boot_diagnostics_storage_account(
+                            limited=not self.boot_diagnostics['enabled'], vm_dict=vm_dict)
+                        boot_diagnostics_blob = boot_diagnostics_storage_account.primary_endpoints.blob if boot_diagnostics_storage_account else None
                     if current_boot_diagnostics.get('storageUri') != boot_diagnostics_blob:
                         current_boot_diagnostics['storageUri'] = boot_diagnostics_blob
                         boot_diagnostics_changed = True
@@ -1522,6 +1718,11 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         vhd = self.compute_models.VirtualHardDisk(uri=requested_vhd_uri)
                         managed_disk = None
 
+                    if managed_disk and self.os_disk_encryption_set:
+                        managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
+                            id=self.os_disk_encryption_set
+                        )
+
                     plan = None
                     if self.plan:
                         plan = self.compute_models.Plan(name=self.plan.get('name'), product=self.plan.get('product'),
@@ -1529,7 +1730,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                                         promotion_code=self.plan.get('promotion_code'))
 
                     # do this before creating vm_resource as it can modify tags
-                    if self.boot_diagnostics_present and self.boot_diagnostics['enabled']:
+                    if self.boot_diagnostics_present and self.boot_diagnostics['enabled'] and self.boot_diagnostics.get('type') != 'managed':
                         boot_diag_storage_account = self.get_boot_diagnostics_storage_account()
 
                     vm_resource = self.compute_models.VirtualMachine(
@@ -1574,7 +1775,22 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         vm_resource.license_type = self.license_type
 
                     if self.vm_identity:
-                        vm_resource.identity = self.compute_models.VirtualMachineIdentity(type=self.vm_identity)
+                        # If UserAssigned in module args and ids specified
+                        if 'UserAssigned' in self.vm_identity.get('type') and len(self.vm_identity.get('user_assigned_identities', {}).get('id', [])) != 0:
+                            user_assigned_identities_dict = {uami: dict() for uami in self.vm_identity.get('user_assigned_identities').get('id')}
+                            # Append identities to the model
+                            vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                type=self.vm_identity.get('type'),
+                                user_assigned_identities=user_assigned_identities_dict
+                            )
+                        # If UserAssigned in module args, but ids are not specified
+                        elif 'UserAssigned' in self.vm_identity.get('type') and len(self.vm_identity.get('user_assigned_identities', {}).get('id', [])) == 0:
+                            self.fail("UserAssigned specified but no User Identity IDs provided")
+                        # In any other case ('SystemAssigned' or 'None') apply the configuration to the model
+                        else:
+                            vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                type=self.vm_identity.get('type')
+                            )
 
                     if self.winrm:
                         winrm_listeners = list()
@@ -1611,7 +1827,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         )
 
                     if self.boot_diagnostics_present:
-                        if self.boot_diagnostics['enabled']:
+                        if self.boot_diagnostics['enabled'] and self.boot_diagnostics.get('type') != 'managed':
                             storage_uri = boot_diag_storage_account.primary_endpoints.blob
                         else:
                             storage_uri = None
@@ -1672,6 +1888,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             else:
                                 data_disk_vhd = None
                                 data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=data_disk['managed_disk_type'])
+                                if data_disk.get('disk_encryption_set'):
+                                    data_disk_managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
+                                        id=data_disk['disk_encryption_set']
+                                    )
                                 disk_name = self.name + "-datadisk-" + str(count)
                                 count += 1
 
@@ -1732,43 +1952,43 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     self.log("Update virtual machine {0}".format(self.name))
                     self.results['actions'].append('Updated VM {0}'.format(self.name))
                     nics = [self.compute_models.NetworkInterfaceReference(id=interface['id'], primary=(i == 0))
-                            for i, interface in enumerate(vm_dict['properties']['networkProfile']['networkInterfaces'])]
+                            for i, interface in enumerate(vm_dict['network_profile']['network_interfaces'])]
 
                     # os disk
-                    if not vm_dict['properties']['storageProfile']['osDisk'].get('managedDisk'):
+                    if not vm_dict['storage_profile']['os_disk'].get('managedDisk'):
                         managed_disk = None
-                        vhd = self.compute_models.VirtualHardDisk(uri=vm_dict['properties']['storageProfile']['osDisk'].get('vhd', {}).get('uri'))
+                        vhd = self.compute_models.VirtualHardDisk(uri=vm_dict['storage_profile']['os_disk'].get('vhd', {}).get('uri'))
                     else:
                         vhd = None
                         managed_disk = self.compute_models.ManagedDiskParameters(
-                            storage_account_type=vm_dict['properties']['storageProfile']['osDisk']['managedDisk'].get('storageAccountType')
+                            storage_account_type=vm_dict['storage_profile']['os_disk']['managed_disk'].get('storage_account_type')
                         )
 
                     proximity_placement_group_resource = None
                     try:
-                        proximity_placement_group_resource = self.compute_models.SubResource(id=vm_dict['properties']['proximityPlacementGroup'].get('id'))
+                        proximity_placement_group_resource = self.compute_models.SubResource(id=vm_dict['proximity_placement_group'].get('id'))
                     except Exception:
                         # pass if the proximity Placement Group
                         pass
 
                     availability_set_resource = None
                     try:
-                        availability_set_resource = self.compute_models.SubResource(id=vm_dict['properties']['availabilitySet'].get('id'))
+                        availability_set_resource = self.compute_models.SubResource(id=vm_dict['availability_set'].get('id'))
                     except Exception:
                         # pass if the availability set is not set
                         pass
 
-                    if 'imageReference' in vm_dict['properties']['storageProfile'].keys():
-                        if 'id' in vm_dict['properties']['storageProfile']['imageReference'].keys():
+                    if 'imageReference' in vm_dict['storage_profile'].keys():
+                        if 'id' in vm_dict['storage_profile']['image_reference'].keys():
                             image_reference = self.compute_models.ImageReference(
-                                id=vm_dict['properties']['storageProfile']['imageReference']['id']
+                                id=vm_dict['storage_profile']['image_reference']['id']
                             )
                         else:
                             image_reference = self.compute_models.ImageReference(
-                                publisher=vm_dict['properties']['storageProfile']['imageReference'].get('publisher'),
-                                offer=vm_dict['properties']['storageProfile']['imageReference'].get('offer'),
-                                sku=vm_dict['properties']['storageProfile']['imageReference'].get('sku'),
-                                version=vm_dict['properties']['storageProfile']['imageReference'].get('version')
+                                publisher=vm_dict['storage_profile']['image_reference'].get('publisher'),
+                                offer=vm_dict['storage_profile']['image_reference'].get('offer'),
+                                sku=vm_dict['storage_profile']['image_reference'].get('sku'),
+                                version=vm_dict['storage_profile']['image_reference'].get('version')
                             )
                     else:
                         image_reference = None
@@ -1777,10 +1997,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if self.zones is not None and vm_dict['zones'] != self.zones:
                         self.fail("You can't change the Availability Zone of a virtual machine (have: {0}, want: {1})".format(vm_dict['zones'], self.zones))
 
-                    if 'osProfile' in vm_dict['properties']:
+                    if 'os_profile' in vm_dict:
                         os_profile = self.compute_models.OSProfile(
-                            admin_username=vm_dict['properties'].get('osProfile', {}).get('adminUsername'),
-                            computer_name=vm_dict['properties'].get('osProfile', {}).get('computerName')
+                            admin_username=vm_dict.get('os_profile', {}).get('admin_username'),
+                            computer_name=vm_dict.get('os_profile', {}).get('computer_name')
                         )
                     else:
                         os_profile = None
@@ -1789,17 +2009,17 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         location=vm_dict['location'],
                         os_profile=os_profile,
                         hardware_profile=self.compute_models.HardwareProfile(
-                            vm_size=vm_dict['properties']['hardwareProfile'].get('vmSize')
+                            vm_size=vm_dict['hardware_profile'].get('vm_size')
                         ),
                         storage_profile=self.compute_models.StorageProfile(
                             os_disk=self.compute_models.OSDisk(
-                                name=vm_dict['properties']['storageProfile']['osDisk'].get('name'),
+                                name=vm_dict['storage_profile']['os_disk'].get('name'),
                                 vhd=vhd,
                                 managed_disk=managed_disk,
-                                create_option=vm_dict['properties']['storageProfile']['osDisk'].get('createOption'),
-                                os_type=vm_dict['properties']['storageProfile']['osDisk'].get('osType'),
-                                caching=vm_dict['properties']['storageProfile']['osDisk'].get('caching'),
-                                disk_size_gb=vm_dict['properties']['storageProfile']['osDisk'].get('diskSizeGB')
+                                create_option=vm_dict['storage_profile']['os_disk'].get('create_option'),
+                                os_type=vm_dict['storage_profile']['os_disk'].get('os_type'),
+                                caching=vm_dict['storage_profile']['os_disk'].get('caching'),
+                                disk_size_gb=vm_dict['storage_profile']['os_disk'].get('disk_size_gb')
                             ),
                             image_reference=image_reference
                         ),
@@ -1813,27 +2033,75 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if self.license_type is not None:
                         vm_resource.license_type = self.license_type
 
+                    if self.vm_identity is not None:
+                        # If 'append' is set to True save current user assigned managed identities to use later
+                        if (self.vm_identity.get('user_assigned_identities', {}) is not None
+                                and self.vm_identity.get('user_assigned_identities', {}).get('append', False) is True):
+                            if 'identity' in vm_dict and 'user_assigned_identities' in vm_dict['identity']:
+                                current_user_assigned_identities_dict = {uami: dict() for uami in vm_dict['identity']['user_assigned_identities'].keys()}
+                                vm_identity_user_assigned_append = True
+                            else:
+                                # Nothing to append to
+                                vm_identity_user_assigned_append = False
+                        else:
+                            # 'append' is False or unset
+                            vm_identity_user_assigned_append = False
+                        # If there are identities in 'id' and 'UserAssigned' in type
+                        if 'UserAssigned' in self.vm_identity.get('type') and len(self.vm_identity.get('user_assigned_identities', {}).get('id', [])) != 0:
+                            user_assigned_identities_dict = {uami: dict() for uami in self.vm_identity.get('user_assigned_identities').get('id')}
+                            # If there are identities to append, merge the dicts
+                            if vm_identity_user_assigned_append:
+                                user_assigned_identities_dict = {**user_assigned_identities_dict, **current_user_assigned_identities_dict}
+                            # Save the identity
+                            vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                type=self.vm_identity.get('type'),
+                                user_assigned_identities=user_assigned_identities_dict
+                            )
+                        # If there are no identities in 'id' and 'UserAssigned' in type
+                        elif 'UserAssigned' in self.vm_identity.get('type') and len(self.vm_identity.get('user_assigned_identities', {}).get('id', [])) == 0:
+                            # Fail if append is False
+                            if vm_identity_user_assigned_append is False:
+                                self.fail("UserAssigned specified but no User Assigned IDs provided" +
+                                          " and no UserAssigned identities are currently assigned to the VM")
+                            # If append is true, user is changing from 'UserAssigned' to 'SystemAssigned, UserAssigned'
+                            #  and wants to keep current UserAssigned identities
+                            else:
+                                # Save current identities
+                                vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                    type=self.vm_identity.get('type'),
+                                    user_assigned_identities=current_user_assigned_identities_dict
+                                )
+                        # Set 'SystemAssigned' or 'None'
+                        else:
+                            vm_resource.identity = self.compute_models.VirtualMachineIdentity(
+                                type=self.vm_identity.get('type')
+                            )
+
                     if self.boot_diagnostics is not None:
+                        storage_uri = None
+                        # storageUri is undefined if boot diagnostics is disabled
+                        if 'storageUri' in vm_dict['diagnostics_profile']['boot_diagnostics']:
+                            storage_uri = vm_dict['diagnostics_profile']['boot_diagnostics']['storageUri']
                         vm_resource.diagnostics_profile = self.compute_models.DiagnosticsProfile(
                             boot_diagnostics=self.compute_models.BootDiagnostics(
-                                enabled=vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']['enabled'],
-                                storage_uri=vm_dict['properties']['diagnosticsProfile']['bootDiagnostics']['storageUri']))
+                                enabled=vm_dict['diagnostics_profile']['boot_diagnostics']['enabled'],
+                                storage_uri=storage_uri))
 
                     if vm_dict.get('tags'):
                         vm_resource.tags = vm_dict['tags']
 
                     # Add custom_data, if provided
-                    if vm_dict['properties'].get('osProfile', {}).get('customData'):
-                        custom_data = vm_dict['properties']['osProfile']['customData']
+                    if vm_dict.get('os_profile', {}).get('custom_data'):
+                        custom_data = vm_dict['os_profile']['custom_data']
                         # Azure SDK (erroneously?) wants native string type for this
                         vm_resource.os_profile.custom_data = to_native(base64.b64encode(to_bytes(custom_data)))
 
                     # Add admin password, if one provided
-                    if vm_dict['properties'].get('osProfile', {}).get('adminPassword'):
-                        vm_resource.os_profile.admin_password = vm_dict['properties']['osProfile']['adminPassword']
+                    if vm_dict.get('os_profile', {}).get('admin_password'):
+                        vm_resource.os_profile.admin_password = vm_dict['os_profile']['admin_password']
 
                     # Add Windows configuration, if applicable
-                    windows_config = vm_dict['properties'].get('osProfile', {}).get('windowsConfiguration')
+                    windows_config = vm_dict.get('os_profile', {}).get('windows_configuration')
                     if windows_config:
                         if self.windows_config is not None:
                             vm_resource.os_profile.windows_configuration = self.compute_models.WindowsConfiguration(
@@ -1847,7 +2115,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             )
 
                     # Add linux configuration, if applicable
-                    linux_config = vm_dict['properties'].get('osProfile', {}).get('linuxConfiguration')
+                    linux_config = vm_dict.get('os_profile', {}).get('linux_configuration')
                     if linux_config:
                         if self.linux_config is not None:
                             vm_resource.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
@@ -1855,7 +2123,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             )
                         else:
                             vm_resource.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
-                                disable_password_authentication=linux_config.get('disablePasswordAuthentication', False)
+                                disable_password_authentication=linux_config.get('disable_password_authentication', False)
                             )
                         ssh_config = linux_config.get('ssh', None)
                         if ssh_config:
@@ -1868,13 +2136,17 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                     )
 
                     # data disk
-                    if vm_dict['properties']['storageProfile'].get('dataDisks'):
+                    if vm_dict['storage_profile'].get('data_disks'):
                         data_disks = []
 
-                        for data_disk in vm_dict['properties']['storageProfile']['dataDisks']:
-                            if data_disk.get('managedDisk'):
-                                managed_disk_type = data_disk['managedDisk'].get('storageAccountType')
+                        for data_disk in vm_dict['storage_profile']['data_disks']:
+                            if data_disk.get('managed_disk'):
+                                managed_disk_type = data_disk['managed_disk'].get('storage_account_type')
                                 data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=managed_disk_type)
+                                if data_disk.get('disk_encryption_set'):
+                                    data_disk_managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
+                                        id=data_disk['disk_encryption_set']
+                                    )
                                 data_disk_vhd = None
                             else:
                                 data_disk_vhd = data_disk['vhd']['uri']
@@ -1885,8 +2157,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 name=data_disk.get('name'),
                                 vhd=data_disk_vhd,
                                 caching=data_disk.get('caching'),
-                                create_option=data_disk.get('createOption'),
-                                disk_size_gb=int(data_disk.get('diskSizeGB', 0)) or None,
+                                create_option=data_disk.get('create_option'),
+                                disk_size_gb=int(data_disk.get('disk_size_gb', 0)) or None,
                                 managed_disk=data_disk_managed_disk,
                             ))
                         vm_resource.storage_profile.data_disks = data_disks
@@ -1980,16 +2252,16 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         for interface in vm.network_profile.network_interfaces:
             int_dict = azure_id_to_dict(interface.id)
             nic = self.get_network_interface(int_dict['resourceGroups'], int_dict['networkInterfaces'])
-            for interface_dict in result['properties']['networkProfile']['networkInterfaces']:
+            for interface_dict in result['network_profile']['network_interfaces']:
                 if interface_dict['id'] == interface.id:
                     nic_dict = self.serialize_obj(nic, 'NetworkInterface')
                     interface_dict['name'] = int_dict['networkInterfaces']
-                    interface_dict['properties'] = nic_dict['properties']
+                    interface_dict['properties'] = nic_dict
         # Expand public IPs to include config properties
-        for interface in result['properties']['networkProfile']['networkInterfaces']:
-            for config in interface['properties']['ipConfigurations']:
-                if config['properties'].get('publicIPAddress'):
-                    pipid_dict = azure_id_to_dict(config['properties']['publicIPAddress']['id'])
+        for interface in result['network_profile']['network_interfaces']:
+            for config in interface['properties']['ip_configurations']:
+                if config.get('public_ip_address'):
+                    pipid_dict = azure_id_to_dict(config['public_ip_address']['id'])
                     try:
                         pip = self.network_client.public_ip_addresses.get(pipid_dict['resourceGroups'],
                                                                           pipid_dict['publicIPAddresses'])
@@ -1997,8 +2269,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         self.fail("Error fetching public ip {0} - {1}".format(pipid_dict['publicIPAddresses'],
                                                                               str(exc)))
                     pip_dict = self.serialize_obj(pip, 'PublicIPAddress')
-                    config['properties']['publicIPAddress']['name'] = pipid_dict['publicIPAddresses']
-                    config['properties']['publicIPAddress']['properties'] = pip_dict['properties']
+                    config['public_ip_address']['name'] = pipid_dict['publicIPAddresses']
+                    config['public_ip_address']['properties'] = pip_dict['ip_configuration']
 
         self.log(result, pretty_print=True)
         if self.state != 'absent' and not result['powerstate']:
@@ -2006,10 +2278,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         return result
 
     def power_off_vm(self):
-        self.log("Powered off virtual machine {0}".format(self.name))
-        self.results['actions'].append("Powered off virtual machine {0}".format(self.name))
+        self.log("Powered off virtual machine {0} - Skip_Shutdown {1}".format(self.name, self.force))
+        self.results['actions'].append("Powered off virtual machine {0} - Skip_Shutdown {1}".format(self.name, self.force))
         try:
-            poller = self.compute_client.virtual_machines.begin_power_off(self.resource_group, self.name)
+            poller = self.compute_client.virtual_machines.begin_power_off(self.resource_group, self.name, skip_shutdown=self.force)
             self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error powering off virtual machine {0} - {1}".format(self.name, str(exc)))
@@ -2459,7 +2731,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             try:
                 subnet = self.network_client.subnets.get(virtual_network_resource_group, virtual_network_name, self.subnet_name)
                 subnet_id = subnet.id
-            except CloudError as exc:
+            except Exception as exc:
                 self.fail("Error: fetching subnet {0} - {1}".format(self.subnet_name, str(exc)))
         else:
             no_subnets_msg = "Error: unable to find a subnet in virtual network {0}. A virtual network " \

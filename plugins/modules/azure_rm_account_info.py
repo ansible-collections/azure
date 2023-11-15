@@ -102,15 +102,13 @@ account_info:
 
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.graphrbac import GraphRbacManagementClient
-    from azure.graphrbac.models import GraphErrorException
+    import asyncio
+    from msgraph.generated.education.me.user.user_request_builder import UserRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMAuth
 
 
 class AzureRMAccountInfo(AzureRMModuleBase):
@@ -127,7 +125,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
 
         # Different return info is gathered using 2 different clients
         # 1. All except "user" section of the return value uses azure.mgmt.subsctiption.operations.subscriptionoperations
-        # 2. "user" section of the return value uses different client (graphrbac)
+        # 2. "user" section of the return value uses different client (GraphServiceClient)
 
         super(AzureRMAccountInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                  supports_check_mode=True,
@@ -135,11 +133,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
                                                  is_ad_resource=False)
 
     def exec_module(self, **kwargs):
-
-        result = []
-        result = self.list_items()
-
-        self.results['account_info'] = result
+        self.results['account_info'] = self.list_items()
         return self.results
 
     def list_items(self):
@@ -170,7 +164,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
 
         try:
             subscription_list_response = list(self.subscription_client.subscriptions.list())
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Failed to list all subscriptions - {0}".format(str(exc)))
 
         results['id'] = subscription_list_response[0].subscription_id
@@ -180,7 +174,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
         results['state'] = subscription_list_response[0].state
         results['managedByTenants'] = self.get_managed_by_tenants_list(subscription_list_response[0].managed_by_tenants)
         results['environmentName'] = self.azure_auth._cloud_environment.name
-        results['user'] = self.get_aduser_info(subscription_list_response[0].tenant_id)
+        results['user'] = self.get_aduser_info()
 
         return results
 
@@ -188,32 +182,31 @@ class AzureRMAccountInfo(AzureRMModuleBase):
 
         return [dict(tenantId=item.tenant_id) for item in object_list]
 
-    def get_aduser_info(self, tenant_id):
+    def get_aduser_info(self):
 
-        # Create GraphRbacManagementClient for getting
+        # Create GraphServiceClient for getting
         # "user": {
         #     "name": "mandar123456@abcdefg.onmicrosoft.com",
-        #     "type": "user"self.
+        #     "type": "Member"
         # }
 
-        # Makes use of azure graphrbac
-        # https://docs.microsoft.com/en-us/python/api/overview/azure/microsoft-graph?view=azure-python#client-library
+        # Makes use of azure MSGraph
+        # https://learn.microsoft.com/en-us/graph/api/user-get?view=graph-rest-1.0&tabs=http
 
         user = {}
-        self.azure_auth_graphrbac = AzureRMAuth(is_ad_resource=True)
-        cred = self.azure_auth_graphrbac.azure_credentials
-        base_url = self.azure_auth_graphrbac._cloud_environment.endpoints.active_directory_graph_resource_id
-        client = GraphRbacManagementClient(cred, tenant_id, base_url)
 
-        try:
-            user_info = client.signed_in_user.get()
-            user['name'] = user_info.user_principal_name
-            user['type'] = user_info.object_type
-
-        except GraphErrorException as e:
-            self.fail("failed to get ad user info {0}".format(str(e)))
-
+        user_info = asyncio.get_event_loop().run_until_complete(self.getAccount())
+        user['name'] = user_info.user_principal_name
+        user['type'] = user_info.user_type
         return user
+
+    async def getAccount(self):
+        return await self.get_msgraph_client().me.get(
+            request_configuration=UserRequestBuilder.UserRequestBuilderGetRequestConfiguration(
+                query_parameters=UserRequestBuilder.UserRequestBuilderGetQueryParameters(
+                    select=["userType", "userPrincipalName", "postalCode", "identities"], ),
+            )
+        )
 
 
 def main():

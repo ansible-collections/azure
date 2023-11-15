@@ -1,5 +1,78 @@
 # Change Log
 
+## v1.19.0 (2023-11-6)
+
+### FEATURE ENHANCEMENT
+  - Update all test case Ubuntu Image version to 20.04-LTS, 16.04-LTS will be deprecated ([#1288](https://github.com/ansible-collections/azure/pull/1288))
+  - Migrate `msrestazure` to `azure-mgmt-core` and `azure-identity` ([#1267](https://github.com/ansible-collections/azure/pull/1267))
+  - Support `ansible-lint` test to `azure.azcollection` ([#1292](https://github.com/ansible-collections/azure/pull/1292))
+
+### BUG FIXING
+  - plugins/module_utls/azure_rm_common.py: Add support for custom ADFS endpoint ([#1299](https://github.com/ansible-collections/azure/pull/1299))
+  - azure_rm_virtualmachine: Fix `disable_password_authentication` not set bug ([#1301](https://github.com/ansible-collections/azure/pull/1301))
+  - azure_rm_azurefiewall_info: Fix `nat_rule_collections` not set bug ([#1308](https://github.com/ansible-collections/azure/pull/1308))
+  - azure_rm_*.py: Fixed sanity errors in the module ([#1296](https://github.com/ansible-collections/azure/pull/1296))
+  - Add required description to the document ([#1314](https://github.com/ansible-collections/azure/pull/1314))
+
+## v1.18.1 (2023-9-25)
+
+### BUG FIXING
+  - inventory/azure_rm: Fix authorization initialization bug. [#1271](https://github.com/ansible-collections/azure/pull/1271)
+  - azure_rm_managementgroup_info: Fix `azure_object.type` to equal `Microsoft.Management/managementGroups`. [#1252](https://github.com/ansible-collections/azure/pull/1252)
+
+## v1.18.0 (2023-9-22)
+
+### FEATURE ENHANCEMENT
+  - Migrate `msrest` to `azure-core`. [#1245](https://github.com/ansible-collections/azure/pull/1245)
+  - Upgrade `GenericRestClient` authorization from ADAL to MSAL - [#1245](https://github.com/ansible-collections/azure/pull/1245)
+  - Lazy initialization of AD resource credentials. [#1268](https://github.com/ansible-collections/azure/pull/1268)
+
+## v1.17.0 (2023-8-23)
+
+### FEATURE ENHANCEMENT
+  - azure_rm_virtualmachine:
+    - Support update User Assigned and System assigned identities ([#1177](https://github.com/ansible-collections/azure/pull/1177))
+    - Add support force power off([#1186](https://github.com/ansible-collections/azure/pull/1186))
+    - Allow to set boot diagnostics storage account to managed ([#1206](https://github.com/ansible-collections/azure/pull/1206))
+  - azure_rm.py:
+    - Add creation timestamp to `hostvars` ([#1221](https://github.com/ansible-collections/azure/pull/1221))
+    - Add an example on how to add a domain to hostname for dynamic inventory ((#1211](https://github.com/ansible-collections/azure/pull/1211))
+  - azure_rm_virtualnetwork: Improve documentation ([#1203](https://github.com/ansible-collections/azure/pull/1203))
+  - azure_rm_storageshare: Add support for `enabled_protocols` and `root_squash` ([#1216](https://github.com/ansible-collections/azure/pull/1216))
+  - azure_rm_common: Migrate ADAL to MSAL, remove ADAL from direct dependencies ([#1239](https://github.com/ansible-collections/azure/pull/1239))
+  - sanity-requirements-azure.txt:
+    - Bump cryptography from v38.0.3 to v39.0.1 ([#1076](https://github.com/ansible-collections/azure/pull/1076))
+    - Bump cryptography from v39.0.1 to v41.0.3 ([#1244](https://github.com/ansible-collections/azure/pull/1244))
+  - azure_rm_batchaccount: Upgrade `azure-mgmt-batch` to v17.0.0 ([#1202](https://github.com/ansible-collections/azure/pull/1202))
+  - azure_rm_batchaccount_info: Upgrade `azure-mgmt-batch` to v17.0.0 ([#1202](https://github.com/ansible-collections/azure/pull/1202))
+  - pr-pipelines.yml: Update test Ansible version to v2.14.0 ([#1182](https://github.com/ansible-collections/azure/pull/1182))
+  - runtime.yml: Keep action_groups and modules list consistent for v1.15.0 and v1.16.0 ([#1188](https://github.com/ansible-collections/azure/pull/1188))
+  - azure_rm_aks_info: Support to list all managed cluster ([#1229](https://github.com/ansible-collections/azure/pull/1229))
+
+### BUG FIXING
+  - azure_rm_virtualmachine:
+    - Fix `version_added in azure_rm_virtualmachine document ([#1180](https://github.com/ansible-collections/azure/pull/1180))
+    - Fix setting of encryption at host for VMs ([#1207](https://github.com/ansible-collections/azure/pull/1207))
+    - Fix typo `update_security_profle` ([#1194](https://github.com/ansible-collections/azure/pull/1194))
+  - README.md: Fix document link in README ([#1189](https://github.com/ansible-collections/azure/pull/1189))
+  - azure_rm_keyvaultkey:
+    - Fix an error when `client_id` and `secret` are empty ([#1185](https://github.com/ansible-collections/azure/pull/1185))
+    - Upgrade `azure-keyvault` to v4.2.0 ([#1198](https://github.com/ansible-collections/azure/pull/1198))
+  - azure_rm_keyvaultkey_info:
+    - Fix an error when `client_id` and `secret` are empty ([#1185](https://github.com/ansible-collections/azure/pull/1185))
+    - Upgrade `azure-keyvault` to v4.2.0 ([#1198](https://github.com/ansible-collections/azure/pull/1198))
+  - azure_rm_keyvaultsecret:
+    - Fix an error when `client_id` and `secret` are empty ([#1185](https://github.com/ansible-collections/azure/pull/1185))
+    - Upgrade `azure-keyvault` to v4.2.0 ([#1198](https://github.com/ansible-collections/azure/pull/1198))
+  - azure_rm_keyvaultsecret_info:
+    - Fix an error when `client_id` and `secret` are empty ([#1185](https://github.com/ansible-collections/azure/pull/1185))
+    - Upgrade `azure-keyvault` to v4.2.0 ([#1198](https://github.com/ansible-collections/azure/pull/1198))
+  - azure_rm_manageddisk: source_account_id should be storage_account_id ([#1187](https://github.com/ansible-collections/azure/pull/1187))
+  - azure_rm_mmultipleanageddisk: `source_account_id` should be ~~~~`storage_account_id` ([#1187](https://github.com/ansible-collections/azure/pull/1187))
+  - azure_rm_virtualmachine_info: Fix the issue when `security_profile` not returned  ([#1205](https://github.com/ansible-collections/azure/pull/1205))
+  - azure_rm_backupazurevm: Use the module configured `subscrtion_id` if available ([#1225](https://github.com/ansible-collections/azure/pull/1225))
+  - azure_keyvault_secret: Removed subscription_id from azure_keyvault_secret lookup when using az cli auth ([#1175](https://github.com/ansible-collections/azure/pull/1175))
+
 ## v1.16.0 (2023-5-31)
 
 ### NEW MODULES

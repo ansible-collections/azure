@@ -26,40 +26,22 @@ options:
             - The set of default rules automatically added to a security group at creation.
             - In general default rules will not be modified. Modify rules to shape the flow of traffic to or from a subnet or NIC.
             - See rules below for the makeup of a rule dict.
-    location:
-        description:
-            - Valid azure location. Defaults to location of the resource group.
-    name:
-        description:
-            - Name of the security group to operate on.
-    purge_default_rules:
-        description:
-            - Remove any existing rules not matching those defined in the default_rules parameter.
-        type: bool
-        default: 'no'
-    purge_rules:
-        description:
-            - Remove any existing rules not matching those defined in the rules parameters.
-        type: bool
-        default: 'no'
-    resource_group:
-        description:
-            - Name of the resource group the security group belongs to.
-        required: true
-    rules:
-        description:
-            - Set of rules shaping traffic flow to or from a subnet or NIC. Each rule is a dictionary.
+        type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - Unique name for the rule.
+                type: str
                 required: true
             description:
                 description:
                     - Short description of the rule's purpose.
+                type: str
             protocol:
                 description:
                     - Accepted traffic protocol.
+                type: str
                 choices:
                     - Udp
                     - Tcp
@@ -71,11 +53,13 @@ options:
                     - Port or range of ports from which traffic originates.
                     - It can accept string type or a list of string type.
                 default: "*"
+                type: raw
             destination_port_range:
                 description:
                     - Port or range of ports to which traffic is headed.
                     - It can accept string type or a list of string type.
                 default: "*"
+                type: raw
             source_address_prefix:
                 description:
                     - The CIDR or source IP range.
@@ -84,6 +68,7 @@ options:
                     - If this is an ingress rule, specifies where network traffic originates from.
                     - It can accept string type or a list of string type.
                     - Asterisk C(*) and default tags can only be specified as single string type, not as a list of string.
+                type: raw
                 default: "*"
             destination_address_prefix:
                 description:
@@ -94,6 +79,7 @@ options:
                     - It can accept string type or a list of string type.
                     - Asterisk C(*) and default tags can only be specified as single string type, not as a list of string.
                 default: "*"
+                type: raw
             source_application_security_groups:
                 description:
                     - List of the source application security groups.
@@ -115,6 +101,7 @@ options:
             access:
                 description:
                     - Whether or not to allow the traffic flow.
+                type: str
                 choices:
                     - Allow
                     - Deny
@@ -122,10 +109,132 @@ options:
             priority:
                 description:
                     - Order in which to apply the rule. Must a unique integer between 100 and 4096 inclusive.
+                type: int
                 required: true
             direction:
                 description:
                     - Indicates the direction of the traffic flow.
+                type: str
+                choices:
+                    - Inbound
+                    - Outbound
+                default: Inbound
+    location:
+        description:
+            - Valid azure location. Defaults to location of the resource group.
+        type: str
+    name:
+        description:
+            - Name of the security group to operate on.
+        type: str
+        required: true
+    purge_default_rules:
+        description:
+            - Remove any existing rules not matching those defined in the default_rules parameter.
+        type: bool
+        default: false
+    purge_rules:
+        description:
+            - Remove any existing rules not matching those defined in the rules parameters.
+        type: bool
+        default: false
+    resource_group:
+        description:
+            - Name of the resource group the security group belongs to.
+        required: true
+        type: str
+    rules:
+        description:
+            - Set of rules shaping traffic flow to or from a subnet or NIC. Each rule is a dictionary.
+        type: list
+        elements: dict
+        suboptions:
+            name:
+                description:
+                    - Unique name for the rule.
+                type: str
+                required: true
+            description:
+                description:
+                    - Short description of the rule's purpose.
+                type: str
+            protocol:
+                description:
+                    - Accepted traffic protocol.
+                type: str
+                choices:
+                    - Udp
+                    - Tcp
+                    - Icmp
+                    - "*"
+                default: "*"
+            source_port_range:
+                description:
+                    - Port or range of ports from which traffic originates.
+                    - It can accept string type or a list of string type.
+                default: "*"
+                type: raw
+            destination_port_range:
+                description:
+                    - Port or range of ports to which traffic is headed.
+                    - It can accept string type or a list of string type.
+                default: "*"
+                type: raw
+            source_address_prefix:
+                description:
+                    - The CIDR or source IP range.
+                    - Asterisk C(*) can also be used to match all source IPs.
+                    - Default tags such as C(VirtualNetwork), C(AzureLoadBalancer) and C(Internet) can also be used.
+                    - If this is an ingress rule, specifies where network traffic originates from.
+                    - It can accept string type or a list of string type.
+                    - Asterisk C(*) and default tags can only be specified as single string type, not as a list of string.
+                type: raw
+                default: "*"
+            destination_address_prefix:
+                description:
+                    - The destination address prefix.
+                    - CIDR or destination IP range.
+                    - Asterisk C(*) can also be used to match all source IPs.
+                    - Default tags such as C(VirtualNetwork), C(AzureLoadBalancer) and C(Internet) can also be used.
+                    - It can accept string type or a list of string type.
+                    - Asterisk C(*) and default tags can only be specified as single string type, not as a list of string.
+                default: "*"
+                type: raw
+            source_application_security_groups:
+                description:
+                    - List of the source application security groups.
+                    - It could be list of resource id.
+                    - It could be list of names in same resource group.
+                    - It could be list of dict containing resource_group and name.
+                    - It is mutually exclusive with C(source_address_prefix) and C(source_address_prefixes).
+                type: list
+                elements: raw
+            destination_application_security_groups:
+                description:
+                    - List of the destination application security groups.
+                    - It could be list of resource id.
+                    - It could be list of names in same resource group.
+                    - It could be list of dict containing I(resource_group) and I(name).
+                    - It is mutually exclusive with C(destination_address_prefix) and C(destination_address_prefixes).
+                type: list
+                elements: raw
+            access:
+                description:
+                    - Whether or not to allow the traffic flow.
+                type: str
+                choices:
+                    - Allow
+                    - Deny
+                default: Allow
+            priority:
+                description:
+                    - Order in which to apply the rule. Must a unique integer between 100 and 4096 inclusive.
+                type: int
+                required: true
+            direction:
+                description:
+                    - Indicates the direction of the traffic flow.
+                type: str
                 choices:
                     - Inbound
                     - Outbound
@@ -134,6 +243,7 @@ options:
         description:
             - Assert the state of the security group. Set to C(present) to create or update a security group. Set to C(absent) to remove a security group.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -149,63 +259,62 @@ author:
 '''
 
 EXAMPLES = '''
+- name: Create a security group
+  azure_rm_securitygroup:
+    resource_group: myResourceGroup
+    name: mysecgroup
+    purge_rules: true
+    rules:
+      - name: DenySSH
+        protocol: Tcp
+        destination_port_range: 22
+        access: Deny
+        priority: 100
+        direction: Inbound
+      - name: 'AllowSSH'
+        protocol: Tcp
+        source_address_prefix:
+          - '174.109.158.0/24'
+          - '174.109.159.0/24'
+        destination_port_range: 22
+        access: Allow
+        priority: 101
+        direction: Inbound
+      - name: 'AllowMultiplePorts'
+        protocol: Tcp
+        source_address_prefix:
+          - '174.109.158.0/24'
+          - '174.109.159.0/24'
+        destination_port_range:
+          - 80
+          - 443
+        access: Allow
+        priority: 102
 
-# Create a security group
-- azure_rm_securitygroup:
-      resource_group: myResourceGroup
-      name: mysecgroup
-      purge_rules: yes
-      rules:
-          - name: DenySSH
-            protocol: Tcp
-            destination_port_range: 22
-            access: Deny
-            priority: 100
-            direction: Inbound
-          - name: 'AllowSSH'
-            protocol: Tcp
-            source_address_prefix:
-              - '174.109.158.0/24'
-              - '174.109.159.0/24'
-            destination_port_range: 22
-            access: Allow
-            priority: 101
-            direction: Inbound
-          - name: 'AllowMultiplePorts'
-            protocol: Tcp
-            source_address_prefix:
-              - '174.109.158.0/24'
-              - '174.109.159.0/24'
-            destination_port_range:
-              - 80
-              - 443
-            access: Allow
-            priority: 102
+- name: Update rules on existing security group
+  azure_rm_securitygroup:
+    resource_group: myResourceGroup
+    name: mysecgroup
+    rules:
+      - name: DenySSH
+        protocol: Tcp
+        destination_port_range: 22-23
+        access: Deny
+        priority: 100
+        direction: Inbound
+      - name: AllowSSHFromHome
+        protocol: Tcp
+        source_address_prefix: '174.109.158.0/24'
+        destination_port_range: 22-23
+        access: Allow
+        priority: 102
+        direction: Inbound
+    tags:
+      testing: testing
+      delete: on-exit
 
-# Update rules on existing security group
-- azure_rm_securitygroup:
-      resource_group: myResourceGroup
-      name: mysecgroup
-      rules:
-          - name: DenySSH
-            protocol: Tcp
-            destination_port_range: 22-23
-            access: Deny
-            priority: 100
-            direction: Inbound
-          - name: AllowSSHFromHome
-            protocol: Tcp
-            source_address_prefix: '174.109.158.0/24'
-            destination_port_range: 22-23
-            access: Allow
-            priority: 102
-            direction: Inbound
-      tags:
-          testing: testing
-          delete: on-exit
-
-# Create a securiy group with I(protocol=Icmp)
-- azure_rm_securitygroup:
+- name: Create a securiy group with I(protocol=Icmp)
+  azure_rm_securitygroup:
     name: mysecgroup
     resource_group: myResourceGroup
     rules:
@@ -219,11 +328,11 @@ EXAMPLES = '''
         protocol: Icmp
         priority: 106
 
-# Delete security group
-- azure_rm_securitygroup:
-      resource_group: myResourceGroup
-      name: mysecgroup
-      state: absent
+- name: Delete security group
+  azure_rm_securitygroup:
+    resource_group: myResourceGroup
+    name: mysecgroup
+    state: absent
 '''
 
 RETURN = '''
@@ -417,14 +526,12 @@ state:
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.tools import is_valid_resource_id
-    from azure.mgmt.network import NetworkManagementClient
+    from azure.mgmt.core.tools import is_valid_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.six import integer_types
 from ansible.module_utils._text import to_native
 
 
@@ -633,13 +740,25 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            default_rules=dict(type='list', elements='dict', options=rule_spec),
+            default_rules=dict(
+                type='list',
+                elements='dict',
+                options=rule_spec,
+                mutually_exclusive=[("source_application_security_groups", "source_address_prefix"),
+                                    ("destination_application_security_groups", "destination_address_prefix")]
+            ),
             location=dict(type='str'),
             name=dict(type='str', required=True),
             purge_default_rules=dict(type='bool', default=False),
             purge_rules=dict(type='bool', default=False),
             resource_group=dict(required=True, type='str'),
-            rules=dict(type='list', elements='dict', options=rule_spec),
+            rules=dict(
+                type='list',
+                elements='dict',
+                options=rule_spec,
+                mutually_exclusive=[("source_application_security_groups", "source_address_prefix"),
+                                    ("destination_application_security_groups", "destination_address_prefix")]
+            ),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
 
@@ -659,14 +778,8 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
             state=dict()
         )
 
-        mutually_exclusive = [["source_application_security_group", "source_address_prefix"],
-                              ["source_application_security_group", "source_address_prefixes"],
-                              ["destination_application_security_group", "destination_address_prefix"],
-                              ["destination_application_security_group", "destination_address_prefixes"]]
-
         super(AzureRMSecurityGroup, self).__init__(self.module_arg_spec,
-                                                   supports_check_mode=True,
-                                                   mutually_exclusive=mutually_exclusive)
+                                                   supports_check_mode=True)
 
     def exec_module(self, **kwargs):
         # tighten up poll interval for security groups; default 30s is an eternity

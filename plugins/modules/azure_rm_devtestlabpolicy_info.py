@@ -51,14 +51,14 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Policy
-    azure_rm_devtestlabpolicy_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      policy_set_name: myPolicySet
-      name: myPolicy
-      tags:
-        - key:value
+- name: Get instance of Policy
+  azure_rm_devtestlabpolicy_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    policy_set_name: myPolicySet
+    name: myPolicy
+    tags:
+      - key:value
 '''
 
 RETURN = '''
@@ -115,7 +115,7 @@ policies:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag': 'MyValue' }"
 '''
 
@@ -124,7 +124,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

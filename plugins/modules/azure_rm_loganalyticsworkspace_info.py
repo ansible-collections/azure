@@ -20,9 +20,11 @@ options:
         description:
             - Name of resource group.
         required: True
+        type: str
     name:
         description:
             - Name of the workspace.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -32,18 +34,22 @@ options:
         description:
             - Show the intelligence packs for a workspace.
             - Note this will cost one more network overhead for each workspace, expected slow response.
+        type: bool
     show_management_groups:
         description:
             - Show the management groups for a workspace.
             - Note this will cost one more network overhead for each workspace, expected slow response.
+        type: bool
     show_shared_keys:
         description:
             - Show the shared keys for a workspace.
             - Note this will cost one more network overhead for each workspace, expected slow response.
+        type: bool
     show_usages:
         description:
             - Show the list of usages for a workspace.
             - Note this will cost one more network overhead for each workspace, expected slow response.
+        type: bool
 extends_documentation_fragment:
     - azure.azcollection.azure
 
@@ -134,11 +140,10 @@ usages:
               }
 '''  # NOQA
 
-from ansible.module_utils.common.dict_transformations import _snake_to_camel, _camel_to_snake
+from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
-    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
-    from msrestazure.tools import parse_resource_id
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common

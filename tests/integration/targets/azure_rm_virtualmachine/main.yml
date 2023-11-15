@@ -1,7 +1,8 @@
+---
 - name: Run Azure VM tests in parallel
   hosts: all
-  gather_facts: no
-  strategy: free
+  gather_facts: false
+  strategy: linear
   tasks:
     - name: Include tasks based on inventory hostname
-      include_tasks: tasks/{{ inventory_hostname }}.yml
+      ansible.builtin.include_tasks: tasks/{{ inventory_hostname }}.yml

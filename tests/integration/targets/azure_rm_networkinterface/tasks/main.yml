@@ -1,24 +1,24 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     applicationsecuritygroup_name1: "asg{{ resource_group | hash('md5') | truncate(5, True, '') }}{{ 1000 | random }}"
     applicationsecuritygroup_name2: "asg{{ resource_group | hash('md5') | truncate(5, True, '') }}{{ 1000 | random }}"
     nic_name1: "nic1{{ resource_group | hash('md5') | truncate(5, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
-      resource_group: "{{ resource_group_secondary }}"
-      name: "tn{{ rpfx }}"
-      address_prefixes: ["10.10.0.0/16", "fdae:f296:2787::/48"]
+    resource_group: "{{ resource_group_secondary }}"
+    name: "tn{{ rpfx }}"
+    address_prefixes: ["10.10.0.0/16", "fdae:f296:2787::/48"]
   register: vn
 
 - name: Add subnet
   azure_rm_subnet:
-      resource_group: "{{ resource_group_secondary }}"
-      name: "tn{{ rpfx }}"
-      address_prefixes_cidr: ["10.10.0.0/24", "fdae:f296:2787::/64"]
-      virtual_network: "tn{{ rpfx }}"
+    resource_group: "{{ resource_group_secondary }}"
+    name: "tn{{ rpfx }}"
+    address_prefixes_cidr: ["10.10.0.0/24", "fdae:f296:2787::/64"]
+    virtual_network: "tn{{ rpfx }}"
 
 - name: Create public IP addresses
   azure_rm_publicipaddress:
@@ -37,7 +37,7 @@
     - name: 'tn{{ rpfx }}v6'
       version: 'ipv6'
 
-- name: create load balancer with multiple parameters
+- name: Create load balancer with multiple parameters
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "lb{{ rpfx }}"
@@ -84,32 +84,34 @@
 
 - name: Create most simple NIC with virtual_network id (check mode)
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      virtual_network: "{{ vn.state.id }}"
-      subnet: "tn{{ rpfx }}"
-      public_ip: False
-      create_with_security_group: False
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    virtual_network: "{{ vn.state.id }}"
+    subnet: "tn{{ rpfx }}"
+    public_ip: false
+    create_with_security_group: false
   register: output
-  check_mode: yes
+  check_mode: true
 
-- assert:
+- name: Assert the check mode facts
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Create most simple NIC with virtual_network resource_group
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    virtual_network:
       name: "tn{{ rpfx }}"
-      virtual_network:
-        name: "tn{{ rpfx }}"
-        resource_group: "{{ resource_group_secondary }}"
-      subnet: "tn{{ rpfx }}"
-      public_ip: False
-      create_with_security_group: False
+      resource_group: "{{ resource_group_secondary }}"
+    subnet: "tn{{ rpfx }}"
+    public_ip: false
+    create_with_security_group: false
   register: output
 
-- assert:
+- name: Assert the NIC created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.id
@@ -121,7 +123,8 @@
     name: "tn{{ rpfx }}"
   register: facts
 
-- assert:
+- name: Assert the NIC facts
+  ansible.builtin.assert:
     that:
       - "facts.networkinterfaces | length == 1"
       - facts.networkinterfaces[0].id == output.state.id
@@ -134,149 +137,157 @@
 
 - name: Create most simple NIC with ip configurations (idempotent)
   azure_rm_networkinterface:
-      resource_group: "{{ facts.networkinterfaces[0].resource_group }}"
-      name: "{{ facts.networkinterfaces[0].name }}"
-      virtual_network: "{{ facts.networkinterfaces[0].virtual_network }}"
-      create_with_security_group: False
-      ip_configurations:
-          - name: "{{ facts.networkinterfaces[0].ip_configurations[0].name }}"
-            private_ip_address: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_address }}"
-            private_ip_allocation_method: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_allocation_method }}"
-            primary: "{{ facts.networkinterfaces[0].ip_configurations[0].primary }}"
-      subnet: "{{ facts.networkinterfaces[0].subnet }}"
+    resource_group: "{{ facts.networkinterfaces[0].resource_group }}"
+    name: "{{ facts.networkinterfaces[0].name }}"
+    virtual_network: "{{ facts.networkinterfaces[0].virtual_network }}"
+    create_with_security_group: false
+    ip_configurations:
+      - name: "{{ facts.networkinterfaces[0].ip_configurations[0].name }}"
+        private_ip_address: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_address }}"
+        private_ip_allocation_method: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_allocation_method }}"
+        primary: "{{ facts.networkinterfaces[0].ip_configurations[0].primary }}"
+    subnet: "{{ facts.networkinterfaces[0].subnet }}"
   register: output
 
-- assert:
+- name: Assert the NIC created
+  ansible.builtin.assert:
     that:
       - not output.changed
 
 - name: Create most simple NIC (idempotent)
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      virtual_network: "{{ vn.state.id }}"
-      subnet: "tn{{ rpfx }}"
-      create_with_security_group: False
-      public_ip: False
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    virtual_network: "{{ vn.state.id }}"
+    subnet: "tn{{ rpfx }}"
+    create_with_security_group: false
+    public_ip: false
   register: output
 
-- assert:
+- name: Assert NIC created
+  ansible.builtin.assert:
     that:
       - not output.changed
 
 - name: Update security group (check mode)
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      virtual_network: "{{ vn.state.id }}"
-      subnet: "tn{{ rpfx }}"
-      public_ip: False
-      security_group: "tn{{ rpfx }}sg"
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    virtual_network: "{{ vn.state.id }}"
+    subnet: "tn{{ rpfx }}"
+    public_ip: false
+    security_group: "tn{{ rpfx }}sg"
   register: output
-  check_mode: yes
+  check_mode: true
 
-- assert:
+- name: Assert the security group check mode
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Update public ip address (check mode)
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      virtual_network: "{{ vn.state.id }}"
-      subnet: "tn{{ rpfx }}"
-      public_ip_address_name: "tn{{ rpfx }}"
-      create_with_security_group: False
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    virtual_network: "{{ vn.state.id }}"
+    subnet: "tn{{ rpfx }}"
+    public_ip_address_name: "tn{{ rpfx }}"
+    create_with_security_group: false
   register: output
-  check_mode: yes
+  check_mode: true
 
-- assert:
+- name: Assert the public ip check mode
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Update accelerated networking (check mode)
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      virtual_network: "{{ vn.state.id }}"
-      subnet: "tn{{ rpfx }}"
-      enable_accelerated_networking: True
-      create_with_security_group: False
-      public_ip: False
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    virtual_network: "{{ vn.state.id }}"
+    subnet: "tn{{ rpfx }}"
+    enable_accelerated_networking: true
+    create_with_security_group: false
+    public_ip: false
   register: output
-  check_mode: yes
+  check_mode: true
 
-- assert:
+- name: Assert the network check mode facts
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Update IP forwarding networking (check mode)
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      virtual_network: "{{ vn.state.id }}"
-      subnet: "tn{{ rpfx }}"
-      create_with_security_group: False
-      enable_ip_forwarding: True
-      public_ip: False
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    virtual_network: "{{ vn.state.id }}"
+    subnet: "tn{{ rpfx }}"
+    create_with_security_group: false
+    enable_ip_forwarding: true
+    public_ip: false
   register: output
-  check_mode: yes
+  check_mode: true
 
-- assert:
+- name: Assert the NIC check mode facts
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Update dns server (check mode)
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      virtual_network: "{{ vn.state.id }}"
-      subnet: "tn{{ rpfx }}"
-      create_with_security_group: False
-      public_ip: False
-      dns_servers:
-        - 8.9.10.11
-        - 7.8.9.10
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    virtual_network: "{{ vn.state.id }}"
+    subnet: "tn{{ rpfx }}"
+    create_with_security_group: false
+    public_ip: false
+    dns_servers:
+      - 8.9.10.11
+      - 7.8.9.10
   register: output
-  check_mode: yes
+  check_mode: true
 
-- assert:
+- name: Assert the NIC check mode facts
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Update NIC
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      virtual_network: "{{ vn.state.id }}"
-      subnet: "tn{{ rpfx }}"
-      enable_accelerated_networking: True
-      enable_ip_forwarding: True
-      security_group: "tn{{ rpfx }}sg"
-      dns_servers:
-        - 8.9.10.11
-        - 7.8.9.10
-      ip_configurations:
-          - name: "{{ facts.networkinterfaces[0].ip_configurations[0].name }}"
-            private_ip_address: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_address }}"
-            private_ip_allocation_method: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_allocation_method }}"
-            primary: "{{ facts.networkinterfaces[0].ip_configurations[0].primary }}"
-          - name: ipconfig1
-            public_ip_name: "tn{{ rpfx }}"
-            load_balancer_backend_address_pools:
-              - "{{ lb.state.backend_address_pools[0].id }}"
-              - name: backendaddrpool1
-                load_balancer: "lb{{ rpfx }}"
-          - name: ipconfig2
-            public_ip_name: "tn{{ rpfx }}v6"
-            private_ip_address_version: 'IPv6'
-            load_balancer_backend_address_pools:
-              - "{{ lb.state.backend_address_pools[2].id }}"
-              - name: backendaddrpool2
-                load_balancer: "lb{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    virtual_network: "{{ vn.state.id }}"
+    subnet: "tn{{ rpfx }}"
+    enable_accelerated_networking: true
+    enable_ip_forwarding: true
+    security_group: "tn{{ rpfx }}sg"
+    dns_servers:
+      - 8.9.10.11
+      - 7.8.9.10
+    ip_configurations:
+      - name: "{{ facts.networkinterfaces[0].ip_configurations[0].name }}"
+        private_ip_address: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_address }}"
+        private_ip_allocation_method: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_allocation_method }}"
+        primary: "{{ facts.networkinterfaces[0].ip_configurations[0].primary }}"
+      - name: ipconfig1
+        public_ip_name: "tn{{ rpfx }}"
+        load_balancer_backend_address_pools:
+          - "{{ lb.state.backend_address_pools[0].id }}"
+          - name: backendaddrpool1
+            load_balancer: "lb{{ rpfx }}"
+      - name: ipconfig2
+        public_ip_name: "tn{{ rpfx }}v6"
+        private_ip_address_version: 'IPv6'
+        load_balancer_backend_address_pools:
+          - "{{ lb.state.backend_address_pools[2].id }}"
+          - name: backendaddrpool2
+            load_balancer: "lb{{ rpfx }}"
   register: output
 
-- assert:
+- name: Assert NIC update facts
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.dns_settings.dns_servers == ['8.9.10.11', '7.8.9.10']
@@ -286,37 +297,38 @@
 
 - name: Complicated NIC (idempontent)
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      virtual_network: "{{ vn.state.id }}"
-      subnet: "tn{{ rpfx }}"
-      enable_accelerated_networking: True
-      security_group: "tn{{ rpfx }}sg"
-      enable_ip_forwarding: True
-      dns_servers:
-        - 8.9.10.11
-        - 7.8.9.10
-      ip_configurations:
-          - name: "{{ facts.networkinterfaces[0].ip_configurations[0].name }}"
-            private_ip_address: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_address }}"
-            private_ip_allocation_method: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_allocation_method }}"
-            primary: "{{ facts.networkinterfaces[0].ip_configurations[0].primary }}"
-          - name: ipconfig1
-            public_ip_name: "tn{{ rpfx }}"
-            load_balancer_backend_address_pools:
-              - "{{ lb.state.backend_address_pools[0].id }}"
-              - name: backendaddrpool1
-                load_balancer: "lb{{ rpfx }}"
-          - name: ipconfig2
-            public_ip_name: "tn{{ rpfx }}v6"
-            private_ip_address_version: 'IPv6'
-            load_balancer_backend_address_pools:
-              - "{{ lb.state.backend_address_pools[2].id }}"
-              - name: backendaddrpool2
-                load_balancer: "lb{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    virtual_network: "{{ vn.state.id }}"
+    subnet: "tn{{ rpfx }}"
+    enable_accelerated_networking: true
+    security_group: "tn{{ rpfx }}sg"
+    enable_ip_forwarding: true
+    dns_servers:
+      - 8.9.10.11
+      - 7.8.9.10
+    ip_configurations:
+      - name: "{{ facts.networkinterfaces[0].ip_configurations[0].name }}"
+        private_ip_address: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_address }}"
+        private_ip_allocation_method: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_allocation_method }}"
+        primary: "{{ facts.networkinterfaces[0].ip_configurations[0].primary }}"
+      - name: ipconfig1
+        public_ip_name: "tn{{ rpfx }}"
+        load_balancer_backend_address_pools:
+          - "{{ lb.state.backend_address_pools[0].id }}"
+          - name: backendaddrpool1
+            load_balancer: "lb{{ rpfx }}"
+      - name: ipconfig2
+        public_ip_name: "tn{{ rpfx }}v6"
+        private_ip_address_version: 'IPv6'
+        load_balancer_backend_address_pools:
+          - "{{ lb.state.backend_address_pools[2].id }}"
+          - name: backendaddrpool2
+            load_balancer: "lb{{ rpfx }}"
   register: output
 
-- assert:
+- name: Assert the NIC no change
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -324,9 +336,10 @@
   azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
-  register:  facts
+  register: facts
 
-- assert:
+- name: Assert the NIC facts
+  ansible.builtin.assert:
     that:
       - "facts.networkinterfaces | length == 1"
       - facts.networkinterfaces[0].id == output.state.id
@@ -339,26 +352,27 @@
 
 - name: Remove one dns server and ip configuration
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      virtual_network: "{{ vn.state.id }}"
-      subnet: "tn{{ rpfx }}"
-      security_group: "tn{{ rpfx }}sg"
-      enable_accelerated_networking: True
-      enable_ip_forwarding: True
-      dns_servers:
-        - 8.9.10.11
-      ip_configurations:
-          - name: ipconfig1
-            public_ip_name: "tn{{ rpfx }}"
-            primary: True
-            load_balancer_backend_address_pools:
-              - "{{ lb.state.backend_address_pools[0].id }}"
-              - name: backendaddrpool1
-                load_balancer: "lb{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    virtual_network: "{{ vn.state.id }}"
+    subnet: "tn{{ rpfx }}"
+    security_group: "tn{{ rpfx }}sg"
+    enable_accelerated_networking: true
+    enable_ip_forwarding: true
+    dns_servers:
+      - 8.9.10.11
+    ip_configurations:
+      - name: ipconfig1
+        public_ip_name: "tn{{ rpfx }}"
+        primary: true
+        load_balancer_backend_address_pools:
+          - "{{ lb.state.backend_address_pools[0].id }}"
+          - name: backendaddrpool1
+            load_balancer: "lb{{ rpfx }}"
   register: output
 
-- assert:
+- name: Assert the NIC changed
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.dns_settings.dns_servers == ['8.9.10.11']
@@ -370,15 +384,15 @@
 
 - name: Create application security group(check mode)
   azure_rm_applicationsecuritygroup:
-      resource_group: "{{ resource_group }}"
-      name: "{{ applicationsecuritygroup_name1 }}"
-      tags:
-          testing: testing
-  check_mode: yes
+    resource_group: "{{ resource_group }}"
+    name: "{{ applicationsecuritygroup_name1 }}"
+    tags:
+      testing: testing
+  check_mode: true
   register: output
 
 - name: Assert check mode creation
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -387,11 +401,11 @@
     resource_group: "{{ resource_group }}"
     name: "{{ applicationsecuritygroup_name1 }}"
     tags:
-        testing: testing
+      testing: testing
   register: output
 
 - name: Assert application security group creation
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id != ''
@@ -403,7 +417,7 @@
   register: facts
 
 - name: Assert facts
-  assert:
+  ansible.builtin.assert:
     that:
       - facts['applicationsecuritygroups'] | length == 1
       - facts['applicationsecuritygroups'][0]['name'] != None
@@ -412,28 +426,28 @@
 
 - name: Create application security group (idempotent)
   azure_rm_applicationsecuritygroup:
-      resource_group: "{{ resource_group }}"
-      name: "{{ applicationsecuritygroup_name1 }}"
-      tags:
-          testing: testing
+    resource_group: "{{ resource_group }}"
+    name: "{{ applicationsecuritygroup_name1 }}"
+    tags:
+      testing: testing
   register: output
 
 - name: Assert idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
 - name: Update application security group
   azure_rm_applicationsecuritygroup:
-      resource_group: "{{ resource_group }}"
-      name: "{{ applicationsecuritygroup_name1 }}"
-      tags:
-          testing: testing
-          foo: bar
+    resource_group: "{{ resource_group }}"
+    name: "{{ applicationsecuritygroup_name1 }}"
+    tags:
+      testing: testing
+      foo: bar
   register: output
 
 - name: Assert update
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -449,18 +463,18 @@
     name: "{{ nic_name1 }}"
     virtual_network: "{{ vn.state.id }}"
     subnet: "tn{{ rpfx }}"
-    create_with_security_group: True
-    public_ip: False
+    create_with_security_group: true
+    public_ip: false
     ip_configurations:
       - name: ipconfig1
         application_security_groups:
           - "{{ applicationsecuritygroup_name1 }}"
           - "{{ asg.id }}"
-        primary: True
+        primary: true
   register: output
 
-- name: assert creation succeeded
-  assert:
+- name: Assert creation succeeded
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -470,18 +484,18 @@
     name: "{{ nic_name1 }}"
     virtual_network: "{{ vn.state.id }}"
     subnet: "tn{{ rpfx }}"
-    create_with_security_group: True
-    public_ip: False
+    create_with_security_group: true
+    public_ip: false
     ip_configurations:
       - name: ipconfig1
         application_security_groups:
           - "{{ asg.id }}"
           - "{{ applicationsecuritygroup_name1 }}"
-        primary: True
+        primary: true
   register: output
 
-- name: assert idempotent
-  assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -491,17 +505,17 @@
     name: "{{ nic_name1 }}"
     virtual_network: "{{ vn.state.id }}"
     subnet: "tn{{ rpfx }}"
-    create_with_security_group: True
-    public_ip: False
+    create_with_security_group: true
+    public_ip: false
     ip_configurations:
       - name: ipconfig1
         application_security_groups:
           - "{{ applicationsecuritygroup_name1 }}"
-        primary: True
+        primary: true
   register: output
 
-- name: assert update succeeded
-  assert:
+- name: Assert update succeeded
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -511,7 +525,8 @@
     name: "{{ nic_name1 }}"
   register: facts
 
-- assert:
+- name: Assert the NIC created
+  ansible.builtin.assert:
     that:
       - "facts.networkinterfaces[0].ip_configurations[0].application_security_groups | length == 1"
 
@@ -523,22 +538,29 @@
     address_prefix_cidr: 10.10.1.0/24
   register: appgw_subnet_output
 
+- name: Create public IP addresses
+  azure_rm_publicipaddress:
+    name: my-appgw-pip
+    resource_group: "{{ resource_group_secondary }}"
+    sku: 'standard'
+    allocation_method: 'static'
+    version: 'ipv4'
+
 - name: Create application gateway to connect NIC to
   azure_rm_appgateway:
     resource_group: "{{ resource_group_secondary }}"
     name: "appgateway{{ rpfx }}"
     sku:
-      name: standard_small
-      tier: standard
+      name: standard_v2
+      tier: standard_v2
       capacity: 2
     gateway_ip_configurations:
       - subnet:
           id: "{{ appgw_subnet_output.state.id }}"
         name: app_gateway_ip_config
     frontend_ip_configurations:
-      - subnet:
-          id: "{{ appgw_subnet_output.state.id }}"
-        name: sample_gateway_frontend_ip_config
+      - name: sample_gateway_frontend_ip_config
+        public_ip_address: my-appgw-pip
     frontend_ports:
       - port: 80
         name: http_frontend_port
@@ -555,7 +577,7 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: http_listener
@@ -584,7 +606,8 @@
           - name: "test_backend_address_pool"
             application_gateway: "appgateway{{ rpfx }}"
   register: output
-- assert:
+- name: Assert the NIC created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.ip_configurations | length == 1
@@ -606,7 +629,8 @@
           - name: "test_backend_address_pool"
             application_gateway: "appgateway{{ rpfx }}"
   register: output
-- assert:
+- name: Assert the NIC idempotent
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -615,7 +639,8 @@
     name: "appgw-nic{{ rpfx }}"
     resource_group: "{{ resource_group_secondary }}"
   register: facts
-- assert:
+- name: Assert the NIC facts
+  ansible.builtin.assert:
     that:
       - facts.networkinterfaces | length == 1
       - facts.networkinterfaces[0].id == output.state.id
@@ -629,7 +654,8 @@
     resource_group: "{{ resource_group_secondary }}"
     state: absent
   register: output
-- assert:
+- name: Assert the NIC deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -639,51 +665,55 @@
     resource_group: "{{ resource_group_secondary }}"
     state: absent
   register: output
-- assert:
+- name: Assert the application gateway deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Delete the NIC (check mode)
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      state: absent
-  check_mode: yes
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    state: absent
+  check_mode: true
   register: output
 
-- assert:
+- name: Assert the NIC check mode
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Delete the NIC
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    state: absent
   register: output
 
-- assert:
+- name: Assert the NIC deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Delete the NIC (idempotent)
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "tn{{ rpfx }}"
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    state: absent
   register: output
 
-- assert:
+- name: Assert the NIC idempotent
+  ansible.builtin.assert:
     that:
       - not output.changed
 
-- name: delete load balancer
+- name: Delete load balancer
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "lb{{ rpfx }}"
     state: absent
 
-- name: delete public ip addresses
+- name: Delete public ip addresses
   azure_rm_publicipaddress:
     name: "{{ item }}"
     resource_group: '{{ resource_group }}'
@@ -695,47 +725,48 @@
     - 'tn{{ rpfx }}'
     - 'tn{{ rpfx }}v6'
 
-- assert:
+- name: Assert the NIC deleted
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.results | length == 4
 
 - name: Delete the NIC
   azure_rm_networkinterface:
-      resource_group: "{{ resource_group }}"
-      name: "{{ nic_name1 }}"
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: "{{ nic_name1 }}"
+    state: absent
 
 - name: Delete the application security group (check mode)
   azure_rm_applicationsecuritygroup:
-      resource_group: "{{ resource_group }}"
-      name: "{{ applicationsecuritygroup_name1 }}"
-      state: absent
-  check_mode: yes
+    resource_group: "{{ resource_group }}"
+    name: "{{ applicationsecuritygroup_name1 }}"
+    state: absent
+  check_mode: true
   register: output
 
 - name: Assert delete check mode
-  assert:
-      that:
-        - output.changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
 
 - name: Delete the application security group
   azure_rm_applicationsecuritygroup:
-      resource_group: "{{ resource_group }}"
-      name: "{{ applicationsecuritygroup_name1 }}"
-      state: absent
+    resource_group: "{{ resource_group }}"
+    name: "{{ applicationsecuritygroup_name1 }}"
+    state: absent
   register: output
 
 - name: Assert the deletion
-  assert:
-      that:
-        - output.changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
 
 - name: Delete second application security group
   azure_rm_applicationsecuritygroup:
-      resource_group: "{{ resource_group_secondary }}"
-      name: "{{ applicationsecuritygroup_name2 }}"
-      state: absent
+    resource_group: "{{ resource_group_secondary }}"
+    name: "{{ applicationsecuritygroup_name2 }}"
+    state: absent
   register: output
 
 - name: Delete network security groups
@@ -748,7 +779,8 @@
     - '{{ nic_name1 }}'
     - 'tn{{ rpfx }}sg'
 
-- assert:
+- name: Assert the security group deleted
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.results | length == 2
@@ -760,6 +792,7 @@
     state: 'absent'
   register: output
 
-- assert:
+- name: Assert the virtual network deleted
+  ansible.builtin.assert:
     that:
       - output.changed

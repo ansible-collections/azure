@@ -45,18 +45,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get route
-      azure_rm_route_info:
-        resource_group: myResourceGroup
-        name: routename
-        route_table_name: routetabename
+- name: Get route
+  azure_rm_route_info:
+    resource_group: myResourceGroup
+    name: routename
+    route_table_name: routetabename
 
 
-    - name: List routes
-      azure_rm_route_info:
-        resource_group: myResourceGroup
-        route_table_name: routetabename
-
+- name: List routes
+  azure_rm_route_info:
+    resource_group: myResourceGroup
+    route_table_name: routetabename
 '''
 
 RETURN = '''
@@ -116,9 +115,6 @@ routes:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.mgmt.network import NetworkManagementClient
-    from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass

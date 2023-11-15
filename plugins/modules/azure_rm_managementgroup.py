@@ -92,7 +92,6 @@ EXAMPLES = '''
   azure_rm_managementgroup:
     group_id: ChildGroup
     state: absent
-
 '''
 
 RETURN = '''
@@ -270,6 +269,7 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
+                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         self.url = ('/providers' +
@@ -358,11 +358,12 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
             self.log('Error attempting to create the ManagementGroup instance.')
             self.fail('Error creating the ManagementGroup instance: {0}'.format(str(exc)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
-            pass
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -396,7 +397,7 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
                                               600,
                                               30)
             found = True
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             self.log("Response : {0}".format(response))
             # self.log("ManagementGroup instance : {0} found".format(response.name))
         except Exception as e:

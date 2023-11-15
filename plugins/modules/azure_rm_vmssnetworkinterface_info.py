@@ -49,23 +49,23 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get information by the network name
-      azure_rm_vmssnetworkinterface_info:
-        resource_group: myResourceGroup
-        name: nic001
-        vmss_name: testVMSS
-        vm_index: 0
+- name: Get information by the network name
+  azure_rm_vmssnetworkinterface_info:
+    resource_group: myResourceGroup
+    name: nic001
+    vmss_name: testVMSS
+    vm_index: 0
 
-    - name: Get all network interface information in virtual machine scale set
-      azure_rm_vmssnetworkinterface_info:
-        resource_group: myResourceGroup
-        vmss_name: testVMSS
+- name: Get all network interface information in virtual machine scale set
+  azure_rm_vmssnetworkinterface_info:
+    resource_group: myResourceGroup
+    vmss_name: testVMSS
 
-    - name: Get all network interface information in the same virtual machine index.
-      azure_rm_vmssnetworkinterface_info:
-        resource_group: myResourceGroup
-        vmss_name: testVMSS
-        vm_index: 1
+- name: Get all network interface information in the same virtual machine index.
+  azure_rm_vmssnetworkinterface_info:
+    resource_group: myResourceGroup
+    vmss_name: testVMSS
+    vm_index: 1
 '''
 
 RETURN = '''

@@ -43,16 +43,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of MariaDB Server
-    azure_rm_mariadbserver_info:
-      resource_group: myResourceGroup
-      name: server_name
+- name: Get instance of MariaDB Server
+  azure_rm_mariadbserver_info:
+    resource_group: myResourceGroup
+    name: server_name
 
-  - name: List instances of MariaDB Server
-    azure_rm_mariadbserver_info:
-      resource_group: myResourceGroup
-      tags:
-        - key:value
+- name: List instances of MariaDB Server
+  azure_rm_mariadbserver_info:
+    resource_group: myResourceGroup
+    tags:
+      - key:value
 '''
 
 RETURN = '''
@@ -156,7 +156,6 @@ servers:
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.core.exceptions import ResourceNotFoundError
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

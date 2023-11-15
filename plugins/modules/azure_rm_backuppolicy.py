@@ -103,43 +103,42 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Delete a backup policy
-      azure_rm_backuppolicy:
-        vault_name: Vault_Name
-        name: Policy_Name
-        resource_group: Resource_Group_Name
-        state: absent
+- name: Delete a backup policy
+  azure_rm_backuppolicy:
+    vault_name: Vault_Name
+    name: Policy_Name
+    resource_group: Resource_Group_Name
+    state: absent
 
-    - name: Create a daily VM backup policy
-      azure_rm_backuppolicy:
-        vault_name: Vault_Name
-        name: Policy_Name
-        resource_group: Resource_Group_Name
-        state: present
-        backup_management_type: "AzureIaasVM"
-        schedule_run_frequency: "Daily"
-        instant_recovery_snapshot_retention: 2
-        daily_retention_count: 12
-        time_zone: "Pacific Standard Time"
-        schedule_run_time: 14
+- name: Create a daily VM backup policy
+  azure_rm_backuppolicy:
+    vault_name: Vault_Name
+    name: Policy_Name
+    resource_group: Resource_Group_Name
+    state: present
+    backup_management_type: "AzureIaasVM"
+    schedule_run_frequency: "Daily"
+    instant_recovery_snapshot_retention: 2
+    daily_retention_count: 12
+    time_zone: "Pacific Standard Time"
+    schedule_run_time: 14
 
-    - name: Create a weekly VM backup policy
-      azure.azcollection.azure_rm_backuppolicy:
-        vault_name: Vault_Name
-        name: Policy_Name
-        resource_group: Resource_Group_Name
-        state: present
-        backup_management_type: "AzureIaasVM"
-        schedule_run_frequency: "Weekly"
-        instant_recovery_snapshot_retention: 5
-        weekly_retention_count: 4
-        schedule_days:
-          - "Monday"
-          - "Wednesday"
-          - "Friday"
-        time_zone: "Pacific Standard Time"
-        schedule_run_time: 8
-
+- name: Create a weekly VM backup policy
+  azure.azcollection.azure_rm_backuppolicy:
+    vault_name: Vault_Name
+    name: Policy_Name
+    resource_group: Resource_Group_Name
+    state: present
+    backup_management_type: "AzureIaasVM"
+    schedule_run_frequency: "Weekly"
+    instant_recovery_snapshot_retention: 5
+    weekly_retention_count: 4
+    schedule_days:
+      - "Monday"
+      - "Wednesday"
+      - "Friday"
+    time_zone: "Pacific Standard Time"
+    schedule_run_time: 8
 '''
 
 RETURN = '''
@@ -169,7 +168,6 @@ type:
     sample: Microsoft.RecoveryServices/vaults/backupPolicies
 '''
 
-import uuid
 from datetime import datetime
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 

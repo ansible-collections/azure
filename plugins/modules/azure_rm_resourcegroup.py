@@ -29,15 +29,18 @@ options:
         description:
             - Azure location for the resource group. Required when creating a new resource group.
             - Cannot be changed once resource group is created.
+        type: str
     name:
         description:
             - Name of the resource group.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the resource group. Use C(present) to create or update and C(absent) to delete.
             - When C(absent) a resource group containing resources will not be removed unless the I(force) option is used.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -52,24 +55,24 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a resource group
-      azure_rm_resourcegroup:
-        name: myResourceGroup
-        location: westus
-        tags:
-            testing: testing
-            delete: never
+- name: Create a resource group
+  azure_rm_resourcegroup:
+    name: myResourceGroup
+    location: westus
+    tags:
+      testing: testing
+      delete: never
 
-    - name: Delete a resource group
-      azure_rm_resourcegroup:
-        name: myResourceGroup
-        state: absent
+- name: Delete a resource group
+  azure_rm_resourcegroup:
+    name: myResourceGroup
+    state: absent
 
-    - name: Delete a resource group including resources it contains
-      azure_rm_resourcegroup:
-        name: myResourceGroup
-        force_delete_nonempty: yes
-        state: absent
+- name: Delete a resource group including resources it contains
+  azure_rm_resourcegroup:
+    name: myResourceGroup
+    force_delete_nonempty: true
+    state: absent
 '''
 RETURN = '''
 contains_resources:

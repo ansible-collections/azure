@@ -21,21 +21,26 @@ options:
         description:
             - The name of the resource group that contains the resource.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - Setting name.
         required: True
+        type: str
     value:
         description:
             - Setting value.
+        type: str
     state:
         description:
             - Assert the state of the PostgreSQL setting. Use C(present) to update setting, or C(absent) to reset to default value.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -49,12 +54,12 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Update PostgreSQL Server setting
-    azure_rm_postgresqlconfiguration:
-      resource_group: myResourceGroup
-      server_name: myServer
-      name: deadlock_timeout
-      value: 2000
+- name: Update PostgreSQL Server setting
+  azure_rm_postgresqlconfiguration:
+    resource_group: myResourceGroup
+    server_name: myServer
+    name: deadlock_timeout
+    value: 2000
 '''
 
 RETURN = '''
@@ -67,11 +72,8 @@ id:
              gurations/event_scheduler"
 '''
 
-import time
-
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrest.serialization import Model
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
 except ImportError:

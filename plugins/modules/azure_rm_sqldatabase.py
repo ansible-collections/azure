@@ -21,20 +21,25 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the database to be operated on (updated or created).
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     collation:
         description:
             - The collation of the database. If not I(create_mode=default), this value is ignored.
+        type: str
     create_mode:
         description:
             - Specifies the mode of database creation.
@@ -46,6 +51,7 @@ options:
             - C(restore), Creates a database by restoring a backup of a deleted database.
             - C(restore_long_term_retention_backup), Creates a database by restoring from a long term retention vault.
             - C(copy), C(non_readable_secondary), C(online_secondary) and C(restore_long_term_retention_backup) are not supported for C(data_warehouse) edition.
+        type: str
         choices:
             - 'copy'
             - 'default'
@@ -59,24 +65,29 @@ options:
         description:
             - Required unless I(create_mode=default) or I(create_mode=restore_long_term_retention_backup).
             - Specifies the resource ID of the source database.
+        type: str
     source_database_deletion_date:
         description:
             - Required if I(create_mode=restore) and I(source_database_id) is the deleted database's original resource id when it existed (as
                opposed to its current restorable dropped database ID), then this value is required. Specifies the time that the database was deleted.
+        type: str
     restore_point_in_time:
         description:
             - Required if I(create_mode=point_in_time_restore), this value is required. If I(create_mode=restore), this value is optional.
             - Specifies the point in time (ISO8601 format) of the source database that will be restored to create the new database.
             - Must be greater than or equal to the source database's earliestRestoreDate value.
+        type: str
     recovery_services_recovery_point_resource_id:
         description:
             - Required if I(create_mode=restore_long_term_retention_backup), then this value is required.
             - Specifies the resource ID of the recovery point to restore from.
+        type: str
     edition:
         description:
             - (Deprecate)The edition of the database. The DatabaseEditions enumeration contains all the valid editions.
             - This option will be deprecated in 2.11, use I(sku) instead.
             - Cannot set C(sku) when this field set.
+        type: str
         choices:
             - 'web'
             - 'business'
@@ -95,32 +106,40 @@ options:
             - To see possible values, query the capabilities API (/subscriptions/{subscriptionId}/providers/Microsoft.Sql/locations/{locationID}/capabilities)
               referred to by operationId:'Capabilities_ListByLocation'.
             - Cannot set C(edition) when this field set.
+        type: dict
         suboptions:
             name:
                 description:
                     - Name of the database SKU, typically, a letter + Number code, e.g. P3
                 required: True
+                type: str
             tier:
                 description:
                     - The tier or edition of the particular SKU, e.g. Basic, Premium
+                type: str
             capacity:
                 description:
                     - Capacity of the particular SKU.
+                type: int
             size:
                 description:
                     - Size of the particular SKU
+                type: str
             family:
                 description:
                     - If the service has different generations of hardware, for the same SKU, then that can be used here
+                type: str
     max_size_bytes:
         description:
             - The max size of the database expressed in bytes.
             - If not I(create_mode=default), this value is ignored.
             - To see possible values, query the capabilities API (/subscriptions/{subscriptionId}/providers/Microsoft.Sql/locations/{locationID}/capabilities).
               referred to by operationId:'Capabilities_ListByLocation'.
+        type: str
     elastic_pool_name:
         description:
             - The name of the elastic pool the database is in. Not supported for I(edition=data_warehouse).
+        type: str
     read_scale:
         description:
             - If the database is a geo-secondary, indicates whether read-only connections are allowed to this database or not.
@@ -132,6 +151,7 @@ options:
             - Indicates the name of the sample schema to apply when creating this database.
             - If not I(create_mode=default), this value is ignored.
             - Not supported for I(edition=data_warehouse).
+        type: str
         choices:
             - 'adventure_works_lt'
     zone_redundant:
@@ -140,17 +160,18 @@ options:
         type: bool
         default: False
     force_update:
-      description:
-          - SQL Database will be updated if given parameters differ from existing resource state.
-          - To force SQL Database update in any circumstances set this parameter to True.
-      type: bool
+        description:
+            - SQL Database will be updated if given parameters differ from existing resource state.
+            - To force SQL Database update in any circumstances set this parameter to True.
+        type: bool
     state:
-      description:
-        - Assert the state of the SQL Database. Use C(present) to create or update an SQL Database and C(absent) to delete it.
-      default: present
-      choices:
-        - absent
-        - present
+        description:
+            - Assert the state of the SQL Database. Use C(present) to create or update an SQL Database and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -162,42 +183,41 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) SQL Database
-    azure_rm_sqldatabase:
-      resource_group: myResourceGroup
-      server_name: sqlcrudtest-5961
-      name: testdb
-      location: eastus
+- name: Create (or update) SQL Database
+  azure_rm_sqldatabase:
+    resource_group: myResourceGroup
+    server_name: sqlcrudtest-5961
+    name: testdb
+    location: eastus
 
-  - name: Restore SQL Database
-    azure_rm_sqldatabase:
-      resource_group: myResourceGroup
-      server_name: sqlcrudtest-5961
-      name: restoreddb
-      location: eastus
-      create_mode: restore
-      restorable_dropped_database_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Sql/s
-                                       ervers/testsvr/restorableDroppedDatabases/testdb2,131444841315030000"
+- name: Restore SQL Database
+  azure_rm_sqldatabase:
+    resource_group: myResourceGroup
+    server_name: sqlcrudtest-5961
+    name: restoreddb
+    location: eastus
+    create_mode: restore
+    restorable_dropped_database_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Sql/s
+                                     ervers/testsvr/restorableDroppedDatabases/testdb2,131444841315030000"
 
-  - name: Create SQL Database in Copy Mode
-    azure_rm_sqldatabase:
-      resource_group: myResourceGroup
-      server_name: sqlcrudtest-5961
-      name: copydb
-      location: eastus
-      create_mode: copy
-      source_database_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Sql/servers/tests
-                           vr/databases/testdb"
+- name: Create SQL Database in Copy Mode
+  azure_rm_sqldatabase:
+    resource_group: myResourceGroup
+    server_name: sqlcrudtest-5961
+    name: copydb
+    location: eastus
+    create_mode: copy
+    source_database_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Sql/servers/tests
+                         vr/databases/testdb"
 
-  - name: Create (or update) SQL Database with SKU
-    azure_rm_sqldatabase:
-      resource_group: myResourceGroup
-      server_name: sqlcrudtest-5961
-      name: testdb
-      location: eastus
-      sku:
-        name: S0
-
+- name: Create (or update) SQL Database with SKU
+  azure_rm_sqldatabase:
+    resource_group: myResourceGroup
+    server_name: sqlcrudtest-5961
+    name: testdb
+    location: eastus
+    sku:
+      name: S0
 '''
 
 RETURN = '''
