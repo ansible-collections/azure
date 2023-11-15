@@ -5,15 +5,16 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 DOCUMENTATION = """
-lookup: azure_service_principal_attribute
+---
+- name: azure_service_principal_attribute
 
 requirements:
-  - azure-graphrbac
+    - msgraph-sdk
 
 author:
-  - Yunge Zhu <yungez@microsoft.com>
+    - Yunge Zhu (@yungezz)
 
-version_added: "2.7"
+version_added: "1.12.0"
 
 short_description: Look up Azure service principal attributes.
 
@@ -56,8 +57,6 @@ try:
     from msgraph.generated.service_principals.service_principals_request_builder import ServicePrincipalsRequestBuilder
 except ImportError:
     pass
-    raise AnsibleError(
-        "The lookup azure_service_principal_attribute requires azure.graphrbac, msrest")
 
 
 class LookupModule(LookupBase):
@@ -79,8 +78,8 @@ class LookupModule(LookupBase):
 
         try:
             azure_credential_track2 = ClientSecretCredential(client_id=credentials['azure_client_id'],
-                                                              client_secret=credentials['azure_secret'],
-                                                              tenant_id=credentials['azure_tenant'])
+                                                             client_secret=credentials['azure_secret'],
+                                                             tenant_id=credentials['azure_tenant'])
 
             client = GraphServiceClient(azure_credential_track2)
 
