@@ -5,7 +5,7 @@
 
 - name: Lookup service principal object id
   ansible.builtin.set_fact:
-    object_id: "{{ lookup('azure_service_principal_attribute',
+    object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
                    azure_client_id=azure_client_id,
                    azure_secret=azure_secret,
                    azure_tenant=azure_tenant) }}"
