@@ -5,16 +5,15 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 DOCUMENTATION = """
----
-name: azure_service_principal_attribute
+lookup: azure_service_principal_attribute
 
 requirements:
-    - azure-graphrbac
+  - azure-graphrbac
 
 author:
-    - Yunge Zhu (@yungezz)
+  - Yunge Zhu <yungez@microsoft.com>
 
-version_added: "1.12.0"
+version_added: "2.7"
 
 short_description: Look up Azure service principal attributes.
 
@@ -50,11 +49,15 @@ from ansible.plugins.lookup import LookupBase
 from ansible.module_utils._text import to_native
 
 try:
-    from azure.common.credentials import ServicePrincipalCredentials
-    from azure.graphrbac import GraphRbacManagementClient
     from azure.cli.core import cloud as azure_cloud
+    from azure.identity._credentials.client_secret import ClientSecretCredential
+    import asyncio
+    from msgraph import GraphServiceClient
+    from msgraph.generated.service_principals.service_principals_request_builder import ServicePrincipalsRequestBuilder
 except ImportError:
     pass
+    raise AnsibleError(
+        "The lookup azure_service_principal_attribute requires azure.graphrbac, msrest")
 
 
 class LookupModule(LookupBase):
@@ -72,21 +75,27 @@ class LookupModule(LookupBase):
 
         _cloud_environment = azure_cloud.AZURE_PUBLIC_CLOUD
         if self.get_option('azure_cloud_environment', None) is not None:
-            cloud_environment = azure_cloud.get_cloud_from_metadata_endpoint(credentials['azure_cloud_environment'])
+            _cloud_environment = azure_cloud.get_cloud_from_metadata_endpoint(credentials['azure_cloud_environment'])
 
         try:
-            azure_credentials = ServicePrincipalCredentials(client_id=credentials['azure_client_id'],
-                                                            secret=credentials['azure_secret'],
-                                                            tenant=credentials['azure_tenant'],
-                                                            resource=_cloud_environment.endpoints.active_directory_graph_resource_id)
+            azure_credential_track2 = ClientSecretCredential(client_id=credentials['azure_client_id'],
+                                                              client_secret=credentials['azure_secret'],
+                                                              tenant_id=credentials['azure_tenant'])
 
-            client = GraphRbacManagementClient(azure_credentials, credentials['azure_tenant'],
-                                               base_url=_cloud_environment.endpoints.active_directory_graph_resource_id)
+            client = GraphServiceClient(azure_credential_track2)
 
-            response = list(client.service_principals.list(filter="appId eq '{0}'".format(credentials['azure_client_id'])))
-            sp = response[0]
-
-            return sp.object_id.split(',')
+            response = asyncio.get_event_loop().run_until_complete(self.get_service_principals(client, credentials['azure_client_id']))
+            if not response:
+                return []
+            return list(response.value)[0].id.split(',')
         except Exception as ex:
             raise AnsibleError("Failed to get service principal object id: %s" % to_native(ex))
         return False
+
+    async def get_service_principals(self, _client, app_id):
+        request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
+            query_parameters=ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
+                filter="servicePrincipalNames/any(c:c eq '{0}')".format(app_id),
+            )
+        )
+        return await _client.service_principals.get(request_configuration=request_configuration)
