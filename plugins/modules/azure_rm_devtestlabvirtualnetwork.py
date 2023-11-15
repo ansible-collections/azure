@@ -157,7 +157,6 @@ class AzureRMDevTestLabVirtualNetwork(AzureRMModuleBase):
 
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    is_track2=True,
                                                     api_version='2018-10-15')
 
         resource_group = self.get_resource_group(self.resource_group)

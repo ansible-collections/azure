@@ -232,7 +232,6 @@ class AzureRMCdnEndpointInfo(AzureRMModuleBase):
 
         self.cdn_client = self.get_mgmt_svc_client(CdnManagementClient,
                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                   is_track2=True,
                                                    api_version='2017-04-02')
 
         if self.name:
