@@ -6,7 +6,7 @@ __metaclass__ = type
 
 DOCUMENTATION = """
 ---
-- name: azure_service_principal_attribute
+name: azure_service_principal_attribute
 
 requirements:
     - msgraph-sdk
@@ -72,7 +72,6 @@ class LookupModule(LookupBase):
         if credentials['azure_client_id'] is None or credentials['azure_secret'] is None:
             raise AnsibleError("Must specify azure_client_id and azure_secret")
 
-        _cloud_environment = azure_cloud.AZURE_PUBLIC_CLOUD
         if self.get_option('azure_cloud_environment', None) is not None:
             _cloud_environment = azure_cloud.get_cloud_from_metadata_endpoint(credentials['azure_cloud_environment'])
 
