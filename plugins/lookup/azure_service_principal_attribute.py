@@ -72,13 +72,15 @@ class LookupModule(LookupBase):
         if credentials['azure_client_id'] is None or credentials['azure_secret'] is None:
             raise AnsibleError("Must specify azure_client_id and azure_secret")
 
+        _cloud_environment = azure_cloud.AZURE_PUBLIC_CLOUD
         if self.get_option('azure_cloud_environment', None) is not None:
             _cloud_environment = azure_cloud.get_cloud_from_metadata_endpoint(credentials['azure_cloud_environment'])
 
         try:
             azure_credential_track2 = ClientSecretCredential(client_id=credentials['azure_client_id'],
                                                              client_secret=credentials['azure_secret'],
-                                                             tenant_id=credentials['azure_tenant'])
+                                                             tenant_id=credentials['azure_tenant'],
+                                                             authority=_cloud_environment.endpoints.active_directory)
 
             client = GraphServiceClient(azure_credential_track2)
 
