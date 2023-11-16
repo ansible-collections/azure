@@ -56,28 +56,28 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a SSH Public Key
-      azure_rm_sshpublickey:
-        resource_group: myResourceGroup
-        name: mySshPublicKey
-        public_key: "ssh-rsa ****************************@test.com"
-        tags:
-            testing: testing
-            delete: on-exit
+- name: Create a SSH Public Key
+  azure_rm_sshpublickey:
+    resource_group: myResourceGroup
+    name: mySshPublicKey
+    public_key: "ssh-rsa ****************************@test.com"
+    tags:
+      testing: testing
+      delete: on-exit
 
-    - name: Generate a pair SSH Public Key
-      azure_rm_sshpublickey:
-        resource_group: myResourceGroup
-        name: mySshPublicKey
-        tags:
-            testing: testing
-            delete: on-exit
+- name: Generate a pair SSH Public Key
+  azure_rm_sshpublickey:
+    resource_group: myResourceGroup
+    name: mySshPublicKey
+    tags:
+      testing: testing
+      delete: on-exit
 
-    - name: Delete a SSH Public Key
-      azure_rm_sshpublickey:
-        resource_group: myResourceGroup
-        name: mySshPublicKey
-        state: absent
+- name: Delete a SSH Public Key
+  azure_rm_sshpublickey:
+    resource_group: myResourceGroup
+    name: mySshPublicKey
+    state: absent
 '''
 RETURN = '''
 state:

@@ -1,7 +1,7 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
- 
+
 - name: Create a new SSH Public Key
   azure_rm_sshpublickey:
     resource_group: "{{ resource_group }}"
@@ -12,7 +12,8 @@
       key2: value2
   register: output
 
-- assert:
+- name: Assert the SSH Public Key created
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -26,7 +27,8 @@
       key2: value2
   register: output
 
-- assert:
+- name: Assert the SSH Public key no changed
+  ansible.builtin.assert:
     that:
       - not output.changed
  
@@ -39,7 +41,8 @@
       key3: value3
   register: output
 
-- assert:
+- name: Assert the SSH Public key Updated
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -49,7 +52,8 @@
     name: sshpublic{{ rpfx }}
   register: output
 
-- assert:
+- name: Assert the SSH Public Kyes facts
+  ansible.builtin.assert:
     that:
       - output.ssh_keys[0].tags | length == 3
 
@@ -60,6 +64,7 @@
     state: absent
   register: output
 
-- assert:
+- name: Assert the SSH Public Key deleted
+  ansible.builtin.assert:
     that:
       - output.changed

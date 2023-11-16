@@ -44,21 +44,21 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get facts of the VM's ssh public key by name
-    azure_rm_sshpublickey_info:
-      resource_group: myResourceGroup
-      name: mysshpublickey
+- name: Get facts of the VM's ssh public key by name
+  azure_rm_sshpublickey_info:
+    resource_group: myResourceGroup
+    name: mysshpublickey
 
-  - name: Get facts of the VM's ssh public key by resource group
-    azure_rm_sshpublickey_info:
-      resource_group: myResourceGroup
+- name: Get facts of the VM's ssh public key by resource group
+  azure_rm_sshpublickey_info:
+    resource_group: myResourceGroup
 
-  - name: Get facts by tags
-    azure_rm_sshpublickey_info:
-      resource_group: myResourceGroup
-      tags:
-        - testing
-        - foo:bar
+- name: Get facts by tags
+  azure_rm_sshpublickey_info:
+    resource_group: myResourceGroup
+    tags:
+      - testing
+      - foo:bar
 '''
 
 RETURN = '''
