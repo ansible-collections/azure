@@ -12,7 +12,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_sshpublickey_info
 
-version_added: "1.18.0"
+version_added: "2.0.0"
 
 short_description: Get Ssh Public Key with VM facts
 

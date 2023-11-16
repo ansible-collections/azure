@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_sshpublickey
-version_added: "1.18.0"
+version_added: "2.0.0"
 short_description: Manage ssh public key with vm
 description:
     - Create, update or delete the vm public key.
@@ -215,13 +215,14 @@ class AzureRMSshPublicKey(AzureRMModuleBase):
         response = None
         try:
             if body.get('public_key') is None:
-                response = self.compute_client.ssh_public_keys.generate_key_pair(self.resource_group, self.name)
+                response = self.to_dict(self.compute_client.ssh_public_keys.create(self.resource_group, self.name, body))
+                response.update(self.to_dict(self.compute_client.ssh_public_keys.generate_key_pair(self.resource_group, self.name)))
             else:
-                response = self.compute_client.ssh_public_keys.create(self.resource_group, self.name, body)
+                response = self.to_dict(self.compute_client.ssh_public_keys.create(self.resource_group, self.name, body))
         except Exception as exc:
             self.fail("Error creating SSH Public Key {0} - {1}".format(self.name, str(exc)))
 
-        return self.to_dict(response)
+        return response
 
     def update_ssh_public_key(self, body):
         response = None
@@ -243,8 +244,8 @@ class AzureRMSshPublicKey(AzureRMModuleBase):
             if hasattr(body, 'private_key'):
                 results = dict(
                     private_key=body.private_key,
-                    public_key=body.public_key,
-                    id=body.id
+                    id=body.id,
+                    public_key=body.public_key
                 )
             else:
                 results = dict(
