@@ -15,10 +15,6 @@ import inspect
 import traceback
 import json
 
-try:
-    from azure.graphrbac import GraphRbacManagementClient
-except Exception:
-    pass
 from os.path import expanduser
 
 from ansible.module_utils.basic import \
@@ -220,11 +216,8 @@ except ImportError:
 
 try:
     from enum import Enum
-    from msrestazure.azure_active_directory import AADTokenCredentials
-    from msrestazure.azure_active_directory import MSIAuthentication
     from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
     from azure.cli.core import cloud as azure_cloud
-    from azure.common.credentials import ServicePrincipalCredentials, UserPassCredentials
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource.resources import ResourceManagementClient
     from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
@@ -240,7 +233,6 @@ try:
     from azure.mgmt.marketplaceordering import MarketplaceOrderingAgreements
     from azure.mgmt.trafficmanager import TrafficManagerManagementClient
     from azure.storage.blob import BlobServiceClient
-    from msal.application import ClientApplication, ConfidentialClientApplication
     from azure.mgmt.authorization import AuthorizationManagementClient
     from azure.mgmt.sql import SqlManagementClient
     from azure.mgmt.servicebus import ServiceBusManagementClient
@@ -860,16 +852,17 @@ class AzureRMModuleBase(object):
         # wrap basic strings in a dict that just defines the default
         return dict(default_api_version=profile_raw)
 
-    def get_graphrbac_client(self, tenant_id):
-        cred = self.azure_auth.azure_credentials
-        base_url = self.azure_auth._cloud_environment.endpoints.active_directory_graph_resource_id
-        client = GraphRbacManagementClient(cred, tenant_id, base_url)
-        return client
+    # The graphrbac has deprecated, migrate to msgraph
+    # def get_graphrbac_client(self, tenant_id):
+    #    cred = self.azure_auth.azure_credentials
+    #    base_url = self.azure_auth._cloud_environment.endpoints.active_directory_graph_resource_id
+    #    client = GraphRbacManagementClient(cred, tenant_id, base_url)
+    #    return client
 
     def get_msgraph_client(self):
         return GraphServiceClient(self.azure_auth.azure_credential_track2)
 
-    def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False, is_track2=False):
+    def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False):
         self.log('Getting management service client {0}'.format(client_type.__name__))
         self.check_client_version(client_type)
 
@@ -891,16 +884,10 @@ class AzureRMModuleBase(object):
 
         # Some management clients do not take a subscription ID as parameters.
         if suppress_subscription_id:
-            if is_track2:
-                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, base_url=base_url, credential_scopes=[base_url + ".default"])
-            else:
-                client_kwargs = dict(credentials=self.azure_auth.azure_credentials, base_url=base_url)
+            client_kwargs = dict(credential=self.azure_auth.azure_credential_track2, base_url=base_url, credential_scopes=[base_url + ".default"])
         else:
-            if is_track2:
-                client_kwargs = dict(credential=self.azure_auth.azure_credential_track2,
-                                     subscription_id=mgmt_subscription_id, base_url=base_url, credential_scopes=[base_url + ".default"])
-            else:
-                client_kwargs = dict(credentials=self.azure_auth.azure_credentials, subscription_id=mgmt_subscription_id, base_url=base_url)
+            client_kwargs = dict(credential=self.azure_auth.azure_credential_track2,
+                                 subscription_id=mgmt_subscription_id, base_url=base_url, credential_scopes=[base_url + ".default"])
 
         api_profile_dict = {}
 
@@ -934,13 +921,8 @@ class AzureRMModuleBase(object):
             setattr(client, '_ansible_models', importlib.import_module(client_type.__module__).models)
             client.models = types.MethodType(_ansible_get_models, client)
 
-        if not is_track2:
-            client.config = self.add_user_agent(client.config)
-            if self.azure_auth._cert_validation_mode == 'ignore':
-                client.config.session_configuration_callback = self._validation_ignore_callback
-        else:
-            if self.azure_auth._cert_validation_mode == 'ignore':
-                client._config.session_configuration_callback = self._validation_ignore_callback
+        if self.azure_auth._cert_validation_mode == 'ignore':
+            client._config.session_configuration_callback = self._validation_ignore_callback
 
         return client
 
@@ -1000,7 +982,6 @@ class AzureRMModuleBase(object):
         if not self._storage_client:
             self._storage_client = self.get_mgmt_svc_client(StorageManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            is_track2=True,
                                                             api_version='2021-06-01')
         return self._storage_client
 
@@ -1014,7 +995,6 @@ class AzureRMModuleBase(object):
         if not self._authorization_client:
             self._authorization_client = self.get_mgmt_svc_client(AuthorizationManagementClient,
                                                                   base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                  is_track2=True,
                                                                   api_version='2020-04-01-preview')
         return self._authorization_client
 
@@ -1029,7 +1009,6 @@ class AzureRMModuleBase(object):
             self._subscription_client = self.get_mgmt_svc_client(SubscriptionClient,
                                                                  base_url=self._cloud_environment.endpoints.resource_manager,
                                                                  suppress_subscription_id=True,
-                                                                 is_track2=True,
                                                                  api_version='2019-11-01')
         return self._subscription_client
 
@@ -1044,7 +1023,6 @@ class AzureRMModuleBase(object):
             self._management_group_client = self.get_mgmt_svc_client(ManagementGroupsClient,
                                                                      base_url=self._cloud_environment.endpoints.resource_manager,
                                                                      suppress_subscription_id=True,
-                                                                     is_track2=True,
                                                                      api_version='2020-05-01')
         return self._management_group_client
 
@@ -1054,7 +1032,6 @@ class AzureRMModuleBase(object):
         if not self._network_client:
             self._network_client = self.get_mgmt_svc_client(NetworkManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            is_track2=True,
                                                             api_version='2021-03-01')
         return self._network_client
 
@@ -1069,7 +1046,6 @@ class AzureRMModuleBase(object):
         if not self._resource_client:
             self._resource_client = self.get_mgmt_svc_client(ResourceManagementClient,
                                                              base_url=self._cloud_environment.endpoints.resource_manager,
-                                                             is_track2=True,
                                                              api_version='2019-10-01')
         return self._resource_client
 
@@ -1084,7 +1060,6 @@ class AzureRMModuleBase(object):
         if not self._image_client:
             self._image_client = self.get_mgmt_svc_client(ComputeManagementClient,
                                                           base_url=self._cloud_environment.endpoints.resource_manager,
-                                                          is_track2=True,
                                                           api_version='2021-04-01')
         return self._image_client
 
@@ -1099,7 +1074,6 @@ class AzureRMModuleBase(object):
         if not self._compute_client:
             self._compute_client = self.get_mgmt_svc_client(ComputeManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            is_track2=True,
                                                             api_version='2021-04-01')
         return self._compute_client
 
@@ -1114,7 +1088,6 @@ class AzureRMModuleBase(object):
         if not self._dns_client:
             self._dns_client = self.get_mgmt_svc_client(DnsManagementClient,
                                                         base_url=self._cloud_environment.endpoints.resource_manager,
-                                                        is_track2=True,
                                                         api_version='2018-05-01')
         return self._dns_client
 
@@ -1129,7 +1102,6 @@ class AzureRMModuleBase(object):
         if not self._private_dns_client:
             self._private_dns_client = self.get_mgmt_svc_client(
                 PrivateDnsManagementClient,
-                is_track2=True,
                 base_url=self._cloud_environment.endpoints.resource_manager)
         return self._private_dns_client
 
@@ -1144,7 +1116,6 @@ class AzureRMModuleBase(object):
         if not self._web_client:
             self._web_client = self.get_mgmt_svc_client(WebSiteManagementClient,
                                                         base_url=self._cloud_environment.endpoints.resource_manager,
-                                                        is_track2=True,
                                                         api_version='2021-03-01')
         return self._web_client
 
@@ -1154,7 +1125,6 @@ class AzureRMModuleBase(object):
         if not self._containerservice_client:
             self._containerservice_client = self.get_mgmt_svc_client(ContainerServiceClient,
                                                                      base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                     is_track2=True,
                                                                      api_version='2017-07-01')
         return self._containerservice_client
 
@@ -1169,7 +1139,6 @@ class AzureRMModuleBase(object):
         if not self._managedcluster_client:
             self._managedcluster_client = self.get_mgmt_svc_client(ContainerServiceClient,
                                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                   is_track2=True,
                                                                    api_version='2022-02-01')
         return self._managedcluster_client
 
@@ -1178,8 +1147,7 @@ class AzureRMModuleBase(object):
         self.log('Getting SQL client')
         if not self._sql_client:
             self._sql_client = self.get_mgmt_svc_client(SqlManagementClient,
-                                                        base_url=self._cloud_environment.endpoints.resource_manager,
-                                                        is_track2=True)
+                                                        base_url=self._cloud_environment.endpoints.resource_manager)
         return self._sql_client
 
     @property
@@ -1187,7 +1155,6 @@ class AzureRMModuleBase(object):
         self.log('Getting PostgreSQL client')
         if not self._postgresql_client:
             self._postgresql_client = self.get_mgmt_svc_client(PostgreSQLManagementClient,
-                                                               is_track2=True,
                                                                base_url=self._cloud_environment.endpoints.resource_manager)
         return self._postgresql_client
 
@@ -1196,7 +1163,6 @@ class AzureRMModuleBase(object):
         self.log('Getting MySQL client')
         if not self._mysql_client:
             self._mysql_client = self.get_mgmt_svc_client(MySQLManagementClient,
-                                                          is_track2=True,
                                                           base_url=self._cloud_environment.endpoints.resource_manager)
         return self._mysql_client
 
@@ -1205,7 +1171,6 @@ class AzureRMModuleBase(object):
         self.log('Getting MariaDB client')
         if not self._mariadb_client:
             self._mariadb_client = self.get_mgmt_svc_client(MariaDBManagementClient,
-                                                            is_track2=True,
                                                             base_url=self._cloud_environment.endpoints.resource_manager)
         return self._mariadb_client
 
@@ -1215,7 +1180,6 @@ class AzureRMModuleBase(object):
         if not self._containerregistry_client:
             self._containerregistry_client = self.get_mgmt_svc_client(ContainerRegistryManagementClient,
                                                                       base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                      is_track2=True,
                                                                       api_version='2021-09-01')
 
         return self._containerregistry_client
@@ -1226,7 +1190,6 @@ class AzureRMModuleBase(object):
         if not self._containerinstance_client:
             self._containerinstance_client = self.get_mgmt_svc_client(ContainerInstanceManagementClient,
                                                                       base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                      is_track2=True,
                                                                       api_version='2018-06-01')
 
         return self._containerinstance_client
@@ -1236,7 +1199,6 @@ class AzureRMModuleBase(object):
         self.log('Getting marketplace agreement client')
         if not self._marketplace_client:
             self._marketplace_client = self.get_mgmt_svc_client(MarketplaceOrderingAgreements,
-                                                                is_track2=True,
                                                                 base_url=self._cloud_environment.endpoints.resource_manager)
         return self._marketplace_client
 
@@ -1245,7 +1207,6 @@ class AzureRMModuleBase(object):
         self.log('Getting traffic manager client')
         if not self._traffic_manager_management_client:
             self._traffic_manager_management_client = self.get_mgmt_svc_client(TrafficManagerManagementClient,
-                                                                               is_track2=True,
                                                                                base_url=self._cloud_environment.endpoints.resource_manager)
         return self._traffic_manager_management_client
 
@@ -1255,8 +1216,7 @@ class AzureRMModuleBase(object):
         if not self._monitor_autoscale_settings_client:
             self._monitor_autoscale_settings_client = self.get_mgmt_svc_client(MonitorManagementClient,
                                                                                base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                               api_version="2015-04-01",
-                                                                               is_track2=True)
+                                                                               api_version="2015-04-01")
         return self._monitor_autoscale_settings_client
 
     @property
@@ -1265,8 +1225,7 @@ class AzureRMModuleBase(object):
         if not self._monitor_log_profiles_client:
             self._monitor_log_profiles_client = self.get_mgmt_svc_client(MonitorManagementClient,
                                                                          base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                         api_version="2016-03-01",
-                                                                         is_track2=True)
+                                                                         api_version="2016-03-01")
         return self._monitor_log_profiles_client
 
     @property
@@ -1275,8 +1234,7 @@ class AzureRMModuleBase(object):
         if not self._monitor_diagnostic_settings_client:
             self._monitor_diagnostic_settings_client = self.get_mgmt_svc_client(MonitorManagementClient,
                                                                                 base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                                api_version="2021-05-01-preview",
-                                                                                is_track2=True)
+                                                                                api_version="2021-05-01-preview")
         return self._monitor_diagnostic_settings_client
 
     @property
@@ -1284,7 +1242,6 @@ class AzureRMModuleBase(object):
         self.log('Getting log analytics client')
         if not self._log_analytics_client:
             self._log_analytics_client = self.get_mgmt_svc_client(LogAnalyticsManagementClient,
-                                                                  is_track2=True,
                                                                   base_url=self._cloud_environment.endpoints.resource_manager)
         return self._log_analytics_client
 
@@ -1298,7 +1255,6 @@ class AzureRMModuleBase(object):
         self.log('Getting servicebus client')
         if not self._servicebus_client:
             self._servicebus_client = self.get_mgmt_svc_client(ServiceBusManagementClient,
-                                                               is_track2=True,
                                                                api_version="2021-06-01-preview",
                                                                base_url=self._cloud_environment.endpoints.resource_manager)
         return self._servicebus_client
@@ -1312,8 +1268,7 @@ class AzureRMModuleBase(object):
         self.log('Getting automation client')
         if not self._automation_client:
             self._automation_client = self.get_mgmt_svc_client(AutomationClient,
-                                                               base_url=self._cloud_environment.endpoints.resource_manager,
-                                                               is_track2=True)
+                                                               base_url=self._cloud_environment.endpoints.resource_manager)
         return self._automation_client
 
     @property
@@ -1325,7 +1280,6 @@ class AzureRMModuleBase(object):
         self.log('Getting iothub client')
         if not self._IoThub_client:
             self._IoThub_client = self.get_mgmt_svc_client(IotHubClient,
-                                                           is_track2=True,
                                                            api_version='2018-04-01',
                                                            base_url=self._cloud_environment.endpoints.resource_manager)
         return self._IoThub_client
@@ -1340,7 +1294,6 @@ class AzureRMModuleBase(object):
         if not self._lock_client:
             self._lock_client = self.get_mgmt_svc_client(ManagementLockClient,
                                                          base_url=self._cloud_environment.endpoints.resource_manager,
-                                                         is_track2=True,
                                                          api_version='2016-09-01')
         return self._lock_client
 
@@ -1354,7 +1307,6 @@ class AzureRMModuleBase(object):
         self.log('Getting recovery services backup client')
         if not self._recovery_services_backup_client:
             self._recovery_services_backup_client = self.get_mgmt_svc_client(RecoveryServicesBackupClient,
-                                                                             is_track2=True,
                                                                              base_url=self._cloud_environment.endpoints.resource_manager)
         return self._recovery_services_backup_client
 
@@ -1368,7 +1320,6 @@ class AzureRMModuleBase(object):
         if not self._search_client:
             self._search_client = self.get_mgmt_svc_client(SearchManagementClient,
                                                            base_url=self._cloud_environment.endpoints.resource_manager,
-                                                           is_track2=True,
                                                            api_version='2020-08-01')
         return self._search_client
 
@@ -1378,7 +1329,6 @@ class AzureRMModuleBase(object):
         if not self._datalake_store_client:
             self._datalake_store_client = self.get_mgmt_svc_client(DataLakeStoreAccountManagementClient,
                                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                   is_track2=True,
                                                                    api_version='2016-11-01')
         return self._datalake_store_client
 
@@ -1393,7 +1343,6 @@ class AzureRMModuleBase(object):
             self._notification_hub_client = self.get_mgmt_svc_client(
                 NotificationHubsManagementClient,
                 base_url=self._cloud_environment.endpoints.resource_manager,
-                is_track2=True,
                 api_version='2016-03-01')
         return self._notification_hub_client
 
@@ -1404,7 +1353,6 @@ class AzureRMModuleBase(object):
             self._event_hub_client = self.get_mgmt_svc_client(
                 EventHubManagementClient,
                 base_url=self._cloud_environment.endpoints.resource_manager,
-                is_track2=True,
                 api_version='2021-11-01')
         return self._event_hub_client
 
@@ -1413,7 +1361,6 @@ class AzureRMModuleBase(object):
         self.log('Getting datafactory client...')
         if not self._datafactory_client:
             self._datafactory_client = self.get_mgmt_svc_client(DataFactoryManagementClient,
-                                                                is_track2=True,
                                                                 base_url=self._cloud_environment.endpoints.resource_manager)
         return self._datafactory_client
 
@@ -1477,7 +1424,7 @@ class AzureRMAuth(object):
 
         # if cloud_environment specified, look up/build Cloud object
         raw_cloud_env = self.credentials.get('cloud_environment')
-        if self.credentials.get('credentials') is not None and raw_cloud_env is not None:
+        if self.credentials.get('credential') is not None and raw_cloud_env is not None:
             self._cloud_environment = raw_cloud_env
         elif not raw_cloud_env:
             self._cloud_environment = azure_cloud.AZURE_PUBLIC_CLOUD  # SDK default
@@ -1512,27 +1459,13 @@ class AzureRMAuth(object):
 
         if self.credentials.get('auth_source') == 'msi':
             # MSI Credentials
-            if is_ad_resource or track1_cred:
-                self.azure_credentials = self.credentials['credentials']
             self.azure_credential_track2 = self.credentials['credential']
         elif self.credentials.get('credentials') is not None:
             # AzureCLI credentials
-            if is_ad_resource or track1_cred:
-                self.azure_credentials = self.credentials['credentials']
             self.azure_credential_track2 = self.credentials['credentials']
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
-
-            graph_resource = self._cloud_environment.endpoints.active_directory_graph_resource_id
-            rm_resource = self._cloud_environment.endpoints.resource_manager
-            if is_ad_resource or track1_cred:
-                self.azure_credentials = ServicePrincipalCredentials(client_id=self.credentials['client_id'],
-                                                                     secret=self.credentials['secret'],
-                                                                     tenant=self.credentials['tenant'],
-                                                                     cloud_environment=self._cloud_environment,
-                                                                     resource=graph_resource if self.is_ad_resource else rm_resource,
-                                                                     verify=self._cert_validation_mode == 'validate')
             self.azure_credential_track2 = client_secret.ClientSecretCredential(client_id=self.credentials['client_id'],
                                                                                 client_secret=self.credentials['secret'],
                                                                                 tenant_id=self.credentials['tenant'],
@@ -1542,14 +1475,6 @@ class AzureRMAuth(object):
                 self.credentials.get('tenant') is not None and \
                 self.credentials.get('thumbprint') is not None and \
                 self.credentials.get('x509_certificate_path') is not None:
-            if is_ad_resource or track1_cred:
-                self.azure_credentials = self.acquire_token_with_client_certificate(
-                    self._adfs_authority_url,
-                    self.credentials['x509_certificate_path'],
-                    self.credentials['thumbprint'],
-                    self.credentials['client_id'],
-                    self.credentials['tenant'])
-
             self.azure_credential_track2 = certificate.CertificateCredential(tenant_id=self.credentials['tenant'],
                                                                              client_id=self.credentials['client_id'],
                                                                              certificate_path=self.credentials['x509_certificate_path'],
@@ -1559,13 +1484,6 @@ class AzureRMAuth(object):
                 self.credentials.get('password') is not None and \
                 self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None:
-            if is_ad_resource or track1_cred:
-                self.azure_credentials = self.acquire_token_with_username_password(
-                    self._adfs_authority_url,
-                    self.credentials['ad_user'],
-                    self.credentials['password'],
-                    self.credentials['client_id'],
-                    self.credentials['tenant'])
             self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
                                                                                     password=self.credentials['password'],
                                                                                     tenant_id=self.credentials.get('tenant'),
@@ -1573,17 +1491,6 @@ class AzureRMAuth(object):
                                                                                     authority=self._adfs_authority_url)
 
         elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
-            tenant = self.credentials.get('tenant')
-            if not tenant:
-                tenant = 'common'  # SDK default
-
-            if is_ad_resource or track1_cred:
-                self.azure_credentials = UserPassCredentials(self.credentials['ad_user'],
-                                                             self.credentials['password'],
-                                                             tenant=tenant,
-                                                             cloud_environment=self._cloud_environment,
-                                                             verify=self._cert_validation_mode == 'validate')
-
             client_id = self.credentials.get('client_id', '04b07795-8ddb-461a-bbee-02f9e1bf7b46')
             self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
                                                                                     password=self.credentials['password'],
@@ -1648,7 +1555,6 @@ class AzureRMAuth(object):
                 except Exception as exc:
                     self.fail("cloud_environment {0} could not be resolved: {1}".format(_cloud_environment, str(exc)), exception=traceback.format_exc())
 
-        credentials = MSIAuthentication(client_id=client_id, cloud_environment=cloud_environment)
         credential = managed_identity.ManagedIdentityCredential(client_id=client_id, cloud_environment=cloud_environment)
         subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
@@ -1661,7 +1567,6 @@ class AzureRMAuth(object):
                 self.fail("Failed to get MSI token: {0}. "
                           "Please check whether your machine enabled MSI or grant access to any subscription.".format(str(exc)))
         return {
-            'credentials': credentials,
             'credential': credential,
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment,
@@ -1770,42 +1675,6 @@ class AzureRMAuth(object):
             self.log('Error getting AzureCLI profile credentials - {0}'.format(ce))
 
         return None
-
-    def acquire_token_with_username_password(self, authority, username, password, client_id, tenant):
-        authority_uri = authority
-
-        if tenant is not None:
-            authority_uri = authority + '/' + tenant
-
-        context = ClientApplication(client_id=client_id, authority=authority_uri)
-        base_url = self._cloud_environment.endpoints.resource_manager
-        if not base_url.endswith("/"):
-            base_url += "/"
-        scopes = [base_url + ".default"]
-        token_response = context.acquire_token_by_username_password(username, password, scopes)
-
-        return AADTokenCredentials(token_response)
-
-    def acquire_token_with_client_certificate(self, authority, x509_private_key_path, thumbprint, client_id, tenant):
-        authority_uri = authority
-
-        if tenant is not None:
-            authority_uri = authority + '/' + tenant
-
-        x509_private_key = None
-        with open(x509_private_key_path, 'r') as pem_file:
-            x509_private_key = pem_file.read()
-
-        base_url = self._cloud_environment.endpoints.resource_manager
-        if not base_url.endswith("/"):
-            base_url += "/"
-        scopes = [base_url + ".default"]
-        client_credential = {"thumbprint": thumbprint, "private_key": x509_private_key}
-        context = ConfidentialClientApplication(client_id=client_id, authority=authority_uri, client_credential=client_credential)
-
-        token_response = context.acquire_token_for_client(scopes=scopes)
-
-        return AADTokenCredentials(token_response)
 
     def log(self, msg, pretty_print=False):
         pass

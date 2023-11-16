@@ -382,7 +382,6 @@ class AzureRMVaults(AzureRMModuleBase):
 
         self.mgmt_client = self.get_mgmt_svc_client(KeyVaultManagementClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    is_track2=True,
                                                     api_version="2021-10-01")
 
         resource_group = self.get_resource_group(self.resource_group)

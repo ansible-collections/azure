@@ -158,7 +158,7 @@ class AzureRMLockInfo(AzureRMModuleBase):
         for key in self.module_arg_spec.keys():
             setattr(self, key, kwargs[key])
 
-        self._mgmt_client = self.get_mgmt_svc_client(GenericRestClient, is_track2=True, base_url=self._cloud_environment.endpoints.resource_manager)
+        self._mgmt_client = self.get_mgmt_svc_client(GenericRestClient, base_url=self._cloud_environment.endpoints.resource_manager)
         changed = False
         # construct scope id
         scope = self.get_scope()
