@@ -7,7 +7,7 @@
     resource_group: "{{ resource_group }}"
     name: sshpublic{{ rpfx }}
     public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCoit3vZKD1Nf6ZZQImq5sRiv0r986/oz+zBezfXPWVKiCgy1TIyX+kGuMNhXcS9rTelXmIo2g3hvw2P/elSilaNkmuDE9otszATeOjPORoIrTcEd2N7vZUpwP7Ekmp+OZ/4ROG4dEuD2PVygmajYvNAayU8Ghdk/sAqLSOJ5FoPa3DO/1JUX81VzFQyfwtcstCsUouIft0GQ0QbSrXEMmtqylU/TstQZdupdWLxaLLRyTb57X43FUWM28lC/HczCPE3TX8gxZAzPTwA7yWp8Mum+QLC7IiKEAMbyVotzbtkcWU6BJd8uOGEQaHbJqoXOhmPKFMdHyhmT43fckS2mh6dSU0z8WiNC/CyCtsavZy0LSXEyPWL1bTDouHePygPXd1sN1GhCtk65tPYncbZavFuI7PcN0yxpjZWATdP79TU5cPYwZl2SZMhtBrR/ll/HLP88CgXIqZ1wsLM+ek76WqHLlhA5UK7KSE8z2qOdnsmH8uTRe4MrqmM9C5VCgjS18= test@test.com"
-    tags: 
+    tags:
       key1: value1
       key2: value2
   register: output
@@ -22,7 +22,7 @@
     resource_group: "{{ resource_group }}"
     name: sshpublic{{ rpfx }}
     public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCoit3vZKD1Nf6ZZQImq5sRiv0r986/oz+zBezfXPWVKiCgy1TIyX+kGuMNhXcS9rTelXmIo2g3hvw2P/elSilaNkmuDE9otszATeOjPORoIrTcEd2N7vZUpwP7Ekmp+OZ/4ROG4dEuD2PVygmajYvNAayU8Ghdk/sAqLSOJ5FoPa3DO/1JUX81VzFQyfwtcstCsUouIft0GQ0QbSrXEMmtqylU/TstQZdupdWLxaLLRyTb57X43FUWM28lC/HczCPE3TX8gxZAzPTwA7yWp8Mum+QLC7IiKEAMbyVotzbtkcWU6BJd8uOGEQaHbJqoXOhmPKFMdHyhmT43fckS2mh6dSU0z8WiNC/CyCtsavZy0LSXEyPWL1bTDouHePygPXd1sN1GhCtk65tPYncbZavFuI7PcN0yxpjZWATdP79TU5cPYwZl2SZMhtBrR/ll/HLP88CgXIqZ1wsLM+ek76WqHLlhA5UK7KSE8z2qOdnsmH8uTRe4MrqmM9C5VCgjS18= test@test.com"
-    tags: 
+    tags:
       key1: value1
       key2: value2
   register: output
@@ -31,13 +31,13 @@
   ansible.builtin.assert:
     that:
       - not output.changed
- 
+
 - name: Update SSH Public Key with tags and public key
   azure_rm_sshpublickey:
     resource_group: "{{ resource_group }}"
     name: sshpublic{{ rpfx }}
     public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCoit3vZKD1Nf6ZZQImq5sRiv0r986/oz+zBezfXPWVKiCgy1TIyX+kGuMNhXcS9rTelXmIo2g3hvw2P/elSilaNkmuDE9otszATeOjPORoIrTcEd2N7vZUpwP7Ekmp+OZ/4ROG4dEuD2PVygmajYvNAayU8Ghdk/sAqLSOJ5FoPa3DO/1JUX81VzFQyfwtcstCsUouIft0GQ0QbSrXEMmtqylU/TstQZdupdWLxaLLRyTb57X43FUWM28lC/HczCPE3TX8gxZAzPTwA7yWp8Mum+QLC7IiKEAMbyVotzbtkcWU6BJd8uOGEQaHbJqoXOhmPKFMdHyhmT43fckS2mh6dSU0z8WiNC/CyCtsavZy0LSXEyPWL1bTDouHePygPXd1sN1GhCtk65tPYncbZavFuI7PcN0yxpjZWATdP79TU5cPYwZl2SZMhtBrR/ll/HLP88CgXIqZ1wsLM+ek76WqHLlhA5UK7KSE8z2qOdnsmH8uTRe4MrqmM9C5VCgjS18= test@test.com"
-    tags: 
+    tags:
       key3: value3
   register: output
 
