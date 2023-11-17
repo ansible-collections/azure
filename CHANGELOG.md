@@ -1,6 +1,6 @@
 # Change Log
 
-## v2.20.0 (2023-11-17)
+## v2.0.0 (2023-11-17)
 
 ### FEATURE ENHANCEMENT
   - azure_rm_storageblob: Add support for `auth_mode` ([#1315](https://github.com/ansible-collections/azure/pull/1315))
