@@ -24,11 +24,11 @@ options:
         description:
             - The application ID.
         type: str
-    tenant:
-        description:
-            - (deprecated) The tenant ID.
-            - This option has been deprecated, and will be removed in the future.
-        type: str
+    # tenant:
+    #    description:
+    #        - (deprecated) The tenant ID.
+    #        - This option has been deprecated, and will be removed in the future.
+    #    type: str
     object_id:
         description:
             - It's application's object ID.
@@ -113,7 +113,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             app_id=dict(type='str'),
             object_id=dict(type='str'),
             identifier_uri=dict(type='str'),
-            tenant=dict(type='str')
+            #tenant=dict(type='str')
         )
         self.tenant = None
         self.app_id = None
