@@ -258,7 +258,7 @@ try:
     from azure.mgmt.datafactory import DataFactoryManagementClient
     import azure.mgmt.datafactory.models as DataFactoryModel
     from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
-    from azure.identity import AzureCliCredential
+    # from azure.identity import AzureCliCredential
     from msgraph import GraphServiceClient
 
 except ImportError as exc:
