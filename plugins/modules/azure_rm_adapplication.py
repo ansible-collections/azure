@@ -20,11 +20,11 @@ description:
     - Manage Azure Active Directory application.
 
 options:
-    # tenant:
-    #    description:
-    #        - (deprecated) The tenant ID.
-    #        - This option has been deprecated, and will be removed in the future.
-    #    type: str
+    tenant:
+        description:
+            - (deprecated) The tenant ID.
+            - This option has been deprecated, and will be removed in the future.
+        type: str
 
     app_id:
         description:
@@ -397,7 +397,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            # tenant=dict(type='str'),
+            tenant=dict(type='str'),
             app_id=dict(type='str'),
             display_name=dict(type='str', required=True),
             app_roles=dict(type='list', elements='dict', options=app_role_spec),
@@ -458,7 +458,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         if self.tenant:
             self.module.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
                            'https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison',
-                           version='2.0.0',
+                           version=('2.0.0', 0),
                            collection_name='azure.azcollection')
         response = self.get_resource()
         if response:

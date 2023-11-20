@@ -24,11 +24,11 @@ options:
         description:
             - The application ID.
         type: str
-    # tenant:
-    #    description:
-    #        - (deprecated) The tenant ID.
-    #        - This option has been deprecated, and will be removed in the future.
-    #    type: str
+    tenant:
+        description:
+            - (deprecated) The tenant ID.
+            - This option has been deprecated, and will be removed in the future.
+        type: str
     object_id:
         description:
             - It's application's object ID.
@@ -113,7 +113,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             app_id=dict(type='str'),
             object_id=dict(type='str'),
             identifier_uri=dict(type='str'),
-            #tenant=dict(type='str')
+            tenant=dict(type='str')
         )
         self.tenant = None
         self.app_id = None
@@ -135,7 +135,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
         if self.tenant:
             self.module.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
                            'https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison',
-                           version='2.0.0',
+                           version=('2.0', 0),
                            collection_name='azure.azcollection')
 
         try:
