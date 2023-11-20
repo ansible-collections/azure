@@ -416,7 +416,10 @@ class AzureRMResource(AzureRMModuleBase):
                                               self.polling_interval)
             if self.state == 'present' and self.method != 'DELETE':
                 if hasattr(response, 'body'):
-                    response = json.loads(response.body())
+                    try:
+                        response = json.loads(response.body())
+                    except Exception:
+                        response = response.body()
                 elif hasattr(response, 'context'):
                     response = response.context['deserialized_data']
                 else:
