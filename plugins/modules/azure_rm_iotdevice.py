@@ -378,8 +378,8 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             elif self.auth_method == 'self_signed':
                 response = self.mgmt_client.update_device_with_certificate_authority(self.name, self.status, iot_edge=self.edge_enabled)
             elif self.auth_method == 'certificate_authority':
-                response = self.mgmt_client.update_device_with_x509(self.name, device['etag'], self.primary_thumbprint,
-                                                                    self.secondary_thumbprint, self.status, iot_edge=self.edge_enabled)
+                response = self.mgmt_client.update_device_with_x509(self.name, device['etag'], self.primary_key,
+                                                                    self.secondary_key, self.status, iot_edge=self.edge_enabled)
 
             return self.format_item(response)
         except Exception as exc:
@@ -394,7 +394,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
                 response = self.mgmt_client.create_device_with_certificate_authority(self.name, self.status, iot_edge=self.edge_enabled)
             elif self.auth_method == 'certificate_authority':
                 response = self.mgmt_client.create_device_with_x509(self.name,
-                                                                    self.primary_thumbprint, self.secondary_thumbprint, self.status, iot_edge=self.edge_enabled)
+                                                                    self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
 
             return self.format_item(response)
         except Exception as exc:
