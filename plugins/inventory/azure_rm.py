@@ -136,6 +136,8 @@ try:
     from azure.core.pipeline.policies import BearerTokenCredentialPolicy
     from azure.core.configuration import Configuration
     from azure.mgmt.core.tools import parse_resource_id
+    from azure.core.pipeline import PipelineResponse
+    from azure.mgmt.core.polling.arm_polling import ARMPolling
 except ImportError:
     Configuration = object
     parse_resource_id = object
@@ -441,6 +443,18 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         request_new = self.new_client.post(url, query_parameters, header_parameters, body_content)
         response = self.new_client.send_request(request_new)
+        if response.status_code == 202:
+            try:
+                poller = ARMPolling(timeout=3)
+                poller.initialize(client=self.new_client,
+                                  initial_response=PipelineResponse(None, response, None),
+                                  deserialization_callback=lambda r: r)
+                poller.run()
+                return poller.resource().context['deserialized_data']
+            except Exception as ec:
+                raise
+        else:
+            return json.loads(response.body())
 
         return json.loads(response.body())
 
