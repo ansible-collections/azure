@@ -24,6 +24,8 @@ options:
             - (deprecated) The tenant ID.
             - This option has been deprecated, and will be removed in the future.
         type: str
+        removed_in_version: 3.0.0
+        removed_from_collection: azure.azcollection
     object_id:
         description:
             - The object id for the user.
@@ -164,7 +166,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             attribute_value=dict(type='str'),
             odata_filter=dict(type='str'),
             all=dict(type='bool'),
-            tenant=dict(type='str'),
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
         )
 
         self.tenant = None

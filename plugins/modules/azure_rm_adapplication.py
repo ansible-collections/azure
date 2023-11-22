@@ -25,6 +25,8 @@ options:
             - (deprecated) The tenant ID.
             - This option has been deprecated, and will be removed in the future.
         type: str
+        removed_in_version: 3.0.0
+        removed_from_collection: azure.azcollection
 
     app_id:
         description:
@@ -397,7 +399,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            tenant=dict(type='str'),
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
             app_id=dict(type='str'),
             display_name=dict(type='str', required=True),
             app_roles=dict(type='list', elements='dict', options=app_role_spec),

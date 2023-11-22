@@ -20,6 +20,8 @@ options:
             - (deprecated) The tenant ID.
             - This option has been deprecated, and will be removed in the future.
         type: str
+        removed_in_version: 3.0.0
+        removed_from_collection: azure.azcollection
     object_id:
         description:
             - The object id for the ad group.
@@ -190,7 +192,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             return_group_members=dict(type='bool', default=False),
             return_member_groups=dict(type='bool', default=False),
             all=dict(type='bool', default=False),
-            tenant=dict(type='str'),
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
         )
 
         self.tenant = None

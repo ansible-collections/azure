@@ -40,6 +40,8 @@ options:
             - (deprecated) The tenant ID.
             - This option has been deprecated, and will be removed in the future.
         type: str
+        removed_in_version: 3.0.0
+        removed_from_collection: azure.azcollection
     end_date:
         description:
             - Date or datemtime after which credentials expire.
@@ -141,7 +143,7 @@ class AzureRMADPassword(AzureRMModuleBase):
             service_principal_object_id=dict(type='str'),
             app_object_id=dict(type='str'),
             key_id=dict(type='str'),
-            tenant=dict(type='str'),
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
             value=dict(type='str'),
             display_name=dict(type='str'),
             end_date=dict(type='str'),

@@ -30,6 +30,8 @@ options:
             - (deprecated) The tenant ID.
             - This option has been deprecated, and will be removed in the future.
         type: str
+        removed_in_version: 3.0.0
+        removed_from_collection: azure.azcollection
     app_role_assignment_required:
         description:
             - Whether the Role of the Service Principal is set.
@@ -107,7 +109,7 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
 
         self.module_arg_spec = dict(
             app_id=dict(type='str', required=True),
-            tenant=dict(type='str'),
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             app_role_assignment_required=dict(type='bool')
         )
