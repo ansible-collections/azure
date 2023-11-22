@@ -24,8 +24,6 @@ options:
             - (deprecated) The tenant ID.
             - This option has been deprecated, and will be removed in the future.
         type: str
-        removed_in_version: 3.0.0
-        removed_from_collection: azure.azcollection
     state:
         description:
             - State of the ad user. Use C(present) to create or update an ad user and C(absent) to delete an ad user.

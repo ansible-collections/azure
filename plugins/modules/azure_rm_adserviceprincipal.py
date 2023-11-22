@@ -30,8 +30,6 @@ options:
             - (deprecated) The tenant ID.
             - This option has been deprecated, and will be removed in the future.
         type: str
-        removed_in_version: 3.0.0
-        removed_from_collection: azure.azcollection
     app_role_assignment_required:
         description:
             - Whether the Role of the Service Principal is set.
