@@ -164,7 +164,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             attribute_value=dict(type='str'),
             odata_filter=dict(type='str'),
             all=dict(type='bool'),
-            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
+            tenant=dict(type='str', deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')])
         )
 
         self.tenant = None
@@ -196,12 +196,6 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        if self.tenant:
-            self.module.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
-                                  'https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison',
-                                  version=('3.0.0', 0),
-                                  collection_name='azure.azcollection')
-
         ad_users = []
 
         try:
@@ -211,7 +205,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                 ad_users = [asyncio.get_event_loop().run_until_complete(self.get_user(self.user_principal_name))]
             elif self.object_id is not None:
                 ad_users = [asyncio.get_event_loop().run_until_complete(self.get_user(self.object_id))]
-            elif self.attribute_name is not None and self.attribute_value is not None:
+            e, deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')])lif self.attribute_name is not None and self.attribute_value is not None:
                 try:
                     users = asyncio.get_event_loop().run_until_complete(
                         self.get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))

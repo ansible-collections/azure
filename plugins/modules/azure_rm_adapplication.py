@@ -397,7 +397,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
+            tenant=dict(type='str', deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')]),
             app_id=dict(type='str'),
             display_name=dict(type='str', required=True),
             app_roles=dict(type='list', elements='dict', options=app_role_spec),
@@ -455,11 +455,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        if self.tenant:
-            self.module.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
-                                  'https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison',
-                                  version=('3.0.0', 0),
-                                  collection_name='azure.azcollection')
         response = self.get_resource()
         if response:
             if self.state == 'present':

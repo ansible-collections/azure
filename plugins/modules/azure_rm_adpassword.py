@@ -141,8 +141,8 @@ class AzureRMADPassword(AzureRMModuleBase):
             service_principal_object_id=dict(type='str'),
             app_object_id=dict(type='str'),
             key_id=dict(type='str'),
-            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
-            value=dict(type='str'),
+            tenant=dict(type='str', deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')]),
+            value=dict(type='str', deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')]),
             display_name=dict(type='str'),
             end_date=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
@@ -169,17 +169,6 @@ class AzureRMADPassword(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-
-        if self.tenant:
-            self.module.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
-                                  'https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison',
-                                  version=('3.0.0', 0),
-                                  collection_name='azure.azcollection')
-        if self.value:
-            self.module.deprecate('value has been deprecated and will be removed in the future. See the Azure documentation for more information: '
-                                  'https://learn.microsoft.com/en-us/graph/api/application-addpassword?view=graph-rest-1.0&tabs=http#request-body',
-                                  version=('2.0.0', 0),
-                                  collection_name='azure.azcollection')
 
         self._client = self.get_msgraph_client()
         self.resolve_app_obj_id()
