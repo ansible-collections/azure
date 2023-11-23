@@ -92,7 +92,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             app_id=dict(type='str'),
             object_id=dict(type='str'),
-            tenant=dict(type='str', deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')])
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection')
         )
 
         self.tenant = None

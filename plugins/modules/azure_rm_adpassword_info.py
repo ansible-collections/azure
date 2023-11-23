@@ -120,7 +120,7 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
             app_object_id=dict(type='str'),
             service_principal_object_id=dict(type='str'),
             key_id=dict(type='str'),
-            tenant=dict(type='str', deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')]),
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
             value=dict(type='str'),
             end_date=dict(type='str'),
         )

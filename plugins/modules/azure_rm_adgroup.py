@@ -234,7 +234,7 @@ class AzureRMADGroup(AzureRMModuleBase):
             present_owners=dict(type='list', elements='str'),
             absent_members=dict(type='list', elements='str'),
             absent_owners=dict(type='list', elements='str'),
-            tenant=dict(type='str', deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')]),
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection')
             state=dict(
                 type='str',
                 default='present',

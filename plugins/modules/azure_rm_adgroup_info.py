@@ -190,7 +190,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             return_group_members=dict(type='bool', default=False),
             return_member_groups=dict(type='bool', default=False),
             all=dict(type='bool', default=False),
-            tenant=dict(type='str', deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')])
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection')
         )
 
         self.tenant = None

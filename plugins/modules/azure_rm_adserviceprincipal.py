@@ -107,7 +107,7 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
 
         self.module_arg_spec = dict(
             app_id=dict(type='str', required=True),
-            tenant=dict(type='str', deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')]),
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             app_role_assignment_required=dict(type='bool')
         )
