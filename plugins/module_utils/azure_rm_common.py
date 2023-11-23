@@ -258,7 +258,7 @@ try:
     from azure.mgmt.datafactory import DataFactoryManagementClient
     import azure.mgmt.datafactory.models as DataFactoryModel
     from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
-    from azure.identity import AzureCliCredential
+    # from azure.identity import AzureCliCredential
     from msgraph import GraphServiceClient
 
 except ImportError as exc:
@@ -1424,7 +1424,7 @@ class AzureRMAuth(object):
 
         # if cloud_environment specified, look up/build Cloud object
         raw_cloud_env = self.credentials.get('cloud_environment')
-        if self.credentials.get('credential') is not None and raw_cloud_env is not None:
+        if self.credentials.get('credentials') is not None and raw_cloud_env is not None:
             self._cloud_environment = raw_cloud_env
         elif not raw_cloud_env:
             self._cloud_environment = azure_cloud.AZURE_PUBLIC_CLOUD  # SDK default
@@ -1567,7 +1567,7 @@ class AzureRMAuth(object):
                 self.fail("Failed to get MSI token: {0}. "
                           "Please check whether your machine enabled MSI or grant access to any subscription.".format(str(exc)))
         return {
-            'credential': credential,
+            'credentials': credential,
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment,
             'auth_source': 'msi'
@@ -1586,9 +1586,9 @@ class AzureRMAuth(object):
             subscription_id=subscription_id)
         cloud_environment = get_cli_active_cloud()
 
-        az_cli = AzureCliCredential()
+        # az_cli = AzureCliCredential()
         cli_credentials = {
-            'credentials': az_cli,
+            'credentials': cred,
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment
         }

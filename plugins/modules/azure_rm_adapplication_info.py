@@ -113,7 +113,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             app_id=dict(type='str'),
             object_id=dict(type='str'),
             identifier_uri=dict(type='str'),
-            tenant=dict(type='str')
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection')
         )
         self.tenant = None
         self.app_id = None
@@ -131,12 +131,6 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         applications = []
-
-        if self.tenant:
-            self.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
-                           'https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison',
-                           version='2.0.0',
-                           collection_name='azure.azcollection')
 
         try:
             self._client = self.get_msgraph_client()
