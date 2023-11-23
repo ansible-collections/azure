@@ -205,7 +205,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                 ad_users = [asyncio.get_event_loop().run_until_complete(self.get_user(self.user_principal_name))]
             elif self.object_id is not None:
                 ad_users = [asyncio.get_event_loop().run_until_complete(self.get_user(self.object_id))]
-            e, deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')])lif self.attribute_name is not None and self.attribute_value is not None:
+            elif self.attribute_name is not None and self.attribute_value is not None:
                 try:
                     users = asyncio.get_event_loop().run_until_complete(
                         self.get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
