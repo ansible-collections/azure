@@ -190,7 +190,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             return_group_members=dict(type='bool', default=False),
             return_member_groups=dict(type='bool', default=False),
             all=dict(type='bool', default=False),
-            tenant=dict(type='str'),
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection')
         )
 
         self.tenant = None
@@ -223,12 +223,6 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
 
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-
-        if self.tenant:
-            self.deprecate('tenant ID has been deprecated and will be removed in the future. See the Azure documentation for more information: '
-                           'https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-request-differences#example-request-comparison',
-                           version='2.0.0',
-                           collection_name='azure.azcollection')
 
         ad_groups = []
 
