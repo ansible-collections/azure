@@ -136,6 +136,7 @@ parameters:
       - "azure_rm_devtestlab"
       - "azure_rm_sqlmanagedinstance"
       - "azure_rm_vmssnetworkinterface_info"
+      - "azure_rm_sshpublickey"
       - "inventory_azure"
       - "setup_azure"
 
