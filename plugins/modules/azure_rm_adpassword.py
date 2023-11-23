@@ -142,7 +142,7 @@ class AzureRMADPassword(AzureRMModuleBase):
             app_object_id=dict(type='str'),
             key_id=dict(type='str'),
             tenant=dict(type='str', deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')]),
-            value=dict(type='str', deprecated_aliases=[dict(name='tenant', version='3.0.0', collection_name='azure.azcollection')]),
+            value=dict(type='str', deprecated_aliases=[dict(name='value', version='3.0.0', collection_name='azure.azcollection')]),
             display_name=dict(type='str'),
             end_date=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
