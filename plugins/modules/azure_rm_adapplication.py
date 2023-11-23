@@ -698,7 +698,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
             query_parameters=ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
                 filter=(" appId eq '{0}'".format(app_id)), ),
-            headers={'ConsistencyLevel': "eventual"},
         )
 
         return await self._client.applications.get(request_configuration=request_configuration)
@@ -709,8 +708,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     async def get_applications(self, filters):
         request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
             query_parameters=ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
-                filter=(' and '.join(filters)),
-                headers={'ConsistencyLevel': "eventual"}
+                filter=(' and '.join(filters))
             ))
         return await self._client.applications.get(request_configuration=request_configuration)
 
