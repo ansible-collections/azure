@@ -171,7 +171,6 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
                 query_parameters=ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
                     filter=(' and '.join(sub_filters)),
                 ),
-                headers={'ConsistencyLevel': "eventual"},
             )
             return await self._client.applications.get(request_configuration=request_configuration)
         else:
