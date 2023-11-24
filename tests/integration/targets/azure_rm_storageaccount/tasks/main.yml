@@ -139,6 +139,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}06"
     account_type: Standard_LRS
+    large_file_shares_state: Enabled
     kind: StorageV2
     is_hns_enabled: true
   register: output
@@ -146,6 +147,7 @@
   ansible.builtin.assert:
     that:
       - output.changed
+      - output.state.large_file_shares_state == 'Enabled'
 
 - name: Gather facts of storage account
   azure_rm_storageaccount_info:
@@ -157,6 +159,7 @@
     that:
       - "output.storageaccounts | length == 1"
       - output.storageaccounts[0].is_hns_enabled == true
+      - output.storageaccounts[0].large_file_shares_state == 'Enabled'
 
 - name: Create storage account with static website enabled
   azure_rm_storageaccount:

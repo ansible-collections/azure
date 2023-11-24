@@ -509,6 +509,12 @@ storageaccounts:
             returned: always
             type: dict
             sample: { "tag1": "abc" }
+        large_file_shares_state:
+            description:
+                - Allow large file shares if sets to Enabled.
+            type: str
+            returned: always
+            sample: Enabled
         static_website:
             description:
                 - Static website configuration for the storage account.
@@ -674,6 +680,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             public_network_access=account_obj.public_network_access,
             allow_blob_public_access=account_obj.allow_blob_public_access,
             is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
+            large_file_shares_state=account_obj.large_file_shares_state,
             static_website=dict(
                 enabled=False,
                 index_document=None,

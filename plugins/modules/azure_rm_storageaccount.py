@@ -240,6 +240,13 @@ options:
                 description:
                     - The absolute path of the custom 404 page.
                 type: str
+    large_file_shares_state:
+        description:
+            - Allow large file shares if sets to Enabled.
+        type: str
+        choices:
+            - Enabled
+            - Disabled
     encryption:
         description:
             - The encryption settings on the storage account.
@@ -599,6 +606,12 @@ state:
             returned: always
             type: str
             sample: "Microsoft.Storage/storageAccounts"
+        large_file_shares_state:
+            description:
+                - Allow large file shares if sets to Enabled.
+            type: str
+            returned: always
+            sample: Enabled
         static_website:
             description:
                 - Static website configuration for the storage account.
@@ -711,6 +724,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict'),
             static_website=dict(type='dict', options=static_website_spec),
             is_hns_enabled=dict(type='bool'),
+            large_file_shares_state=dict(type='str', choices=['Enabled', 'Disabled']),
             encryption=dict(
                 type='dict',
                 options=dict(
@@ -766,6 +780,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.static_website = None
         self.encryption = None
         self.is_hns_enabled = None
+        self.large_file_shares_state = None
 
         super(AzureRMStorageAccount, self).__init__(self.module_arg_spec,
                                                     supports_check_mode=True)
@@ -870,6 +885,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             allow_blob_public_access=account_obj.allow_blob_public_access,
             network_acls=account_obj.network_rule_set,
             is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
+            large_file_shares_state=account_obj.large_file_shares_state,
             static_website=dict(
                 enabled=False,
                 index_document=None,
@@ -1129,6 +1145,21 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 except Exception as exc:
                     self.fail("Failed to update access tier: {0}".format(str(exc)))
 
+        if self.large_file_shares_state is not None:
+            if self.large_file_shares_state != self.account_dict['large_file_shares_state']:
+                self.results['changed'] = True
+                self.account_dict['large_file_shares_state'] = self.large_file_shares_state
+
+            if self.results['changed'] and not self.check_mode:
+                if self.large_file_shares_state == 'Disabled':
+                    parameters = self.storage_models.StorageAccountUpdateParameters(large_file_shares_state=None)
+                else:
+                    parameters = self.storage_models.StorageAccountUpdateParameters(large_file_shares_state=self.large_file_shares_state)
+                try:
+                    self.storage_client.storage_accounts.update(self.resource_group, self.name, parameters)
+                except Exception as exc:
+                    self.fail("Failed to update large_file_shares_state: {0}".format(str(exc)))
+
         update_tags, self.account_dict['tags'] = self.update_tags(self.account_dict['tags'])
         if update_tags:
             self.results['changed'] = True
@@ -1198,6 +1229,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 allow_blob_public_access=self.allow_blob_public_access,
                 encryption=self.encryption,
                 is_hns_enabled=self.is_hns_enabled,
+                large_file_shares_state=self.large_file_shares_state,
                 tags=dict()
             )
             if self.tags:
@@ -1223,7 +1255,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         allow_blob_public_access=self.allow_blob_public_access,
                                                                         encryption=self.encryption,
                                                                         is_hns_enabled=self.is_hns_enabled,
-                                                                        access_tier=self.access_tier)
+                                                                        access_tier=self.access_tier,
+                                                                        large_file_shares_state=self.large_file_shares_state)
         self.log(str(parameters))
         try:
             poller = self.storage_client.storage_accounts.begin_create(self.resource_group, self.name, parameters)
