@@ -17,6 +17,28 @@ short_description: Manage Azure storage accounts
 description:
     - Create, update or delete a storage account.
 options:
+    allow_shared_key_access:
+        description:
+            - When disabled, storage account key access denies all requests authorized by shared key or SAS.
+        type: bool
+        default: True
+    identity:
+        description:
+            - Identity for the resource.
+        type: dict
+        suboptions:
+            type:
+                description:
+                    - The identity type. Required.
+                type: str
+                choices:
+                    - None
+                    - SystemAssigned
+                    - UserAssigned
+            user_assigned_identities:
+                description:
+                    - Sets a single User Assigned identity for the account, using key-value pairs where the key is the identity's ARM resource ID.
+                type: str
     resource_group:
         description:
             - Name of the resource group to use.
@@ -294,10 +316,42 @@ options:
                 choices:
                     - Microsoft.Storage
                     - Microsoft.Keyvault
+            key_vault_properties:
+                description:
+                  - list of Microsoft Keyvault properties needed in order to create Storage account with encryption enabled with Microsoft KeyVault for CMK.
+                type: dict
+                suboptions:
+                  key_vault_uri:
+                    description:
+                        - The Uri of KeyVault.
+                    type: str
+                    required: true
+                  key_name:
+                    description:
+                      - The name of KeyVault key.
+                    type: str
+                    required: true
+                  key_version:
+                    description:
+                      - The version of KeyVault key.
+                    type: str
+
+            encryption_identity:
+                description:
+                    - The identity to be used with service-side encryption at rest.
+                type: dict
+                suboptions:
+                  encryption_user_assigned_identity:
+                    description:
+                      - Resource identifier of the UserAssigned identity to be associated with server-side encryption on the storage account.
+                    type: str
+
+
             require_infrastructure_encryption:
                 description:
                     - A boolean indicating whether or not the service applies a secondary layer of encryption with platform managed keys for data at rest.
                 type: bool
+
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -450,6 +504,25 @@ state:
                             type: dict
                             returned: always
                             sample: {'enabled': true}
+                key_vault_properties:
+                    description:
+                      - list of Microsoft Keyvault properties needed in order to create Storage account with encryption enabled with Microsoft KeyVault for CMK.
+                    type: dict
+                    sample: false
+                    contains:
+                      key_vault_uri:
+                        description:
+                            - The Uri of KeyVault.
+                        type: str
+                      key_name:
+                        description:
+                          - The name of KeyVault key.
+                        type: str
+                      key_version:
+                        description:
+                          - The version of KeyVault key.
+                        type: str
+
         id:
             description:
                 - Resource ID.
@@ -711,6 +784,14 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict'),
             static_website=dict(type='dict', options=static_website_spec),
             is_hns_enabled=dict(type='bool'),
+            allow_shared_key_access=dict(type='bool', default='True'),
+            identity=dict(
+                type='dict',
+                options=dict(
+                    type=dict(type='str', choices=['SystemAssigned', 'UserAssigned', 'None']),
+                    user_assigned_identities=dict(type='str', required=False)
+                )
+            ),
             encryption=dict(
                 type='dict',
                 options=dict(
@@ -736,7 +817,21 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                         )
                     ),
                     require_infrastructure_encryption=dict(type='bool'),
-                    key_source=dict(type='str', choices=["Microsoft.Storage", "Microsoft.Keyvault"], default='Microsoft.Storage')
+                    key_source=dict(type='str', choices=["Microsoft.Storage", "Microsoft.Keyvault"], default='Microsoft.Storage'),
+                    key_vault_properties=dict(
+                        type='dict',
+                        options=dict(
+                            key_vault_uri=dict(type='str', required=True, no_log=True),
+                            key_name=dict(type='str', required=True),
+                            key_version=dict(type='str', no_log=True)
+                        ), no_log=True
+                    ),
+                    encryption_identity=dict(
+                        type='dict',
+                        options=dict(
+                            encryption_user_assigned_identity=dict(type='str', required=False)  # This will hold the resource ID of the user-assigned identity
+                        )
+                    )
                 )
             )
         )
@@ -766,6 +861,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.static_website = None
         self.encryption = None
         self.is_hns_enabled = None
+        self.allow_shared_key_access = None
+        self.identity = None
 
         super(AzureRMStorageAccount, self).__init__(self.module_arg_spec,
                                                     supports_check_mode=True)
@@ -815,7 +912,12 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         elif self.state == 'failover' and self.account_dict:
             self.failover_account()
             self.results['state'] = self.get_account()
-
+        # # Check if 'identity' parameter exists and process it
+        if hasattr(self, 'identity') and self.identity:
+            if 'user_assigned_identities' in self.identity and isinstance(self.identity['user_assigned_identities'], str):
+                # Convert the string to a dictionary
+                identity_resource_id = self.identity['user_assigned_identities']
+                self.identity['user_assigned_identities'] = {identity_resource_id: {}}
         return self.results
 
     def check_name_availability(self):
@@ -836,6 +938,15 @@ class AzureRMStorageAccount(AzureRMModuleBase):
 
         try:
             account_obj = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name)
+            if account_obj.identity and 'user_assigned_identities' in account_obj.identity:
+                # Check if user_assigned_identities is a dictionary
+                if isinstance(account_obj.identity['user_assigned_identities'], dict):
+                    # Assuming there's only one key in the dictionary,
+                    # convert the dictionary to a string (the key of the dictionary)
+                    identity_resource_id_keys = list(account_obj.identity['user_assigned_identities'].keys())
+                    if identity_resource_id_keys:
+                        account_obj.identity['user_assigned_identities'] = identity_resource_id_keys[0]
+
             blob_mgmt_props = self.storage_client.blob_services.get_service_properties(self.resource_group, self.name)
             if self.kind != "FileStorage":
                 blob_client_props = self.get_blob_service_client(self.resource_group, self.name).get_service_properties()
@@ -844,7 +955,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
 
         if account_obj:
             account_dict = self.account_obj_to_dict(account_obj, blob_mgmt_props, blob_client_props)
-
+        # print("account dict:{}".format(account_dict))
         return account_dict
 
     def account_obj_to_dict(self, account_obj, blob_mgmt_props=None, blob_client_props=None):
@@ -870,11 +981,12 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             allow_blob_public_access=account_obj.allow_blob_public_access,
             network_acls=account_obj.network_rule_set,
             is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
+            allow_shared_key_access=account_obj.allow_shared_key_access if account_obj.allow_shared_key_access else False,
             static_website=dict(
                 enabled=False,
                 index_document=None,
                 error_document404_path=None,
-            ),
+            )
         )
         account_dict['custom_domain'] = None
         if account_obj.custom_domain:
@@ -1182,6 +1294,12 @@ class AzureRMStorageAccount(AzureRMModuleBase):
 
         if not self.access_tier and self.kind == 'BlobStorage':
             self.fail('Parameter error: access_tier required when creating a storage account of type BlobStorage.')
+        # # Check if 'identity' parameter exists and process it
+        if hasattr(self, 'identity') and self.identity:
+            if 'user_assigned_identities' in self.identity and isinstance(self.identity['user_assigned_identities'], str):
+                # Convert the string to a dictionary
+                identity_resource_id = self.identity['user_assigned_identities']
+                self.identity['user_assigned_identities'] = {identity_resource_id: {}}
 
         self.check_name_availability()
         self.results['changed'] = True
@@ -1198,12 +1316,15 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 allow_blob_public_access=self.allow_blob_public_access,
                 encryption=self.encryption,
                 is_hns_enabled=self.is_hns_enabled,
+                allow_shared_key_access=self.allow_shared_key_access,
+                network_rule_set=self.network_acls,
+                identity=self.identity,
                 tags=dict()
             )
             if self.tags:
                 account_dict['tags'] = self.tags
-            if self.network_acls:
-                account_dict['network_acls'] = self.network_acls
+            # if self.network_acls:
+            #     account_dict['network_acls'] = self.network_acls
             if self.blob_cors:
                 account_dict['blob_cors'] = self.blob_cors
             if self.static_website:
@@ -1223,7 +1344,10 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         allow_blob_public_access=self.allow_blob_public_access,
                                                                         encryption=self.encryption,
                                                                         is_hns_enabled=self.is_hns_enabled,
-                                                                        access_tier=self.access_tier)
+                                                                        allow_shared_key_access=self.allow_shared_key_access,
+                                                                        access_tier=self.access_tier,
+                                                                        network_rule_set=self.network_acls,
+                                                                        identity=self.identity)
         self.log(str(parameters))
         try:
             poller = self.storage_client.storage_accounts.begin_create(self.resource_group, self.name, parameters)
@@ -1231,8 +1355,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         except Exception as e:
             self.log('Error creating storage account.')
             self.fail("Failed to create account: {0}".format(str(e)))
-        if self.network_acls:
-            self.set_network_acls()
+        # if self.network_acls:
+        #     self.set_network_acls()
         if self.blob_cors:
             self.set_blob_cors()
         if self.static_website:
