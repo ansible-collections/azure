@@ -34,10 +34,10 @@ author:
 
 
 EXAMPLES = '''
-  - name: Get facts of specific DDoS protection plan
-    azure_rm_ddosprotectionplan_info:
-      resource_group: myResourceGroup
-      name: myDDoSProtectionPlan
+- name: Get facts of specific DDoS protection plan
+  azure_rm_ddosprotectionplan_info:
+    resource_group: myResourceGroup
+    name: myDDoSProtectionPlan
 '''
 
 RETURN = '''

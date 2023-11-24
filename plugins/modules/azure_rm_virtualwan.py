@@ -48,6 +48,7 @@ options:
         description:
             - List of VirtualHubs in the VirtualWAN.
         type: list
+        elements: dict
         suboptions:
             id:
                 description:
@@ -57,11 +58,12 @@ options:
         description:
             - List of VpnSites in the VirtualWAN.
         type: list
+        elements: dict
         suboptions:
             id:
-               description:
-                   - The vpn site resource ID.
-               type: str
+                description:
+                    - The vpn site resource ID.
+                type: str
     allow_branch_to_branch_traffic:
         description:
             - True if branch to branch traffic is allowed.
@@ -82,6 +84,7 @@ options:
             - Assert the state of the VirtualWan.
             - Use C(present) to create or update an VirtualWan and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -94,21 +97,20 @@ author:
 '''
 
 EXAMPLES = '''
- - name: Create a VirtualWan
-   azure_rm_virtualwan:
-     resource_group: myResouceGroup
-     name: testwan
-     disable_vpn_encryption: true
-     allow_branch_to_branch_traffic: true
-     allow_vnet_to_vnet_traffic: true
-     virtual_wan_type: Standard
+- name: Create a VirtualWan
+  azure_rm_virtualwan:
+    resource_group: myResouceGroup
+    name: testwan
+    disable_vpn_encryption: true
+    allow_branch_to_branch_traffic: true
+    allow_vnet_to_vnet_traffic: true
+    virtual_wan_type: Standard
 
- - name: Delete the VirtualWan
-   azure_rm_virtualwan:
-     resource_group: myResouceGroup
-     name: testwan
-     state: absent
-
+- name: Delete the VirtualWan
+  azure_rm_virtualwan:
+    resource_group: myResouceGroup
+    name: testwan
+    state: absent
 '''
 
 RETURN = '''
@@ -254,6 +256,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             ),
             virtual_hubs=dict(
                 type='list',
+                elements='dict',
                 updatable=False,
                 disposition='/virtual_hubs',
                 options=dict(
@@ -265,6 +268,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             ),
             vpn_sites=dict(
                 type='list',
+                elements='dict',
                 updatable=False,
                 disposition='/vpn_sites',
                 options=dict(

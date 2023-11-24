@@ -46,17 +46,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Custom Image
-    azure_rm_devtestlabcustomimage_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myImage
+- name: Get instance of Custom Image
+  azure_rm_devtestlabcustomimage_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myImage
 
-  - name: List instances of Custom Image in the lab
-    azure_rm_devtestlabcustomimage_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myImage
+- name: List instances of Custom Image in the lab
+  azure_rm_devtestlabcustomimage_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myImage
 '''
 
 RETURN = '''
@@ -108,7 +108,7 @@ custom_images:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag':'MyValue' }"
 '''
 
@@ -136,7 +136,6 @@ class AzureRMDtlCustomImageInfo(AzureRMModuleBase):
             ),
             name=dict(
                 type='str',
-                required=True
             ),
             tags=dict(
                 type='list',
@@ -163,7 +162,6 @@ class AzureRMDtlCustomImageInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name:

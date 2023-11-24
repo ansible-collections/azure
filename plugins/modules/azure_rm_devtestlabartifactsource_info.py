@@ -46,11 +46,11 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of DevTest Lab Artifact Source
-    azure_rm_devtestlabartifactsource_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myArtifactSource
+- name: Get instance of DevTest Lab Artifact Source
+  azure_rm_devtestlabartifactsource_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myArtifactSource
 '''
 
 RETURN = '''
@@ -131,7 +131,7 @@ artifactsources:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag': 'MyValue' }"
 '''
 
@@ -185,7 +185,6 @@ class AzureRMDtlArtifactSourceInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name:

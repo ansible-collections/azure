@@ -51,14 +51,14 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Policy
-    azure_rm_devtestlabpolicy_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      policy_set_name: myPolicySet
-      name: myPolicy
-      tags:
-        - key:value
+- name: Get instance of Policy
+  azure_rm_devtestlabpolicy_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    policy_set_name: myPolicySet
+    name: myPolicy
+    tags:
+      - key:value
 '''
 
 RETURN = '''
@@ -115,7 +115,7 @@ policies:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag': 'MyValue' }"
 '''
 
@@ -173,7 +173,6 @@ class AzureRMDtlPolicyInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name:

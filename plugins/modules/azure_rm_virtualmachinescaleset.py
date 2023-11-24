@@ -25,10 +25,12 @@ options:
         description:
             - Name of the resource group containing the virtual machine scale set.
         required: true
+        type: str
     name:
         description:
             - Name of the virtual machine.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the virtual machine scale set.
@@ -36,26 +38,32 @@ options:
               of the existing machine does not match, the machine will be updated.
             - State C(absent) will remove the virtual machine scale set.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     short_hostname:
         description:
             - Short host name.
+        type: str
     vm_size:
         description:
             - A valid Azure VM size value. For example, C(Standard_D4).
             - The list of choices varies depending on the subscription and location. Check your subscription for available choices.
+        type: str
     capacity:
         description:
             - Capacity of VMSS.
         default: 1
+        type: int
     tier:
         description:
             - SKU Tier.
+        type: str
         choices:
             - Basic
             - Standard
@@ -63,6 +71,7 @@ options:
         description:
             - Upgrade policy.
             - Required when creating the Azure virtual machine scale sets.
+        type: str
         choices:
             - Manual
             - Automatic
@@ -70,6 +79,7 @@ options:
         description:
             - Priority of the VMSS.
             - C(None) is the equivalent of Regular VM.
+        type: str
         choices:
             - None
             - Spot
@@ -77,6 +87,7 @@ options:
         description:
             - Specifies the eviction policy for the Azure Spot virtual machine.
             - Requires priority to be set to Spot.
+        type: str
         choices:
             - Deallocate
             - Delete
@@ -87,13 +98,16 @@ options:
             - C(-1) indicates default price to be up-to on-demand.
             - Requires priority to be set to Spot.
         default: -1
+        type: float
     admin_username:
         description:
             - Admin username used to access the host after it is created. Required when creating a VM.
+        type: str
     admin_password:
         description:
             - Password for the admin username.
             - Not required if the os_type is Linux and SSH password authentication is disabled by setting I(ssh_password_enabled=false).
+        type: str
     ssh_password_enabled:
         description:
             - When the os_type is Linux, setting I(ssh_password_enabled=false) will disable SSH password authentication and require use of SSH keys.
@@ -106,6 +120,8 @@ options:
             - Set the C(path) to the default location of the authorized_keys files.
             - On an Enterprise Linux host, for example, the I(path=/home/<admin username>/.ssh/authorized_keys).
               Set C(key_data) to the actual value of the public key.
+        type: list
+        elements: dict
     image:
         description:
             - Specifies the image used to build the VM.
@@ -115,10 +131,12 @@ options:
             - If a dict with the keys I(name) and I(resource_group), the image is sourced from a custom image based on the I(name) and I(resource_group) set.
               Note that the key I(resource_group) is optional and if omitted, all images in the subscription will be searched for by I(name).
             - Custom image support was added in Ansible 2.5.
-        required: true
+            - Required when creating.
+        type: raw
     os_disk_caching:
         description:
             - Type of OS disk caching.
+        type: str
         choices:
             - ReadOnly
             - ReadWrite
@@ -133,6 +151,7 @@ options:
     os_type:
         description:
             - Base type of operating system.
+        type: str
         choices:
             - Windows
             - Linux
@@ -145,6 +164,7 @@ options:
     managed_disk_type:
         description:
             - Managed disk type.
+        type: str
         choices:
             - Standard_LRS
             - Premium_LRS
@@ -155,17 +175,22 @@ options:
     data_disks:
         description:
             - Describes list of data disks.
+        type: list
+        elements: dict
         suboptions:
             lun:
                 description:
                     - The logical unit number for data disk.
-                default: 0
+                default: '0'
+                type: str
             disk_size_gb:
                 description:
                     - The initial disk size in GB for blank data disks.
+                type: int
             managed_disk_type:
                 description:
                     - Managed data disk type.
+                type: str
                 choices:
                     - Standard_LRS
                     - Premium_LRS
@@ -176,6 +201,7 @@ options:
             caching:
                 description:
                     - Type of data disk caching.
+                type: str
                 choices:
                     - ReadOnly
                     - ReadWrite
@@ -185,14 +211,17 @@ options:
             - When creating a virtual machine, if a specific virtual network from another resource group should be
               used.
             - Use this parameter to specify the resource group to use.
+        type: str
     virtual_network_name:
         description:
             - Virtual Network name.
         aliases:
             - virtual_network
+        type: str
     subnet_name:
         description:
             - Subnet name.
+        type: str
         aliases:
             - subnet
     public_ip_per_vm:
@@ -203,14 +232,18 @@ options:
     load_balancer:
         description:
             - Load balancer name.
+        type: str
     application_gateway:
         description:
             - Application gateway name.
+        type: str
     remove_on_absent:
         description:
             - When removing a VM using I(state=absent), also remove associated resources.
             - It can be C(all) or a list with any of the following ['network_interfaces', 'virtual_storage', 'public_ips'].
             - Any other input will be ignored.
+        type: list
+        elements: str
         default: ['all']
     enable_accelerated_networking:
         description:
@@ -224,6 +257,7 @@ options:
             - It can be a dict which contains I(name) and I(resource_group) of the security group.
         aliases:
             - security_group_name
+        type: raw
     overprovision:
         description:
             - Specifies whether the Virtual Machine Scale Set should be overprovisioned.
@@ -242,21 +276,26 @@ options:
                 description:
                     - Billing plan name.
                 required: true
+                type: str
             product:
                 description:
                     - Product name.
                 required: true
+                type: str
             publisher:
                 description:
                     - Publisher offering the plan.
                 required: true
+                type: str
             promotion_code:
                 description:
                     - Optional promotion code.
+                type: str
     zones:
         description:
             - A list of Availability Zones for your virtual machine scale set.
         type: list
+        elements: str
     custom_data:
         description:
             - Data which is made available to the virtual machine and used by e.g., C(cloud-init).
@@ -264,9 +303,11 @@ options:
             - If the image you are attempting to use is not listed in
               U(https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init#cloud-init-overview),
               follow these steps U(https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloudinit-prepare-custom-image).
+        type: str
     scale_in_policy:
         description:
             - define the order in which vmss instances are scaled-in
+        type: str
         choices:
             - Default
             - NewestVM
@@ -275,6 +316,7 @@ options:
         description:
             - timeout time for termination notification event
             - in range between 5 and 15
+        type: int
     platform_fault_domain_count:
         description:
             - Fault Domain count for each placement group.
@@ -292,6 +334,7 @@ options:
         choices:
             - Flexible
             - Uniform
+        default: Flexible
     security_profile:
         description:
             - Specifies the Security related profile settings for the virtual machine sclaset.
@@ -411,7 +454,7 @@ EXAMPLES = '''
     name: testvmss
     vm_size: Standard_DS1_v2
     capacity: 120
-    single_placement_group: False
+    single_placement_group: false
     virtual_network_name: testvnet
     upgrade_policy: Manual
     subnet_name: testsubnet
@@ -458,9 +501,9 @@ EXAMPLES = '''
     name: testVMSS{{ rpfx }}
     vm_size: Standard_D4s_v3
     admin_username: testuser
-    single_placement_group: False
+    single_placement_group: false
     platform_fault_domain_count: 1
-    public_ip_per_vm: True
+    public_ip_per_vm: true
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
@@ -472,9 +515,9 @@ EXAMPLES = '''
     os_disk_caching: ReadWrite
     security_profile:
       uefi_settings:
-        secure_boot_enabled: True
-        v_tpm_enabled: False
-      encryption_at_host: False
+        secure_boot_enabled: true
+        v_tpm_enabled: false
+      encryption_at_host: false
       security_type: TrustedLaunch
     image:
       offer: 0001-com-ubuntu-server-jammy
@@ -643,25 +686,37 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             admin_username=dict(type='str'),
             admin_password=dict(type='str', no_log=True),
             ssh_password_enabled=dict(type='bool', default=True),
-            ssh_public_keys=dict(type='list'),
+            ssh_public_keys=dict(type='list', elements='dict'),
             image=dict(type='raw'),
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite'],
                                  default='ReadOnly'),
             os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS']),
-            data_disks=dict(type='list'),
+            data_disks=dict(
+                type='list',
+                elements='dict',
+                options=dict(
+                    lun=dict(type='str', default='0'),
+                    disk_size_gb=dict(type='int'),
+                    caching=dict(type='str', default='ReadOnly', choices=['ReadOnly', 'ReadWrite']),
+                    managed_disk_type=dict(
+                        type='str',
+                        choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS']
+                    )
+                )
+            ),
             subnet_name=dict(type='str', aliases=['subnet']),
             public_ip_per_vm=dict(type='bool', default=False),
             load_balancer=dict(type='str'),
             application_gateway=dict(type='str'),
             virtual_network_resource_group=dict(type='str'),
             virtual_network_name=dict(type='str', aliases=['virtual_network']),
-            remove_on_absent=dict(type='list', default=['all']),
+            remove_on_absent=dict(type='list', default=['all'], elements='str'),
             enable_accelerated_networking=dict(type='bool'),
             security_group=dict(type='raw', aliases=['security_group_name']),
             overprovision=dict(type='bool'),
             single_placement_group=dict(type='bool', default=False),
-            zones=dict(type='list'),
+            zones=dict(type='list', elements='str'),
             custom_data=dict(type='str'),
             plan=dict(type='dict', options=dict(publisher=dict(type='str', required=True),
                       product=dict(type='str', required=True), name=dict(type='str', required=True),
@@ -669,7 +724,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBase):
             scale_in_policy=dict(type='str', choices=['Default', 'OldestVM', 'NewestVM']),
             terminate_event_timeout_minutes=dict(type='int'),
             ephemeral_os_disk=dict(type='bool'),
-            orchestration_mode=dict(type='str', choices=['Uniform', 'Flexible']),
+            orchestration_mode=dict(type='str',
+                                    choices=['Uniform', 'Flexible'],
+                                    default='Flexible',),
             platform_fault_domain_count=dict(type='int', default=1),
             os_disk_size_gb=dict(type='int'),
             security_profile=dict(

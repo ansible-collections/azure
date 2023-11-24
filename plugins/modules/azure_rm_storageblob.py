@@ -22,10 +22,22 @@ description:
     - the module can work exclusively in three modes, when C(batch_upload_src) is set, it is working in batch upload mode;
       when C(src) is set, it is working in upload mode and when C(dst) is set, it is working in dowload mode.
 options:
+    auth_mode:
+        description:
+            - The mode in which to run the command. C(login) mode will directly use your login credentials for the authentication.
+            - The legacy C(key) mode will attempt to query for an account key if no authentication parameters for the account are provided.
+            - Can also be set via the environment variable C(AZURE_STORAGE_AUTH_MODE).
+        default: key
+        type: str
+        choices:
+            - key
+            - login
+        version_added: "1.19.0"
     storage_account_name:
         description:
             - Name of the storage account to use.
         required: true
+        type: str
         aliases:
             - account_name
             - storage_account
@@ -34,10 +46,12 @@ options:
             - Name of a blob object within the container.
         aliases:
             - blob_name
+        type: str
     blob_type:
         description:
             - Type of blob object.
         default: block
+        type: str
         choices:
             - block
             - page
@@ -46,31 +60,39 @@ options:
         description:
             - Name of a blob container within the storage account.
         required: true
+        type: str
         aliases:
             - container_name
     content_type:
         description:
             - Set the blob content-type header. For example C(image/png).
+        type: str
     cache_control:
         description:
             - Set the blob cache-control header.
+        type: str
     content_disposition:
         description:
             - Set the blob content-disposition header.
+        type: str
     content_encoding:
         description:
             - Set the blob encoding header.
+        type: str
     content_language:
         description:
             - Set the blob content-language header.
+        type: str
     content_md5:
         description:
             - Set the blob md5 hash value.
+        type: str
     dest:
         description:
             - Destination file path. Use with state C(present) to download a blob.
         aliases:
             - destination
+        type: path
     force:
         description:
             - Overwrite existing blob or file when uploading or downloading. Force deletion of a container that contains blobs.
@@ -80,19 +102,23 @@ options:
         description:
             - Name of the resource group to use.
         required: true
+        type: str
         aliases:
             - resource_group_name
     src:
         description:
             - Source file path. Use with state C(present) to upload a blob.
+        type: str
         aliases:
             - source
     batch_upload_src:
         description:
             - Batch upload source directory. Use with state C(present) to upload batch of files under the directory.
+        type: path
     batch_upload_dst:
         description:
             - Base directory in container when upload batch of files.
+        type: path
     state:
         description:
             - State of a container or blob.
@@ -105,6 +131,7 @@ options:
               to download. If a blob (uploading) or a file (downloading) already exists, it will not be overwritten
               unless I(force=true).
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -112,6 +139,7 @@ options:
         description:
             - A container's level of public access. By default containers are private.
             - Can only be set at time of container creation.
+        type: str
         choices:
             - container
             - blob
@@ -197,6 +225,7 @@ except ImportError:
     pass
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible.module_utils.basic import env_fallback
 
 
 class AzureRMStorageBlob(AzureRMModuleBase):
@@ -204,6 +233,12 @@ class AzureRMStorageBlob(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
+            auth_mode=dict(
+                type='str',
+                choices=['key', 'login'],
+                fallback=(env_fallback, ['AZURE_STORAGE_AUTH_MODE']),
+                default="key"
+            ),
             storage_account_name=dict(required=True, type='str', aliases=['account_name', 'storage_account']),
             blob=dict(type='str', aliases=['blob_name']),
             blob_type=dict(type='str', default='block', choices=['block', 'page']),
@@ -264,7 +299,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
         # add file path validation
 
-        self.blob_service_client = self.get_blob_service_client(self.resource_group, self.storage_account_name)
+        self.blob_service_client = self.get_blob_service_client(self.resource_group, self.storage_account_name, self.auth_mode)
         self.container_obj = self.get_container()
         if self.blob:
             self.blob_obj = self.get_blob()

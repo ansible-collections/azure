@@ -20,51 +20,62 @@ options:
     resource_group:
         description:
             - The name of the resource group.
+        type: str
         required: True
     lab_name:
         description:
             - The name of the lab.
+        type: str
         required: True
     name:
         description:
             - The name of the artifact source.
+        type: str
         required: True
     display_name:
         description:
             - The artifact source's display name.
+        type: str
     uri:
         description:
             - The artifact source's URI.
+        type: str
     source_type:
         description:
             - The artifact source's type.
+        type: str
         choices:
             - 'vso'
             - 'github'
     folder_path:
         description:
             - The folder containing artifacts.
+        type: str
     arm_template_folder_path:
         description:
             - The folder containing Azure Resource Manager templates.
+        type: str
     branch_ref:
         description:
             - The artifact source's branch reference.
+        type: str
     security_token:
         description:
             - The security token to authenticate to the artifact source.
+        type: str
     is_enabled:
         description:
             - Indicates whether the artifact source is enabled.
         type: bool
     state:
-      description:
-          - Assert the state of the DevTest Labs Artifacts Source.
-          - Use C(present) to create or update an DevTest Labs Artifacts Source and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the DevTest Labs Artifacts Source.
+            - Use C(present) to create or update an DevTest Labs Artifacts Source and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -76,15 +87,15 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) DevTest Labs Artifacts Source
-    azure_rm_devtestlabartifactsource:
-      resource_group: myrg
-      lab_name: mylab
-      name: myartifacts
-      uri: https://github.com/myself/myrepo.git
-      source_type: github
-      folder_path: /
-      security_token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+- name: Create (or update) DevTest Labs Artifacts Source
+  azure_rm_devtestlabartifactsource:
+    resource_group: myrg
+    lab_name: mylab
+    name: myartifacts
+    uri: https://github.com/myself/myrepo.git
+    source_type: github
+    folder_path: /
+    security_token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 '''
 
 RETURN = '''
@@ -209,7 +220,6 @@ class AzureRMDevTestLabArtifactsSource(AzureRMModuleBase):
 
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    is_track2=True,
                                                     api_version='2018-10-15')
 
         old_response = self.get_devtestlabartifactssource()

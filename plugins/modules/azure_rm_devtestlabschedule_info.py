@@ -46,13 +46,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Schedule
-    azure_rm_devtestlabschedule_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: mySchedule
-      tags:
-        - key:value
+- name: Get instance of Schedule
+  azure_rm_devtestlabschedule_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: mySchedule
+    tags:
+      - key:value
 '''
 
 RETURN = '''
@@ -103,7 +103,7 @@ schedules:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag': 'MyValue' }"
 '''
 
@@ -157,7 +157,6 @@ class AzureRMDtlScheduleInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
         if self.name:
             self.results['schedules'] = self.get()

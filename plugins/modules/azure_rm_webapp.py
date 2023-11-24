@@ -21,14 +21,17 @@ options:
         description:
             - Name of the resource group to which the resource belongs.
         required: True
+        type: str
     name:
         description:
             - Unique name of the app to create or update. To create or update a deployment slot, use the {slot} parameter.
         required: True
+        type: str
 
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
 
     plan:
         description:
@@ -42,11 +45,14 @@ options:
             - C(sku), SKU of app service plan, allowed values listed on U(https://azure.microsoft.com/en-us/pricing/details/app-service/linux/).
             - C(is_linux), whether or not the app service plan is Linux. defaults to C(False).
             - C(number_of_workers), number of workers for app service plan.
+        type: raw
 
     frameworks:
         description:
             - Set of run time framework settings. Each setting is a dictionary.
             - See U(https://docs.microsoft.com/en-us/azure/app-service/app-service-web-overview) for more info.
+        type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -57,6 +63,8 @@ options:
                     - Linux web apps support C(java), C(ruby), C(php), C(python), C(dotnetcore), and C(node) from June 2018.
                     - Linux web apps support only one framework.
                     - Java framework is mutually exclusive with others.
+                type: str
+                required: true
                 choices:
                     - java
                     - net_framework
@@ -75,42 +83,56 @@ options:
                     - C(dotnetcore) supported value sample, C(1.0), C(1.1), C(1.2).
                     - C(ruby) supported value sample, C(2.3).
                     - C(java) supported value sample, C(1.9) for Windows web app. C(1.8) for Linux web app.
+                type: str
+                required: true
             settings:
                 description:
                     - List of settings of the framework.
+                type: dict
                 suboptions:
                     java_container:
                         description:
                             - Name of Java container.
                             - Supported only when I(frameworks=java). Sample values C(Tomcat), C(Jetty).
+                        type: str
+                        required: True
                     java_container_version:
                         description:
                             - Version of Java container.
                             - Supported only when I(frameworks=java).
                             - Sample values for C(Tomcat), C(8.0), C(8.5), C(9.0). For C(Jetty,), C(9.1), C(9.3).
+                        type: str
+                        required: True
 
     container_settings:
         description:
             - Web app container settings.
+        type: dict
         suboptions:
             name:
                 description:
                     - Name of the container, for example C(imagename:tag).
                     - To create a multi-container app, the name should be 'COMPOSE|' or 'KUBE|' followed by base64 encoded configuration.
+                type: str
+                required: True
             registry_server_url:
                 description:
                     - Container registry server URL, for example C(mydockerregistry.io).
+                type: str
             registry_server_user:
                 description:
                     - The container registry server user name.
+                type: str
             registry_server_password:
                 description:
                     - The container registry server password.
+                type: str
 
     scm_type:
         description:
             - Repository type of deployment source, for example C(LocalGit), C(GitHub).
             - List of supported values maintained at U(https://docs.microsoft.com/en-us/rest/api/appservice/webapps/createorupdate#scmtype).
+        type: str
 
     always_on:
         description:
@@ -138,18 +160,22 @@ options:
     deployment_source:
         description:
             - Deployment source for git.
+        type: dict
         suboptions:
             url:
                 description:
                     - Repository url of deployment source.
+                type: str
 
             branch:
                 description:
                     - The branch name of the repository.
+                type: str
     startup_file:
         description:
             - The web's startup file.
             - Used only for Linux web apps.
+        type: str
 
     client_affinity_enabled:
         description:
@@ -165,6 +191,7 @@ options:
     app_settings:
         description:
             - Configure web app application settings. Suboptions are in key value pair format.
+        type: dict
 
     purge_app_settings:
         description:
@@ -187,6 +214,7 @@ options:
             - State of the Web App.
             - Use C(present) to create or update a Web App and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -201,121 +229,121 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a windows web app with non-exist app service plan
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myWinWebapp
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-          is_linux: false
-          sku: S1
+- name: Create a windows web app with non-exist app service plan
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myWinWebapp
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+      is_linux: false
+      sku: S1
 
-    - name: Create a docker web app with some app settings, with docker image
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myDockerWebapp
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-          is_linux: true
-          sku: S1
-          number_of_workers: 2
-        app_settings:
-          testkey: testvalue
-          testkey2: testvalue2
-        container_settings:
-          name: ansible/ansible:ubuntu1404
+- name: Create a docker web app with some app settings, with docker image
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myDockerWebapp
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+      is_linux: true
+      sku: S1
+      number_of_workers: 2
+    app_settings:
+      testkey: testvalue
+      testkey2: testvalue2
+    container_settings:
+      name: ansible/ansible:ubuntu1404
 
-    - name: Create a docker web app with private acr registry
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myDockerWebapp
-        plan: myAppServicePlan
-        app_settings:
-          testkey: testvalue
-        container_settings:
-          name: ansible/ubuntu1404
-          registry_server_url: myregistry.io
-          registry_server_user: user
-          registry_server_password: pass
+- name: Create a docker web app with private acr registry
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myDockerWebapp
+    plan: myAppServicePlan
+    app_settings:
+      testkey: testvalue
+    container_settings:
+      name: ansible/ubuntu1404
+      registry_server_url: myregistry.io
+      registry_server_user: user
+      registry_server_password: pass
 
-    - name: Create a multi-container web app
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myMultiContainerWebapp
-        plan: myAppServicePlan
-        app_settings:
-          testkey: testvalue
-        container_settings:
-          name: "COMPOSE|{{ lookup('file', 'docker-compose.yml') | b64encode }}"
+- name: Create a multi-container web app
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myMultiContainerWebapp
+    plan: myAppServicePlan
+    app_settings:
+      testkey: testvalue
+    container_settings:
+      name: "COMPOSE|{{ lookup('file', 'docker-compose.yml') | b64encode }}"
 
-    - name: Create a linux web app with Node 6.6 framework
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myLinuxWebapp
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-        app_settings:
-          testkey: testvalue
-        frameworks:
-          - name: "node"
-            version: "6.6"
+- name: Create a linux web app with Node 6.6 framework
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myLinuxWebapp
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+    app_settings:
+      testkey: testvalue
+    frameworks:
+      - name: "node"
+        version: "6.6"
 
-    - name: Create a windows web app with node, php
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myWinWebapp
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-        app_settings:
-          testkey: testvalue
-        frameworks:
-          - name: "node"
-            version: 6.6
-          - name: "php"
-            version: "7.0"
+- name: Create a windows web app with node, php
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myWinWebapp
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+    app_settings:
+      testkey: testvalue
+    frameworks:
+      - name: "node"
+        version: 6.6
+      - name: "php"
+        version: "7.0"
 
-    - name: Create a stage deployment slot for an existing web app
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myWebapp/slots/stage
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-        app_settings:
-          testkey:testvalue
+- name: Create a stage deployment slot for an existing web app
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myWebapp/slots/stage
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+    app_settings:
+      testkey:testvalue
 
-    - name: Create a linux web app with java framework
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myLinuxWebapp
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-        app_settings:
-          testkey: testvalue
-        frameworks:
-          - name: "java"
-            version: "8"
-            settings:
-              java_container: "Tomcat"
-              java_container_version: "8.5"
+- name: Create a linux web app with java framework
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myLinuxWebapp
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+    app_settings:
+      testkey: testvalue
+    frameworks:
+      - name: "java"
+        version: "8"
+        settings:
+          java_container: "Tomcat"
+          java_container_version: "8.5"
 
-    - name: Create a linux web app with python framework
-      azure_rm_webapp:
-        resource_group: myResourceGroup
-        name: myLinuxWebapp
-        plan:
-          resource_group: myAppServicePlan_rg
-          name: myAppServicePlan
-        app_settings:
-          testkey: testvalue
-        frameworks:
-          - name: "python"
-            version: "3.10"
+- name: Create a linux web app with python framework
+  azure_rm_webapp:
+    resource_group: myResourceGroup
+    name: myLinuxWebapp
+    plan:
+      resource_group: myAppServicePlan_rg
+      name: myAppServicePlan
+    app_settings:
+      testkey: testvalue
+    frameworks:
+      - name: "python"
+        version: "3.10"
 '''
 
 RETURN = '''

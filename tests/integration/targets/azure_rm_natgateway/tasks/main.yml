@@ -1,9 +1,9 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: true
 - name: Set json query to only retrieve gateways from this test
-  set_fact:
+  ansible.builtin.set_fact:
     query: "[?ends_with(name, `{{ rpfx }}`)]"
   run_once: true
 
@@ -12,7 +12,7 @@
     name: "{{ resource_group }}"
   register: rg_output
 - name: Store rg location
-  set_fact:
+  ansible.builtin.set_fact:
     rg_location: "{{ rg_output.resourcegroups[0].location }}"
   run_once: true
 
@@ -21,7 +21,7 @@
     resource_group: "{{ resource_group }}"
   register: natgw_output
 - name: Assert there are no gateways
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.gateways | community.general.json_query(query) | length == 0
 
@@ -30,9 +30,9 @@
     resource_group: "{{ resource_group }}"
     name: nat-gateway{{ rpfx }}1
   register: output
-  check_mode: yes
+  check_mode: true
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -41,7 +41,7 @@
     resource_group: "{{ resource_group }}"
   register: natgw_output
 - name: Assert there are still no gateways
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.gateways | community.general.json_query(query) | length == 0
 
@@ -51,7 +51,7 @@
     name: nat-gateway{{ rpfx }}1
   register: natgw_output
 - name: Assert that gateway is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.changed
       - natgw_output.resource_group == "{{ resource_group }}"
@@ -63,7 +63,7 @@
     resource_group: "{{ resource_group }}"
   register: natgw_output
 - name: Assert that gateway has the right default parameters
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.gateways[0].idle_timeout_in_minutes == 4
 
@@ -73,7 +73,7 @@
     name: nat-gateway{{ rpfx }}1
   register: output
 - name: Assert the resource instance is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -84,7 +84,7 @@
     idle_timeout_in_minutes: 10
   register: natgw_output
 - name: Assert the resource instance is changed
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.changed
       - natgw_output.location == "{{ rg_location }}"
@@ -94,7 +94,7 @@
     resource_group: "{{ resource_group }}"
   register: natgw_output
 - name: Assert that gateway has the right parameters
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.gateways[0].idle_timeout_in_minutes == 10
 
@@ -107,7 +107,7 @@
     idle_timeout_in_minutes: 10
   register: output
 - name: Assert the resource instance is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -142,7 +142,7 @@
       - "nat-gateway{{ rpfx }}-pip2"
   register: natgw_output
 - name: Assert the resource instance is changed
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.changed
 - name: Get NAT gateways
@@ -151,7 +151,7 @@
     resource_group: "{{ resource_group }}"
   register: natgw_output
 - name: Assert that gateway has the right parameters
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.gateways[0].public_ip_addresses | length == 2
 
@@ -166,7 +166,7 @@
       - "nat-gateway{{ rpfx }}-pip2"
   register: natgw_output
 - name: Assert the resource instance is changed
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.changed
 - name: Get NAT gateways
@@ -175,7 +175,7 @@
     resource_group: "{{ resource_group }}"
   register: natgw_output
 - name: Assert that gateway has the right parameters
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.gateways[0].public_ip_addresses | length == 1
 
@@ -189,7 +189,7 @@
       name: standard
   register: natgw_output
 - name: Assert the resource instance is changed
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.changed
 - name: Get NAT gateways
@@ -198,7 +198,7 @@
     resource_group: "{{ resource_group }}"
   register: natgw_output
 - name: Assert that gateway has the right parameters
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.gateways[0].public_ip_addresses == None
 
@@ -231,7 +231,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert the NAT Gateway is associated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.subnets[0].nat_gateway == "{{ natgw_output.gateways[0].id }}"
 
@@ -254,7 +254,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert the NAT Gateway is not associated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.subnets[0].nat_gateway == "{{ natgw_output3.id }}"
 
@@ -271,7 +271,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert the NAT Gateway is not associated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.subnets[0].nat_gateway == None
 
@@ -282,12 +282,12 @@
     name: nat-gateway{{ rpfx }}2
     idle_timeout_in_minutes: 10
     location: eastus
-    zones: [ 1 ]
+    zones: [1]
     sku:
       name: standard
   register: natgw_output
 - name: Assert the resource instance is changed
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.changed
       - natgw_output.location == "eastus"
@@ -297,7 +297,7 @@
     resource_group: "{{ resource_group }}"
   register: natgw_output
 - name: Assert that gateway has the right parameters
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.gateways[0].idle_timeout_in_minutes == 10
       - natgw_output.gateways[0].zones[0] == "1"
@@ -310,9 +310,9 @@
     state: absent
   register: output
   with_items:
-       - 1
-       - 2
-       - 3
+    - 1
+    - 2
+    - 3
 
 - name: Remove subnet
   azure_rm_subnet:
@@ -332,15 +332,15 @@
     resource_group: "{{ resource_group }}"
   register: natgw_output
 - name: Assert there are no gateways left
-  assert:
+  ansible.builtin.assert:
     that:
       - natgw_output.gateways | community.general.json_query(query) | length == 0
 
 - name: Delete public IPs for NAT Gateway
   azure_rm_publicipaddress:
-       resource_group: "{{ resource_group }}"
-       name: "nat-gateway{{ rpfx }}-pip{{ item }}"
-       state: absent
+    resource_group: "{{ resource_group }}"
+    name: "nat-gateway{{ rpfx }}-pip{{ item }}"
+    state: absent
   with_items:
-       - 1
-       - 2
+    - 1
+    - 2

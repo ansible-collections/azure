@@ -56,18 +56,18 @@ options:
     os_type:
         description:
             - This property allows you to specify the type of the OS that is included in the disk when creating a VM from a managed image.
+            - Required when creating.
         choices:
             - windows
             - linux
-        required: true
         type: str
     os_state:
         description:
             - The allowed values for OS State are C(generalized).
+            - Required when creating.
         choices:
             - generalized
             - specialized
-        required: true
         type: str
     hypervgeneration:
         description:
@@ -86,7 +86,7 @@ options:
     identifier:
         description:
             - Image identifier.
-        required: true
+            - Required when creating.
         type: dict
         suboptions:
             publisher:
@@ -144,6 +144,7 @@ options:
                 description:
                     - A list of disallowed disk types.
                 type: list
+                elements: str
     purchase_plan:
         description:
             - Purchase plan.
@@ -161,6 +162,22 @@ options:
                 description:
                     - The product ID.
                 type: str
+    features:
+        description:
+            - A list of gallery image features.
+        type: list
+        elements: dict
+        suboptions:
+            name:
+                description:
+                    - The name of the gallery image feature.
+                type: str
+                required: True
+            value:
+                description:
+                    - The value of the gallery image feature.
+                type: str
+                required: True
     state:
         description:
             - Assert the state of the GalleryImage.
@@ -331,6 +348,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                 options=dict(
                     disk_types=dict(
                         type='list',
+                        elements='str',
                         disposition='diskTypes'
                     )
                 )
@@ -347,6 +365,21 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                     ),
                     product=dict(
                         type='str'
+                    )
+                )
+            ),
+            features=dict(
+                type='list',
+                disposition='/properties/*',
+                elements='dict',
+                options=dict(
+                    name=dict(
+                        type='str',
+                        required=True
+                    ),
+                    value=dict(
+                        type='str',
+                        required=True
                     )
                 )
             ),
@@ -371,7 +404,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
 
         self.body = {}
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2019-07-01'
+        self.query_parameters['api-version'] = '2022-03-03'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -392,7 +425,6 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -490,10 +522,12 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
             self.log('Error attempting to create the GalleryImage instance.')
             self.fail('Error creating the GalleryImage instance: {0}'.format(str(exc)))
 
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 

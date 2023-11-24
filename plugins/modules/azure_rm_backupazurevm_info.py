@@ -42,13 +42,13 @@ author:
 
 EXAMPLES = \
     '''
-    - name: Get Recovery Point Details
-      azure_rm_backupazurevm_info:
-        resource_group: 'myResourceGroup'
-        recovery_vault_name: 'testVault'
-        resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-        resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
-    '''
+- name: Get Recovery Point Details
+  azure_rm_backupazurevm_info:
+    resource_group: 'myResourceGroup'
+    recovery_vault_name: 'testVault'
+    resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
+                  resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
+'''
 
 RETURN = \
     '''
@@ -130,7 +130,6 @@ class BackupAzureVMInfo(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         response = self.get_recovery_point_info()
@@ -156,10 +155,12 @@ class BackupAzureVMInfo(AzureRMModuleBaseExt):
             self.log('Error in fetching recovery point.')
             self.fail('Error in fetching recovery point {0}'.format(str(e)))
 
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 

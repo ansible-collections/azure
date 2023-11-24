@@ -42,18 +42,21 @@ options:
         required: false
         default: ['Monday']
         type: list
+        elements: str
     weeks:
         description:
             - List of weeks of month.
         required: false
         default: ['First']
         type: list
+        elements: str
     months:
         description:
             - List of months of year of yearly retention policy.
         required: false
         default: ['January']
         type: list
+        elements: str
     count:
         description:
             - Count of duration types. Retention duration is obtained by the counting the duration type Count times.
@@ -235,14 +238,17 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
             ),
             weekdays=dict(
                 type='list',
+                elements='str',
                 default=['Monday']
             ),
             weeks=dict(
                 type='list',
+                elements='str',
                 default=['First']
             ),
             months=dict(
                 type='list',
+                elements='str',
                 default=['January']
             ),
             count=dict(
@@ -360,7 +366,6 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         old_response = self.get_resource()
@@ -397,10 +402,12 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
             self.log('Error in creating Backup Policy.')
             self.fail('Error in creating Backup Policy {0}'.format(str(e)))
 
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 

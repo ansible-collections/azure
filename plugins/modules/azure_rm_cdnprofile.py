@@ -20,17 +20,21 @@ options:
         description:
             - Name of a resource group where the CDN profile exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the CDN profile.
         required: true
+        type: str
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     sku:
         description:
             - The pricing tier, defines a CDN provider, feature list and rate of the CDN profile.
             - Detailed pricing can be find at U(https://azure.microsoft.com/en-us/pricing/details/cdn/).
+        type: str
         choices:
             - standard_verizon
             - premium_verizon
@@ -42,6 +46,7 @@ options:
         description:
             - Assert the state of the CDN profile. Use C(present) to create or update a CDN profile and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -56,19 +61,19 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a CDN profile
-      azure_rm_cdnprofile:
-          resource_group: myResourceGroup
-          name: myCDN
-          sku: standard_akamai
-          tags:
-              testing: testing
+- name: Create a CDN profile
+  azure_rm_cdnprofile:
+    resource_group: myResourceGroup
+    name: myCDN
+    sku: standard_akamai
+    tags:
+      testing: testing
 
-    - name: Delete the CDN profile
-      azure_rm_cdnprofile:
-        resource_group: myResourceGroup
-        name: myCDN
-        state: absent
+- name: Delete the CDN profile
+  azure_rm_cdnprofile:
+    resource_group: myResourceGroup
+    name: myCDN
+    state: absent
 '''
 RETURN = '''
 id:
@@ -285,7 +290,6 @@ class AzureRMCdnprofile(AzureRMModuleBase):
         if not self.cdn_client:
             self.cdn_client = self.get_mgmt_svc_client(CdnManagementClient,
                                                        base_url=self._cloud_environment.endpoints.resource_manager,
-                                                       is_track2=True,
                                                        api_version='2017-04-02')
         return self.cdn_client
 

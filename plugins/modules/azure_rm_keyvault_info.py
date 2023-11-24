@@ -40,17 +40,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get Key Vault by name
-    azure_rm_keyvault_info:
-      resource_group: myResourceGroup
-      name: myVault
+- name: Get Key Vault by name
+  azure_rm_keyvault_info:
+    resource_group: myResourceGroup
+    name: myVault
 
-  - name: List Key Vaults in specific resource group
-    azure_rm_keyvault_info:
-      resource_group: myResourceGroup
+- name: List Key Vaults in specific resource group
+  azure_rm_keyvault_info:
+    resource_group: myResourceGroup
 
-  - name: List Key Vaults in current subscription
-    azure_rm_keyvault_info:
+- name: List Key Vaults in current subscription
+  azure_rm_keyvault_info:
 '''
 
 RETURN = '''
@@ -261,7 +261,6 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
 
         self._client = self.get_mgmt_svc_client(KeyVaultManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
-                                                is_track2=True,
                                                 api_version="2021-10-01")
 
         if self.name:

@@ -24,9 +24,11 @@ options:
     name:
         description:
             - Only show results for a specific Public IP.
+        type: str
     resource_group:
         description:
             - Limit results by resource group. Required when using name parameter.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -42,16 +44,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one Public IP
-      azure_rm_publicipaddress_info:
-        resource_group: myResourceGroup
-        name: publicip001
+- name: Get facts for one Public IP
+  azure_rm_publicipaddress_info:
+    resource_group: myResourceGroup
+    name: publicip001
 
-    - name: Get facts for all Public IPs within a resource groups
-      azure_rm_publicipaddress_info:
-        resource_group: myResourceGroup
-        tags:
-          - key:value
+- name: Get facts for all Public IPs within a resource groups
+  azure_rm_publicipaddress_info:
+    resource_group: myResourceGroup
+    tags:
+      - key:value
 '''
 
 RETURN = '''

@@ -1,20 +1,20 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     cert1_file: "cert1.txt"
     cert2_file: "cert2.txt"
     cert3b64_file: "cert3b64.txt"
-  run_once: yes
+  run_once: true
 - name: Set json query to only retrieve gateways from this test
-  set_fact:
+  ansible.builtin.set_fact:
     query: "[?ends_with(name, `{{ rpfx }}`)]"
-  run_once: yes
+  run_once: true
 
 - name: Load app gateways
   azure_rm_appgateway_info:
   register: appgw_output
 - name: Assert there are no gateways
-  assert:
+  ansible.builtin.assert:
     that:
       - appgw_output.gateways | community.general.json_query(query) | length == 0
 
@@ -23,11 +23,11 @@
     name: vnet{{ rpfx }}
     resource_group: "{{ resource_group }}"
     address_prefixes_cidr:
-        - 10.1.0.0/16
-        - 172.100.0.0/16
+      - 10.1.0.0/16
+      - 172.100.0.0/16
     dns_servers:
-        - 127.0.0.1
-        - 127.0.0.2
+      - 127.0.0.1
+      - 127.0.0.2
   register: vnet_output
 - name: Create a subnet
   azure_rm_subnet:
@@ -73,13 +73,13 @@
           - ip_address: 10.0.0.4
         name: test_backend_address_pool
     probes:
-     - name: custom_probe
-       protocol: http
-       host: 10.0.0.4
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
+      - name: custom_probe
+        protocol: http
+        host: 10.0.0.4
+        path: /healthz
+        interval: 30
+        timeout: 30
+        unhealthy_threshold: 3
     backend_http_settings_collection:
       - port: 80
         protocol: http
@@ -97,29 +97,29 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
     redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
+      - redirect_type: permanent
+        target_listener: sample_http_listener
+        include_path: true
+        include_query_string: true
+        name: redirect_site_to_https
   register: output
-  check_mode: yes
+  check_mode: true
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
-- name: Create instance of Application Gateway
+- name: Create instance of application gateway
   azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
@@ -155,13 +155,13 @@
           - ip_address: 10.0.0.4
         name: test_backend_address_pool
     probes:
-     - name: custom_probe
-       protocol: http
-       host: 10.0.0.4
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
+      - name: custom_probe
+        protocol: http
+        host: 10.0.0.4
+        path: /healthz
+        interval: 30
+        timeout: 30
+        unhealthy_threshold: 3
     backend_http_settings_collection:
       - port: 80
         protocol: http
@@ -179,24 +179,24 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
     redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
+      - redirect_type: permanent
+        target_listener: sample_http_listener
+        include_path: true
+        include_query_string: true
+        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -206,7 +206,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert properties
-  assert:
+  ansible.builtin.assert:
     that:
       - output.gateways | length == 1
       - output.gateways[0].name == 'appgateway{{ rpfx }}'
@@ -222,7 +222,7 @@
   check_mode: true
   register: output
 - name: Assert the resource instance is stopped
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -233,7 +233,7 @@
     gateway_state: stopped
   register: output
 - name: Assert the resource instance is stopped
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.operational_state == 'Stopped'
@@ -245,7 +245,7 @@
     gateway_state: stopped
   register: output
 - name: Assert the resource instance did not change
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.operational_state == 'Stopped'
@@ -258,7 +258,7 @@
   check_mode: true
   register: output
 - name: Assert the resource instance is started
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -269,7 +269,7 @@
     gateway_state: started
   register: output
 - name: Assert the resource instance is started
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.operational_state == 'Running'
@@ -281,7 +281,7 @@
     gateway_state: started
   register: output
 - name: Assert the resource instance did not change
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.operational_state == 'Running'
@@ -322,13 +322,13 @@
           - ip_address: 10.0.0.4
         name: test_backend_address_pool
     probes:
-     - name: custom_probe
-       protocol: http
-       host: 10.0.0.4
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
+      - name: custom_probe
+        protocol: http
+        host: 10.0.0.4
+        path: /healthz
+        interval: 30
+        timeout: 30
+        unhealthy_threshold: 3
     backend_http_settings_collection:
       - port: 80
         protocol: http
@@ -346,24 +346,24 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
     redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
+      - redirect_type: permanent
+        target_listener: sample_http_listener
+        include_path: true
+        include_query_string: true
+        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -403,13 +403,13 @@
           - ip_address: 10.0.0.4
         name: test_backend_address_pool
     probes:
-     - name: custom_probe
-       protocol: http
-       host: 10.0.0.4
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
+      - name: custom_probe
+        protocol: http
+        host: 10.0.0.4
+        path: /healthz
+        interval: 30
+        timeout: 30
+        unhealthy_threshold: 3
     backend_http_settings_collection:
       - port: 81
         protocol: http
@@ -427,24 +427,24 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
     redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
+      - redirect_type: permanent
+        target_listener: sample_http_listener
+        include_path: true
+        include_query_string: true
+        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -488,13 +488,13 @@
           - ip_address: 10.0.0.4
         name: test_backend_address_pool
     probes:
-     - name: custom_probe
-       protocol: http
-       host: 10.0.0.4
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
+      - name: custom_probe
+        protocol: http
+        host: 10.0.0.4
+        path: /healthz
+        interval: 30
+        timeout: 30
+        unhealthy_threshold: 3
     backend_http_settings_collection:
       - port: 81
         protocol: http
@@ -512,24 +512,24 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
     redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
+      - redirect_type: permanent
+        target_listener: sample_http_listener
+        include_path: true
+        include_query_string: true
+        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -539,7 +539,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert SSL config updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.gateways[0].ssl_policy.policy_type == 'custom'
 
@@ -583,13 +583,13 @@
           - ip_address: 10.0.0.4
         name: test_backend_address_pool
     probes:
-     - name: custom_probe
-       protocol: http
-       host: 10.0.0.4
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
+      - name: custom_probe
+        protocol: http
+        host: 10.0.0.4
+        path: /healthz
+        interval: 30
+        timeout: 30
+        unhealthy_threshold: 3
     backend_http_settings_collection:
       - port: 81
         protocol: http
@@ -607,24 +607,24 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
     redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
+      - redirect_type: permanent
+        target_listener: sample_http_listener
+        include_path: true
+        include_query_string: true
+        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -666,13 +666,13 @@
           - ip_address: 10.0.0.4
         name: test_backend_address_pool
     probes:
-     - name: custom_probe
-       protocol: http
-       host: 10.0.0.4
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
+      - name: custom_probe
+        protocol: http
+        host: 10.0.0.4
+        path: /healthz
+        interval: 30
+        timeout: 30
+        unhealthy_threshold: 3
     backend_http_settings_collection:
       - port: 80
         protocol: http
@@ -690,24 +690,24 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
     redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
+      - redirect_type: permanent
+        target_listener: sample_http_listener
+        include_path: true
+        include_query_string: true
+        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -715,7 +715,7 @@
   azure_rm_appgateway_info:
   register: appgw_output
 - name: Assert there are the correct number of gateways
-  assert:
+  ansible.builtin.assert:
     that:
       - appgw_output.gateways | community.general.json_query(query) | length == 2
 
@@ -725,7 +725,7 @@
     resource_group: "{{ resource_group }}"
   register: appgw_output
 - name: Assert there are the correct number of gateways
-  assert:
+  ansible.builtin.assert:
     that:
       - appgw_output.gateways | community.general.json_query(query) | length == 1
       - (appgw_output.gateways | community.general.json_query(query))[0].name == 'appgateway-subnet-lookup{{ rpfx }}'
@@ -769,13 +769,13 @@
           - ip_address: 10.0.0.4
         name: test_backend_address_pool
     probes:
-     - name: custom_probe
-       protocol: http
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
-       pick_host_name_from_backend_http_settings: true
+      - name: custom_probe
+        protocol: http
+        path: /healthz
+        interval: 30
+        timeout: 30
+        unhealthy_threshold: 3
+        pick_host_name_from_backend_http_settings: true
     backend_http_settings_collection:
       - port: 80
         protocol: http
@@ -794,24 +794,24 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
     redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
+      - redirect_type: permanent
+        target_listener: sample_http_listener
+        include_path: true
+        include_query_string: true
+        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -852,13 +852,13 @@
           - ip_address: 10.0.0.4
         name: test_backend_address_pool
     probes:
-     - name: custom_probe
-       protocol: http
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
-       pick_host_name_from_backend_http_settings: true
+      - name: custom_probe
+        protocol: http
+        path: /healthz
+        interval: 30
+        timeout: 30
+        unhealthy_threshold: 3
+        pick_host_name_from_backend_http_settings: true
     backend_http_settings_collection:
       - port: 80
         protocol: http
@@ -877,24 +877,24 @@
         protocol: http
         name: http_listener
     request_routing_rules:
-      - rule_type: Basic
+      - rule_type: basic
         backend_address_pool: test_backend_address_pool
         backend_http_settings: sample_appgateway_http_settings
         http_listener: sample_http_listener
         name: rule1
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
     redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
+      - redirect_type: permanent
+        target_listener: sample_http_listener
+        include_path: true
+        include_query_string: true
+        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -903,7 +903,7 @@
     resource_group: "{{ resource_group_secondary }}"
   register: appgw_output
 - name: Assert there are the correct number of gateways and they are the right ones
-  assert:
+  ansible.builtin.assert:
     that:
       - appgw_output.gateways | community.general.json_query(query) | length == 1
       - (appgw_output.gateways | community.general.json_query(query))[0].name == 'appgateway-probe-{{ rpfx }}'
@@ -914,7 +914,7 @@
     resource_group: "{{ resource_group_secondary }}"
   register: appgw_output
 - name: Assert there are no results
-  assert:
+  ansible.builtin.assert:
     that:
       - appgw_output.gateways | community.general.json_query(query) | length == 0
 
@@ -954,13 +954,13 @@
           - ip_address: 10.0.0.4
         name: test_backend_address_pool
     probes:
-     - name: custom_probe
-       protocol: http
-       host: 10.0.0.4
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
+      - name: custom_probe
+        protocol: http
+        host: 10.0.0.4
+        path: /healthz
+        interval: 30
+        timeout: 30
+        unhealthy_threshold: 3
     backend_http_settings_collection:
       - port: 80
         protocol: http
@@ -982,7 +982,7 @@
         http_listener: sample_http_listener
         name: rule1
         url_path_map: path_mappings
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -998,14 +998,14 @@
               - "/abc"
               - "/123/*"
     redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
+      - redirect_type: permanent
+        target_listener: sample_http_listener
+        include_path: true
+        include_query_string: true
+        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -1045,13 +1045,13 @@
           - ip_address: 10.0.0.4
         name: test_backend_address_pool
     probes:
-     - name: custom_probe
-       protocol: http
-       host: 10.0.0.4
-       path: /healthz
-       interval: 30
-       timeout: 30
-       unhealthy_threshold: 3
+      - name: custom_probe
+        protocol: http
+        host: 10.0.0.4
+        path: /healthz
+        interval: 30
+        timeout: 30
+        unhealthy_threshold: 3
     backend_http_settings_collection:
       - port: 80
         protocol: http
@@ -1073,7 +1073,7 @@
         http_listener: sample_http_listener
         name: rule1
         url_path_map: path_mappings
-      - rule_type: Basic
+      - rule_type: basic
         http_listener: http_listener
         redirect_configuration: redirect_site_to_https
         name: http_redirect_rule
@@ -1089,14 +1089,14 @@
               - "/abc"
               - "/123/*"
     redirect_configurations:
-     - redirect_type: permanent
-       target_listener: sample_http_listener
-       include_path: true
-       include_query_string: true
-       name: redirect_site_to_https
+      - redirect_type: permanent
+        target_listener: sample_http_listener
+        include_path: true
+        include_query_string: true
+        name: redirect_site_to_https
   register: output
 - name: Assert the resource instance is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -1192,20 +1192,20 @@
         http_listener: "inbound-http"
         redirect_configuration: "redirect-http"
     probes:
-        - name: "http-probe1"
-          interval: 30
-          path: "/abc"
-          protocol: "https"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
-        - name: "http-probe2"
-          interval: 30
-          path: "/xyz"
-          protocol: "http"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
+      - name: "http-probe1"
+        interval: 30
+        path: "/abc"
+        protocol: "https"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+      - name: "http-probe2"
+        interval: 30
+        path: "/xyz"
+        protocol: "http"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
     redirect_configurations:
       - name: "redirect-http"
         redirect_type: "permanent"
@@ -1223,7 +1223,7 @@
           - "path_mappings"
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -1319,20 +1319,20 @@
         http_listener: "inbound-http"
         redirect_configuration: "redirect-http"
     probes:
-        - name: "http-probe1"
-          interval: 30
-          path: "/abc"
-          protocol: "https"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
-        - name: "http-probe2"
-          interval: 30
-          path: "/xyz"
-          protocol: "http"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
+      - name: "http-probe1"
+        interval: 30
+        path: "/abc"
+        protocol: "https"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+      - name: "http-probe2"
+        interval: 30
+        path: "/xyz"
+        protocol: "http"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
     redirect_configurations:
       - name: "redirect-http"
         redirect_type: "permanent"
@@ -1350,7 +1350,7 @@
           - "path_mappings"
   register: output
 - name: Assert the resource instance is not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -1481,20 +1481,20 @@
                 - header_name: "Foo"
                   header_value: "Bar"
     probes:
-        - name: "http-probe1"
-          interval: 30
-          path: "/abc"
-          protocol: "https"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
-        - name: "http-probe2"
-          interval: 30
-          path: "/xyz"
-          protocol: "http"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
+      - name: "http-probe1"
+        interval: 30
+        path: "/abc"
+        protocol: "https"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+      - name: "http-probe2"
+        interval: 30
+        path: "/xyz"
+        protocol: "http"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
     redirect_configurations:
       - name: "redirect-http"
         redirect_type: "permanent"
@@ -1512,7 +1512,7 @@
           - "path_mappings"
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -1636,20 +1636,20 @@
                 - header_name: "Foo"
                   header_value: "Bar"
     probes:
-        - name: "http-probe1"
-          interval: 30
-          path: "/abc"
-          protocol: "https"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
-        - name: "http-probe2"
-          interval: 30
-          path: "/xyz"
-          protocol: "http"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
+      - name: "http-probe1"
+        interval: 30
+        path: "/abc"
+        protocol: "https"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+      - name: "http-probe2"
+        interval: 30
+        path: "/xyz"
+        protocol: "http"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
     redirect_configurations:
       - name: "redirect-http"
         redirect_type: "permanent"
@@ -1667,7 +1667,7 @@
           - "path_mappings"
   register: output
 - name: Assert the resource instance is not updated
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -1794,20 +1794,20 @@
                 - header_name: "FooResponse"
                   header_value: "BarResponse"
     probes:
-        - name: "http-probe1"
-          interval: 30
-          path: "/abc"
-          protocol: "https"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
-        - name: "http-probe2"
-          interval: 30
-          path: "/xyz"
-          protocol: "http"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
+      - name: "http-probe1"
+        interval: 30
+        path: "/abc"
+        protocol: "https"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+      - name: "http-probe2"
+        interval: 30
+        path: "/xyz"
+        protocol: "http"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
     redirect_configurations:
       - name: "redirect-http"
         redirect_type: "permanent"
@@ -1825,7 +1825,7 @@
           - "path_mappings"
   register: output
 - name: Assert the resource instance is updated
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -1877,8 +1877,8 @@
         probe: "http-probe1"
         cookie_based_affinity: "Disabled"
         connection_draining:
-            drain_timeout_in_sec: 60
-            enabled: true
+          drain_timeout_in_sec: 60
+          enabled: true
         trusted_root_certificates:
           - "rootCert3"
       - name: "http-profile2"
@@ -1960,20 +1960,20 @@
                 - header_name: "Foo"
                   header_value: "Bar"
     probes:
-        - name: "http-probe1"
-          interval: 30
-          path: "/abc"
-          protocol: "https"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
-        - name: "http-probe2"
-          interval: 30
-          path: "/xyz"
-          protocol: "http"
-          pick_host_name_from_backend_http_settings: true
-          timeout: 30
-          unhealthy_threshold: 2
+      - name: "http-probe1"
+        interval: 30
+        path: "/abc"
+        protocol: "https"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
+      - name: "http-probe2"
+        interval: 30
+        path: "/xyz"
+        protocol: "http"
+        pick_host_name_from_backend_http_settings: true
+        timeout: 30
+        unhealthy_threshold: 2
     redirect_configurations:
       - name: "redirect-http"
         redirect_type: "permanent"
@@ -1992,7 +1992,7 @@
   register: output
 
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2160,7 +2160,7 @@
   register: output
 
 - name: Assert the resource instance is not updated
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -2321,17 +2321,17 @@
         url_path_maps:
           - "path_mappings"
     web_application_firewall_configuration:
-        enabled: true
-        firewall_mode: "Detection"
-        rule_set_type: "OWASP"
-        rule_set_version: "3.0"
-        request_body_check: true
-        max_request_body_size_in_kb: 128
-        file_upload_limit_in_mb: 100
+      enabled: true
+      firewall_mode: "Detection"
+      rule_set_type: "OWASP"
+      rule_set_version: "3.0"
+      request_body_check: true
+      max_request_body_size_in_kb: 128
+      file_upload_limit_in_mb: 100
   register: output
 
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2495,7 +2495,7 @@
   register: output
 
 - name: Assert the resource instance is not updated
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -2504,10 +2504,10 @@
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2518,7 +2518,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2529,7 +2529,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -2540,7 +2540,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2551,7 +2551,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2562,7 +2562,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2573,7 +2573,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2584,7 +2584,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2595,7 +2595,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2606,7 +2606,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -2617,7 +2617,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 

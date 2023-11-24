@@ -1,10 +1,10 @@
 packaging
 requests[security]
 xmltodict
-msal==1.23.0
+msgraph-sdk==1.0.0
 azure-cli-core==2.34.0
 azure-common==1.1.11
-azure-identity==1.7.0
+azure-identity==1.14.0
 azure-mgmt-authorization==2.0.0
 azure-mgmt-apimanagement==3.0.0
 azure-mgmt-batch==16.2.0
@@ -36,12 +36,9 @@ azure-mgmt-trafficmanager==1.0.0b1
 azure-mgmt-web==6.1.0
 azure-nspkg==2.0.0
 azure-storage-blob==12.11.0
-msrest==0.7.1
 azure-core==1.28.0
-msrestazure==0.6.4
 azure-keyvault==4.2.0
 azure-mgmt-keyvault==10.0.0
-azure-graphrbac==0.61.1
 azure-mgmt-cosmosdb==6.4.0
 azure-mgmt-hdinsight==9.0.0
 azure-mgmt-devtestlabs==9.0.0

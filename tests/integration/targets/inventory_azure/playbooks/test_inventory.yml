@@ -1,16 +1,20 @@
 ---
-- hosts: localhost
+- name: Config hosts
+  hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: false
   tasks:
-  - include_vars: vars.yml
+    - name: Set facts
+      ansible.builtin.include_vars: vars.yml
 
-  - name: Pause for 10 mimutes for updating
-    shell: sleep 600
+    - name: Pause for 10 mimutes for updating
+      ansible.builtin.command: sleep 600
+      changed_when: false
 
-  - meta: refresh_inventory
+    - name: Refresh inventory
+      ansible.builtin.meta: refresh_inventory
 
-  - name: Test Inventory 
-    assert:
-      that:
-        - vm_name in hostvars
+    - name: Test Inventory
+      ansible.builtin.assert:
+        that:
+          - vm_name in hostvars

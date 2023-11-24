@@ -21,24 +21,30 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     lab_name:
         description:
             - The name of the lab.
         required: True
+        type: str
     policy_set_name:
         description:
             - The name of the policy set.
         required: True
+        type: str
     name:
         description:
             - The name of the policy.
         required: True
+        type: str
     description:
         description:
             - The description of the policy.
+        type: str
     fact_name:
         description:
             - The fact name of the policy (e.g. C(lab_vm_count), C(lab_vm_size)), MaxVmsAllowedPerLab, etc.
+        type: str
         choices:
             - 'user_owned_lab_vm_count'
             - 'user_owned_lab_premium_vm_count'
@@ -53,13 +59,14 @@ options:
             - The threshold of the policy (it could be either a maximum value or a list of allowed values).
         type: raw
     state:
-      description:
-          - Assert the state of the Policy.
-          - Use C(present) to create or update an Policy and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Policy.
+            - Use C(present) to create or update an Policy and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -193,7 +200,6 @@ class AzureRMDtlPolicy(AzureRMModuleBase):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)

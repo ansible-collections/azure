@@ -49,18 +49,18 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create/Update Azure Recovery Service vault
-      azure_rm_recoveryservicesvault:
-        resource_group: 'myResourceGroup'
-        name: 'testVault'
-        location: 'westeurope'
-        state: 'present'
-    - name: Delete Recovery Service Vault
-      azure_rm_recoveryservicesvault:
-        resource_group: 'myResourceGroup'
-        name: 'testVault'
-        location: 'westeurope'
-        state: 'absent'
+- name: Create/Update Azure Recovery Service vault
+  azure_rm_recoveryservicesvault:
+    resource_group: 'myResourceGroup'
+    name: 'testVault'
+    location: 'westeurope'
+    state: 'present'
+- name: Delete Recovery Service Vault
+  azure_rm_recoveryservicesvault:
+    resource_group: 'myResourceGroup'
+    name: 'testVault'
+    location: 'westeurope'
+    state: 'absent'
 '''
 
 RETURN = '''
@@ -208,7 +208,6 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         old_response = self.get_resource()
@@ -247,10 +246,12 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
             self.log('Error in creating Azure Recovery Service Vault.')
             self.fail('Error in creating Azure Recovery Service Vault {0}'.format(str(e)))
 
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 

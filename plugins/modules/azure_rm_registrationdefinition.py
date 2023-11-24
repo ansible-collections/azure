@@ -106,34 +106,33 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create Registration Definition without scope
-      azure_rm_registrationdefinition:
-        registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        properties:
-          description: test
-          authorizations:
-            - principal_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-              role_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-          managed_by_tenant_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-          registration_definition_name: def4
+- name: Create Registration Definition without scope
+  azure_rm_registrationdefinition:
+    registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    properties:
+      description: test
+      authorizations:
+        - principal_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+          role_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      managed_by_tenant_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      registration_definition_name: def4
 
-    - name: Create Registration Definition with scope
-      azure_rm_registrationdefinition:
-        scope: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        properties:
-          description: test
-          authorizations:
-            - principal_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-              role_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-          managed_by_tenant_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-          registration_definition_name: def5
+- name: Create Registration Definition with scope
+  azure_rm_registrationdefinition:
+    scope: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    properties:
+      description: test
+      authorizations:
+        - principal_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+          role_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      managed_by_tenant_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      registration_definition_name: def5
 
-    - name: Delete Registration Definition
-      azure_rm_registrationdefinition:
-        registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        state: absent
-
+- name: Delete Registration Definition
+  azure_rm_registrationdefinition:
+    registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: absent
 '''
 
 RETURN = '''
@@ -366,7 +365,6 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
                                                     api_version='2019-09-01',
-                                                    is_track2=True,
                                                     suppress_subscription_id=True)
 
         old_response = self.get_resource()

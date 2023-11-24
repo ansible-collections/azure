@@ -1,0 +1,94 @@
+- name: Set vault name
+  ansible.builtin.set_fact:
+    vault_name: "kv{{ uid_short }}{{ '%m%d%H%M%S' | strftime }}"
+
+- name: Lookup service principal object id
+  ansible.builtin.set_fact:
+    object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
+                   azure_client_id=azure_client_id,
+                   azure_secret=azure_secret,
+                   azure_tenant=azure_tenant) }}"
+  register: object_id_facts
+
+- name: Create a key vault
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    vault_name: "{{ vault_name }}"
+    enabled_for_disk_encryption: true
+    enable_purge_protection: true
+    vault_tenant: "{{ azure_tenant }}"
+    sku:
+      name: standard
+      family: A
+    access_policies:
+      - tenant_id: "{{ azure_tenant }}"
+        object_id: "{{ object_id }}"
+        keys:
+          - get
+          - list
+          - wrapkey
+          - unwrapkey
+          - create
+          - update
+          - import
+          - delete
+          - backup
+          - restore
+          - recover
+          - purge
+
+- name: Create a key in key vault
+  azure_rm_keyvaultkey:
+    key_name: testkey
+    keyvault_uri: https://{{ vault_name }}.vault.azure.net
+
+- name: Get latest version of key
+  azure_rm_keyvaultkey_info:
+    vault_uri: https://{{ vault_name }}.vault.azure.net
+    name: testkey
+  register: results
+
+- name: Assert the key vault facts
+  ansible.builtin.set_fact:
+    key_url: "{{ results['keys'][0]['kid'] }}"
+
+- name: Create disk encryption set
+  azure_rm_diskencryptionset:
+    resource_group: "{{ resource_group }}"
+    name: "{{ des_name }}"
+    source_vault: "{{ vault_name }}"
+    key_url: "{{ key_url }}"
+    state: present
+  register: des_results
+
+- name: Grant DES access to key vault
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    vault_name: "{{ vault_name }}"
+    enabled_for_disk_encryption: true
+    enable_purge_protection: true
+    vault_tenant: "{{ azure_tenant }}"
+    sku:
+      name: standard
+      family: A
+    access_policies:
+      - tenant_id: "{{ azure_tenant }}"
+        object_id: "{{ object_id }}"
+        keys:
+          - get
+          - list
+          - wrapkey
+          - unwrapkey
+          - create
+          - update
+          - import
+          - delete
+          - backup
+          - restore
+          - recover
+          - purge
+      - object_id: "{{ des_results.state.identity.principal_id }}"
+        keys:
+          - get
+          - wrapkey
+          - unwrapkey

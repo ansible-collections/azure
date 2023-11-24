@@ -80,28 +80,28 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create a log profile
-    azure_rm_monitorlogprofile:
-      name: myProfile
-      location: eastus
-      locations:
-        - eastus
-        - westus
-      categories:
-        - Write
-        - Action
-      retention_policy:
-        enabled: False
-        days: 1
-      storage_account:
-        resource_group: myResourceGroup
-        name: myStorageAccount
-    register: output
+- name: Create a log profile
+  azure_rm_monitorlogprofile:
+    name: myProfile
+    location: eastus
+    locations:
+      - eastus
+      - westus
+    categories:
+      - Write
+      - Action
+    retention_policy:
+      enabled: false
+      days: 1
+    storage_account:
+      resource_group: myResourceGroup
+      name: myStorageAccount
+  register: output
 
-  - name: Delete a log profile
-    azure_rm_monitorlogprofile:
-      name: myProfile
-      state: absent
+- name: Delete a log profile
+  azure_rm_monitorlogprofile:
+    name: myProfile
+    state: absent
 '''
 
 RETURN = '''

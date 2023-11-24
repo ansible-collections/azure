@@ -34,6 +34,7 @@ options:
         description:
             - Collection of application rule collections used by Azure Firewall.
         type: list
+        elements: dict
         suboptions:
             priority:
                 description:
@@ -50,6 +51,7 @@ options:
                 description:
                     - Collection of rules used by a application rule collection.
                 type: list
+                elements: raw
                 suboptions:
                     name:
                         description:
@@ -63,18 +65,31 @@ options:
                         description:
                             - List of source IP addresses for this rule.
                         type: list
+                        elements: str
                     protocols:
                         description:
                             - Array of ApplicationRuleProtocols.
+                        elements: dict
                         type: list
+                        suboptions:
+                            type:
+                                description:
+                                    - The type of the protocols.
+                                type: str
+                            port:
+                                description:
+                                    - The ports of the protocols.
+                                type: str
                     target_fqdns:
                         description:
                             - List of FQDNs for this rule.
                         type: list
+                        elements: raw
                     fqdn_tags:
                         description:
                             - List of FQDN Tags for this rule.
                         type: list
+                        elements: raw
             name:
                 description:
                     - Gets name of the resource that is unique within a resource group.
@@ -84,6 +99,7 @@ options:
         description:
             - Collection of NAT rule collections used by Azure Firewall.
         type: list
+        elements: dict
         suboptions:
             priority:
                 description:
@@ -100,6 +116,7 @@ options:
                 description:
                     - Collection of rules used by a NAT rule collection.
                 type: list
+                elements: dict
                 suboptions:
                     name:
                         description:
@@ -113,18 +130,22 @@ options:
                         description:
                             - List of source IP addresses for this rule.
                         type: list
+                        elements: str
                     destination_addresses:
                         description:
                             - List of destination IP addresses for this rule.
                         type: list
+                        elements: str
                     destination_ports:
                         description:
                             - List of destination ports.
                         type: list
+                        elements: str
                     protocols:
                         description:
                             - Array of AzureFirewallNetworkRuleProtocols applicable to this NAT rule.
                         type: list
+                        elements: raw
                     translated_address:
                         description:
                             - The translated address for this NAT rule.
@@ -142,6 +163,7 @@ options:
         description:
             - Collection of network rule collections used by Azure Firewall.
         type: list
+        elements: dict
         suboptions:
             priority:
                 description:
@@ -158,6 +180,7 @@ options:
                 description:
                     - Collection of rules used by a network rule collection.
                 type: list
+                elements: dict
                 suboptions:
                     name:
                         description:
@@ -171,18 +194,22 @@ options:
                         description:
                             - Array of AzureFirewallNetworkRuleProtocols.
                         type: list
+                        elements: raw
                     source_addresses:
                         description:
                             - List of source IP addresses for this rule.
                         type: list
+                        elements: str
                     destination_addresses:
                         description:
                             - List of destination IP addresses.
                         type: list
+                        elements: str
                     destination_ports:
                         description:
                             - List of destination ports.
                         type: list
+                        elements: str
             name:
                 description:
                     - Gets name of the resource that is unique within a resource group.
@@ -192,6 +219,7 @@ options:
         description:
             - IP configuration of the Azure Firewall resource.
         type: list
+        elements: dict
         suboptions:
             subnet:
                 description:
@@ -300,7 +328,6 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myAzureFirewall
     state: absent
-
 '''
 
 RETURN = '''
@@ -343,6 +370,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             ),
             application_rule_collections=dict(
                 type='list',
+                elements='dict',
                 disposition='/properties/applicationRuleCollections',
                 options=dict(
                     priority=dict(
@@ -358,6 +386,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                     ),
                     rules=dict(
                         type='list',
+                        elements='raw',
                         disposition='properties/*',
                         options=dict(
                             name=dict(
@@ -368,10 +397,12 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                             ),
                             source_addresses=dict(
                                 type='list',
+                                elements='str',
                                 disposition='sourceAddresses'
                             ),
                             protocols=dict(
                                 type='list',
+                                elements='dict',
                                 options=dict(
                                     type=dict(
                                         type='str',
@@ -384,10 +415,12 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                             ),
                             target_fqdns=dict(
                                 type='list',
+                                elements='raw',
                                 disposition='targetFqdns'
                             ),
                             fqdn_tags=dict(
                                 type='list',
+                                elements='raw',
                                 disposition='fqdnTags'
                             )
                         )
@@ -399,6 +432,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             ),
             nat_rule_collections=dict(
                 type='list',
+                elements='dict',
                 disposition='/properties/natRuleCollections',
                 options=dict(
                     priority=dict(
@@ -414,6 +448,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                     ),
                     rules=dict(
                         type='list',
+                        elements='dict',
                         disposition='properties/*',
                         options=dict(
                             name=dict(
@@ -424,18 +459,22 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                             ),
                             source_addresses=dict(
                                 type='list',
+                                elements='str',
                                 disposition='sourceAddresses'
                             ),
                             destination_addresses=dict(
                                 type='list',
+                                elements='str',
                                 disposition='destinationAddresses'
                             ),
                             destination_ports=dict(
                                 type='list',
+                                elements='str',
                                 disposition='destinationPorts'
                             ),
                             protocols=dict(
-                                type='list'
+                                type='list',
+                                elements='raw'
                             ),
                             translated_address=dict(
                                 type='str',
@@ -454,6 +493,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             ),
             network_rule_collections=dict(
                 type='list',
+                elements='dict',
                 disposition='/properties/networkRuleCollections',
                 options=dict(
                     priority=dict(
@@ -469,6 +509,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                     ),
                     rules=dict(
                         type='list',
+                        elements='dict',
                         disposition='properties/*',
                         options=dict(
                             name=dict(
@@ -478,18 +519,22 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                                 type='str'
                             ),
                             protocols=dict(
-                                type='list'
+                                type='list',
+                                elements='raw'
                             ),
                             source_addresses=dict(
                                 type='list',
+                                elements='str',
                                 disposition='sourceAddresses'
                             ),
                             destination_addresses=dict(
                                 type='list',
+                                elements='str',
                                 disposition='destinationAddresses'
                             ),
                             destination_ports=dict(
                                 type='list',
+                                elements='str',
                                 disposition='destinationPorts'
                             )
                         )
@@ -501,6 +546,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             ),
             ip_configurations=dict(
                 type='list',
+                elements='dict',
                 disposition='/properties/ipConfigurations',
                 options=dict(
                     subnet=dict(
@@ -564,7 +610,6 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -659,10 +704,12 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             self.log('Error attempting to create the AzureFirewall instance.')
             self.fail('Error creating the AzureFirewall instance: {0}'.format(str(exc)))
 
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 

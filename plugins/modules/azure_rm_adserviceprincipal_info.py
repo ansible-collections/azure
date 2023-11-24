@@ -5,8 +5,8 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
+__metaclass__ = type
 
 DOCUMENTATION = '''
 module: azure_rm_adserviceprincipal_info
@@ -25,9 +25,9 @@ options:
         type: str
     tenant:
         description:
-            - The tenant ID.
+            - (deprecated) The tenant ID.
+            - This option has been deprecated, and will be removed in the future.
         type: str
-        required: True
     object_id:
         description:
             - It's service principal's object ID.
@@ -42,11 +42,9 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: get ad sp info
-    azure_rm_adserviceprincipal_info:
-      app_id: "{{ app_id }}"
-      tenant: "{{ tenant_id }}"
-
+- name: get ad sp info
+  azure_rm_adserviceprincipal_info:
+    app_id: "{{ app_id }}"
 '''
 
 RETURN = '''
@@ -81,7 +79,8 @@ object_id:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from azure.graphrbac.models import GraphErrorException
+    import asyncio
+    from msgraph.generated.service_principals.service_principals_request_builder import ServicePrincipalsRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -93,7 +92,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             app_id=dict(type='str'),
             object_id=dict(type='str'),
-            tenant=dict(type='str', required=True),
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection')
         )
 
         self.tenant = None
@@ -111,17 +110,19 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
+        self._client = self.get_msgraph_client()
+
         service_principals = []
 
         try:
-            client = self.get_graphrbac_client(self.tenant)
             if self.object_id is None:
-                service_principals = list(client.service_principals.list(filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id)))
+                sps = asyncio.get_event_loop().run_until_complete(self.get_service_principals())
+                service_principals = list(sps.value)
             else:
-                service_principals = [client.service_principals.get(self.object_id)]
+                service_principals = [asyncio.get_event_loop().run_until_complete(self.get_service_principal())]
 
             self.results['service_principals'] = [self.to_dict(sp) for sp in service_principals]
-        except GraphErrorException as ge:
+        except Exception as ge:
             self.fail("failed to get service principal info {0}".format(str(ge)))
 
         return self.results
@@ -129,10 +130,21 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
     def to_dict(self, object):
         return dict(
             app_id=object.app_id,
-            object_id=object.object_id,
+            object_id=object.id,
             app_display_name=object.display_name,
             app_role_assignment_required=object.app_role_assignment_required
         )
+
+    async def get_service_principal(self):
+        return await self._client.service_principals.by_service_principal_id(self.object_id).get()
+
+    async def get_service_principals(self):
+        request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
+            query_parameters=ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
+                filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
+            ),
+        )
+        return await self._client.service_principals.get(request_configuration=request_configuration)
 
 
 def main():

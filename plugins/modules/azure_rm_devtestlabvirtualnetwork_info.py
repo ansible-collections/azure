@@ -41,17 +41,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of DevTest Lab Virtual Network
-    azure_rm_devtestlabvirtualnetwork_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myVirtualNetwork
+- name: Get instance of DevTest Lab Virtual Network
+  azure_rm_devtestlabvirtualnetwork_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myVirtualNetwork
 
-  - name: List all Virtual Networks in DevTest Lab
-    azure_rm_devtestlabvirtualnetwork_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myVirtualNetwork
+- name: List all Virtual Networks in DevTest Lab
+  azure_rm_devtestlabvirtualnetwork_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myVirtualNetwork
 '''
 
 RETURN = '''
@@ -152,7 +152,6 @@ class AzureRMDevTestLabVirtualNetworkInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name:

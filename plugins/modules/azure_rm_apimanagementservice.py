@@ -169,7 +169,7 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
 
         self.body = {}
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2020-06-01-preview'
+        self.query_parameters['api-version'] = '2022-08-01'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -190,7 +190,6 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -284,11 +283,12 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
             self.log('Error attempting to create the ApiManagementService instance.')
             self.fail('Error creating the ApiManagementService instance: {0}'.format(str(exc)))
 
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
-            pass
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 

@@ -25,9 +25,11 @@ options:
     resource_group:
         description:
             - Name of the resource group containing the virtual machines (required when filtering by vm name).
+        type: str
     name:
         description:
             - Name of the virtual machine.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -44,21 +46,21 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get facts for all virtual machines of a resource group
-    azure_rm_virtualmachine_info:
-      resource_group: myResourceGroup
+- name: Get facts for all virtual machines of a resource group
+  azure_rm_virtualmachine_info:
+    resource_group: myResourceGroup
 
-  - name: Get facts by name
-    azure_rm_virtualmachine_info:
-      resource_group: myResourceGroup
-      name: myVm
+- name: Get facts by name
+  azure_rm_virtualmachine_info:
+    resource_group: myResourceGroup
+    name: myVm
 
-  - name: Get facts by tags
-    azure_rm_virtualmachine_info:
-      resource_group: myResourceGroup
-      tags:
-        - testing
-        - foo:bar
+- name: Get facts by tags
+  azure_rm_virtualmachine_info:
+    resource_group: myResourceGroup
+    tags:
+      - testing
+      - foo:bar
 '''
 
 RETURN = '''
@@ -242,6 +244,12 @@ vms:
             returned: always
             type: dict
             sample: { "key1":"value1" }
+        vm_agent_version:
+            description:
+                - Version of the Azure VM Agent (waagent) running inside the VM.
+            returned: always
+            type: str
+            sample: '2.9.1.1'
         vm_size:
             description:
                 - Virtual machine size.
@@ -456,6 +464,11 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                 break
 
         new_result = {}
+
+        if instance.get('vm_agent') is not None:
+            new_result['vm_agent_version'] = instance['vm_agent'].get('vm_agent_version')
+        else:
+            new_result['vm_agent_version'] = 'Unknown'
 
         if vm.security_profile is not None:
             new_result['security_profile'] = dict()

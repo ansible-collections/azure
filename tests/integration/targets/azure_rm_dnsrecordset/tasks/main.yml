@@ -1,5 +1,5 @@
 - name: Create random domain name
-  set_fact:
+  ansible.builtin.set_fact:
     domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create a DNS zone
@@ -10,10 +10,10 @@
   register: results
 
 - name: Assert that DNS zone was created
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
-- name: create "A" record set with multiple records
+- name: Create "A" record set with multiple records
   azure_rm_dnsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: www
@@ -26,10 +26,10 @@
   register: results
 
 - name: Assert that A record set was created
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
-- name: re-run "A" record with same values
+- name: Re-run "A" record with same values
   azure_rm_dnsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: www
@@ -42,7 +42,7 @@
   register: results
 
 - name: Assert that A record set was not changed
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Update "A" record set with additional record
@@ -57,11 +57,11 @@
   register: results
 
 - name: Assert that new record was appended
-  assert:
-    that: 
+  ansible.builtin.assert:
+    that:
       - results.changed
 
-- name: re-update "A" record set with additional record
+- name: Re-update "A" record set with additional record
   azure_rm_dnsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: www
@@ -73,7 +73,7 @@
   register: results
 
 - name: Assert that A record set was not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not results.changed
 
@@ -90,7 +90,7 @@
   register: results
 
 - name: Assert that record was deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed
 
@@ -102,17 +102,17 @@
     record_type: A
     records:
       - entry: 192.168.100.105
-  check_mode: yes
+  check_mode: true
   register: results
 
 - name: Assert that check_mode returns new state
-  assert:
-    that: 
+  ansible.builtin.assert:
+    that:
       - results.changed
 
 # FUTURE: add facts module calls to ensure that we really didn't touch anything
 
-- name: delete a record set
+- name: Delete a record set
   azure_rm_dnsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: www
@@ -122,10 +122,10 @@
   register: results
 
 - name: Assert that record set deleted
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
-- name: (idempotence test) re-run record set absent
+- name: Re-run record set absent(idempotence test)
   azure_rm_dnsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: www
@@ -134,11 +134,11 @@
     state: absent
   register: results
 
-- name:
-  assert:
+- name: Assert the record set deleted
+  ansible.builtin.assert:
     that: not results.changed
 
-- name: create SRV records in a new record set
+- name: Create SRV records in a new record set
   azure_rm_dnsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: "_sip._tcp.{{ domain_name }}.com"
@@ -147,18 +147,18 @@
     record_type: SRV
     state: present
     records:
-    - entry: sip.{{ domain_name }}.com
-      priority: 20
-      weight: 10
-      port: 5060
+      - entry: sip.{{ domain_name }}.com
+        priority: 20
+        weight: 10
+        port: 5060
   register: results
 
 - name: Assert that SRV record set was created
-  assert:
-    that: 
+  ansible.builtin.assert:
+    that:
       - results.changed
 
-- name: create TXT records in a new record set
+- name: Create TXT records in a new record set
   azure_rm_dnsrecordset:
     resource_group: "{{ resource_group }}"
     relative_name: "_txt.{{ domain_name }}.com"
@@ -174,7 +174,7 @@
   register: results
 
 - name: Assert that TXT record set was created
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed
 
@@ -196,7 +196,7 @@
   register: results
 
 - name: Assert that SOA record set was created
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed
 

@@ -21,13 +21,16 @@ options:
         description:
             - The name of the resource group that contains the server.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the firewall rule.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -38,16 +41,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of SQL Firewall Rule
-    azure_rm_sqlfirewallrule_info:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: testrule
+- name: Get instance of SQL Firewall Rule
+  azure_rm_sqlfirewallrule_info:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: testrule
 
-  - name: List instances of SQL Firewall Rule
-    azure_rm_sqlfirewallrule_info:
-      resource_group: myResourceGroup
-      server_name: testserver
+- name: List instances of SQL Firewall Rule
+  azure_rm_sqlfirewallrule_info:
+    resource_group: myResourceGroup
+    server_name: testserver
 '''
 
 RETURN = '''

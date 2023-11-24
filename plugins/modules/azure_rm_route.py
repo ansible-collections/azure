@@ -20,23 +20,28 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the route.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the route. Use C(present) to create or update and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
     address_prefix:
         description:
             - The destination CIDR to which the route applies.
+        type: str
     next_hop_type:
         description:
             - The type of Azure hop the packet should be sent to.
+        type: str
         choices:
             - virtual_network_gateway
             - vnet_local
@@ -48,10 +53,12 @@ options:
         description:
             - The IP address packets should be forwarded to.
             - Next hop values are only allowed in routes where the next hop type is VirtualAppliance.
+        type: str
     route_table_name:
         description:
             - The name of the route table.
         required: true
+        type: str
 
 
 extends_documentation_fragment:
@@ -64,20 +71,20 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a route
-      azure_rm_route:
-        resource_group: myResourceGroup
-        name: myRoute
-        address_prefix: 10.1.0.0/16
-        next_hop_type: virtual_network_gateway
-        route_table_name: table
+- name: Create a route
+  azure_rm_route:
+    resource_group: myResourceGroup
+    name: myRoute
+    address_prefix: 10.1.0.0/16
+    next_hop_type: virtual_network_gateway
+    route_table_name: table
 
-    - name: Delete a route
-      azure_rm_route:
-        resource_group: myResourceGroup
-        name: myRoute
-        route_table_name: table
-        state: absent
+- name: Delete a route
+  azure_rm_route:
+    resource_group: myResourceGroup
+    name: myRoute
+    route_table_name: table
+    state: absent
 '''
 RETURN = '''
 id:

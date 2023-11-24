@@ -27,20 +27,24 @@ options:
         description:
             - Name of a resource group where the managed disk exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the managed disk.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the managed disk. Use C(present) to create or update a managed disk and C(absent) to delete a managed disk.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     storage_account_type:
         description:
             - Type of storage for the managed disk.
@@ -52,6 +56,7 @@ options:
             - C(Premium_ZRS) is for Premium SSD Zone-redundant.
             - C(UltraSSD_LRS) (added in 2.8) is for Ultra SSD, which is only available on select instance types.
             - See U(https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-types) for more information about disk types.
+        type: str
         choices:
             - Standard_LRS
             - StandardSSD_LRS
@@ -62,6 +67,7 @@ options:
     create_option:
         description:
             - C(import) from a VHD file in I(source_uri) and C(copy) from previous managed disk I(source_uri).
+        type: str
         choices:
             - empty
             - import
@@ -74,6 +80,7 @@ options:
     source_uri:
         description:
             - URI to a valid VHD file to be used or the resource ID of the managed disk to copy.
+        type: str
         aliases:
             - source_resource_uri
     os_type:
@@ -83,6 +90,7 @@ options:
             - If omitted during creation, no value is set.
             - If omitted during an update, no change is made.
             - Once set, this value cannot be cleared.
+        type: str
         choices:
             - linux
             - windows
@@ -90,11 +98,13 @@ options:
         description:
             - Size in GB of the managed disk to be created.
             - If I(create_option=copy) then the value must be greater than or equal to the source's size.
+        type: int
     managed_by:
         description:
             - Name of an existing virtual machine with which the disk is or will be associated, this VM should be in the same resource group.
             - To detach a disk from a vm, explicitly set to ''.
             - If this option is unset, the value will not be changed.
+        type: str
     managed_by_extended:
         description:
             - List of name and resource group of the VMs that have the disk attached.
@@ -119,6 +129,7 @@ options:
         description:
             - Disk caching policy controlled by VM. Will be used when attached to the VM defined by C(managed_by).
             - If this option is different from the current caching policy, the managed disk will be deattached and attached with current caching option again.
+        type: str
         choices:
             - ''
             - read_only
@@ -127,6 +138,7 @@ options:
         description:
             - The Azure managed disk's zone.
             - Allowed values are C(1), C(2), C(3) and C('').
+        type: str
         choices:
             - '1'
             - '2'
@@ -146,61 +158,61 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create managed disk
-      azure_rm_manageddisk:
-        name: mymanageddisk
-        location: eastus
-        resource_group: myResourceGroup
-        disk_size_gb: 4
+- name: Create managed disk
+  azure_rm_manageddisk:
+    name: mymanageddisk
+    location: eastus
+    resource_group: myResourceGroup
+    disk_size_gb: 4
 
-    - name: Create managed operating system disk from page blob
-      azure_rm_manageddisk:
-        name: mymanageddisk
-        location: eastus2
-        resource_group: myResourceGroup
-        create_option: import
-        source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
-        storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
-        os_type: windows
-        storage_account_type: Premium_LRS
+- name: Create managed operating system disk from page blob
+  azure_rm_manageddisk:
+    name: mymanageddisk
+    location: eastus2
+    resource_group: myResourceGroup
+    create_option: import
+    source_uri: https://storageaccountname.blob.core.windows.net/containername/blob-name.vhd
+    storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
+    os_type: windows
+    storage_account_type: Premium_LRS
 
-    - name: Mount the managed disk to VM
-      azure_rm_manageddisk:
-        name: mymanageddisk
-        location: eastus
-        resource_group: myResourceGroup
-        disk_size_gb: 4
-        managed_by: testvm001
-        attach_caching: read_only
+- name: Mount the managed disk to VM
+  azure_rm_manageddisk:
+    name: mymanageddisk
+    location: eastus
+    resource_group: myResourceGroup
+    disk_size_gb: 4
+    managed_by: testvm001
+    attach_caching: read_only
 
-    - name: Mount the managed disk to multiple VMs
-      azure_rm_manageddisk:
-        resource_group: myResourceGroup
-        name: freddisk04
-        max_shares: 4
-        disk_size_gb: 1024
-        storage_account_type: Premium_LRS
-        managed_by_extended:
-          - resource_group: myResourceGroup01
-            name: testVM01
-          - resource_group: myResourceGroup02
-            name: testVM02
-        zone: 1
+- name: Mount the managed disk to multiple VMs
+  azure_rm_manageddisk:
+    resource_group: myResourceGroup
+    name: freddisk04
+    max_shares: 4
+    disk_size_gb: 1024
+    storage_account_type: Premium_LRS
+    managed_by_extended:
+      - resource_group: myResourceGroup01
+        name: testVM01
+      - resource_group: myResourceGroup02
+        name: testVM02
+    zone: 1
 
-    - name: Unmount the managed disk to VM
-      azure_rm_manageddisk:
-        name: mymanageddisk
-        location: eastus
-        resource_group: myResourceGroup
-        managed_by: ''
-        disk_size_gb: 4
+- name: Unmount the managed disk to VM
+  azure_rm_manageddisk:
+    name: mymanageddisk
+    location: eastus
+    resource_group: myResourceGroup
+    managed_by: ''
+    disk_size_gb: 4
 
-    - name: Delete managed disk
-      azure_rm_manageddisk:
-        name: mymanageddisk
-        location: eastus
-        resource_group: myResourceGroup
-        state: absent
+- name: Delete managed disk
+  azure_rm_manageddisk:
+    name: mymanageddisk
+    location: eastus
+    resource_group: myResourceGroup
+    state: absent
 '''
 
 RETURN = '''
@@ -479,14 +491,15 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         # unmount from the old virtual machine and mount to the new virtual machine
         if self.managed_by or self.managed_by == '':
             vm_name = parse_resource_id(disk_instance.get('managed_by', '')).get('name') if disk_instance else None
+            resource_group = parse_resource_id(disk_instance.get('managed_by', '')).get('resource_group') if disk_instance else None
             vm_name = vm_name or ''
             if self.managed_by != vm_name or self.is_attach_caching_option_different(vm_name, result):
                 changed = True
                 if not self.check_mode:
                     if vm_name:
-                        self.detach(self.resource_group, vm_name, result)
+                        self.detach(resource_group, vm_name, result)
                     if self.managed_by:
-                        self.attach(self.resource_group, self.managed_by, result)
+                        self.attach(resource_group, self.managed_by, result)
                     result = self.get_managed_disk()
 
         if self.state == 'absent' and disk_instance:

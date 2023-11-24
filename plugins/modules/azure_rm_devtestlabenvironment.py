@@ -49,6 +49,7 @@ options:
         description:
             - The parameters of the Azure Resource Manager template.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -145,6 +146,7 @@ class AzureRMDtlEnvironment(AzureRMModuleBase):
             ),
             deployment_parameters=dict(
                 type='list',
+                elements='dict',
                 options=dict(
                     name=dict(
                         type='str'
@@ -188,7 +190,6 @@ class AzureRMDtlEnvironment(AzureRMModuleBase):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)

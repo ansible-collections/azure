@@ -21,9 +21,11 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the Auto Scale Setting.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -39,17 +41,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Auto Scale Setting
-    azure_rm_autoscale_info:
-      resource_group: myResourceGroup
-      name: auto_scale_name
+- name: Get instance of Auto Scale Setting
+  azure_rm_autoscale_info:
+    resource_group: myResourceGroup
+    name: auto_scale_name
 
-  - name: List instances of Auto Scale Setting
-    azure_rm_autoscale_info:
-      resource_group: myResourceGroup
-      tags:
-        - key
-        - key:value
+- name: List instances of Auto Scale Setting
+  azure_rm_autoscale_info:
+    resource_group: myResourceGroup
+    tags:
+      - key
+      - key:value
 '''
 
 RETURN = '''

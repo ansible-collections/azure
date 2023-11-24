@@ -51,14 +51,14 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Environment
-    azure_rm_devtestlabenvironment_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      user_name: myUser
-      name: myEnvironment
-      tags:
-        - key:value
+- name: Get instance of Environment
+  azure_rm_devtestlabenvironment_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    user_name: myUser
+    name: myEnvironment
+    tags:
+      - key:value
 '''
 
 RETURN = '''
@@ -116,7 +116,7 @@ environments:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag': 'MyValue' }"
 '''
 
@@ -175,7 +175,6 @@ class AzureRMDtlEnvironmentInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name:

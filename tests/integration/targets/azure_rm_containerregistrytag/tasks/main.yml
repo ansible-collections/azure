@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: true
 
@@ -16,7 +16,7 @@
     registry: "acr{{ rpfx }}"
   register: output
 - name: Verify no tags exist
-  assert:
+  ansible.builtin.assert:
     that: output.repositories | length == 0
 
 - name: Load all tags for non-existant repository
@@ -25,7 +25,7 @@
     repository_name: "does-not-exist"
   register: output
 - name: Verify no tags exist
-  assert:
+  ansible.builtin.assert:
     that: output.repositories | length == 0
 
 - name: Import tag (check mode)
@@ -40,7 +40,7 @@
   check_mode: true
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Import tag (actually import)
@@ -54,7 +54,7 @@
       name: "latest"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Import tag (test idempotency)
@@ -68,7 +68,7 @@
       name: "latest"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Import additional tag
@@ -82,7 +82,7 @@
       name: "latest"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Import additional tag
@@ -96,7 +96,7 @@
       name: "latest"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Import additional tag
@@ -110,7 +110,7 @@
       name: "latest"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Load all tags
@@ -118,7 +118,7 @@
     registry: "acr{{ rpfx }}"
   register: output
 - name: Assert tags exist
-  assert:
+  ansible.builtin.assert:
     that:
       - output.repositories | length == 2
       - output.repositories[0].name == 'app1'
@@ -136,7 +136,7 @@
     repository_name: "app2"
   register: output
 - name: Assert tags exist
-  assert:
+  ansible.builtin.assert:
     that:
       - output.repositories | length == 1
       - output.repositories[0].name == 'app2'
@@ -152,7 +152,7 @@
     name: "test-image"
   register: output
 - name: Assert tags exist
-  assert:
+  ansible.builtin.assert:
     that:
       - output.repositories | length == 1
       - output.repositories[0].name == 'app2'
@@ -165,7 +165,7 @@
     name: "v1"
   register: output
 - name: Assert tags exist
-  assert:
+  ansible.builtin.assert:
     that:
       - output.repositories | length == 2
       - output.repositories[0].name == 'app1'
@@ -184,7 +184,7 @@
   check_mode: true
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Delete tag by name (actually delete)
@@ -195,7 +195,7 @@
     state: "absent"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Delete tag by name (test idempotency)
@@ -206,7 +206,7 @@
     state: "absent"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Load tags by repository
@@ -215,7 +215,7 @@
     repository_name: "app2"
   register: output
 - name: Assert tags exist
-  assert:
+  ansible.builtin.assert:
     that:
       - output.repositories | length == 1
       - output.repositories[0].name == 'app2'
@@ -231,7 +231,7 @@
   check_mode: true
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Delete repository (actually delete)
@@ -241,7 +241,7 @@
     state: "absent"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Delete repository (test idempotency)
@@ -251,7 +251,7 @@
     state: "absent"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Load all tags
@@ -259,7 +259,7 @@
     registry: "acr{{ rpfx }}"
   register: output
 - name: Assert tags exist
-  assert:
+  ansible.builtin.assert:
     that:
       - output.repositories | length == 1
       - output.repositories[0].name == 'app1'
@@ -275,7 +275,7 @@
       name: "latest"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Import tag with same name (test idempotency)
@@ -287,7 +287,7 @@
       name: "latest"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Import tag with different repo, same name
@@ -300,7 +300,7 @@
       name: "latest"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Import tag with different repo, same name (test idempotency)
@@ -313,7 +313,7 @@
       name: "latest"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Import tag with different name, same repo
@@ -326,7 +326,7 @@
       name: "latest"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Import tag with different name, same repo (test idempotency)
@@ -339,7 +339,7 @@
       name: "latest"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Load all tags
@@ -347,7 +347,7 @@
     registry: "acr{{ rpfx }}"
   register: output
 - name: Assert tags exist
-  assert:
+  ansible.builtin.assert:
     that:
       - output.repositories | length == 2
       - output.repositories[0].name == 'app1'

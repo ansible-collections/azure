@@ -1,12 +1,12 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     tenant_id: "{{ azure_tenant }}"
-  run_once: yes
+  run_once: true
 
-- name: lookup service principal object id
-  set_fact:
-    object_id: "{{ lookup('azure_service_principal_attribute',
+- name: Lookup service principal object id
+  ansible.builtin.set_fact:
+    object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
                    azure_client_id=azure_client_id,
                    azure_secret=azure_secret,
                    azure_tenant=tenant_id) }}"
@@ -16,7 +16,7 @@
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     vault_name: "vault{{ rpfx }}"
-    enabled_for_deployment: yes
+    enabled_for_deployment: true
     vault_tenant: "{{ tenant_id }}"
     sku:
       name: standard
@@ -50,33 +50,37 @@
           - restore
   register: output
 
-- name: create a kevyault key
+- name: Create a kevyault key
   block:
-    - azure_rm_keyvaultkey:
+    - name: Create a keyvault key
+      azure_rm_keyvaultkey:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         key_name: testkey
         tags:
           testing: test
           delete: on-exit
       register: output
-    - assert:
+    - name: Assert the keyvault key created
+      ansible.builtin.assert:
         that: output.changed
   rescue:
-    - azure_rm_keyvaultkey:
+    - name: Delete the keyvault key
+      azure_rm_keyvaultkey:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         state: absent
         key_name: testkey
 
-- name: delete a kevyault key
+- name: Delete a kevyault key
   azure_rm_keyvaultkey:
     keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
     state: absent
     key_name: testkey
   register: output
 
-- name: create a kevyault key of type EC
+- name: Create a kevyault key of type EC
   block:
-    - azure_rm_keyvaultkey:
+    - name: Create a keyvault key of type EC
+      azure_rm_keyvaultkey:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         key_name: testkeyEC
         key_type: EC
@@ -84,24 +88,27 @@
           testing: test
           delete: on-exit
       register: output
-    - assert:
+    - name: Assert the keyvault key created
+      ansible.builtin.assert:
         that: output.changed
   rescue:
-    - azure_rm_keyvaultkey:
+    - name: Delete the keyvault key
+      azure_rm_keyvaultkey:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         state: absent
         key_name: testkeyEC
 
-- name: delete a kevyault key of type EC
+- name: Delete a kevyault key of type EC
   azure_rm_keyvaultkey:
     keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
     state: absent
     key_name: testkeyEC
   register: output
 
-- name: create a kevyault key of size 4096
+- name: Create a kevyault key of size 4096
   block:
-    - azure_rm_keyvaultkey:
+    - name: Create a keyvault key of size 4096
+      azure_rm_keyvaultkey:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         key_name: testkey4096
         key_size: 4096
@@ -109,24 +116,27 @@
           testing: test
           delete: on-exit
       register: output
-    - assert:
+    - name: Assert the keyvault key created
+      ansible.builtin.assert:
         that: output.changed
   rescue:
-    - azure_rm_keyvaultkey:
+    - name: Delete the keyvault key
+      azure_rm_keyvaultkey:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         state: absent
         key_name: testkey4096
 
-- name: delete a kevyault key of size 4096
+- name: Delete a kevyault key of size 4096
   azure_rm_keyvaultkey:
     keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
     state: absent
     key_name: testkey4096
   register: output
 
-- name: create a kevyault key with P-521 curve
+- name: Create a kevyault key with P-521 curve
   block:
-    - azure_rm_keyvaultkey:
+    - name: Create a keyvault key with P-521
+      azure_rm_keyvaultkey:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         key_name: testkeycurve
         curve: P-521
@@ -134,24 +144,27 @@
           testing: test
           delete: on-exit
       register: output
-    - assert:
+    - name: Assert the keyvault key created
+      ansible.builtin.assert:
         that: output.changed
   rescue:
-    - azure_rm_keyvaultkey:
+    - name: Delete the keyvault key
+      azure_rm_keyvaultkey:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         state: absent
         key_name: testkeycurve
 
-- name: delete a kevyault key with P-521 curve
+- name: Delete a kevyault key with P-521 curve
   azure_rm_keyvaultkey:
     keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
     state: absent
     key_name: testkeycurve
   register: output
 
-- name: create a kevyault key with attributes
+- name: Create a kevyault key with attributes
   block:
-    - azure_rm_keyvaultkey:
+    - name: Create a keyvault key with attributes
+      azure_rm_keyvaultkey:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         key_name: testkeyattribute
         key_attributes:
@@ -161,22 +174,25 @@
           testing: test
           delete: on-exit
       register: output
-    - assert:
+    - name: Assert the keyvault key created
+      ansible.builtin.assert:
         that: output.changed
   rescue:
-    - azure_rm_keyvaultkey:
+    - name: Delete the keyvault ke
+      azure_rm_keyvaultkey:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         state: absent
         key_name: testkeyattributes
 
-- name: delete a kevyault key with attributes
+- name: Delete a kevyault key with attributes
   azure_rm_keyvaultkey:
     keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
     state: absent
     key_name: testkeyattribute
   register: output
 
-- assert:
+- name: Assert the keyvault key deleted
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Delete instance of Key Vault

@@ -1,147 +1,149 @@
 parameters:
-- name: PYTHON_VER
-  displayName: 'Python Version'
-  type: string
-  default: "3.9"
-  values:
-    - "2.7"
-    - "3.6"
-    - "3.8"
-    - "3.9"
-    - "3.10"
-    - "3.11"
-- name: ANSIBLE_VER
-  displayName: 'Ansible Version'
-  type: string
-  default: "2.15"
-  values:
-    - "2.9"
-    - "2.10"
-    - "2.11"
-    - "2.12"
-    - "2.13"
-    - "2.14"
-    - "2.15"
-    - "devel"
-- name: MODULE_NAME
-  displayName: 'Test Module'
-  type: string
-  default: 'all'
-  values:
-    - 'all'
-    - 'sanity'
-    - 'azure_rm_adapplication'
-    - "azure_rm_acs"
-    - "azure_rm_adgroup"
-    - "azure_rm_aduser"
-    - "azure_rm_aks"
-    - "azure_rm_aksagentpool"
-    - "azure_rm_apimanagement"
-    - "azure_rm_appgateway"
-    - "azure_rm_appserviceplan"
-    - "azure_rm_automationaccount"
-    - "azure_rm_automationrunbook"
-    - "azure_rm_autoscale"
-    - "azure_rm_availabilityset"
-    - "azure_rm_azurefirewall"
-    - "azure_rm_apimanagementservice"
-    - "azure_rm_batchaccount"
-    - "azure_rm_backuppolicy"
-    - "azure_rm_cdnprofile"
-    - "azure_rm_containerinstance"
-    - "azure_rm_containerregistry"
-    - "azure_rm_containerregistrytag"
-    - "azure_rm_cosmosdbaccount"
-    - "azure_rm_datalakestore"
-    - "azure_rm_ddosprotectionplan"
-    - "azure_rm_deployment"
-    - "azure_rm_diskencryptionset"
-    - "azure_rm_dnsrecordset"
-    - "azure_rm_dnszone"
-    - "azure_rm_eventhub"
-    - "azure_rm_expressroute"
-    - "azure_rm_firewallpolicy"
-    - "azure_rm_functionapp"
-    - "azure_rm_gallery"
-    - "azure_rm_hdinsightcluster"
-    - "azure_rm_hostgroup"
-    - "azure_rm_image"
-    - "azure_rm_iothub"
-    - "azure_rm_ipgroup"
-    - "azure_rm_keyvault"
-    - "azure_rm_keyvaultkey"
-    - "azure_rm_keyvaultsecret"
-    - "azure_rm_loadbalancer"
-    - "azure_rm_loganalyticsworkspace"
-    - "azure_rm_manageddisk"
-    - "azure_rm_managementgroup"
-    - "azure_rm_mariadbserver"
-    - "azure_rm_monitordiagnosticsetting"
-    - "azure_rm_monitorlogprofile"
-    - "azure_rm_multiplemanageddisks"
-    - "azure_rm_mysqlserver"
-    - "azure_rm_natgateway"
-    - "azure_rm_networkinterface"
-    - "azure_rm_notificationhub"
-    - "azure_rm_openshiftmanagedcluster"
-    - "azure_rm_postgresqlserver"
-    - "azure_rm_privatednsrecordset"
-    - "azure_rm_privatednszone"
-    - "azure_rm_privateendpoint"
-    - "azure_rm_privateendpointdnszonegroup"
-    - "azure_rm_privatelinkservice"
-    - "azure_rm_privatednszonelink"
-    - "azure_rm_publicipaddress"
-    - "azure_rm_proximityplacementgroup"
-    - "azure_rm_rediscache"
-    - "azure_rm_resource"
-    - "azure_rm_resourcegroup"
-    - "azure_rm_routetable"
-    - "azure_rm_roleassignment"
-    - "azure_rm_roledefinition"
-    - "azure_rm_registrationassignment"
-    - "azure_rm_registrationdefinition"
-    - "azure_rm_cognitivesearch"
-    - "azure_rm_securitygroup"
-    - "azure_rm_servicebus"
-    - "azure_rm_sqlserver"
-    - "azure_rm_storageaccount"
-    - "azure_rm_storageblob"
-    - "azure_rm_storageshare"
-    - "azure_rm_subnet"
-    - "azure_rm_subscription"
-    - "azure_rm_trafficmanagerprofile"
-    - "azure_rm_virtualmachine"
-    - "azure_rm_virtualmachineextension"
-    - "azure_rm_virtualmachineimage_info"
-    - "azure_rm_virtualmachinescaleset"
-    - "azure_rm_virtualmachinesize_info"
-    - "azure_rm_virtualnetwork"
-    - "azure_rm_virtualnetworkgateway"
-    - "azure_rm_virtualnetworkpeering"
-    - "azure_rm_virtualwan"
-    - "azure_rm_vpnsite"
-    - "azure_rm_virtualhub"
-    - "azure_rm_virtualhubconnection"
-    - "azure_rm_backupazurevm"
-    - "azure_rm_recoveryservicesvault"
-    - "azure_rm_vmbackuppolicy"
-    - "azure_rm_webapp"
-    - "azure_rm_webappvnetconnection"
-    - "azure_rm_webappaccessrestriction"
-    - "azure_rm_workspace"
-    - "azure_rm_datafactory"
-    - "azure_rm_bastionhost"
-    - "azure_rm_devtestlab"
-    - "azure_rm_sqlmanagedinstance"
-    - "azure_rm_vmssnetworkinterface_info"
-    - "inventory_azure"
-    - "setup_azure"
+  - name: PYTHON_VER
+    displayName: 'Python Version'
+    type: string
+    default: "3.9"
+    values:
+      - "2.7"
+      - "3.6"
+      - "3.8"
+      - "3.9"
+      - "3.10"
+      - "3.11"
+  - name: ANSIBLE_VER
+    displayName: 'Ansible Version'
+    type: string
+    default: "2.15"
+    values:
+      - "2.9"
+      - "2.10"
+      - "2.11"
+      - "2.12"
+      - "2.13" # Eol Nov.6 2023 https://docs.ansible.com/ansible/latest/reference_appendices/release_and_maintenance.html
+      - "2.14"
+      - "2.15"
+      - "2.16"
+      - "devel"
+  - name: MODULE_NAME
+    displayName: 'Test Module'
+    type: string
+    default: 'all'
+    values:
+      - 'all'
+      - 'sanity'
+      - 'azure_rm_adapplication'
+      - "azure_rm_acs"
+      - "azure_rm_adgroup"
+      - "azure_rm_aduser"
+      - "azure_rm_aks"
+      - "azure_rm_aksagentpool"
+      - "azure_rm_apimanagement"
+      - "azure_rm_appgateway"
+      - "azure_rm_appserviceplan"
+      - "azure_rm_automationaccount"
+      - "azure_rm_automationrunbook"
+      - "azure_rm_autoscale"
+      - "azure_rm_availabilityset"
+      - "azure_rm_azurefirewall"
+      - "azure_rm_apimanagementservice"
+      - "azure_rm_batchaccount"
+      - "azure_rm_backuppolicy"
+      - "azure_rm_cdnprofile"
+      - "azure_rm_containerinstance"
+      - "azure_rm_containerregistry"
+      - "azure_rm_containerregistrytag"
+      - "azure_rm_cosmosdbaccount"
+      - "azure_rm_datalakestore"
+      - "azure_rm_ddosprotectionplan"
+      - "azure_rm_deployment"
+      - "azure_rm_diskencryptionset"
+      - "azure_rm_dnsrecordset"
+      - "azure_rm_dnszone"
+      - "azure_rm_eventhub"
+      - "azure_rm_expressroute"
+      - "azure_rm_firewallpolicy"
+      - "azure_rm_functionapp"
+      - "azure_rm_gallery"
+      - "azure_rm_hdinsightcluster"
+      - "azure_rm_hostgroup"
+      - "azure_rm_image"
+      - "azure_rm_iothub"
+      - "azure_rm_ipgroup"
+      - "azure_rm_keyvault"
+      - "azure_rm_keyvaultkey"
+      - "azure_rm_keyvaultsecret"
+      - "azure_rm_loadbalancer"
+      - "azure_rm_loganalyticsworkspace"
+      - "azure_rm_manageddisk"
+      - "azure_rm_managementgroup"
+      - "azure_rm_mariadbserver"
+      - "azure_rm_monitordiagnosticsetting"
+      - "azure_rm_monitorlogprofile"
+      - "azure_rm_multiplemanageddisks"
+      - "azure_rm_mysqlserver"
+      - "azure_rm_natgateway"
+      - "azure_rm_networkinterface"
+      - "azure_rm_notificationhub"
+      - "azure_rm_openshiftmanagedcluster"
+      - "azure_rm_postgresqlserver"
+      - "azure_rm_privatednsrecordset"
+      - "azure_rm_privatednszone"
+      - "azure_rm_privateendpoint"
+      - "azure_rm_privateendpointdnszonegroup"
+      - "azure_rm_privatelinkservice"
+      - "azure_rm_privatednszonelink"
+      - "azure_rm_publicipaddress"
+      - "azure_rm_proximityplacementgroup"
+      - "azure_rm_rediscache"
+      - "azure_rm_resource"
+      - "azure_rm_resourcegroup"
+      - "azure_rm_routetable"
+      - "azure_rm_roleassignment"
+      - "azure_rm_roledefinition"
+      - "azure_rm_registrationassignment"
+      - "azure_rm_registrationdefinition"
+      - "azure_rm_cognitivesearch"
+      - "azure_rm_securitygroup"
+      - "azure_rm_servicebus"
+      - "azure_rm_sqlserver"
+      - "azure_rm_storageaccount"
+      - "azure_rm_storageblob"
+      - "azure_rm_storageshare"
+      - "azure_rm_subnet"
+      - "azure_rm_subscription"
+      - "azure_rm_trafficmanagerprofile"
+      - "azure_rm_virtualmachine"
+      - "azure_rm_virtualmachineextension"
+      - "azure_rm_virtualmachineimage_info"
+      - "azure_rm_virtualmachinescaleset"
+      - "azure_rm_virtualmachinesize_info"
+      - "azure_rm_virtualnetwork"
+      - "azure_rm_virtualnetworkgateway"
+      - "azure_rm_virtualnetworkpeering"
+      - "azure_rm_virtualwan"
+      - "azure_rm_vpnsite"
+      - "azure_rm_virtualhub"
+      - "azure_rm_virtualhubconnection"
+      - "azure_rm_backupazurevm"
+      - "azure_rm_recoveryservicesvault"
+      - "azure_rm_vmbackuppolicy"
+      - "azure_rm_webapp"
+      - "azure_rm_webappvnetconnection"
+      - "azure_rm_webappaccessrestriction"
+      - "azure_rm_workspace"
+      - "azure_rm_datafactory"
+      - "azure_rm_bastionhost"
+      - "azure_rm_devtestlab"
+      - "azure_rm_sqlmanagedinstance"
+      - "azure_rm_vmssnetworkinterface_info"
+      - "azure_rm_sshpublickey"
+      - "inventory_azure"
+      - "setup_azure"
 
 trigger: none
 
 pr:
-- dev
+  - dev
 
 pool:
   name: pool-ubuntu-2004
@@ -169,11 +171,11 @@ jobs:
 
   - job: RunTests
     dependsOn: CreateResourceGroups
-    timeoutInMinutes: 120
+    timeoutInMinutes: 180
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_secondary'] ]
-      TEST_RESOURCE_GROUP_DATALAKE:  $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_datalake'] ]
+      TEST_RESOURCE_GROUP_DATALAKE: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_datalake'] ]
     strategy:
       matrix:
         "Python${{ parameters.PYTHON_VER }}_sanity":
@@ -223,26 +225,26 @@ jobs:
           test.key: '15'
 
     steps:
-    - task: UsePythonVersion@0
-      displayName: 'Use Python $(python.version)'
-      inputs:
-        versionSpec: '$(python.version)'
+      - task: UsePythonVersion@0
+        displayName: 'Use Python $(python.version)'
+        inputs:
+          versionSpec: '$(python.version)'
 
-    - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.PYTHON_VER }} ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
-      env:
-        SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
-        AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-        AZURE_SECRET: $(AZURE_SECRET)
-        AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
-        AZURE_SUBSCRIPTION_SEC_ID: $(AZURE_SUBSCRIPTION_SEC_ID)
-        AZURE_TENANT: $(AZURE_TENANT)
-        AZURE_PRINCIPAL_ID: $(AZURE_PRINCIPAL_ID)
-        AZURE_MANAGED_BY_TENANT_ID: $(AZURE_MANAGED_BY_TENANT_ID)
-        AZURE_ROLE_DEFINITION_ID: $(AZURE_ROLE_DEFINITION_ID)
-        RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
-        RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
-        RESOURCE_GROUP_DATALAKE: $(TEST_RESOURCE_GROUP_DATALAKE)
-      displayName: 'Running Tests'
+      - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.PYTHON_VER }} ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
+        env:
+          SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
+          AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+          AZURE_SECRET: $(AZURE_SECRET)
+          AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+          AZURE_SUBSCRIPTION_SEC_ID: $(AZURE_SUBSCRIPTION_SEC_ID)
+          AZURE_TENANT: $(AZURE_TENANT)
+          AZURE_PRINCIPAL_ID: $(AZURE_PRINCIPAL_ID)
+          AZURE_MANAGED_BY_TENANT_ID: $(AZURE_MANAGED_BY_TENANT_ID)
+          AZURE_ROLE_DEFINITION_ID: $(AZURE_ROLE_DEFINITION_ID)
+          RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
+          RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
+          RESOURCE_GROUP_DATALAKE: $(TEST_RESOURCE_GROUP_DATALAKE)
+        displayName: 'Running Tests'
 
   - job: CleanupResourceGroups
     dependsOn:

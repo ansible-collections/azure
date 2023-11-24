@@ -1,7 +1,7 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Create instance of MariaDB Server -- check mode
   azure_rm_mariadbserver:
@@ -13,13 +13,13 @@
     location: westus2
     storage_mb: 51200
     version: 10.2
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -33,12 +33,12 @@
     location: westus2
     storage_mb: 51200
     version: 10.2
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state == 'Ready'
@@ -53,12 +53,12 @@
     location: westus2
     storage_mb: 51200
     version: 10.2
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
       - output.state == 'Ready'
@@ -73,16 +73,17 @@
     location: westus2
     storage_mb: 128000
     version: 10.2
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state == 'Ready'
-- debug:
+- name: Print the state of the mariadb server
+  ansible.builtin.debug:
     var: output
 
 - name: Gather facts MariaDB Server
@@ -91,7 +92,7 @@
     name: mariadbsrv{{ rpfx }}
   register: output
 - name: Assert that storage size is correct
-  assert:
+  ansible.builtin.assert:
     that:
       - output.servers[0]['storage_mb'] == 128000
 
@@ -105,7 +106,7 @@
     location: westus2
     storage_mb: 51200
     version: 10.3
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
     tags:
@@ -121,7 +122,7 @@
     location: westus2
     storage_mb: 51200
     version: 10.3
-    enforce_ssl: True
+    enforce_ssl: true
     admin_username: zimxyz
     admin_password: Password123!
     tags:
@@ -131,10 +132,10 @@
   azure_rm_mariadbserver_info:
     resource_group: "{{ resource_group }}"
     name: mariadbsrv{{ rpfx }}second
-  register: output 
+  register: output
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.servers[0]['id'] != None
@@ -154,7 +155,7 @@
     resource_group: "{{ resource_group }}"
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.servers[0]['id'] != None
@@ -184,10 +185,10 @@
     resource_group: "{{ resource_group }}"
     server_name: mariadbsrv{{ rpfx }}
     name: testdatabase
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -200,7 +201,7 @@
     charset: latin1
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.name == 'testdatabase'
@@ -214,7 +215,7 @@
     charset: latin1
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
       - output.name == 'testdatabase'
@@ -226,10 +227,10 @@
     name: testdatabase
     collation: utf8_general_ci
     charset: utf8
-  ignore_errors: yes
+  ignore_errors: true
   register: output
 - name: Assert that nothing has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
 
@@ -240,10 +241,10 @@
     name: testdatabase
     collation: utf8_general_ci
     charset: utf8
-    force_update: yes
+    force_update: true
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.name == 'testdatabase'
@@ -259,10 +260,10 @@
     resource_group: "{{ resource_group }}"
     server_name: mariadbsrv{{ rpfx }}
     name: testdatabase
-  register: output 
+  register: output
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.databases[0]['server_name'] != None
@@ -276,7 +277,7 @@
     server_name: mariadbsrv{{ rpfx }}
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.databases[0]['server_name'] != None
@@ -294,10 +295,10 @@
     server_name: mariadbsrv{{ rpfx }}
     name: testdatabase
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -309,7 +310,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -321,7 +322,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -335,10 +336,10 @@
     name: firewallrule{{ rpfx }}
     start_ip_address: 172.28.10.136
     end_ip_address: 172.28.10.138
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -351,7 +352,7 @@
     end_ip_address: 172.28.10.138
   register: output
 - name: Assert the resource instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -364,7 +365,7 @@
     end_ip_address: 172.28.10.138
   register: output
 - name: Assert the state has not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -374,10 +375,10 @@
     server_name: mariadbsrv{{ rpfx }}
     name: firewallrule{{ rpfx }}
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -390,7 +391,7 @@
     end_ip_address: 172.28.10.138
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -401,7 +402,7 @@
     name: firewallrule{{ rpfx }}
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.rules[0].id != None
@@ -417,7 +418,7 @@
     server_name: mariadbsrv{{ rpfx }}
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.rules[0].id != None
@@ -439,7 +440,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -451,7 +452,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 
@@ -469,7 +470,7 @@
     name: firewallrule{{ rpfx }}
   register: output
 - name: Assert that empty list was returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - "output.rules | length == 0"
@@ -483,10 +484,10 @@
     server_name: mariadbsrv{{ rpfx }}
     name: event_scheduler
     value: "ON"
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert that change was registered
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -497,7 +498,7 @@
     name: event_scheduler
   register: output
 - name: Get facts of event_scheduler
-  debug:
+  ansible.builtin.debug:
     var: output
 
 - name: Try to delete default configuraion
@@ -508,7 +509,7 @@
     state: absent
   register: output
 - name: Assert that change was registered
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -520,7 +521,7 @@
     value: "ON"
   register: output
 - name: Assert that change was registered
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -532,7 +533,7 @@
     value: "ON"
   register: output
 - name: Assert that change was registered
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -544,7 +545,7 @@
     state: absent
   register: output
 - name: Assert that change was registered
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -556,7 +557,7 @@
     state: absent
   register: output
 - name: Assert that change was registered
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -567,7 +568,7 @@
     name: event_scheduler
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.settings[0].id != None
@@ -583,7 +584,7 @@
     server_name: mariadbsrv{{ rpfx }}
   register: output
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.settings[0].id != None
@@ -602,10 +603,10 @@
     resource_group: "{{ resource_group }}"
     name: mariadbsrv{{ rpfx }}
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -616,7 +617,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -627,7 +628,7 @@
     state: absent
   register: output
 - name: Assert the state has changed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == false
 

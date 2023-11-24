@@ -49,6 +49,7 @@ options:
             - It can be the storage account ID. Fox example "/subscriptions/{subscription_id}/resourceGroups/
               {resource_group}/providers/Microsoft.Storage/storageAccounts/{name}".
             - It can be a dict which contains I(name) and I(resource_group) of the storage account.
+        type: raw
     key_vault:
         description:
             - Existing key vault with which to associate the Batch Account.
@@ -56,6 +57,7 @@ options:
             - It can be the key vault ID. For example "/subscriptions/{subscription_id}/resourceGroups/
               {resource_group}/providers/Microsoft.KeyVault/vaults/{name}".
             - It can be a dict which contains I(name) and I(resource_group) of the key vault.
+        type: raw
     pool_allocation_mode:
         description:
             - The pool acclocation mode of the Batch Account.
@@ -83,14 +85,14 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create Batch Account
-    azure_rm_batchaccount:
-        resource_group: MyResGroup
-        name: mybatchaccount
-        location: eastus
-        auto_storage_account:
-          name: mystorageaccountname
-        pool_allocation_mode: batch_service
+- name: Create Batch Account
+  azure_rm_batchaccount:
+    resource_group: MyResGroup
+    name: mybatchaccount
+    location: eastus
+    auto_storage_account:
+      name: mystorageaccountname
+    pool_allocation_mode: batch_service
 '''
 
 RETURN = '''
@@ -210,8 +212,7 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(BatchManagementClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    is_track2=True)
+                                                    base_url=self._cloud_environment.endpoints.resource_manager)
 
         old_response = self.get_batchaccount()
 

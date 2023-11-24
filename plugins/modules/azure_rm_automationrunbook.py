@@ -102,8 +102,8 @@ EXAMPLES = '''
     runbook_type: "Script"
     description: "Fred test"
     log_activity_trace: 3
-    log_progress: True
-    log_verbose: False
+    log_progress: true
+    log_verbose: false
     tags:
       key1: value1
 
@@ -112,7 +112,7 @@ EXAMPLES = '''
     resource_group: "{{ resource_group }}"
     automation_account_name: "{{ account-name }}"
     name: "{{ runbook-name }}"
-    publish: True
+    publish: true
 
 - name: Delete automation runbook
   azure_rm_automationrunbook:

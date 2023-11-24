@@ -1,11 +1,78 @@
 # Change Log
 
+## v2.0.0 (2023-11-17)
+
+### FEATURE ENHANCEMENT
+  - azure_rm_storageblob: Add support for `auth_mode` ([#1315](https://github.com/ansible-collections/azure/pull/1315))
+  - azure_rm_galleryimageversion: Add support for `encryption` ([#1311](https://github.com/ansible-collections/azure/pull/1311))
+  - azure_rm_galleryimage: Add support for `features` ([#1310](https://github.com/ansible-collections/azure/pull/1310))
+  - azure_rm_apimanagement: Bump API version to `v2022-08-01` ([#1327](https://github.com/ansible-collections/azure/pull/1327))
+  - azure_rm_apimanagement_info: Bump API version to `v2022-08-01` ([#1327](https://github.com/ansible-collections/azure/pull/1327))
+  - azure_rm_apimanagementservice: Bump API version to `v2022-08-01` ([#1327](https://github.com/ansible-collections/azure/pull/1327))
+  - azure_rm_apimanagementservice_info: Bump API version to `v2022-08-01` ([#1327](https://github.com/ansible-collections/azure/pull/1327))
+  - azure_rm_*: Add `hasattr` method to verify return value ([#1307](https://github.com/ansible-collections/azure/pull/1307))
+  - azure_rm_virtualmachine_info: Add `vm_agent_version` to output ([#1289](https://github.com/ansible-collections/azure/pull/1289))
+  - azure_rm_virtualmachine:
+    - Add support for `os_disk_encryption_set` ([#1306](https://github.com/ansible-collections/azure/pull/1306))
+    - Add `disk_encryption_set` for data disks ([#1309](https://github.com/ansible-collections/azure/pull/1309))
+  - azure_service_principal_attribute: Move `azure_service_principal_attribute.py` to azure-collecitons lookup file ([#1326](https://github.com/ansible-collections/azure/pull/1326)
+  - azure_rm_account_info: Migrate from ADGraph to MSGraph ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+  - azure_rm_adapplication: Migrate from ADGraph to MSGraph ([#1325](https://github.com/ansible-collections/azure/pull/1325)) 
+  - azure_rm_adapplication_info: Migrate from ADGraph to MSGraph ([#1325](https://github.com/ansible-collections/azure/pull/1325)) 
+  - azure_rm_adgroup: Migrate from ADGraph to MSGraph ([#1325](https://github.com/ansible-collections/azure/pull/1325)) 
+  - azure_rm_adgroup_info: Migrate from ADGraph to MSGraph ([#1325](https://github.com/ansible-collections/azure/pull/1325)) 
+  - azure_rm_adpassword:
+    - Migrate from ADGraph to MSGraph ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+    - Add support for `display_name` ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+  - azure_rm_adpassword_info: Migrate from ADGraph to MSGraph ([#1325](https://github.com/ansible-collections/azure/pull/1325)) 
+  - azure_rm_adserviceprincipal: Migrate from ADGraph to MSGraph ([#1325](https://github.com/ansible-collections/azure/pull/1325)) 
+  - azure_rm_adserviceprincipal_info: Migrate from ADGraph to MSGraph ([#1325](https://github.com/ansible-collections/azure/pull/1325)) 
+  - azure_rm_aduser: Migrate from ADGraph to MSGraph ([#1325](https://github.com/ansible-collections/azure/pull/1325)) 
+  - azure_rm_aduser_info: Migrate from ADGraph to MSGraph ([#1325](https://github.com/ansible-collections/azure/pull/1325)) 
+  - pr-pipelines.yml:
+    - Add ansible-core v2.16 ([#1305](https://github.com/ansible-collections/azure/pull/1305)) 
+    - Update PR validation pipeline timeout to 180 minutes ([#1334](https://github.com/ansible-collections/azure/pull/1334))
+
+### BUG FIXING
+  - main.yml: Ansible `is match` does not need a `^` ([#1321](https://github.com/ansible-collections/azure/pull/1321))
+  - azure_rm_virtualmachine: Fix caching choices ([#1324](https://github.com/ansible-collections/azure/pull/1324))
+
+### BREAKING CHANGE
+  - azure_rm_virtualmachinescaleset: `orchestration_mode` defaults to `Flexible` ([#1331](https://github.com/ansible-collections/azure/pull/1331))
+  - azure_rm_adapplication: 
+    - Deprecate `tenant` ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+    - Deprecate `allow_guests_sign_in` as not supported in MSGraph ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+  - azure_rm_adapplication_info: - Deprecate `tenant` ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+  - azure_rm_adgroup: Deprecate `tenant` ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+  - azure_rm_adgroup_info: Deprecate `tenant` ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+  - azure_rm_adpassword: 
+    - Deprecate `tenant` ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+    - Deprecate `value` ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+  - azure_rm_adpassword_info: Deprecate `tenant` ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+  - azure_rm_adserviceprincipal: Deprecate `tenant` ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+  - azure_rm_adserviceprincipal_info: Deprecate `tenant` ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+  - azure_rm_aduser: Deprecate `tenant` ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+  - azure_rm_aduser_info: Deprecate `tenant` ([#1325](https://github.com/ansible-collections/azure/pull/1325))
+
+## v1.19.0 (2023-11-6)
+
+### FEATURE ENHANCEMENT
+  - Update all test case Ubuntu Image version to 20.04-LTS, 16.04-LTS will be deprecated ([#1288](https://github.com/ansible-collections/azure/pull/1288))
+  - Migrate `msrestazure` to `azure-mgmt-core` and `azure-identity` ([#1267](https://github.com/ansible-collections/azure/pull/1267))
+  - Support `ansible-lint` test to `azure.azcollection` ([#1292](https://github.com/ansible-collections/azure/pull/1292))
+
+### BUG FIXING
+  - plugins/module_utls/azure_rm_common.py: Add support for custom ADFS endpoint ([#1299](https://github.com/ansible-collections/azure/pull/1299))
+  - azure_rm_virtualmachine: Fix `disable_password_authentication` not set bug ([#1301](https://github.com/ansible-collections/azure/pull/1301))
+  - azure_rm_azurefiewall_info: Fix `nat_rule_collections` not set bug ([#1308](https://github.com/ansible-collections/azure/pull/1308))
+  - azure_rm_*.py: Fixed sanity errors in the module ([#1296](https://github.com/ansible-collections/azure/pull/1296))
+  - Add required description to the document ([#1314](https://github.com/ansible-collections/azure/pull/1314))
+
 ## v1.18.1 (2023-9-25)
 
 ### BUG FIXING
-- inventory/azure_rm: - Fix authorization initialization bug. [#1271](https://github.com/ansible-collections/azure/pull/1271) 
-
-- azure_rm_managementgroup_info: - Fix `azure_object.type` to equal `Microsoft.Management/managementGroups`. [#1252](https://github.com/ansible-collections/azure/pull/1252) 
+  - inventory/azure_rm: Fix authorization initialization bug. [#1271](https://github.com/ansible-collections/azure/pull/1271)
+  - azure_rm_managementgroup_info: Fix `azure_object.type` to equal `Microsoft.Management/managementGroups`. [#1252](https://github.com/ansible-collections/azure/pull/1252)
 
 ## v1.18.0 (2023-9-22)
 

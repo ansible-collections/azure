@@ -46,13 +46,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of DTL Virtual Machine
-    azure_rm_devtestlabvirtualmachine_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myVm
-      tags:
-        - key:value
+- name: Get instance of DTL Virtual Machine
+  azure_rm_devtestlabvirtualmachine_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myVm
+    tags:
+      - key:value
 '''
 
 RETURN = '''
@@ -199,7 +199,7 @@ virtualmachines:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'foo': 'bar' }"
 '''
 
@@ -253,7 +253,6 @@ class AzureRMDtlVirtualMachineInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name:

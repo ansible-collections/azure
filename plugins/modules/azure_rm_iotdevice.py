@@ -119,7 +119,7 @@ EXAMPLES = '''
     hub_policy_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    edge_enabled: yes
+    edge_enabled: true
 
 - name: Create Azure IoT Hub device with device twin properties and tag
   azure_rm_iotdevice:
@@ -130,12 +130,12 @@ EXAMPLES = '''
     primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     twin_tags:
-        location:
-            country: US
-            city: Redmond
-        sensor: humidity
+      location:
+        country: US
+        city: Redmond
+      sensor: humidity
     desired:
-        period: 100
+      period: 100
 '''
 
 RETURN = '''
@@ -378,8 +378,8 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             elif self.auth_method == 'self_signed':
                 response = self.mgmt_client.update_device_with_certificate_authority(self.name, self.status, iot_edge=self.edge_enabled)
             elif self.auth_method == 'certificate_authority':
-                response = self.mgmt_client.update_device_with_x509(self.name, device['etag'], self.primary_thumbprint,
-                                                                    self.secondary_thumbprint, self.status, iot_edge=self.edge_enabled)
+                response = self.mgmt_client.update_device_with_x509(self.name, device['etag'], self.primary_key,
+                                                                    self.secondary_key, self.status, iot_edge=self.edge_enabled)
 
             return self.format_item(response)
         except Exception as exc:
@@ -394,7 +394,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
                 response = self.mgmt_client.create_device_with_certificate_authority(self.name, self.status, iot_edge=self.edge_enabled)
             elif self.auth_method == 'certificate_authority':
                 response = self.mgmt_client.create_device_with_x509(self.name,
-                                                                    self.primary_thumbprint, self.secondary_thumbprint, self.status, iot_edge=self.edge_enabled)
+                                                                    self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
 
             return self.format_item(response)
         except Exception as exc:

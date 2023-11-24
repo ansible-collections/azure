@@ -39,19 +39,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: List instances of DevTest Lab by resource group
-    azure_rm_devtestlab_info:
-      resource_group: testrg
-      tags:
-        - key:value
+- name: List instances of DevTest Lab by resource group
+  azure_rm_devtestlab_info:
+    resource_group: testrg
+    tags:
+      - key:value
 
-  - name: List instances of DevTest Lab in subscription
-    azure_rm_devtestlab_info:
+- name: List instances of DevTest Lab in subscription
+  azure_rm_devtestlab_info:
 
-  - name: Get instance of DevTest Lab
-    azure_rm_devtestlab_info:
-      resource_group: testrg
-      name: testlab
+- name: Get instance of DevTest Lab
+  azure_rm_devtestlab_info:
+    resource_group: testrg
+    name: testlab
 '''
 
 RETURN = '''
@@ -137,7 +137,7 @@ labs:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag': 'MyValue' }"
 '''
 
@@ -184,7 +184,6 @@ class AzureRMDevTestLabInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.resource_group is not None:

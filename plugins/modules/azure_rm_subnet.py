@@ -23,13 +23,16 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the subnet.
         required: true
+        type: str
     address_prefix_cidr:
         description:
             - CIDR defining the IPv4 address space of the subnet. Must be valid within the context of the virtual network.
+        type: str
         aliases:
             - address_prefix
     address_prefixes_cidr:
@@ -38,20 +41,23 @@ options:
             - If set I(address_prefix), It will not set.
         aliases:
             - address_prefixes
-        type: list
         version_added: "1.0.0"
+        type: list
+        elements: str
     security_group:
         description:
             - Existing security group with which to associate the subnet.
             - It can be the security group name which is in the same resource group.
             - Can be the resource ID of the security group.
             - Can be a dict containing the I(name) and I(resource_group) of the security group.
+        type: raw
         aliases:
             - security_group_name
     state:
         description:
             - Assert the state of the subnet. Use C(present) to create or update a subnet and use C(absent) to delete a subnet.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -59,6 +65,7 @@ options:
         description:
             - Name of an existing virtual network with which the subnet is or will be associated.
         required: true
+        type: str
         aliases:
             - virtual_network
     route_table:
@@ -67,19 +74,23 @@ options:
             - Can be the name or resource ID of the route table.
             - Can be a dict containing the I(name) and I(resource_group) of the route table.
             - Without this configuration, the associated route table will be dissociate. If there is no associated route table, it has no impact.
+        type: raw
     service_endpoints:
         description:
             - An array of service endpoints.
         type: list
+        elements: dict
         suboptions:
             service:
                 description:
                     - The type of the endpoint service.
                 required: True
+                type: str
             locations:
                 description:
                     - A list of locations.
                 type: list
+                elements: str
     private_endpoint_network_policies:
         description:
             - C(Enabled) or C(Disabled) apply network policies on private endpoints in the subnet.
@@ -100,15 +111,18 @@ options:
         description:
             - An array of delegations.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - The name of delegation.
+                type: str
                 required: True
             serviceName:
                 description:
                     - The type of the endpoint service.
                 required: True
+                type: str
                 choices:
                     - Microsoft.Web/serverFarms
                     - Microsoft.ContainerInstance/containerGroups
@@ -143,6 +157,7 @@ options:
                 description:
                     - A list of actions.
                 type: list
+                elements: str
                 default: []
     nat_gateway:
         description:
@@ -162,59 +177,59 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a subnet
-      azure_rm_subnet:
-        resource_group: myResourceGroup
-        virtual_network_name: myVirtualNetwork
-        name: mySubnet
-        address_prefix_cidr: "10.1.0.0/24"
+- name: Create a subnet
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
+    address_prefix_cidr: "10.1.0.0/24"
 
-    - name: Create a subnet refer nsg from other resource group
-      azure_rm_subnet:
-        resource_group: myResourceGroup
-        virtual_network_name: myVirtualNetwork
-        name: mySubnet
-        address_prefix_cidr: "10.1.0.0/16"
-        security_group:
-          name: secgroupfoo
-          resource_group: mySecondResourceGroup
-        route_table: route
+- name: Create a subnet refer nsg from other resource group
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
+    address_prefix_cidr: "10.1.0.0/16"
+    security_group:
+      name: secgroupfoo
+      resource_group: mySecondResourceGroup
+    route_table: route
 
-    - name: Create a subnet with service endpoint
-      azure_rm_subnet:
-        resource_group: myResourceGroup
-        virtual_network_name: myVirtualNetwork
-        name: mySubnet
-        address_prefix_cidr: "10.1.0.0/16"
-        service_endpoints:
-          - service: "Microsoft.Sql"
-            locations:
-              - "eastus"
+- name: Create a subnet with service endpoint
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
+    address_prefix_cidr: "10.1.0.0/16"
+    service_endpoints:
+      - service: "Microsoft.Sql"
+        locations:
+          - "eastus"
 
-    - name: Create a subnet with delegations
-      azure_rm_subnet:
-        resource_group: myResourceGroup
-        virtual_network_name: myVirtualNetwork
-        name: mySubnet
-        address_prefix_cidr: "10.1.0.0/16"
-        delegations:
-          - name: 'mydeleg'
-            serviceName: 'Microsoft.ContainerInstance/containerGroups'
+- name: Create a subnet with delegations
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
+    address_prefix_cidr: "10.1.0.0/16"
+    delegations:
+      - name: 'mydeleg'
+        serviceName: 'Microsoft.ContainerInstance/containerGroups'
 
-    - name: Create a subnet with an associated NAT Gateway
-      azure_rm_subnet:
-        resource_group: myResourceGroup
-        virtual_network_name: myVirtualNetwork
-        name: mySubnet
-        address_prefix_cidr: "10.1.0.0/16"
-        nat_gateway: myNatGateway
+- name: Create a subnet with an associated NAT Gateway
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
+    address_prefix_cidr: "10.1.0.0/16"
+    nat_gateway: myNatGateway
 
-    - name: Delete a subnet
-      azure_rm_subnet:
-        resource_group: myResourceGroup
-        virtual_network_name: myVirtualNetwork
-        name: mySubnet
-        state: absent
+- name: Delete a subnet
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: mySubnet
+    state: absent
 '''
 
 RETURN = '''
@@ -341,6 +356,7 @@ delegations_spec = dict(
     ),
     actions=dict(
         type='list',
+        elements='str',
         default=[]
     )
 )
@@ -388,11 +404,16 @@ class AzureRMSubnet(AzureRMModuleBase):
             state=dict(type='str', default='present', choices=['present', 'absent']),
             virtual_network_name=dict(type='str', required=True, aliases=['virtual_network']),
             address_prefix_cidr=dict(type='str', aliases=['address_prefix']),
-            address_prefixes_cidr=dict(type='list', aliases=['address_prefixes']),
+            address_prefixes_cidr=dict(type='list', aliases=['address_prefixes'], elements='str'),
             security_group=dict(type='raw', aliases=['security_group_name']),
             route_table=dict(type='raw'),
             service_endpoints=dict(
-                type='list'
+                type='list',
+                elements='dict',
+                options=dict(
+                    service=dict(type='str', required=True),
+                    locations=dict(type='list', elements='str')
+                )
             ),
             private_endpoint_network_policies=dict(
                 type='str',

@@ -205,16 +205,15 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create VpnSite
-      azure_rm_vpnsite:
-        resource_group: myResourceGroup
-        name: vpnSite_name
+- name: Create VpnSite
+  azure_rm_vpnsite:
+    resource_group: myResourceGroup
+    name: vpnSite_name
 
-    - name: Delete Vpn Site
-      azure_rm_vpnsite:
-        resource_group: myResourceGroup
-        name: vpnSite_name
-
+- name: Delete Vpn Site
+  azure_rm_vpnsite:
+    resource_group: myResourceGroup
+    name: vpnSite_name
 '''
 
 RETURN = '''

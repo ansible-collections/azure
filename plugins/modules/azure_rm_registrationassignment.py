@@ -54,27 +54,26 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Delete Registration Assignment
-      azure_rm_registrationassignment:
-        scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        state: absent
+- name: Delete Registration Assignment
+  azure_rm_registrationassignment:
+    scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: absent
 
 
-    - name: Create Registration Assignment in subscription level
-      azure_rm_registrationassignment:
-        scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        properties:
-          registration_definition_id: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxx-xxx
+- name: Create Registration Assignment in subscription level
+  azure_rm_registrationassignment:
+    scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    properties:
+      registration_definition_id: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxx-xxx
 
 
-    - name: Create Registration Assignment in resourcegroup level with randomly generating registration_assignment_id
-      azure_rm_registrationassignment:
-        scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
-        properties:
-          registration_definition_id: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxx-xxx
-
+- name: Create Registration Assignment in resourcegroup level with randomly generating registration_assignment_id
+  azure_rm_registrationassignment:
+    scope: subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
+    properties:
+      registration_definition_id: /subscriptions/xxx-xxx/providers/Microsoft.ManagedServices/registrationDefinitions/xxx-xxx
 '''
 
 RETURN = '''
@@ -189,7 +188,6 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
                                                     api_version='2019-09-01',
-                                                    is_track2=True,
                                                     suppress_subscription_id=True)
 
         old_response = self.get_resource()

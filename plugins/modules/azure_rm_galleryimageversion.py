@@ -45,7 +45,7 @@ options:
     storage_profile:
         description:
             - Storage profile
-        required: true
+            - Required when creating.
         type: dict
         suboptions:
             source_image:
@@ -59,12 +59,12 @@ options:
                 description:
                     - os disk snapshot
                     - Mutual exclusive with source_image
-                type: raw
+                type: dict
                 suboptions:
                     source:
                         description:
                             - Reference to os disk snapshot. Could be resource ID or dictionary containing I(resource_group) and I(name)
-                        type: str
+                        type: raw
                     host_caching:
                         description:
                             - host disk caching
@@ -79,11 +79,12 @@ options:
                     - list of data disk snapshot
                     - Mutual exclusive with source_image
                 type: list
+                elements: raw
                 suboptions:
                     source:
                         description:
                             - Reference to data disk snapshot. Could be resource ID or dictionary containing I(resource_group) and I(name)
-                        type: str
+                        type: raw
                     lun:
                         description:
                             - lun of the data disk
@@ -100,7 +101,6 @@ options:
     publishing_profile:
         description:
             - Publishing profile.
-        required: true
         type: dict
         suboptions:
             target_regions:
@@ -108,29 +108,89 @@ options:
                     - The target regions where the Image Version is going to be replicated to.
                     - This property is updatable.
                 type: list
+                elements: raw
                 suboptions:
                     name:
                         description:
                             - Region name.
                         type: str
+                        required: true
                     regional_replica_count:
                         description:
                             - The number of replicas of the Image Version to be created per region.
                             - This property would take effect for a region when regionalReplicaCount is not specified.
                             - This property is updatable.
-                        type: str
+                        type: int
                     storage_account_type:
                         description:
                             - Storage account type.
                         type: str
+                    encryption:
+                        description:
+                            - Allows users to provide customer managed keys for encrypting the OS and data disks in the gallery artifact.
+                        type: dict
+                        suboptions:
+                            data_disk_images:
+                                description:
+                                    - A list of encryption specifications for data disk images.
+                                type: list
+                                elements: dict
+                                suboptions:
+                                    disk_encryption_set_id:
+                                        description:
+                                            - A relative URI containing the resource ID of the disk encryption set.
+                                        type: str
+                                    lun:
+                                        description:
+                                            - This property specifies the logical unit number of the data disk.
+                                            - This value is used to identify data disks within the Virtual Machine and
+                                              therefore must be unique for each data disk attached to the Virtual Machine.
+                                        type: int
+                            os_disk_image:
+                                description:
+                                    - Contains encryption settings for an OS disk image.
+                                type: dict
+                                suboptions:
+                                    disk_encryption_set_id:
+                                        description:
+                                            - A relative URI containing the resource ID of the disk encryption set.
+                                        type: str
+                                    security_profile:
+                                        description:
+                                            - This property specifies the security profile of an OS disk image.
+                                        type: dict
+                                        suboptions:
+                                            confidential_vm_encryption_type:
+                                                description:
+                                                    - Confidential VM encryption types.
+                                                type: dict
+                                                suboptions:
+                                                    encrypted_vm_guest_state_only_with_pmk:
+                                                        description:
+                                                            - VM Guest State Only with PMK.
+                                                        type: str
+                                                    encrypted_with_cmk:
+                                                        description:
+                                                            - Encrypted with CMK.
+                                                        type: str
+                                                    encrypted_with_pmk:
+                                                        description:
+                                                            - Encrypted with PMK.
+                                                        type: str
+                                            secure_vm_disk_encryption_set_id:
+                                                description:
+                                                    - Secure VM disk encryption set id.
+                                                type: str
             managed_image:
                 description:
                     - Managed image reference, could be resource ID, or dictionary containing I(resource_group) and I(name)
                     - Obsolete since 2.10, use storage_profile instead
+                type: raw
             snapshot:
                 description:
                     - Source snapshot to be used.
                     - Obsolete since 2.10, use storage_profile instead
+                type: raw
             replica_count:
                 description:
                     - The number of replicas of the Image Version to be created per region.
@@ -152,6 +212,9 @@ options:
                     - Specifies the storage account type to be used to store the image.
                     - This property is not updatable.
                 type: str
+                choices:
+                    - Standard_LRS
+                    - Standard_ZRS
     state:
         description:
             - Assert the state of the GalleryImageVersion.
@@ -179,7 +242,7 @@ EXAMPLES = '''
     location: East US
     publishing_profile:
       end_of_life_date: "2020-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 4
       storage_account_type: Standard_LRS
       target_regions:
@@ -189,7 +252,7 @@ EXAMPLES = '''
           regional_replica_count: 3
           storage_account_type: Standard_LRS
     storage_profile:
-        source_image: /subscriptions/sub123/resourceGroups/group123/providers/Microsoft.Compute/images/myOsImage
+      source_image: /subscriptions/sub123/resourceGroups/group123/providers/Microsoft.Compute/images/myOsImage
 
 - name: Create a gallery image version from another gallery image version
   azure_rm_galleryimageversion:
@@ -200,7 +263,7 @@ EXAMPLES = '''
     location: East US
     publishing_profile:
       end_of_life_date: "2020-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 4
       storage_account_type: Standard_LRS
       target_regions:
@@ -210,10 +273,10 @@ EXAMPLES = '''
           regional_replica_count: 3
           storage_account_type: Standard_LRS
     storage_profile:
-        source_image:
-            version: 1.1.0
-            gallery_name: myGallery2
-            gallery_image_name: myGalleryImage2
+      source_image:
+        version: 1.1.0
+        gallery_name: myGallery2
+        gallery_image_name: myGalleryImage2
 
 - name: Create gallery image by using one os dist snapshot and zero or many data disk snapshots
   azure_rm_galleryimageversion:
@@ -224,7 +287,7 @@ EXAMPLES = '''
     location: East  US
     publishing_profile:
       end_of_life_date: "2020-10-01t00:00:00+00:00"
-      exclude_from_latest: yes
+      exclude_from_latest: true
       replica_count: 1
       storage_account_type: Standard_LRS
       target_regions:
@@ -233,13 +296,13 @@ EXAMPLES = '''
           storage_account_type: Standard_LRS
     storage_profile:
       os_disk:
-          source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/os_snapshot_vma"
+        source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/os_snapshot_vma"
       data_disks:
-          - lun: 0
-            source:
-              name: data_snapshot_vma
-          - lun: 1
-            source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/data_snapshot_vmb"
+        - lun: 0
+          source:
+            name: data_snapshot_vma
+        - lun: 1
+          source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/data_snapshot_vmb"
 '''
 
 RETURN = '''
@@ -342,6 +405,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                     ),
                     data_disks=dict(
                         type='list',
+                        elements='raw',
                         disposition='dataDiskImages',
                         purgeIfNone=True,
                         options=dict(
@@ -371,6 +435,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                 options=dict(
                     target_regions=dict(
                         type='list',
+                        elements='raw',
                         disposition='targetRegions',
                         options=dict(
                             name=dict(
@@ -385,6 +450,63 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                             storage_account_type=dict(
                                 type='str',
                                 disposition='storageAccountType'
+                            ),
+                            encryption=dict(
+                                type='dict',
+                                options=dict(
+                                    data_disk_images=dict(
+                                        type='list',
+                                        disposition='dataDiskImages',
+                                        elements='dict',
+                                        options=dict(
+                                            disk_encryption_set_id=dict(
+                                                type='str',
+                                                disposition='diskEncryptionSetId'
+                                            ),
+                                            lun=dict(
+                                                type='int'
+                                            )
+                                        )
+                                    ),
+                                    os_disk_image=dict(
+                                        type='dict',
+                                        disposition='osDiskImage',
+                                        options=dict(
+                                            disk_encryption_set_id=dict(
+                                                type='str',
+                                                disposition='diskEncryptionSetId'
+                                            ),
+                                            security_profile=dict(
+                                                type='dict',
+                                                disposition='securityProfile',
+                                                options=dict(
+                                                    confidential_vm_encryption_type=dict(
+                                                        type='dict',
+                                                        disposition='confidentialVMEncryptionType',
+                                                        options=dict(
+                                                            encrypted_vm_guest_state_only_with_pmk=dict(
+                                                                type='str',
+                                                                disposition='EncryptedVMGuestStateOnlyWithPmk'
+                                                            ),
+                                                            encrypted_with_cmk=dict(
+                                                                type='str',
+                                                                disposition='EncryptedWithCmk'
+                                                            ),
+                                                            encrypted_with_pmk=dict(
+                                                                type='str',
+                                                                disposition='EncryptedWithPmk'
+                                                            )
+                                                        )
+                                                    ),
+                                                    secure_vm_disk_encryption_set_id=dict(
+                                                        type='str',
+                                                        disposition='secureVMDiskEncryptionSetId'
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
                             )
                         )
                     ),
@@ -445,7 +567,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
 
         self.body = {}
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2019-07-01'
+        self.query_parameters['api-version'] = '2022-03-03'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -476,7 +598,6 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -574,10 +695,12 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
             self.log('Error attempting to create the GalleryImageVersion instance.')
             self.fail('Error creating the GalleryImageVersion instance: {0}'.format(str(exc)))
 
-        try:
+        if hasattr(response, 'body'):
             response = json.loads(response.body())
-        except Exception:
-            response = {'text': response.context['deserialized_data']}
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         while response['properties']['provisioningState'] == 'Creating':
             time.sleep(60)

@@ -115,7 +115,7 @@ EXAMPLES = '''
     hub_policy_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    edge_enabled: yes
+    edge_enabled: true
 
 - name: Create Azure IoT Hub device module with module twin properties and tag
   azure_rm_iotdevice:
@@ -127,12 +127,12 @@ EXAMPLES = '''
     primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     twin_tags:
-        location:
-            country: US
-            city: Redmond
-        sensor: humidity
+      location:
+        country: US
+        city: Redmond
+      sensor: humidity
     desired:
-        period: 100
+      period: 100
 '''
 
 RETURN = '''
@@ -291,11 +291,11 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
         try:
             if self.auth_method == 'sas':
                 response = self.mgmt_client.update_module_with_sas(self.device, self.name, self.managed_by, self.etag, self.primary_key, self.secondary_key)
-            elif self.auth_method == 'self_signed':
-                response = self.mgmt_client.update_module_with_certificate_authority(self.device, self.name, self.managed_by, self.etag)
             elif self.auth_method == 'certificate_authority':
+                response = self.mgmt_client.update_module_with_certificate_authority(self.device, self.name, self.managed_by, self.etag)
+            elif self.auth_method == 'self_signed':
                 response = self.mgmt_client.update_module_with_x509(self.device,
-                                                                    self.name, self.managed_by, self.etag, self.primary_thumbprint, self.secondary_thumbprint)
+                                                                    self.name, self.managed_by, self.etag, self.primary_key, self.secondary_key)
 
             return self.format_module(response)
         except Exception as exc:
@@ -309,11 +309,11 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
         try:
             if self.auth_method == 'sas':
                 response = self.mgmt_client.create_module_with_sas(self.device, self.name, self.managed_by, self.primary_key, self.secondary_key)
-            elif self.auth_method == 'self_signed':
-                response = self.mgmt_client.create_module_with_certificate_authority(self.device, self.name, self.managed_by)
             elif self.auth_method == 'certificate_authority':
+                response = self.mgmt_client.create_module_with_certificate_authority(self.device, self.name, self.managed_by)
+            elif self.auth_method == 'self_signed':
                 response = self.mgmt_client.create_module_with_x509(self.device_id,
-                                                                    self.name, self.managed_by, self.primary_thumbprint, self.secondary_thumbprint)
+                                                                    self.name, self.managed_by, self.primary_key, self.secondary_key)
 
             return self.format_module(response)
         except Exception as exc:

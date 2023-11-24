@@ -47,7 +47,6 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     gallery_name: myGallery
     name: myImage
-
 '''
 
 RETURN = '''
@@ -85,12 +84,12 @@ images:
         os_state:
             description:
                 - The allowed values for OS State are C(generalized).
-            type: OperatingSystemStateTypes
+            type: str
             sample: "Generalized"
         os_type:
             description:
                 - This property allows you to specify the type of the OS that is included in the disk when creating a VM from a managed image.
-            type: OperatingSystemTypes
+            type: str
             sample: "linux/windows"
         identifier:
             description:
@@ -160,7 +159,6 @@ class AzureRMGalleryImagesInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if (self.resource_group is not None and

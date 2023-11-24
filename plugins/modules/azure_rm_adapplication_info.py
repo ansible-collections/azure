@@ -6,8 +6,8 @@
 
 
 from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
+__metaclass__ = type
 
 DOCUMENTATION = '''
 module: azure_rm_adapplication_info
@@ -26,9 +26,9 @@ options:
         type: str
     tenant:
         description:
-            - The tenant ID.
+            - (deprecated) The tenant ID.
+            - This option has been deprecated, and will be removed in the future.
         type: str
-        required: True
     object_id:
         description:
             - It's application's object ID.
@@ -45,24 +45,21 @@ author:
     haiyuan_zhang (@haiyuazhang)
     Fred-sun (@Fred-sun)
     guopeng_lin (@guopenglin)
+    Xu Zhang (@xuzhang)
 '''
 
 EXAMPLES = '''
-  - name: get ad app info by App ID
-    azure_rm_adapplication_info:
-      app_id: "{{ app_id }}"
-      tenant: "{{ tenant_id }}"
+- name: get ad app info by App ID
+  azure_rm_adapplication_info:
+    app_id: "{{ app_id }}"
 
-  - name: get ad app info ---- by object ID
-    azure_rm_adapplication_info:
-      object_id: "{{ object_id }}"
-      tenant: "{{ tenant_id }}"
+- name: get ad app info ---- by object ID
+  azure_rm_adapplication_info:
+    object_id: "{{ object_id }}"
 
-  - name: get ad app info ---- by identifier uri
-    azure_rm_adapplication_info:
-      identifier_uri: "{{ identifier_uri }}"
-      tenant: "{{ tenant_id }}"
-
+- name: get ad app info ---- by identifier uri
+  azure_rm_adapplication_info:
+    identifier_uri: "{{ identifier_uri }}"
 '''
 
 RETURN = '''
@@ -101,7 +98,9 @@ applications:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from azure.graphrbac.models import GraphErrorException
+    import asyncio
+    from msgraph.generated.applications.applications_request_builder import ApplicationsRequestBuilder
+    from kiota_abstractions.api_error import APIError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -111,25 +110,17 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
 
     def __init__(self):
         self.module_arg_spec = dict(
-            app_id=dict(
-                type='str'
-            ),
-            object_id=dict(
-                type='str'
-            ),
-            identifier_uri=dict(
-                type='str'
-            ),
-            tenant=dict(
-                type='str',
-                required=True
-            )
+            app_id=dict(type='str'),
+            object_id=dict(type='str'),
+            identifier_uri=dict(type='str'),
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection')
         )
         self.tenant = None
         self.app_id = None
         self.object_id = None
         self.identifier_uri = None
         self.results = dict(changed=False)
+        self._client = None
         super(AzureRMADApplicationInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                        supports_check_mode=True,
                                                        supports_tags=False,
@@ -140,21 +131,25 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         applications = []
+
         try:
-            client = self.get_graphrbac_client(self.tenant)
+            self._client = self.get_msgraph_client()
             if self.object_id:
-                applications = [client.applications.get(self.object_id)]
+                applications = [asyncio.get_event_loop().run_until_complete(self.get_application(self.object_id))]
             else:
                 sub_filters = []
                 if self.identifier_uri:
                     sub_filters.append("identifierUris/any(s:s eq '{0}')".format(self.identifier_uri))
                 if self.app_id:
                     sub_filters.append("appId eq '{0}'".format(self.app_id))
-                # applications = client.applications.list(filter=(' and '.join(sub_filters)))
-                applications = list(client.applications.list(filter=(' and '.join(sub_filters))))
 
+                apps = asyncio.get_event_loop().run_until_complete(self.get_applications(sub_filters))
+                applications = list(apps.value)
             self.results['applications'] = [self.to_dict(app) for app in applications]
-        except GraphErrorException as ge:
+        except APIError as e:
+            if e.response_status_code != 404:
+                self.fail("failed to get application info {0}".format(str(e)))
+        except Exception as ge:
             self.fail("failed to get application info {0}".format(str(ge)))
 
         return self.results
@@ -162,10 +157,24 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
     def to_dict(self, object):
         return dict(
             app_id=object.app_id,
-            object_id=object.object_id,
+            object_id=object.id,
             app_display_name=object.display_name,
             identifier_uris=object.identifier_uris
         )
+
+    async def get_application(self, obj_id):
+        return await self._client.applications.by_application_id(obj_id).get()
+
+    async def get_applications(self, sub_filters):
+        if sub_filters:
+            request_configuration = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
+                query_parameters=ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                    filter=(' and '.join(sub_filters)),
+                ),
+            )
+            return await self._client.applications.get(request_configuration=request_configuration)
+        else:
+            return await self._client.applications.get()
 
 
 def main():

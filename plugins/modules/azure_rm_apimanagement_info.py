@@ -48,15 +48,15 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get the information of api
-      azure_rm_apimanagement_info:
-        resource_group: myResourceGroup
-        service_name: myService
-    - name: Get the information of api
-      azure_rm_apimanagement_info:
-        resource_group: myResourceGroup
-        service_name: myService
-        api_id: testApi
+- name: Get the information of api
+  azure_rm_apimanagement_info:
+    resource_group: myResourceGroup
+    service_name: myService
+- name: Get the information of api
+  azure_rm_apimanagement_info:
+    resource_group: myResourceGroup
+    service_name: myService
+    api_id: testApi
 '''
 
 RETURN = '''
@@ -139,7 +139,7 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
         self.status_code = [200]
 
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2020-06-01-preview'
+        self.query_parameters['api-version'] = '2022-08-01'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -155,7 +155,6 @@ class AzureApiManagementInfo(AzureRMModuleBaseExt):
                 self.body[key] = kwargs[key]
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if (self.resource_group is not None and

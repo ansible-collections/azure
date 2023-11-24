@@ -1,5 +1,5 @@
-- name: setup basic facts
-  set_fact:
+- name: Setup basic facts
+  ansible.builtin.set_fact:
     uuid: bb21a88b-30e1-42b5-84e8-1d3f322de033
     # Disk Backup Reader, unlikely to be already assigned in ansible-test resource groups.
     az_role_definition_guid: '3e5e47e6-65f7-47ef-90b5-e5dd4d455f24'
@@ -15,7 +15,7 @@
     id: "{{ item.id | default(omit) }}"
     role_definition_id: "{{ item.role_definition_id | default(omit) }}"
     scope: "{{ item.scope | default(omit) }}"
-    strict_scope_match: True
+    strict_scope_match: true
   register: az_role_assignment_specific
   loop:
     - name: "{{ az_role_assignments.roleassignments[0].name }}"
@@ -25,10 +25,10 @@
       role_definition_id: "{{ az_role_assignments.roleassignments[0].role_definition_id }}"
     - id: "{{ az_role_assignments.roleassignments[0].id }}"
 
-- name: check specific fetch for single return
-  assert:
+- name: Check specific fetch for single return
+  ansible.builtin.assert:
     that:
-      - "{{ ( item.roleassignments | length) == 1 }}"
+      - "{{ (item.roleassignments | length) == 1 }}"
   loop: "{{ az_role_assignment_specific.results }}"
 
 - name: Intentional mutual exclusion info
@@ -38,7 +38,7 @@
     id: "{{ item.id | default(omit) }}"
     scope: "{{ item.scope | default(omit) }}"
   register: failures_info
-  ignore_errors: True
+  ignore_errors: true
   loop:
     - name: "{{ az_role_assignments.roleassignments[0].name }}"
       assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
@@ -47,8 +47,8 @@
     - name: "{{ az_role_assignments.roleassignments[0].name }}"
       id: "{{ az_role_assignments.roleassignments[0].id }}"
 
-- name: check intended failures
-  assert:
+- name: Check intended failures
+  ansible.builtin.assert:
     that:
       - item.failed
   loop: "{{ failures_info.results }}"
@@ -62,7 +62,7 @@
     role_definition_id: "{{ item.role_definition_id | default(omit) }}"
     state: "{{ item.state | default(omit) }}"
   register: failures_mutable
-  ignore_errors: True
+  ignore_errors: true
   loop:
       # mutually exclusive
     - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
@@ -87,33 +87,33 @@
       role_definition_id: "{{ az_role_assignments.roleassignments[0].role_definition_id }}"
       state: "absent"
 
-- name: check intended failures
-  assert:
+- name: Check intended failures
+  ansible.builtin.assert:
     that:
       - item.failed
   loop: "{{ failures_mutable.results }} "
 
-- name: get resource group info
+- name: Get resource group info
   azure_rm_resourcegroup_info:
     name: "{{ resource_group }}"
   register: az_resource_group
 
-- name: create role assignment by id
+- name: Create role assignment by id
   azure_rm_roleassignment:
     id: "{{ az_resource_group.resourcegroups[0].id }}/providers/Microsoft.Authorization/roleAssignments/{{ uuid }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
   register: az_role_assignment_create
 
-- name: create role assignment by scope
+- name: Create role assignment by scope
   azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
   register: az_role_assignment_idempotent
 
-- name: check idempotence
-  assert:
+- name: Check idempotence
+  ansible.builtin.assert:
     that:
       - az_role_assignment_idempotent.changed == False
 
@@ -131,13 +131,13 @@
 - name: List Role Assignments at scope with strict matching
   azure_rm_roleassignment_info:
     scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-    strict_scope_match: True
+    strict_scope_match: true
   register: az_role_assignment_by_scope_strict
 
-- name: check strict scope matching
-  assert:
+- name: Check strict scope matching
+  ansible.builtin.assert:
     that:
-      - item.scope == az_role_assignments.roleassignments[0].scope 
+      - item.scope == az_role_assignments.roleassignments[0].scope
   loop: "{{ az_role_assignment_by_scope_strict.roleassignments }}"
 
 - name: List Role Assignments at id
@@ -157,12 +157,12 @@
   register: az_role_assignment_delete
   when: az_role_assignment_create.changed
 
-- name: create role assignment with name
+- name: Create role assignment with name
   azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-    name: "{{ uuid }}" 
+    name: "{{ uuid }}"
   register: az_role_assignment_create
 
 - name: Delete Role by Name
@@ -173,14 +173,14 @@
   register: az_role_assignment_delete
   when: az_role_assignment_create.changed
 
-- name: create role assignment by scope
+- name: Create role assignment by scope
   azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
   register: az_role_assignment_create_by_scope
 
-- name: delete by scope, assignee_object_id and role_definition_id
+- name: Delete by scope, assignee_object_id and role_definition_id
   azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
@@ -189,20 +189,20 @@
   register: az_role_assignment_delete
   when: az_role_assignment_create.changed
 
-- name: absent assignment that doesn't exist - id
+- name: Absent assignment that doesn't exist - id
   azure.azcollection.azure_rm_roleassignment:
     id: "{{ az_role_assignment_delete.id }}"
     state: absent
   register: absent_nochange_id
 
-- name: absent assignment that doesn't exist - name
+- name: Absent assignment that doesn't exist - name
   azure.azcollection.azure_rm_roleassignment:
     name: "{{ az_role_assignment_delete.name }}"
     scope: "{{ az_role_assignment_delete.scope }}"
     state: absent
   register: absent_nochange_name
 
-- name: absent assignment that doesn't exist - properties
+- name: Absent assignment that doesn't exist - properties
   azure.azcollection.azure_rm_roleassignment:
     scope: "{{ az_role_assignment_delete.scope }}"
     assignee_object_id: "{{ az_role_assignment_delete.assignee_object_id }}"
@@ -210,11 +210,11 @@
     state: absent
   register: absent_nochange_properties
 
-- name: check intended failures info
-  assert:
+- name: Check intended failures info
+  ansible.builtin.assert:
     that:
       - item.changed == false
-  loop: 
+  loop:
     - "{{ absent_nochange_properties }}"
     - "{{ absent_nochange_id }}"
     - "{{ absent_nochange_name }}"
