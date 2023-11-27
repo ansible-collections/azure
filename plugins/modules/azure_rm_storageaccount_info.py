@@ -211,12 +211,12 @@ storageaccounts:
             type: bool
             returned: always
             sample: true
-        is_hns_enabled:
+        enable_nfs_v3:
             description:
-                - Account HierarchicalNamespace enabled if sets to true.
+                - NFS 3.0 protocol.
             type: bool
             returned: always
-            sample: true
+            sample: false
         kind:
             description:
                 - The kind of storage.
