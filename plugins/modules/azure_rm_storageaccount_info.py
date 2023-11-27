@@ -211,6 +211,12 @@ storageaccounts:
             type: bool
             returned: always
             sample: true
+        is_hns_enabled:
+            description:
+                - Account HierarchicalNamespace enabled if sets to true.
+            type: bool
+            returned: always
+            sample: true
         kind:
             description:
                 - The kind of storage.
@@ -681,6 +687,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             allow_blob_public_access=account_obj.allow_blob_public_access,
             is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
             large_file_shares_state=account_obj.large_file_shares_state,
+            enable_nfs_v3=account_obj.enable_nfs_v3 if hasattr(account_obj, 'enable_nfs_v3') else null,
             static_website=dict(
                 enabled=False,
                 index_document=None,
