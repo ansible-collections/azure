@@ -352,7 +352,7 @@ EXAMPLES = '''
     kind: FileStorage
     enable_nfs_v3: false
     static_website:
-      enabled: True
+      enabled: true
 
 - name: configure firewall and virtual networks
   azure_rm_storageaccount:
