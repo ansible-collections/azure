@@ -907,7 +907,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             allow_blob_public_access=account_obj.allow_blob_public_access,
             network_acls=account_obj.network_rule_set,
             is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
-            enable_nfs_v3=account_obj.enable_nfs_v3 if hasattr(account_obj, 'enable_nfs_v3') else null,
+            enable_nfs_v3=account_obj.enable_nfs_v3 if hasattr(account_obj, 'enable_nfs_v3') else None,
             large_file_shares_state=account_obj.large_file_shares_state,
             static_website=dict(
                 enabled=False,
