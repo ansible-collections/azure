@@ -114,7 +114,7 @@ include_host_filters:
     - location in ['eastus'] and powerstate == 'running'
     - location in ['eastus2'] and tags['tagkey'] is defined and tags['tagkey'] == 'tagkey'
 
-    
+ 
 '''
 
 # FUTURE: do we need a set of sane default filters, separate from the user-defineable ones?
