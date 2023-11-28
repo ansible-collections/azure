@@ -108,7 +108,7 @@ exclude_host_filters:
 
 # includes a host to the inventory when any of these expressions is true, can refer to any vars defined on the host
 include_host_filters:
-    # includes hosts that in the eastus region and power on 
+    # includes hosts that in the eastus region and power on
     - location in ['eastus'] and powerstate == 'running'
     # includes hosts in the eastus region and power on OR includes hosts in the eastus2 region and tagkey is tagkey
     - location in ['eastus'] and powerstate == 'running'
