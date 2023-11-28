@@ -47,6 +47,11 @@ options:
             expression in the list is evaluated for each host; when the expression is true, the host is excluded
             from the inventory.
         default: []
+    include_host_filters:
+        description: Include hosts from the inventory with a list of Jinja2 conditional expressions. Each
+            expression in the list is evaluated for each host; when the expression is true, the host is included
+            in the inventory, all hosts are includes in the inventory by default.
+        default: [true]
     batch_fetch:
         description: To improve performance, results are fetched using an unsupported batch API. Disabling
             C(batch_fetch) uses a much slower serial fetch, resulting in many more round-trips. Generally only
