@@ -223,7 +223,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         self._filters = self.get_option('exclude_host_filters') + self.get_option('default_host_filters')
 
-        self._include_filters = self.get_option('include_host_filters') 
+        self._include_filters = self.get_option('include_host_filters')
 
         try:
             self._credential_setup()
@@ -341,12 +341,11 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         return False
 
-    def _filter_include_host(self,inventory_hostname, hostvars):
-        return self._filter_host(self._include_filters,inventory_hostname,hostvars)
-    
-    def _filter_exclude_host(self,inventory_hostname, hostvars):
-        return self._filter_host(self._filters ,inventory_hostname,hostvars)
-    
+    def _filter_include_host(self, inventory_hostname, hostvars):
+        return self._filter_host(self._include_filters, inventory_hostname, hostvars)
+
+    def _filter_exclude_host(self, inventory_hostname, hostvars):
+        return self._filter_host(self._filters, inventory_hostname, hostvars)
 
     def _get_hostname(self, host, hostnames=None, strict=False):
         hostname = None
