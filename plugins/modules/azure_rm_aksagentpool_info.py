@@ -14,7 +14,7 @@ module: azure_rm_aksagentpool_info
 version_added: '1.14.0'
 short_description: Show the details for a node pool in the managed Kubernetes cluster
 description:
-    - Get the details for a node pool in the managed Kubernetes cluster
+    - Get the details for a node pool in the managed Kubernetes cluster.
 
 options:
     resource_group:
@@ -41,17 +41,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get node agent pool by cluster name
-      azure_rm_aksagentpool_info:
-        resource_group: myRG
-        cluster_name: testcluster
+- name: Get node agent pool by cluster name
+  azure_rm_aksagentpool_info:
+    resource_group: myRG
+    cluster_name: testcluster
 
-    - name: Get node agent pool by name
-      azure_rm_aksagentpool_info:
-        resource_group: myRG
-        cluster_name: testcluster
-        name: default
-
+- name: Get node agent pool by name
+  azure_rm_aksagentpool_info:
+    resource_group: myRG
+    cluster_name: testcluster
+    name: default
 '''
 
 RETURN = '''
@@ -310,7 +309,7 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             availability_zones=[],
             orchestrator_version=agent_pool.orchestrator_version,
             node_image_version=agent_pool.node_image_version,
-            upgrade_settings=agent_pool.upgrade_settings,
+            upgrade_settings=dict(),
             provisioning_state=agent_pool.provisioning_state,
             enable_node_public_ip=agent_pool.enable_node_public_ip,
             scale_set_priority=agent_pool.scale_set_priority,
@@ -319,6 +318,9 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             node_labels=agent_pool.node_labels,
             node_taints=agent_pool.node_taints,
         )
+
+        if agent_pool.upgrade_settings is not None:
+            agent_pool_dict['upgrade_settings']['max_surge'] = agent_pool.upgrade_settings.max_surge
 
         if agent_pool.availability_zones is not None:
             for key in agent_pool.availability_zones:

@@ -1,8 +1,8 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    name: "scale{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+    name_rpfx: "scale{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  run_once: true
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
@@ -34,10 +34,11 @@
     tier: Standard
     managed_disk_type: Standard_LRS
     os_disk_caching: ReadWrite
+    orchestration_mode: Uniform
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
-      sku: 18.04-LTS
+      sku: 20_04-lts
       version: latest
     data_disks:
       - lun: 0
@@ -46,157 +47,164 @@
         managed_disk_type: Standard_LRS
   register: vmss
 
-- name: create auto scaling (check mode)
+- name: Create auto scaling (check mode)
   azure_rm_autoscale:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     target: "{{ vmss.ansible_facts.azure_vmss.id }}"
     enabled: true
     profiles:
-    - count: '1'
-      recurrence_days:
-      - Monday
-      name: Auto created scale condition
-      recurrence_timezone: China Standard Time
-      recurrence_mins:
-      - '0'
-      min_count: '1'
-      max_count: '1'
-      recurrence_frequency: Week
-      recurrence_hours:
-      - '18'
-  check_mode: yes
+      - count: '1'
+        recurrence_days:
+          - Monday
+        name: Auto created scale condition
+        recurrence_timezone: China Standard Time
+        recurrence_mins:
+          - '0'
+        min_count: '1'
+        max_count: '1'
+        recurrence_frequency: Week
+        recurrence_hours:
+          - '18'
+  check_mode: true
   register: output
 
-- assert:
+- name: Assert check mode facts
+  ansible.builtin.assert:
     that:
       - output.changed
 
-- name: create auto scaling
+- name: Create auto scaling
   azure_rm_autoscale:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     target:
       name: "testVMSS{{ rpfx }}"
       types: "virtualMachineScaleSets"
       namespace: "Microsoft.Compute"
     enabled: true
     profiles:
-    - count: '1'
-      recurrence_days:
-      - Monday
-      name: Auto created scale condition
-      recurrence_timezone: China Standard Time
-      recurrence_mins:
-      - '0'
-      min_count: '1'
-      max_count: '1'
-      recurrence_frequency: Week
-      recurrence_hours:
-      - '18'
+      - count: '1'
+        recurrence_days:
+          - Monday
+        name: Auto created scale condition
+        recurrence_timezone: China Standard Time
+        recurrence_mins:
+          - '0'
+        min_count: '1'
+        max_count: '1'
+        recurrence_frequency: Week
+        recurrence_hours:
+          - '18'
   register: output
 
-- assert:
+- name: Assert the auto scale created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
 
-- name: create auto scaling (idemponent)
+- name: Create auto scaling (idemponent)
   azure_rm_autoscale:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     target: "{{ vmss.ansible_facts.azure_vmss.id }}"
     enabled: true
     profiles:
-    - count: '1'
-      recurrence_days:
-      - Monday
-      name: Auto created scale condition
-      recurrence_timezone: China Standard Time
-      recurrence_mins:
-      - '0'
-      min_count: '1'
-      max_count: '1'
-      recurrence_frequency: Week
-      recurrence_hours:
-      - '18'
+      - count: '1'
+        recurrence_days:
+          - Monday
+        name: Auto created scale condition
+        recurrence_timezone: China Standard Time
+        recurrence_mins:
+          - '0'
+        min_count: '1'
+        max_count: '1'
+        recurrence_frequency: Week
+        recurrence_hours:
+          - '18'
   register: output
 
-- assert:
+- name: Assert the auto scale idempotent
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.id
 
-- name: update auto scaling
+- name: Update auto scaling
   azure_rm_autoscale:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     target: "{{ vmss.ansible_facts.azure_vmss.id }}"
     enabled: true
     profiles:
-    - count: '1'
-      recurrence_days:
-      - Monday
-      name: Auto created scale condition 0
-      rules:
-      - time_aggregation: Average
-        time_window: 10
-        direction: Increase
-        metric_name: Percentage CPU
-        metric_resource_uri: "{{ vmss.ansible_facts.azure_vmss.id }}"
-        value: '1'
-        threshold: 70
-        cooldown: 5
-        time_grain: 1
-        statistic: Average
-        operator: GreaterThan
-        type: ChangeCount
-      max_count: '1'
-      recurrence_mins:
-      - '0'
-      min_count: '1'
-      recurrence_timezone: China Standard Time
-      recurrence_frequency: Week
-      recurrence_hours:
-      - '6'
+      - count: '1'
+        recurrence_days:
+          - Monday
+        name: Auto created scale condition 0
+        rules:
+          - time_aggregation: Average
+            time_window: 10
+            direction: Increase
+            metric_name: Percentage CPU
+            metric_resource_uri: "{{ vmss.ansible_facts.azure_vmss.id }}"
+            value: '1'
+            threshold: 70
+            cooldown: 5
+            time_grain: 1
+            statistic: Average
+            operator: GreaterThan
+            type: ChangeCount
+        max_count: '1'
+        recurrence_mins:
+          - '0'
+        min_count: '1'
+        recurrence_timezone: China Standard Time
+        recurrence_frequency: Week
+        recurrence_hours:
+          - '6'
   register: output
 
-- assert:
+- name: Assert the auto scale created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.profiles[0].rules[0].metric_resource_uri == vmss.ansible_facts.azure_vmss.id
 
-- name: delete auto scaling (check mode)
+- name: Delete auto scaling (check mode)
   azure_rm_autoscale:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 
-- assert:
+- name: Assert the auto scaling deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
-- name: delete auto scaling
+- name: Delete auto scaling
   azure_rm_autoscale:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     state: absent
   register: output
 
-- assert:
+- name: Assert the auto scaling deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
-- name: delete auto scaling (idemponetent)
+- name: Delete auto scaling (idemponetent)
   azure_rm_autoscale:
     resource_group: "{{ resource_group }}"
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     state: absent
   register: output
 
-- assert:
+- name: Assert the auto scaling deleted idempotent
+  ansible.builtin.assert:
     that:
       - not output.changed
 

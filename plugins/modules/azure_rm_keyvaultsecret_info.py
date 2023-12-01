@@ -53,31 +53,31 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get latest version of specific secret
-    azure_rm_keyvaultsecret_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: mySecret
+- name: Get latest version of specific secret
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: mySecret
 
-  - name: List all versions of specific secret
-    azure_rm_keyvaultsecret_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: mySecret
-      version: all
+- name: List all versions of specific secret
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: mySecret
+    version: all
 
-  - name: List specific version of specific secret
-    azure_rm_keyvaultsecret_info:
-      vault_uri: "https://myVault.vault.azure.net"
-      name: mySecret
-      version: fd2682392a504455b79c90dd04a1bf46
+- name: List specific version of specific secret
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    name: mySecret
+    version: fd2682392a504455b79c90dd04a1bf46
 
-  - name: List all secrets in specific key vault
-    azure_rm_keyvaultsecret_info:
-        vault_uri: "https://myVault.vault.azure.net"
+- name: List all secrets in specific key vault
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
 
-  - name: List deleted secrets in specific key vault
-    azure_rm_keyvaultsecret_info:
-        vault_uri: "https://myVault.vault.azure.net"
-        show_deleted_secret: True
+- name: List deleted secrets in specific key vault
+  azure_rm_keyvaultsecret_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    show_deleted_secret: true
 '''
 
 RETURN = '''
@@ -162,55 +162,68 @@ secrets:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from azure.keyvault import KeyVaultClient, KeyVaultId, KeyVaultAuthentication
-    from azure.common.credentials import ServicePrincipalCredentials, get_cli_profile
-    from msrestazure.azure_active_directory import MSIAuthentication
+    from azure.keyvault.secrets import SecretClient
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
 
 def secretbundle_to_dict(bundle):
+    return dict(tags=bundle._properties._tags,
+                attributes=dict(
+                    enabled=bundle._properties._attributes.enabled,
+                    not_before=bundle._properties._attributes.not_before,
+                    expires=bundle._properties._attributes.expires,
+                    created=bundle._properties._attributes.created,
+                    updated=bundle._properties._attributes.updated,
+                    recovery_level=bundle._properties._attributes.recovery_level),
+                sid=bundle._properties._id,
+                version=bundle._properties.version,
+                content_type=bundle._properties._content_type,
+                secret=bundle._value)
+
+
+def deleted_bundle_to_dict(bundle):
     return dict(tags=bundle.tags,
                 attributes=dict(
-                    enabled=bundle.attributes.enabled,
-                    not_before=bundle.attributes.not_before,
-                    expires=bundle.attributes.expires,
-                    created=bundle.attributes.created,
-                    updated=bundle.attributes.updated,
-                    recovery_level=bundle.attributes.recovery_level),
+                    enabled=bundle.enabled,
+                    not_before=bundle.not_before,
+                    expires=bundle.expires_on,
+                    created=bundle.created_on,
+                    updated=bundle.updated_on,
+                    recovery_level=bundle.recovery_level),
                 sid=bundle.id,
-                version=KeyVaultId.parse_secret_id(bundle.id).version,
+                version=bundle.key_id,
                 content_type=bundle.content_type,
-                secret=bundle.value)
+                secret=bundle.version)
 
 
 def deletedsecretbundle_to_dict(bundle):
-    secretbundle = secretbundle_to_dict(bundle)
-    secretbundle['recovery_id'] = bundle.recovery_id,
-    secretbundle['scheduled_purge_date'] = bundle.scheduled_purge_date,
-    secretbundle['deleted_date'] = bundle.deleted_date
+    secretbundle = deleted_bundle_to_dict(bundle.properties)
+    secretbundle['recovery_id'] = bundle._recovery_id
+    secretbundle['scheduled_purge_date'] = bundle._scheduled_purge_date
+    secretbundle['deleted_date'] = bundle._deleted_date
     return secretbundle
 
 
 def secretitem_to_dict(secretitem):
-    return dict(sid=secretitem.id,
-                version=KeyVaultId.parse_secret_id(secretitem.id).version,
-                tags=secretitem.tags,
+    return dict(sid=secretitem._id,
+                version=secretitem.version,
+                tags=secretitem._tags,
                 attributes=dict(
-                    enabled=secretitem.attributes.enabled,
-                    not_before=secretitem.attributes.not_before,
-                    expires=secretitem.attributes.expires,
-                    created=secretitem.attributes.created,
-                    updated=secretitem.attributes.updated,
-                    recovery_level=secretitem.attributes.recovery_level))
+                    enabled=secretitem._attributes.enabled,
+                    not_before=secretitem._attributes.not_before,
+                    expires=secretitem._attributes.expires,
+                    created=secretitem._attributes.created,
+                    updated=secretitem._attributes.updated,
+                    recovery_level=secretitem._attributes.recovery_level))
 
 
 def deletedsecretitem_to_dict(secretitem):
-    item = secretitem_to_dict(secretitem)
-    item['recovery_id'] = secretitem.recovery_id,
-    item['scheduled_purge_date'] = secretitem.scheduled_purge_date,
-    item['deleted_date'] = secretitem.deleted_date
+    item = secretitem_to_dict(secretitem.properties)
+    item['recovery_id'] = secretitem._recovery_id
+    item['scheduled_purge_date'] = secretitem._scheduled_purge_date
+    item['deleted_date'] = secretitem._deleted_date
     return item
 
 
@@ -265,49 +278,8 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
         return self.results
 
     def get_keyvault_client(self):
-        kv_url = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
-        # Don't use MSI credentials if the auth_source isn't set to MSI.  The below will Always result in credentials when running on an Azure VM.
-        if self.module.params['auth_source'] == 'msi':
-            try:
-                self.log("Get KeyVaultClient from MSI")
-                resource = self.azure_auth._cloud_environment.suffixes.keyvault_dns.split('.', 1).pop()
-                credentials = MSIAuthentication(resource="https://{0}".format(resource))
-                return KeyVaultClient(credentials)
-            except Exception:
-                self.log("Get KeyVaultClient from service principal")
-        elif self.module.params['auth_source'] in ['auto', 'cli']:
-            try:
-                profile = get_cli_profile()
-                credentials, subscription_id, tenant = profile.get_login_credentials(
-                    subscription_id=self.credentials['subscription_id'], resource="https://{0}".format(kv_url))
-                return KeyVaultClient(credentials)
-            except Exception as exc:
-                self.log("Get KeyVaultClient from service principal")
-                # self.fail("Failed to load CLI profile {0}.".format(str(exc)))
 
-        # Create KeyVault Client using KeyVault auth class and auth_callback
-        def auth_callback(server, resource, scope):
-            if self.credentials['client_id'] is None or self.credentials[
-                    'secret'] is None:
-                self.fail(
-                    'Please specify client_id, secret and tenant to access azure Key Vault.'
-                )
-
-            tenant = self.credentials.get('tenant')
-            if not self.credentials['tenant']:
-                tenant = "common"
-
-            authcredential = ServicePrincipalCredentials(
-                client_id=self.credentials['client_id'],
-                secret=self.credentials['secret'],
-                tenant=tenant,
-                cloud_environment=self._cloud_environment,
-                resource="https://{0}".format(kv_url))
-
-            token = authcredential.token
-            return token['token_type'], token['access_token']
-
-        return KeyVaultClient(KeyVaultAuthentication(auth_callback))
+        return SecretClient(vault_url=self.vault_uri, credential=self.azure_auth.azure_credential_track2)
 
     def get_secret(self):
         '''
@@ -320,19 +292,15 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
         results = []
         try:
             if self.version == 'current':
-                response = self._client.get_secret(
-                    vault_base_url=self.vault_uri,
-                    secret_name=self.name,
-                    secret_version='')
+                response = self._client.get_secret(name=self.name, version='')
             else:
-                response = self._client.get_secret(
-                    vault_base_url=self.vault_uri,
-                    secret_name=self.name,
-                    secret_version=self.version)
+                response = self._client.get_secret(name=self.name, version=self.version)
 
-            if response and self.has_tags(response.tags, self.tags):
-                self.log("Response : {0}".format(response))
-                results.append(secretbundle_to_dict(response))
+            if response:
+                response = secretbundle_to_dict(response)
+                if self.has_tags(response['tags'], self.tags):
+                    self.log("Response : {0}".format(response))
+                    results.append(response)
 
         except Exception as e:
             self.log("Did not find the key vault secret {0}: {1}".format(
@@ -349,14 +317,14 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
 
         results = []
         try:
-            response = self._client.get_secret_versions(
-                vault_base_url=self.vault_uri, secret_name=self.name)
+            response = self._client.list_properties_of_secret_versions(name=self.name)
             self.log("Response : {0}".format(response))
 
             if response:
                 for item in response:
-                    if self.has_tags(item.tags, self.tags):
-                        results.append(secretitem_to_dict(item))
+                    item = secretitem_to_dict(item)
+                    if self.has_tags(item['tags'], self.tags):
+                        results.append(item)
         except Exception as e:
             self.log("Did not find secret versions {0} : {1}.".format(
                 self.name, str(e)))
@@ -372,13 +340,14 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
 
         results = []
         try:
-            response = self._client.get_secrets(vault_base_url=self.vault_uri)
+            response = self._client.list_properties_of_secrets()
             self.log("Response : {0}".format(response))
 
             if response:
                 for item in response:
-                    if self.has_tags(item.tags, self.tags):
-                        results.append(secretitem_to_dict(item))
+                    item = secretitem_to_dict(item)
+                    if self.has_tags(item['tags'], self.tags):
+                        results.append(item)
         except Exception as e:
             self.log(
                 "Did not find key vault in current subscription {0}.".format(
@@ -395,12 +364,13 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
 
         results = []
         try:
-            response = self._client.get_deleted_secret(
-                vault_base_url=self.vault_uri, secret_name=self.name)
+            response = self._client.get_deleted_secret(name=self.name)
 
-            if response and self.has_tags(response.tags, self.tags):
-                self.log("Response : {0}".format(response))
-                results.append(deletedsecretbundle_to_dict(response))
+            if response:
+                response = deletedsecretbundle_to_dict(response)
+                if self.has_tags(response['tags'], self.tags):
+                    self.log("Response : {0}".format(response))
+                    results.append(response)
 
         except Exception as e:
             self.log("Did not find the key vault secret {0}: {1}".format(
@@ -417,14 +387,14 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
 
         results = []
         try:
-            response = self._client.get_deleted_secrets(
-                vault_base_url=self.vault_uri)
+            response = self._client.list_deleted_secrets()
             self.log("Response : {0}".format(response))
 
             if response:
                 for item in response:
-                    if self.has_tags(item.tags, self.tags):
-                        results.append(deletedsecretitem_to_dict(item))
+                    item = deletedsecretitem_to_dict(item)
+                    if self.has_tags(item['tags'], self.tags):
+                        results.append(item)
         except Exception as e:
             self.log(
                 "Did not find key vault in current subscription {0}.".format(

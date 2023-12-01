@@ -41,17 +41,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of DevTest Lab Virtual Network
-    azure_rm_devtestlabvirtualnetwork_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myVirtualNetwork
+- name: Get instance of DevTest Lab Virtual Network
+  azure_rm_devtestlabvirtualnetwork_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myVirtualNetwork
 
-  - name: List all Virtual Networks in DevTest Lab
-    azure_rm_devtestlabvirtualnetwork_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myVirtualNetwork
+- name: List all Virtual Networks in DevTest Lab
+  azure_rm_devtestlabvirtualnetwork_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myVirtualNetwork
 '''
 
 RETURN = '''
@@ -110,9 +110,8 @@ virtualnetworks:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -169,7 +168,7 @@ class AzureRMDevTestLabVirtualNetworkInfo(AzureRMModuleBase):
             response = self.mgmt_client.virtual_networks.list(resource_group_name=self.resource_group,
                                                               lab_name=self.lab_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.fail('Could not list Virtual Networks for DevTest Lab.')
 
         if response is not None:
@@ -186,7 +185,7 @@ class AzureRMDevTestLabVirtualNetworkInfo(AzureRMModuleBase):
                                                              lab_name=self.lab_name,
                                                              name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get facts for Virtual Network.')
 
         if response:

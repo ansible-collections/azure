@@ -1,5 +1,5 @@
 - name: Set Container Instance Names
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Create sample container instance
@@ -20,11 +20,12 @@
           - 81
   register: output
 
-- debug:
+- name: Print the created results
+  ansible.builtin.debug:
     var: output
 
 - name: Assert the container instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.provisioning_state == 'Succeeded'
@@ -48,7 +49,7 @@
   register: output
 
 - name: Assert the container instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
 
@@ -68,11 +69,11 @@
         ports:
           - 80
           - 81
-    force_update: yes
+    force_update: true
   register: output
 
 - name: Assert the container instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.provisioning_state == 'Succeeded'
@@ -100,17 +101,64 @@
             value: myvarvalue
   register: output
 
+- name: Create virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "vnet{{ rpfx }}"
+    address_prefixes_cidr:
+      - 10.1.0.0/16
+      - 172.100.0.0/16
+
+- name: Create a subnet
+  azure_rm_subnet:
+    resource_group: "{{ resource_group }}"
+    name: "sub{{ rpfx }}"
+    virtual_network_name: "vnet{{ rpfx }}"
+    address_prefix_cidr: "10.1.0.0/24"
+    private_link_service_network_policies: Disabled
+    private_endpoint_network_policies: Disabled
+    delegations:
+      - name: delegation_to_containerinsance
+        serviceName: 'Microsoft.ContainerInstance/containerGroups'
+  register: subnet_output
+
+- name: Create third container instance for subnet_ids
+  azure_rm_containerinstance:
+    resource_group: "{{ resource_group }}"
+    name: "aci{{ rpfx }}thi"
+    os_type: linux
+    ip_address: private
+    location: eastus
+    subnet_ids:
+      - "{{ subnet_output.state.id }}"
+    ports:
+      - 80
+    containers:
+      - name: mycontainer1
+        image: httpd
+        memory: 1.5
+        ports:
+          - 80
+          - 81
+  register: output
+
+- name: Assert the container instance is well created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
 - name: Gather facts for single Container Instance
   azure_rm_containerinstance_info:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}sec"
-  register: output 
+  register: output
 
-- debug:
+- name: Print the container instance facts
+  ansible.builtin.debug:
     var: output
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.containerinstances[0]['resource_group'] != None
@@ -129,7 +177,7 @@
   register: output
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.containerinstances[0]['resource_group'] != None
@@ -173,32 +221,37 @@
           share_name: "{{ file_share_name }}"
           storage_account_key: "{{ storage_account_key }}"
   register: output
-  ignore_errors: True
+  ignore_errors: true
 
-- debug:
+- name: Print failed return
+  ansible.builtin.debug:
     var: output
-  ignore_errors: True
+  ignore_errors: true
+  register: ignore_errors_register
 
 - name: Assert the container instance is well created
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.provisioning_state == 'Succeeded'
-  ignore_errors: True
+  register: ignore_errors_register
+  ignore_errors: true
 
 - name: Gather facts for Container Instance
   azure_rm_containerinstance_info:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}thi"
   register: output
-  ignore_errors: True
+  ignore_errors: true
 
-- debug:
+- name: Assert the container instance facts
+  ansible.builtin.debug:
     var: output
-  ignore_errors: True
+  ignore_errors: true
+  register: ignore_errors_register
 
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False
       - output.containerinstances[0]['resource_group'] != None
@@ -212,7 +265,8 @@
       - output.containerinstances[0]['containers'][0]['volume_mounts'] | length == 1
       - output.containerinstances[0]['containers'][0]['volume_mounts'][0]['name'] != None
       - output.containerinstances[0]['containers'][0]['volume_mounts'][0]['mount_path'] != None
-  ignore_errors: True
+  ignore_errors: true
+  register: ignore_errors_register
 
 - name: Remove container instance
   azure_rm_containerinstance:
@@ -241,7 +295,7 @@
           storage_account_key: "{{ storage_account_key }}"
     state: absent
   register: output
-  ignore_errors: True
+  ignore_errors: true
 
 - name: Remove container instance
   azure_rm_containerinstance:
@@ -263,7 +317,7 @@
   register: output
 
 - name: Assert the container instance is deleted
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
 
@@ -305,6 +359,6 @@
   register: output
 
 - name: Assert the changed is false
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed == False

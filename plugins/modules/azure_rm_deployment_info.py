@@ -21,9 +21,11 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     name:
         description:
             - The name of the deployment.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -34,10 +36,10 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Deployment
-    azure_rm_deployment_info:
-      resource_group: myResourceGroup
-      name: myDeployment
+- name: Get instance of Deployment
+  azure_rm_deployment_info:
+    resource_group: myResourceGroup
+    name: myDeployment
 '''
 
 RETURN = '''
@@ -58,31 +60,36 @@ deployments:
                 - Resource group name.
             returned: always
             sample: myResourceGroup
+            type: str
         name:
             description:
                 - Deployment name.
             returned: always
+            type: str
             sample: myDeployment
         provisioning_state:
             description:
                 - Provisioning state of the deployment.
             returned: always
+            type: str
             sample: Succeeded
         template_link:
             description:
                 - Link to the template.
             returned: always
+            type: str
             sample: "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/
                      azuredeploy.json"
         parameters:
             description:
                 - Dictionary containing deployment parameters.
             returned: always
-            type: complex
+            type: dict
         outputs:
             description:
                 - Dictionary containing deployment outputs.
             returned: always
+            type: dict
         output_resources:
             description:
                 - List of resources.
@@ -121,9 +128,7 @@ deployments:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -170,7 +175,7 @@ class AzureRMDeploymentInfo(AzureRMModuleBase):
         try:
             response = self.rm_client.deployments.get(self.resource_group, deployment_name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Deployment.')
 
         if response:
@@ -184,7 +189,7 @@ class AzureRMDeploymentInfo(AzureRMModuleBase):
         try:
             response = self.rm_client.deployments.list_by_resource_group(self.resource_group)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Deployment.')
 
         if response is not None:

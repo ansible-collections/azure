@@ -34,17 +34,15 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get Registration Assignment
-      azure_rm_registrationassignment_info:
-        registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        scope: subscription/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
+- name: Get Registration Assignment
+  azure_rm_registrationassignment_info:
+    registration_assignment_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    scope: subscription/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
 
 
-    - name: Get All Registration Assignments in scope(subscription)
-      azure_rm_registrationassignment_info:
-        scope: subscription/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-
-
+- name: Get All Registration Assignments in scope(subscription)
+  azure_rm_registrationassignment_info:
+    scope: subscription/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 RETURN = '''
@@ -89,10 +87,7 @@ registration_assignments:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.managedservices import ManagedServicesClient
-    from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -131,7 +126,6 @@ class AzureRMRegistrationAssignmentInfo(AzureRMModuleBase):
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
                                                     api_version='2020-09-01',
-                                                    is_track2=True,
                                                     suppress_subscription_id=True)
 
         if (self.scope is not None and self.registration_assignment_id is not None):

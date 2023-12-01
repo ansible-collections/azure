@@ -42,18 +42,21 @@ options:
         required: false
         default: ['Monday']
         type: list
+        elements: str
     weeks:
         description:
             - List of weeks of month.
         required: false
         default: ['First']
         type: list
+        elements: str
     months:
         description:
             - List of months of year of yearly retention policy.
         required: false
         default: ['January']
         type: list
+        elements: str
     count:
         description:
             - Count of duration types. Retention duration is obtained by the counting the duration type Count times.
@@ -235,14 +238,17 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
             ),
             weekdays=dict(
                 type='list',
+                elements='str',
                 default=['Monday']
             ),
             weeks=dict(
                 type='list',
+                elements='str',
                 default=['First']
             ),
             months=dict(
                 type='list',
+                elements='str',
                 default=['January']
             ),
             count=dict(
@@ -396,10 +402,12 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
             self.log('Error in creating Backup Policy.')
             self.fail('Error in creating Backup Policy {0}'.format(str(e)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -420,12 +428,6 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
             self.log('Error attempting to delete Azure Backup policy.')
             self.fail('Error attempting to delete Azure Backup policy: {0}'.format(str(e)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
-        return response
-
     def get_resource(self):
         # self.log('Fetch Backup Policy Details {0}'.format(self.))
         found = False
@@ -444,7 +446,7 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
         except Exception as e:
             self.log('Backup policy does not exist.')
         if found is True:
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             return response
         else:
             return False

@@ -133,9 +133,9 @@ EXAMPLES = '''
     record_type: "{{ item.type }}"
     records: "{{ item.records }}"
   with_items:
-    - { name: 'servera', type: 'A', records: [ { entry: '10.10.10.20' }, { entry: '10.10.10.21' }] }
-    - { name: 'serverb', type: 'A', records: [ { entry: '10.10.10.30' }, { entry: '10.10.10.41' }] }
-    - { name: 'serverc', type: 'A', records: [ { entry: '10.10.10.40' }, { entry: '10.10.10.41' }] }
+    - {name: 'servera', type: 'A', records: [{ entry: '10.10.10.20'}, {entry: '10.10.10.21'}]}
+    - {name: 'serverb', type: 'A', records: [{ entry: '10.10.10.30'}, {entry: '10.10.10.41'}]}
+    - {name: 'serverc', type: 'A', records: [{ entry: '10.10.10.40'}, {entry: '10.10.10.41'}]}
 
 - name: create SRV records in a new record set
   azure_rm_privatednsrecordset:
@@ -145,10 +145,10 @@ EXAMPLES = '''
     time_to_live: 7200
     record_type: SRV
     records:
-    - entry: sip.testing.com
-      priority: 20
-      weight: 10
-      port: 5060
+      - entry: sip.testing.com
+        priority: 20
+        weight: 10
+        port: 5060
 
 - name: create PTR record in a new record set
   azure_rm_privatednsrecordset:
@@ -157,7 +157,7 @@ EXAMPLES = '''
     zone_name: testing.com
     record_type: PTR
     records:
-    - entry: servera.testing.com
+      - entry: servera.testing.com
 
 - name: create TXT record in a new record set
   azure_rm_privatednsrecordset:
@@ -166,8 +166,22 @@ EXAMPLES = '''
     zone_name: testing.com
     record_type: TXT
     records:
-    - entry: 'v=spf1 a -all'
+      - entry: 'v=spf1 a -all'
 
+- name: Update SOA record
+  azure_rm_privatednsrecordset:
+    resource_group: myResourceGroup
+    relative_name: "@"
+    zone_name: testing.com
+    record_type: SOA
+    records:
+      - host: azureprivatedns.net
+        email: azureprivatedns-host99.example.com
+        serial_number: 1
+        refresh_time: 3699
+        retry_time: 399
+        expire_time: 2419299
+        minimum_ttl: 399
 '''
 
 RETURN = '''
@@ -278,11 +292,11 @@ RECORD_ARGSPECS = dict(
     SOA=dict(
         host=dict(type='str', aliases=['entry']),
         email=dict(type='str'),
-        serial_number=dict(type='long'),
-        refresh_time=dict(type='long'),
-        retry_time=dict(type='long'),
-        expire_time=dict(type='long'),
-        minimum_ttl=dict(type='long')
+        serial_number=dict(type='int'),
+        refresh_time=dict(type='int'),
+        retry_time=dict(type='int'),
+        expire_time=dict(type='int'),
+        minimum_ttl=dict(type='int')
     )
 )
 

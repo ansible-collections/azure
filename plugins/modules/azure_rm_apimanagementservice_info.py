@@ -117,16 +117,9 @@ api_management_service:
             sample: null
 '''
 
-import time
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from copy import deepcopy
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class AzureRMApiManagementServiceInfo(AzureRMModuleBaseExt):
@@ -150,7 +143,7 @@ class AzureRMApiManagementServiceInfo(AzureRMModuleBaseExt):
         self.status_code = [200]
 
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2020-06-01-preview'
+        self.query_parameters['api-version'] = '2022-08-01'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -197,8 +190,8 @@ class AzureRMApiManagementServiceInfo(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-            results = json.loads(response.text)
-        except CloudError as e:
+            results = json.loads(response.body())
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return self.format_item(results)
@@ -226,8 +219,8 @@ class AzureRMApiManagementServiceInfo(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-            results = json.loads(response.text)
-        except CloudError as e:
+            results = json.loads(response.body())
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return [self.format_item(x) for x in results['value']] if results['value'] else []
@@ -252,8 +245,8 @@ class AzureRMApiManagementServiceInfo(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-            results = json.loads(response.text)
-        except CloudError as e:
+            results = json.loads(response.body())
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return [self.format_item(x) for x in results['value']] if results['value'] else []

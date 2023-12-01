@@ -1,0 +1,209 @@
+- name: Create virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "{{ network_name }}-identity"
+    address_prefixes: "{{ network }}"
+    location: westeurope
+
+- name: Create subnet
+  azure_rm_subnet:
+    resource_group: "{{ resource_group }}"
+    name: "{{ subnet_name }}"
+    address_prefix: "{{ subnet }}"
+    virtual_network: "{{ network_name }}-identity"
+
+- name: Create network interface
+  azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}"
+    name: "{{ interface_name }}-identity"
+    virtual_network: "{{ network_name }}-identity"
+    subnet: "{{ subnet_name }}"
+    location: westeurope
+
+- name: Create User Managed Identities
+  azure_rm_resource:
+    resource_group: "{{ resource_group }}"
+    provider: ManagedIdentity
+    resource_type: userAssignedIdentities
+    resource_name: "{{ item }}"
+    api_version: "2023-01-31"
+    body:
+      location: westeurope
+    state: present
+  loop:
+    - "ansible-test-vm-identity"
+    - "ansible-test-vm-identity-2"
+
+- name: Set identities IDs to test. Identities ansible-test-vm-identity and ansible-test-vm-identity-2 have to be created previously
+  ansible.builtin.set_fact:
+    user_identity_1: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-vm-identity"
+    user_identity_2: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-vm-identity-2"
+
+- name: Create minimal VM with UserAssigned Identity
+  azure_rm_virtualmachine:
+    allocated: false
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    vm_identity:
+      type: UserAssigned
+      user_assigned_identities:
+        id:
+          - "{{ user_identity_1 }}"
+    admin_username: "testuser"
+    ssh_password_enabled: false
+    public_ip_allocation_method: Disabled
+    location: westeurope
+    network_interface_names:
+      - name: "{{ interface_name }}-identity"
+        resource_group: "{{ resource_group }}"
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    vm_size: Standard_D4s_v3
+    virtual_network: "{{ network_name }}-identity"
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
+  register: vm_output
+
+- name: Assert User identity assigned
+  ansible.builtin.assert:
+    that:
+      - vm_output.ansible_facts.azure_vm.identity.type == 'UserAssigned'
+      - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
+
+- name: Append another UserAssigned
+  azure_rm_virtualmachine:
+    name: "{{ vm_name }}"
+    resource_group: "{{ resource_group }}"
+    vm_identity:
+      type: "UserAssigned"
+      user_assigned_identities:
+        id:
+          - "{{ user_identity_2 }}"
+        append: true
+  register: vm_output
+
+- name: Assert appended user identity
+  ansible.builtin.assert:
+    that:
+      - vm_output.ansible_facts.azure_vm.identity.type == 'UserAssigned'
+      - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
+      - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
+
+- name: Add SystemAssigned
+  azure_rm_virtualmachine:
+    name: "{{ vm_name }}"
+    resource_group: "{{ resource_group }}"
+    vm_identity:
+      type: "SystemAssigned, UserAssigned"
+      user_assigned_identities:
+        append: true
+  register: vm_output
+
+- name: Assert System identity assigned
+  ansible.builtin.assert:
+    that:
+      - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
+      - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
+      - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
+
+- name: Force only one UserAssigned
+  azure_rm_virtualmachine:
+    name: "{{ vm_name }}"
+    resource_group: "{{ resource_group }}"
+    vm_identity:
+      type: "SystemAssigned, UserAssigned"
+      user_assigned_identities:
+        id:
+          - "{{ user_identity_2 }}"
+        append: false
+  register: vm_output
+
+- name: Assert appended user identity
+  ansible.builtin.assert:
+    that:
+      - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
+      - "\"{{ user_identity_1 }}\" not in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
+      - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
+
+- name: Remove UserAssigned
+  azure_rm_virtualmachine:
+    name: "{{ vm_name }}"
+    resource_group: "{{ resource_group }}"
+    vm_identity:
+      type: "SystemAssigned"
+  register: vm_output
+
+- name: Assert removed user identities
+  ansible.builtin.assert:
+    that:
+      - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned'
+      - "'user_assigned_identities' not in vm_output.ansible_facts.azure_vm.identity"
+
+- name: Disable SystemAssigned
+  azure_rm_virtualmachine:
+    name: "{{ vm_name }}"
+    resource_group: "{{ resource_group }}"
+    vm_identity:
+      type: "None"
+  register: vm_output
+
+- name: Assert no managed identities
+  ansible.builtin.assert:
+    that:
+      - "'identity' not in vm_output.ansible_facts.azure_vm"
+
+- name: Delete VM
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    remove_on_absent: all_autocreated
+    state: absent
+
+- name: Destroy NIC
+  azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}"
+    name: "{{ interface_name }}-identity"
+    state: absent
+  ignore_errors: true
+  register: ignore_errors_register
+
+- name: Delete network security group
+  azure_rm_securitygroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ interface_name }}-identity"
+    state: absent
+
+- name: Destroy subnet
+  azure_rm_subnet:
+    resource_group: "{{ resource_group }}"
+    virtual_network: "{{ network_name }}"
+    name: "{{ subnet_name }}-identity"
+    state: absent
+
+- name: Destroy virtual network
+  azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "{{ network_name }}-identity"
+    state: absent
+
+- name: Destroy SA of the machine
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_output.ansible_facts.azure_vm.tags._own_sa_ }}"
+    state: absent
+
+- name: Destroy User Managed Identities
+  azure_rm_resource:
+    resource_group: "{{ resource_group }}"
+    provider: ManagedIdentity
+    resource_type: userAssignedIdentities
+    resource_name: "{{ item }}"
+    api_version: "2023-01-31"
+    state: absent
+  loop:
+    - "ansible-test-vm-identity"
+    - "ansible-test-vm-identity-2"

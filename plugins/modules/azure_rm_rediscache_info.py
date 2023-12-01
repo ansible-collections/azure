@@ -24,9 +24,11 @@ options:
         description:
             - The resource group to search for the desired Azure Cache for Redis.
         required: True
+        type: str
     name:
         description:
             - Limit results to a specific Azure Cache for Redis.
+        type: str
     return_access_keys:
         description:
             - Indicate weather to return access keys of the Azure Cache for Redis.
@@ -46,20 +48,20 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get Azure Cache for Redis by name
-      azure_rm_rediscache_info:
-        resource_group: myResourceGroup
-        name: myRedis
+- name: Get Azure Cache for Redis by name
+  azure_rm_rediscache_info:
+    resource_group: myResourceGroup
+    name: myRedis
 
-    - name: Get Azure Cache for Redis with access keys by name
-      azure_rm_rediscache_info:
-        resource_group: myResourceGroup
-        name: myRedis
-        return_access_keys: true
+- name: Get Azure Cache for Redis with access keys by name
+  azure_rm_rediscache_info:
+    resource_group: myResourceGroup
+    name: myRedis
+    return_access_keys: true
 
-    - name: Get Azure Cache for Redis in specific resource group
-      azure_rm_rediscache_info:
-        resource_group: myResourceGroup
+- name: Get Azure Cache for Redis in specific resource group
+  azure_rm_rediscache_info:
+    resource_group: myResourceGroup
 '''
 
 RETURN = '''
@@ -168,7 +170,7 @@ rediscaches:
                 - The version of Redis.
             returned: always
             type: str
-            sample: 4.0.14
+            sample: 6.0.14
             version_added: "1.10.0"
         shard_count:
             description:
@@ -267,8 +269,7 @@ class AzureRMRedisCacheInfo(AzureRMModuleBase):
         # get management client
         self._client = self.get_mgmt_svc_client(RedisManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
-                                                api_version='2018-03-01',
-                                                is_track2=True)
+                                                api_version='2018-03-01')
 
         if self.name:
             self.results['rediscaches'] = self.get_item()

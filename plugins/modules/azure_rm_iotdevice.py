@@ -108,6 +108,8 @@ EXAMPLES = '''
     name: Testing
     hub_policy_name: iothubowner
     hub_policy_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
 - name: Create Azure IoT Edge device
   azure_rm_iotdevice:
@@ -115,7 +117,9 @@ EXAMPLES = '''
     name: Testing
     hub_policy_name: iothubowner
     hub_policy_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    edge_enabled: yes
+    primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    edge_enabled: true
 
 - name: Create Azure IoT Hub device with device twin properties and tag
   azure_rm_iotdevice:
@@ -123,13 +127,15 @@ EXAMPLES = '''
     name: Testing
     hub_policy_name: iothubowner
     hub_policy_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    primary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    secondary_key: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     twin_tags:
-        location:
-            country: US
-            city: Redmond
-        sensor: humidity
+      location:
+        country: US
+        city: Redmond
+      sensor: humidity
     desired:
-        period: 100
+      period: 100
 '''
 
 RETURN = '''
@@ -219,16 +225,12 @@ device:
     }
 '''  # NOQA
 
-import json
-import copy
 import re
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, format_resource_id
-from ansible.module_utils.common.dict_transformations import _snake_to_camel
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.tools import parse_resource_id
-    from msrestazure.azure_exceptions import CloudError
+    from azure.iot.hub import IoTHubRegistryManager
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -272,14 +274,7 @@ class AzureRMIoTDevice(AzureRMModuleBase):
         self.secondary_key = None
 
         self._base_url = None
-        self._mgmt_client = None
-        self.query_parameters = {
-            'api-version': '2018-06-30'
-        }
-        self.header_parameters = {
-            'Content-Type': 'application/json; charset=utf-8',
-            'accept-language': 'en-US'
-        }
+        self.mgmt_client = None
         super(AzureRMIoTDevice, self).__init__(self.module_arg_spec, supports_check_mode=True)
 
     def exec_module(self, **kwargs):
@@ -288,38 +283,23 @@ class AzureRMIoTDevice(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         self._base_url = '{0}.azure-devices.net'.format(self.hub)
-        config = {
-            'base_url': self._base_url,
-            'key': self.hub_policy_key,
-            'policy': self.hub_policy_name
-        }
-        self._mgmt_client = self.get_data_svc_client(**config)
+
+        connect_str = "HostName={0};SharedAccessKeyName={1};SharedAccessKey={2}".format(self._base_url, self.hub_policy_name, self.hub_policy_key)
+        self.mgmt_client = IoTHubRegistryManager.from_connection_string(connect_str)
 
         changed = False
+        update_changed = False
 
         device = self.get_device()
+
+        if self.status is not None and not self.status:
+            device['status'] = 'disabled'
+
         if self.state == 'present':
             if not device:
                 changed = True
-                auth = {'type': _snake_to_camel(self.auth_method)}
-                if self.auth_method == 'self_signed':
-                    auth['x509Thumbprint'] = {
-                        'primaryThumbprint': self.primary_key,
-                        'secondaryThumbprint': self.secondary_key
-                    }
-                elif self.auth_method == 'sas':
-                    auth['symmetricKey'] = {
-                        'primaryKey': self.primary_key,
-                        'secondaryKey': self.secondary_key
-                    }
-                device = {
-                    'deviceId': self.name,
-                    'capabilities': {'iotEdge': self.edge_enabled or False},
-                    'authentication': auth
-                }
-                if self.status is not None and not self.status:
-                    device['status'] = 'disabled'
             else:
+                update_changed = True
                 if self.edge_enabled is not None and self.edge_enabled != device['capabilities']['iotEdge']:
                     changed = True
                     device['capabilities']['iotEdge'] = self.edge_enabled
@@ -328,9 +308,14 @@ class AzureRMIoTDevice(AzureRMModuleBase):
                     if status != device['status']:
                         changed = True
                         device['status'] = status
-            if changed and not self.check_mode:
-                device = self.create_or_update_device(device)
+            if not self.check_mode:
+                if changed and update_changed:
+                    device = self.update_device(device)
+                elif changed:
+                    device = self.create_device()
+
             twin = self.get_twin()
+
             if twin:
                 if not twin.get('tags'):
                     twin['tags'] = dict()
@@ -340,18 +325,26 @@ class AzureRMIoTDevice(AzureRMModuleBase):
                 if self.desired and not self.is_equal(self.desired, twin['properties']['desired']):
                     twin_change = True
                 if twin_change and not self.check_mode:
-                    self.update_twin(twin)
+                    twin_dict = dict()
+                    twin_dict['tags'] = self.twin_tags
+                    twin_dict['properties'] = dict()
+                    twin_dict['properties']['desired'] = self.desired
+
+                    twin = self.update_twin(twin_dict)
+
                 changed = changed or twin_change
                 device['tags'] = twin.get('tags') or dict()
-                device['properties'] = twin['properties']
+                device['properties'] = twin.get('properties') or dict()
                 device['modules'] = self.list_device_modules()
             elif self.twin_tags or self.desired:
                 self.fail("Device twin is not supported in IoT Hub with basic tier.")
-        elif device:
+        else:
             if not self.check_mode:
-                self.delete_device(device['etag'])
-            changed = True
-            device = None
+                if device:
+                    changed = True
+                    self.delete_device(device['etag'])
+            else:
+                changed = True
         self.results = device or dict()
         self.results['changed'] = changed
         return self.results
@@ -376,83 +369,140 @@ class AzureRMIoTDevice(AzureRMModuleBase):
                 original[key] = updated_value
         return not changed
 
-    def create_or_update_device(self, device):
+    def update_device(self, device):
+        response = None
         try:
-            url = '/devices/{0}'.format(self.name)
-            headers = copy.copy(self.header_parameters)
-            if device.get('etag'):
-                headers['If-Match'] = '"{0}"'.format(device['etag'])
-            request = self._mgmt_client.put(url, self.query_parameters)
-            response = self._mgmt_client.send(request=request, headers=headers, content=device)
-            if response.status_code not in [200, 201, 202]:
-                raise CloudError(response)
-            return json.loads(response.text)
+            if self.auth_method == 'sas':
+                response = self.mgmt_client.update_device_with_sas(self.name, device['etag'],
+                                                                   self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
+            elif self.auth_method == 'self_signed':
+                response = self.mgmt_client.update_device_with_certificate_authority(self.name, self.status, iot_edge=self.edge_enabled)
+            elif self.auth_method == 'certificate_authority':
+                response = self.mgmt_client.update_device_with_x509(self.name, device['etag'], self.primary_key,
+                                                                    self.secondary_key, self.status, iot_edge=self.edge_enabled)
+
+            return self.format_item(response)
         except Exception as exc:
-            if exc.status_code in [403] and self.edge_enabled:
-                self.fail('Edge device is not supported in IoT Hub with Basic tier.')
-            else:
-                self.fail('Error when creating or updating IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
+            self.fail('Error when creating or updating IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
+
+    def create_device(self):
+        response = None
+        try:
+            if self.auth_method == 'sas':
+                response = self.mgmt_client.create_device_with_sas(self.name, self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
+            elif self.auth_method == 'self_signed':
+                response = self.mgmt_client.create_device_with_certificate_authority(self.name, self.status, iot_edge=self.edge_enabled)
+            elif self.auth_method == 'certificate_authority':
+                response = self.mgmt_client.create_device_with_x509(self.name,
+                                                                    self.primary_key, self.secondary_key, self.status, iot_edge=self.edge_enabled)
+
+            return self.format_item(response)
+        except Exception as exc:
+            self.fail('Error when creating or updating IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
 
     def delete_device(self, etag):
         try:
-            url = '/devices/{0}'.format(self.name)
-            headers = copy.copy(self.header_parameters)
-            headers['If-Match'] = '"{0}"'.format(etag)
-            request = self._mgmt_client.delete(url, self.query_parameters)
-            response = self._mgmt_client.send(request=request, headers=headers)
-            if response.status_code not in [204]:
-                raise CloudError(response)
+            response = self.mgmt_client.delete_device(self.name, etag=etag)
+            return response
+
         except Exception as exc:
             self.fail('Error when deleting IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
 
     def get_device(self):
         try:
-            url = '/devices/{0}'.format(self.name)
-            device = self._https_get(url, self.query_parameters, self.header_parameters)
-            return device
+            response = self.mgmt_client.get_device(self.name)
+
+            response = self.format_item(response)
+            return response
         except Exception as exc:
-            if exc.status_code in [404]:
-                return None
-            else:
-                self.fail('Error when getting IoT Hub device {0}: {1}'.format(self.name, exc.message or str(exc)))
+            self.log('Error when getting IoT Hub device {0}: {1}'.format(self.name, exc))
 
     def get_twin(self):
         try:
-            url = '/twins/{0}'.format(self.name)
-            return self._https_get(url, self.query_parameters, self.header_parameters)
+            response = self.mgmt_client.get_twin(self.name)
+            return self.format_twin(response)
         except Exception as exc:
-            if exc.status_code in [403]:
-                # The Basic sku has nothing to to with twin
-                return None
-            else:
-                self.fail('Error when getting IoT Hub device {0} twin: {1}'.format(self.name, exc.message or str(exc)))
+            self.fail('Error when getting IoT Hub device {0} twin: {1}'.format(self.name, exc.message or str(exc)))
 
     def update_twin(self, twin):
         try:
-            url = '/twins/{0}'.format(self.name)
-            headers = copy.copy(self.header_parameters)
-            headers['If-Match'] = '"{0}"'.format(twin['etag'])
-            request = self._mgmt_client.patch(url, self.query_parameters)
-            response = self._mgmt_client.send(request=request, headers=headers, content=twin)
-            if response.status_code not in [200]:
-                raise CloudError(response)
-            return json.loads(response.text)
+            response = self.mgmt_client.update_twin(self.name, twin)
+
+            return self.format_twin(response)
         except Exception as exc:
             self.fail('Error when creating or updating IoT Hub device twin {0}: {1}'.format(self.name, exc.message or str(exc)))
 
     def list_device_modules(self):
         try:
-            url = '/devices/{0}/modules'.format(self.name)
-            return self._https_get(url, self.query_parameters, self.header_parameters)
-        except Exception as exc:
-            self.fail('Error when listing IoT Hub device {0} modules: {1}'.format(self.name, exc.message or str(exc)))
+            response = None
+            response = self.mgmt_client.get_modules(self.name)
 
-    def _https_get(self, url, query_parameters, header_parameters):
-        request = self._mgmt_client.get(url, query_parameters)
-        response = self._mgmt_client.send(request=request, headers=header_parameters, content=None)
-        if response.status_code not in [200]:
-            raise CloudError(response)
-        return json.loads(response.text)
+            response = [self.format_item(item) for item in response]
+            return response
+
+        except Exception as exc:
+            if hasattr(exc, 'message'):
+                pass
+            else:
+                self.fail('Error when listing IoT Hub devices in {0}: {1}'.format(self.hub, exc))
+
+    def format_twin(self, item):
+        if not item:
+            return None
+        format_twin = dict(
+            device_id=item.device_id,
+            module_id=item.module_id,
+            tags=item.tags,
+            properties=dict(),
+            etag=item.etag,
+            version=item.version,
+            device_etag=item.device_etag,
+            status=item.status,
+            cloud_to_device_message_count=item.cloud_to_device_message_count,
+            authentication_type=item.authentication_type,
+        )
+        if item.properties is not None:
+            format_twin['properties']['desired'] = item.properties.desired
+            format_twin['properties']['reported'] = item.properties.reported
+
+        return format_twin
+
+    def format_item(self, item):
+        if not item:
+            return None
+        format_item = dict(
+            authentication=dict(),
+            capabilities=dict(),
+            cloudToDeviceMessageCount=item.cloud_to_device_message_count,
+            connectionState=item.connection_state,
+            connectionStateUpdatedTime=item.connection_state_updated_time,
+            deviceId=item.device_id,
+            etag=item.etag,
+            generationId=item.generation_id,
+            lastActivityTime=item.last_activity_time
+        )
+        if hasattr(item, 'status_updated_time'):
+            format_item['statusUpdatedTime'] = item.status_updated_time
+        if hasattr(item, 'status_reason'):
+            format_item['status_reason'] = item.status_reason
+        if hasattr(item, 'status'):
+            format_item['status'] = item.status
+        if hasattr(item, 'modules'):
+            format_item['modules'] = item.modules
+        if item.authentication:
+            format_item['authentication']['symmetricKey'] = dict()
+            format_item['authentication']['symmetricKey']['primaryKey'] = item.authentication.symmetric_key.primary_key
+            format_item['authentication']['symmetricKey']['secondaryKey'] = item.authentication.symmetric_key.secondary_key
+
+            format_item['authentication']['type'] = item.authentication.type
+            format_item['authentication']["x509Thumbprint"] = dict()
+            format_item['authentication']["x509Thumbprint"]["primaryThumbprint"] = item.authentication.x509_thumbprint.primary_thumbprint
+            format_item['authentication']["x509Thumbprint"]['secondaryThumbprint'] = item.authentication.x509_thumbprint.secondary_thumbprint
+        format_item['capabilities'] = dict()
+        if hasattr(item, 'capabilities') and item.capabilities is not None:
+            format_item['capabilities']["iotEdge"] = item.capabilities.iot_edge
+
+        return format_item
 
 
 def main():

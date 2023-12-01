@@ -5,6 +5,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 DOCUMENTATION = '''
@@ -20,9 +21,9 @@ description:
 options:
     tenant:
         description:
-            - The tenant ID.
+            - (deprecated) The tenant ID.
+            - This option has been deprecated, and will be removed in the future.
         type: str
-        required: True
     state:
         description:
             - State of the ad user. Use C(present) to create or update an ad user and C(absent) to delete an ad user.
@@ -57,11 +58,13 @@ options:
             - The surname for the user.
             - Used when either creating or updating a user account.
         type: str
-    immutable_id:
+    on_premises_immutable_id:
         description:
-            - The immutable_id of the user.
+            - The on_premises_immutable_id of the user.
             - Used when either creating or updating a user account.
         type: str
+        aliases:
+            - immutable_id
     mail:
         description:
             - The primary email address of the user.
@@ -96,17 +99,17 @@ options:
         type: str
     attribute_name:
         description:
-            - The name of an attribute that you want to match to attribute_value.
-            - If attribute_name is not a collection type it will update or delete the user where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will update or delete the user where attribute_value is in attribute_name.
+            - The name of an attribute that you want to match to I(attribute_value).
+            - If I(attribute_name) is not a collection type it will update or delete the user where I(attribute_name) is equal to I(attribute_value).
+            - If I(attribute_name) is a collection type it will update or delete the user where I(attribute_value) is in I(attribute_name).
             - Mutually exclusive with I(object_id), I(user_principal_name), and I(odata_filter).
             - Required together with I(attribute_value).
         type: str
     attribute_value:
         description:
-            - The value to match attribute_name to.
-            - If attribute_name is not a collection type it will update or delete the user where attribute_name is equal to attribute_value.
-            - If attribute_name is a collection type it will update or delete the user where attribute_value is in attribute_name.
+            - The value to match I(attribute_name) to.
+            - If I(attribute_name) is not a collection type it will update or delete the user where I(attribute_name) is equal to I(attribute_value).
+            - If I(attribute_name) is a collection type it will update or delete the user where I(attribute_value) is in I(attribute_name).
             - Required together with I(attribute_name).
         type: str
     odata_filter:
@@ -126,13 +129,12 @@ EXAMPLES = '''
 - name: Create user
   azure_rm_aduser:
     user_principal_name: "{{ user_id }}"
-    tenant: "{{ tenant_id }}"
     state: "present"
     account_enabled: "True"
     display_name: "Test_{{ user_principal_name }}_Display_Name"
     password_profile: "password"
     mail_nickname: "Test_{{ user_principal_name }}_mail_nickname"
-    immutable_id: "{{ object_id }}"
+    on_premises_immutable_id: "{{ object_id }}"
     given_name: "First"
     surname: "Last"
     user_type: "Member"
@@ -142,16 +144,13 @@ EXAMPLES = '''
 - name: Update user with new value for account_enabled
   azure_rm_aduser:
     user_principal_name: "{{ user_id }}"
-    tenant: "{{ tenant_id }}"
     state: "present"
     account_enabled: "False"
 
 - name: Delete user
   azure_rm_aduser:
     user_principal_name: "{{ user_id }}"
-    tenant: "{{ tenant_id }}"
     state: "absent"
-
 '''
 
 RETURN = '''
@@ -202,11 +201,10 @@ user_type:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from azure.graphrbac.models import UserUpdateParameters
-    from azure.graphrbac.models import UserCreateParameters
-    from azure.graphrbac.models import PasswordProfile
-    from azure.graphrbac.models import GraphErrorException
+    import asyncio
+    from msgraph.generated.models.password_profile import PasswordProfile
+    from msgraph.generated.models.user import User
+    from msgraph.generated.users.users_request_builder import UsersRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -226,13 +224,13 @@ class AzureRMADUser(AzureRMModuleBase):
             display_name=dict(type='str'),
             password_profile=dict(type='str', no_log=True),
             mail_nickname=dict(type='str'),
-            immutable_id=dict(type='str'),
+            on_premises_immutable_id=dict(type='str', aliases=['immutable_id']),
             usage_location=dict(type='str'),
             given_name=dict(type='str'),
             surname=dict(type='str'),
             user_type=dict(type='str'),
             mail=dict(type='str'),
-            tenant=dict(type='str', required=True),
+            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection')
         )
 
         self.tenant = None
@@ -246,7 +244,7 @@ class AzureRMADUser(AzureRMModuleBase):
         self.display_name = None
         self.password_profile = None
         self.mail_nickname = None
-        self.immutable_id = None
+        self.on_premises_immutable_id = None
         self.usage_location = None
         self.given_name = None
         self.surname = None
@@ -275,9 +273,9 @@ class AzureRMADUser(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         try:
-            client = self.get_graphrbac_client(self.tenant)
+            self._client = self.get_msgraph_client()
 
-            ad_user = self.get_exisiting_user(client)
+            ad_user = self.get_exisiting_user()
 
             if self.state == 'present':
 
@@ -286,11 +284,13 @@ class AzureRMADUser(AzureRMModuleBase):
                     password = None
 
                     if self.password_profile:
-                        password = PasswordProfile(password=self.password_profile)
+                        password = PasswordProfile(
+                            password=self.password_profile,
+                        )
 
                     should_update = False
 
-                    if self.immutable_id and ad_user.immutable_id != self.immutable_id:
+                    if self.on_premises_immutable_id and ad_user.on_premises_immutable_id != self.on_premises_immutable_id:
                         should_update = True
                     if should_update or self.usage_location and ad_user.usage_location != self.usage_location:
                         should_update = True
@@ -312,82 +312,69 @@ class AzureRMADUser(AzureRMModuleBase):
                         should_update = True
 
                     if should_update:
-                        parameters = UserUpdateParameters(immutable_id=self.immutable_id,
-                                                          usage_location=self.usage_location,
-                                                          given_name=self.given_name,
-                                                          surname=self.surname,
-                                                          user_type=self.user_type,
-                                                          account_enabled=self.account_enabled,
-                                                          display_name=self.display_name,
-                                                          password_profile=password,
-                                                          user_principal_name=self.user_principal_name,
-                                                          mail_nickname=self.mail_nickname)
-
-                        client.users.update(upn_or_object_id=ad_user.object_id, parameters=parameters)
+                        asyncio.get_event_loop().run_until_complete(self.update_user(ad_user, password))
 
                         self.results['changed'] = True
 
                         # Get the updated versions of the users to return
                         # the update method, has no return value so it needs to be explicitely returned in a call
-                        ad_user = self.get_exisiting_user(client)
+                        ad_user = self.get_exisiting_user()
 
                     else:
                         self.results['changed'] = False
 
                 else:  # Create, changed
-                    password = PasswordProfile(password=self.password_profile)
-                    parameters = UserCreateParameters(account_enabled=self.account_enabled,
-                                                      display_name=self.display_name,
-                                                      password_profile=password,
-                                                      user_principal_name=self.user_principal_name,
-                                                      mail_nickname=self.mail_nickname,
-                                                      immutable_id=self.immutable_id,
-                                                      usage_location=self.usage_location,
-                                                      given_name=self.given_name,
-                                                      surname=self.surname,
-                                                      user_type=self.user_type,
-                                                      mail=self.mail)
-                    ad_user = client.users.create(parameters=parameters)
+                    asyncio.get_event_loop().run_until_complete(self.create_user())
                     self.results['changed'] = True
+                    ad_user = self.get_exisiting_user()
 
                 self.results['ad_user'] = self.to_dict(ad_user)
 
             elif self.state == 'absent':
                 if ad_user:  # Delete, changed
-                    client.users.delete(ad_user.object_id)
+                    asyncio.get_event_loop().run_until_complete(self.delete_user(ad_user))
                     self.results['changed'] = True
                 else:  # Do nothing unchanged
                     self.results['changed'] = False
 
-        except GraphErrorException as e:
+        except Exception as e:
             self.fail("failed to get ad user info {0}".format(str(e)))
 
         return self.results
 
-    def get_exisiting_user(self, client):
+    def get_exisiting_user(self):
         ad_user = None
 
         try:
             if self.user_principal_name is not None:
-                ad_user = client.users.get(self.user_principal_name)
+                ad_user = asyncio.get_event_loop().run_until_complete(self.get_user(self.user_principal_name))
             elif self.object_id is not None:
-                ad_user = client.users.get(self.object_id)
+                ad_user = asyncio.get_event_loop().run_until_complete(self.get_user(self.object_id))
             elif self.attribute_name is not None and self.attribute_value is not None:
                 try:
-                    ad_user = list(client.users.list(filter="{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))[0]
-                except GraphErrorException as e:
+                    users = asyncio.get_event_loop().run_until_complete(
+                        self.get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
+                    ad_users = list(users.value)
+                    ad_user = ad_users[0]
+                except Exception as e:
                     # the type doesn't get more specific. Could check the error message but no guarantees that message doesn't change in the future
                     # more stable to try again assuming the first error came from the attribute being a list
                     try:
-                        ad_user = list(client.users.list(filter="{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))[0]
-                    except GraphErrorException as sub_e:
+                        users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(
+                            "{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
+                        ad_users = list(users.value)
+                        ad_user = ad_users[0]
+                    except Exception as sub_e:
                         raise
             elif self.odata_filter is not None:  # run a filter based on user input to return based on any given attribute/query
-                ad_user = list(client.users.list(filter=self.odata_filter))[0]
-        except GraphErrorException as e:
+                users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(self.odata_filter))
+                ad_users = list(users.value)
+                ad_user = ad_users[0]
+        except Exception as e:
             # User was not found
             err_msg = str(e)
-            if err_msg == "Resource '{0}' does not exist or one of its queried reference-property objects are not present.".format(self.user_principal_name):
+            if "Resource '{0}' does not exist or one of its queried reference-property objects are not present.".format(
+                    self.user_principal_name) in err_msg:
                 ad_user = None
             else:
                 raise
@@ -395,13 +382,72 @@ class AzureRMADUser(AzureRMModuleBase):
 
     def to_dict(self, object):
         return dict(
-            object_id=object.object_id,
+            object_id=object.id,
             display_name=object.display_name,
             user_principal_name=object.user_principal_name,
             mail_nickname=object.mail_nickname,
             mail=object.mail,
             account_enabled=object.account_enabled,
             user_type=object.user_type
+        )
+
+    async def update_user(self, ad_user, password):
+        request_body = User(
+            on_premises_immutable_id=self.on_premises_immutable_id,
+            usage_location=self.usage_location,
+            given_name=self.given_name,
+            surname=self.surname,
+            user_type=self.user_type,
+            account_enabled=self.account_enabled,
+            display_name=self.display_name,
+            password_profile=password,
+            user_principal_name=self.user_principal_name,
+            mail_nickname=self.mail_nickname
+        )
+        return await self._client.users.by_user_id(ad_user.id).patch(body=request_body)
+
+    async def create_user(self):
+        password = PasswordProfile(
+            password=self.password_profile
+        )
+        request_body = User(
+            account_enabled=self.account_enabled,
+            display_name=self.display_name,
+            password_profile=password,
+            user_principal_name=self.user_principal_name,
+            mail_nickname=self.mail_nickname,
+            on_premises_immutable_id=self.on_premises_immutable_id,
+            usage_location=self.usage_location,
+            given_name=self.given_name,
+            surname=self.surname,
+            user_type=self.user_type,
+            mail=self.mail
+        )
+        return await self._client.users.post(body=request_body)
+
+    async def delete_user(self, ad_user):
+        return await self._client.users.by_user_id(ad_user.id).delete()
+
+    async def get_user(self, object):
+        request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
+            query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType",
+                        "onPremisesImmutableId", "usageLocation", "givenName", "surname"]
+            ),
+        )
+        return await self._client.users.by_user_id(object).get(request_configuration=request_configuration)
+
+    async def get_users_by_filter(self, filter):
+        return await self._client.users.get(
+            request_configuration=UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
+                query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                    filter=filter,
+                    select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
+                            "userType", "onPremisesImmutableId", "usageLocation", "givenName", "surname"],
+                    count=True
+                ),
+                headers={'ConsistencyLevel': "eventual", }
+            )
         )
 
 

@@ -41,7 +41,6 @@ options:
                 description:
                     - Pull secret for the cluster (immutable).
                 type: str
-                default: ""
             domain:
                 description:
                     - The domain for the cluster (immutable).
@@ -93,9 +92,9 @@ options:
                     - Size of agent VMs (immutable).
                 type: str
                 choices:
-                    - Standard_D2s_v3
-                    - Standard_D4s_v3
                     - Standard_D8s_v3
+                    - Standard_D16s_v3
+                    - Standard_D32s_v3
             subnet_id:
                 description:
                     - The Azure resource ID of the master subnet (immutable).
@@ -105,6 +104,7 @@ options:
         description:
             - Configuration for OpenShift worker Vms.
         type: list
+        elements: dict
         suboptions:
             name:
                 description: name of the worker profile (immutable).
@@ -117,7 +117,6 @@ options:
                     - The size of the worker Vms (immutable).
                 type: str
                 choices:
-                    - Standard_D2s_v3
                     - Standard_D4s_v3
                     - Standard_D8s_v3
             disk_size:
@@ -158,6 +157,7 @@ options:
         description:
             - Ingress profiles configuration. only one profile is supported at the current API version.
         type: list
+        elements: dict
         suboptions:
             visibility:
                 description:
@@ -199,34 +199,34 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create openshift cluster
-      azure_rm_openshiftmanagedcluster:
-        resource_group: "myResourceGroup"
-        name: "myCluster"
-        location: "eastus"
-        cluster_profile:
-          cluster_resource_group_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/clusterResourceGroup"
-          domain: "mydomain"
-        service_principal_profile:
-          client_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-          client_secret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        network_profile:
-          pod_cidr: "10.128.0.0/14"
-          service_cidr: "172.30.0.0/16"
-        worker_profiles:
-          - vm_size : "Standard_D4s_v3"
-            subnet_id : "/subscriptions/xx-xx-xx-xx-xx/resourceGroups/myResourceGroup/Microsoft.Network/virtualNetworks/myVnet/subnets/worker"
-            disk_size : 128
-            count : 3
-        master_profile:
-          vm_size : "Standard_D8s_v3"
-          subnet_id: "/subscriptions/xx-xx-xx-xx-xx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/master"
-    - name: Delete OpenShift Managed Cluster
-      azure_rm_openshiftmanagedcluster:
-        resource_group: myResourceGroup
-        name: myCluster
-        location: eastus
-        state: absent
+- name: Create openshift cluster
+  azure_rm_openshiftmanagedcluster:
+    resource_group: "myResourceGroup"
+    name: "myCluster"
+    location: "eastus"
+    cluster_profile:
+      cluster_resource_group_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/clusterResourceGroup"
+      domain: "mydomain"
+    service_principal_profile:
+      client_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      client_secret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    network_profile:
+      pod_cidr: "10.128.0.0/14"
+      service_cidr: "172.30.0.0/16"
+    worker_profiles:
+      - vm_size: "Standard_D4s_v3"
+        subnet_id: "/subscriptions/xx-xx-xx-xx-xx/resourceGroups/myResourceGroup/Microsoft.Network/virtualNetworks/myVnet/subnets/worker"
+        disk_size: 128
+        count: 3
+    master_profile:
+      vm_size: "Standard_D8s_v3"
+      subnet_id: "/subscriptions/xx-xx-xx-xx-xx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/master"
+- name: Delete OpenShift Managed Cluster
+  azure_rm_openshiftmanagedcluster:
+    resource_group: myResourceGroup
+    name: myCluster
+    location: eastus
+    state: absent
 '''
 
 RETURN = '''
@@ -401,11 +401,6 @@ import json
 import random
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # this is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -512,9 +507,9 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                         type='str',
                         updatable=False,
                         disposition='vmSize',
-                        choices=['Standard_D2s_v3',
-                                 'Standard_D4s_v3',
-                                 'Standard_D8s_v3'],
+                        choices=['Standard_D8s_v3',
+                                 'Standard_D16s_v3',
+                                 'Standard_D32s_v3'],
                         purgeIfNone=True
                     ),
                     subnet_id=dict(
@@ -527,6 +522,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             ),
             worker_profiles=dict(
                 type='list',
+                elements='dict',
                 disposition='/properties/workerProfiles',
                 options=dict(
                     name=dict(
@@ -546,8 +542,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                         type='str',
                         disposition='vmSize',
                         updatable=False,
-                        choices=['Standard_D2s_v3',
-                                 'Standard_D4s_v3',
+                        choices=['Standard_D4s_v3',
                                  'Standard_D8s_v3'],
                         purgeIfNone=True
                     ),
@@ -589,6 +584,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             ),
             ingress_profiles=dict(
                 type='list',
+                elements='dict',
                 disposition='/properties/ingressProfiles',
                 options=dict(
                     name=dict(
@@ -755,15 +751,16 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the OpenShiftManagedCluster instance.')
             self.fail('Error creating the OpenShiftManagedCluster instance: {0}'
                       '\n{1}'.format(str(self.body), str(exc)))
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
-            pass
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -778,7 +775,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the OpenShiftManagedCluster instance.')
             self.fail('Error deleting the OpenShiftManagedCluster instance: {0}'.format(str(e)))
 
@@ -797,11 +794,11 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                                               600,
                                               30)
             found = True
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             found = True
             self.log("Response : {0}".format(response))
             # self.log("OpenShiftManagedCluster instance : {0} found".format(response.name))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the OpenShiftManagedCluster instance.')
         if found is True:
             return response

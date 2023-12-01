@@ -21,67 +21,75 @@ description:
     - For more information on Azure Resource Manager templates see U(https://azure.microsoft.com/en-us/documentation/articles/resource-group-template-deploy/).
 
 options:
-  resource_group:
-    description:
-        - The resource group name to use or create to host the deployed template.
-    required: true
-    aliases:
-        - resource_group_name
-  name:
-    description:
-        - The name of the deployment to be tracked in the resource group deployment history.
-        - Re-using a deployment name will overwrite the previous value in the resource group's deployment history.
-    default: ansible-arm
-    aliases:
-        - deployment_name
-  location:
-    description:
-        - The geo-locations in which the resource group will be located.
-    default: westus
-  deployment_mode:
-    description:
-        - In incremental mode, resources are deployed without deleting existing resources that are not included in the template.
-        - In complete mode resources are deployed and existing resources in the resource group not included in the template are deleted.
-    default: incremental
-    choices:
-        - complete
-        - incremental
-  template:
-    description:
-        - A hash containing the templates inline. This parameter is mutually exclusive with I(template_link).
-        - Either I(template) or I(template_link) is required if I(state=present).
-    type: dict
-  template_link:
-    description:
-        - Uri of file containing the template body. This parameter is mutually exclusive with I(template).
-        - Either I(template) or I(template_link) is required if I(state=present).
-  parameters:
-    description:
-        - A hash of all the required template variables for the deployment template. This parameter is mutually exclusive with I(parameters_link).
-        - Either I(parameters_link) or I(parameters) is required if I(state=present).
-    type: dict
-  parameters_link:
-    description:
-        - Uri of file containing the parameters body. This parameter is mutually exclusive with I(parameters).
-        - Either I(parameters_link) or I(parameters) is required if I(state=present).
-  wait_for_deployment_completion:
-    description:
-        - Whether or not to block until the deployment has completed.
-    type: bool
-    default: 'yes'
-  wait_for_deployment_polling_period:
-    description:
-        - Time (in seconds) to wait between polls when waiting for deployment completion.
-    default: 10
-  state:
-    description:
-        - If I(state=present), template will be created.
-        - If I(state=present) and deployment exists, it will be updated.
-        - If I(state=absent), the resource group will be removed.
-    default: present
-    choices:
-        - present
-        - absent
+    resource_group:
+        description:
+            - The resource group name to use or create to host the deployed template.
+        required: true
+        type: str
+        aliases:
+            - resource_group_name
+    name:
+        description:
+            - The name of the deployment to be tracked in the resource group deployment history.
+            - Re-using a deployment name will overwrite the previous value in the resource group's deployment history.
+        default: ansible-arm
+        type: str
+        aliases:
+            - deployment_name
+    location:
+        description:
+            - The geo-locations in which the resource group will be located.
+        default: westus
+        type: str
+    deployment_mode:
+        description:
+            - In incremental mode, resources are deployed without deleting existing resources that are not included in the template.
+            - In complete mode resources are deployed and existing resources in the resource group not included in the template are deleted.
+        default: incremental
+        type: str
+        choices:
+            - complete
+            - incremental
+    template:
+        description:
+            - A hash containing the templates inline. This parameter is mutually exclusive with I(template_link).
+            - Either I(template) or I(template_link) is required if I(state=present).
+        type: dict
+    template_link:
+        description:
+            - Uri of file containing the template body. This parameter is mutually exclusive with I(template).
+            - Either I(template) or I(template_link) is required if I(state=present).
+        type: str
+    parameters:
+        description:
+            - A hash of all the required template variables for the deployment template. This parameter is mutually exclusive with I(parameters_link).
+            - Either I(parameters_link) or I(parameters) is required if I(state=present).
+        type: dict
+    parameters_link:
+        description:
+            - Uri of file containing the parameters body. This parameter is mutually exclusive with I(parameters).
+            - Either I(parameters_link) or I(parameters) is required if I(state=present).
+        type: str
+    wait_for_deployment_completion:
+        description:
+            - Whether or not to block until the deployment has completed.
+        type: bool
+        default: true
+    wait_for_deployment_polling_period:
+        description:
+            - Time (in seconds) to wait between polls when waiting for deployment completion.
+        default: 10
+        type: int
+    state:
+        description:
+            - If I(state=present), template will be created.
+            - If I(state=present) and deployment exists, it will be updated.
+            - If I(state=absent), the deployment resource will be deleted.
+        default: present
+        type: str
+        choices:
+            - present
+            - absent
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -394,7 +402,7 @@ deployment:
         outputs:
           description:
               - Dictionary of outputs received from the deployment.
-          type: complex
+          type: dict
           returned: always
           sample: { "hostname": { "type": "String", "value": "myvirtualmachine.eastus2.cloudapp.azure.com" } }
 '''
@@ -402,17 +410,12 @@ deployment:
 import time
 
 try:
-    from azure.common.credentials import ServicePrincipalCredentials
     import time
-    import yaml
 except ImportError as exc:
     IMPORT_ERROR = "Error importing module prerequisites: %s" % exc
 
 try:
-    from itertools import chain
-    from azure.common.exceptions import CloudError
-    from azure.mgmt.resource.resources import ResourceManagementClient
-    from azure.mgmt.network import NetworkManagementClient
+    from azure.core.exceptions import ResourceNotFoundError
 
 except ImportError:
     # This is handled in azure_rm_common
@@ -495,10 +498,10 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
         else:
             try:
                 if self.get_resource_group(self.resource_group):
-                    self.destroy_resource_group()
+                    self.destroy_deployment_resource()
                     self.results['changed'] = True
                     self.results['msg'] = "deployment deleted"
-            except CloudError:
+            except Exception:
                 # resource group does not exist
                 pass
 
@@ -532,7 +535,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
             rg = self.rm_client.resource_groups.get(self.resource_group)
             if rg.tags:
                 update_tags, self.tags = self.update_tags(rg.tags)
-        except CloudError:
+        except ResourceNotFoundError:
             # resource group does not exist
             pass
 
@@ -540,13 +543,13 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
 
         try:
             self.rm_client.resource_groups.create_or_update(self.resource_group, params)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Resource group create_or_update failed with status code: %s and message: %s" %
                       (exc.status_code, exc.message))
         try:
-            result = self.rm_client.deployments.create_or_update(self.resource_group,
-                                                                 self.name,
-                                                                 deploy_parameter)
+            result = self.rm_client.deployments.begin_create_or_update(self.resource_group,
+                                                                       self.name,
+                                                                       {'properties': deploy_parameter})
 
             deployment_result = None
             if self.wait_for_deployment_completion:
@@ -555,7 +558,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                                                                                                                       'Succeeded']:
                     time.sleep(self.wait_for_deployment_polling_period)
                     deployment_result = self.rm_client.deployments.get(self.resource_group, self.name)
-        except CloudError as exc:
+        except Exception as exc:
             failed_deployment_operations = self._get_failed_deployment_operations(self.name)
             self.log("Deployment failed %s: %s" % (exc.status_code, exc.message))
             error_msg = self._error_msg_from_cloud_error(exc)
@@ -569,14 +572,14 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
 
         return deployment_result
 
-    def destroy_resource_group(self):
+    def destroy_deployment_resource(self):
         """
         Destroy the targeted resource group
         """
         try:
-            result = self.rm_client.resource_groups.delete(self.resource_group)
+            result = self.rm_client.deployments.begin_delete(self.resource_group, self.name)
             result.wait()  # Blocking wait till the delete is finished
-        except CloudError as e:
+        except Exception as e:
             if e.status_code == 404 or e.status_code == 204:
                 return
             else:
@@ -594,7 +597,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                     try:
                         nested_operations = self.rm_client.deployment_operations.list(self.resource_group,
                                                                                       nested_deployment)
-                    except CloudError as exc:
+                    except Exception as exc:
                         self.fail("List nested deployment operations failed with status code: %s and message: %s" %
                                   (exc.status_code, exc.message))
                     new_nested_operations = self._get_failed_nested_operations(nested_operations)
@@ -608,7 +611,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
 
         try:
             operations = self.rm_client.deployment_operations.list(self.resource_group, name)
-        except CloudError as exc:
+        except Exception as exc:
             self.fail("Get deployment failed with status code: %s and message: %s" %
                       (exc.status_code, exc.message))
         try:
@@ -681,9 +684,18 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
         return ip_dict
 
     def _nic_to_public_ips_instance(self, nics):
+        nic_list = []
+        for nic in nics:
+            resp = None
+            try:
+                resp = self.network_client.network_interfaces.get(self.resource_group, nic['dep'].resource_name)
+            except ResourceNotFoundError:
+                pass
+            if resp is not None:
+                nic_list.append(resp)
+
         return [self.network_client.public_ip_addresses.get(public_ip_id.split('/')[4], public_ip_id.split('/')[-1])
-                for nic_obj in (self.network_client.network_interfaces.get(self.resource_group,
-                                                                           nic['dep'].resource_name) for nic in nics)
+                for nic_obj in nic_list
                 for public_ip_id in [ip_conf_instance.public_ip_address.id
                                      for ip_conf_instance in nic_obj.ip_configurations
                                      if ip_conf_instance.public_ip_address]]

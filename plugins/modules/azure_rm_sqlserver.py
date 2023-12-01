@@ -20,27 +20,34 @@ options:
     resource_group:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
+        type: str
         required: True
     name:
         description:
             - The name of the server.
+        type: str
         required: True
     location:
         description:
             - Resource location.
+        type: str
     admin_username:
         description:
             - Username of the SQL administrator account for server. Once created it cannot be changed.
+        type: str
     admin_password:
         description:
             - Password of the SQL administrator account for server (required for server creation).
+        type: str
     version:
         description:
             - The version of the server. For example C(12.0).
+        type: str
     identity:
         description:
             - The identity type. Set this to C(SystemAssigned) in order to automatically create and assign an Azure Active Directory principal for the resource.
             - Possible values include C(SystemAssigned).
+        type: str
     minimal_tls_version:
         description:
             - Require clients to use a specified TLS version.
@@ -68,7 +75,7 @@ options:
         version_added: "1.11.0"
     change_admin_password:
         description:
-            - Whether or not the c(admin_password) should be updated for an existing server. If true, the password is the only value which will be updated.
+            - Whether or not the I(admin_password) should be updated for an existing server. If C(true), the password is the only value which will be updated.
         type: bool
         default: false
         version_added: "1.11.0"
@@ -111,6 +118,7 @@ options:
         description:
             - State of the SQL server. Use C(present) to create or update a server and use C(absent) to delete a server.
         default: present
+        type: str
         choices:
             - absent
             - present

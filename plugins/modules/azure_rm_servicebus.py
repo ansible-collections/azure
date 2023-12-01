@@ -20,23 +20,28 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the servicebus namespace.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the servicebus. Use C(present) to create or update and use C(absen) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - The servicebus's location.
+        type: str
     sku:
         description:
             - Namespace SKU.
+        type: str
         choices:
             - standard
             - basic
@@ -55,8 +60,10 @@ author:
 EXAMPLES = '''
 - name: Create a namespace
   azure_rm_servicebus:
-      name: deadbeef
-      location: eastus
+    name: deadbeef
+    location: eastus
+    tags:
+      key1: value1
 '''
 RETURN = '''
 id:
@@ -73,7 +80,6 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
-from ansible.module_utils.common.dict_transformations import _snake_to_camel, _camel_to_snake
 from ansible.module_utils._text import to_native
 from datetime import datetime, timedelta
 
@@ -102,11 +108,12 @@ class AzureRMServiceBus(AzureRMModuleBase):
         )
 
         super(AzureRMServiceBus, self).__init__(self.module_arg_spec,
+                                                supports_tags=True,
                                                 supports_check_mode=True)
 
     def exec_module(self, **kwargs):
 
-        for key in list(self.module_arg_spec.keys()):
+        for key in list(self.module_arg_spec.keys()) + ['tags']:
             setattr(self, key, kwargs[key])
 
         changed = False
@@ -116,11 +123,25 @@ class AzureRMServiceBus(AzureRMModuleBase):
             self.location = resource_group.location
 
         original = self.get()
-        if self.state == 'present' and not original:
+
+        if not original:
             self.check_name()
-            changed = True
+
+        if self.state == 'present':
             if not self.check_mode:
-                original = self.create()
+                if original:
+                    update_tags, new_tags = self.update_tags(original.tags)
+                    if update_tags:
+                        changed = True
+                        self.tags = new_tags
+                        original = self.create()
+                    else:
+                        changed = False
+                else:
+                    changed = True
+                    original = self.create()
+            else:
+                changed = True
         elif self.state == 'absent' and original:
             changed = True
             original = None
@@ -148,6 +169,7 @@ class AzureRMServiceBus(AzureRMModuleBase):
             poller = self.servicebus_client.namespaces.begin_create_or_update(self.resource_group,
                                                                               self.name,
                                                                               self.servicebus_models.SBNamespace(location=self.location,
+                                                                                                                 tags=self.tags,
                                                                                                                  sku=sku))
             ns = self.get_poller_result(poller)
         except Exception as exc:

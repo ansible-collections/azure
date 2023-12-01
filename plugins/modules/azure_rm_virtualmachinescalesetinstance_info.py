@@ -21,13 +21,16 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     vmss_name:
         description:
             - The name of the VM scale set.
         required: True
+        type: str
     instance_id:
         description:
             - The instance ID of the virtual machine.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -43,10 +46,10 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: List VM instances in Virtual Machine ScaleSet
-    azure_rm_virtualmachinescalesetinstance_info:
-      resource_group: myResourceGroup
-      vmss_name: myVMSS
+- name: List VM instances in Virtual Machine ScaleSet
+  azure_rm_virtualmachinescalesetinstance_info:
+    resource_group: myResourceGroup
+    vmss_name: myVMSS
 '''
 
 RETURN = '''
@@ -118,7 +121,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.mgmt.compute import ComputeManagementClient
-    from msrest.serialization import Model
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
@@ -167,7 +169,6 @@ class AzureRMVirtualMachineScaleSetVMInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(ComputeManagementClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    is_track2=True,
                                                     api_version='2021-04-01')
 
         if (self.instance_id is None):

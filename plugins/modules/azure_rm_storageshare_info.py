@@ -14,21 +14,21 @@ module: azure_rm_storageshare_info
 version_added: "1.8.0"
 short_description: Get Azure storage file share info
 description:
-    - Get facts for storage file share
+    - Get facts for storage file share.
 options:
     resource_group:
         description:
-            - Name of the resource group to use
+            - Name of the resource group to use.
         required: true
         type: str
     name:
         description:
-            - Name of the storage file share
+            - Name of the storage file share.
         type: str
         required: false
     account_name:
         description:
-            - Name of the parent storage account for the storage file share
+            - Name of the parent storage account for the storage file share.
         required: true
         type: str
 

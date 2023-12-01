@@ -51,14 +51,14 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Environment
-    azure_rm_devtestlabenvironment_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      user_name: myUser
-      name: myEnvironment
-      tags:
-        - key:value
+- name: Get instance of Environment
+  azure_rm_devtestlabenvironment_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    user_name: myUser
+    name: myEnvironment
+    tags:
+      - key:value
 '''
 
 RETURN = '''
@@ -116,16 +116,15 @@ environments:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag': 'MyValue' }"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -194,7 +193,7 @@ class AzureRMDtlEnvironmentInfo(AzureRMModuleBase):
                                                          user_name=self.user_name,
                                                          name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Environment.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -210,7 +209,7 @@ class AzureRMDtlEnvironmentInfo(AzureRMModuleBase):
                                                           lab_name=self.lab_name,
                                                           user_name=self.user_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Environment.')
 
         if response is not None:

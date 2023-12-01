@@ -72,13 +72,19 @@ author:
 '''
 
 EXAMPLES = '''
+- name: Create new management group
+  azure_rm_managementgroup:
+    group_id: test
+    type: /providers/Microsoft.Management/managementGroups/
+    name: test
+
 - name: create management group
   azure_rm_managementgroup:
     group_id: ChildGroup
     type: /providers/Microsoft.Management/managementGroups/
     name: ChildGroup
     properties:
-      tenantId: 20000000-0000-0000-0000-000000000000
+      tenant_id: 20000000-0000-0000-0000-000000000000
       display_name: ChildGroup
       parent_id: /providers/Microsoft.Management/managementGroups/RootGroup
 
@@ -86,7 +92,6 @@ EXAMPLES = '''
   azure_rm_managementgroup:
     group_id: ChildGroup
     state: absent
-
 '''
 
 RETURN = '''
@@ -208,11 +213,6 @@ import time
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -353,15 +353,16 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the ManagementGroup instance.')
             self.fail('Error creating the ManagementGroup instance: {0}'.format(str(exc)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
-            pass
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -376,7 +377,7 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the ManagementGroup instance.')
             self.fail('Error deleting the ManagementGroup instance: {0}'.format(str(e)))
 
@@ -395,11 +396,11 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
                                               600,
                                               30)
             found = True
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             self.log("Response : {0}".format(response))
             # self.log("ManagementGroup instance : {0} found".format(response.name))
-        except CloudError as e:
-            self.log('Did not find the ManagementGroup instance.')
+        except Exception as e:
+            self.log('Did not find the ManagementGroup instance. msg: {0}'.format(e))
         if found is True:
             return response
 

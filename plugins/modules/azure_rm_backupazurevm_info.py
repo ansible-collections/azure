@@ -42,13 +42,13 @@ author:
 
 EXAMPLES = \
     '''
-    - name: Get Recovery Point Details
-      azure_rm_backupazurevm_info:
-        resource_group: 'myResourceGroup'
-        recovery_vault_name: 'testVault'
-        resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-        resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
-    '''
+- name: Get Recovery Point Details
+  azure_rm_backupazurevm_info:
+    resource_group: 'myResourceGroup'
+    recovery_vault_name: 'testVault'
+    resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
+                  resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
+'''
 
 RETURN = \
     '''
@@ -62,9 +62,7 @@ id:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-import re
 import json
-import time
 
 
 class Actions:
@@ -157,10 +155,12 @@ class BackupAzureVMInfo(AzureRMModuleBaseExt):
             self.log('Error in fetching recovery point.')
             self.fail('Error in fetching recovery point {0}'.format(str(e)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 

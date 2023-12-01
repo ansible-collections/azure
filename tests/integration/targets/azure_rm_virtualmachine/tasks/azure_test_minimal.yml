@@ -1,4 +1,5 @@
-- include_tasks: setup.yml
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
 
 # # Tests possible when CI user acccount setup with required authority
 # - name: Create virtual machine with image and plan which requires acceptance of terms
@@ -18,7 +19,7 @@
 #     plan_paid: "{{ plan_paid }}"
 #   register: create_image_plan_result
 
-# - assert:
+# - ansible.builtin.assert:
 #     that:
 #       - create_image_plan_result is changed
 #       - create_image_plan_result.ansible_facts.azure_vm.properties.storageProfile.imageReference.publisher == image_paid.publisher
@@ -40,7 +41,7 @@
 #     plan_paid: "{{ plan_paid }}"
 #   register: create_image_plan_again_result
 
-# - assert:
+# - ansible.builtin.assert:
 #     that: create_image_plan_again is not changed
 
 - name: Create minimal VM with defaults
@@ -55,11 +56,23 @@
     vm_size: Standard_B1ms
     virtual_network: "{{ network_name }}"
     image:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
-      sku: 16.04-LTS
+      sku: 20_04-lts
       version: latest
   register: vm_output
+
+- name: Query auto created security group before deleting
+  azure_rm_securitygroup_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}01"
+  register: nsg_result
+
+- name: Assert that security group were exist before deleting
+  ansible.builtin.assert:
+    that:
+      - nsg_result.securitygroups | length == 1
+      - nsg_result.securitygroups[0].network_interfaces | length == 1
 
 - name: Delete VM
   azure_rm_virtualmachine:
@@ -87,7 +100,7 @@
   register: pip_result
 
 - name: Assert that autocreated resources were deleted
-  assert:
+  ansible.builtin.assert:
     that:
       # what about the default storage group?
       - nic_result.networkinterfaces | length == 0
@@ -117,5 +130,5 @@
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
-    force_delete_nonempty: yes
+    force_delete_nonempty: true
     state: absent

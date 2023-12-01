@@ -21,26 +21,32 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the MySQL firewall rule.
         required: True
+        type: str
     start_ip_address:
         description:
             - The start IP address of the MySQL firewall rule. Must be IPv4 format.
-        required: True
+            - Required when creating.
+        type: str
     end_ip_address:
         description:
             - The end IP address of the MySQL firewall rule. Must be IPv4 format.
-        required: True
+            - Required when creating.
+        type: str
     state:
         description:
             - Assert the state of the MySQL firewall rule. Use C(present) to create or update a rule and C(absent) to ensure it is not present.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -54,13 +60,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) MySQL firewall rule
-    azure_rm_mysqlfirewallrule:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: rule1
-      start_ip_address: 10.0.0.17
-      end_ip_address: 10.0.0.20
+- name: Create (or update) MySQL firewall rule
+  azure_rm_mysqlfirewallrule:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: rule1
+    start_ip_address: 10.0.0.17
+    end_ip_address: 10.0.0.20
 '''
 
 RETURN = '''
@@ -79,7 +85,6 @@ try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -125,6 +130,7 @@ class AzureRMMySqlFirewallRule(AzureRMModuleBase):
         self.start_ip_address = None
         self.end_ip_address = None
 
+        required_if = [('state', 'present', ['start_ip_address', 'end_ip_address'])]
         self.results = dict(changed=False)
         self.state = None
         self.parameters = dict()
@@ -132,6 +138,7 @@ class AzureRMMySqlFirewallRule(AzureRMModuleBase):
 
         super(AzureRMMySqlFirewallRule, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                        supports_check_mode=True,
+                                                       required_if=required_if,
                                                        supports_tags=False)
 
     def exec_module(self, **kwargs):

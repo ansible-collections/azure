@@ -22,44 +22,58 @@ options:
     url:
         description:
             - Azure RM Resource URL.
+        type: str
     api_version:
         description:
             - Specific API version to be used.
+        type: str
     provider:
         description:
             - Provider type.
             - Required if URL is not specified.
+        type: str
     resource_group:
         description:
             - Resource group to be used.
             - Required if URL is not specified.
+        type: str
     resource_type:
         description:
             - Resource type.
             - Required if URL is not specified.
+        type: str
     resource_name:
         description:
             - Resource name.
             - Required if URL Is not specified.
+        type: str
     subresource:
         description:
             - List of subresources.
+        default: []
+        type: list
+        elements: dict
         suboptions:
             namespace:
                 description:
                     - Subresource namespace.
+                type: str
             type:
                 description:
                     - Subresource type.
+                type: str
             name:
                 description:
                     - Subresource name.
+                type: str
     body:
         description:
             - The body of the HTTP request/response to the web service.
+        type: raw
     method:
         description:
             - The HTTP method of the request or response. It must be uppercase.
+        type: str
         choices:
             - GET
             - PUT
@@ -73,11 +87,12 @@ options:
         description:
             - A valid, numeric, HTTP status code that signifies success of the request. Can also be comma separated list of status codes.
         type: list
+        elements: int
         default: [ 200, 201, 202 ]
     idempotency:
         description:
             - If enabled, idempotency check will be done by using I(method=GET) first and then comparing with I(body).
-        default: no
+        default: false
         type: bool
     polling_timeout:
         description:
@@ -93,6 +108,7 @@ options:
         description:
             - Assert the state of the resource. Use C(present) to create or update resource or C(absent) to delete resource.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -106,14 +122,14 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Update scaleset info using azure_rm_resource
-    azure_rm_resource:
-      resource_group: myResourceGroup
-      provider: compute
-      resource_type: virtualmachinescalesets
-      resource_name: myVmss
-      api_version: "2017-12-01"
-      body: { body }
+- name: Update scaleset info using azure_rm_resource
+  azure_rm_resource:
+    resource_group: myResourceGroup
+    provider: compute
+    resource_type: virtualmachinescalesets
+    resource_name: myVmss
+    api_version: "2017-12-01"
+    body: { body }
 '''
 
 RETURN = '''
@@ -215,9 +231,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils.common.dict_transformations import dict_merge
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.service_client import ServiceClient
-    from msrestazure.tools import resource_id, is_valid_resource_id
+    from azure.mgmt.core.tools import resource_id
     import json
 
 except ImportError:
@@ -246,6 +260,7 @@ class AzureRMResource(AzureRMModuleBase):
             ),
             subresource=dict(
                 type='list',
+                elements='dict',
                 default=[]
             ),
             api_version=dict(
@@ -261,6 +276,7 @@ class AzureRMResource(AzureRMModuleBase):
             ),
             status_code=dict(
                 type='list',
+                elements='int',
                 default=[200, 201, 202]
             ),
             idempotency=dict(
@@ -354,7 +370,7 @@ class AzureRMResource(AzureRMModuleBase):
                     provider = self.url.split("/providers/")[1].split("/")[0]
                     resourceType = self.url.split(provider + "/")[1].split("/")[0]
                     url = "/subscriptions/" + self.subscription_id + "/providers/" + provider
-                    api_versions = json.loads(self.mgmt_client.query(url, "GET", {'api-version': '2015-01-01'}, None, None, [200], 0, 0).text)
+                    api_versions = json.loads(self.mgmt_client.query(url, "GET", {'api-version': '2015-01-01'}, None, None, [200], 0, 0).body())
                     for rt in api_versions['resourceTypes']:
                         if rt['resourceType'].lower() == resourceType.lower():
                             self.api_version = rt['apiVersions'][0]
@@ -384,7 +400,7 @@ class AzureRMResource(AzureRMModuleBase):
                     needs_update = False
             else:
                 try:
-                    response = json.loads(original.text)
+                    response = json.loads(original.body())
                     needs_update = (dict_merge(response, self.body) != response)
                 except Exception:
                     pass
@@ -398,11 +414,16 @@ class AzureRMResource(AzureRMModuleBase):
                                               self.status_code,
                                               self.polling_timeout,
                                               self.polling_interval)
-            if self.state == 'present':
-                try:
-                    response = json.loads(response.text)
-                except Exception:
-                    response = response.text
+            if self.state == 'present' and self.method != 'DELETE':
+                if hasattr(response, 'body'):
+                    try:
+                        response = json.loads(response.body())
+                    except Exception:
+                        response = response.body()
+                elif hasattr(response, 'context'):
+                    response = response.context['deserialized_data']
+                else:
+                    self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
             else:
                 response = None
 

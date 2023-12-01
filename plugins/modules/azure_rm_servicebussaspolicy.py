@@ -20,14 +20,17 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the SAS policy.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the route. Use C(present) to create or update and C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -36,14 +39,17 @@ options:
             - Manage SAS policy for a namespace without C(queue) or C(topic) set.
             - Manage SAS policy for a queue or topic under this namespace.
         required: true
+        type: str
     queue:
         description:
             - Type of the messaging queue.
             - Cannot set C(topc) when this field set.
+        type: str
     topic:
         description:
             - Name of the messaging topic.
             - Cannot set C(queue) when this field set.
+        type: str
     regenerate_primary_key:
         description:
             - Regenerate the SAS policy primary key.
@@ -57,7 +63,8 @@ options:
     rights:
         description:
             - Claim rights of the SAS policy.
-        required: True
+            - Required when creating.
+        type: str
         choices:
             - manage
             - listen
@@ -66,7 +73,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -154,10 +160,6 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
-from ansible.module_utils.common.dict_transformations import _snake_to_camel, _camel_to_snake
-from ansible.module_utils._text import to_native
-from datetime import datetime, timedelta
-
 
 class AzureRMServiceBusSASPolicy(AzureRMModuleBase):
 
@@ -187,8 +189,8 @@ class AzureRMServiceBusSASPolicy(AzureRMModuleBase):
         self.namespace = None
         self.queue = None
         self.topic = None
-        self.regenerate_primary_key = None
-        self.regenerate_secondary_key = None
+        self.regenerate_primary_key = False
+        self.regenerate_secondary_key = False
         self.rights = None
 
         self.results = dict(
@@ -199,6 +201,7 @@ class AzureRMServiceBusSASPolicy(AzureRMModuleBase):
         super(AzureRMServiceBusSASPolicy, self).__init__(self.module_arg_spec,
                                                          mutually_exclusive=mutually_exclusive,
                                                          required_if=required_if,
+                                                         supports_tags=False,
                                                          supports_check_mode=True)
 
     def exec_module(self, **kwargs):

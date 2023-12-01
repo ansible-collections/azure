@@ -48,6 +48,7 @@ options:
         description:
             - List of VirtualHubs in the VirtualWAN.
         type: list
+        elements: dict
         suboptions:
             id:
                 description:
@@ -57,18 +58,19 @@ options:
         description:
             - List of VpnSites in the VirtualWAN.
         type: list
+        elements: dict
         suboptions:
             id:
-               description:
-                   - The vpn site resource ID.
-               type: str
+                description:
+                    - The vpn site resource ID.
+                type: str
     allow_branch_to_branch_traffic:
         description:
             - True if branch to branch traffic is allowed.
         type: bool
     allow_vnet_to_vnet_traffic:
         description:
-            - True if Vnet to Vnet traffic is allowed.
+            - C(True) if Vnet to Vnet traffic is allowed.
         type: bool
     virtual_wan_type:
         description:
@@ -82,6 +84,7 @@ options:
             - Assert the state of the VirtualWan.
             - Use C(present) to create or update an VirtualWan and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -94,21 +97,20 @@ author:
 '''
 
 EXAMPLES = '''
- - name: Create a VirtualWan
-   azure_rm_virtualwan:
-     resource_group: myResouceGroup
-     name: testwan
-     disable_vpn_encryption: true
-     allow_branch_to_branch_traffic: true
-     allow_vnet_to_vnet_traffic: true
-     virtual_wan_type: Standard
+- name: Create a VirtualWan
+  azure_rm_virtualwan:
+    resource_group: myResouceGroup
+    name: testwan
+    disable_vpn_encryption: true
+    allow_branch_to_branch_traffic: true
+    allow_vnet_to_vnet_traffic: true
+    virtual_wan_type: Standard
 
- - name: Delete the VirtualWan
-   azure_rm_virtualwan:
-     resource_group: myResouceGroup
-     name: testwan
-     state: absent
-
+- name: Delete the VirtualWan
+  azure_rm_virtualwan:
+    resource_group: myResouceGroup
+    name: testwan
+    state: absent
 '''
 
 RETURN = '''
@@ -221,7 +223,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from msrestazure.azure_operation import AzureOperationPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -255,6 +256,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             ),
             virtual_hubs=dict(
                 type='list',
+                elements='dict',
                 updatable=False,
                 disposition='/virtual_hubs',
                 options=dict(
@@ -266,6 +268,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             ),
             vpn_sites=dict(
                 type='list',
+                elements='dict',
                 updatable=False,
                 disposition='/vpn_sites',
                 options=dict(
@@ -365,7 +368,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             response = self.network_client.virtual_wans.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                virtual_wan_name=self.name,
                                                                                wan_parameters=self.body)
-            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
             self.log('Error attempting to create the VirtualWan instance.')

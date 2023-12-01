@@ -22,14 +22,17 @@ options:
         description:
             - Name of a resource group where VPN Gateway exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of VPN Gateway.
         required: true
+        type: str
     state:
         description:
             - State of the VPN Gateway. Use C(present) to create or update VPN gateway and C(absent) to delete VPN gateway.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -37,7 +40,7 @@ options:
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
-        required: false
+        type: str
     virtual_network:
         description:
             - An existing virtual network with which the VPN Gateway will be associated.
@@ -46,35 +49,42 @@ options:
             - Must be in the same resource group as VPN gateway when specified by name.
             - Can be the resource ID of the virtual network.
             - Can be a dict which contains I(name) and I(resource_group) of the virtual network.
+            - Required when creating.
+        type: raw
         aliases:
             - virtual_network_name
-        required: true
     ip_configurations:
         description:
             - List of IP configurations.
+        type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - Name of the IP configuration.
+                type: str
                 required: true
             private_ip_allocation_method:
                 description:
                     - Private IP allocation method.
+                type: str
                 choices:
-                    - dynamic
-                    - static
-                default: dynamic
+                    - Dynamic
+                    - Static
+                default: Dynamic
             public_ip_address_name:
                 description:
                     - Name of the public IP address. Use 'None' to disable the public IP address.
+                type: str
             subnet:
                 description:
                     - ID of the gateway subnet for VPN.
-                default: GatewaySubnet
+                type: str
     gateway_type:
         description:
             - The type of this virtual network gateway.
         default: vpn
+        type: str
         choices:
             - vpn
             - express_route
@@ -82,6 +92,7 @@ options:
         description:
             - The type of this virtual private network.
         default: route_based
+        type: str
         choices:
             - route_based
             - policy_based
@@ -89,10 +100,12 @@ options:
         description:
             - Whether BGP is enabled for this virtual network gateway or not.
         default: false
+        type: bool
     sku:
         description:
             - The reference of the VirtualNetworkGatewaySku resource which represents the SKU selected for Virtual network gateway.
         default: VpnGw1
+        type: str
         choices:
             - VpnGw1
             - VpnGw2
@@ -104,6 +117,7 @@ options:
         description:
             - The generation for this VirtualNetworkGateway. Must be C(None) if C(gateway_type) is not VPN.
         default: Generation1
+        type: str
         choices:
             - None
             - Generation1
@@ -111,10 +125,12 @@ options:
     bgp_settings:
         description:
             - Virtual network gateway's BGP speaker settings.
+        type: dict
         suboptions:
             asn:
                 description:
                     - The BGP speaker's ASN.
+                type: int
                 required: True
 
 extends_documentation_fragment:
@@ -126,54 +142,54 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create virtual network gateway without bgp settings
-      azure_rm_virtualnetworkgateway:
-        resource_group: myResourceGroup
-        name: myVirtualNetworkGateway
-        ip_configurations:
-          - name: testipconfig
-            private_ip_allocation_method: Dynamic
-            public_ip_address_name: testipaddr
-        virtual_network: myVirtualNetwork
-        tags:
-          common: "xyz"
+- name: Create virtual network gateway without bgp settings
+  azure_rm_virtualnetworkgateway:
+    resource_group: myResourceGroup
+    name: myVirtualNetworkGateway
+    ip_configurations:
+      - name: testipconfig
+        private_ip_allocation_method: Dynamic
+        public_ip_address_name: testipaddr
+    virtual_network: myVirtualNetwork
+    tags:
+      common: "xyz"
 
-    - name: Create virtual network gateway Generation2
-      azure_rm_virtualnetworkgateway:
-        resource_group: myResourceGroup
-        name: myVirtualNetworkGateway
-        sku: vpn_gw2
-        vpn_gateway_generation: Generation2
-        ip_configurations:
-          - name: testipconfig
-            private_ip_allocation_method: Dynamic
-            public_ip_address_name: testipaddr
-        virtual_network: myVirtualNetwork
-        tags:
-          common: "xyz"
+- name: Create virtual network gateway Generation2
+  azure_rm_virtualnetworkgateway:
+    resource_group: myResourceGroup
+    name: myVirtualNetworkGateway
+    sku: vpn_gw2
+    vpn_gateway_generation: Generation2
+    ip_configurations:
+      - name: testipconfig
+        private_ip_allocation_method: Dynamic
+        public_ip_address_name: testipaddr
+    virtual_network: myVirtualNetwork
+    tags:
+      common: "xyz"
 
-    - name: Create virtual network gateway with bgp
-      azure_rm_virtualnetworkgateway:
-        resource_group: myResourceGroup
-        name: myVirtualNetworkGateway
-        sku: vpn_gw1
-        ip_configurations:
-          - name: testipconfig
-            private_ip_allocation_method: Dynamic
-            public_ip_address_name: testipaddr
-        enable_bgp: yes
-        virtual_network: myVirtualNetwork
-        bgp_settings:
-          asn: 65515
-          bgp_peering_address: "169.254.54.209"
-        tags:
-          common: "xyz"
+- name: Create virtual network gateway with bgp
+  azure_rm_virtualnetworkgateway:
+    resource_group: myResourceGroup
+    name: myVirtualNetworkGateway
+    sku: vpn_gw1
+    ip_configurations:
+      - name: testipconfig
+        private_ip_allocation_method: Dynamic
+        public_ip_address_name: testipaddr
+    enable_bgp: true
+    virtual_network: myVirtualNetwork
+    bgp_settings:
+      asn: 65515
+      bgp_peering_address: "169.254.54.209"
+    tags:
+      common: "xyz"
 
-    - name: Delete instance of virtual network gateway
-      azure_rm_virtualnetworkgateway:
-        resource_group: myResourceGroup
-        name: myVirtualNetworkGateway
-        state: absent
+- name: Delete instance of virtual network gateway
+  azure_rm_virtualnetworkgateway:
+    resource_group: myResourceGroup
+    name: myVirtualNetworkGateway
+    state: absent
 '''
 
 RETURN = '''
@@ -192,7 +208,7 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 
@@ -257,7 +273,7 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
             vpn_type=dict(type='str', default='route_based', choices=['route_based', 'policy_based']),
             vpn_gateway_generation=dict(type='str', default='Generation1', choices=['None', 'Generation1', 'Generation2']),
             enable_bgp=dict(type='bool', default=False),
-            sku=dict(default='VpnGw1', choices=['VpnGw1', 'VpnGw2', 'VpnGw3', 'Standard', 'Basic', 'HighPerformance']),
+            sku=dict(type='str', default='VpnGw1', choices=['VpnGw1', 'VpnGw2', 'VpnGw3', 'Standard', 'Basic', 'HighPerformance']),
             bgp_settings=dict(type='dict', options=bgp_spec),
             virtual_network=dict(type='raw', aliases=['virtual_network_name'])
         )
@@ -274,12 +290,14 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
         self.vpn_gateway_generation = None
         self.bgp_settings = None
 
+        required_if = [('state', 'present', ['virtual_network'])]
         self.results = dict(
             changed=False,
             state=dict()
         )
 
         super(AzureRMVirtualNetworkGateway, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                           required_if=required_if,
                                                            supports_check_mode=True)
 
     def exec_module(self, **kwargs):

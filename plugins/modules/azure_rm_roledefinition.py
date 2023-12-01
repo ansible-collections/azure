@@ -81,17 +81,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a role definition
-      azure_rm_roledefinition:
-        name: myTestRole
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myresourceGroup
-        permissions:
-            - actions:
-                - "Microsoft.Compute/virtualMachines/read"
-              data_actions:
-                - "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
-        assignable_scopes:
-            - "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+- name: Create a role definition
+  azure_rm_roledefinition:
+    name: myTestRole
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myresourceGroup
+    permissions:
+      - actions:
+          - "Microsoft.Compute/virtualMachines/read"
+        data_actions:
+          - "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
+    assignable_scopes:
+      - "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 '''
 
 RETURN = '''
@@ -108,11 +108,8 @@ from ansible.module_utils._text import to_native
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.core.polling import LROPoller
-    from msrest.serialization import Model
     from azure.mgmt.authorization import AuthorizationManagementClient
-    from azure.mgmt.authorization.model import (RoleDefinition, Permission)
 
 except ImportError:
     # This is handled in azure_rm_common
@@ -227,7 +224,6 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
         # get management client
         self._client = self.get_mgmt_svc_client(AuthorizationManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
-                                                is_track2=True,
                                                 api_version="2018-01-01-preview")
 
         self.scope = self.build_scope()
@@ -341,7 +337,7 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
             response = self._client.role_definitions.create_or_update(role_definition_id=self.role['name'] if self.role else str(uuid.uuid4()),
                                                                       scope=self.scope,
                                                                       role_definition=role_definition)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:
@@ -360,7 +356,7 @@ class AzureRMRoleDefinition(AzureRMModuleBase):
         try:
             response = self._client.role_definitions.delete(scope=scope,
                                                             role_definition_id=role_definition_id)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as e:
             self.log('Error attempting to delete the role definition.')

@@ -49,6 +49,7 @@ options:
             - It can be the storage account ID. Fox example "/subscriptions/{subscription_id}/resourceGroups/
               {resource_group}/providers/Microsoft.Storage/storageAccounts/{name}".
             - It can be a dict which contains I(name) and I(resource_group) of the storage account.
+        type: raw
     key_vault:
         description:
             - Existing key vault with which to associate the Batch Account.
@@ -56,6 +57,7 @@ options:
             - It can be the key vault ID. For example "/subscriptions/{subscription_id}/resourceGroups/
               {resource_group}/providers/Microsoft.KeyVault/vaults/{name}".
             - It can be a dict which contains I(name) and I(resource_group) of the key vault.
+        type: raw
     pool_allocation_mode:
         description:
             - The pool acclocation mode of the Batch Account.
@@ -83,14 +85,14 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create Batch Account
-    azure_rm_batchaccount:
-        resource_group: MyResGroup
-        name: mybatchaccount
-        location: eastus
-        auto_storage_account:
-          name: mystorageaccountname
-        pool_allocation_mode: batch_service
+- name: Create Batch Account
+  azure_rm_batchaccount:
+    resource_group: MyResGroup
+    name: mybatchaccount
+    location: eastus
+    auto_storage_account:
+      name: mystorageaccountname
+    pool_allocation_mode: batch_service
 '''
 
 RETURN = '''
@@ -108,17 +110,13 @@ account_endpoint:
     sample: sampleacct.westus.batch.azure.com
 '''
 
-import time
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import normalize_location_name
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.serialization import Model
+    from azure.core.polling import LROPoller
     from azure.mgmt.batch import BatchManagementClient
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -172,7 +170,6 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
         self.resource_group = None
         self.name = None
         self.batch_account = dict()
-        self.tags = None
 
         self.results = dict(changed=False)
         self.mgmt_client = None
@@ -232,7 +229,13 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
             elif self.state == 'present':
                 self.results['old'] = old_response
                 self.results['new'] = self.batch_account
-                if not self.idempotency_check(old_response, self.batch_account):
+
+                update_tags, self.tags = self.update_tags(old_response['tags'])
+
+                if self.batch_account.get('auto_storage_account') is not None:
+                    if old_response['auto_storage']['storage_account_id'] != self.batch_account['auto_storage']['storage_account_id']:
+                        self.to_do = Actions.Update
+                if update_tags:
                     self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
@@ -275,17 +278,17 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
 
         try:
             if self.to_do == Actions.Create:
-                response = self.mgmt_client.batch_account.create(resource_group_name=self.resource_group,
-                                                                 account_name=self.name,
-                                                                 parameters=self.batch_account)
+                response = self.mgmt_client.batch_account.begin_create(resource_group_name=self.resource_group,
+                                                                       account_name=self.name,
+                                                                       parameters=self.batch_account)
             else:
                 response = self.mgmt_client.batch_account.update(resource_group_name=self.resource_group,
                                                                  account_name=self.name,
-                                                                 tags=self.tags,
-                                                                 auto_storage=self.batch_account.get('auto_storage'))
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+                                                                 parameters=dict(tags=self.tags,
+                                                                                 auto_storage=self.batch_account.get('self.batch_account')))
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Batch Account instance.')
             self.fail("Error creating the Batch Account instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -298,13 +301,13 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
         '''
         self.log("Deleting the Batch Account instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.batch_account.delete(resource_group_name=self.resource_group,
-                                                             account_name=self.name)
-        except CloudError as e:
+            response = self.mgmt_client.batch_account.begin_delete(resource_group_name=self.resource_group,
+                                                                   account_name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the Batch Account instance.')
             self.fail("Error deleting the Batch Account instance: {0}".format(str(e)))
 
-        if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+        if isinstance(response, LROPoller):
             response = self.get_poller_result(response)
         return True
 
@@ -321,11 +324,29 @@ class AzureRMBatchAccount(AzureRMModuleBaseExt):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Batch Account instance : {0} found".format(response.name))
-        except CloudError as e:
-            self.log('Did not find the Batch Account instance.')
+        except ResourceNotFoundError as e:
+            self.log('Did not find the Batch Account instance. Exception as {0}'.format(e))
         if found is True:
-            return response.as_dict()
+            return self.format_item(response.as_dict())
         return False
+
+    def format_item(self, item):
+        result = {
+            'id': item['id'],
+            'name': item['name'],
+            'type': item['type'],
+            'location': item['location'],
+            'account_endpoint': item['account_endpoint'],
+            'provisioning_state': item['provisioning_state'],
+            'pool_allocation_mode': item['pool_allocation_mode'],
+            'auto_storage': item['auto_storage'],
+            'dedicated_core_quota': item['dedicated_core_quota'],
+            'low_priority_core_quota': item['low_priority_core_quota'],
+            'pool_quota': item['pool_quota'],
+            'active_job_and_job_schedule_quota': item['active_job_and_job_schedule_quota'],
+            'tags': item.get('tags')
+        }
+        return result
 
 
 def main():

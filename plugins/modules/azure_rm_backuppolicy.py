@@ -86,15 +86,13 @@ options:
     schedule_weekly_frequency:
         description:
             - The amount of weeks between backups.
-            - Backup every schedule_weekly_frequency week(s)
-            - Azure will default behavior to running weekly if this is left blank
-            - Backup every schedule_weekly_frequency week(s).
+            - Backup every I(schedule_weekly_frequency) week(s).
             - Azure will default behavior to running weekly if this is left blank.
             - Does not apply to Daily frequency.
         type: int
     time_zone:
         description:
-            - Timezone to apply schedule_run_time.
+            - Timezone to apply I(schedule_run_time).
         default: UTC
         type: str
 extends_documentation_fragment:
@@ -105,43 +103,42 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Delete a backup policy
-      azure_rm_backuppolicy:
-        vault_name: Vault_Name
-        name: Policy_Name
-        resource_group: Resource_Group_Name
-        state: absent
+- name: Delete a backup policy
+  azure_rm_backuppolicy:
+    vault_name: Vault_Name
+    name: Policy_Name
+    resource_group: Resource_Group_Name
+    state: absent
 
-    - name: Create a daily VM backup policy
-      azure_rm_backuppolicy:
-        vault_name: Vault_Name
-        name: Policy_Name
-        resource_group: Resource_Group_Name
-        state: present
-        backup_management_type: "AzureIaasVM"
-        schedule_run_frequency: "Daily"
-        instant_recovery_snapshot_retention: 2
-        daily_retention_count: 12
-        time_zone: "Pacific Standard Time"
-        schedule_run_time: 14
+- name: Create a daily VM backup policy
+  azure_rm_backuppolicy:
+    vault_name: Vault_Name
+    name: Policy_Name
+    resource_group: Resource_Group_Name
+    state: present
+    backup_management_type: "AzureIaasVM"
+    schedule_run_frequency: "Daily"
+    instant_recovery_snapshot_retention: 2
+    daily_retention_count: 12
+    time_zone: "Pacific Standard Time"
+    schedule_run_time: 14
 
-    - name: Create a weekly VM backup policy
-      azure.azcollection.azure_rm_backuppolicy:
-        vault_name: Vault_Name
-        name: Policy_Name
-        resource_group: Resource_Group_Name
-        state: present
-        backup_management_type: "AzureIaasVM"
-        schedule_run_frequency: "Weekly"
-        instant_recovery_snapshot_retention: 5
-        weekly_retention_count: 4
-        schedule_days:
-          - "Monday"
-          - "Wednesday"
-          - "Friday"
-        time_zone: "Pacific Standard Time"
-        schedule_run_time: 8
-
+- name: Create a weekly VM backup policy
+  azure.azcollection.azure_rm_backuppolicy:
+    vault_name: Vault_Name
+    name: Policy_Name
+    resource_group: Resource_Group_Name
+    state: present
+    backup_management_type: "AzureIaasVM"
+    schedule_run_frequency: "Weekly"
+    instant_recovery_snapshot_retention: 5
+    weekly_retention_count: 4
+    schedule_days:
+      - "Monday"
+      - "Wednesday"
+      - "Friday"
+    time_zone: "Pacific Standard Time"
+    schedule_run_time: 8
 '''
 
 RETURN = '''
@@ -171,7 +168,6 @@ type:
     sample: Microsoft.RecoveryServices/vaults/backupPolicies
 '''
 
-import uuid
 from datetime import datetime
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
@@ -358,7 +354,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                 daily_retention_schedule = self.recovery_services_backup_models.DailyRetentionSchedule(retention_times=schedule_run_times_as_datetimes,
                                                                                                        retention_duration=retention_duration)
 
-            if(self.weekly_retention_count):
+            if (self.weekly_retention_count):
                 retention_duration = self.recovery_services_backup_models.RetentionDuration(count=self.weekly_retention_count,
                                                                                             duration_type="Weeks")
                 weekly_retention_schedule = self.recovery_services_backup_models.WeeklyRetentionSchedule(days_of_the_week=self.schedule_days,

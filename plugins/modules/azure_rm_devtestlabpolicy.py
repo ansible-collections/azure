@@ -21,24 +21,30 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     lab_name:
         description:
             - The name of the lab.
         required: True
+        type: str
     policy_set_name:
         description:
             - The name of the policy set.
         required: True
+        type: str
     name:
         description:
             - The name of the policy.
         required: True
+        type: str
     description:
         description:
             - The description of the policy.
+        type: str
     fact_name:
         description:
             - The fact name of the policy (e.g. C(lab_vm_count), C(lab_vm_size)), MaxVmsAllowedPerLab, etc.
+        type: str
         choices:
             - 'user_owned_lab_vm_count'
             - 'user_owned_lab_premium_vm_count'
@@ -53,13 +59,14 @@ options:
             - The threshold of the policy (it could be either a maximum value or a list of allowed values).
         type: raw
     state:
-      description:
-          - Assert the state of the Policy.
-          - Use C(present) to create or update an Policy and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Policy.
+            - Use C(present) to create or update an Policy and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -92,16 +99,13 @@ id:
 
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from msrestazure.azure_operation import AzureOperationPoller
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -236,7 +240,7 @@ class AzureRMDtlPolicy(AzureRMModuleBase):
 
             self.delete_policy()
             # This currently doesnt' work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("Policy instance unchanged")
@@ -264,10 +268,10 @@ class AzureRMDtlPolicy(AzureRMModuleBase):
                                                                   policy_set_name=self.policy_set_name,
                                                                   name=self.name,
                                                                   policy=self.policy)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Policy instance.')
             self.fail("Error creating the Policy instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -284,7 +288,7 @@ class AzureRMDtlPolicy(AzureRMModuleBase):
                                                         lab_name=self.lab_name,
                                                         policy_set_name=self.policy_set_name,
                                                         name=self.name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Policy instance.')
             self.fail("Error deleting the Policy instance: {0}".format(str(e)))
 
@@ -306,7 +310,7 @@ class AzureRMDtlPolicy(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Policy instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Policy instance.')
         if found is True:
             return response.as_dict()

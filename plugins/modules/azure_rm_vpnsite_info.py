@@ -33,18 +33,17 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get Vpn Site Info by name
-      azure_rm_vpnsite_info:
-        resource_group: myResourceGroup
-        name: vwan_site_name
+- name: Get Vpn Site Info by name
+  azure_rm_vpnsite_info:
+    resource_group: myResourceGroup
+    name: vwan_site_name
 
-    - name: Get Vpn Site List By ResourceGroup
-      azure_rm_vpnsite_info:
-        resource_group: myResourceGroup
+- name: Get Vpn Site List By ResourceGroup
+  azure_rm_vpnsite_info:
+    resource_group: myResourceGroup
 
-    - name: Get Vpn Site List By Subscription
-      azure_rm_vpnsite_info:
-
+- name: Get Vpn Site List By Subscription
+  azure_rm_vpnsite_info:
 '''
 
 RETURN = '''

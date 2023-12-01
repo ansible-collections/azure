@@ -46,12 +46,12 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get information on DevTest Lab ARM Template
-    azure_rm_devtestlabarmtemplate_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      artifact_source_name: public environment repo
-      name: WebApp
+- name: Get information on DevTest Lab ARM Template
+  azure_rm_devtestlabarmtemplate_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    artifact_source_name: public environment repo
+    name: WebApp
 '''
 
 RETURN = '''
@@ -72,45 +72,51 @@ arm_templates:
             description:
                 - Resource group name.
             returned: always
+            type: str
             sample: myResourceGroup
         lab_name:
             description:
                 - DevTest Lab name.
             returned: always
+            type: str
             sample: myLab
         artifact_source_name:
             description:
                 - Artifact source name.
             returned: always
+            type: str
             sample: public environment repo
         name:
             description:
                 - ARM Template name.
             returned: always
+            type: str
             sample: WebApp
         display_name:
             description:
                 - The tags of the resource.
             returned: always
+            type: str
             sample: Web App
         description:
             description:
                 - The tags of the resource.
             returned: always
+            type: str
             sample: This template creates an Azure Web App without a data store.
         publisher:
             description:
                 - The tags of the resource.
             returned: always
+            type: str
             sample: Microsoft
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -173,7 +179,7 @@ class AzureRMDtlArmTemplateInfo(AzureRMModuleBase):
                                                            lab_name=self.lab_name,
                                                            artifact_source_name=self.artifact_source_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.fail('Could not get facts for DTL ARM Template.')
 
         if response is not None:
@@ -191,7 +197,7 @@ class AzureRMDtlArmTemplateInfo(AzureRMModuleBase):
                                                           artifact_source_name=self.artifact_source_name,
                                                           name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get facts for DTL ARM Template.')
 
         if response:

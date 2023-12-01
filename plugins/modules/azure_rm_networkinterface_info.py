@@ -24,9 +24,11 @@ options:
     name:
         description:
             - Only show results for a specific network interface.
+        type: str
     resource_group:
         description:
             - Name of the resource group containing the network interface(s). Required when searching by name.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -43,21 +45,21 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one network interface
-      azure_rm_networkinterface_info:
-        resource_group: myResourceGroup
-        name: nic001
+- name: Get facts for one network interface
+  azure_rm_networkinterface_info:
+    resource_group: myResourceGroup
+    name: nic001
 
-    - name: Get network interfaces within a resource group
-      azure_rm_networkinterface_info:
-        resource_group: myResourceGroup
+- name: Get network interfaces within a resource group
+  azure_rm_networkinterface_info:
+    resource_group: myResourceGroup
 
-    - name: Get network interfaces by tag
-      azure_rm_networkinterface_info:
-        resource_group: myResourceGroup
-        tags:
-          - testing
-          - foo:bar
+- name: Get network interfaces by tag
+  azure_rm_networkinterface_info:
+    resource_group: myResourceGroup
+    tags:
+      - testing
+      - foo:bar
 '''
 
 RETURN = '''
@@ -111,61 +113,79 @@ networkinterfaces:
         id:
             description:
                 - Id of the network interface.
+            type: str
         resource_group:
             description:
                 - Name of a resource group where the network interface exists.
+            type: str
         name:
             description:
                 - Name of the network interface.
+            type: str
         location:
             description:
                 - Azure location.
+            type: str
         virtual_network:
             description:
                 - An existing virtual network with which the network interface will be associated.
                 - It is a dict which contains I(name) and I(resource_group) of the virtual network.
+            type: raw
         subnet:
             description:
                 - Name of an existing subnet within the specified virtual network.
+            type: str
         tags:
             description:
                 - Tags of the network interface.
+            type: dict
         ip_configurations:
             description:
                 - List of IP configurations, if contains multiple configurations.
+            type: complex
             contains:
                 name:
                     description:
                         - Name of the IP configuration.
+                    type: str
                 private_ip_address:
                     description:
                         - Private IP address for the IP configuration.
+                    type: list
                 private_ip_allocation_method:
                     description:
                         - Private IP allocation method.
+                    type: str
                 public_ip_address:
                     description:
                         - Name of the public IP address. None for disable IP address.
+                    type: str
                 public_ip_allocation_method:
                     description:
                         - Public IP allocation method.
+                    type: str
                 load_balancer_backend_address_pools:
                     description:
                         - List of existing load-balancer backend address pools associated with the network interface.
+                    type: list
                 application_gateway_backend_address_pools:
                     description:
                         - List of existing application gateway backend address pools associated with the network interface.
                     version_added: "1.10.0"
+                    type: list
                 primary:
                     description:
                         - Whether the IP configuration is the primary one in the list.
+                    type: bool
                 application_security_groups:
                     description:
                         - List of Application security groups.
-                    sample: /subscriptions/<subsid>/resourceGroups/<rg>/providers/Microsoft.Network/applicationSecurityGroups/myASG
+                    type: list
+                    sample: ['/subscriptions/<subsid>/resourceGroups/<rg>/providers/Microsoft.Network/applicationSecurityGroups/myASG']
         enable_accelerated_networking:
             description:
                 - Specifies whether the network interface should be created with the accelerated networking feature or not.
+            type: bool
         create_with_security_group:
             description:
                 - Specifies whether a default security group should be be created with the NIC. Only applies when creating a new NIC.
@@ -173,40 +193,49 @@ networkinterfaces:
         security_group:
             description:
                 - A security group resource ID with which to associate the network interface.
+            type: str
         enable_ip_forwarding:
             description:
                 - Whether to enable IP forwarding
+            type: bool
         dns_servers:
             description:
                 - Which DNS servers should the NIC lookup.
                 - List of IP addresses.
+            type: list
         mac_address:
             description:
                 - The MAC address of the network interface.
+            type: str
         provisioning_state:
             description:
                 - The provisioning state of the network interface.
+            type: str
         dns_settings:
             description:
                 - The DNS settings in network interface.
+            type: complex
             contains:
                 dns_servers:
                     description:
                         - List of DNS servers IP addresses.
+                    type: list
                 applied_dns_servers:
                     description:
                         - If the VM that uses this NIC is part of an Availability Set, then this list will have the union of all DNS servers
                           from all NICs that are part of the Availability Set. This property is what is configured on each of those VMs.
+                    type: list
                 internal_dns_name_label:
                     description:
                         - Relative DNS name for this NIC used for internal communications between VMs in the same virtual network.
+                    type: str
                 internal_fqdn:
                     description:
                         - Fully qualified DNS name supporting internal communications between VMs in the same virtual network.
+                    type: str
 '''  # NOQA
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.common import AzureMissingResourceHttpError, AzureHttpError
 except Exception:
     # This is handled in azure_rm_common
     pass

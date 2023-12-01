@@ -20,9 +20,11 @@ options:
     resource_group:
         description:
             - Name of an Azure resource group.
+        type: str
     name:
         description:
             - HDInsight cluster name.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -38,16 +40,16 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of HDInsight Cluster
-    azure_rm_hdinsightcluster_info:
-      resource_group: myResourceGroup
-      name: myCluster
+- name: Get instance of HDInsight Cluster
+  azure_rm_hdinsightcluster_info:
+    resource_group: myResourceGroup
+    name: myCluster
 
-  - name: List instances of HDInsight Cluster
-    azure_rm_hdinsightcluster_info:
-      resource_group: myResourceGroup
-      tags:
-        - key:value
+- name: List instances of HDInsight Cluster
+  azure_rm_hdinsightcluster_info:
+    resource_group: myResourceGroup
+    tags:
+      - key:value
 '''
 
 RETURN = '''
@@ -102,6 +104,7 @@ clusters:
         cluster_definition:
             description:
                 - The cluster definition.
+            type: complex
             contains:
                 kind:
                     description:
@@ -112,7 +115,7 @@ clusters:
         compute_profile_roles:
             description:
                 - The list of roles in the cluster.
-            type: list
+            type: complex
             contains:
                 name:
                     description:
@@ -135,6 +138,7 @@ clusters:
                 linux_profile:
                     description:
                         - The Linux OS profile.
+                    type: dict
                     contains:
                         username:
                             description:
@@ -145,7 +149,7 @@ clusters:
         connectivity_endpoints:
             description:
                 - Cluster's connectivity endpoints.
-            type: list
+            type: complex
             contains:
                 location:
                     description:
@@ -175,17 +179,15 @@ clusters:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: {}
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.common.dict_transformations import _camel_to_snake
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.hdinsight import HDInsightManagementClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -227,7 +229,6 @@ class AzureRMHDInsightclusterInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(HDInsightManagementClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name is not None:

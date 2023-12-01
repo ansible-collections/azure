@@ -56,18 +56,18 @@ options:
     os_type:
         description:
             - This property allows you to specify the type of the OS that is included in the disk when creating a VM from a managed image.
+            - Required when creating.
         choices:
             - windows
             - linux
-        required: true
         type: str
     os_state:
         description:
             - The allowed values for OS State are C(generalized).
+            - Required when creating.
         choices:
             - generalized
             - specialized
-        required: true
         type: str
     hypervgeneration:
         description:
@@ -86,7 +86,7 @@ options:
     identifier:
         description:
             - Image identifier.
-        required: true
+            - Required when creating.
         type: dict
         suboptions:
             publisher:
@@ -144,6 +144,7 @@ options:
                 description:
                     - A list of disallowed disk types.
                 type: list
+                elements: str
     purchase_plan:
         description:
             - Purchase plan.
@@ -161,6 +162,22 @@ options:
                 description:
                     - The product ID.
                 type: str
+    features:
+        description:
+            - A list of gallery image features.
+        type: list
+        elements: dict
+        suboptions:
+            name:
+                description:
+                    - The name of the gallery image feature.
+                type: str
+                required: True
+            value:
+                description:
+                    - The value of the gallery image feature.
+                type: str
+                required: True
     state:
         description:
             - Assert the state of the GalleryImage.
@@ -205,15 +222,8 @@ id:
 
 import time
 import json
-import re
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-from copy import deepcopy
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -338,6 +348,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                 options=dict(
                     disk_types=dict(
                         type='list',
+                        elements='str',
                         disposition='diskTypes'
                     )
                 )
@@ -354,6 +365,21 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                     ),
                     product=dict(
                         type='str'
+                    )
+                )
+            ),
+            features=dict(
+                type='list',
+                disposition='/properties/*',
+                elements='dict',
+                options=dict(
+                    name=dict(
+                        type='str',
+                        required=True
+                    ),
+                    value=dict(
+                        type='str',
+                        required=True
                     )
                 )
             ),
@@ -378,7 +404,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
 
         self.body = {}
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2019-07-01'
+        self.query_parameters['api-version'] = '2022-03-03'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -492,14 +518,16 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the GalleryImage instance.')
             self.fail('Error creating the GalleryImage instance: {0}'.format(str(exc)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -514,7 +542,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the GalleryImage instance.')
             self.fail('Error deleting the GalleryImage instance: {0}'.format(str(e)))
 
@@ -532,11 +560,11 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             found = True
             self.log("Response : {0}".format(response))
             # self.log("AzureFirewall instance : {0} found".format(response.name))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the AzureFirewall instance.')
         if found is True:
             return response

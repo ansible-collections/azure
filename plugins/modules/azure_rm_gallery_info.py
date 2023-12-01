@@ -41,7 +41,6 @@ EXAMPLES = '''
   azure_rm_gallery_info:
     resource_group: myResourceGroup
     name: myGallery
-
 '''
 
 RETURN = '''
@@ -90,16 +89,9 @@ galleries:
 
 '''
 
-import time
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-from copy import deepcopy
-try:
-    from msrestazure.azure_exceptions import CloudError
-except Exception:
-    # handled in azure_rm_common
-    pass
 
 
 class AzureRMGalleriesInfo(AzureRMModuleBase):
@@ -174,9 +166,9 @@ class AzureRMGalleriesInfo(AzureRMModuleBase):
                                               self.status_code,
                                               600,
                                               30)
-            results = json.loads(response.text)
+            results = json.loads(response.body())
             # self.log('Response : {0}'.format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return self.format_item(results)
@@ -204,9 +196,9 @@ class AzureRMGalleriesInfo(AzureRMModuleBase):
                                               self.status_code,
                                               600,
                                               30)
-            results = json.loads(response.text)
+            results = json.loads(response.body())
             # self.log('Response : {0}'.format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return [self.format_item(x) for x in results['value']] if results['value'] else []
@@ -231,9 +223,9 @@ class AzureRMGalleriesInfo(AzureRMModuleBase):
                                               self.status_code,
                                               600,
                                               30)
-            results = json.loads(response.text)
+            results = json.loads(response.body())
             # self.log('Response : {0}'.format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return [self.format_item(x) for x in results['value']] if results['value'] else []

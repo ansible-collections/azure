@@ -22,35 +22,60 @@ options:
     url:
         description:
             - Azure RM Resource URL.
+        type: str
     api_version:
         description:
             - Specific API version to be used.
+        type: str
     provider:
         description:
             - Provider type, should be specified in no URL is given.
+        type: str
     resource_group:
         description:
             - Resource group to be used.
             - Required if URL is not specified.
+        type: str
     resource_type:
         description:
             - Resource type.
+        type: str
     resource_name:
         description:
             - Resource name.
+        type: str
+    method:
+        description:
+            - The HTTP method of the request or response. It must be uppercase.
+        type: str
+        choices:
+            - GET
+            - PUT
+            - POST
+            - HEAD
+            - PATCH
+            - DELETE
+            - MERGE
+        default: "GET"
     subresource:
         description:
             - List of subresources.
+        type: list
+        elements: dict
+        default: []
         suboptions:
             namespace:
                 description:
                     - Subresource namespace.
+                type: str
             type:
                 description:
                     - Subresource type.
+                type: str
             name:
                 description:
                     - Subresource name.
+                type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -61,18 +86,18 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get scaleset info
-    azure_rm_resource_info:
-      resource_group: myResourceGroup
-      provider: compute
-      resource_type: virtualmachinescalesets
-      resource_name: myVmss
-      api_version: "2017-12-01"
+- name: Get scaleset info
+  azure_rm_resource_info:
+    resource_group: myResourceGroup
+    provider: compute
+    resource_type: virtualmachinescalesets
+    resource_name: myVmss
+    api_version: "2017-12-01"
 
-  - name: Query all the resources in the resource group
-    azure_rm_resource_info:
-      resource_group: "{{ resource_group }}"
-      resource_type: resources
+- name: Query all the resources in the resource group
+  azure_rm_resource_info:
+    resource_group: "{{ resource_group }}"
+    resource_type: resources
 '''
 
 RETURN = '''
@@ -246,7 +271,7 @@ response:
                             sample: {
                                    "offer": "UbuntuServer",
                                    "publisher": "Canonical",
-                                   "sku": "18.04-LTS",
+                                   "sku": "20_04-lts",
                                    "version": "latest"
                                    }
                         osDisk:
@@ -277,9 +302,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.service_client import ServiceClient
-    from msrestazure.tools import resource_id, is_valid_resource_id
+    from azure.mgmt.core.tools import resource_id
     import json
 
 except ImportError:
@@ -308,7 +331,18 @@ class AzureRMResourceInfo(AzureRMModuleBase):
             ),
             subresource=dict(
                 type='list',
-                default=[]
+                elements='dict',
+                default=[],
+                options=dict(
+                    namespace=dict(type='str'),
+                    type=dict(type='str'),
+                    name=dict(type='str')
+                )
+            ),
+            method=dict(
+                type='str',
+                default='GET',
+                choices=["GET", "PUT", "POST", "HEAD", "PATCH", "DELETE", "MERGE"]
             ),
             api_version=dict(
                 type='str'
@@ -377,7 +411,7 @@ class AzureRMResourceInfo(AzureRMModuleBase):
                     provider = self.url.split("/providers/")[1].split("/")[0]
                     resourceType = self.url.split(provider + "/")[1].split("/")[0]
                     url = "/subscriptions/" + self.subscription_id + "/providers/" + provider
-                    api_versions = json.loads(self.mgmt_client.query(url, "GET", {'api-version': '2015-01-01'}, None, None, [200], 0, 0).text)
+                    api_versions = json.loads(self.mgmt_client.query(url, self.method, {'api-version': '2015-01-01'}, None, None, [200], 0, 0).body())
                     for rt in api_versions['resourceTypes']:
                         if rt['resourceType'].lower() == resourceType.lower():
                             self.api_version = rt['apiVersions'][0]
@@ -402,9 +436,9 @@ class AzureRMResourceInfo(AzureRMModuleBase):
         while True:
             if skiptoken:
                 query_parameters['skiptoken'] = skiptoken
-            response = self.mgmt_client.query(self.url, "GET", query_parameters, header_parameters, None, [200, 404], 0, 0)
+            response = self.mgmt_client.query(self.url, self.method, query_parameters, header_parameters, None, [200, 404], 0, 0)
             try:
-                response = json.loads(response.text)
+                response = json.loads(response.body())
                 if isinstance(response, dict):
                     if response.get('value'):
                         self.results['response'] = self.results['response'] + response['value']

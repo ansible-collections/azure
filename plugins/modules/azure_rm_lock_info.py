@@ -20,7 +20,6 @@ options:
         description:
             - Name of the lock.
         type: str
-        required: true
     managed_resource_id:
         description:
             - ID of the resource where need to manage the lock.
@@ -115,7 +114,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrestazure.azure_exceptions import CloudError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -195,8 +193,8 @@ class AzureRMLockInfo(AzureRMModuleBase):
                                            expected_status_codes=[200],
                                            polling_timeout=None,
                                            polling_interval=None)
-            return json.loads(resp.text)
-        except CloudError as exc:
+            return json.loads(resp.body())
+        except Exception as exc:
             self.fail('Error when finding locks {0}: {1}'.format(url, exc.message))
 
     def get_scope(self):

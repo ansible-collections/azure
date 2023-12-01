@@ -55,12 +55,12 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Update SQL Server setting
-    azure_rm_mariadbconfiguration:
-      resource_group: myResourceGroup
-      server_name: myServer
-      name: event_scheduler
-      value: "ON"
+- name: Update SQL Server setting
+  azure_rm_mariadbconfiguration:
+    resource_group: myResourceGroup
+    server_name: myServer
+    name: event_scheduler
+    value: "ON"
 '''
 
 RETURN = '''
@@ -73,13 +73,11 @@ id:
              gurations/event_scheduler"
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

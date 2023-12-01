@@ -1,260 +1,268 @@
- - name: Prepare random number
-   set_fact:
-     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-     parameter: {}
-   run_once: yes
+- name: Prepare random number
+  ansible.builtin.set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    parameter: {}
+  run_once: true
 
- - name: Clearing (if) previous disks were created
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}{{ item }}"
-       managed_by: ''
-       state: absent
-   with_items:
-       - 1
-       - 2
-       - 3
+- name: Clearing (if) previous disks were created
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}{{ item }}"
+    managed_by: ''
+    state: absent
+  with_items:
+    - 1
+    - 2
+    - 3
 
- - name: Test invalid account name (should give error)
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       name: "invalid_char$"
-       disk_size_gb: 1
-   register: output
-   ignore_errors: yes
-   check_mode: no
+- name: Test invalid account name (should give error)
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "invalid_char$"
+    disk_size_gb: 1
+  register: output
+  ignore_errors: true
+  check_mode: false
 
- - name: Assert task failed
-   assert: { that: "output['failed'] == True" }
+- name: Assert task failed
+  ansible.builtin.assert: { that: "output['failed'] == True" }
 
- - name: Create managed disk (Check Mode)
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}1"
-       storage_account_type: "Standard_LRS"
-       disk_size_gb: 1
-       tags:
-           testing: testing
-           delete: never
-   register: output
-   check_mode: yes
+- name: Create managed disk (Check Mode)
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}1"
+    storage_account_type: "Standard_LRS"
+    disk_size_gb: 1
+    tags:
+      testing: testing
+      delete: never
+  register: output
+  check_mode: true
 
- - name: Assert status succeeded (Check Mode)
-   assert:
-     that:
-       - output.changed
-       - output.state
+- name: Assert status succeeded (Check Mode)
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state
 
- - name: Create new managed disk succesfully
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}1"
-       storage_account_type: "Standard_LRS"
-       disk_size_gb: 1
-       tags:
-           testing: testing
-           delete: never
-   register: output
+- name: Create new managed disk succesfully
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}1"
+    storage_account_type: "Standard_LRS"
+    disk_size_gb: 1
+    tags:
+      testing: testing
+      delete: never
+  register: output
 
- - name: Assert status succeeded and results include an Id value
-   assert:
-     that:
-       - output.changed
-       - output.state.disk_size_gb == 1
-       - output.state.id is defined
-       - output.state.os_type == None
-       - output.state.storage_account_type == "Standard_LRS"
+- name: Assert status succeeded and results include an Id value
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state.disk_size_gb == 1
+      - output.state.id is defined
+      - output.state.os_type == None
+      - output.state.storage_account_type == "Standard_LRS"
 
- - name: Copy disk to a new managed disk
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}2"
-       create_option: "copy"
-       source_uri: "{{ output.state.id }}"
-       disk_size_gb: 1
-   register: disk2
+- name: Copy disk to a new managed disk
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}2"
+    create_option: "copy"
+    source_uri: "{{ output.state.id }}"
+    disk_size_gb: 1
+  register: disk2
 
- - name: Assert status succeeded and results include an Id value
-   assert:
-     that:
-       - disk2.changed
-       - disk2.state.id is defined
+- name: Assert status succeeded and results include an Id value
+  ansible.builtin.assert:
+    that:
+      - disk2.changed
+      - disk2.state.id is defined
 
- - name: Create disk to a new managed disk with zone and os type
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}3"
-       source_uri: "{{ output.state.id }}"
-       disk_size_gb: 1
-       zone: "1"
-       os_type: windows
-   register: disk3
+- name: Create disk to a new managed disk with zone and os type
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}3"
+    source_uri: "{{ output.state.id }}"
+    disk_size_gb: 1
+    zone: "1"
+    os_type: windows
+  register: disk3
 
- - name: Assert status succeeded and results include an Id value
-   assert:
-     that:
-       - disk3.changed
-       - disk3.state.id is defined
-       - disk3.state.zone == "1"
-       - disk3.state.os_type == "windows"
+- name: Assert status succeeded and results include an Id value
+  ansible.builtin.assert:
+    that:
+      - disk3.changed
+      - disk3.state.id is defined
+      - disk3.state.zone == "1"
+      - disk3.state.os_type == "windows"
 
- - name: Change storage account type to an invalid type
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}1"
-       storage_account_type: "PremiumL"
-       disk_size_gb: 1
-   register: output
-   ignore_errors: yes
+- name: Change storage account type to an invalid type
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}1"
+    storage_account_type: "PremiumL"
+    disk_size_gb: 1
+  register: output
+  ignore_errors: true
 
- - name: Assert storage account type change failed
-   assert: { that: "output['failed'] == True" }
+- name: Assert storage account type change failed
+  ansible.builtin.assert: { that: "output['failed'] == True" }
 
- - name: Update disk options (os_type, account_type, size, tags)
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}1"
-       disk_size_gb: 2
-       os_type: linux
-       storage_account_type: "StandardSSD_LRS"
-       tags:
-           galaxy: "no"
-           delete: never
-   register: output
+- name: Update disk options (os_type, account_type, size, tags)
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}1"
+    disk_size_gb: 2
+    os_type: linux
+    storage_account_type: "StandardSSD_LRS"
+    tags:
+      galaxy: "no"
+      delete: never
+  register: output
 
- - assert:
-     that:
-       - output.changed
-       - output.state.storage_account_type == "StandardSSD_LRS"
-       - output.state.disk_size_gb == 2
-       - "output.state.tags | length == 2"
-       - "output.state.tags.galaxy == 'no'"
-       - output.state.os_type == 'linux'
+- name: Assert the disk updated
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state.storage_account_type == "StandardSSD_LRS"
+      - output.state.disk_size_gb == 2
+      - "output.state.tags | length == 2"
+      - "output.state.tags.galaxy == 'no'"
+      - output.state.os_type == 'linux'
 
- - name: Gather facts to one specific disk
-   azure_rm_manageddisk_info:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}1"
-   register: output
+- name: Gather facts to one specific disk
+  azure_rm_manageddisk_info:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}1"
+  register: output
 
- - assert:
-       that:
-           - "output.ansible_info.azure_managed_disk | length == 1"
-           - output.ansible_info.azure_managed_disk[0].storage_account_type == "StandardSSD_LRS"
-           - output.ansible_info.azure_managed_disk[0].disk_size_gb == 2
-           - "output.ansible_info.azure_managed_disk[0].os_type == 'linux'"
+- name: Assert the disk facts
+  ansible.builtin.assert:
+    that:
+      - "output.ansible_info.azure_managed_disk | length == 1"
+      - output.ansible_info.azure_managed_disk[0].storage_account_type == "StandardSSD_LRS"
+      - output.ansible_info.azure_managed_disk[0].disk_size_gb == 2
+      - "output.ansible_info.azure_managed_disk[0].os_type == 'linux'"
 
- - set_fact:
-     parameter: "{{parameter |combine({item.key: item.value})}}"
-   when: "{{item.key not in ['id', 'changed'] and item.value != None}}"
-   with_dict: "{{ output.ansible_info.azure_managed_disk[0] }}"
+- name: Set variables
+  ansible.builtin.set_fact:
+    parameter: "{{ parameter | combine({item.key: item.value}) }}"
+  when: item.key not in ['id', 'changed'] and item.value != None
+  with_dict: "{{ output.ansible_info.azure_managed_disk[0] }}"
 
- - name: Create disk with facts return value
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       location: "{{ parameter.location }}"
-       name: "{{ parameter.name }}"
-       storage_account_type: "{{ parameter.storage_account_type }}"
-       disk_size_gb: "{{ parameter.disk_size_gb }}"
-       create_option: "{{ parameter.create_option }}"
-       tags: "{{ parameter.tags }}"
-   register: output
+- name: Create disk with facts return value
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    location: "{{ parameter.location }}"
+    name: "{{ parameter.name }}"
+    storage_account_type: "{{ parameter.storage_account_type }}"
+    disk_size_gb: "{{ parameter.disk_size_gb }}"
+    create_option: "{{ parameter.create_option }}"
+    tags: "{{ parameter.tags }}"
+  register: output
 
- - assert:
-       that:
-           - not output.changed
+- name: Assert the disk created
+  ansible.builtin.assert:
+    that:
+      - not output.changed
 
- - name: Create new managed disk with  I(account_type=StandardSSD_ZRS)
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}4"
-       storage_account_type: "StandardSSD_ZRS"
-       disk_size_gb: 2
-       location: westus2
-   register: output
+- name: Create new managed disk with  I(account_type=StandardSSD_ZRS)
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}4"
+    storage_account_type: "StandardSSD_ZRS"
+    disk_size_gb: 2
+    location: westus2
+  register: output
 
- - assert:
-     that:
-       - output.changed
-       - output.state.storage_account_type == "StandardSSD_ZRS"
-       - output.state.disk_size_gb == 2
+- name: Assert the managed disk update
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state.storage_account_type == "StandardSSD_ZRS"
+      - output.state.disk_size_gb == 2
 
- - name: Gather facts to one specific disk
-   azure_rm_manageddisk_info:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}4"
-   register: output
+- name: Gather facts to one specific disk
+  azure_rm_manageddisk_info:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}4"
+  register: output
 
- - assert:
-       that:
-           - "output.ansible_info.azure_managed_disk | length == 1"
-           - output.ansible_info.azure_managed_disk[0].storage_account_type == "StandardSSD_ZRS"
-           - output.ansible_info.azure_managed_disk[0].disk_size_gb == 2
+- name: Assert the managed disk facts
+  ansible.builtin.assert:
+    that:
+      - "output.ansible_info.azure_managed_disk | length == 1"
+      - output.ansible_info.azure_managed_disk[0].storage_account_type == "StandardSSD_ZRS"
+      - output.ansible_info.azure_managed_disk[0].disk_size_gb == 2
 
- - name: Create new managed disk with  I(account_type=Premium_ZRS)
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}5"
-       storage_account_type: "Premium_ZRS"
-       disk_size_gb: 2
-       location: westus2
-   register: output
+- name: Create new managed disk with  I(account_type=Premium_ZRS)
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}5"
+    storage_account_type: "Premium_ZRS"
+    disk_size_gb: 2
+    location: westus2
+  register: output
 
- - assert:
-     that:
-       - output.changed
-       - output.state.storage_account_type == "Premium_ZRS"
-       - output.state.disk_size_gb == 2
+- name: Assert the managed disk created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state.storage_account_type == "Premium_ZRS"
+      - output.state.disk_size_gb == 2
 
- - name: Gather facts to one specific disk
-   azure_rm_manageddisk_info:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}5"
-   register: output
+- name: Gather facts to one specific disk
+  azure_rm_manageddisk_info:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}5"
+  register: output
 
- - assert:
-       that:
-           - "output.ansible_info.azure_managed_disk | length == 1"
-           - output.ansible_info.azure_managed_disk[0].storage_account_type == "Premium_ZRS"
-           - output.ansible_info.azure_managed_disk[0].disk_size_gb == 2
+- name: Assert the managed disk facts
+  ansible.builtin.assert:
+    that:
+      - "output.ansible_info.azure_managed_disk | length == 1"
+      - output.ansible_info.azure_managed_disk[0].storage_account_type == "Premium_ZRS"
+      - output.ansible_info.azure_managed_disk[0].disk_size_gb == 2
 
- - name: Delete managed disk (Check Mode)
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}1"
-       state: absent
-   register: output
-   check_mode: yes
+- name: Delete managed disk (Check Mode)
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}1"
+    state: absent
+  register: output
+  check_mode: true
 
- - name: Assert status succeeded
-   assert:
-     that:
-       - output.changed
-       - output.state
+- name: Assert status succeeded
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state
 
- - name: Delete all managed disk
-   azure_rm_manageddisk:
-       resource_group: "{{ resource_group }}"
-       name: "md{{ rpfx }}{{ item }}"
-       managed_by: ''
-       state: absent
-   with_items:
-       - 1
-       - 2
-       - 3
-       - 4
-       - 5
+- name: Delete all managed disk
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}{{ item }}"
+    managed_by: ''
+    state: absent
+  with_items:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
 
- - name: Delete virtual machine
-   azure_rm_virtualmachine:
-       resource_group: "{{ resource_group }}"
-       name: "tr{{ rpfx }}"
-       state: absent
-       vm_size: Standard_DS1_v2
+- name: Delete virtual machine
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "tr{{ rpfx }}"
+    state: absent
+    vm_size: Standard_DS1_v2
 
- - name: Delete public ip
-   azure_rm_publicipaddress:
-       resource_group: "{{ resource_group }}"
-       allocation_method: Static
-       name: "tr{{ rpfx }}"
-       state: absent
+- name: Delete public ip
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    allocation_method: Static
+    name: "tr{{ rpfx }}"
+    state: absent

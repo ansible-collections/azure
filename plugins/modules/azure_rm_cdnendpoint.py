@@ -20,13 +20,16 @@ options:
         description:
             - Name of a resource group where the Azure CDN endpoint exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the Azure CDN endpoint.
         required: true
+        type: str
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.
+        type: str
     started:
         description:
             - Use with I(state=present) to start the endpoint.
@@ -45,19 +48,25 @@ options:
         description:
             - Name of the CDN profile where the endpoint attached to.
         required: true
+        type: str
     origins:
         description:
             - Set of source of the content being delivered via CDN.
+            - Required when creating.
+        elements: dict
+        type: list
         suboptions:
             name:
                 description:
                     - Origin name.
                 required: true
+                type: str
             host_name:
                 description:
                     - The address of the origin.
                     - It can be a domain name, IPv4 address, or IPv6 address.
                 required: true
+                type: str
             http_port:
                 description:
                     - The value of the HTTP port. Must be between C(1) and C(65535).
@@ -66,7 +75,6 @@ options:
                 description:
                     - The value of the HTTPS port. Must be between C(1) and C(65535).
                 type: int
-        required: true
     origin_host_header:
         description:
             - The host header value sent to the origin with each request.
@@ -111,6 +119,7 @@ options:
         description:
             - Assert the state of the Azure CDN endpoint. Use C(present) to create or update a Azure CDN endpoint and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -124,24 +133,24 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a Azure CDN endpoint
-      azure_rm_cdnendpoint:
-          resource_group: myResourceGroup
-          profile_name: myProfile
-          name: myEndpoint
-          origins:
-            - name: TestOrig
-              host_name: "www.example.com"
-          tags:
-              testing: testing
-              delete: on-exit
-              foo: bar
-    - name: Delete a Azure CDN endpoint
-      azure_rm_cdnendpoint:
-          resource_group: myResourceGroup
-          profile_name: myProfile
-          name: myEndpoint
-          state: absent
+- name: Create a Azure CDN endpoint
+  azure_rm_cdnendpoint:
+    resource_group: myResourceGroup
+    profile_name: myProfile
+    name: myEndpoint
+    origins:
+      - name: TestOrig
+        host_name: "www.example.com"
+    tags:
+      testing: testing
+      delete: on-exit
+      foo: bar
+- name: Delete a Azure CDN endpoint
+  azure_rm_cdnendpoint:
+    resource_group: myResourceGroup
+    profile_name: myProfile
+    name: myEndpoint
+    state: absent
 '''
 RETURN = '''
 state:
@@ -586,12 +595,12 @@ class AzureRMCdnendpoint(AzureRMModuleBase):
             poller = self.cdn_client.endpoints.begin_purge_content(self.resource_group,
                                                                    self.profile_name,
                                                                    self.name,
-                                                                   content_paths=self.purge_content_paths)
+                                                                   content_file_paths=dict(content_paths=self.purge_content_paths))
             response = self.get_poller_result(poller)
             self.log("Response : {0}".format(response))
             return self.get_cdnendpoint()
         except Exception as e:
-            self.log('Fail to purge the Azure CDN endpoint.')
+            self.fail('Fail to purge the Azure CDN endpoint.')
             return False
 
     def stop_cdnendpoint(self):
@@ -650,7 +659,6 @@ class AzureRMCdnendpoint(AzureRMModuleBase):
         if not self.cdn_client:
             self.cdn_client = self.get_mgmt_svc_client(CdnManagementClient,
                                                        base_url=self._cloud_environment.endpoints.resource_manager,
-                                                       is_track2=True,
                                                        api_version='2017-04-02')
         return self.cdn_client
 

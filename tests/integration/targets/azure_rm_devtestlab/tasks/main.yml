@@ -1,0 +1,218 @@
+- name: Set devtest labe value
+  ansible.builtin.set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+
+- name: Create a DevTest Lab (check mode)
+  azure_rm_devtestlab:
+    resource_group: "{{ resource_group }}"
+    name: "dev-{{ rpfx }}"
+    storage_type: standard
+    premium_data_disks: true
+    tags:
+      key1: value1
+  check_mode: true
+
+- name: Create a DevTest Lab
+  azure_rm_devtestlab:
+    resource_group: "{{ resource_group }}"
+    name: "dev-{{ rpfx }}"
+    storage_type: standard
+    premium_data_disks: true
+    tags:
+      key1: value1
+  register: output
+
+- name: Check the devtest lab changed
+  ansible.builtin.assert:
+    that: output.changed
+
+- name: Create a DevTest Lab (Idempotent test)
+  azure_rm_devtestlab:
+    resource_group: "{{ resource_group }}"
+    name: "dev-{{ rpfx }}"
+    storage_type: standard
+    premium_data_disks: true
+    tags:
+      key1: value1
+  register: output
+
+- name: Check the devtest lab not changed
+  ansible.builtin.assert:
+    that: not output.changed
+
+- name: Get devtest lab facts
+  azure_rm_devtestlab_info:
+    resource_group: "{{ resource_group }}"
+    name: "dev-{{ rpfx }}"
+  register: output
+
+- name: Assert the devtest lab create success
+  ansible.builtin.assert:
+    that:
+      - output.labs | length == 1
+      - output.labs[0].provisioning_state == "Succeeded"
+
+- name: Create a devtest lab virtual network
+  azure_rm_devtestlabvirtualnetwork:
+    resource_group: "{{ resource_group }}"
+    lab_name: "dev-{{ rpfx }}"
+    name: "vnet-{{ rpfx }}"
+    description: "My Lab Virtual network"
+    tags:
+      key1: value1
+  register: output
+
+- name: Assert the devtest lab virtual network create successfully
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Get the devtest lab virtual network
+  azure_rm_devtestlabvirtualnetwork_info:
+    resource_group: "{{ resource_group }}"
+    lab_name: "dev-{{ rpfx }}"
+    name: "vnet-{{ rpfx }}"
+  register: output
+
+- name: Assert the devtest lab virtual network facts
+  ansible.builtin.assert:
+    that:
+      - output.virtualnetworks | length == 1
+      - output.virtualnetworks[0].description == "My Lab Virtual network"
+      - output.virtualnetworks[0].provisioning_state == "Succeeded"
+
+- name: Create a dev test lab Virtual machine
+  azure_rm_devtestlabvirtualmachine:
+    resource_group: "{{ resource_group }}"
+    lab_name: "dev-{{ rpfx }}"
+    name: "vm-{{ rpfx }}"
+    notes: "Notes of Virtual machine"
+    os_type: linux
+    vm_size: Standard_A2_v2
+    user_name: azureuser
+    password: Password@0329
+    lab_subnet:
+      name: "vnet-{{ rpfx }}Subnet"
+      virtual_network_name: "vnet-{{ rpfx }}"
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      os_type: Linux
+      version: latest
+    allow_claim: false
+    expiration_date: "2025-10-22T01:49:12.117974Z"
+  register: output
+
+- name: Assert the devtest lab virtual machine create successfully
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Get devtest lab info
+  azure_rm_devtestlabvirtualmachine_info:
+    resource_group: "{{ resource_group }}"
+    lab_name: "dev-{{ rpfx }}"
+    name: "vm-{{ rpfx }}"
+  register: output
+
+- name: Assert the devtest lab virtualmachine facts
+  ansible.builtin.assert:
+    that:
+      - output.virtualmachines | length == 1
+      - output.virtualmachines[0].provisioning_state == "Succeeded"
+      - output.virtualmachines[0].expiration_date == "2025-10-22T01:49:12.117974Z"
+
+- name: Create a instance devtest lab image
+  azure_rm_devtestlabcustomimage:
+    resource_group: "{{ resource_group }}"
+    lab_name: "dev-{{ rpfx }}"
+    name: "image-{{ rpfx }}"
+    source_vm: "vm-{{ rpfx }}"
+    linux_os_state: non_deprovisioned
+  register: output
+
+- name: Assert the devtest lab image create successufully
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Get custom image
+  azure_rm_devtestlabcustomimage_info:
+    resource_group: "{{ resource_group }}"
+    lab_name: "dev-{{ rpfx }}"
+    name: "image-{{ rpfx }}"
+  register: output
+
+- name: Assert the devtest lab image facts
+  ansible.builtin.assert:
+    that:
+      - output.custom_images | length == 1
+      - output.custom_images[0].lab_name
+      - output.custom_images[0].id
+
+- name: Get devtest lab armtemplate facts
+  azure_rm_devtestlabarmtemplate_info:
+    resource_group: "{{ resource_group }}"
+    lab_name: "dev-{{ rpfx }}"
+    artifact_source_name: "public environment repo"
+  register: output
+
+- name: Assert the devtest lab armtemplate is returned successfully
+  ansible.builtin.assert:
+    that:
+      - output.armtemplates | length >= 1
+
+- name: Create a Devtest lab policy
+  azure_rm_devtestlabpolicy:
+    resource_group: "{{ resource_group }}"
+    lab_name: "dev-{{ rpfx }}"
+    policy_set_name: default
+    name: "policy-{{ rpfx }}"
+    fact_name: user_owned_lab_vm_count
+    threshold: 5
+  register: output
+
+- name: Assert the devtest lab policy creatre successfully
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Get the devtest lab policy facts
+  azure_rm_devtestlabpolicy_info:
+    resource_group: "{{ resource_group }}"
+    lab_name: "dev-{{ rpfx }}"
+    policy_set_name: default
+  register: output
+
+- name: Assert the devtest lab policy facts
+  ansible.builtin.assert:
+    that:
+      - output.policies | length >= 1
+
+- name: Create a Devtest lab schedule
+  azure_rm_devtestlabschedule:
+    resource_group: "{{ resource_group }}"
+    lab_name: "dev-{{ rpfx }}"
+    name: lab_vms_shutdown
+    time: "1030"
+    time_zone_id: "UTC+12"
+  register: output
+
+- name: Assert the devtest lab schedule create sussessfully
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Get devtest lab schedule
+  azure_rm_devtestlabschedule_info:
+    resource_group: "{{ resource_group }}"
+    lab_name: "dev-{{ rpfx }}"
+    name: lab_vms_shutdown
+  register: output
+
+- name: Assert the devtest lab schedule facts
+  ansible.builtin.assert:
+    that:
+      - output.schedules | length >= 1
+      - output.schedules[0].name == "lab_vms_shutdown"

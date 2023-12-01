@@ -1,26 +1,27 @@
 - name: Prepare random number
-  set_fact:
-    name: "loganalytics{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+  ansible.builtin.set_fact:
+    name_rpfx: "loganalytics{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     retention_days: 60
 
 - name: Create Log Analytics Workspace (Check Mode On)
   azure_rm_loganalyticsworkspace:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     intelligence_packs:
       Backup: true
       Containers: true
     retention_in_days: "{{ retention_days }}"
     resource_group: "{{ resource_group }}"
-  check_mode: yes
+  check_mode: true
   register: output
 
-- assert:
+- name: Assert there is no log analytics workspace
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Get Log Analytics workspace information
   azure_rm_loganalyticsworkspace_info:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     show_intelligence_packs: true
     show_management_groups: true
@@ -28,13 +29,14 @@
     show_usages: true
   register: facts
 
-- assert:
+- name: Assert the log analytics workspace facts
+  ansible.builtin.assert:
     that:
       - facts.workspaces | length == 0
 
 - name: Create Log Analytics Workspace
   azure_rm_loganalyticsworkspace:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     intelligence_packs:
       Backup: true
       Containers: true
@@ -44,18 +46,19 @@
       key1: value1
   register: output
 
-- assert:
+- name: Assert the log analytics workspace created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.retention_in_days == 30
       # - output.intelligence_packs | json_query('[?name == `Backup`].enabled') | first == true
       # - output.intelligence_packs | json_query('[?name == `Containers`].enabled') | first == true
-      - output.sku == 'pergb2018'
+      - output.sku == 'per_gb2018'
       - output.tags.key1 == 'value1'
 
 - name: Update Log Analytics Workspace
   azure_rm_loganalyticsworkspace:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     intelligence_packs:
       Backup: true
       Containers: true
@@ -66,7 +69,8 @@
       key2: value2
   register: output
 
-- assert:
+- name: Assert the log analytics workspace updated
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.retention_in_days == retention_days
@@ -74,7 +78,7 @@
 
 - name: Get Log Analytics workspace information (Show full information)
   azure_rm_loganalyticsworkspace_info:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     show_intelligence_packs: true
     show_management_groups: true
@@ -82,7 +86,8 @@
     show_usages: true
   register: facts
 
-- assert:
+- name: Assert the log analytics workspace facts
+  ansible.builtin.assert:
     that:
       - not facts.changed
       - facts.workspaces | length > 0
@@ -96,15 +101,16 @@
       - facts.workspaces[0].usages is defined
       - facts.workspaces[0].usages | length > 0
       - facts.workspaces[0].management_groups is defined
-      - facts.workspaces[0].sku == 'pergb2018'
+      - facts.workspaces[0].sku == 'per_gb2018'
 
 - name: Get Log Analytics workspace information (Show default information)
   azure_rm_loganalyticsworkspace_info:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
+- name: Assert the log analytics workspace facts
+  ansible.builtin.assert:
     that:
       - not facts.changed
       - facts.workspaces | length > 0
@@ -113,71 +119,77 @@
       - facts.workspaces[0].shared_keys is not defined
       - facts.workspaces[0].usages is not defined
       - facts.workspaces[0].management_groups is not defined
-      - facts.workspaces[0].sku == 'pergb2018'
+      - facts.workspaces[0].sku == 'per_gb2018'
 
 - name: Create Log Analytics workspace (Test Idempotence)
   azure_rm_loganalyticsworkspace:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     retention_in_days: "{{ retention_days }}"
   register: output
 
-- assert:
+- name: Assert the log anaytics workspace already created
+  ansible.builtin.assert:
     that:
       - not output.changed
 
 - name: Remove Log Analytics workspace (Check Mode On)
   azure_rm_loganalyticsworkspace:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
-  check_mode: yes
+  check_mode: true
   register: output
 
-- assert:
+- name: Assert there is no log anaytics workspace
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Get Log Analytics workspace information(Check still exists after remove Check Mode On)
   azure_rm_loganalyticsworkspace_info:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
+- name: Assert the log analytics workspace facts
+  ansible.builtin.assert:
     that:
       - facts.workspaces | length == 1
 
 - name: Remove Log Analytics workspace
   azure_rm_loganalyticsworkspace:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
     force: true
   register: output
 
-- assert:
+- name: Assert the log analytics workspace deleted
+  ansible.builtin.assert:
     that:
       - output.changed
 
 - name: Get Log Analytics workspace information
   azure_rm_loganalyticsworkspace_info:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
   register: facts
 
-- assert:
+- name: Assert the log analytics workspace facts
+  ansible.builtin.assert:
     that:
       - facts.workspaces | length == 0
 
 - name: Remove Log Analytics workspace (Test Idempotence)
   azure_rm_loganalyticsworkspace:
-    name: "{{ name }}"
+    name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
     force: true
   register: output
 
-- assert:
+- name: Assert the log analytics workspace deleted
+  ansible.builtin.assert:
     that:
       - not output.changed

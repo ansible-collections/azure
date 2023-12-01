@@ -32,6 +32,18 @@ all:
         - name: "{{ 'int' ~ uid_short ~ '-2' }}"
           resource_group: "{{ resource_group_secondary }}"
 
+    azure_test_no_nsg:
+      network: 10.42.6.0/24
+      subnet: 10.42.6.0/28
+
+    azure_test_vm_identity:
+      network: 10.42.7.0/24
+      subnet: 10.42.7.0/28
+
+    azure_test_encrypted:
+      network: 10.42.8.0/24
+      subnet: 10.42.8.0/28
+
   vars:
     ansible_connection: local
     ansible_python_interpreter: "{{ ansible_playbook_python }}"
@@ -47,6 +59,7 @@ all:
     security_group: "{{ 'sg' ~ uid_short }}"
     public_ip_name: "{{ 'ip' ~ uid_short }}"
     interface_name: "{{ 'int' ~ uid_short }}"
+    des_name: "{{ 'des' ~ uid_short }}"
 
     ssh_keys:
       - path: '/home/chouseknecht/.ssh/authorized_keys'

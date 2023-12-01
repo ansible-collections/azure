@@ -58,18 +58,18 @@ author:
 EXAMPLES = '''
 - name: Get details of an automation account
   azure_rm_automationaccount_info:
-      name: Testing
-      resource_group: myResourceGroup
-      list_statistics: yes
-      list_usages: yes
-      list_keys: yes
-      tags:
-        - key
-        - key:value
+    name: Testing
+    resource_group: myResourceGroup
+    list_statistics: true
+    list_usages: true
+    list_keys: true
+    tags:
+      - key
+      - key:value
 
 - name: List automation account in a resource group
   azure_rm_automationaccount_info:
-      resource_group: myResourceGroup
+    resource_group: myResourceGroup
 
 - name: List automation account in a resource group
   azure_rm_automationaccount_info:
@@ -240,7 +240,7 @@ automation_accounts:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.tools import parse_resource_id
+    from azure.mgmt.core.tools import parse_resource_id
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     pass

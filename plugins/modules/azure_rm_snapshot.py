@@ -12,7 +12,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_snapshot
 version_added: "0.1.2"
-short_description: Manage Azure Snapshot instance.
+short_description: Manage Azure Snapshot instance
 description:
     - Create, update and delete instance of Azure Snapshot.
 options:
@@ -24,11 +24,18 @@ options:
     name:
         description:
             - Resource name.
+        required: true
         type: str
     location:
         description:
             - Resource location.
         type: str
+    incremental:
+        description:
+            - Whether a snapshot is incremental.
+            - Incremental snapshots on the same disk occupy less space than full snapshots and can be diffed.
+        type: bool
+        default: False
     sku:
         description:
             - The snapshots SKU.
@@ -68,11 +75,11 @@ options:
                     - Copy
             source_uri:
                 description:
-                    - If I(createOption=Import), this is the URI of a blob to be imported into a managed disk.
+                    - If I(create_option=Import), this is the URI of a blob to be imported into a managed disk.
                 type: str
             source_id:
                 description:
-                    - If I(createOption=Copy), this is the resource ID of a managed disk to be copied from.
+                    - If I(create_option=Copy), this is the resource ID of a managed disk to be copied from.
                 type: str
     state:
         description:
@@ -124,11 +131,6 @@ import time
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # this is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -176,6 +178,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
                 choices=['Windows',
                          'Linux']
             ),
+            incremental=dict(type='bool', default=False),
             creation_data=dict(
                 type='dict',
                 disposition='/properties/creationData',
@@ -219,8 +222,9 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
         self.to_do = Actions.NoAction
 
         self.body = {}
+        self.body['properties'] = dict()
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2018-09-30'
+        self.query_parameters['api-version'] = '2019-03-01'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -233,7 +237,10 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                self.body[key] = kwargs[key]
+                if key == 'incremental':
+                    self.body['properties']['incremental'] = kwargs[key]
+                else:
+                    self.body[key] = kwargs[key]
 
         self.inflate_parameters(self.module_arg_spec, self.body, 0)
 
@@ -317,6 +324,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
 
     def create_update_resource(self):
         # self.log('Creating / Updating the Snapshot instance {0}'.format(self.))
+        response = None
         try:
             response = self.mgmt_client.query(url=self.url,
                                               method='PUT',
@@ -326,14 +334,16 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
                                               expected_status_codes=self.status_code,
                                               polling_timeout=600,
                                               polling_interval=30)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Snapshot instance.')
             self.fail('Error creating the Snapshot instance: {0}'.format(str(exc)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -348,7 +358,7 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
                                               expected_status_codes=self.status_code,
                                               polling_timeout=600,
                                               polling_interval=30)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Snapshot instance.')
             self.fail('Error deleting the Snapshot instance: {0}'.format(str(e)))
 
@@ -366,11 +376,11 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
                                               expected_status_codes=self.status_code,
                                               polling_timeout=600,
                                               polling_interval=30)
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             found = True
             self.log("Response : {0}".format(response))
             # self.log("Snapshot instance : {0} found".format(response.name))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the Snapshot instance.')
         if found is True:
             return response

@@ -21,14 +21,17 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     vmss_name:
         description:
             - The name of the VM scale set.
         required: True
+        type: str
     instance_id:
         description:
             - The instance ID of the virtual machine.
-        required: True
+        type: str
+        required: true
     latest_model:
         type: bool
         description:
@@ -36,6 +39,7 @@ options:
     power_state:
         description:
             - Use this option to change power state of the instance.
+        type: str
         choices:
             - 'running'
             - 'stopped'
@@ -52,6 +56,7 @@ options:
         description:
             - State of the VMSS instance. Use C(present) to update an instance and C(absent) to delete an instance.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -65,19 +70,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Upgrade instance to the latest image
-    azure_rm_virtualmachinescalesetinstance:
-      resource_group: myResourceGroup
-      vmss_name: myVMSS
-      instance_id: "2"
-      latest_model: yes
+- name: Upgrade instance to the latest image
+  azure_rm_virtualmachinescalesetinstance:
+    resource_group: myResourceGroup
+    vmss_name: myVMSS
+    instance_id: "2"
+    latest_model: true
 
-  - name: Turn on protect from scale in
-    azure_rm_virtualmachinescalesetinstance:
-        resource_group: myResourceGroup
-        vmss_name: myVMSS
-        instance_id: "2"
-        protect_from_scale_in: true
+- name: Turn on protect from scale in
+  azure_rm_virtualmachinescalesetinstance:
+    resource_group: myResourceGroup
+    vmss_name: myVMSS
+    instance_id: "2"
+    protect_from_scale_in: true
 '''
 
 RETURN = '''
@@ -100,7 +105,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.compute import ComputeManagementClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -119,7 +123,8 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
                 required=True
             ),
             instance_id=dict(
-                type='str'
+                type='str',
+                required=True
             ),
             latest_model=dict(
                 type='bool'
@@ -160,7 +165,6 @@ class AzureRMVirtualMachineScaleSetInstance(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(ComputeManagementClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    is_track2=True,
                                                     api_version='2021-04-01')
 
         instances = self.get()

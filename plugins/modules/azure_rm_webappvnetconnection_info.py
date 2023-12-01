@@ -39,10 +39,10 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get web app virtual network connection
-      azure_rm_webappvnetconnection_info:
-        name: "MyWebapp"
-        resource_group: "MyResourceGroup"
+- name: Get web app virtual network connection
+  azure_rm_webappvnetconnection_info:
+    name: "MyWebapp"
+    resource_group: "MyResourceGroup"
 '''
 
 RETURN = '''

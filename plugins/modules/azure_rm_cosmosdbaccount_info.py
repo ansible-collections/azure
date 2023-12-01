@@ -20,9 +20,11 @@ options:
     resource_group:
         description:
             - Name of an Azure resource group.
+        type: str
     name:
         description:
             - Cosmos DB database account name.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -49,17 +51,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of Database Account
-    azure_rm_cosmosdbaccount_info:
-      resource_group: myResourceGroup
-      name: testaccount
+- name: Get instance of Database Account
+  azure_rm_cosmosdbaccount_info:
+    resource_group: myResourceGroup
+    name: testaccount
 
-  - name: List instances of Database Account
-    azure_rm_cosmosdbaccount_info:
-      resource_group: myResourceGroup
-      tags:
-        - key
-        - key:value
+- name: List instances of Database Account
+  azure_rm_cosmosdbaccount_info:
+    resource_group: myResourceGroup
+    tags:
+      - key
+      - key:value
 '''
 
 RETURN = '''
@@ -429,7 +431,6 @@ class AzureRMCosmosDBAccountInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
         self.mgmt_client = self.get_mgmt_svc_client(CosmosDBManagementClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name is not None:

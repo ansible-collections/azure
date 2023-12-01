@@ -72,15 +72,8 @@ id:
 
 import time
 import json
-import re
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-from copy import deepcopy
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -243,14 +236,16 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Gallery instance.')
             self.fail('Error creating the Gallery instance: {0}'.format(str(exc)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -265,7 +260,7 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Gallery instance.')
             self.fail('Error deleting the Gallery instance: {0}'.format(str(e)))
 
@@ -283,11 +278,11 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
                                               self.status_code,
                                               600,
                                               30)
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             found = True
             self.log("Response : {0}".format(response))
             # self.log("AzureFirewall instance : {0} found".format(response.name))
-        except CloudError as e:
+        except Exception as e:
             self.log('Did not find the AzureFirewall instance.')
         if found is True:
             return response

@@ -34,10 +34,10 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get Azure Recovery Services Vault Details.
-      azure_rm_recoveryservicesvault_info:
-        resource_group: 'myResourceGroup'
-        name: 'testVault'
+- name: Get Azure Recovery Services Vault Details.
+  azure_rm_recoveryservicesvault_info:
+    resource_group: 'myResourceGroup'
+    name: 'testVault'
 '''
 
 RETURN = '''
@@ -98,9 +98,7 @@ response:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-import re
 import json
-import time
 
 
 class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
@@ -189,10 +187,12 @@ class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
             self.log('Error in fetching Azure Recovery Service Vault Details.')
             self.fail('Error in fetching Azure Recovery Service Vault Details {0}'.format(str(e)))
 
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 

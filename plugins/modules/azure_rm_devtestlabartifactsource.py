@@ -20,51 +20,62 @@ options:
     resource_group:
         description:
             - The name of the resource group.
+        type: str
         required: True
     lab_name:
         description:
             - The name of the lab.
+        type: str
         required: True
     name:
         description:
             - The name of the artifact source.
+        type: str
         required: True
     display_name:
         description:
             - The artifact source's display name.
+        type: str
     uri:
         description:
             - The artifact source's URI.
+        type: str
     source_type:
         description:
             - The artifact source's type.
+        type: str
         choices:
             - 'vso'
             - 'github'
     folder_path:
         description:
             - The folder containing artifacts.
+        type: str
     arm_template_folder_path:
         description:
             - The folder containing Azure Resource Manager templates.
+        type: str
     branch_ref:
         description:
             - The artifact source's branch reference.
+        type: str
     security_token:
         description:
             - The security token to authenticate to the artifact source.
+        type: str
     is_enabled:
         description:
             - Indicates whether the artifact source is enabled.
         type: bool
     state:
-      description:
-          - Assert the state of the DevTest Labs Artifacts Source.
-          - Use C(present) to create or update an DevTest Labs Artifacts Source and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the DevTest Labs Artifacts Source.
+            - Use C(present) to create or update an DevTest Labs Artifacts Source and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -76,15 +87,15 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) DevTest Labs Artifacts Source
-    azure_rm_devtestlabartifactsource:
-      resource_group: myrg
-      lab_name: mylab
-      name: myartifacts
-      uri: https://github.com/myself/myrepo.git
-      source_type: github
-      folder_path: /
-      security_token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+- name: Create (or update) DevTest Labs Artifacts Source
+  azure_rm_devtestlabartifactsource:
+    resource_group: myrg
+    lab_name: mylab
+    name: myartifacts
+    uri: https://github.com/myself/myrepo.git
+    source_type: github
+    folder_path: /
+    security_token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 '''
 
 RETURN = '''
@@ -102,16 +113,12 @@ is_enabled:
     sample: true
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from msrestazure.azure_operation import AzureOperationPoller
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -304,10 +311,10 @@ class AzureRMDevTestLabArtifactsSource(AzureRMModuleBase):
                                                                           lab_name=self.lab_name,
                                                                           name=self.name,
                                                                           artifact_source=self.artifact_source)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the DevTest Labs Artifacts Source instance.')
             self.fail("Error creating the DevTest Labs Artifacts Source instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -323,7 +330,7 @@ class AzureRMDevTestLabArtifactsSource(AzureRMModuleBase):
             response = self.mgmt_client.artifact_sources.delete(resource_group_name=self.resource_group,
                                                                 lab_name=self.lab_name,
                                                                 name=self.name)
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the DevTest Labs Artifacts Source instance.')
             self.fail("Error deleting the DevTest Labs Artifacts Source instance: {0}".format(str(e)))
 
@@ -344,7 +351,7 @@ class AzureRMDevTestLabArtifactsSource(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("DevTest Labs Artifacts Source instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the DevTest Labs Artifacts Source instance.')
         if found is True:
             return response.as_dict()

@@ -33,17 +33,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get Registration Definition
-      azure_rm_registrationdefinition_info:
-        registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+- name: Get Registration Definition
+  azure_rm_registrationdefinition_info:
+    registration_definition_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-    - name: Get All Registration Definitions from AzureRMAuth's subscription
-      azure_rm_registrationdefinition_info:
+- name: Get All Registration Definitions from AzureRMAuth's subscription
+  azure_rm_registrationdefinition_info:
 
-    - name: Get All Registration Definitions in the subscription levle
-      azure_rm_registrationdefinition_info:
-          scope: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-
+- name: Get All Registration Definitions in the subscription levle
+  azure_rm_registrationdefinition_info:
+    scope: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 '''
 
 RETURN = '''
@@ -149,10 +148,7 @@ registration_definitions:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.managedservices import ManagedServicesClient
-    from msrestazure.azure_operation import AzureOperationPoller
-    from msrest.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -194,7 +190,6 @@ class AzureRMRegistrationDefinitionInfo(AzureRMModuleBase):
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
                                                     api_version='2019-09-01',
-                                                    is_track2=True,
                                                     suppress_subscription_id=True)
 
         if self.registration_definition_id is not None:

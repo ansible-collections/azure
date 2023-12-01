@@ -41,17 +41,17 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get specific Container Instance facts
-    azure_rm_containerinstance_info:
-      resource_group: myResourceGroup
-      name: myContainer
+- name: Get specific Container Instance facts
+  azure_rm_containerinstance_info:
+    resource_group: myResourceGroup
+    name: myContainer
 
-  - name: List Container Instances in a specified resource group name
-    azure_rm_containerinstance_info:
-      resource_group: myResourceGroup
-      tags:
-        - key
-        - key:value
+- name: List Container Instances in a specified resource group name
+  azure_rm_containerinstance_info:
+    resource_group: myResourceGroup
+    tags:
+      - key
+      - key:value
 '''
 
 RETURN = '''
@@ -178,6 +178,12 @@ container_groups:
                             description:
                                 - Environment variable value.
                             type: str
+        subnet_ids:
+            description:
+                - The subnet resource IDs for a container group.
+            type: list
+            returned: always
+            sample: [{'id': "/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/vnetrpfx/subnets/subrpfx"}]
         volumes:
             description: The list of Volumes that can be mounted by container instances
             returned: If container group has volumes
@@ -339,6 +345,7 @@ class AzureRMContainerInstanceInfo(AzureRMModuleBase):
             'containers': containers,
             'restart_policy': _camel_to_snake(d.get('restart_policy')) if d.get('restart_policy') else None,
             'tags': d.get('tags', None),
+            'subnet_ids': d.get('subnet_ids', None),
             'volumes': d['volumes'] if 'volumes' in d else []
         }
         return d

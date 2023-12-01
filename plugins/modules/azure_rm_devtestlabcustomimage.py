@@ -21,20 +21,25 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     lab_name:
         description:
             - The name of the lab.
         required: True
+        type: str
     name:
         description:
             - The name of the custom image.
         required: True
+        type: str
     source_vm:
         description:
             - Source DevTest Lab virtual machine name.
+        type: str
     windows_os_state:
         description:
             - The state of the Windows OS.
+        type: str
         choices:
             - 'non_sysprepped'
             - 'sysprep_requested'
@@ -42,6 +47,7 @@ options:
     linux_os_state:
         description:
             - The state of the Linux OS.
+        type: str
         choices:
             - 'non_deprovisioned'
             - 'deprovision_requested'
@@ -49,17 +55,20 @@ options:
     description:
         description:
             - The description of the custom image.
+        type: str
     author:
         description:
             - The author of the custom image.
+        type: str
     state:
-      description:
-          - Assert the state of the Custom Image.
-          - Use C(present) to create or update an Custom Image and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Custom Image.
+            - Use C(present) to create or update an Custom Image and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -89,16 +98,13 @@ id:
     sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourcegroups/myResourceGroup/providers/microsoft.devtestlab/labs/myLab/images/myImage"
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from msrestazure.azure_operation import AzureOperationPoller
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -237,7 +243,7 @@ class AzureRMDtlCustomImage(AzureRMModuleBase):
 
             self.delete_customimage()
             # This currently doesnt' work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("Custom Image instance unchanged")
@@ -259,14 +265,14 @@ class AzureRMDtlCustomImage(AzureRMModuleBase):
         self.log("Creating / Updating the Custom Image instance {0}".format(self.name))
 
         try:
-            response = self.mgmt_client.custom_images.create_or_update(resource_group_name=self.resource_group,
-                                                                       lab_name=self.lab_name,
-                                                                       name=self.name,
-                                                                       custom_image=self.custom_image)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            response = self.mgmt_client.custom_images.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                             lab_name=self.lab_name,
+                                                                             name=self.name,
+                                                                             custom_image=self.custom_image)
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Custom Image instance.')
             self.fail("Error creating the Custom Image instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -279,10 +285,10 @@ class AzureRMDtlCustomImage(AzureRMModuleBase):
         '''
         self.log("Deleting the Custom Image instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.custom_images.delete(resource_group_name=self.resource_group,
-                                                             lab_name=self.lab_name,
-                                                             name=self.name)
-        except CloudError as e:
+            response = self.mgmt_client.custom_images.begin_delete(resource_group_name=self.resource_group,
+                                                                   lab_name=self.lab_name,
+                                                                   name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the Custom Image instance.')
             self.fail("Error deleting the Custom Image instance: {0}".format(str(e)))
 
@@ -303,7 +309,7 @@ class AzureRMDtlCustomImage(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Custom Image instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Custom Image instance.')
         if found is True:
             return response.as_dict()

@@ -20,20 +20,24 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the topic.
         required: true
+        type: str
     namespace:
         description:
             - Servicebus namespace name.
             - A namespace is a scoping container for all messaging components.
             - Multipletopics can reside within a single namespace.
+        type: str
         required: true
     state:
         description:
             - Assert the state of the topic. Use C(present) to create or update and use C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -61,6 +65,11 @@ options:
         description:
             - A value that indicates whether the topic is to be partitioned across multiple message brokers.
         type: bool
+    max_message_size_in_kb:
+        description:
+            - Maximum size (in KB) of the message payload that can be accepted by the queue.
+            - This property is only used in Premium today and default is 1024.
+        type: int
     max_size_in_mb:
         description:
             - The maximum size of the topic in megabytes, which is the size of memory allocated for the topic.
@@ -80,6 +89,7 @@ options:
     status:
         description:
             - Status of the entity.
+        type: str
         choices:
             - active
             - disabled
@@ -88,7 +98,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -150,8 +159,9 @@ class AzureRMServiceBusTopic(AzureRMModuleBase):
             enable_express=dict(type='bool'),
             enable_partitioning=dict(type='bool'),
             max_size_in_mb=dict(type='int'),
+            max_message_size_in_kb=dict(type='int'),
             name=dict(type='str', required=True),
-            namespace=dict(type='str'),
+            namespace=dict(type='str', required=True),
             requires_duplicate_detection=dict(type='bool'),
             resource_group=dict(type='str', required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
@@ -173,6 +183,7 @@ class AzureRMServiceBusTopic(AzureRMModuleBase):
         self.requires_duplicate_detection = None
         self.status = None
         self.support_ordering = None
+        self.max_message_size_in_kb = None
 
         self.results = dict(
             changed=False,
@@ -180,6 +191,7 @@ class AzureRMServiceBusTopic(AzureRMModuleBase):
         )
 
         super(AzureRMServiceBusTopic, self).__init__(self.module_arg_spec,
+                                                     supports_tags=False,
                                                      supports_check_mode=True)
 
     def exec_module(self, **kwargs):
@@ -196,6 +208,7 @@ class AzureRMServiceBusTopic(AzureRMModuleBase):
                 enable_express=self.enable_express,
                 enable_partitioning=self.enable_partitioning,
                 max_size_in_megabytes=self.max_size_in_mb,
+                max_message_size_in_kilobytes=self.max_message_size_in_kb,
                 support_ordering=self.support_ordering
             )
             if self.status:
@@ -277,6 +290,8 @@ class AzureRMServiceBusTopic(AzureRMModuleBase):
                 result[attribute] = to_native(value)
             elif attribute == 'max_size_in_megabytes':
                 result['max_size_in_mb'] = value
+            elif attribute == 'max_message_size_in_kilobyte':
+                result['max_message_size_in_kb'] = value
             else:
                 result[attribute] = value
         return result

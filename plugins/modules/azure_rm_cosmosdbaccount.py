@@ -21,17 +21,21 @@ options:
         description:
             - Name of an Azure resource group.
         required: True
+        type: str
     name:
         description:
             - Cosmos DB database account name.
         required: True
+        type: str
     location:
         description:
             - The location of the resource group to which the resource belongs.
             - Required when I(state=present).
+        type: str
     kind:
         description:
             - Indicates the type of database account. This can only be set at database account creation.
+        type: str
         choices:
             - 'global_document_db'
             - 'mongo_db'
@@ -39,11 +43,13 @@ options:
     consistency_policy:
         description:
             - The consistency policy for the Cosmos DB account.
+        type: dict
         suboptions:
             default_consistency_level:
                 description:
                     - The default consistency level and configuration settings of the Cosmos DB account.
                     - Required when I(state=present).
+                type: str
                 choices:
                     - 'eventual'
                     - 'session'
@@ -65,20 +71,25 @@ options:
             - An array that contains the georeplication locations enabled for the Cosmos DB account.
             - Required when I(state=present).
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
                     - The name of the region.
+                type: str
+                required: true
             failover_priority:
                 description:
                     - The failover priority of the region. A failover priority of 0 indicates a write region.
                     - The maximum value for a failover priority = (total number of regions - 1).
                     - Failover priority values must be unique for each of the regions in which the database account exists.
                 type: int
+                required: true
     database_account_offer_type:
         description:
             - Database account offer type, for example I(Standard)
             - Required when I(state=present).
+        type: str
     enable_free_tier:
         description:
             - If enabled the account is free-tier.
@@ -91,6 +102,7 @@ options:
             - In CIDR form to be included as the allowed list of client IPs for a given database account.
             - IP addresses/ranges must be comma separated and must not contain any spaces.
             - This value has been deprecated, and will be removed in a later version. Use I(ip_rules) instead.
+        type: str
     ip_rules:
         description:
             - The IP addresses or IP address ranges in CIDR form to be included as the allowed list of client IPs.
@@ -137,11 +149,14 @@ options:
         description:
             - List of Virtual Network ACL rules configured for the Cosmos DB account.
         type: list
+        elements: dict
         suboptions:
             subnet:
                 description:
                     - It can be a string containing resource id of a subnet.
                     - It can be a dictionary containing 'resource_group', 'virtual_network_name' and 'subnet_name'
+                type: raw
+                required: true
             ignore_missing_v_net_service_endpoint:
                 description:
                     - Create Cosmos DB account without existing virtual network service endpoint.
@@ -151,13 +166,14 @@ options:
             - Enables the account to write in multiple locations
         type: bool
     state:
-      description:
-        - Assert the state of the Database Account.
-        - Use C(present) to create or update an Database Account and C(absent) to delete it.
-      default: present
-      choices:
-        - absent
-        - present
+        description:
+            - Assert the state of the Database Account.
+            - Use C(present) to create or update an Database Account and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -169,36 +185,36 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create Cosmos DB Account - min
-    azure_rm_cosmosdbaccount:
-      resource_group: myResourceGroup
-      name: myDatabaseAccount
-      location: westus
-      geo_rep_locations:
-        - name: southcentralus
-          failover_priority: 0
-      database_account_offer_type: Standard
+- name: Create Cosmos DB Account - min
+  azure_rm_cosmosdbaccount:
+    resource_group: myResourceGroup
+    name: myDatabaseAccount
+    location: westus
+    geo_rep_locations:
+      - name: southcentralus
+        failover_priority: 0
+    database_account_offer_type: Standard
 
-  - name: Create Cosmos DB Account - max
-    azure_rm_cosmosdbaccount:
-      resource_group: myResourceGroup
-      name: myDatabaseAccount
-      location: westus
-      kind: mongo_db
-      geo_rep_locations:
-        - name: southcentralus
-          failover_priority: 0
-      database_account_offer_type: Standard
-      ip_rules:
-        - 10.10.10.10
-      enable_multiple_write_locations: yes
-      virtual_network_rules:
-        - subnet: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVi
-                   rtualNetwork/subnets/mySubnet"
-      consistency_policy:
-        default_consistency_level: bounded_staleness
-        max_staleness_prefix: 10
-        max_interval_in_seconds: 1000
+- name: Create Cosmos DB Account - max
+  azure_rm_cosmosdbaccount:
+    resource_group: myResourceGroup
+    name: myDatabaseAccount
+    location: westus
+    kind: mongo_db
+    geo_rep_locations:
+      - name: southcentralus
+        failover_priority: 0
+    database_account_offer_type: Standard
+    ip_rules:
+      - 10.10.10.10
+    enable_multiple_write_locations: true
+    virtual_network_rules:
+      - subnet: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVi
+                 rtualNetwork/subnets/mySubnet"
+    consistency_policy:
+      default_consistency_level: bounded_staleness
+      max_staleness_prefix: 10
+      max_interval_in_seconds: 1000
 '''
 
 RETURN = '''
@@ -217,7 +233,6 @@ from ansible.module_utils.common.dict_transformations import _snake_to_camel
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.mgmt.cosmosdb import CosmosDBManagementClient
     from ansible.module_utils.six import string_types
 except ImportError:
@@ -272,6 +287,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             ),
             geo_rep_locations=dict(
                 type='list',
+                elements='dict',
                 options=dict(
                     name=dict(
                         type='str',
@@ -322,9 +338,10 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             ),
             virtual_network_rules=dict(
                 type='list',
+                elements='dict',
                 options=dict(
-                    id=dict(
-                        type='str',
+                    subnet=dict(
+                        type='raw',
                         required=True
                     ),
                     ignore_missing_v_net_service_endpoint=dict(
@@ -409,7 +426,6 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(CosmosDBManagementClient,
-                                                    is_track2=True,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
@@ -474,7 +490,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             response = self.mgmt_client.database_accounts.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                  account_name=self.name,
                                                                                  create_update_parameters=self.parameters)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:
@@ -493,7 +509,7 @@ class AzureRMCosmosDBAccount(AzureRMModuleBase):
             response = self.mgmt_client.database_accounts.begin_delete(resource_group_name=self.resource_group,
                                                                        account_name=self.name)
 
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as e:
             self.log('Error attempting to delete the Database Account instance.')

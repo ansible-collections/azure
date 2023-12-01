@@ -41,7 +41,6 @@ EXAMPLES = '''
   azure_rm_azurefirewall_info:
     resource_group: myResourceGroup
     name: myAzureFirewall
-
 '''
 
 RETURN = '''
@@ -102,16 +101,9 @@ firewalls:
 
 '''
 
-import time
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-from copy import deepcopy
-try:
-    from msrestazure.azure_exceptions import CloudError
-except Exception:
-    # handled in azure_rm_common
-    pass
 
 
 class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
@@ -183,9 +175,9 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
                                               self.status_code,
                                               600,
                                               30)
-            results = json.loads(response.text)
+            results = json.loads(response.body())
             # self.log('Response : {0}'.format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return self.format_item(results)
@@ -213,9 +205,9 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
                                               self.status_code,
                                               600,
                                               30)
-            results = json.loads(response.text)
+            results = json.loads(response.body())
             # self.log('Response : {0}'.format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return [self.format_item(x) for x in results['value']] if results['value'] else []
@@ -240,25 +232,31 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
                                               self.status_code,
                                               600,
                                               30)
-            results = json.loads(response.text)
+            results = json.loads(response.body())
             # self.log('Response : {0}'.format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
 
         return [self.format_item(x) for x in results['value']] if results['value'] else []
 
     def format_item(self, item):
+        if item is None or item == {}:
+            return {}
         d = {
-            'id': item['id'],
-            'name': item['name'],
-            'location': item['location'],
-            'etag': item['etag'],
+            'id': item.get('id'),
+            'name': item.get('name'),
+            'location': item.get('location'),
+            'etag': item.get('etag'),
             'tags': item.get('tags'),
-            'nat_rule_collections': item['properties']['natRuleCollections'],
-            'network_rule_collections': item['properties']['networkRuleCollections'],
-            'ip_configurations': item['properties']['ipConfigurations'],
-            'provisioning_state': item['properties']['provisioningState']
+            'nat_rule_collections': dict(),
+            'network_rule_collections': dict(),
+            'ip_configurations': dict(),
         }
+        if isinstance(item.get('properties'), dict):
+            d['nat_rule_collections'] = item.get('properties').get('natRuleCollections')
+            d['network_rule_collections'] = item.get('properties').get('networkRuleCollections')
+            d['ip_configurations'] = item.get('properties').get('ipConfigurations')
+            d['provisioning_state'] = item.get('properties').get('provisioningState')
         return d
 
 

@@ -1,29 +1,29 @@
 - name: Prepare facts
-  set_fact:
+  ansible.builtin.set_fact:
     resource_prefix: "{{ resource_group_secondary | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Prepare facts
-  set_fact:
+  ansible.builtin.set_fact:
     linux_plan_resource_group: "{{ resource_group_secondary }}"
-    win_plan_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}winplan"
-    linux_plan_name: "{{ (resource_prefix | replace('-','x'))[-8:] }}linplan"
-  run_once: yes
+    win_plan_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}winplan"
+    linux_plan_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}linplan"
+  run_once: true
 
-- name: create a windows plan
+- name: Create a windows plan
   azure_rm_appserviceplan:
     name: "{{ win_plan_name }}1"
     resource_group: "{{ resource_group }}"
     sku: B1
   register: output
 
-- name: assert app service was created
-  assert:
+- name: Assert app service was created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
 
-- name: create a linux plan
+- name: Create a linux plan
   azure_rm_appserviceplan:
     resource_group: "{{ linux_plan_resource_group }}"
     name: "{{ linux_plan_name }}1"
@@ -32,25 +32,25 @@
     number_of_workers: 1
   register: output
 
-- name: assert app service was created
-  assert:
+- name: Assert app service was created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
 
-- name: get app service plan by name
+- name: Get app service plan by name
   azure_rm_appserviceplan_info:
     resource_group: "{{ linux_plan_resource_group }}"
     name: "{{ linux_plan_name }}1"
   register: output
 
-- name: assert is_linux is True
-  assert:
+- name: Assert is_linux is True
+  ansible.builtin.assert:
     that:
       - output.appserviceplans | length == 1
       - output.appserviceplans[0].is_linux == True
 
-- name: create linux app service plan idempotent
+- name: Create linux app service plan idempotent
   azure_rm_appserviceplan:
     resource_group: "{{ linux_plan_resource_group }}"
     name: "{{ linux_plan_name }}1"
@@ -59,23 +59,23 @@
     number_of_workers: 1
   register: output
 
-- name: assert app service is not updated
-  assert:
+- name: Assert app service is not updated
+  ansible.builtin.assert:
     that: not output.changed
 
-- name: update a windows plan sku
+- name: Update a windows plan sku
   azure_rm_appserviceplan:
     name: "{{ win_plan_name }}1"
     resource_group: "{{ resource_group }}"
     sku: B2
   register: output
 
-- name: assert app service was updated
-  assert:
+- name: Assert app service was updated
+  ansible.builtin.assert:
     that:
       - output.changed
 
-- name: update a linux plan number of workers
+- name: Update a linux plan number of workers
   azure_rm_appserviceplan:
     resource_group: "{{ linux_plan_resource_group }}"
     name: "{{ linux_plan_name }}1"
@@ -84,12 +84,12 @@
     number_of_workers: 2
   register: output
 
-- name: assert app service was updated
-  assert:
+- name: Assert app service was updated
+  ansible.builtin.assert:
     that:
       - output.changed
 
-- name: create premium linux plan
+- name: Create premium linux plan
   azure_rm_appserviceplan:
     resource_group: "{{ linux_plan_resource_group }}"
     name: "{{ linux_plan_name }}-premium"
@@ -97,13 +97,13 @@
     is_linux: true
   register: output
 
-- name: assert app service was created
-  assert:
+- name: Assert app service was created
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.id
 
-- name: create premium linux plan idempotent
+- name: Create premium linux plan idempotent
   azure_rm_appserviceplan:
     resource_group: "{{ linux_plan_resource_group }}"
     name: "{{ linux_plan_name }}-premium"
@@ -111,6 +111,6 @@
     is_linux: true
   register: output
 
-- name: assert app service is not updated
-  assert:
+- name: Assert app service is not updated
+  ansible.builtin.assert:
     that: not output.changed

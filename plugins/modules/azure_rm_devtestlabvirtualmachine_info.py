@@ -46,13 +46,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Get instance of DTL Virtual Machine
-    azure_rm_devtestlabvirtualmachine_info:
-      resource_group: myResourceGroup
-      lab_name: myLab
-      name: myVm
-      tags:
-        - key:value
+- name: Get instance of DTL Virtual Machine
+  azure_rm_devtestlabvirtualmachine_info:
+    resource_group: myResourceGroup
+    lab_name: myLab
+    name: myVm
+    tags:
+      - key:value
 '''
 
 RETURN = '''
@@ -128,7 +128,7 @@ virtualmachines:
                         - The SKU of the gallery image.
                     returned: when created from gallery image
                     type: str
-                    sample: 16.04-LTS
+                    sample: 20_04-lts
                 publisher:
                     description:
                         - The publisher of the gallery image.
@@ -199,16 +199,15 @@ virtualmachines:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'foo': 'bar' }"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -271,7 +270,7 @@ class AzureRMDtlVirtualMachineInfo(AzureRMModuleBase):
                                                              lab_name=self.lab_name,
                                                              name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Could not get facts for Virtual Machine.')
 
         if response and self.has_tags(response.tags, self.tags):
@@ -286,7 +285,7 @@ class AzureRMDtlVirtualMachineInfo(AzureRMModuleBase):
             response = self.mgmt_client.virtual_machines.list(resource_group_name=self.resource_group,
                                                               lab_name=self.lab_name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.fail('Could not get facts for Virtual Machine.')
 
         if response is not None:

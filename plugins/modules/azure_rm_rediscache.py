@@ -21,31 +21,39 @@ options:
         description:
             - Name of the resource group to which the resource belongs.
         required: True
+        type: str
     name:
         description:
             - Unique name of the Azure Cache for Redis to create or update.
         required: True
+        type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
+        type: str
     sku:
         description:
             - SKU info of Azure Cache for Redis.
+        type: dict
+        required: true
         suboptions:
             name:
                 description:
                     - Type of Azure Cache for Redis to deploy.
+                type: str
+                required: true
                 choices:
                     - basic
                     - standard
                     - premium
-                required: True
             size:
                 description:
                     - Size of Azure Cache for Redis to deploy.
                     - When I(sku=basic) or I(sku=standard), allowed values are C(C0), C(C1), C(C2), C(C3), C(C4), C(C5), C(C6).
                     - When I(sku=premium), allowed values are C(P1), C(P2), C(P3), C(P4).
                     - Please see U(https://docs.microsoft.com/en-us/rest/api/redis/redis/create#sku) for allowed values.
+                type: str
+                required: true
                 choices:
                     - C0
                     - C1
@@ -58,7 +66,6 @@ options:
                     - P2
                     - P3
                     - P4
-                required: True
     enable_non_ssl_port:
         description:
             - When set I(enable_non_ssl_port=true), the non-ssl Redis server port 6379 will be enabled.
@@ -68,14 +75,17 @@ options:
         description:
             - Configures the amount of memory in MB that is reserved to accommodate for memory fragmentation.
             - Please see U(https://docs.microsoft.com/en-us/azure/redis-cache/cache-configure#advanced-settings) for more detail.
+        type: int
     maxmemory_reserved:
         description:
             - Configures the amount of memory in MB that is reserved for non-cache operations.
             - Please see U(https://docs.microsoft.com/en-us/azure/redis-cache/cache-configure#advanced-settings) for more detail.
+        type: int
     maxmemory_policy:
         description:
             - Configures the eviction policy of the cache.
             - Please see U(https://docs.microsoft.com/en-us/azure/redis-cache/cache-configure#advanced-settings) for more detail.
+        type: str
         choices:
             - volatile_lru
             - allkeys_lru
@@ -113,7 +123,7 @@ options:
         choices:
             - "4"
             - "6"
-        default: "4"
+        default: "6"
         version_added: "1.10.0"
     shard_count:
         description:
@@ -122,6 +132,7 @@ options:
     static_ip:
         description:
             - Static IP address. Required when deploying an Azure Cache for Redis inside an existing Azure virtual network.
+        type: str
     subnet:
         description:
             - Subnet in a virtual network to deploy the Azure Cache for Redis in.
@@ -131,6 +142,7 @@ options:
             - I(name). Name of the subnet.
             - I(resource_group). Resource group name of the subnet.
             - I(virtual_network_name). Name of virtual network to which this subnet belongs.
+        type: raw
     tenant_settings:
         description:
             - Dict of tenant settings.
@@ -138,26 +150,29 @@ options:
     reboot:
         description:
             - Reboot specified Redis node(s). There can be potential data loss.
+        type: dict
         suboptions:
             shard_id:
                 description:
                     - If clustering is enabled, the id of the shard to be rebooted.
-                type: int
+                type: str
             reboot_type:
                 description:
                     - Which Redis node(s) to reboot.
+                type: str
                 choices:
                     - primary
                     - secondary
                     - all
-                default: all
     regenerate_key:
         description:
             - Regenerate Redis cache's access keys.
+        type: dict
         suboptions:
             key_type:
                 description:
                     - The Redis key to regenerate.
+                type: str
                 choices:
                     - primary
                     - secondary
@@ -170,13 +185,14 @@ options:
         type: bool
         default: True
     state:
-      description:
-          - Assert the state of the Azure Cache for Redis.
-          - Use C(present) to create or update an Azure Cache for Redis and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Azure Cache for Redis.
+            - Use C(present) to create or update an Azure Cache for Redis and C(absent) to delete it.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -193,8 +209,8 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myRedis
     sku:
-        name: basic
-        size: C1
+      name: basic
+      size: C1
 
 - name: Scale up the Azure Cache for Redis
   azure_rm_rediscache:
@@ -251,7 +267,6 @@ import time
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.core.exceptions import ResourceNotFoundError
-    from msrestazure.azure_operation import AzureOperationPoller
     from azure.core.polling import LROPoller
     from azure.mgmt.redis import RedisManagementClient
     from azure.mgmt.redis.models import (
@@ -265,9 +280,11 @@ except ImportError:
 sku_spec = dict(
     name=dict(
         type='str',
+        required=True,
         choices=['basic', 'standard', 'premium']),
     size=dict(
         type='str',
+        required=True,
         choices=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'P1', 'P2', 'P3', 'P4']
     )
 )
@@ -362,6 +379,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             ),
             sku=dict(
                 type='dict',
+                required=True,
                 options=sku_spec
             ),
             enable_non_ssl_port=dict(
@@ -400,7 +418,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             ),
             redis_version=dict(
                 type="str",
-                default="4",
+                default="6",
                 choices=["4", "6"]
             ),
             shard_count=dict(
@@ -492,8 +510,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
         # get management client
         self._client = self.get_mgmt_svc_client(RedisManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
-                                                api_version='2018-03-01',
-                                                is_track2=True)
+                                                api_version='2018-03-01')
 
         # set location
         resource_group = self.get_resource_group(self.resource_group)
@@ -609,7 +626,8 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             self.log("public_network_access diff: origin {0} / update {1}".format(existing['public_network_access'], self.public_network_access))
             return True
         if self.redis_version is not None and existing['redis_version'][0] != self.redis_version[0]:
-            self.fail("Updating redis_version is not supported")
+            self.log("redis_version diff: origin {0} / update {1}".format(existing['redis_version'], self.redis_version))
+            return True
         for config in self.redis_configuration_properties:
             if getattr(self, config) is not None and existing.get(config, None) != getattr(self, config, None):
                 self.log("redis_configuration {0} diff: origin {1} / update {2}".format(config, existing.get(config, None), getattr(self, config, None)))
@@ -650,7 +668,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
                                                        name=self.name,
                                                        parameters=params)
 
-            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
             if self.wait_for_provisioning:
@@ -691,7 +709,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             response = self._client.redis.update(resource_group_name=self.resource_group,
                                                  name=self.name,
                                                  parameters=params)
-            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
             if self.wait_for_provisioning:
@@ -757,7 +775,7 @@ class AzureRMRedisCaches(AzureRMModuleBase):
             response = self._client.redis.force_reboot(resource_group_name=self.resource_group,
                                                        name=self.name,
                                                        parameters=params)
-            if isinstance(response, AzureOperationPoller) or isinstance(response, LROPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
             if self.wait_for_provisioning:

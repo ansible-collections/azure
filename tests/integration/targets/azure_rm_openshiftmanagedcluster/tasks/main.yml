@@ -1,7 +1,8 @@
-- set_fact:
+- name: Set variables
+  ansible.builtin.set_fact:
     cluster_name: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
-- name: get resource group info
+- name: Get resource group info
   azure_rm_resourcegroup_info:
     name: "{{ resource_group_secondary }}"
   register: rg_output
@@ -11,8 +12,9 @@
     resource_group: "{{ resource_group_secondary }}"
   register: output
 
-- assert:
-      that: output['clusters'] | length == 0
+- name: Assert the cluster facts
+  ansible.builtin.assert:
+    that: output['clusters'] | length == 0
 
 - name: Get specific cluster information for a specific cluster
   azure_rm_openshiftmanagedcluster_info:
@@ -20,15 +22,17 @@
     name: "{{ cluster_name }}"
   register: output
 
-- assert:
-      that: output['clusters'].keys() | length == 0
+- name: Assert the cluster facts
+  ansible.builtin.assert:
+    that: output['clusters'].keys() | length == 0
 
 - name: Get all clusters
   azure_rm_openshiftmanagedcluster_info:
   register: output
 
-- assert:
-      that: output['clusters']['value'] | length == 0
+- name: Assert all clusters facts
+  ansible.builtin.assert:
+    that: output['clusters']['value'] | length == 0
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
@@ -38,7 +42,7 @@
       - 10.151.0.0/16
       - 10.152.0.0/16
 
-- name: create master subnet
+- name: Create master subnet
   azure_rm_subnet:
     name: master_foobar
     virtual_network_name: testVnet
@@ -46,7 +50,7 @@
     address_prefix_cidr: 10.151.0.0/24
   register: master_sub_output
 
-- name: create work subnet
+- name: Create work subnet
   azure_rm_subnet:
     name: worker_foobar
     virtual_network_name: testVnet
@@ -78,8 +82,9 @@
       subnet_id: "{{ master_sub_output.state.id }}"
   register: output
 
-- assert:
-      that: output.changed
+- name: Assert the cluster created
+  ansible.builtin.assert:
+    that: output.changed
 
 
 - name: Get available clusters for a specific resource_group
@@ -87,8 +92,9 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
-      that: output['clusters'] | length == 1
+- name: Assert the cluster facts
+  ansible.builtin.assert:
+    that: output['clusters'] | length == 1
 
 - name: Get specific cluster information for a specific cluster
   azure_rm_openshiftmanagedcluster_info:
@@ -96,15 +102,61 @@
     name: "{{ cluster_name }}"
   register: output
 
-- assert:
-      that: output['clusters']['name'] == "{{ cluster_name }}"
+- name: Assert the cluster facts
+  ansible.builtin.assert:
+    that: output['clusters']['name'] == "{{ cluster_name }}"
 
 - name: Get all clusters
   azure_rm_openshiftmanagedcluster_info:
   register: output
 
-- assert:
-      that: output['clusters'] | length >= 1
+- name: Assert all cluster
+  ansible.builtin.assert:
+    that: output['clusters'] | length >= 1
+
+- name: Fetch kubeconfig file to register
+  azure_rm_openshiftmanagedclusterkubeconfig_info:
+    name: "{{ cluster_name }}"
+    resource_group: "{{ resource_group }}"
+  register: kubeconfig_reg
+
+- name: Assert the kubeconfig file facts
+  ansible.builtin.assert:
+    that: kubeconfig_reg['kubeconfig'] | length >= 1
+
+- name: Fetch kubeconfig file with specific name
+  azure_rm_openshiftmanagedclusterkubeconfig_info:
+    name: "{{ cluster_name }}"
+    resource_group: "{{ resource_group }}"
+    path: "/home/testuser/{{ cluster_name }}"
+
+- name: Check for created named kubeconfig file
+  ansible.builtin.stat:
+    path: "/home/testuser/{{ cluster_name }}"
+  register: named_kubeconf_file
+
+- name: Assert kubeconfig file creation with specific name
+  ansible.builtin.assert:
+    that:
+      - named_kubeconf_file.stat.exists
+      - named_kubeconf_file.stat.size != 0
+
+- name: Fetch kubeconfig file with default name (kubeconfig)
+  azure_rm_openshiftmanagedclusterkubeconfig_info:
+    name: "{{ cluster_name }}"
+    resource_group: "{{ resource_group }}"
+    path: "/home/testuser/"
+
+- name: Check for created default kubeconfig file
+  ansible.builtin.stat:
+    path: "/home/testuser/kubeconfig"
+  register: default_kubeconf_file
+
+- name: Assert kubeconfig file creation with default name
+  ansible.builtin.assert:
+    that:
+      - default_kubeconf_file.stat.exists
+      - default_kubeconf_file.stat.size != 0
 
 - name: Delete openshift cluster
   azure_rm_openshiftmanagedcluster:
@@ -114,5 +166,6 @@
     state: absent
   register: output
 
-- assert:
-      that: output.changed
+- name: Assert the cluster deleted
+  ansible.builtin.assert:
+    that: output.changed

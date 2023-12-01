@@ -55,26 +55,26 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Configure web app with virtual network
-      azure.azcollection.azure_rm_webappvnetconnection:
-        name: "MyWebapp"
-        resource_group: "MyResourceGroup"
-        vnet_name: "MyVnetName"
-        subnet: "MySubnetName"
+- name: Configure web app with virtual network
+  azure.azcollection.azure_rm_webappvnetconnection:
+    name: "MyWebapp"
+    resource_group: "MyResourceGroup"
+    vnet_name: "MyVnetName"
+    subnet: "MySubnetName"
 
-    - name: Configure web app with virtual network in different resource group
-      azure.azcollection.azure_rm_webappvnetconnection:
-        name: "MyWebapp"
-        resource_group: "MyResourceGroup"
-        vnet_name: "MyVnetName"
-        subnet: "MySubnetName"
-        vnet_resource_group: "MyOtherResourceGroup"
+- name: Configure web app with virtual network in different resource group
+  azure.azcollection.azure_rm_webappvnetconnection:
+    name: "MyWebapp"
+    resource_group: "MyResourceGroup"
+    vnet_name: "MyVnetName"
+    subnet: "MySubnetName"
+    vnet_resource_group: "MyOtherResourceGroup"
 
-    - name: Delete web app virtual network
-      azure.azcollection.azure_rm_webappvnetconnection:
-        name: "MyWebapp"
-        resource_group: "MyResourceGroup"
-        state: "absent"
+- name: Delete web app virtual network
+  azure.azcollection.azure_rm_webappvnetconnection:
+    name: "MyWebapp"
+    resource_group: "MyResourceGroup"
+    state: "absent"
 '''
 
 RETURN = '''

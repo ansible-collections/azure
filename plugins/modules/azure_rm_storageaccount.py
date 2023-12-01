@@ -21,26 +21,34 @@ options:
         description:
             - Name of the resource group to use.
         required: true
+        type: str
         aliases:
             - resource_group_name
     name:
         description:
             - Name of the storage account to update or create.
+        type: str
+        required: true
     state:
         description:
             - State of the storage account. Use C(present) to create or update a storage account and use C(absent) to delete an account.
+            - C(failover) is used to failover the storage account to its secondary. This process can take up to a hour.
         default: present
+        type: str
         choices:
             - absent
             - present
+            - failover
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     account_type:
         description:
             - Type of storage account. Required when creating a storage account.
             - C(Standard_ZRS) and C(Premium_LRS) accounts cannot be changed to other account types.
             - Other account types cannot be changed to C(Standard_ZRS) or C(Premium_LRS).
+        type: str
         choices:
             - Premium_LRS
             - Standard_GRS
@@ -59,6 +67,7 @@ options:
             - Only one custom domain is supported per storage account at this time.
             - To clear the existing custom domain, use an empty string for the custom domain name property.
             - Can be added to an existing storage account. Will be ignored during storage account creation.
+        type: dict
         aliases:
             - custom_dns_domain_suffix
     kind:
@@ -66,6 +75,7 @@ options:
             - The kind of storage.
             - The C(FileStorage) and (BlockBlobStorage) only used when I(account_type=Premium_LRS) or I(account_type=Premium_ZRS).
         default: 'Storage'
+        type: str
         choices:
             - Storage
             - StorageV2
@@ -80,6 +90,7 @@ options:
     access_tier:
         description:
             - The access tier for this storage account. Required when I(kind=BlobStorage).
+        type: str
         choices:
             - Hot
             - Cool
@@ -99,6 +110,7 @@ options:
         description:
             - The minimum required version of Transport Layer Security (TLS) for requests to a storage account.
             - If omitted, new account creation will default to null which is currently interpreted to TLS1_0. Existing accounts will not be modified.
+        type: str
         choices:
             - TLS1_0
             - TLS1_1
@@ -107,6 +119,7 @@ options:
     public_network_access:
         description:
             - Allow or disallow public network access to Storage Account.
+        type: str
         choices:
             - Enabled
             - Disabled
@@ -127,6 +140,7 @@ options:
                 description:
                     - Default firewall traffic rule.
                     - If I(default_action=Allow) no other settings have effect.
+                type: str
                 choices:
                     - Allow
                     - Deny
@@ -138,28 +152,37 @@ options:
                     - It can be any combination of the example C(AzureServices), C(Logging), C(Metrics).
                     - If no Azure components are allowed, explicitly set I(bypass="").
                 default: AzureServices
+                type: str
             virtual_network_rules:
                 description:
                     - A list of subnets and their actions.
+                type: list
+                elements: dict
                 suboptions:
                     id:
                         description:
                             - The complete path to the subnet.
+                        type: str
                     action:
                         description:
                             - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
                         default: 'Allow'
+                        type: str
             ip_rules:
                 description:
                     - A list of IP addresses or ranges in CIDR format.
+                type: list
+                elements: dict
                 suboptions:
                     value:
                         description:
                             - The IP address or range.
+                        type: str
                     action:
                         description:
                             - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
                         default: 'Allow'
+                        type: str
     blob_cors:
         description:
             - Specifies CORS rules for the Blob service.
@@ -217,6 +240,13 @@ options:
                 description:
                     - The absolute path of the custom 404 page.
                 type: str
+    large_file_shares_state:
+        description:
+            - Allow large file shares if sets to Enabled.
+        type: str
+        choices:
+            - Enabled
+            - Disabled
     encryption:
         description:
             - The encryption settings on the storage account.
@@ -286,65 +316,65 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: remove account, if it exists
-      azure_rm_storageaccount:
-        resource_group: myResourceGroup
-        name: clh0002
-        state: absent
+- name: remove account, if it exists
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: clh0002
+    state: absent
 
-    - name: create an account
-      azure_rm_storageaccount:
-        resource_group: myResourceGroup
-        name: clh0002
-        type: Standard_RAGRS
-        tags:
-          testing: testing
-          delete: on-exit
+- name: create an account
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: clh0002
+    type: Standard_RAGRS
+    tags:
+      testing: testing
+      delete: on-exit
 
-    - name: Create an account with kind of FileStorage
-      azure_rm_storageaccount:
-        resource_group: myResourceGroup
-        name: c1h0002
-        type: Premium_LRS
-        kind: FileStorage
-        tags:
-          testing: testing
+- name: Create an account with kind of FileStorage
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: c1h0002
+    type: Premium_LRS
+    kind: FileStorage
+    tags:
+      testing: testing
 
-    - name: configure firewall and virtual networks
-      azure_rm_storageaccount:
-        resource_group: myResourceGroup
-        name: clh0002
-        type: Standard_RAGRS
-        network_acls:
-          bypass: AzureServices,Metrics
-          default_action: Deny
-          virtual_network_rules:
-            - id: /subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet
-              action: Allow
-          ip_rules:
-            - value: 1.2.3.4
-              action: Allow
-            - value: 123.234.123.0/24
-              action: Allow
+- name: configure firewall and virtual networks
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: clh0002
+    type: Standard_RAGRS
+    network_acls:
+      bypass: AzureServices,Metrics
+      default_action: Deny
+      virtual_network_rules:
+        - id: /subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet
+          action: Allow
+      ip_rules:
+        - value: 1.2.3.4
+          action: Allow
+        - value: 123.234.123.0/24
+          action: Allow
 
-    - name: create an account with blob CORS
-      azure_rm_storageaccount:
-        resource_group: myResourceGroup
-        name: clh002
-        type: Standard_RAGRS
-        blob_cors:
-            - allowed_origins:
-                - http://www.example.com/
-              allowed_methods:
-                - GET
-                - POST
-              allowed_headers:
-                - x-ms-meta-data*
-                - x-ms-meta-target*
-                - x-ms-meta-abc
-              exposed_headers:
-                - x-ms-meta-*
-              max_age_in_seconds: 200
+- name: create an account with blob CORS
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: clh002
+    type: Standard_RAGRS
+    blob_cors:
+      - allowed_origins:
+          - http://www.example.com/
+        allowed_methods:
+          - GET
+          - POST
+        allowed_headers:
+          - x-ms-meta-data*
+          - x-ms-meta-target*
+          - x-ms-meta-abc
+        exposed_headers:
+          - x-ms-meta-*
+        max_age_in_seconds: 200
 '''
 
 
@@ -500,6 +530,12 @@ state:
             returned: always
             type: str
             sample: Succeeded
+        failover_in_progress:
+            description:
+                - Status indicating the storage account is currently failing over to its secondary location.
+            returned: always
+            type: bool
+            sample: False
         resource_group:
             description:
                 - The resource group's name.
@@ -570,6 +606,12 @@ state:
             returned: always
             type: str
             sample: "Microsoft.Storage/storageAccounts"
+        large_file_shares_state:
+            description:
+                - Allow large file shares if sets to Enabled.
+            type: str
+            returned: always
+            sample: Enabled
         static_website:
             description:
                 - Static website configuration for the storage account.
@@ -669,7 +711,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             location=dict(type='str'),
             name=dict(type='str', required=True),
             resource_group=dict(required=True, type='str', aliases=['resource_group_name']),
-            state=dict(default='present', choices=['present', 'absent']),
+            state=dict(default='present', choices=['present', 'absent', 'failover']),
             force_delete_nonempty=dict(type='bool', default=False, aliases=['force']),
             tags=dict(type='dict'),
             kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
@@ -682,6 +724,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict'),
             static_website=dict(type='dict', options=static_website_spec),
             is_hns_enabled=dict(type='bool'),
+            large_file_shares_state=dict(type='str', choices=['Enabled', 'Disabled']),
             encryption=dict(
                 type='dict',
                 options=dict(
@@ -737,6 +780,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.static_website = None
         self.encryption = None
         self.is_hns_enabled = None
+        self.large_file_shares_state = None
 
         super(AzureRMStorageAccount, self).__init__(self.module_arg_spec,
                                                     supports_check_mode=True)
@@ -783,6 +827,9 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         elif self.state == 'absent' and self.account_dict:
             self.delete_account()
             self.results['state'] = dict(Status='Deleted')
+        elif self.state == 'failover' and self.account_dict:
+            self.failover_account()
+            self.results['state'] = self.get_account()
 
         return self.results
 
@@ -820,6 +867,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             id=account_obj.id,
             name=account_obj.name,
             location=account_obj.location,
+            failover_in_progress=(account_obj.failover_in_progress
+                                  if account_obj.failover_in_progress is not None else False),
             resource_group=self.resource_group,
             type=account_obj.type,
             access_tier=account_obj.access_tier,
@@ -836,6 +885,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             allow_blob_public_access=account_obj.allow_blob_public_access,
             network_acls=account_obj.network_rule_set,
             is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
+            large_file_shares_state=account_obj.large_file_shares_state,
             static_website=dict(
                 enabled=False,
                 index_document=None,
@@ -914,6 +964,30 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                         account_dict['encryption']['services']['blob'] = dict(enabled=True)
 
         return account_dict
+
+    def failover_account(self):
+
+        if str(self.account_dict['sku_name']) not in ["Standard_GZRS", "Standard_GRS", "Standard_RAGZRS", "Standard_RAGRS"]:
+            self.fail("Storage account SKU ({0}) does not support failover to a secondary region.".format(self.account_dict['sku_name']))
+        try:
+            account_obj = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name, expand='georeplicationstats')
+        except Exception as exc:
+            self.fail("Error occured while acquiring geo-replication status. {0}".format(str(exc)))
+
+        if account_obj.failover_in_progress:
+            self.fail("Storage account is already in process of failing over to secondary region.")
+
+        if not account_obj.geo_replication_stats.can_failover:
+            self.fail("Storage account is unable to failover.  Secondary region has status of {0}".format(account_obj.geo_replication_stats.status))
+
+        try:
+            poller = self.storage_client.storage_accounts.begin_failover(self.resource_group, self.name)
+            result = self.get_poller_result(poller)
+        except Exception as exc:
+            self.fail("Error occured while attempting a failover operation. {0}".format(str(exc)))
+
+        self.results['changed'] = True
+        return result
 
     def update_network_rule_set(self):
         if not self.check_mode:
@@ -1071,6 +1145,21 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 except Exception as exc:
                     self.fail("Failed to update access tier: {0}".format(str(exc)))
 
+        if self.large_file_shares_state is not None:
+            if self.large_file_shares_state != self.account_dict['large_file_shares_state']:
+                self.results['changed'] = True
+                self.account_dict['large_file_shares_state'] = self.large_file_shares_state
+
+            if self.results['changed'] and not self.check_mode:
+                if self.large_file_shares_state == 'Disabled':
+                    parameters = self.storage_models.StorageAccountUpdateParameters(large_file_shares_state=None)
+                else:
+                    parameters = self.storage_models.StorageAccountUpdateParameters(large_file_shares_state=self.large_file_shares_state)
+                try:
+                    self.storage_client.storage_accounts.update(self.resource_group, self.name, parameters)
+                except Exception as exc:
+                    self.fail("Failed to update large_file_shares_state: {0}".format(str(exc)))
+
         update_tags, self.account_dict['tags'] = self.update_tags(self.account_dict['tags'])
         if update_tags:
             self.results['changed'] = True
@@ -1140,6 +1229,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 allow_blob_public_access=self.allow_blob_public_access,
                 encryption=self.encryption,
                 is_hns_enabled=self.is_hns_enabled,
+                large_file_shares_state=self.large_file_shares_state,
                 tags=dict()
             )
             if self.tags:
@@ -1165,7 +1255,8 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         allow_blob_public_access=self.allow_blob_public_access,
                                                                         encryption=self.encryption,
                                                                         is_hns_enabled=self.is_hns_enabled,
-                                                                        access_tier=self.access_tier)
+                                                                        access_tier=self.access_tier,
+                                                                        large_file_shares_state=self.large_file_shares_state)
         self.log(str(parameters))
         try:
             poller = self.storage_client.storage_accounts.begin_create(self.resource_group, self.name, parameters)

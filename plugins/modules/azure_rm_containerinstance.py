@@ -51,6 +51,7 @@ options:
         choices:
             - public
             - none
+            - private
         default: 'none'
     dns_name_label:
         description:
@@ -62,6 +63,7 @@ options:
             - This option is deprecated, using I(ports) under I(containers)".
         type: list
         elements: int
+        default: []
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.
@@ -165,6 +167,12 @@ options:
             - always
             - on_failure
             - never
+    subnet_ids:
+        description:
+            - The subnet resource IDs for a container group.
+            - Multiple subnets are not yet supported. Only 1 subnet can be used.
+        type: list
+        elements: str
     volumes:
         description:
             - List of Volumes that can be mounted by containers in this container group.
@@ -242,63 +250,82 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create sample container group
-    azure_rm_containerinstance:
-      resource_group: myResourceGroup
-      name: myContainerInstanceGroup
-      os_type: linux
-      ip_address: public
-      containers:
-        - name: myContainer1
-          image: httpd
-          memory: 1.5
-          ports:
-            - 80
-            - 81
+- name: Create sample container group
+  azure_rm_containerinstance:
+    resource_group: myResourceGroup
+    name: myContainerInstanceGroup
+    os_type: linux
+    ip_address: public
+    containers:
+      - name: myContainer1
+        image: httpd
+        memory: 1.5
+        ports:
+          - 80
+          - 81
 
-  - name: Create sample container group with azure file share volume
-    azure_rm_containerinstance:
-      resource_group: myResourceGroup
-      name: myContainerInstanceGroupz
-      os_type: linux
-      ip_address: public
-      containers:
-        - name: mycontainer1
-          image: httpd
-          memory: 1
-          volume_mounts:
-            - name: filesharevolume
-              mount_path: "/data/files"
-          ports:
-            - 80
-            - 81
-      volumes:
-        - name: filesharevolume
-          azure_file:
-            storage_account_name: mystorageaccount
-            share_name: acishare
-            storage_account_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+- name: Create sample container group with azure file share volume
+  azure_rm_containerinstance:
+    resource_group: myResourceGroup
+    name: myContainerInstanceGroupz
+    os_type: linux
+    ip_address: public
+    containers:
+      - name: mycontainer1
+        image: httpd
+        memory: 1
+        volume_mounts:
+          - name: filesharevolume
+            mount_path: "/data/files"
+        ports:
+          - 80
+          - 81
+    volumes:
+      - name: filesharevolume
+        azure_file:
+          storage_account_name: mystorageaccount
+          share_name: acishare
+          storage_account_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-  - name: Create sample container group with git repo volume
-    azure_rm_containerinstance:
-      resource_group: myResourceGroup
-      name: myContainerInstanceGroup
-      os_type: linux
-      ip_address: public
-      containers:
-        - name: mycontainer1
-          image: httpd
-          memory: 1
-          volume_mounts:
-            - name: myvolume1
-              mount_path: "/mnt/test"
-          ports:
-            - 80
-            - 81
-      volumes:
-        - name: myvolume1
-          git_repo:
-            repository: "https://github.com/Azure-Samples/aci-helloworld.git"
+- name: Create sample container group with git repo volume
+  azure_rm_containerinstance:
+    resource_group: myResourceGroup
+    name: myContainerInstanceGroup
+    os_type: linux
+    ip_address: public
+    containers:
+      - name: mycontainer1
+        image: httpd
+        memory: 1
+        volume_mounts:
+          - name: myvolume1
+            mount_path: "/mnt/test"
+        ports:
+          - 80
+          - 81
+    volumes:
+      - name: myvolume1
+        git_repo:
+          repository: "https://github.com/Azure-Samples/aci-helloworld.git"
+
+- name: Create sample container instance with subnet
+  azure_rm_containerinstance:
+    resource_group: myResourceGroup
+    name: myContainerInstanceGroup
+    os_type: linux
+    ip_address: private
+    location: eastus
+    subnet_ids:
+      - "{{ subnet_id }}"
+    ports:
+      - 80
+    containers:
+      - name: mycontainer1
+        image: httpd
+        memory: 1.5
+        ports:
+          - 80
+          - 81
 '''
 RETURN = '''
 id:
@@ -522,7 +549,7 @@ class AzureRMContainerInstance(AzureRMModuleBase):
             ip_address=dict(
                 type='str',
                 default='none',
-                choices=['public', 'none']
+                choices=['public', 'none', 'private']
             ),
             dns_name_label=dict(
                 type='str',
@@ -562,7 +589,11 @@ class AzureRMContainerInstance(AzureRMModuleBase):
                 type='list',
                 elements='dict',
                 options=volumes_spec
-            )
+            ),
+            subnet_ids=dict(
+                type='list',
+                elements='str',
+            ),
         )
 
         self.resource_group = None
@@ -573,6 +604,7 @@ class AzureRMContainerInstance(AzureRMModuleBase):
         self.dns_name_label = None
         self.containers = None
         self.restart_policy = None
+        self.subnet_ids = None
 
         self.tags = None
 
@@ -580,7 +612,7 @@ class AzureRMContainerInstance(AzureRMModuleBase):
         self.cgmodels = None
 
         required_if = [
-            ('state', 'present', ['containers'])
+            ('state', 'present', ['containers']), ('ip_address', 'private', ['subnet_ids'])
         ]
 
         super(AzureRMContainerInstance, self).__init__(derived_arg_spec=self.module_arg_spec,
@@ -626,13 +658,16 @@ class AzureRMContainerInstance(AzureRMModuleBase):
             elif self.state == 'present':
                 self.log("Need to check if container group has to be deleted or may be updated")
                 update_tags, newtags = self.update_tags(response.get('tags', dict()))
-                if update_tags:
-                    self.tags = newtags
 
                 if self.force_update:
                     self.log('Deleting container instance before update')
                     if not self.check_mode:
                         self.delete_containerinstance()
+                elif update_tags:
+                    if not self.check_mode:
+                        self.tags = newtags
+                        self.results['changed'] = True
+                        response = self.update_containerinstance()
 
         if self.state == 'present':
 
@@ -651,6 +686,23 @@ class AzureRMContainerInstance(AzureRMModuleBase):
             self.log("Creation / Update done")
 
         return self.results
+
+    def update_containerinstance(self):
+        '''
+        Updates a container service with the specified configuration of orchestrator, masters, and agents.
+
+        :return: deserialized container instance state dictionary
+        '''
+        try:
+            response = self.containerinstance_client.container_groups.update(resource_group_name=self.resource_group,
+                                                                             container_group_name=self.name,
+                                                                             resource=dict(tags=self.tags))
+            if isinstance(response, LROPoller):
+                response = self.get_poller_result(response)
+        except Exception as exc:
+            self.fail("Error when Updating ACI {0}: {1}".format(self.name, exc.message or str(exc)))
+
+        return response.as_dict()
 
     def create_update_containerinstance(self):
         '''
@@ -711,13 +763,17 @@ class AzureRMContainerInstance(AzureRMModuleBase):
                                                       environment_variables=variables,
                                                       volume_mounts=volume_mounts))
 
-        if self.ip_address == 'public':
+        if self.ip_address is not None:
             # get list of ports
             if len(all_ports) > 0:
                 ports = []
                 for port in all_ports:
                     ports.append(self.cgmodels.Port(port=port, protocol="TCP"))
-                ip_address = self.cgmodels.IpAddress(ports=ports, dns_name_label=self.dns_name_label, type='public')
+                ip_address = self.cgmodels.IpAddress(ports=ports, dns_name_label=self.dns_name_label, type=self.ip_address)
+
+        subnet_ids = None
+        if self.subnet_ids is not None:
+            subnet_ids = [self.cgmodels.ContainerGroupSubnetId(id=item) for item in self.subnet_ids]
 
         parameters = self.cgmodels.ContainerGroup(location=self.location,
                                                   containers=containers,
@@ -725,6 +781,7 @@ class AzureRMContainerInstance(AzureRMModuleBase):
                                                   restart_policy=_snake_to_camel(self.restart_policy, True) if self.restart_policy else None,
                                                   ip_address=ip_address,
                                                   os_type=self.os_type,
+                                                  subnet_ids=subnet_ids,
                                                   volumes=self.volumes,
                                                   tags=self.tags)
 

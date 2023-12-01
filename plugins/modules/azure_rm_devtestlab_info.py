@@ -39,19 +39,19 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: List instances of DevTest Lab by resource group
-    azure_rm_devtestlab_info:
-      resource_group: testrg
-      tags:
-        - key:value
+- name: List instances of DevTest Lab by resource group
+  azure_rm_devtestlab_info:
+    resource_group: testrg
+    tags:
+      - key:value
 
-  - name: List instances of DevTest Lab in subscription
-    azure_rm_devtestlab_info:
+- name: List instances of DevTest Lab in subscription
+  azure_rm_devtestlab_info:
 
-  - name: Get instance of DevTest Lab
-    azure_rm_devtestlab_info:
-      resource_group: testrg
-      name: testlab
+- name: Get instance of DevTest Lab
+  azure_rm_devtestlab_info:
+    resource_group: testrg
+    name: testlab
 '''
 
 RETURN = '''
@@ -137,16 +137,15 @@ labs:
             description:
                 - The tags of the resource.
             returned: always
-            type: complex
+            type: dict
             sample: "{ 'MyTag': 'MyValue' }"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
-    from msrestazure.azure_exceptions import CloudError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -202,7 +201,7 @@ class AzureRMDevTestLabInfo(AzureRMModuleBase):
         try:
             response = self.mgmt_client.labs.list_by_resource_group(resource_group_name=self.resource_group)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Lab.')
 
         if response is not None:
@@ -218,7 +217,7 @@ class AzureRMDevTestLabInfo(AzureRMModuleBase):
         try:
             response = self.mgmt_client.labs.list_by_subscription()
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not get facts for Lab.')
 
         if response is not None:
@@ -235,7 +234,7 @@ class AzureRMDevTestLabInfo(AzureRMModuleBase):
             response = self.mgmt_client.labs.get(resource_group_name=self.resource_group,
                                                  name=self.name)
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Could not get facts for Lab.')
 
         if response and self.has_tags(response.tags, self.tags):

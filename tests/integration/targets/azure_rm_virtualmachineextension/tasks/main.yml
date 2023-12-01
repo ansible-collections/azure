@@ -1,5 +1,5 @@
 - name: Create Random Storage Account Name
-  set_fact:
+  ansible.builtin.set_fact:
     storage_account: "vme{{ resource_group | hash('md5') | truncate(21, True, '') }}"
     public_settings_file: "files/test-public-settings.json"
     protected_settings_file: "files/test-protected-settings.json"
@@ -44,7 +44,7 @@
     public_ip_name: testPublicIP
     security_group_name: testNetworkSecurityGroup
 
-- name: create a storage account
+- name: Create a storage account
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
@@ -84,7 +84,7 @@
     settings: {"commandToExecute": "date"}
   register: results
 - name: Assert that VM Extension ran
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Query extension
@@ -94,7 +94,7 @@
     virtual_machine_name: testVM
   register: results
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed == False
       - results.extensions[0]['id'] != None
@@ -120,7 +120,7 @@
     settings: {"commandToExecute": "date"}
   register: results
 - name: Assert no updates
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Create VM Extension (force update)
@@ -136,7 +136,7 @@
     force_update_tag: true
   register: results
 - name: Assert updates
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: List extensions
@@ -145,7 +145,7 @@
     virtual_machine_name: testVM
   register: results
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed == False
       - results.extensions[0]['id'] != None
@@ -167,7 +167,7 @@
     state: absent
   register: results
 - name: Assert that VM Extension deleted
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Delete VM Extension (idempotent)
@@ -178,7 +178,7 @@
     state: absent
   register: results
 - name: Assert no changes
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: Create VM Extension to configure python required for VM diagnostic extension
@@ -193,7 +193,7 @@
     settings: {"commandToExecute": "apt-get update && apt-get install -y python2 && update-alternatives --install /usr/bin/python python /usr/bin/python2 1"}
   register: results
 - name: Assert that VM Extension ran
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Install VM Extension for diagnostics
@@ -209,7 +209,7 @@
     protected_settings: "{{ lookup('file', protected_settings_file) }}"
   register: results
 - name: Assert extension installed
-  assert:
+  ansible.builtin.assert:
     that: results.changed
 
 - name: Install VM Extension for diagnostics (idempotent)
@@ -225,7 +225,7 @@
     protected_settings: "{{ lookup('file', protected_settings_file) }}"
   register: results
 - name: Assert no updates
-  assert:
+  ansible.builtin.assert:
     that: not results.changed
 
 - name: List extensions
@@ -234,7 +234,7 @@
     virtual_machine_name: testVM
   register: results
 - name: Assert that facts are returned
-  assert:
+  ansible.builtin.assert:
     that:
       - results.changed == False
       - results.extensions | length >= 2

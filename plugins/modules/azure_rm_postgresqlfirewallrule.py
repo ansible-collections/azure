@@ -21,23 +21,29 @@ options:
         description:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
+        type: str
     server_name:
         description:
             - The name of the server.
         required: True
+        type: str
     name:
         description:
             - The name of the PostgreSQL firewall rule.
         required: True
+        type: str
     start_ip_address:
         description:
             - The start IP address of the PostgreSQL firewall rule. Must be IPv4 format.
+        type: str
     end_ip_address:
         description:
             - The end IP address of the PostgreSQL firewall rule. Must be IPv4 format.
+        type: str
     state:
         description:
             - Assert the state of the PostgreSQL firewall rule. Use C(present) to create or update a PostgreSQL firewall rule and C(absent) to delete it.
+        type: str
         default: present
         choices:
             - absent
@@ -52,13 +58,13 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) PostgreSQL firewall rule
-    azure_rm_postgresqlfirewallrule:
-      resource_group: myResourceGroup
-      server_name: testserver
-      name: rule1
-      start_ip_address: 10.0.0.16
-      end_ip_address: 10.0.0.18
+- name: Create (or update) PostgreSQL firewall rule
+  azure_rm_postgresqlfirewallrule:
+    resource_group: myResourceGroup
+    server_name: testserver
+    name: rule1
+    start_ip_address: 10.0.0.16
+    end_ip_address: 10.0.0.18
 '''
 
 RETURN = '''
@@ -77,7 +83,6 @@ try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

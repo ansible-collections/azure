@@ -45,12 +45,12 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get backup policy information
-      azure_rm_backuppolicy_info:
-        vault_name: Vault_Name
-        name: Policy_Name
-        resource_group: Resource_Group_Name
-      register: backup_policy
+- name: Get backup policy information
+  azure_rm_backuppolicy_info:
+    vault_name: Vault_Name
+    name: Policy_Name
+    resource_group: Resource_Group_Name
+  register: backup_policy
 '''
 
 RETURN = '''
@@ -80,8 +80,6 @@ type:
     sample: Microsoft.RecoveryServices/vaults/backupPolicies
 '''
 
-import uuid
-from datetime import datetime
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:

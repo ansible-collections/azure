@@ -23,9 +23,11 @@ options:
     name:
         description:
             - Limit results to a specific servicebus.
+        type: str
     resource_group:
         description:
             - Limit results in a specific resource group.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -37,9 +39,12 @@ options:
             - A namespace is a scoping container for all messaging components.
             - Multiple queues and topics can reside within a single namespace, and namespaces often serve as application containers.
             - Required when I(type=namespace).
+        type: str
     type:
         description:
             - Type of the resource.
+        type: str
+        required: true
         choices:
             - namespace
             - queue
@@ -49,6 +54,7 @@ options:
         description:
             - Topic name.
             - Required when I(type=subscription).
+        type: str
     show_sas_policies:
         description:
             - Whether to show the SAS policies.
@@ -375,8 +381,7 @@ servicebuses:
 '''
 
 try:
-    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, azure_id_to_dict
-    from msrestazure.azure_exceptions import CloudError
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 except Exception:
     # This is handled in azure_rm_common
     pass

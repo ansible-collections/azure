@@ -34,10 +34,10 @@ author:
 
 
 EXAMPLES = '''
-  - name: Get facts of specific DDoS protection plan
-    azure_rm_ddosprotectionplan_info:
-      resource_group: myResourceGroup
-      name: myDDoSProtectionPlan
+- name: Get facts of specific DDoS protection plan
+  azure_rm_ddosprotectionplan_info:
+    resource_group: myResourceGroup
+    name: myDDoSProtectionPlan
 '''
 
 RETURN = '''
@@ -47,7 +47,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass

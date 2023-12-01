@@ -1,0 +1,30 @@
+---
+async_virtual_network: "async-vnet"
+async_subnet: "async-subnet"
+async_virtual_network_cidr: "172.10.0.0/16"
+async_subnet_cidr: "172.10.0.0/24"
+async_virtual_machine_prefix: "async-vm"
+async_number_virtual_machine: 3
+async_number_disk_to_attach: 3
+
+shared_virtual_network: "shareddisk-vnet"
+shared_subnet: "shareddisk-subnet"
+shared_virtual_network_cidr: "10.10.0.0/16"
+shared_subnet_cidr: "10.10.0.0/24"
+shared_virtual_machine_prefix: "shareddisk-vm"
+shared_virtual_machines:
+  - name: "shareddisk-vm-1"
+    resource_group: "{{ resource_group_secondary }}"
+  - name: "shareddisk-vm-2"
+    resource_group: "{{ resource_group_secondary }}"
+shared_disks:
+  - resource_group: "{{ resource_group_secondary }}"
+    name: "shareddisk-01"
+    disk_size_gb: 4
+    storage_account_type: StandardSSD_LRS
+    max_shares: 3
+  - resource_group: "{{ resource_group_secondary }}"
+    name: "shareddisk-02"
+    disk_size_gb: 4
+    storage_account_type: StandardSSD_LRS
+    max_shares: 3

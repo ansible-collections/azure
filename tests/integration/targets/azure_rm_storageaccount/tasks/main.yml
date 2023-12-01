@@ -1,5 +1,5 @@
 - name: Set Storage Account Names
-  set_fact:
+  ansible.builtin.set_fact:
     storage_account_name_default: "sa{{ resource_group | hash('md5') | truncate(20, True, '') }}"
     storage_account_name_explicit: "sa{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
 
@@ -11,7 +11,7 @@
   register: output
   ignore_errors: true
 - name: Check intentional name failure.
-  assert:
+  ansible.builtin.assert:
     that:
       - output.failed
       - output.msg is regex('AccountNameInvalid')
@@ -38,14 +38,14 @@
     account_type: Standard_LRS
   register: defaults_output
 - name: Assert status succeeded and results match expectations
-  assert:
+  ansible.builtin.assert:
     that:
       - defaults_output.changed
       - defaults_output.state.name == storage_account_name_default
       - defaults_output.state.id is defined
       - defaults_output.state.https_only
       - defaults_output.state.access_tier == None
-      - defaults_output.state.allow_blob_public_access == true
+      - defaults_output.state.allow_blob_public_access == false
       - defaults_output.state.minimum_tls_version == "TLS1_0"
 
 - name: Create storage account with static website disabled
@@ -58,7 +58,7 @@
       enabled: false
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.static_website is defined
@@ -76,7 +76,7 @@
       enabled: false
   register: output
 - name: Assert not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -90,7 +90,7 @@
       enabled: true
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.static_website is defined
@@ -110,7 +110,7 @@
       error_document404_path: "error.html"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.static_website is defined
@@ -130,7 +130,7 @@
       error_document404_path: "error.html"
   register: output
 - name: Assert not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -139,23 +139,27 @@
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}06"
     account_type: Standard_LRS
+    large_file_shares_state: Enabled
     kind: StorageV2
     is_hns_enabled: true
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
+      - output.state.large_file_shares_state == 'Enabled'
 
 - name: Gather facts of storage account
   azure_rm_storageaccount_info:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}06"
   register: output
-- assert:
+- name: Assert the storage account facts
+  ansible.builtin.assert:
     that:
       - "output.storageaccounts | length == 1"
       - output.storageaccounts[0].is_hns_enabled == true
+      - output.storageaccounts[0].large_file_shares_state == 'Enabled'
 
 - name: Create storage account with static website enabled
   azure_rm_storageaccount:
@@ -168,7 +172,7 @@
       index_document: "abc.htm"
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.static_website is defined
@@ -187,7 +191,7 @@
       index_document: "abc.htm"
   register: output
 - name: Assert not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -201,7 +205,7 @@
       enabled: false
   register: output
 - name: Assert output
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.static_website is defined
@@ -217,7 +221,7 @@
     kind: FileStorage
   register: filestorage_output
 - name: Assert status succeeded and results match I(kind=FileStorage)
-  assert:
+  ansible.builtin.assert:
     that:
       - filestorage_output.changed
       - filestorage_output.state.sku_name == "Premium_ZRS"
@@ -226,7 +230,7 @@
   azure_rm_storageaccount:
     access_tier: Hot
     account_type: Premium_LRS
-    allow_blob_public_access: False
+    allow_blob_public_access: false
     append_tags: false
     blob_cors:
       - allowed_origins:
@@ -241,7 +245,7 @@
         exposed_headers:
           - x-ms-meta-*
         max_age_in_seconds: 200
-    https_only: False
+    https_only: false
     kind: StorageV2
     location: eastus
     minimum_tls_version: 'TLS1_2'
@@ -258,7 +262,7 @@
       galaxy: galaxy
   register: explicit_output
 - name: Assert status succeeded and correct parameter results
-  assert:
+  ansible.builtin.assert:
     that:
       - explicit_output.changed
       - explicit_output.state.id is defined
@@ -274,7 +278,7 @@
   azure_rm_storageaccount:
     access_tier: Hot
     account_type: Premium_LRS
-    allow_blob_public_access: False
+    allow_blob_public_access: false
     append_tags: false
     blob_cors:
       - allowed_origins:
@@ -289,7 +293,7 @@
         exposed_headers:
           - x-ms-meta-*
         max_age_in_seconds: 200
-    https_only: False
+    https_only: false
     kind: StorageV2
     location: eastus
     minimum_tls_version: 'TLS1_2'
@@ -306,7 +310,7 @@
       galaxy: galaxy
   register: output
 - name: Assert that properties have not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.state.access_tier == explicit_output.state.access_tier
@@ -333,7 +337,7 @@
     name: "{{ storage_account_name_explicit }}"
   register: output
 - name: Assert that properties have not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
       - output.state.access_tier == explicit_output.state.access_tier
@@ -358,7 +362,7 @@
   azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}"
-    allow_blob_public_access: False
+    allow_blob_public_access: false
     append_tags: false
     blob_cors:
       - allowed_origins:
@@ -373,7 +377,7 @@
         exposed_headers:
           - x-ms-meta-*
         max_age_in_seconds: 200
-    https_only: False
+    https_only: false
     kind: StorageV2
     minimum_tls_version: 'TLS1_1'
     network_acls:
@@ -387,7 +391,7 @@
       galaxy: galaxy
   register: output
 - name: Assert account change success
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.allow_blob_public_access == False
@@ -409,7 +413,7 @@
   register: output
   ignore_errors: true
 - name: Assert account type change failed
-  assert:
+  ansible.builtin.assert:
     that:
       - output.failed
       - output.msg is regex('Storage account of type .* cannot be changed')
@@ -424,7 +428,7 @@
   ignore_errors: true
   register: output
 - name: Assert CNAME failure
-  assert:
+  ansible.builtin.assert:
     that:
       - output.failed
       - output.msg is regex('custom domain name could not be verified')
@@ -440,7 +444,7 @@
     public_network_access: 'Disabled'
   register: output
 - name: Assert desired account config
-  assert:
+  ansible.builtin.assert:
     that:
       - output.changed
       - output.state.https_only
@@ -459,7 +463,7 @@
     public_network_access: 'Disabled'
   register: output
 - name: Assert no change
-  assert:
+  ansible.builtin.assert:
     that:
       - not output.changed
 
@@ -470,7 +474,8 @@
       - test
       - galaxy
   register: output
-- assert:
+- name: Assert the storage account facts
+  ansible.builtin.assert:
     that: output.storageaccounts | length >= 1
 
 - name: Update account tags
@@ -482,7 +487,8 @@
       testing: testing
       delete: never
   register: output
-- assert:
+- name: Assert the storage account updated
+  ansible.builtin.assert:
     that:
       - "output.state.tags | length == 2"
       - "output.state.tags.testing == 'testing'"
@@ -492,10 +498,11 @@
   azure_rm_storageaccount_info:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_explicit }}"
-    show_connection_string: True
-    show_blob_cors: True
+    show_connection_string: true
+    show_blob_cors: true
   register: output
-- assert:
+- name: Assert the storage account facts
+  ansible.builtin.assert:
     that:
       - "output.storageaccounts | length == 1"
       - not output.storageaccounts[0].custom_domain
@@ -514,7 +521,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}01"
   register: output
-- assert:
+- name: Assert the storage account facts
+  ansible.builtin.assert:
     that:
       - output.storageaccounts | length == 1
       - output.storageaccounts[0].static_website is defined
@@ -527,7 +535,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name_default }}04"
   register: output
-- assert:
+- name: Assert the storage account facts
+  ansible.builtin.assert:
     that:
       - output.storageaccounts | length == 1
       - output.storageaccounts[0].static_website is defined
@@ -551,7 +560,7 @@
   register: encryption_output
 
 - name: Assert storage account with (require_infrastructure_encryption=false) created
-  assert:
+  ansible.builtin.assert:
     that:
       - encryption_output.changed
 
@@ -561,7 +570,8 @@
     name: "{{ storage_account_name_default }}05"
   register: encryption_output
 
-- assert:
+- name: Assert the storage account facts
+  ansible.builtin.assert:
     that:
       - output.storageaccounts | length == 1
       - output.storageaccounts[0].encryption.key_source == 'Microsoft.Storage'
@@ -572,7 +582,8 @@
   azure_rm_storageaccount_info:
     resource_group: "{{ resource_group }}"
   register: output
-- assert:
+- name: Assert all storage account facts
+  ansible.builtin.assert:
     that:
       - "output.storageaccounts | length >= 2"
 
@@ -581,7 +592,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ item }}"
     state: absent
-    force_delete_nonempty: True
+    force_delete_nonempty: true
   loop:
     - "{{ storage_account_name_default }}"
     - "{{ storage_account_name_explicit }}"

@@ -20,6 +20,16 @@ else
     sudo apt install python"$2" -y
     sudo apt install python3-dateutil
     sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python"$2" 1
+    
+    if [ "$2" = "3.10" ]
+    then
+        sudo apt-get install python3.10-distutils
+    fi
+
+    if [ "$2" = "3.11" ]
+    then
+        sudo apt-get install python3.11-distutils
+    fi
 fi
 
 command -v pip
@@ -57,7 +67,9 @@ mkdir -p shippable/testresults
 pip install  -I -r "${TEST_DIR}/requirements-azure.txt"
 pip install  -I -r "${TEST_DIR}/sanity-requirements-azure.txt"
 
-timeout=90
+pip install ansible-lint
+
+timeout=180
 
 if [ "$4" = "all" ]
 then
@@ -97,8 +109,11 @@ AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
 AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
 EOF
 
+rm -rf "ansible"
+
 if [ "sanity" = "${group}" ]
 then
+    ansible-lint --exclude "tests/integration/targets/inventory_azure/playbooks/vars.yml" --force-color -c "tests/lint/ignore-lint.txt"
     ansible-test sanity --color -v --junit
 else
     ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive

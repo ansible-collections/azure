@@ -1,169 +1,191 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: yes
+  run_once: true
 
 - name: Create a namespace
   azure_rm_servicebus:
-      name: "ns{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
+    name: "ns{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    sku: premium
+    tags:
+      key1: value1
   register: namespace
 
-- assert:
+- name: Assert the namespace created
+  ansible.builtin.assert:
     that:
       - namespace.id
       - namespace.changed
+      - namespace.tags
 
 - name: Create a namespace (idempontent)
   azure_rm_servicebus:
-      name: "ns{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
+    name: "ns{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
   register: namespace
 
-- assert:
+- name: Assert idempotent
+  ansible.builtin.assert:
     that:
       - not namespace.changed
 
 - name: Create a queue
   azure_rm_servicebusqueue:
-      name: "queue{{ rpfx }}"
-      namespace: "ns{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
+    name: "queue{{ rpfx }}"
+    namespace: "ns{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    max_message_size_in_kb: 2048
+    max_size_in_mb: 2048
   register: queue
 
-- assert:
-      that:
-          - queue.id
-          - queue.changed
+- name: Assert the queue created
+  ansible.builtin.assert:
+    that:
+      - queue.id
+      - queue.changed
 
 - name: Create a topic (check mode)
   azure_rm_servicebustopic:
-      name: "topic{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      namespace: "ns{{ rpfx }}"
-      duplicate_detection_time_in_seconds: 600
-  check_mode: yes
+    name: "topic{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    namespace: "ns{{ rpfx }}"
+    duplicate_detection_time_in_seconds: 600
+    max_message_size_in_kb: 2048
+    max_size_in_mb: 2048
+  check_mode: true
   register: output
 
-- assert:
-      that:
-          - output.changed
+- name: Assert the check mode
+  ansible.builtin.assert:
+    that:
+      - output.changed
 
 - name: Create a topic
   azure_rm_servicebustopic:
-      name: "topic{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      namespace: "ns{{ rpfx }}"
-      duplicate_detection_time_in_seconds: 600
+    name: "topic{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    namespace: "ns{{ rpfx }}"
+    duplicate_detection_time_in_seconds: 600
+    max_message_size_in_kb: 2048
+    max_size_in_mb: 2048
   register: output
 
-- assert:
-      that:
-          - output.changed
-          - output.id
-          - "'subscription_count' not in output"
+- name: Assert the topic created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+      - "'subscription_count' not in output"
 
 - name: Create a topic (idempontent)
   azure_rm_servicebustopic:
-      name: "topic{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      namespace: "ns{{ rpfx }}"
-      duplicate_detection_time_in_seconds: 600
+    name: "topic{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    namespace: "ns{{ rpfx }}"
+    duplicate_detection_time_in_seconds: 600
+    max_message_size_in_kb: 2048
+    max_size_in_mb: 2048
   register: output
 
-- assert:
-      that:
-          - not output.changed
+- name: Assert idempotent
+  ansible.builtin.assert:
+    that:
+      - not output.changed
 
 - name: Create test policy
   azure_rm_servicebussaspolicy:
-      name: testpolicy
-      resource_group: "{{ resource_group }}"
-      namespace: "ns{{ rpfx }}"
-      topic: "topic{{ rpfx }}"
-      rights: manage
+    name: testpolicy
+    resource_group: "{{ resource_group }}"
+    namespace: "ns{{ rpfx }}"
+    topic: "topic{{ rpfx }}"
+    rights: manage
 
 - name: Create a subscription
   azure_rm_servicebustopicsubscription:
-      name: "subs{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      namespace: "ns{{ rpfx }}"
-      topic: "topic{{ rpfx }}"
+    name: "subs{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    namespace: "ns{{ rpfx }}"
+    topic: "topic{{ rpfx }}"
   register: subs
 
-- assert:
-      that:
-          - subs.id
-          - subs.changed
+- name: Assert the subscription created
+  ansible.builtin.assert:
+    that:
+      - subs.id
+      - subs.changed
 
 - name: Retrive topic
   azure_rm_servicebus_info:
-      type: topic
-      name: "topic{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      namespace: "ns{{ rpfx }}"
-      show_sas_policies: yes
+    type: topic
+    name: "topic{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    namespace: "ns{{ rpfx }}"
+    show_sas_policies: true
   register: facts
 
-- assert:
-      that:
-         - "facts.servicebuses | length == 1"
-         - facts.servicebuses[0].id == output.id
-         - facts.servicebuses[0].subscription_count == 1
-         - facts.servicebuses[0].sas_policies.testpolicy
-         - facts.servicebuses[0].sas_policies.testpolicy.rights == 'manage'
+- name: Assert the topic facts
+  ansible.builtin.assert:
+    that:
+      - "facts.servicebuses | length == 1"
+      - facts.servicebuses[0].id == output.id
+      - facts.servicebuses[0].subscription_count == 1
+      - facts.servicebuses[0].sas_policies.testpolicy
+      - facts.servicebuses[0].sas_policies.testpolicy.rights == 'manage'
 
 - name: Delete subscription
   azure_rm_servicebustopicsubscription:
-      name: "subs{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      namespace: "ns{{ rpfx }}"
-      topic: "topic{{ rpfx }}"
-      state: absent
+    name: "subs{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    namespace: "ns{{ rpfx }}"
+    topic: "topic{{ rpfx }}"
+    state: absent
 
 - name: Retrive topic
   azure_rm_servicebus_info:
-      type: topic
-      name: "topic{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      namespace: "ns{{ rpfx }}"
-      show_sas_policies: yes
+    type: topic
+    name: "topic{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    namespace: "ns{{ rpfx }}"
+    show_sas_policies: true
   register: facts
 
-- assert:
-      that:
-         - facts.servicebuses[0].subscription_count == 0
-         - "facts.servicebuses | length == 1"
+- name: Assert the topic facts
+  ansible.builtin.assert:
+    that:
+      - facts.servicebuses[0].subscription_count == 0
+      - "facts.servicebuses | length == 1"
 
 - name: Delete topic
   azure_rm_servicebustopic:
-      name: "topic{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      namespace: "ns{{ rpfx }}"
-      state: absent
+    name: "topic{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    namespace: "ns{{ rpfx }}"
+    state: absent
 
 - name: Retrive topic
   azure_rm_servicebus_info:
-      name: "topic{{ rpfx }}"
-      type: topic
-      resource_group: "{{ resource_group }}"
-      namespace: "ns{{ rpfx }}"
-      show_sas_policies: yes
+    name: "topic{{ rpfx }}"
+    type: topic
+    resource_group: "{{ resource_group }}"
+    namespace: "ns{{ rpfx }}"
+    show_sas_policies: true
   register: facts
 
-- assert:
-      that:
-         - "facts.servicebuses | length == 0"
+- name: Assert the topic facts
+  ansible.builtin.assert:
+    that:
+      - "facts.servicebuses | length == 0"
 
 - name: Delete queue
   azure_rm_servicebusqueue:
-      name: "queue{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      namespace: "ns{{ rpfx }}"
-      state: absent
+    name: "queue{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    namespace: "ns{{ rpfx }}"
+    state: absent
 
 - name: Delete namespace
   azure_rm_servicebus:
-      name: "ns{{ rpfx }}"
-      resource_group: "{{ resource_group }}"
-      state: absent
+    name: "ns{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent

@@ -20,14 +20,17 @@ options:
         description:
             - Name of a resource group where the Traffic Manager profile exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the Traffic Manager profile.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the Traffic Manager profile. Use C(present) to create or update a Traffic Manager profile and C(absent) to delete it.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -35,11 +38,13 @@ options:
         description:
             - Valid Azure location. Defaults to C(global) because in default public Azure cloud, Traffic Manager profile can only be deployed globally.
             - Reference U(https://docs.microsoft.com/en-us/azure/traffic-manager/quickstart-create-traffic-manager-profile#create-a-traffic-manager-profile).
+        type: str
         default: global
     profile_status:
         description:
             - The status of the Traffic Manager profile.
         default: enabled
+        type: str
         choices:
             - enabled
             - disabled
@@ -47,6 +52,7 @@ options:
         description:
             - The traffic routing method of the Traffic Manager profile.
         default: performance
+        type: str
         choices:
             - performance
             - priority
@@ -55,33 +61,42 @@ options:
     dns_config:
         description:
             - The DNS settings of the Traffic Manager profile.
+        type: dict
         suboptions:
             relative_name:
                 description:
                     - The relative DNS name provided by this Traffic Manager profile.
                     - If not provided, name of the Traffic Manager will be used.
+                type: str
             ttl:
                 description:
                     - The DNS Time-To-Live (TTL), in seconds.
                 type: int
-                default: 60
     monitor_config:
         description:
             - The endpoint monitoring settings of the Traffic Manager profile.
+        type: dict
         suboptions:
+            profile_monitor_status:
+                description:
+                    - The profile-level monitoring status of the Traffic Manager.
+                type: str
             protocol:
                 description:
                     - The protocol C(HTTP), C(HTTPS) or C(TCP) used to probe for endpoint health.
+                type: str
                 choices:
-                    - HTTP
                     - HTTPS
+                    - HTTP
                     - TCP
             port:
                 description:
                     - The TCP port used to probe for endpoint health.
+                type: int
             path:
                 description:
                     - The path relative to the endpoint domain name used to probe for endpoint health.
+                type: str
             interval:
                 description:
                     - The monitor interval for endpoints in this profile in seconds.
@@ -93,6 +108,7 @@ options:
             tolerated_failures:
                 description:
                     - The number of consecutive failed health check before declaring an endpoint in this profile Degraded after the next failed health check.
+                type: int
         default:
             protocol: HTTP
             port: 80
@@ -109,28 +125,28 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a Traffic Manager Profile
-      azure_rm_trafficmanagerprofile:
-        name: tmtest
-        resource_group: myResourceGroup
-        location: global
-        profile_status: enabled
-        routing_method: priority
-        dns_config:
-          relative_name: tmtest
-          ttl: 60
-        monitor_config:
-          protocol: HTTPS
-          port: 80
-          path: '/'
-        tags:
-          Environment: Test
+- name: Create a Traffic Manager Profile
+  azure_rm_trafficmanagerprofile:
+    name: tmtest
+    resource_group: myResourceGroup
+    location: global
+    profile_status: enabled
+    routing_method: priority
+    dns_config:
+      relative_name: tmtest
+      ttl: 60
+    monitor_config:
+      protocol: HTTPS
+      port: 80
+      path: '/'
+    tags:
+      Environment: Test
 
-    - name: Delete a Traffic Manager Profile
-      azure_rm_trafficmanagerprofile:
-        state: absent
-        name: tmtest
-        resource_group: myResourceGroup
+- name: Delete a Traffic Manager Profile
+  azure_rm_trafficmanagerprofile:
+    state: absent
+    name: tmtest
+    resource_group: myResourceGroup
 '''
 RETURN = '''
 id:
@@ -156,7 +172,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.trafficmanager.models import (
-        Profile, Endpoint, DnsConfig, MonitorConfig
+        Profile, DnsConfig, MonitorConfig
     )
 except ImportError:
     # This is handled in azure_rm_common
@@ -240,7 +256,7 @@ dns_config_spec = dict(
 
 monitor_config_spec = dict(
     profile_monitor_status=dict(type='str'),
-    protocol=dict(type='str'),
+    protocol=dict(type='str', choices=['HTTP', 'HTTPS', 'TCP']),
     port=dict(type='int'),
     path=dict(type='str'),
     interval=dict(type='int'),

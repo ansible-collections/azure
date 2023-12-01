@@ -49,6 +49,7 @@ options:
         description:
             - The parameters of the Azure Resource Manager template.
         type: list
+        elements: dict
         suboptions:
             name:
                 description:
@@ -101,16 +102,12 @@ id:
 
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from msrestazure.azure_operation import AzureOperationPoller
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -149,6 +146,7 @@ class AzureRMDtlEnvironment(AzureRMModuleBase):
             ),
             deployment_parameters=dict(
                 type='list',
+                elements='dict',
                 options=dict(
                     name=dict(
                         type='str'
@@ -247,7 +245,7 @@ class AzureRMDtlEnvironment(AzureRMModuleBase):
 
             self.delete_environment()
             # This currently doesn't work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("Environment instance unchanged")
@@ -270,21 +268,21 @@ class AzureRMDtlEnvironment(AzureRMModuleBase):
 
         try:
             if self.to_do == Actions.Create:
-                response = self.mgmt_client.environments.create_or_update(resource_group_name=self.resource_group,
-                                                                          lab_name=self.lab_name,
-                                                                          user_name=self.user_name,
-                                                                          name=self.name,
-                                                                          dtl_environment=self.dtl_environment)
+                response = self.mgmt_client.environments.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                lab_name=self.lab_name,
+                                                                                user_name=self.user_name,
+                                                                                name=self.name,
+                                                                                dtl_environment=self.dtl_environment)
             else:
                 response = self.mgmt_client.environments.update(resource_group_name=self.resource_group,
                                                                 lab_name=self.lab_name,
                                                                 user_name=self.user_name,
                                                                 name=self.name,
                                                                 dtl_environment=self.dtl_environment)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Environment instance.')
             self.fail("Error creating the Environment instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -297,11 +295,11 @@ class AzureRMDtlEnvironment(AzureRMModuleBase):
         '''
         self.log("Deleting the Environment instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.environments.delete(resource_group_name=self.resource_group,
-                                                            lab_name=self.lab_name,
-                                                            user_name=self.user_name,
-                                                            name=self.name)
-        except CloudError as e:
+            response = self.mgmt_client.environments.begin_delete(resource_group_name=self.resource_group,
+                                                                  lab_name=self.lab_name,
+                                                                  user_name=self.user_name,
+                                                                  name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the Environment instance.')
             self.fail("Error deleting the Environment instance: {0}".format(str(e)))
 
@@ -323,7 +321,7 @@ class AzureRMDtlEnvironment(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Environment instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Environment instance.')
         if found is True:
             return response.as_dict()

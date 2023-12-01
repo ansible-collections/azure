@@ -30,21 +30,25 @@ options:
         description:
             - Name of a resource group where the network interface exists or will be created.
         required: true
+        type: str
     name:
         description:
             - Name of the network interface.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the network interface. Use C(present) to create or update an interface and
               C(absent) to delete an interface.
         default: present
+        type: str
         choices:
             - absent
             - present
     location:
         description:
             - Valid Azure location. Defaults to location of the resource group.
+        type: str
     virtual_network:
         description:
             - An existing virtual network with which the network interface will be associated. Required when creating a network interface.
@@ -52,22 +56,25 @@ options:
             - Make sure your virtual network is in the same resource group as NIC when you give only the name.
             - It can be the virtual network's resource id.
             - It can be a dict which contains I(name) and I(resource_group) of the virtual network.
+            - Required when creating.
+        type: raw
         aliases:
             - virtual_network_name
-        required: true
     subnet_name:
         description:
             - Name of an existing subnet within the specified virtual network. Required when creating a network interface.
             - Use the C(virtual_network)'s resource group.
+            - Required when creating.
         aliases:
             - subnet
-        required: true
+        type: str
     os_type:
         description:
             - Determines any rules to be added to a default security group.
             - When creating a network interface, if no security group name is provided, a default security group will be created.
             - If the I(os_type=Windows), a rule allowing RDP access will be added.
             - If the I(os_type=Linux), a rule allowing SSH access will be added.
+        type: str
         choices:
             - Windows
             - Linux
@@ -76,6 +83,7 @@ options:
         description:
             - (Deprecate) Valid IPv4 address that falls within the specified subnet.
             - This option will be deprecated in 2.9, use I(ip_configurations) instead.
+        type: str
     private_ip_allocation_method:
         description:
             - (Deprecate) Whether or not the assigned IP address is permanent.
@@ -83,6 +91,7 @@ options:
             - You can update the allocation method to C(Static) after a dynamic private IP address has been assigned.
             - This option will be deprecated in 2.9, use I(ip_configurations) instead.
         default: Dynamic
+        type: str
         choices:
             - Dynamic
             - Static
@@ -97,6 +106,7 @@ options:
         description:
             - (Deprecate) Name of an existing public IP address object to associate with the security group.
             - This option will be deprecated in 2.9, use I(ip_configurations) instead.
+        type: str
         aliases:
             - public_ip_address
             - public_ip_name
@@ -105,6 +115,7 @@ options:
             - (Deprecate) If a I(public_ip_address_name) is not provided, a default public IP address will be created.
             - The allocation method determines whether or not the public IP address assigned to the network interface is permanent.
             - This option will be deprecated in 2.9, use I(ip_configurations) instead.
+        type: str
         choices:
             - Dynamic
             - Static
@@ -113,17 +124,23 @@ options:
         description:
             - List of IP configurations. Each configuration object should include
               field I(private_ip_address), I(private_ip_allocation_method), I(public_ip_address_name), I(public_ip), I(public_ip_allocation_method), I(name).
+        type: list
+        elements: dict
+        default: []
         suboptions:
             name:
                 description:
                     - Name of the IP configuration.
                 required: true
+                type: str
             private_ip_address:
                 description:
                     - Private IP address for the IP configuration.
+                type: str
             private_ip_address_version:
                 description:
                     - The version of the IP configuration.
+                type: str
                 choices:
                     - IPv4
                     - IPv6
@@ -131,6 +148,7 @@ options:
             private_ip_allocation_method:
                 description:
                     - Private IP allocation method.
+                type: str
                 choices:
                     - Dynamic
                     - Static
@@ -138,12 +156,14 @@ options:
             public_ip_address_name:
                 description:
                     - Name of the public IP address. None for disable IP address.
+                type: str
                 aliases:
                     - public_ip_address
                     - public_ip_name
             public_ip_allocation_method:
                 description:
                     - Public IP allocation method.
+                type: str
                 choices:
                     - Dynamic
                     - Static
@@ -153,11 +173,15 @@ options:
                     - List of existing load-balancer backend address pools to associate with the network interface.
                     - Can be written as a resource ID.
                     - Also can be a dict of I(name) and I(load_balancer).
+                type: list
+                elements: raw
             application_gateway_backend_address_pools:
                 description:
                     - List of existing application gateway backend address pools to associate with the network interface.
                     - Can be written as a resource ID.
                     - Also can be a dict of I(name) and I(application_gateway).
+                type: list
+                elements: raw
                 version_added: "1.10.0"
             primary:
                 description:
@@ -169,6 +193,8 @@ options:
                 description:
                     - List of application security groups in which the IP configuration is included.
                     - Element of the list could be a resource id of application security group, or dict of I(resource_group) and I(name).
+                type: list
+                elements: raw
     enable_accelerated_networking:
         description:
             - Whether the network interface should be created with the accelerated networking feature or not.
@@ -190,11 +216,14 @@ options:
             - It can be a dict contains security_group's I(name) and I(resource_group).
         aliases:
             - security_group_name
+        type: raw
     open_ports:
         description:
             - When a default security group is created for a Linux host a rule will be added allowing inbound TCP
               connections to the default SSH port C(22), and for a Windows host rules will be added allowing inbound
               access to RDP ports C(3389) and C(5986). Override the default ports by providing a list of open ports.
+        type: list
+        elements: str
     enable_ip_forwarding:
         description:
             - Whether to enable IP forwarding.
@@ -207,6 +236,7 @@ options:
             - Which DNS servers should the NIC lookup.
             - List of IP addresses.
         type: list
+        elements: str
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -218,123 +248,123 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a network interface with minimal parameters
-      azure_rm_networkinterface:
-        name: nic001
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        ip_configurations:
-          - name: ipconfig1
-            public_ip_address_name: publicip001
-            primary: True
+- name: Create a network interface with minimal parameters
+  azure_rm_networkinterface:
+    name: nic001
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    ip_configurations:
+      - name: ipconfig1
+        public_ip_address_name: publicip001
+        primary: true
 
-    - name: Create a network interface with private IP address only (no Public IP)
-      azure_rm_networkinterface:
-        name: nic001
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        create_with_security_group: False
-        ip_configurations:
-          - name: ipconfig1
-            primary: True
+- name: Create a network interface with private IP address only (no Public IP)
+  azure_rm_networkinterface:
+    name: nic001
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    create_with_security_group: false
+    ip_configurations:
+      - name: ipconfig1
+        primary: true
 
-    - name: Create a network interface for use in a Windows host (opens RDP port) with custom RDP port
-      azure_rm_networkinterface:
-        name: nic002
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        os_type: Windows
-        rdp_port: 3399
-        security_group: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Network/networkSecurit
-                         yGroups/nsg001"
-        ip_configurations:
-          - name: ipconfig1
-            public_ip_address_name: publicip001
-            primary: True
+- name: Create a network interface for use in a Windows host (opens RDP port) with custom RDP port
+  azure_rm_networkinterface:
+    name: nic002
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    os_type: Windows
+    rdp_port: 3399
+    security_group: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Network/networkSecurit
+                     yGroups/nsg001"
+    ip_configurations:
+      - name: ipconfig1
+        public_ip_address_name: publicip001
+        primary: true
 
-    - name: Create a network interface using existing security group and public IP
-      azure_rm_networkinterface:
-        name: nic003
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        security_group: secgroup001
-        ip_configurations:
-          - name: ipconfig1
-            public_ip_address_name: publicip001
-            primary: True
+- name: Create a network interface using existing security group and public IP
+  azure_rm_networkinterface:
+    name: nic003
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    security_group: secgroup001
+    ip_configurations:
+      - name: ipconfig1
+        public_ip_address_name: publicip001
+        primary: true
 
-    - name: Create a network with multiple ip configurations
-      azure_rm_networkinterface:
-        name: nic004
-        resource_group: myResourceGroup
-        subnet_name: subnet001
-        virtual_network: vnet001
-        security_group:
-          name: testnic002
-          resource_group: Testing1
-        ip_configurations:
-          - name: ipconfig1
-            public_ip_address_name: publicip001
-            primary: True
-          - name: ipconfig2
-            load_balancer_backend_address_pools:
-              - "{{ loadbalancer001.state.backend_address_pools[0].id }}"
-              - name: backendaddrpool1
-                load_balancer: loadbalancer001
+- name: Create a network with multiple ip configurations
+  azure_rm_networkinterface:
+    name: nic004
+    resource_group: myResourceGroup
+    subnet_name: subnet001
+    virtual_network: vnet001
+    security_group:
+      name: testnic002
+      resource_group: Testing1
+    ip_configurations:
+      - name: ipconfig1
+        public_ip_address_name: publicip001
+        primary: true
+      - name: ipconfig2
+        load_balancer_backend_address_pools:
+          - "{{ loadbalancer001.state.backend_address_pools[0].id }}"
+          - name: backendaddrpool1
+            load_balancer: loadbalancer001
 
-    - name: Create network interface attached to application gateway backend address pool
-      azure_rm_networkinterface:
-        name: nic-appgw
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        create_with_security_group: false
-        public_ip: false
-        ip_configurations:
-          - name: default
-            primary: true
-            application_gateway_backend_address_pools:
-              - name: myApplicationGatewayBackendAddressPool
-                application_gateway: myApplicationGateway
+- name: Create network interface attached to application gateway backend address pool
+  azure_rm_networkinterface:
+    name: nic-appgw
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    create_with_security_group: false
+    public_ip: false
+    ip_configurations:
+      - name: default
+        primary: true
+        application_gateway_backend_address_pools:
+          - name: myApplicationGatewayBackendAddressPool
+            application_gateway: myApplicationGateway
 
-    - name: Create a network interface in accelerated networking mode
-      azure_rm_networkinterface:
-        name: nic005
-        resource_group: myResourceGroup
-        virtual_network_name: vnet001
-        subnet_name: subnet001
-        enable_accelerated_networking: True
+- name: Create a network interface in accelerated networking mode
+  azure_rm_networkinterface:
+    name: nic005
+    resource_group: myResourceGroup
+    virtual_network_name: vnet001
+    subnet_name: subnet001
+    enable_accelerated_networking: true
 
-    - name: Create a network interface with IP forwarding
-      azure_rm_networkinterface:
-        name: nic001
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        ip_forwarding: True
-        ip_configurations:
-          - name: ipconfig1
-            public_ip_address_name: publicip001
-            primary: True
+- name: Create a network interface with IP forwarding
+  azure_rm_networkinterface:
+    name: nic001
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    ip_forwarding: true
+    ip_configurations:
+      - name: ipconfig1
+        public_ip_address_name: publicip001
+        primary: true
 
-    - name: Create a network interface with dns servers
-      azure_rm_networkinterface:
-        name: nic009
-        resource_group: myResourceGroup
-        virtual_network: vnet001
-        subnet_name: subnet001
-        dns_servers:
-          - 8.8.8.8
+- name: Create a network interface with dns servers
+  azure_rm_networkinterface:
+    name: nic009
+    resource_group: myResourceGroup
+    virtual_network: vnet001
+    subnet_name: subnet001
+    dns_servers:
+      - 8.8.8.8
 
-    - name: Delete network interface
-      azure_rm_networkinterface:
-        resource_group: myResourceGroup
-        name: nic003
-        state: absent
+- name: Delete network interface
+  azure_rm_networkinterface:
+    resource_group: myResourceGroup
+    name: nic003
+    state: absent
 '''
 
 RETURN = '''
@@ -485,7 +515,7 @@ state:
 '''
 
 try:
-    from msrestazure.tools import parse_resource_id, resource_id, is_valid_resource_id
+    from azure.mgmt.core.tools import resource_id, is_valid_resource_id
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
@@ -565,8 +595,8 @@ ip_configuration_spec = dict(
     private_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
     public_ip_address_name=dict(type='str', aliases=['public_ip_address', 'public_ip_name']),
     public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
-    load_balancer_backend_address_pools=dict(type='list'),
-    application_gateway_backend_address_pools=dict(type='list'),
+    load_balancer_backend_address_pools=dict(type='list', elements='raw'),
+    application_gateway_backend_address_pools=dict(type='list', elements='raw'),
     primary=dict(type='bool', default=False),
     application_security_groups=dict(type='list', elements='raw')
 )
@@ -591,11 +621,11 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
             subnet_name=dict(type='str', aliases=['subnet']),
             virtual_network=dict(type='raw', aliases=['virtual_network_name']),
             public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
-            ip_configurations=dict(type='list', default=None, elements='dict', options=ip_configuration_spec),
+            ip_configurations=dict(type='list', default=[], elements='dict', options=ip_configuration_spec),
             os_type=dict(type='str', choices=['Windows', 'Linux'], default='Linux'),
-            open_ports=dict(type='list'),
+            open_ports=dict(type='list', elements='str'),
             enable_ip_forwarding=dict(type='bool', aliases=['ip_forwarding'], default=False),
-            dns_servers=dict(type='list'),
+            dns_servers=dict(type='list', elements='str'),
         )
 
         required_if = [
@@ -754,9 +784,18 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                 # name, private_ip_address, public_ip_address_name, private_ip_allocation_method, subnet_name
                 ip_configuration_result = self.construct_ip_configuration_set(results['ip_configurations'])
                 ip_configuration_request = self.construct_ip_configuration_set(self.ip_configurations)
-                if ip_configuration_result != ip_configuration_request:
-                    self.log("CHANGED: network interface {0} ip configurations".format(self.name))
-                    changed = True
+                ip_configuration_result_name = [item['name'] for item in ip_configuration_result]
+                for item_request in ip_configuration_request:
+                    if item_request['name'] not in ip_configuration_result_name:
+                        changed = True
+                        break
+                    else:
+                        for item_result in ip_configuration_result:
+                            if len(ip_configuration_request) == 1 and len(ip_configuration_result) == 1:
+                                item_request['primary'] = True
+                            if item_request['name'] == item_result['name'] and item_request != item_result:
+                                changed = True
+                                break
 
             elif self.state == 'absent':
                 self.log("CHANGED: network interface {0} exists but requested state is 'absent'".format(self.name))
@@ -911,7 +950,7 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
         return val
 
     def construct_ip_configuration_set(self, raw):
-        configurations = [str(dict(
+        configurations = [dict(
             private_ip_allocation_method=to_native(item.get('private_ip_allocation_method')),
             public_ip_address_name=(to_native(item.get('public_ip_address').get('name'))
                                     if item.get('public_ip_address') else to_native(item.get('public_ip_address_name'))),
@@ -925,8 +964,8 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
             application_security_groups=(set([to_native(asg_id) for asg_id in item.get('application_security_groups')])
                                          if item.get('application_security_groups') else None),
             name=to_native(item.get('name'))
-        )) for item in raw]
-        return set(configurations)
+        ) for item in raw]
+        return configurations
 
 
 def main():

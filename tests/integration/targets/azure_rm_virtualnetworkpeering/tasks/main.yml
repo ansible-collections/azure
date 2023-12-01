@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     vnetname1: "vnet1{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     vnetname2: "vnet2{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     peering_name: "peering1{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 100 | random }}"
@@ -23,7 +23,8 @@
     resource_group: "{{ resource_group_secondary }}"
   register: vnet2
 
-- assert:
+- name: Assert the second virtual network created
+  ansible.builtin.assert:
     that:
       - vnet1.changed
       - vnet2.changed
@@ -38,10 +39,11 @@
       name: "{{ vnetname2 }}"
     allow_virtual_network_access: false
     allow_forwarded_traffic: true
-  check_mode: yes
+  check_mode: true
   register: output
 
-- assert:
+- name: Assert the virtual network peering check mode
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Create virtual network peering
@@ -56,7 +58,8 @@
     allow_forwarded_traffic: true
   register: output
 
-- assert:
+- name: Assert the virtual network peering created
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Update virtual network peering (idempotent)
@@ -71,7 +74,8 @@
     allow_forwarded_traffic: true
   register: output
 
-- assert:
+- name: Assert the virtual network peering idempotent
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Update virtual network peering
@@ -86,7 +90,8 @@
     allow_forwarded_traffic: false
   register: output
 
-- assert:
+- name: Assert the virtual network peering updated
+  ansible.builtin.assert:
     that: output.changed
 
 - name: Get facts
@@ -97,7 +102,7 @@
   register: facts
 
 - name: Assert Facts
-  assert:
+  ansible.builtin.assert:
     that:
       - facts['vnetpeerings'] | length == 1
       - facts['vnetpeerings'][0]['id']

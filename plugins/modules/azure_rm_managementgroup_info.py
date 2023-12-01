@@ -80,14 +80,14 @@ EXAMPLES = '''
 - name: Get facts for one management group by id with direct children
   azure_rm_managementgroup_info:
     id: /providers/Microsoft.Management/managementGroups/contoso-group
-    children: True
+    children: true
 
 - name: Get facts for one management group by name with all children, flattened into top list
   azure_rm_managementgroup_info:
     name: "contoso-group"
-    children: True
-    recurse: True
-    flatten: True
+    children: true
+    recurse: true
+    flatten: true
 '''
 
 RETURN = '''
@@ -155,11 +155,6 @@ subscriptions:
             sample: "/subscriptions"
 '''
 
-try:
-    from msrestazure.azure_exceptions import CloudError
-except Exception:
-    # This is handled in azure_rm_common
-    pass
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
@@ -232,9 +227,9 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
             response = self.management_groups_client.management_groups.get(group_id=mg_name,
                                                                            expand=expand,
                                                                            recurse=self.recurse)
-        except CloudError:
-            self.log('No Management group {0} found.'.format(mg_name))
-            response = None
+        except Exception as e:
+            self.log('No Management group {0} found. msg: {1}'.format(mg_name, e))
+            response = []
 
         return self.to_dict(response)
 
@@ -246,8 +241,8 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
 
         try:
             response = self.management_groups_client.management_groups.list()
-        except CloudError:
-            self.log('No Management groups found.')
+        except Exception as e:
+            self.log('No Management groups found.msg: {0}'.format(e))
             pass  # default to response of an empty list
 
         if self.children:
@@ -260,7 +255,9 @@ class AzureRMManagementGroupInfo(AzureRMModuleBase):
         return results
 
     def to_dict(self, azure_object):
-        if azure_object.type == '/providers/Microsoft.Management/managementGroups':
+        if not azure_object:
+            return []
+        if azure_object.type == 'Microsoft.Management/managementGroups':
             return_dict = dict(
                 display_name=azure_object.display_name,
                 id=azure_object.id,

@@ -23,17 +23,21 @@ options:
     name:
         description:
             - Limit results to a specific Traffic Manager endpoint.
+        type: str
     resource_group:
         description:
             - The resource group to search for the desired Traffic Manager profile.
         required: True
+        type: str
     profile_name:
         description:
             - Name of Traffic Manager Profile.
         required: True
+        type: str
     type:
         description:
             - Type of endpoint.
+        type: str
         choices:
             - azure_endpoints
             - external_endpoints
@@ -48,17 +52,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get endpoints facts of a Traffic Manager profile
-      azure_rm_trafficmanagerendpoint_info:
-        resource_group: myResourceGroup
-        profile_name: Testing
+- name: Get endpoints facts of a Traffic Manager profile
+  azure_rm_trafficmanagerendpoint_info:
+    resource_group: myResourceGroup
+    profile_name: Testing
 
-    - name: Get specific endpoint of a Traffic Manager profile
-      azure_rm_trafficmanager_info:
-        resource_group: myResourceGroup
-        profile_name: Testing
-        name: test_external_endpoint
-
+- name: Get specific endpoint of a Traffic Manager profile
+  azure_rm_trafficmanager_info:
+    resource_group: myResourceGroup
+    profile_name: Testing
+    name: test_external_endpoint
 '''
 
 RETURN = '''
@@ -149,8 +152,6 @@ try:
 except Exception:
     # handled in azure_rm_common
     pass
-
-import re
 
 AZURE_OBJECT_CLASS = 'TrafficManagerEndpoints'
 

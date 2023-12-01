@@ -99,7 +99,7 @@ EXAMPLES = '''
     namespace_name: myNamespace
     name: myhub
     tags:
-       - a: b
+      - a: b
     sku: free
 
 - name: Delete Event Hub
@@ -122,7 +122,6 @@ EXAMPLES = '''
     resource_group: testgroupans
     namespace_name: myNamespace
     state: absent
-
 '''
 
 RETURN = '''
@@ -157,7 +156,6 @@ state:
 '''
 
 try:
-    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.eventhub.models import Eventhub, EHNamespace
     from azure.mgmt.eventhub.models import Sku
 except ImportError:

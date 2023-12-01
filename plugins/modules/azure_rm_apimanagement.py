@@ -243,33 +243,33 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a new API instance
-      azure_rm_apimanagement:
-        resource_group: 'myResourceGroup'
-        service_name: myService
-        api_id: testApi
-        description: testDescription
-        display_name: TestAPI
-        service_url: 'http://testapi.example.net/api'
-        path: myapiPath
-        protocols:
-        - https
-    - name: Update an existing API instance.
-      azure_rm_apimanagement:
-        resource_group: myResourceGroup
-        service_name: myService
-        api_id: testApi
-        display_name: newTestAPI
-        service_url: 'http://testapi.example.net/api'
-        path: myapiPath
-        protocols:
-        - https
-    - name: ApiManagementDeleteApi
-      azure_rm_apimanagement:
-        resource_group: myResourceGroup
-        service_name: myService
-        api_id: testApi
-        state: absent
+- name: Create a new API instance
+  azure_rm_apimanagement:
+    resource_group: 'myResourceGroup'
+    service_name: myService
+    api_id: testApi
+    description: testDescription
+    display_name: TestAPI
+    service_url: 'http://testapi.example.net/api'
+    path: myapiPath
+    protocols:
+      - https
+- name: Update an existing API instance.
+  azure_rm_apimanagement:
+    resource_group: myResourceGroup
+    service_name: myService
+    api_id: testApi
+    display_name: newTestAPI
+    service_url: 'http://testapi.example.net/api'
+    path: myapiPath
+    protocols:
+      - https
+- name: ApiManagementDeleteApi
+  azure_rm_apimanagement:
+    resource_group: myResourceGroup
+    service_name: myService
+    api_id: testApi
+    state: absent
 '''
 
 RETURN = \
@@ -284,15 +284,7 @@ id:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from copy import deepcopy
-import time
 import json
-import re
-try:
-    from msrestazure.azure_exceptions import CloudError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class Actions:
@@ -516,7 +508,7 @@ class AzureApiManagement(AzureRMModuleBaseExt):
 
         self.body = {}
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2020-06-01-preview'
+        self.query_parameters['api-version'] = '2022-08-01'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -609,13 +601,15 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                 600,
                 30,
             )
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error while creating/updating the Api instance.')
             self.fail('Error creating the Api instance: {0}'.format(str(exc)))
-        try:
-            response = json.loads(response.text)
-        except Exception:
-            response = {'text': response.text}
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
 
         return response
 
@@ -633,7 +627,7 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                 30,
             )
             isDeleted = True
-        except CloudError as e:
+        except Exception as e:
             self.log('Error attempting to delete the Api instance.')
             self.fail('Error deleting the Api instance: {0}'.format(str(e)))
 
@@ -653,9 +647,9 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                 30,
             )
             isFound = True
-            response = json.loads(response.text)
+            response = json.loads(response.body())
             self.log("Response : {0}".format(response))
-        except CloudError as e:
+        except Exception as e:
             self.log('Could not find the Api instance from the given parameters.')
         if isFound is True:
             return response

@@ -1,5 +1,5 @@
 - name: Prepare random number
-  set_fact:
+  ansible.builtin.set_fact:
     vnetname: "vnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Delete virtual network, if it exists
@@ -22,6 +22,7 @@
 
 - name: Update virtual network with dns server
   azure_rm_virtualnetwork:
+    flow_timeout_in_minutes: 8
     name: "{{ vnetname }}"
     address_prefixes_cidr:
       - 10.1.0.0/16
@@ -36,9 +37,11 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- name: Assert the virtual network update
+  ansible.builtin.assert:
     that:
       - "output.state.address_prefixes | length == 3"
+      - "output.state.flow_timeout_in_minutes == 8"
       - "output.state.dns_servers | length == 2"
       - "output.state.tags.delete == 'on-exit'"
       - "output.state.tags | length == 2"
@@ -58,11 +61,13 @@
       - testing
   register: facts
 
-- assert:
+- name: Assert the virtual network facts
+  ansible.builtin.assert:
     that:
       - "facts.virtualnetworks | length == 1"
       - "facts.virtualnetworks[0].dns_servers | length == 2"
       - "facts.virtualnetworks[0].address_prefixes | length == 3"
+      - "facts.virtualnetworks[0].flow_timeout_in_minutes == 8"
       - "facts.virtualnetworks[0].subnets | length == 1"
 
 - name: Gather facts by resource group, tags
@@ -72,7 +77,8 @@
       - testing
   register: facts
 
-- assert:
+- name: Assert the virtualnetwork facts
+  ansible.builtin.assert:
     that: "facts.virtualnetworks | length >= 1"
 
 - name: Gather facts by tags
@@ -81,7 +87,8 @@
       - testing
   register: facts
 
-- assert:
+- name: Assert the virtual network facts
+  ansible.builtin.assert:
     that: "facts.virtualnetworks | length >= 1"
 
 - name: Should be idempotent
@@ -100,7 +107,8 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- name: Assert the virtual network idempotent
+  ansible.builtin.assert:
     that: not output.changed
 
 - name: Update tags
@@ -113,22 +121,24 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
-     that: output.state.tags | length == 3
+- name: Assert the virtual network updated
+  ansible.builtin.assert:
+    that: output.state.tags | length == 3
 
 - name: Purge tags
   azure_rm_virtualnetwork:
     name: "{{ vnetname }}"
-    append_tags: no
+    append_tags: false
     tags:
       testing: 'always'
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
-     that:
-       - output.state.tags | length == 1
-       - output.state.tags.testing == 'always'
+- name: Assert the virtual network updated
+  ansible.builtin.assert:
+    that:
+      - output.state.tags | length == 1
+      - output.state.tags.testing == 'always'
 
 - name: Should require address_prefixes_cidr when purge_address_prefixes
   azure_rm_virtualnetwork:
@@ -136,10 +146,11 @@
     purge_address_prefixes: true
     resource_group: "{{ resource_group }}"
   register: output
-  ignore_errors: yes
+  ignore_errors: true
 
-- assert:
-      that: output.failed
+- name: Assert the virtual network updated
+  ansible.builtin.assert:
+    that: output.failed
 
 - name: Purge address prefixes
   azure_rm_virtualnetwork:
@@ -149,12 +160,13 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- name: Assert the virtual network updated
+  ansible.builtin.assert:
     that:
-        - output.state.address_prefixes | length == 1
-        - output.state.address_prefixes[0] == '10.1.0.0/16'
-        - output.state.dns_servers | length == 2
-        - output.state.dns_servers[0] == '127.0.0.1'
+      - output.state.address_prefixes | length == 1
+      - output.state.address_prefixes[0] == '10.1.0.0/16'
+      - output.state.dns_servers | length == 2
+      - output.state.dns_servers[0] == '127.0.0.1'
 
 - name: Purge DNS servers
   azure_rm_virtualnetwork:
@@ -163,7 +175,8 @@
     resource_group: "{{ resource_group }}"
   register: output
 
-- assert:
+- name: Assert the virtual network DNS server purged
+  ansible.builtin.assert:
     that: output.state['dns_servers'] is undefined
 
 - name: Gather facts
@@ -172,7 +185,8 @@
     name: "{{ vnetname }}"
   register: facts
 
-- assert:
+- name: Assert the virtual network facts
+  ansible.builtin.assert:
     that:
       - facts.virtualnetworks | length == 1
       - "facts.virtualnetworks[0].subnets | length == 1"

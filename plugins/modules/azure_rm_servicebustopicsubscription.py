@@ -20,14 +20,17 @@ options:
         description:
             - Name of resource group.
         required: true
+        type: str
     name:
         description:
             - Name of the servicebus subscription.
         required: true
+        type: str
     state:
         description:
             - Assert the state of the servicebus subscription. Use C(present) to create or update and use C(absent) to delete.
         default: present
+        type: str
         choices:
             - absent
             - present
@@ -37,10 +40,12 @@ options:
             - A namespace is a scoping container for all messaging components.
             - Multiple subscriptions and topics can reside within a single namespace, and namespaces often serve as application containers.
         required: true
+        type: str
     topic:
         description:
             - Topic name which the subscription subscribe to.
         required: true
+        type: str
     auto_delete_on_idle_in_seconds:
         description:
             - Time idle interval after which a subscription is automatically deleted.
@@ -67,9 +72,11 @@ options:
     forward_dead_lettered_messages_to:
         description:
             - Queue or topic name to forward the Dead Letter message for a subscription.
+        type: str
     forward_to:
         description:
             - Queue or topic name to forward the messages for a subscription.
+        type: str
     lock_duration_in_seconds:
         description:
             - Timespan duration of a peek-lock.
@@ -92,6 +99,7 @@ options:
     status:
         description:
             - Status of the entity.
+        type: str
         choices:
             - active
             - disabled
@@ -100,7 +108,6 @@ options:
 
 extends_documentation_fragment:
     - azure.azcollection.azure
-    - azure.azcollection.azure_tags
 
 author:
     - Yuwei Zhou (@yuwzho)
@@ -193,6 +200,7 @@ class AzureRMServiceSubscription(AzureRMModuleBase):
         )
 
         super(AzureRMServiceSubscription, self).__init__(self.module_arg_spec,
+                                                         supports_tags=False,
                                                          supports_check_mode=True)
 
     def exec_module(self, **kwargs):

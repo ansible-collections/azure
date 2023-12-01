@@ -21,20 +21,25 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     lab_name:
         description:
             - The name of the lab.
         required: True
+        type: str
     name:
         description:
             - The name of the virtual machine.
         required: True
+        type: str
     notes:
         description:
             - The notes of the virtual machine.
+        type: str
     os_type:
         description:
             - Base type of operating system.
+        type: str
         choices:
             - windows
             - linux
@@ -44,84 +49,106 @@ options:
             - The list of choices varies depending on the subscription and location. Check your subscription for available choices.
             - Available values can be found on this website, link U(https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general).
             - Required when I(state=present).
+        type: str
     user_name:
         description:
             - The user name of the virtual machine.
+        type: str
     password:
         description:
             - The password of the virtual machine administrator.
+        type: str
     ssh_key:
         description:
             - The SSH key of the virtual machine administrator.
+        type: str
     lab_subnet:
         description:
             - An existing subnet within lab's virtual network.
             - It can be the subnet's resource id.
             - It can be a dict which contains C(virtual_network_name) and C(name).
+        type: raw
     disallow_public_ip_address:
         description:
             - Indicates whether the virtual machine is to be created without a public IP address.
+        type: str
     artifacts:
         description:
             - The artifacts to be installed on the virtual machine.
         type: list
+        elements: dict
         suboptions:
             source_name:
                 description:
                     - The artifact's source name.
+                type: str
             source_path:
                 description:
                     - The artifact's path in the source repository.
+                type: str
             parameters:
                 description:
                     - The parameters of the artifact.
                 type: list
+                elements: dict
                 suboptions:
                     name:
                         description:
                             - The name of the artifact parameter.
+                        type: str
                     value:
                         description:
                             - The value of the artifact parameter.
+                        type: str
     image:
         description:
             - The Microsoft Azure Marketplace image reference of the virtual machine.
+        type: dict
         suboptions:
             offer:
                 description:
                     - The offer of the gallery image.
+                type: str
             publisher:
                 description:
                     - The publisher of the gallery image.
+                type: str
             sku:
                 description:
                     - The SKU of the gallery image.
+                type: str
             os_type:
                 description:
                     - The OS type of the gallery image.
+                type: str
             version:
                 description:
                     - The version of the gallery image.
+                type: str
     expiration_date:
         description:
             - The expiration date for VM.
+        type: str
     allow_claim:
         description:
             - Indicates whether another user can take ownership of the virtual machine.
+        type: str
     storage_type:
         description:
             - Storage type to use for virtual machine.
+        type: str
         choices:
             - standard
             - premium
     state:
-      description:
-          - Assert the state of the Virtual Machine.
-          - Use C(present) to create or update an Virtual Machine and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Virtual Machine.
+            - Use C(present) to create or update an Virtual Machine and C(absent) to delete it.
+        type: str
+        default: present
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -133,31 +160,31 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) Virtual Machine
-    azure_rm_devtestlabvirtualmachine:
-      resource_group: myrg
-      lab_name: mylab
-      name: myvm
-      notes: Virtual machine notes....
-      os_type: linux
-      vm_size: Standard_A2_v2
-      user_name: vmadmin
-      password: ZSuppas$$21!
-      lab_subnet:
-        name: myvnSubnet
-        virtual_network_name: myvn
-      disallow_public_ip_address: no
-      image:
-        offer: UbuntuServer
-        publisher: Canonical
-        sku: 16.04-LTS
-        os_type: Linux
-        version: latest
-      artifacts:
-        - source_name: myartifact
-          source_path: "/Artifacts/linux-install-mongodb"
-      allow_claim: no
-      expiration_date: "2019-02-22T01:49:12.117974Z"
+- name: Create (or update) Virtual Machine
+  azure_rm_devtestlabvirtualmachine:
+    resource_group: myrg
+    lab_name: mylab
+    name: myvm
+    notes: Virtual machine notes....
+    os_type: linux
+    vm_size: Standard_A2_v2
+    user_name: vmadmin
+    password: ZSuppas$$21!
+    lab_subnet:
+      name: myvnSubnet
+      virtual_network_name: myvn
+    disallow_public_ip_address: false
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      os_type: Linux
+      version: latest
+    artifacts:
+      - source_name: myartifact
+        source_path: "/Artifacts/linux-install-mongodb"
+    allow_claim: false
+    expiration_date: "2019-02-22T01:49:12.117974Z"
 '''
 
 RETURN = '''
@@ -181,16 +208,13 @@ fqdn:
     sample: myvm.eastus.cloudapp.azure.com
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from msrestazure.azure_operation import AzureOperationPoller
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -246,12 +270,17 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             ),
             artifacts=dict(
                 type='list',
+                elements='dict',
                 options=dict(
-                    artifact_id=dict(
+                    source_name=dict(
+                        type='str',
+                    ),
+                    source_path=dict(
                         type='str'
                     ),
                     parameters=dict(
                         type='list',
+                        elements='dict',
                         options=dict(
                             name=dict(
                                 type='str'
@@ -458,14 +487,14 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.log("Creating / Updating the Virtual Machine instance {0}".format(self.name))
 
         try:
-            response = self.mgmt_client.virtual_machines.create_or_update(resource_group_name=self.resource_group,
-                                                                          lab_name=self.lab_name,
-                                                                          name=self.name,
-                                                                          lab_virtual_machine=self.lab_virtual_machine)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            response = self.mgmt_client.virtual_machines.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                lab_name=self.lab_name,
+                                                                                name=self.name,
+                                                                                lab_virtual_machine=self.lab_virtual_machine)
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Virtual Machine instance.')
             self.fail("Error creating the Virtual Machine instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -478,14 +507,14 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         '''
         self.log("Deleting the Virtual Machine instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.virtual_machines.delete(resource_group_name=self.resource_group,
-                                                                lab_name=self.lab_name,
-                                                                name=self.name)
-        except CloudError as e:
+            response = self.mgmt_client.virtual_machines.begin_delete(resource_group_name=self.resource_group,
+                                                                      lab_name=self.lab_name,
+                                                                      name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the Virtual Machine instance.')
             self.fail("Error deleting the Virtual Machine instance: {0}".format(str(e)))
 
-        if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+        if isinstance(response, LROPoller):
             response = self.get_poller_result(response)
 
         return True
@@ -505,7 +534,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Virtual Machine instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Virtual Machine instance.')
         if found is True:
             return response.as_dict()
@@ -525,7 +554,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             self.log("Response : {0}".format(response))
             self.log("DevTest Lab instance : {0} found".format(response.name))
             return response.as_dict()
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.fail('Did not find the DevTest Lab instance.')
             return False
 

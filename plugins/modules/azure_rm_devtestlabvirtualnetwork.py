@@ -21,28 +21,34 @@ options:
         description:
             - The name of the resource group.
         required: True
+        type: str
     lab_name:
         description:
             - The name of the lab.
         required: True
+        type: str
     name:
         description:
             - The name of the virtual network.
         required: True
+        type: str
     location:
         description:
             - The location of the resource.
+        type: str
     description:
         description:
             - The description of the virtual network.
+        type: str
     state:
-      description:
-          - Assert the state of the Virtual Network.
-          - Use C(present) to create or update an Virtual Network and C(absent) to delete it.
-      default: present
-      choices:
-          - absent
-          - present
+        description:
+            - Assert the state of the Virtual Network.
+            - Use C(present) to create or update an Virtual Network and C(absent) to delete it.
+        type: str
+        default: present
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -54,12 +60,12 @@ author:
 '''
 
 EXAMPLES = '''
-  - name: Create (or update) Virtual Network
-    azure_rm_devtestlabvirtualnetwork:
-      resource_group: myResourceGroup
-      lab_name: mylab
-      name: myvn
-      description: My Lab Virtual Network
+- name: Create (or update) Virtual Network
+  azure_rm_devtestlabvirtualnetwork:
+    resource_group: myResourceGroup
+    lab_name: mylab
+    name: myvn
+    description: My Lab Virtual Network
 '''
 
 RETURN = '''
@@ -79,16 +85,12 @@ external_provider_resource_id:
              rtualNetworks/myvn"
 '''
 
-import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
-    from msrestazure.azure_exceptions import CloudError
-    from msrest.polling import LROPoller
-    from msrestazure.azure_operation import AzureOperationPoller
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.devtestlabs import DevTestLabsClient
-    from msrest.serialization import Model
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -204,7 +206,7 @@ class AzureRMDevTestLabVirtualNetwork(AzureRMModuleBase):
                 return self.results
             self.delete_virtualnetwork()
             # This currently doesn't work as there is a bug in SDK / Service
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         else:
             self.log("Virtual Network instance unchanged")
@@ -227,14 +229,14 @@ class AzureRMDevTestLabVirtualNetwork(AzureRMModuleBase):
         self.log("Creating / Updating the Virtual Network instance {0}".format(self.name))
 
         try:
-            response = self.mgmt_client.virtual_networks.create_or_update(resource_group_name=self.resource_group,
-                                                                          lab_name=self.lab_name,
-                                                                          name=self.name,
-                                                                          virtual_network=self.virtual_network)
-            if isinstance(response, LROPoller) or isinstance(response, AzureOperationPoller):
+            response = self.mgmt_client.virtual_networks.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                lab_name=self.lab_name,
+                                                                                name=self.name,
+                                                                                virtual_network=self.virtual_network)
+            if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
-        except CloudError as exc:
+        except Exception as exc:
             self.log('Error attempting to create the Virtual Network instance.')
             self.fail("Error creating the Virtual Network instance: {0}".format(str(exc)))
         return response.as_dict()
@@ -247,10 +249,10 @@ class AzureRMDevTestLabVirtualNetwork(AzureRMModuleBase):
         '''
         self.log("Deleting the Virtual Network instance {0}".format(self.name))
         try:
-            response = self.mgmt_client.virtual_networks.delete(resource_group_name=self.resource_group,
-                                                                lab_name=self.lab_name,
-                                                                name=self.name)
-        except CloudError as e:
+            response = self.mgmt_client.virtual_networks.begin_delete(resource_group_name=self.resource_group,
+                                                                      lab_name=self.lab_name,
+                                                                      name=self.name)
+        except Exception as e:
             self.log('Error attempting to delete the Virtual Network instance.')
             self.fail("Error deleting the Virtual Network instance: {0}".format(str(e)))
 
@@ -271,7 +273,7 @@ class AzureRMDevTestLabVirtualNetwork(AzureRMModuleBase):
             found = True
             self.log("Response : {0}".format(response))
             self.log("Virtual Network instance : {0} found".format(response.name))
-        except CloudError as e:
+        except ResourceNotFoundError as e:
             self.log('Did not find the Virtual Network instance.')
         if found is True:
             return response.as_dict()

@@ -47,14 +47,14 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: List Role Definitions in scope
-      azure_rm_roledefinition_info:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
+- name: List Role Definitions in scope
+  azure_rm_roledefinition_info:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
 
-    - name: Get Role Definition by name
-      azure_rm_roledefinition_info:
-        scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
-        role_name: myRoleDefinition
+- name: Get Role Definition by name
+  azure_rm_roledefinition_info:
+    scope: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
+    role_name: myRoleDefinition
 '''
 
 RETURN = '''
@@ -120,11 +120,8 @@ roledefinitions:
                     sample: [ 'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write' ]
 '''
 
-from ansible.module_utils._text import to_native
-
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from msrest.serialization import Model
     from azure.mgmt.authorization import AuthorizationManagementClient
 
 except ImportError:
@@ -197,7 +194,6 @@ class AzureRMRoleDefinitionInfo(AzureRMModuleBase):
         # get management client
         self._client = self.get_mgmt_svc_client(AuthorizationManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,
-                                                is_track2=True,
                                                 api_version="2018-01-01-preview")
 
         if self.id:
