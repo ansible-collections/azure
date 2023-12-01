@@ -15,6 +15,7 @@ version_added: '1.12.0'
 requirements:
     - requests
     - azure
+    - msrest
 short_description: Read secret from Azure Key Vault.
 description:
   - This lookup returns the content of secret saved in Azure Key Vault.
@@ -32,6 +33,8 @@ options:
         description: Secret of the service principal.
     tenant_id:
         description: Tenant id of service principal.
+    use_msi:
+        description: MSI token autodiscover, default is true
 notes:
     - If version is not provided, this plugin will return the latest version of the secret.
     - If ansible is running on Azure Virtual Machine with MSI enabled, client_id, secret and tenant isn't required.
@@ -74,7 +77,8 @@ EXAMPLE = """
           vault_url=url,
           client_id=client_id,
           secret=secret,
-          tenant_id=tenant
+          tenant_id=tenant,
+          use_msi=false
         )
       }}"
 
@@ -139,22 +143,6 @@ token_headers = {
     'Metadata': 'true'
 }
 
-token = None
-
-try:
-    token_res = requests.get('http://169.254.169.254/metadata/identity/oauth2/token', params=token_params, headers=token_headers, timeout=(3.05, 27))
-    if token_res.ok:
-        token = token_res.json().get("access_token")
-        if token is not None:
-            TOKEN_ACQUIRED = True
-        else:
-            display.v('Successfully called MSI endpoint, but no token was available. Will use service principal if provided.')
-    else:
-        display.v("Unable to query MSI endpoint, Error Code %s. Will use service principal if provided" % token_res.status_code)
-except Exception:
-    display.v('Unable to fetch MSI token. Will use service principal if provided.')
-    TOKEN_ACQUIRED = False
-
 
 def lookup_secret_non_msi(terms, vault_url, kwargs):
 
@@ -187,6 +175,24 @@ class LookupModule(LookupBase):
     def run(self, terms, variables, **kwargs):
         ret = []
         vault_url = kwargs.pop('vault_url', None)
+        use_msi = kwargs.pop('use_msi', True)
+        TOKEN_ACQUIRED = False
+        token = None
+
+        if use_msi:
+            try:
+                token_res = requests.get('http://169.254.169.254/metadata/identity/oauth2/token', params=token_params, headers=token_headers, timeout=(3.05, 27))
+                if token_res.ok:
+                    token = token_res.json().get("access_token")
+                    if token is not None:
+                        TOKEN_ACQUIRED = True
+                    else:
+                        display.v('Successfully called MSI endpoint, but no token was available. Will use service principal if provided.')
+                else:
+                    display.v("Unable to query MSI endpoint, Error Code %s. Will use service principal if provided" % token_res.status_code)
+            except Exception:
+                display.v('Unable to fetch MSI token. Will use service principal if provided.')
+
         if vault_url is None:
             raise AnsibleError('Failed to get valid vault url.')
         if TOKEN_ACQUIRED:
