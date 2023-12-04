@@ -35,7 +35,7 @@
 - name: Check there is no Traffic Manager profile created
   ansible.builtin.assert:
     that:
-      - fact.tms | length }} == 0
+      - fact.tms | length == 0
 
 - name: Create a Traffic Manager profile
   azure_rm_trafficmanagerprofile:
