@@ -338,7 +338,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
             query_parameters=GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
                 count=True,
-                select=['id', 'displayName', 'userPrincipalName', 'mailNickname', 'mail', 'accountEnabled', 'userType', 
+                select=['id', 'displayName', 'userPrincipalName', 'mailNickname', 'mail', 'accountEnabled', 'userType',
                         'appId', 'appRoleAssignmentRequired']
 
             ),
@@ -349,7 +349,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         request_configuration = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetRequestConfiguration(
             query_parameters=TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
                 count=True,
-                select=['id', 'displayName', 'userPrincipalName', 'mailNickname', 'mail', 'accountEnabled', 'userType', 
+                select=['id', 'displayName', 'userPrincipalName', 'mailNickname', 'mail', 'accountEnabled', 'userType',
                         'appId', 'appRoleAssignmentRequired']
 
             ),
