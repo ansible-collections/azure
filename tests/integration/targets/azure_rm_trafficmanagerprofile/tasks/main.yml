@@ -33,7 +33,9 @@
   register: fact
 
 - name: Check there is no Traffic Manager profile created
-  ansible.builtin.assert: { that: "{{ fact.tms | length }} == 0" }
+  ansible.builtin.assert:
+    that:
+      - fact.tms | length }} == 0
 
 - name: Create a Traffic Manager profile
   azure_rm_trafficmanagerprofile:
@@ -69,7 +71,7 @@
 - name: Assert fact returns the created one
   ansible.builtin.assert:
     that:
-      - "fact.tms | length == 1"
+      - fact.tms | length == 1
       - fact.tms[0].id == tm.id
       - fact.tms[0].endpoints | length == 0
 
@@ -261,7 +263,7 @@
 - name: Assert the traffic manager profile is still there
   ansible.builtin.assert:
     that:
-      - "fact.tms | length == 1"
+      - fact.tms | length == 1
       - fact.tms[0].id == tm.id
       - fact.tms[0].endpoints | length == 1
 
@@ -286,4 +288,4 @@
 - name: Assert fact returns empty
   ansible.builtin.assert:
     that:
-      - "fact.tms | length == 0"
+      - fact.tms | length == 0
