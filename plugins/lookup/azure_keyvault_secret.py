@@ -15,7 +15,6 @@ version_added: '1.12.0'
 requirements:
     - requests
     - azure
-    - msrest
 short_description: Read secret from Azure Key Vault.
 description:
   - This lookup returns the content of secret saved in Azure Key Vault.
@@ -181,7 +180,10 @@ class LookupModule(LookupBase):
 
         if use_msi:
             try:
-                token_res = requests.get('http://169.254.169.254/metadata/identity/oauth2/token', params=token_params, headers=token_headers, timeout=(3.05, 27))
+                token_res = requests.get('http://169.254.169.254/metadata/identity/oauth2/token',
+                                         params=token_params,
+                                         headers=token_headers,
+                                         timeout=(3.05, 27))
                 if token_res.ok:
                     token = token_res.json().get("access_token")
                     if token is not None:
