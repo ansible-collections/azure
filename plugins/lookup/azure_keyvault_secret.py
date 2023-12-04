@@ -33,7 +33,7 @@ options:
     tenant_id:
         description: Tenant id of service principal.
     use_msi:
-        description: MSI token autodiscover, default is true
+        description: MSI token autodiscover, default is true.
 notes:
     - If version is not provided, this plugin will return the latest version of the secret.
     - If ansible is running on Azure Virtual Machine with MSI enabled, client_id, secret and tenant isn't required.
