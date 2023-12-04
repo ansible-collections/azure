@@ -71,7 +71,7 @@
       - output.changed
       - output.state.virtual_network_rules | length == 1
       - output.state.virtual_network_rules[0].name == "vnet_rule_1"
-      - output.state.virtual_network_rules[0].subnet_id == "{{ subnet_output.state.id }}"
+      - output.state.virtual_network_rules[0].subnet_id == subnet_output.state.id
 
 - name: Update data lake store to change encryption state that must fail
   azure_rm_datalakestore:
@@ -154,7 +154,7 @@
       - output.state.trusted_id_provider_state == "Disabled"
       - output.state.virtual_network_rules | length == 1
       - output.state.virtual_network_rules[0].name == "vnet_rule_1"
-      - output.state.virtual_network_rules[0].subnet_id == "{{ subnet_output.state.id }}"
+      - output.state.virtual_network_rules[0].subnet_id == subnet_output.state.id
 
 - name: Create new data lake store (Idempotence)
   azure_rm_datalakestore:
