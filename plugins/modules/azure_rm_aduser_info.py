@@ -269,7 +269,6 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                             "userType"],
                     count=True
                 ),
-                headers={'ConsistencyLevel': "eventual", }
             ))
 
 

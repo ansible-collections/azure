@@ -453,7 +453,6 @@ class AzureRMADGroup(AzureRMModuleBase):
                     count=True,
                     filter=filter,
                 ),
-                headers={'ConsistencyLevel': "eventual", }
             )
             groups = await self._client.groups.get(request_configuration=request_configuration)
         else:
@@ -468,7 +467,6 @@ class AzureRMADGroup(AzureRMModuleBase):
             query_parameters=TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
                 count=True,
             ),
-            headers={'ConsistencyLevel': "eventual", }
         )
         if filters:
             request_configuration.query_parameters.filter = filters

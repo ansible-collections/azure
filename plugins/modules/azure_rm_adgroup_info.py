@@ -324,7 +324,6 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
                     count=True,
                     filter=filter,
                 ),
-                headers={'ConsistencyLevel': "eventual", }
             )
             groups = await self._client.groups.get(request_configuration=request_configuration)
         else:
@@ -339,9 +338,10 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
             query_parameters=GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
                 count=True,
-                select='id,displayName,userPrincipalName,mailNickname,mail,accountEnabled,userType,appId,appRoleAssignmentRequired'
+                select=['id', 'displayName', 'userPrincipalName', 'mailNickname', 'mail', 'accountEnabled', 'userType', 
+                        'appId', 'appRoleAssignmentRequired']
+
             ),
-            headers={'ConsistencyLevel': "eventual", }
         )
         return await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
 
@@ -349,9 +349,10 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         request_configuration = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetRequestConfiguration(
             query_parameters=TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
                 count=True,
-                select='id,displayName,userPrincipalName,mailNickname,mail,accountEnabled,userType,appId,appRoleAssignmentRequired'
+                select=['id', 'displayName', 'userPrincipalName', 'mailNickname', 'mail', 'accountEnabled', 'userType', 
+                        'appId', 'appRoleAssignmentRequired']
+
             ),
-            headers={'ConsistencyLevel': "eventual", }
         )
         if filters:
             request_configuration.query_parameters.filter = filters
