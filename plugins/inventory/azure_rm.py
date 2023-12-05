@@ -445,7 +445,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         response = self.new_client.send_request(request_new)
         if response.status_code == 202:
             try:
-                poller = ARMPolling(timeout=3)
+                poller = ARMPolling(timeout=20)
                 poller.initialize(client=self.new_client,
                                   initial_response=PipelineResponse(None, response, None),
                                   deserialization_callback=lambda r: r)
