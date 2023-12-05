@@ -456,8 +456,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         else:
             return json.loads(response.body())
 
-        return json.loads(response.body())
-
     def send_request(self, url, api_version):
         query_parameters = {'api-version': api_version}
         header_parameters = {'x-ms-client-request-id': str(uuid.uuid4()), 'Content-Type': 'application/json; charset=utf-8'}
