@@ -1,6 +1,6 @@
 ---
-uid: "{{ (resource_group_secondary ~ inventory_hostname) | hash('md5') | truncate(18, True, '') }}"
-uid_short: "{{ (resource_group_secondary ~ inventory_hostname) | hash('md5') | truncate(10, True, '') }}"
+uid: "{{ (resource_group ~ inventory_hostname) | hash('md5') | truncate(18, True, '') }}"
+uid_short: "{{ (resource_group ~ inventory_hostname) | hash('md5') | truncate(10, True, '') }}"
 
 storage_account: "{{ 'stor' ~ uid }}"
 availability_set: "{{ 'avbs' ~ uid_short }}"
