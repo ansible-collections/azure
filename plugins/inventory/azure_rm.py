@@ -105,6 +105,14 @@ exclude_host_filters:
     - tags['tagkey2'] is defined and tags['tagkey2'] == 'tagkey2'
     # excludes hosts that are powered off
     - powerstate != 'running'
+
+# includes a host to the inventory when any of these expressions is true, can refer to any vars defined on the host
+include_host_filters:
+    # includes hosts that in the eastus region and power on
+    - location in ['eastus'] and powerstate == 'running'
+    # includes hosts in the eastus region and power on OR includes hosts in the eastus2 region and tagkey is tagkey
+    - location in ['eastus'] and powerstate == 'running'
+    - location in ['eastus2'] and tags['tagkey'] is defined and tags['tagkey'] == 'tagkey'
 '''
 
 # FUTURE: do we need a set of sane default filters, separate from the user-defineable ones?
@@ -217,6 +225,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         self._filters = self.get_option('exclude_host_filters') + self.get_option('default_host_filters')
 
+        self._include_filters = self.get_option('include_host_filters')
+
         try:
             self._credential_setup()
             self._get_hosts()
@@ -299,7 +309,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         for h in self._hosts:
             # FUTURE: track hostnames to warn if a hostname is repeated (can happen for legacy and for composed inventory_hostname)
             inventory_hostname = self._get_hostname(h, hostnames=constructable_hostnames, strict=constructable_config_strict)
-            if self._filter_host(inventory_hostname, h.hostvars):
+            if self._filter_exclude_host(inventory_hostname, h.hostvars):
+                continue
+            if not self._filter_include_host(inventory_hostname, h.hostvars):
                 continue
             self.inventory.add_host(inventory_hostname)
             # FUTURE: configurable default IP list? can already do this via hostvar_expressions
@@ -315,10 +327,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             self._add_host_to_keyed_groups(constructable_config_keyed_groups, h.hostvars, inventory_hostname, strict=constructable_config_strict)
 
     # FUTURE: fix underlying inventory stuff to allow us to quickly access known groupvars from reconciled host
-    def _filter_host(self, inventory_hostname, hostvars):
+    def _filter_host(self, filter, inventory_hostname, hostvars):
         self.templar.available_variables = hostvars
 
-        for condition in self._filters:
+        for condition in filter:
             # FUTURE: should warn/fail if conditional doesn't return True or False
             conditional = "{{% if {0} %}} True {{% else %}} False {{% endif %}}".format(condition)
             try:
@@ -330,6 +342,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
                 continue
 
         return False
+
+    def _filter_include_host(self, inventory_hostname, hostvars):
+        return self._filter_host(self._include_filters, inventory_hostname, hostvars)
+
+    def _filter_exclude_host(self, inventory_hostname, hostvars):
+        return self._filter_host(self._filters, inventory_hostname, hostvars)
 
     def _get_hostname(self, host, hostnames=None, strict=False):
         hostname = None
