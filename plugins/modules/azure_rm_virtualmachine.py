@@ -2250,7 +2250,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         :return: VirtualMachine object
         '''
         try:
-            retry_count = 20
+            retry_count = 0
             vm = self.compute_client.virtual_machines.get(self.resource_group, self.name, expand='instanceview')
             while True:
                 if retry_count == 20:
