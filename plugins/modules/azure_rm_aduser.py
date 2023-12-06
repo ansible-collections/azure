@@ -19,11 +19,6 @@ description:
     - Create, delete, and update an Azure Active Directory user.
 
 options:
-    tenant:
-        description:
-            - (deprecated) The tenant ID.
-            - This option has been deprecated, and will be removed in the future.
-        type: str
     state:
         description:
             - State of the ad user. Use C(present) to create or update an ad user and C(absent) to delete an ad user.
@@ -230,10 +225,8 @@ class AzureRMADUser(AzureRMModuleBase):
             surname=dict(type='str'),
             user_type=dict(type='str'),
             mail=dict(type='str'),
-            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection')
         )
 
-        self.tenant = None
         self.user_principal_name = None
         self.state = None
         self.object_id = None

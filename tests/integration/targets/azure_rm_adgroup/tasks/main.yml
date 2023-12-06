@@ -1,6 +1,5 @@
 - name: Set variables
   ansible.builtin.set_fact:
-    tenant_id: "{{ azure_tenant }}"
     resource_prefix: "{{ 999999999999999999994 | random | to_uuid }}"
   run_once: true
 
@@ -8,14 +7,12 @@
   azure_rm_adgroup_info:
     attribute_name: "displayName"
     attribute_value: "{{ resource_prefix }}-Group-Root"
-    tenant: "{{ tenant_id }}"
   register: get_nonexistent_group_display_name_shouldfail
   failed_when:
     - get_nonexistent_group_display_name_shouldfail.ad_groups != []
 
 - name: Create Group Root
   azure_rm_adgroup:
-    tenant: "{{ tenant_id }}"
     display_name: "{{ resource_prefix }}-Group-Root"
     mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
@@ -23,7 +20,6 @@
 
 - name: Create Group Should Return Not Changed
   azure_rm_adgroup:
-    tenant: "{{ tenant_id }}"
     display_name: "{{ resource_prefix }}-Group-Root"
     mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
@@ -43,7 +39,6 @@
 - name: Return previously created group using object_id
   azure_rm_adgroup_info:
     object_id: "{{ group_create_unchanged_shouldpass.object_id }}"
-    tenant: "{{ tenant_id }}"
   register: get_created_object_id_shouldpass
 
 - name: Assert Returns are Equal to Created Group
@@ -53,7 +48,6 @@
 
 - name: Create Group Member 1
   azure_rm_adgroup:
-    tenant: "{{ tenant_id }}"
     display_name: "{{ resource_prefix }}-Group-Member-1"
     mail_nickname: "{{ resource_prefix }}-Group-Member-1"
     state: 'present'
@@ -61,7 +55,6 @@
 
 - name: Create Group Member 2
   azure_rm_adgroup:
-    tenant: "{{ tenant_id }}"
     display_name: "{{ resource_prefix }}-Group-Member-2"
     mail_nickname: "{{ resource_prefix }}-Group-Member-2"
     state: 'present'
@@ -69,7 +62,6 @@
 
 - name: Ensure member is in group using display_name and mail_nickname
   azure_rm_adgroup:
-    tenant: "{{ tenant_id }}"
     display_name: "{{ resource_prefix }}-Group-Root"
     mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
@@ -86,7 +78,6 @@
 
 - name: Ensure member is in group that is already present using object_id
   azure_rm_adgroup:
-    tenant: "{{ tenant_id }}"
     object_id: "{{ group_create_changed_shouldpass.object_id }}"
     state: 'present'
     present_members:
@@ -100,7 +91,6 @@
 
 - name: Ensure member is not in group using object_id
   azure_rm_adgroup:
-    tenant: "{{ tenant_id }}"
     object_id: "{{ group_create_changed_shouldpass.object_id }}"
     state: 'present'
     absent_members:
@@ -115,7 +105,6 @@
 
 - name: Ensure member is not in group that is already not in group using display_name and mail_nickname
   azure_rm_adgroup:
-    tenant: "{{ tenant_id }}"
     display_name: "{{ resource_prefix }}-Group-Root"
     mail_nickname: "{{ resource_prefix }}-Group-Root"
     state: 'present'
@@ -131,14 +120,12 @@
 - name: Return a specific group using object_id
   azure_rm_adgroup_info:
     object_id: "{{ group_create_changed_shouldpass.object_id }}"
-    tenant: "{{ tenant_id }}"
   register: object_id_shouldpass
 
 - name: Return a specific group using object_id and return_owners
   azure_rm_adgroup_info:
     object_id: "{{ group_create_changed_shouldpass.object_id }}"
     return_owners: true
-    tenant: "{{ tenant_id }}"
   register: object_id_return_owners_shouldpass
 
 - name: Return a specific group using object_id and return_owners and return_group_members
@@ -146,41 +133,35 @@
     object_id: "{{ group_create_changed_shouldpass.object_id }}"
     return_owners: true
     return_group_members: true
-    tenant: "{{ tenant_id }}"
   register: object_id_return_owners_and_group_members_shouldpass
 
 - name: Return a specific group using object_id and member_groups
   azure_rm_adgroup_info:
     object_id: "{{ group_create_changed_shouldpass.object_id }}"
     return_member_groups: true
-    tenant: "{{ tenant_id }}"
   register: object_id_return_member_groups_shouldpass
 
 - name: Return a specific group using object_id and check_membership
   azure_rm_adgroup_info:
     object_id: "{{ group_create_changed_shouldpass.object_id }}"
     check_membership: "{{ create_pass_first.object_id }}"
-    tenant: "{{ tenant_id }}"
   register: object_id_return_check_membership_shouldpass
 
 - name: Return a specific group using displayName attribute
   azure_rm_adgroup_info:
     attribute_name: "displayName"
     attribute_value: "{{ group_create_changed_shouldpass.display_name }}"
-    tenant: "{{ tenant_id }}"
   register: displayname_attribute_shouldpass
 
 - name: Return a specific group using mailNickname filter
   azure_rm_adgroup_info:
     odata_filter: "mailNickname eq '{{ group_create_changed_shouldpass.mail_nickname }}'"
-    tenant: "{{ tenant_id }}"
   register: mailnickname_filter_shouldpass
 
 - name: Return a different group using displayName attribute
   azure_rm_adgroup_info:
     attribute_name: "displayName"
     attribute_value: "{{ create_pass_second.display_name }}"
-    tenant: "{{ tenant_id }}"
   register: displayname_attribute_different_shouldpass
 
 - name: Assert All Returns Are Equal
@@ -196,7 +177,6 @@
 
 - name: Delete group Group Root on object_id
   azure_rm_adgroup:
-    tenant: "{{ tenant_id }}"
     object_id: "{{ group_create_unchanged_shouldpass.object_id }}"
     state: 'absent'
   register: group_delete_group_root_shouldpass
@@ -204,14 +184,12 @@
 - name: Try to return now deleted group Group Root using object_id
   azure_rm_adgroup_info:
     object_id: "{{ group_create_unchanged_shouldpass.object_id }}"
-    tenant: "{{ tenant_id }}"
   register: get_deleted_object_group_root_shouldfail
   failed_when:
     - '"failed to get ad group info Resource" not in get_deleted_object_group_root_shouldfail.msg'
 
 - name: Delete group Group Member 1 on object_id
   azure_rm_adgroup:
-    tenant: "{{ tenant_id }}"
     object_id: "{{ create_pass_first.object_id }}"
     state: 'absent'
   register: group_delete_group_member_1_shouldpass
@@ -219,14 +197,12 @@
 - name: Try to return now deleted group Group Member 1 using object_id
   azure_rm_adgroup_info:
     object_id: "{{ create_pass_first.object_id }}"
-    tenant: "{{ tenant_id }}"
   register: get_deleted_object_group_member_1_shouldfail
   failed_when:
     - '"failed to get ad group info Resource" not in get_deleted_object_group_member_1_shouldfail.msg'
 
 - name: Delete group Group Member 2 on object_id
   azure_rm_adgroup:
-    tenant: "{{ tenant_id }}"
     object_id: "{{ create_pass_second.object_id }}"
     state: 'absent'
   register: group_delete_group_member_2_shouldpass
@@ -234,7 +210,6 @@
 - name: Try to return now deleted group Group Member 2 using object_id
   azure_rm_adgroup_info:
     object_id: "{{ create_pass_second.object_id }}"
-    tenant: "{{ tenant_id }}"
   register: get_deleted_object_group_member_2_shouldfail
   failed_when:
     - '"failed to get ad group info Resource" not in get_deleted_object_group_member_2_shouldfail.msg'

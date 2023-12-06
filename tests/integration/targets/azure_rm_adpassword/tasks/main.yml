@@ -1,14 +1,11 @@
 - name: Set variables
   ansible.builtin.set_fact:
     app_id: "e0a62513-1d81-480e-a6dc-5c99cdd58d9a"
-    tenant_id: "72f988bf-86f1-41af-91ab-2d7cd011db47"
     app_object_id: "b52e8275-a1ee-4c4a-86ff-15992e0920ed"
 
 - name: Create first ad password by app_id
   azure_rm_adpassword:
     app_id: "{{ app_id }}"
-    value: "Password@032900001"
-    tenant: "{{ tenant_id }}"
     state: present
   register: ad_fact
 
@@ -19,8 +16,6 @@
 
 - name: Create second ad password by app_object_id
   azure_rm_adpassword:
-    value: "Password@032900002"
-    tenant: "{{ tenant_id }}"
     app_object_id: "{{ app_object_id }}"
     state: present
   register: ad_fact02
@@ -33,12 +28,10 @@
 - name: Create ad service principal
   azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
-    tenant: "{{ tenant_id }}"
     state: present
 
 - name: Get ad service principal info
   azure_rm_adserviceprincipal_info:
-    tenant: "{{ tenant_id }}"
     app_id: "{{ app_id }}"
   register: sp_info
 - name: Print Service principals facts
@@ -47,8 +40,6 @@
 
 - name: Create third ad password by service_principal_object_id
   azure_rm_adpassword:
-    value: "Password@032900003"
-    tenant: "{{ tenant_id }}"
     service_principal_object_id: "{{ sp_info.service_principals[0].object_id }}"
     state: present
   register: ad_fact03
@@ -61,8 +52,6 @@
 - name: Can't update ad password
   azure_rm_adpassword:
     app_id: "{{ app_id }}"
-    value: "Password@032900003"
-    tenant: "{{ tenant_id }}"
     key_id: "{{ ad_fact.key_id }}"
     app_object_id: "{{ app_object_id }}"
     state: present
@@ -72,7 +61,6 @@
 - name: Get ad password info
   azure_rm_adpassword_info:
     app_id: "{{ app_id }}"
-    tenant: "{{ tenant_id }}"
     key_id: "{{ ad_fact.key_id }}"
     app_object_id: "{{ app_object_id }}"
   register: ad_info
@@ -87,7 +75,6 @@
   azure_rm_adpassword:
     app_id: "{{ app_id }}"
     key_id: "{{ ad_fact.key_id }}"
-    tenant: "{{ tenant_id }}"
     app_object_id: "{{ app_object_id }}"
     state: absent
   register: output
@@ -100,7 +87,6 @@
 - name: Delete all ad password
   azure_rm_adpassword:
     app_id: "{{ app_id }}"
-    tenant: "{{ tenant_id }}"
     app_object_id: "{{ app_object_id }}"
     state: absent
   register: output

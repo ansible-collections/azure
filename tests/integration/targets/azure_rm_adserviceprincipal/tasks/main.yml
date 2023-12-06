@@ -1,18 +1,15 @@
 - name: Set variables
   ansible.builtin.set_fact:
     app_id: "e0a62513-1d81-480e-a6dc-5c99cdd58d9a"
-    tenant_id: "72f988bf-86f1-41af-91ab-2d7cd011db47"
 
 - name: Delete ad service principal
   azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
-    tenant: "{{ tenant_id }}"
     state: absent
 
 - name: Create ad service principal
   azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
-    tenant: "{{ tenant_id }}"
     state: present
   register: ad_fact
 
@@ -24,7 +21,6 @@
 - name: Create ad service principal (idempontent)
   azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
-    tenant: "{{ tenant_id }}"
     state: present
   register: output
 
@@ -36,7 +32,6 @@
 - name: Get ad service principal info by app_id
   azure_rm_adserviceprincipal_info:
     app_id: "{{ app_id }}"
-    tenant: "{{ tenant_id }}"
   register: ad_info
 
 - name: Assert The ad service principals facts
@@ -48,14 +43,12 @@
 - name: Update ad service principal app_role_assignmentrequired to True
   azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
-    tenant: "{{ tenant_id }}"
     app_role_assignment_required: true
     state: present
   register: output
 
 - name: Get ad service principal info by object_id
   azure_rm_adserviceprincipal_info:
-    tenant: "{{ tenant_id }}"
     object_id: "{{ ad_info.service_principals[0].object_id }}"
   register: ad_info
 
@@ -68,7 +61,6 @@
 - name: Delete ad service principal
   azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
-    tenant: "{{ tenant_id }}"
     state: absent
   register: output
 

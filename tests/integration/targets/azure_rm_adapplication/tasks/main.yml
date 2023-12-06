@@ -1,12 +1,10 @@
 - name: Set variables
   ansible.builtin.set_fact:
-    tenant_id: "{{ azure_tenant }}"
     display_name: "app{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
   run_once: true
 
 - name: Create application
   azure_rm_adapplication:
-    tenant: "{{ tenant_id }}"
     display_name: "{{ display_name }}"
   register: create_output
 
@@ -16,7 +14,6 @@
 
 - name: Create application again idempotent test
   azure_rm_adapplication:
-    tenant: "{{ tenant_id }}"
     app_id: "{{ create_output.app_id }}"
   register: output
 
@@ -26,7 +23,6 @@
 
 - name: Create application with more parameter
   azure_rm_adapplication:
-    tenant: "{{ tenant_id }}"
     display_name: "{{ display_name }}-01"
     available_to_other_tenants: false
     credential_description: "for test"
@@ -50,13 +46,11 @@
 - name: Get ad app info by object id
   azure_rm_adapplication_info:
     object_id: "{{ create_output.object_id }}"
-    tenant: "{{ tenant_id }}"
   register: output
 
 - name: Get ad app info by app id
   azure_rm_adapplication_info:
     app_id: "{{ create_output.app_id }}"
-    tenant: "{{ tenant_id }}"
   register: output
 
 - name: Assert the application facts
@@ -68,7 +62,6 @@
 - name: Delete ad app  by app id
   azure_rm_adapplication:
     app_id: "{{ create_output.app_id }}"
-    tenant: "{{ tenant_id }}"
     state: absent
   register: output
 
@@ -79,7 +72,6 @@
 - name: Delete ad app  by app id
   azure_rm_adapplication:
     app_id: "{{ second_output.app_id }}"
-    tenant: "{{ tenant_id }}"
     state: absent
   register: output
 
@@ -90,7 +82,6 @@
 - name: Get ad app info by app id
   azure_rm_adapplication_info:
     app_id: "{{ create_output.app_id }}"
-    tenant: "{{ tenant_id }}"
   register: output
 
 - name: Assert there is no application

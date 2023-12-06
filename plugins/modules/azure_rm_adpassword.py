@@ -35,20 +35,10 @@ options:
             - It isn't supported anymore in the create operation. See the Azure documentation for more information
               U(https://learn.microsoft.com/en-us/graph/api/application-addpassword?view=graph-rest-1.0&tabs=http#request-body).
         type: str
-    tenant:
-        description:
-            - (deprecated) The tenant ID.
-            - This option has been deprecated, and will be removed in the future.
-        type: str
     end_date:
         description:
             - Date or datemtime after which credentials expire.
             - Default value is one year after current time.
-        type: str
-    value:
-        description:
-            - (deprecated) The application password value.
-            - Length greater than 18 characters.
         type: str
     display_name:
         description:
@@ -141,20 +131,16 @@ class AzureRMADPassword(AzureRMModuleBase):
             service_principal_object_id=dict(type='str'),
             app_object_id=dict(type='str'),
             key_id=dict(type='str'),
-            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
-            value=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
             display_name=dict(type='str'),
             end_date=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
 
         self.state = None
-        self.tenant = None
         self.app_id = None
         self.service_principal_object_id = None
         self.app_object_id = None
         self.key_id = None
-        self.value = None
         self.display_name = None
         self.end_date = None
         self.results = dict(changed=False)
