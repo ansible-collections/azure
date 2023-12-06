@@ -2250,7 +2250,18 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         :return: VirtualMachine object
         '''
         try:
+            retry_count == 20
             vm = self.compute_client.virtual_machines.get(self.resource_group, self.name, expand='instanceview')
+            while True:
+                if retry_count == 20:
+                    self.fail("Error {0} has a provisioning state of Updating. Expecting state to be Successed.".format(self.name))
+
+                if vm.provisioning_state != 'Succeeded':
+                    retry_count = retry_count + 1
+                    time.sleep(150)
+                    vm = self.compute_client.virtual_machines.get(self.resource_group, self.name, expand='instanceview')
+                else:
+                    break
             return vm
         except Exception as exc:
             self.fail("Error getting virtual machine {0} - {1}".format(self.name, str(exc)))
