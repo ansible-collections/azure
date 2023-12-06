@@ -647,6 +647,7 @@ azure_vmss:
 '''  # NOQA
 
 import base64
+import time
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
