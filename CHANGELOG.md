@@ -1,5 +1,35 @@
 # Change Log
 
+## v2.1.0 (2023-12-7)
+
+### NEW MODULES
+  - azure_rm_accesstoken_info: Add azure_rm_accesstoken_info module ([#1318](https://github.com/ansible-collections/azure/pull/1318))
+  - azure_rm_openshiftmanagedclusterkubeconfig_info: Add openshiftmanagedcluster_kubeconfig_info module ([#1238](https://github.com/ansible-collections/azure/pull/1238))
+  - azure_rm_sshpublickey: Add azure_rm_sshpublickey module ([#1190](https://github.com/ansible-collections/azure/pull/1190))
+  - azure_rm_sshpublickey_info: Add azure_rm_sshpublickey_info module ([#1190](https://github.com/ansible-collections/azure/pull/1190))
+
+### FEATURE ENHANCEMENT
+  - azure_rm_storageaccount: Add large_file_shares_state to azure_rm_storageaccount ([#1210](https://github.com/ansible-collections/azure/pull/1210))
+  - azure_rm_storageaccount_info: Add large_file_shares_state to azure_rm_storageaccount_info's facts ([#1210](https://github.com/ansible-collections/azure/pull/1210))
+  - sanity-requirements-azure.txt: Bump cryptography from 41.0.4 to 41.0.6 ([#1349](https://github.com/ansible-collections/azure/pull/1349))
+  - azure_rm.py: Support the include_host_filters ([#1347](https://github.com/ansible-collections/azure/pull/1347))
+
+### BUG FIXING
+  - azure_rm_iotdevice: Fix getting alias parameters fail on azure_rm_iotdevice.py ([#1278](https://github.com/ansible-collections/azure/pull/1278))
+  - azure_rm_iotdevicemodule: Fix getting alias parameters fail on azure_rm_iotdevicemodule.py ([#1278](https://github.com/ansible-collections/azure/pull/1278))
+  - azure_rm_virtualmachine: support to update proximity_placement_group parameters ([#1329](https://github.com/ansible-collections/azure/pull/1329))
+  - azure_rm_common: Fix the az login login to obtain the token error ([#1340](https://github.com/ansible-collections/azure/pull/1340))
+  - azure_rm_adapplication: Fix get application failed ([#1345](https://github.com/ansible-collections/azure/pull/1345))
+  - azure_rm_adapplication_info: Fix get application failed ([#1345](https://github.com/ansible-collections/azure/pull/1345))
+  - azure_rm_manageddisk: Support unmount disk to VMs that not belong to the same resource group ([#1201](https://github.com/ansible-collections/azure/pull/1201))
+  - azure_rm_resource: Fix failure on response with not json body ([#1341](https://github.com/ansible-collections/azure/pull/1341))
+  - azure_rm_deployment: Fix azure_rm_deployment deletes the whole resource group's method ([#1231](https://github.com/ansible-collections/azure/pull/1231))
+  - azure_rm_adgroup: [Bug Fix] - azure_rm_adgroup - Remvoe unsupported headers ([#1355](https://github.com/ansible-collections/azure/pull/1355))
+  - azure_rm_adgroup_info: [Bug Fix] - azure_rm_adgroup_info - Remvoe unsupported headers ([#1355](https://github.com/ansible-collections/azure/pull/1355))
+  - azure_rm_aduser_info: [Bug Fix] - azure_rm_aduser_info - Remvoe unsupported headers ([#1355](https://github.com/ansible-collections/azure/pull/1355))
+  - azure_rm.py: Fix dynamic VM fetch failure when I(batch_fetch=true) ([#1344](https://github.com/ansible-collections/azure/pull/1344))
+  - azure_keyvault_secret.py: Added option for disabling MSI autodiscover feature in azure_keyvault_secret lookup plugin ([#1353](https://github.com/ansible-collections/azure/pull/1353))
+
 ## v2.0.0 (2023-11-17)
 
 ### FEATURE ENHANCEMENT
