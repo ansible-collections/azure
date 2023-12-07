@@ -6,7 +6,7 @@
     path: myapipath
 
 - name: Create API management service
-  azure_rm_apimanagementservice:
+  azure.azcollection.azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
     name: "{{ service_name }}"
     publisher_email: user@example.com
@@ -20,7 +20,7 @@
   changed_when: true
 
 - name: Create a new API instance
-  azure_rm_apimanagement:
+  azure.azcollection.azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}"
@@ -39,7 +39,7 @@
       - newapi.failed == False
 
 - name: Create a new API instance Idempotent
-  azure_rm_apimanagement:
+  azure.azcollection.azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}"
@@ -58,7 +58,7 @@
       - newapi_idempotent.failed == False
 
 - name: Update protocols
-  azure_rm_apimanagement:
+  azure.azcollection.azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}"
@@ -77,7 +77,7 @@
       - updateapi.changed == True
 
 - name: Create different format api
-  azure_rm_apimanagement:
+  azure.azcollection.azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}-secondary"
@@ -95,7 +95,7 @@
       - newopenapi.failed == False
 
 - name: Get api information
-  azure_rm_apimanagement_info:
+  azure.azcollection.azure_rm_apimanagement_info:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}"
@@ -107,7 +107,7 @@
       - output.api.id != None
 
 - name: Delete an api
-  azure_rm_apimanagement:
+  azure.azcollection.azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}"
@@ -120,7 +120,7 @@
       - deleteapi.changed == True
 
 - name: Delete an api Idempotent
-  azure_rm_apimanagement:
+  azure.azcollection.azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}"
@@ -133,7 +133,7 @@
       - deleteapi_idempotent.changed == False
 
 - name: Delete an api
-  azure_rm_apimanagement:
+  azure.azcollection.azure_rm_apimanagement:
     resource_group: "{{ resource_group }}"
     service_name: "{{ service_name }}"
     api_id: "{{ api_id }}-secondary"

@@ -3,13 +3,13 @@
     vnetname: "vnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Delete virtual network, if it exists
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ vnetname }}"
     resource_group: "{{ resource_group }}"
     state: absent
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ vnetname }}"
     address_prefixes_cidr:
       - 10.1.0.0/16
@@ -21,7 +21,7 @@
     resource_group: "{{ resource_group }}"
 
 - name: Update virtual network with dns server
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     flow_timeout_in_minutes: 8
     name: "{{ vnetname }}"
     address_prefixes_cidr:
@@ -47,14 +47,14 @@
       - "output.state.tags | length == 2"
 
 - name: Attach a subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: "{{ vnetname }}"
     virtual_network_name: "{{ vnetname }}"
     address_prefix_cidr: "10.1.0.0/24"
 
 - name: Gather facts by name, tags
-  azure_rm_virtualnetwork_info:
+  azure.azcollection.azure_rm_virtualnetwork_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vnetname }}"
     tags:
@@ -71,7 +71,7 @@
       - "facts.virtualnetworks[0].subnets | length == 1"
 
 - name: Gather facts by resource group, tags
-  azure_rm_virtualnetwork_info:
+  azure.azcollection.azure_rm_virtualnetwork_info:
     resource_group: "{{ resource_group }}"
     tags:
       - testing
@@ -82,7 +82,7 @@
     that: "facts.virtualnetworks | length >= 1"
 
 - name: Gather facts by tags
-  azure_rm_virtualnetwork_info:
+  azure.azcollection.azure_rm_virtualnetwork_info:
     tags:
       - testing
   register: facts
@@ -92,7 +92,7 @@
     that: "facts.virtualnetworks | length >= 1"
 
 - name: Should be idempotent
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ vnetname }}"
     address_prefixes_cidr:
       - 10.1.0.0/16
@@ -112,7 +112,7 @@
     that: not output.changed
 
 - name: Update tags
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ vnetname }}"
     tags:
       testing: 'no'
@@ -126,7 +126,7 @@
     that: output.state.tags | length == 3
 
 - name: Purge tags
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ vnetname }}"
     append_tags: false
     tags:
@@ -141,7 +141,7 @@
       - output.state.tags.testing == 'always'
 
 - name: Should require address_prefixes_cidr when purge_address_prefixes
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ vnetname }}"
     purge_address_prefixes: true
     resource_group: "{{ resource_group }}"
@@ -153,7 +153,7 @@
     that: output.failed
 
 - name: Purge address prefixes
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ vnetname }}"
     address_prefixes_cidr: 10.1.0.0/16
     purge_address_prefixes: true
@@ -169,7 +169,7 @@
       - output.state.dns_servers[0] == '127.0.0.1'
 
 - name: Purge DNS servers
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ vnetname }}"
     purge_dns_servers: true
     resource_group: "{{ resource_group }}"
@@ -180,7 +180,7 @@
     that: output.state['dns_servers'] is undefined
 
 - name: Gather facts
-  azure_rm_virtualnetwork_info:
+  azure.azcollection.azure_rm_virtualnetwork_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vnetname }}"
   register: facts
@@ -192,7 +192,7 @@
       - "facts.virtualnetworks[0].subnets | length == 1"
 
 - name: Delete virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ vnetname }}"
     resource_group: "{{ resource_group }}"
     state: absent
