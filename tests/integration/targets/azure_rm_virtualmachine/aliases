@@ -1,4 +1,4 @@
 cloud/azure
 shippable/azure/group7
 destructive
-azure.azcollection.azure_rm_virtualmachine_info
+azure_rm_virtualmachine_info

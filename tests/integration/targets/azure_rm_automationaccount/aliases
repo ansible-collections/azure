@@ -1,4 +1,4 @@
 cloud/azure
 shippable/azure/group11
 destructive
-azure.azcollection.azure_rm_automationaccount_facts
+azure_rm_automationaccount_facts

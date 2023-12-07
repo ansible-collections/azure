@@ -1,6 +1,6 @@
 cloud/azure
 shippable/azure/group2
 destructive
-azure.azcollection.azure_rm_dnszone_info
-azure.azcollection.azure_rm_dnsrecordset
-azure.azcollection.azure_rm_dnsrecordset_info
+azure_rm_dnszone_info
+azure_rm_dnsrecordset
+azure_rm_dnsrecordset_info

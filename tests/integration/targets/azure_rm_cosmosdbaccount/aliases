@@ -1,4 +1,4 @@
 cloud/azure
 destructive
 shippable/azure/group14
-azure.azcollection.azure_rm_cosmosdbaccount_info
+azure_rm_cosmosdbaccount_info

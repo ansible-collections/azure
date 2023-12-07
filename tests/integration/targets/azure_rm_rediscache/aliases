@@ -2,5 +2,5 @@ cloud/azure
 shippable/azure/group2
 unsupported
 destructive
-azure.azcollection.azure_rm_rediscache_facts
-azure.azcollection.azure_rm_rediscachefirewallrule
+azure_rm_rediscache_facts
+azure_rm_rediscachefirewallrule

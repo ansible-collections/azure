@@ -1,4 +1,4 @@
 cloud/azure
 shippable/azure/group2
 destructive
-azure.azcollection.azure_rm_publicipaddress_info
+azure_rm_publicipaddress_info

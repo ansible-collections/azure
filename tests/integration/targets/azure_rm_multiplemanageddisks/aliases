@@ -1,5 +1,5 @@
 cloud/azure
 shippable/azure/group12
 destructive
-azure.azcollection.azure_rm_manageddisk_info
-azure.azcollection.azure_rm_multiplemanageddisks
+azure_rm_manageddisk_info
+azure_rm_multiplemanageddisks

@@ -2,4 +2,4 @@ cloud/azure
 shippable/azure/group5
 destructive
 unsupported
-azure.azcollection.azure_rm_virtualmachineextension_facts
+azure_rm_virtualmachineextension_facts
