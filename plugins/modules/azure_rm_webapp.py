@@ -139,6 +139,11 @@ options:
             - Keeps the app loaded even when there's no traffic.
         type: bool
 
+    http20_enabled:
+        description:
+            - Configures a web site to allow clients to connect over HTTP 2.0.
+        type: bool
+
     min_tls_version:
         description:
             - The minimum TLS encryption version required for the app.
@@ -494,6 +499,9 @@ class AzureRMWebApps(AzureRMModuleBase):
             always_on=dict(
                 type='bool',
             ),
+            http20_enabled=dict(
+                type='bool',
+            ),
             min_tls_version=dict(
                 type='str',
                 choices=['1.0', '1.1', '1.2'],
@@ -583,6 +591,7 @@ class AzureRMWebApps(AzureRMModuleBase):
                                                  "python_version",
                                                  "scm_type",
                                                  "always_on",
+                                                 "http20_enabled",
                                                  "min_tls_version",
                                                  "ftps_state"]
 
@@ -605,7 +614,7 @@ class AzureRMWebApps(AzureRMModuleBase):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                if key in ["scm_type", "always_on", "min_tls_version", "ftps_state"]:
+                if key in ["scm_type", "always_on", "http20_enabled", "min_tls_version", "ftps_state"]:
                     self.site_config[key] = kwargs[key]
 
         old_response = None
@@ -852,7 +861,7 @@ class AzureRMWebApps(AzureRMModuleBase):
     # compare xxx_version
     def is_site_config_changed(self, existing_config):
         for updatable_property in self.site_config_updatable_properties:
-            if self.site_config.get(updatable_property):
+            if updatable_property in self.site_config:
                 if not getattr(existing_config, updatable_property) or \
                         str(getattr(existing_config, updatable_property)).upper() != str(self.site_config.get(updatable_property)).upper():
                     return True
