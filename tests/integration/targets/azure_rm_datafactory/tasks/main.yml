@@ -3,7 +3,7 @@
     name_rpfx: "df{{ resource_group | hash('md5') | truncate(21, True, '') }}"
 
 - name: Create data factory (Checkmode)
-  azure_rm_datafactory:
+  azure.azcollection.azure_rm_datafactory:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     public_network_access: Enabled
@@ -12,7 +12,7 @@
   check_mode: true
 
 - name: Create data factory
-  azure_rm_datafactory:
+  azure.azcollection.azure_rm_datafactory:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     public_network_access: Enabled
@@ -26,7 +26,7 @@
       - output.changed
 
 - name: Create data factory again (Idempotent test)
-  azure_rm_datafactory:
+  azure.azcollection.azure_rm_datafactory:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     public_network_access: Enabled
@@ -40,7 +40,7 @@
       - not output.changed
 
 - name: Update data factory
-  azure_rm_datafactory:
+  azure.azcollection.azure_rm_datafactory:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     public_network_access: Disabled
@@ -55,7 +55,7 @@
       - output.changed
 
 - name: Get data factory info
-  azure_rm_datafactory_info:
+  azure.azcollection.azure_rm_datafactory_info:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
   register: output
@@ -67,7 +67,7 @@
       - output.datafactory[0].public_network_access == 'Disabled'
 
 - name: Delete data factory
-  azure_rm_datafactory:
+  azure.azcollection.azure_rm_datafactory:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     state: absent

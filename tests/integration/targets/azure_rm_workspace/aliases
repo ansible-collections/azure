@@ -1,5 +1,5 @@
 cloud/azure
 shippable/azure/group4
 destructive
-azure_rm_workspace
-azure_rm_workspace_facts
+azure.azcollection.azure_rm_workspace
+azure.azcollection.azure_rm_workspace_facts

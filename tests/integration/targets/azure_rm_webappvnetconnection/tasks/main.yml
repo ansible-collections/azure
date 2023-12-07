@@ -4,7 +4,7 @@
   run_once: true
 
 - name: Create a virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: vnet{{ rpfx }}
     resource_group: "{{ resource_group }}"
     address_prefixes_cidr:
@@ -14,7 +14,7 @@
       - 127.0.0.1
       - 127.0.0.2
 - name: Create a subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     name: subnet{{ rpfx }}
     virtual_network_name: vnet{{ rpfx }}
     resource_group: "{{ resource_group }}"
@@ -24,7 +24,7 @@
         serviceName: 'Microsoft.Web/serverFarms'
   register: subnet_output
 - name: Create a web app
-  azure_rm_webapp:
+  azure.azcollection.azure_rm_webapp:
     resource_group: "{{ resource_group }}"
     name: webapp{{ rpfx }}
     plan:
@@ -34,7 +34,7 @@
       sku: S1
 
 - name: "Create webapp vnetconnection - check mode"
-  azure_rm_webappvnetconnection:
+  azure.azcollection.azure_rm_webappvnetconnection:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     vnet_name: vnet{{ rpfx }}
@@ -46,7 +46,7 @@
     that: output.changed
 
 - name: "Check webapp vnetconnection facts 1"
-  azure_rm_webappvnetconnection_info:
+  azure.azcollection.azure_rm_webappvnetconnection_info:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
   register: output
@@ -57,7 +57,7 @@
       - output.connection | length == 0
 
 - name: "Create webapp vnetconnection"
-  azure_rm_webappvnetconnection:
+  azure.azcollection.azure_rm_webappvnetconnection:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     vnet_name: vnet{{ rpfx }}
@@ -72,7 +72,7 @@
       - output.connection.vnet_resource_group == '{{ resource_group }}'
 
 - name: "Check webapp vnetconnection facts 2"
-  azure_rm_webappvnetconnection_info:
+  azure.azcollection.azure_rm_webappvnetconnection_info:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
   register: output
@@ -85,7 +85,7 @@
       - output.connection.vnet_resource_group == '{{ resource_group }}'
 
 - name: "Create webapp vnetconnection - idempotent"
-  azure_rm_webappvnetconnection:
+  azure.azcollection.azure_rm_webappvnetconnection:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     vnet_name: vnet{{ rpfx }}
@@ -96,7 +96,7 @@
     that: not output.changed
 
 - name: "Delete webapp vnetconnection"
-  azure_rm_webappvnetconnection:
+  azure.azcollection.azure_rm_webappvnetconnection:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     state: "absent"
@@ -108,7 +108,7 @@
       - output.connection | length == 0
 
 - name: "Check webapp vnetconnection facts 3"
-  azure_rm_webappvnetconnection_info:
+  azure.azcollection.azure_rm_webappvnetconnection_info:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
   register: output
@@ -119,7 +119,7 @@
       - output.connection | length == 0
 
 - name: "Delete webapp vnetconnection - idempotent"
-  azure_rm_webappvnetconnection:
+  azure.azcollection.azure_rm_webappvnetconnection:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     state: "absent"

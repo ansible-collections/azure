@@ -7,7 +7,7 @@
   run_once: true
 
 - name: Create a RegistrationDefinition
-  azure_rm_registrationdefinition:
+  azure.azcollection.azure_rm_registrationdefinition:
     properties:
       description: first_test
       authorizations:
@@ -18,7 +18,7 @@
   register: output1
 
 - name: Create a RegistrationAssignment ---check mode
-  azure_rm_registrationassignment:
+  azure.azcollection.azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
     properties:
       registration_definition_id: "{{ output1.state.id }}"
@@ -31,7 +31,7 @@
       - output.changed
 
 - name: Create a RegistrationAssignment
-  azure_rm_registrationassignment:
+  azure.azcollection.azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
     properties:
       registration_definition_id: "{{ output1.state.id }}"
@@ -43,7 +43,7 @@
       - output2.changed
 
 - name: Create a RegistrationAssignment -- idempotent
-  azure_rm_registrationassignment:
+  azure.azcollection.azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
     registration_assignment_id: "{{ output2.state.name }}"
     properties:
@@ -56,7 +56,7 @@
       - not output.changed
 
 - name: Get a RegistrationAssignment
-  azure_rm_registrationassignment_info:
+  azure.azcollection.azure_rm_registrationassignment_info:
     scope: subscriptions/{{ subscription_id }}
     registration_assignment_id: "{{ output2.state.name }}"
   register: output
@@ -67,7 +67,7 @@
       - output.registration_assignments[0].properties.registration_definition_id == "{{ output1.state.id }}"
 
 - name: Get all RegistrationAssignment
-  azure_rm_registrationassignment_info:
+  azure.azcollection.azure_rm_registrationassignment_info:
     scope: subscriptions/{{ subscription_id }}
   register: output
 
@@ -77,7 +77,7 @@
       - output.registration_assignments | length >= 1
 
 - name: Delete the RegistrationAssignment
-  azure_rm_registrationassignment:
+  azure.azcollection.azure_rm_registrationassignment:
     scope: subscriptions/{{ subscription_id }}
     registration_assignment_id: "{{ output2.state.name }}"
     state: absent

@@ -1,19 +1,19 @@
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ network_name }}-identity"
     address_prefixes: "{{ network }}"
     location: westeurope
 
 - name: Create subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: "{{ subnet_name }}"
     address_prefix: "{{ subnet }}"
     virtual_network: "{{ network_name }}-identity"
 
 - name: Create network interface
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ interface_name }}-identity"
     virtual_network: "{{ network_name }}-identity"
@@ -21,7 +21,7 @@
     location: westeurope
 
 - name: Create User Managed Identities
-  azure_rm_resource:
+  azure.azcollection.azure_rm_resource:
     resource_group: "{{ resource_group }}"
     provider: ManagedIdentity
     resource_type: userAssignedIdentities
@@ -40,7 +40,7 @@
     user_identity_2: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-vm-identity-2"
 
 - name: Create minimal VM with UserAssigned Identity
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     allocated: false
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
@@ -75,7 +75,7 @@
       - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
 
 - name: Append another UserAssigned
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     name: "{{ vm_name }}"
     resource_group: "{{ resource_group }}"
     vm_identity:
@@ -94,7 +94,7 @@
       - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
 
 - name: Add SystemAssigned
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     name: "{{ vm_name }}"
     resource_group: "{{ resource_group }}"
     vm_identity:
@@ -111,7 +111,7 @@
       - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
 
 - name: Force only one UserAssigned
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     name: "{{ vm_name }}"
     resource_group: "{{ resource_group }}"
     vm_identity:
@@ -130,7 +130,7 @@
       - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
 
 - name: Remove UserAssigned
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     name: "{{ vm_name }}"
     resource_group: "{{ resource_group }}"
     vm_identity:
@@ -144,7 +144,7 @@
       - "'user_assigned_identities' not in vm_output.ansible_facts.azure_vm.identity"
 
 - name: Disable SystemAssigned
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     name: "{{ vm_name }}"
     resource_group: "{{ resource_group }}"
     vm_identity:
@@ -157,14 +157,14 @@
       - "'identity' not in vm_output.ansible_facts.azure_vm"
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     remove_on_absent: all_autocreated
     state: absent
 
 - name: Destroy NIC
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ interface_name }}-identity"
     state: absent
@@ -172,32 +172,32 @@
   register: ignore_errors_register
 
 - name: Delete network security group
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ interface_name }}-identity"
     state: absent
 
 - name: Destroy subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     virtual_network: "{{ network_name }}"
     name: "{{ subnet_name }}-identity"
     state: absent
 
 - name: Destroy virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ network_name }}-identity"
     state: absent
 
 - name: Destroy SA of the machine
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_output.ansible_facts.azure_vm.tags._own_sa_ }}"
     state: absent
 
 - name: Destroy User Managed Identities
-  azure_rm_resource:
+  azure.azcollection.azure_rm_resource:
     resource_group: "{{ resource_group }}"
     provider: ManagedIdentity
     resource_type: userAssignedIdentities

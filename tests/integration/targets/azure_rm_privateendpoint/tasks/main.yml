@@ -3,7 +3,7 @@
     rpfx: "private{{ resource_group | hash('md5') | truncate(18, True, '') }}"
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: vnet{{ rpfx }}
     address_prefixes_cidr:
       - 10.1.0.0/16
@@ -13,12 +13,12 @@
     resource_group: "{{ resource_group }}"
 
 - name: Create network security group
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     name: secgroup{{ rpfx }}
     resource_group: "{{ resource_group }}"
 
 - name: Create the subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     name: subnet{{ rpfx }}
     virtual_network_name: vnet{{ rpfx }}
     resource_group: "{{ resource_group }}"
@@ -34,7 +34,7 @@
   register: subnet_output
 
 - name: Create instance of PostgreSQL Server
-  azure_rm_postgresqlserver:
+  azure.azcollection.azure_rm_postgresqlserver:
     resource_group: "{{ resource_group }}"
     name: postgresqlsrv{{ rpfx }}
     sku:
@@ -48,13 +48,13 @@
   register: post_output
 
 - name: Delete private endpoint, makesure there is no private endpoint exist
-  azure_rm_privateendpoint:
+  azure.azcollection.azure_rm_privateendpoint:
     name: privateendpoint{{ rpfx }}
     resource_group: "{{ resource_group }}"
     state: absent
 
 - name: Create private endpoint
-  azure_rm_privateendpoint:
+  azure.azcollection.azure_rm_privateendpoint:
     name: privateendpoint{{ rpfx }}
     resource_group: "{{ resource_group }}"
     private_link_service_connections:
@@ -78,7 +78,7 @@
       - output.state.tags | length == 1
 
 - name: Create private endpoint ( Idempotent Test)
-  azure_rm_privateendpoint:
+  azure.azcollection.azure_rm_privateendpoint:
     name: privateendpoint{{ rpfx }}
     resource_group: "{{ resource_group }}"
     private_link_service_connections:
@@ -100,7 +100,7 @@
   register: ignore_errors_register
 
 - name: Update private endpoint with tags
-  azure_rm_privateendpoint:
+  azure.azcollection.azure_rm_privateendpoint:
     name: privateendpoint{{ rpfx }}
     resource_group: "{{ resource_group }}"
     private_link_service_connections:
@@ -122,7 +122,7 @@
       - output.state.tags | length == 2
 
 - name: Get private endpoint info
-  azure_rm_privateendpoint_info:
+  azure.azcollection.azure_rm_privateendpoint_info:
     name: privateendpoint{{ rpfx }}
     resource_group: "{{ resource_group }}"
   register: output
@@ -134,7 +134,7 @@
       - output.privateendpoints[0].tags | length == 2
 
 - name: Delete private endpoint
-  azure_rm_privateendpoint:
+  azure.azcollection.azure_rm_privateendpoint:
     name: privateendpoint{{ rpfx }}
     resource_group: "{{ resource_group }}"
     state: absent
@@ -146,7 +146,7 @@
       - output.changed
 
 - name: Delete private endpoint ( Idempotent Test)
-  azure_rm_privateendpoint:
+  azure.azcollection.azure_rm_privateendpoint:
     name: privateendpoint{{ rpfx }}
     resource_group: "{{ resource_group }}"
     state: absent

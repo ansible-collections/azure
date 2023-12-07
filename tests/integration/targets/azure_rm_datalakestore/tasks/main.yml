@@ -4,7 +4,7 @@
     vnet_name: "vnet{{ resource_group_datalake | hash('md5') | truncate(20, True, '') }}"
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ vnet_name }}"
     resource_group: "{{ resource_group_datalake }}"
     address_prefixes_cidr:
@@ -12,7 +12,7 @@
   register: vnet_output
 
 - name: Create subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     name: foobar
     virtual_network_name: "{{ vnet_name }}"
     resource_group: "{{ resource_group_datalake }}"
@@ -22,7 +22,7 @@
   register: subnet_output
 
 - name: Create minimal data lake store
-  azure_rm_datalakestore:
+  azure.azcollection.azure_rm_datalakestore:
     resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
   register: output
@@ -46,7 +46,7 @@
       - output.state.trusted_id_provider_state == "Disabled"
 
 - name: Create minimal data lake store (Idempotence)
-  azure_rm_datalakestore:
+  azure.azcollection.azure_rm_datalakestore:
     resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
   register: output
@@ -57,7 +57,7 @@
       - not output.changed
 
 - name: Update data lake store to add virtual_network_rules
-  azure_rm_datalakestore:
+  azure.azcollection.azure_rm_datalakestore:
     resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     virtual_network_rules:
@@ -74,7 +74,7 @@
       - output.state.virtual_network_rules[0].subnet_id == "{{ subnet_output.state.id }}"
 
 - name: Update data lake store to change encryption state that must fail
-  azure_rm_datalakestore:
+  azure.azcollection.azure_rm_datalakestore:
     resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     encryption_state: Disabled
@@ -88,7 +88,7 @@
       - output.msg == 'Encryption type cannot be updated.'
 
 - name: Update data lake store to add new_tier
-  azure_rm_datalakestore:
+  azure.azcollection.azure_rm_datalakestore:
     resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     new_tier: Commitment_1TB
@@ -102,14 +102,14 @@
       - output.state.new_tier == "Commitment_1TB"
 
 - name: Delete minimal data lake store
-  azure_rm_datalakestore:
+  azure.azcollection.azure_rm_datalakestore:
     resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     state: absent
   register: output
 
 - name: Create new data lake store
-  azure_rm_datalakestore:
+  azure.azcollection.azure_rm_datalakestore:
     resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     tags:
@@ -157,7 +157,7 @@
       - output.state.virtual_network_rules[0].subnet_id == "{{ subnet_output.state.id }}"
 
 - name: Create new data lake store (Idempotence)
-  azure_rm_datalakestore:
+  azure.azcollection.azure_rm_datalakestore:
     resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     tags:
@@ -187,13 +187,13 @@
       - not output.changed
 
 - name: Delete virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ vnet_name }}"
     resource_group: "{{ resource_group_datalake }}"
     state: absent
 
 - name: Delete Data Lake Store
-  azure_rm_datalakestore:
+  azure.azcollection.azure_rm_datalakestore:
     resource_group: "{{ resource_group_datalake }}"
     name: "{{ adl_name }}"
     state: absent

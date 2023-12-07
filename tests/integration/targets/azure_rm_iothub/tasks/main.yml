@@ -3,7 +3,7 @@
     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
 - name: Create IoT Hub (check mode)
-  azure_rm_iothub:
+  azure.azcollection.azure_rm_iothub:
     name: "hub{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     ip_filters:
@@ -19,14 +19,14 @@
       - iothub.changed
 
 - name: Query IoT Hub
-  azure_rm_iothub_info:
+  azure.azcollection.azure_rm_iothub_info:
     name: "hub{{ rpfx }}"
     resource_group: "{{ resource_group }}"
   register: iothub
   ignore_errors: true
 
 - name: Create IoT Hub
-  azure_rm_iothub:
+  azure.azcollection.azure_rm_iothub:
     name: "hub{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     ip_filters:
@@ -41,7 +41,7 @@
       - iothub.changed
 
 - name: Create IoT Hub (idempontent)
-  azure_rm_iothub:
+  azure.azcollection.azure_rm_iothub:
     name: "hub{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     ip_filters:
@@ -56,7 +56,7 @@
       - not iothub.changed
 
 - name: Query IoT Hub
-  azure_rm_iothub_info:
+  azure.azcollection.azure_rm_iothub_info:
     name: "hub{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     list_keys: true
@@ -76,7 +76,7 @@
   when: item.rights == 'RegistryWrite, ServiceConnect, DeviceConnect'
 
 - name: Create devices
-  azure_rm_iotdevice:
+  azure.azcollection.azure_rm_iotdevice:
     hub: "hub{{ rpfx }}"
     hub_policy_name: "{{ registry_write_name }}"
     hub_policy_key: "{{ registry_write_key }}"
@@ -93,7 +93,7 @@
     - 2
 
 - name: Query devices
-  azure_rm_iotdevice_info:
+  azure.azcollection.azure_rm_iotdevice_info:
     hub: "hub{{ rpfx }}"
     hub_policy_name: "{{ registry_write_name }}"
     hub_policy_key: "{{ registry_write_key }}"
@@ -105,7 +105,7 @@
       - devices.iot_devices | length == 2
 
 - name: Query devices by name
-  azure_rm_iotdevice_info:
+  azure.azcollection.azure_rm_iotdevice_info:
     hub: "hub{{ rpfx }}"
     name: "mydevice1"
     hub_policy_name: "{{ registry_write_name }}"
@@ -123,7 +123,7 @@
   changed_when: true
 
 - name: Update devices
-  azure_rm_iotdevice:
+  azure.azcollection.azure_rm_iotdevice:
     hub: "hub{{ rpfx }}"
     hub_policy_name: "{{ registry_write_name }}"
     hub_policy_key: "{{ registry_write_key }}"
@@ -145,7 +145,7 @@
   ansible.builtin.command: sleep 300
 
 - name: Query devices twin
-  azure_rm_iotdevice_info:
+  azure.azcollection.azure_rm_iotdevice_info:
     hub: "hub{{ rpfx }}"
     hub_policy_name: "{{ registry_write_name }}"
     hub_policy_key: "{{ registry_write_key }}"
@@ -157,7 +157,7 @@
       - devices.iot_devices | length == 2
 
 - name: Delete IoT Hub (check mode)
-  azure_rm_iothub:
+  azure.azcollection.azure_rm_iothub:
     name: "hub{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
@@ -170,7 +170,7 @@
       - iothub.changed
 
 - name: Delete IoT Hub
-  azure_rm_iothub:
+  azure.azcollection.azure_rm_iothub:
     name: "hub{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent

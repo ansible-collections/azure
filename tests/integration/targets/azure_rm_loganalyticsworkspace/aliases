@@ -1,5 +1,5 @@
 cloud/azure
 shippable/azure/group4
 destructive
-azure_rm_loganalyticsworkspace
-azure_rm_loganalyticsworkspace_info
+azure.azcollection.azure_rm_loganalyticsworkspace
+azure.azcollection.azure_rm_loganalyticsworkspace_info

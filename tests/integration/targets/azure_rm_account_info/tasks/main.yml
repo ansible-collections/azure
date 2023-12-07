@@ -1,5 +1,5 @@
 - name: Get facts for current logged in user
-  azure.azcollection.azure_rm_account_info:
+  azure.azcollection.azure.azcollection.azure_rm_account_info:
   register: result
 
 - name: Assert the facts

@@ -17,14 +17,14 @@
   run_once: true
 
 - name: Create Storage Account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name }}"
     location: eastus
     account_type: Standard_LRS
 
 - name: Create Batch Account
-  azure_rm_batchaccount:
+  azure.azcollection.azure_rm_batchaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ batch_account_name }}"
     location: eastus
@@ -42,7 +42,7 @@
       - output.changed
 
 - name: Create Batch Account -- idempotent
-  azure_rm_batchaccount:
+  azure.azcollection.azure_rm_batchaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ batch_account_name }}"
     location: eastus
@@ -60,7 +60,7 @@
       - not output.changed
 
 - name: Get Batch Account facts
-  azure_rm_batchaccount_info:
+  azure.azcollection.azure_rm_batchaccount_info:
     resource_group: "{{ resource_group }}"
     name: "{{ batch_account_name }}"
   register: output
@@ -72,7 +72,7 @@
       - output.batch_account[0].tags | length == 2
 
 - name: Delete Batch Account
-  azure_rm_batchaccount:
+  azure.azcollection.azure_rm_batchaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ batch_account_name }}"
     state: absent
@@ -84,7 +84,7 @@
       - output.changed
 
 - name: Clean up storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account_name }}"
     state: absent

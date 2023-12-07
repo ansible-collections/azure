@@ -6,31 +6,31 @@
     empty_disk_name: "emptydisk{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     address_prefixes: "10.10.0.0/16"
 
 - name: Add subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     address_prefix: "10.10.0.0/24"
     virtual_network: "{{ vm_name }}"
 
 - name: Create public ip
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
     name: "{{ public_ip_name }}"
 
 - name: Create security group
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ security_group_name }}"
 
 - name: Create NIC
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     virtual_network: "{{ vm_name }}"
@@ -39,7 +39,7 @@
     security_group: "{{ security_group_name }}"
 
 - name: Create virtual machine
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
@@ -59,7 +59,7 @@
   register: vm
 
 - name: Create new empty managed disk
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "{{ empty_disk_name }}"
     storage_account_type: "Standard_LRS"
@@ -67,7 +67,7 @@
   register: emptydisk
 
 - name: Create an image from VM (check mode)
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}"
     source: "{{ vm.ansible_facts.azure_vm.storage_profile.os_disk.managed_disk.id }}"
     name: testimage001
@@ -83,7 +83,7 @@
     that: output.changed
 
 - name: Create an image from VM
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}"
     source:
       name: "{{ vm_name }}"
@@ -100,7 +100,7 @@
       - output.id
 
 - name: Create an image from VM (idempotent)
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}"
     source: "{{ vm.ansible_facts.azure_vm.storage_profile.os_disk.managed_disk.id }}"
     name: testimage001
@@ -115,7 +115,7 @@
       - output.id
 
 - name: Gather information about image created
-  azure_rm_image_info:
+  azure.azcollection.azure_rm_image_info:
     resource_group: "{{ resource_group }}"
     name: testimage001
   register: output
@@ -127,7 +127,7 @@
       - output.images[0].hyper_v_generation == 'V1'
 
 - name: Delete image (check mode)
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}"
     name: testimage001
     state: absent
@@ -140,7 +140,7 @@
       - output.changed
 
 - name: Delete image
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}"
     name: testimage001
     state: absent
@@ -152,7 +152,7 @@
       - output.changed
 
 - name: Delete image (idempotent)
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}"
     name: testimage001
     state: absent
@@ -164,13 +164,13 @@
       - not output.changed
 
 - name: Delete empty disk
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "{{ empty_disk_name }}"
     state: absent
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     state: absent
@@ -178,7 +178,7 @@
   register: output
 
 - name: Delete public ip
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
     name: "{{ public_ip_name }}"

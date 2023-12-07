@@ -9,7 +9,7 @@
   run_once: true
 
 - name: Create a RegistrationDefinition -- check mode
-  azure_rm_registrationdefinition:
+  azure.azcollection.azure_rm_registrationdefinition:
     properties:
       description: first_test
       authorizations:
@@ -26,7 +26,7 @@
       - output.changed
 
 - name: Create a RegistrationDefinition with scope
-  azure_rm_registrationdefinition:
+  azure.azcollection.azure_rm_registrationdefinition:
     scope: "{{ subscription_sec_id }}"
     properties:
       description: test definition with scope
@@ -43,7 +43,7 @@
       - output2.changed
 
 - name: Create a RegistrationDefinition
-  azure_rm_registrationdefinition:
+  azure.azcollection.azure_rm_registrationdefinition:
     properties:
       description: first_test
       authorizations:
@@ -59,7 +59,7 @@
       - output1.changed
 
 - name: Create a RegistrationDefinition (idempotent)
-  azure_rm_registrationdefinition:
+  azure.azcollection.azure_rm_registrationdefinition:
     registration_definition_id: "{{ output1.state.name }}"
     properties:
       description: first_test
@@ -76,7 +76,7 @@
       - not output.changed
 
 - name: Update the RegistrationDefinition properties description and name
-  azure_rm_registrationdefinition:
+  azure.azcollection.azure_rm_registrationdefinition:
     registration_definition_id: "{{ output1.state.name }}"
     properties:
       description: second_test
@@ -93,7 +93,7 @@
       - output.changed
 
 - name: Get the Registration Definition info
-  azure_rm_registrationdefinition_info:
+  azure.azcollection.azure_rm_registrationdefinition_info:
     registration_definition_id: "{{ output1.state.name }}"
   register: output
 
@@ -108,7 +108,7 @@
       - output.registration_definitions[0].properties.registration_definition_name == "test_name02"
 
 - name: Get All Registration Definition info in the subscription
-  azure_rm_registrationdefinition_info:
+  azure.azcollection.azure_rm_registrationdefinition_info:
     scope: "{{ subscription_id }}"
   register: output
 
@@ -118,7 +118,7 @@
       - output.registration_definitions | length >=1
 
 - name: Delete the registration definition
-  azure_rm_registrationdefinition:
+  azure.azcollection.azure_rm_registrationdefinition:
     registration_definition_id: "{{ output1.state.name }}"
     state: absent
   register: output
@@ -129,6 +129,6 @@
       - output.changed
 
 - name: Delete the registration definition
-  azure_rm_registrationdefinition:
+  azure.azcollection.azure_rm_registrationdefinition:
     registration_definition_id: "{{ output2.state.name }}"
     state: absent

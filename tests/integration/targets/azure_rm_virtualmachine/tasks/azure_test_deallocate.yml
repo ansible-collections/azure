@@ -2,7 +2,7 @@
   ansible.builtin.include_tasks: setup.yml
 
 - name: Create minimal VM with defaults
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     admin_username: "testuser"
@@ -20,7 +20,7 @@
   register: vm_output
 
 - name: Get VM facts
-  azure_rm_virtualmachine_info:
+  azure.azcollection.azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
   register: vm_state
@@ -30,7 +30,7 @@
   changed_when: true
 
 - name: Restart the virtual machine
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     restarted: true
@@ -44,7 +44,7 @@
       - restart_result is changed
 
 - name: Deallocate the virtual machine
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     allocated: false
@@ -58,7 +58,7 @@
       - deallocate_result is changed
 
 - name: Start the virtual machine
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
@@ -72,33 +72,33 @@
       - start_result is changed
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     state: absent
     remove_on_absent: all_autocreated
 
 - name: Destroy subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     virtual_network: "{{ network_name }}"
     name: "{{ subnet_name }}"
     state: absent
 
 - name: Destroy virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ network_name }}"
     state: absent
 
 - name: Destroy availability set
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     resource_group: "{{ resource_group }}"
     name: "{{ availability_set }}"
     state: absent
 
 - name: Destroy storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
     force_delete_nonempty: false

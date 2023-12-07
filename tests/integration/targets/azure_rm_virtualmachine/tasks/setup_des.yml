@@ -11,7 +11,7 @@
   register: object_id_facts
 
 - name: Create a key vault
-  azure_rm_keyvault:
+  azure.azcollection.azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     vault_name: "{{ vault_name }}"
     enabled_for_disk_encryption: true
@@ -38,12 +38,12 @@
           - purge
 
 - name: Create a key in key vault
-  azure_rm_keyvaultkey:
+  azure.azcollection.azure_rm_keyvaultkey:
     key_name: testkey
     keyvault_uri: https://{{ vault_name }}.vault.azure.net
 
 - name: Get latest version of key
-  azure_rm_keyvaultkey_info:
+  azure.azcollection.azure_rm_keyvaultkey_info:
     vault_uri: https://{{ vault_name }}.vault.azure.net
     name: testkey
   register: results
@@ -53,7 +53,7 @@
     key_url: "{{ results['keys'][0]['kid'] }}"
 
 - name: Create disk encryption set
-  azure_rm_diskencryptionset:
+  azure.azcollection.azure_rm_diskencryptionset:
     resource_group: "{{ resource_group }}"
     name: "{{ des_name }}"
     source_vault: "{{ vault_name }}"
@@ -62,7 +62,7 @@
   register: des_results
 
 - name: Grant DES access to key vault
-  azure_rm_keyvault:
+  azure.azcollection.azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     vault_name: "{{ vault_name }}"
     enabled_for_disk_encryption: true

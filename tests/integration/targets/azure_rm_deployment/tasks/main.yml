@@ -3,7 +3,7 @@
     dns_label: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Error Create Azure Deploy
-  azure_rm_deployment:
+  azure.azcollection.azure_rm_deployment:
     resource_group: "{{ resource_group }}"
     location: "eastus"
     template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/azuredeploy.json'
@@ -21,7 +21,7 @@
   ignore_errors: true
 
 - name: Create Azure Deploy
-  azure_rm_deployment:
+  azure.azcollection.azure_rm_deployment:
     resource_group: "{{ resource_group }}"
     location: "eastus"
     template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/azuredeploy.json'
@@ -47,7 +47,7 @@
   with_items: "{{ output.deployment.instances }}"
 
 - name: Get Deployment Facts for Resource Group
-  azure_rm_deployment_info:
+  azure.azcollection.azure_rm_deployment_info:
     resource_group: "{{ resource_group }}"
   register: output
 - name: Print the deployment facts
@@ -55,7 +55,7 @@
     var: output
 
 - name: Get Deployment Facts for named deployment
-  azure_rm_deployment_info:
+  azure.azcollection.azure_rm_deployment_info:
     resource_group: "{{ resource_group }}"
     name: "{{ dns_label }}"
   register: output

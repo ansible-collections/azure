@@ -3,7 +3,7 @@
     storage_account: "sb{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
     account_type: Standard_LRS
@@ -19,7 +19,7 @@
       purpose: test
 
 - name: Create share
-  azure_rm_storageshare:
+  azure.azcollection.azure_rm_storageshare:
     name: "{{ share_name }}"
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
@@ -41,7 +41,7 @@
       - create_result.state.etag is defined
 
 - name: Run again to check idempotence
-  azure_rm_storageshare:
+  azure.azcollection.azure_rm_storageshare:
     name: "{{ share_name }}"
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
@@ -52,7 +52,7 @@
     that: not create_result.changed
 
 - name: Get share details
-  azure_rm_storageshare_info:
+  azure.azcollection.azure_rm_storageshare_info:
     name: "{{ share_name }}"
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
@@ -76,7 +76,7 @@
     access_tier: Hot
 
 - name: Update share
-  azure_rm_storageshare:
+  azure.azcollection.azure_rm_storageshare:
     name: "{{ share_name }}"
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
@@ -89,7 +89,7 @@
     that: update_result.changed
 
 - name: Get updated details
-  azure_rm_storageshare_info:
+  azure.azcollection.azure_rm_storageshare_info:
     name: "{{ share_name }}"
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
@@ -107,7 +107,7 @@
       - share_facts.storageshares.etag is defined
 
 - name: Delete share
-  azure_rm_storageshare:
+  azure.azcollection.azure_rm_storageshare:
     name: "{{ share_name }}"
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
@@ -120,7 +120,7 @@
   changed_when: true
 
 - name: Delete storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
     state: absent

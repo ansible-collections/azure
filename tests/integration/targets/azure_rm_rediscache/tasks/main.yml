@@ -7,7 +7,7 @@
   run_once: true
 
 - name: Create a redis cache (Check Mode)
-  azure_rm_rediscache:
+  azure.azcollection.azure_rm_rediscache:
     resource_group: "{{ resource_group }}"
     name: "{{ redis_name }}"
     sku:
@@ -23,7 +23,7 @@
       - output.changed
 
 - name: Create a redis cache
-  azure_rm_rediscache:
+  azure.azcollection.azure_rm_rediscache:
     resource_group: "{{ resource_group }}"
     name: "{{ redis_name }}"
     sku:
@@ -39,7 +39,7 @@
       - output.id
 
 - name: Get facts
-  azure_rm_rediscache_info:
+  azure.azcollection.azure_rm_rediscache_info:
     resource_group: "{{ resource_group }}"
     name: "{{ redis_name }}"
   register: facts
@@ -55,7 +55,7 @@
       - facts.rediscaches[0].sku.size == 'C1'
 
 - name: Update the redis cache (idempotent)
-  azure_rm_rediscache:
+  azure.azcollection.azure_rm_rediscache:
     resource_group: "{{ resource_group }}"
     name: "{{ redis_name }}"
     sku:
@@ -78,7 +78,7 @@
  # As such, it is currently unable to accept the update request.  Please try again later."
   block:
     - name: Wait for Redis provisioning to complete
-      azure_rm_rediscache_info:
+      azure.azcollection.azure_rm_rediscache_info:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}"
       register: facts
@@ -87,7 +87,7 @@
       delay: 60
 
     - name: (Actually) update redis cache
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}"
         sku:
@@ -105,7 +105,7 @@
           - output.changed
 
     - name: Update redis cache configuration
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}"
         sku:
@@ -123,7 +123,7 @@
           - output.changed
 
     - name: Scale up the redis cache
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}"
         sku:
@@ -140,7 +140,7 @@
           - output.changed
 
     - name: Force reboot redis cache
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}"
         reboot:
@@ -153,7 +153,7 @@
           - output.changed
 
     - name: Delete the redis cache (Check Mode)
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}"
         state: absent
@@ -165,7 +165,7 @@
         that: output.changed
 
     - name: Delete the redis cache
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}"
         state: absent
@@ -179,7 +179,7 @@
 
 
 - name: Create a redis cache with enhanced configuration options
-  azure_rm_rediscache:
+  azure.azcollection.azure_rm_rediscache:
     resource_group: "{{ resource_group }}"
     name: "{{ redis_name }}-enhanced"
     sku:
@@ -196,7 +196,7 @@
       - output.changed
 
 - name: Get facts for enhanced cache
-  azure_rm_rediscache_info:
+  azure.azcollection.azure_rm_rediscache_info:
     resource_group: "{{ resource_group }}"
     name: "{{ redis_name }}-enhanced"
   register: facts
@@ -222,7 +222,7 @@
  # As such, it is currently unable to accept the update request.  Please try again later."
   block:
     - name: Wait for Redis provisioning to complete
-      azure_rm_rediscache_info:
+      azure.azcollection.azure_rm_rediscache_info:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}-enhanced"
       register: facts
@@ -231,7 +231,7 @@
       delay: 60
 
     - name: Update redis (idempotent)
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}-enhanced"
         sku:
@@ -248,7 +248,7 @@
           - not output.changed
 
     - name: Update redis cache TLS
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}-enhanced"
         sku:
@@ -265,7 +265,7 @@
           - output.changed
 
     - name: Update redis cache public network access
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}-enhanced"
         sku:
@@ -282,7 +282,7 @@
           - output.changed
 
     - name: Get facts for enhanced cache
-      azure_rm_rediscache_info:
+      azure.azcollection.azure_rm_rediscache_info:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}-enhanced"
       register: facts
@@ -293,7 +293,7 @@
           - facts.rediscaches[0].public_network_access == 'Enabled'
 
     - name: Update redis cache version
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}-enhanced"
         sku:
@@ -307,7 +307,7 @@
       failed_when: "output.changed or 'not supported' not in output.msg"
 
     - name: Delete the redis cache
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}-enhanced"
         state: absent
@@ -320,20 +320,20 @@
 
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ vnet_name }}"
     address_prefixes: "10.10.0.0/16"
 
 - name: Add subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: "{{ subnet_name }}"
     address_prefix: "10.10.0.0/24"
     virtual_network: "{{ vnet_name }}"
 
 - name: Create redis with subnet
-  azure_rm_rediscache:
+  azure.azcollection.azure_rm_rediscache:
     resource_group: "{{ resource_group }}"
     name: "{{ redis_name }}2"
     sku:
@@ -352,7 +352,7 @@
       - output.id
 
 - name: Get facts
-  azure_rm_rediscache_info:
+  azure.azcollection.azure_rm_rediscache_info:
     resource_group: "{{ resource_group }}"
     name: "{{ redis_name }}2"
     return_access_keys: true
@@ -366,7 +366,7 @@
       - facts.rediscaches[0].access_keys.primary != None
 
 - name: Create firewall rule (Check mode)
-  azure_rm_rediscachefirewallrule:
+  azure.azcollection.azure_rm_rediscachefirewallrule:
     resource_group: "{{ resource_group }}"
     cache_name: "{{ redis_name }}2"
     name: "{{ rule_name }}"
@@ -389,7 +389,7 @@
 # a previous update request or is undergoing system maintenance.  As such, it is currently unable to accept the update request.  Please try again later."
   block:
     - name: Wait for Redis provisioning to complete
-      azure_rm_rediscache_info:
+      azure.azcollection.azure_rm_rediscache_info:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}2"
       register: facts
@@ -398,7 +398,7 @@
       delay: 60
 
     - name: Create firewall rule
-      azure_rm_rediscachefirewallrule:
+      azure.azcollection.azure_rm_rediscachefirewallrule:
         resource_group: "{{ resource_group }}"
         cache_name: "{{ redis_name }}2"
         name: "{{ rule_name }}"
@@ -413,7 +413,7 @@
           - output.id
 
     - name: Update firewall rule idempotence
-      azure_rm_rediscachefirewallrule:
+      azure.azcollection.azure_rm_rediscachefirewallrule:
         resource_group: "{{ resource_group }}"
         cache_name: "{{ redis_name }}2"
         name: "{{ rule_name }}"
@@ -427,7 +427,7 @@
           - output.changed == false
 
     - name: Update firewall rule
-      azure_rm_rediscachefirewallrule:
+      azure.azcollection.azure_rm_rediscachefirewallrule:
         resource_group: "{{ resource_group }}"
         cache_name: "{{ redis_name }}2"
         name: "{{ rule_name }}"
@@ -440,14 +440,14 @@
           - output.changed
 
     - name: Get key facts
-      azure_rm_rediscache_info:
+      azure.azcollection.azure_rm_rediscache_info:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}2"
         return_access_keys: true
       register: key_facts
 
     - name: Regenerate primary redis key
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}2"
         regenerate_key:
@@ -460,7 +460,7 @@
           - output.changed
 
     - name: Get facts after key regeneration
-      azure_rm_rediscache_info:
+      azure.azcollection.azure_rm_rediscache_info:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}2"
         return_access_keys: true
@@ -473,7 +473,7 @@
           - key_facts.rediscaches[0].access_keys.secondary == key_facts2.rediscaches[0].access_keys.secondary
 
     - name: Delete firewall rule
-      azure_rm_rediscachefirewallrule:
+      azure.azcollection.azure_rm_rediscachefirewallrule:
         resource_group: "{{ resource_group }}"
         cache_name: "{{ redis_name }}2"
         name: "{{ rule_name }}"
@@ -486,7 +486,7 @@
           - output.changed
 
     - name: Delete the redis cache
-      azure_rm_rediscache:
+      azure.azcollection.azure_rm_rediscache:
         resource_group: "{{ resource_group }}"
         name: "{{ redis_name }}2"
         state: absent

@@ -4,7 +4,7 @@
     search_name_secondary: "search{{ resource_group | hash('md5') | truncate(16, True, '') }}-secondary"
 
 - name: Create invalid Azure Search - Hosting Name
-  azure_rm_cognitivesearch:
+  azure.azcollection.azure_rm_cognitivesearch:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
     hosting_mode: highDensity
@@ -17,7 +17,7 @@
       - invalid_hosting_name.failed == True
 
 - name: Create invalid Azure Search - Partition Count High Density
-  azure_rm_cognitivesearch:
+  azure.azcollection.azure_rm_cognitivesearch:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
     sku: standard3
@@ -32,7 +32,7 @@
       - invalid_partition_count.failed == True
 
 - name: Create invalid Azure Search - Partition Count
-  azure_rm_cognitivesearch:
+  azure.azcollection.azure_rm_cognitivesearch:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
     partition_count: 7
@@ -45,7 +45,7 @@
       - invalid_partition_count.failed == True
 
 - name: Create invalid Azure Search - Replica Count
-  azure_rm_cognitivesearch:
+  azure.azcollection.azure_rm_cognitivesearch:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
     sku: standard
@@ -59,7 +59,7 @@
       - invalid_replica_count.failed == True
 
 - name: Create invalid Azure Search - Replica Count SKU basic
-  azure_rm_cognitivesearch:
+  azure.azcollection.azure_rm_cognitivesearch:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
     replica_count: 4
@@ -73,7 +73,7 @@
       - invalid_replica_count.failed == True
 
 - name: Create basic Azure Search
-  azure_rm_cognitivesearch:
+  azure.azcollection.azure_rm_cognitivesearch:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
   register: search_info
@@ -95,7 +95,7 @@
       - search_info.state.status == "running"
 
 - name: Get info for Azure Search
-  azure_rm_cognitivesearch_info:
+  azure.azcollection.azure_rm_cognitivesearch_info:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
   register: search_info_module
@@ -116,7 +116,7 @@
       - search_info_module.search.status == "running"
 
 - name: Update basic Azure Search (Idempotence)
-  azure_rm_cognitivesearch:
+  azure.azcollection.azure_rm_cognitivesearch:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
   register: search_info
@@ -127,13 +127,13 @@
       - not search_info.changed
 
 - name: Delete Azure Search
-  azure_rm_cognitivesearch:
+  azure.azcollection.azure_rm_cognitivesearch:
     name: "{{ search_name }}"
     resource_group: "{{ resource_group }}"
     state: absent
 
 - name: Create Azure Search not default parameters
-  azure_rm_cognitivesearch:
+  azure.azcollection.azure_rm_cognitivesearch:
     name: "{{ search_name_secondary }}"
     resource_group: "{{ resource_group }}"
     hosting_mode: default
@@ -165,7 +165,7 @@
       - search_info.state.status == "running"
 
 - name: Update Azure Search not default parameters (Idempotence)
-  azure_rm_cognitivesearch:
+  azure.azcollection.azure_rm_cognitivesearch:
     name: "{{ search_name_secondary }}"
     resource_group: "{{ resource_group }}"
     hosting_mode: default
@@ -187,7 +187,7 @@
       - not search_info.changed
 
 - name: Delete Azure Search
-  azure_rm_cognitivesearch:
+  azure.azcollection.azure_rm_cognitivesearch:
     name: "{{ search_name_secondary }}"
     resource_group: "{{ resource_group }}"
     state: absent

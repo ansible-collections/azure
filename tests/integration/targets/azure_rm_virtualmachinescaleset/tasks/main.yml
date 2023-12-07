@@ -4,61 +4,61 @@
   run_once: true
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: VMSStestVnet
     address_prefixes: "10.0.0.0/16"
 
 - name: Add subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: VMSStestSubnet
     address_prefix: "10.0.1.0/24"
     virtual_network: VMSStestVnet
 
 - name: Create public IP address
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
     name: testPublicIP
 
 - name: Create load balancer
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: "{{ resource_group }}"
     name: testLB
     public_ip_address_name: testPublicIP
 
 - name: Create public IP address 1
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
     name: testPublicIP1
 
 - name: Create load balancer 1
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: "{{ resource_group }}"
     name: testLB1
     public_ip_address_name: testPublicIP1
 
 - name: Create network security group within same resource group of VMSS.
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: testNetworkSecurityGroup
 
 - name: Create network security group in different resource group of VMSS.
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group_secondary }}"
     name: testNetworkSecurityGroup2
 
 - name: Create virtual network inteface cards for VM A and B
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}nic"
     virtual_network: VMSStestVnet
     subnet: VMSStestSubnet
 
 - name: Create VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
     admin_username: testuser
@@ -74,7 +74,7 @@
       sku: 20_04-lts
       version: latest
 - name: Get VM facts
-  azure_rm_virtualmachine_info:
+  azure.azcollection.azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
   register: vm_state
@@ -82,28 +82,28 @@
   ansible.builtin.command: sleep 600
   changed_when: true
 - name: Generalize VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
     generalized: true
 - name: Create image A
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}"
     name: testimagea
     source: "vmforimage{{ rpfx }}"
 - name: Create image B
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}"
     name: testimageb
     source: "vmforimage{{ rpfx }}"
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
     state: absent
 
 - name: Create VMSS with I(orchestration_mode=Flexible)
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     vm_size: Standard_A1_v2
@@ -137,7 +137,7 @@
     that: results.changed
 
 - name: Create VMSS with I(orchestration_mode=Flexible) again --- Idempotent
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     vm_size: Standard_A1_v2
@@ -171,7 +171,7 @@
     that: not results.changed
 
 - name: Retrieve scaleset VMSS fact
-  azure_rm_virtualmachinescaleset_info:
+  azure.azcollection.azure_rm_virtualmachinescaleset_info:
     name: testVMSS{{ rpfx }}
     resource_group: "{{ resource_group }}"
   register: output_scaleset
@@ -182,13 +182,13 @@
       - output_scaleset.vmss[0].orchestration_mode == "Flexible"
 
 - name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     state: absent
 
 - name: Create VMSS with Spot Instance default value
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     vm_size: Standard_A1_v2
@@ -228,13 +228,13 @@
       - results.ansible_facts.azure_vmss.virtual_machine_profile.billing_profile.max_price == -1.0
 
 - name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     state: absent
 
 - name: Create VMSS with custom Spot Instance values
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     vm_size: Standard_A1_v2
@@ -275,13 +275,13 @@
       - results.ansible_facts.azure_vmss.virtual_machine_profile.billing_profile.max_price == 1.0
 
 - name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     state: absent
 
 - name: Create VMSS (check mode)
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     vm_size: Standard_B1s
@@ -318,7 +318,7 @@
     that: results.changed
 
 - name: Get VMSS to ansible.builtin.assert no VMSS is created in check mode
-  azure_rm_virtualmachinescaleset_info:
+  azure.azcollection.azure_rm_virtualmachinescaleset_info:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     format: curated
@@ -330,7 +330,7 @@
       - output_scaleset.vmss | length == 0
 
 - name: Create VMSS
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     vm_size: Standard_B1s
@@ -368,7 +368,7 @@
     that: results.changed
 
 - name: Create VMSS -- test upgrade_policy idempotence and load balancer
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     vm_size: Standard_B1s
@@ -405,7 +405,7 @@
     that: results.changed
 
 - name: Retrieve scaleset facts
-  azure_rm_virtualmachinescaleset_info:
+  azure.azcollection.azure_rm_virtualmachinescaleset_info:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     format: curated
@@ -417,7 +417,7 @@
       - output_scaleset.vmss[0].load_balancer == "testLB1"
 
 - name: Retrieve scaleset VMs facts
-  azure_rm_virtualmachinescalesetinstance_info:
+  azure.azcollection.azure_rm_virtualmachinescalesetinstance_info:
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
   register: instances
@@ -439,7 +439,7 @@
     body: "{{ output_scaleset.vmss[0] }}"
 
 - name: Try to update VMSS using output as input
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ body.resource_group }}"
     name: "{{ body.name }}"
     vm_size: "{{ body.vm_size }}"
@@ -468,7 +468,7 @@
     that: not results.changed
 
 - name: Install VMSS Extension
-  azure_rm_virtualmachinescalesetextension:
+  azure.azcollection.azure_rm_virtualmachinescalesetextension:
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
     name: testExtension
@@ -484,7 +484,7 @@
     that: results.changed
 
 - name: Install Again VMSS Extension - again
-  azure_rm_virtualmachinescalesetextension:
+  azure.azcollection.azure_rm_virtualmachinescalesetextension:
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
     name: testExtension
@@ -500,7 +500,7 @@
     that: not results.changed
 
 - name: Query extension
-  azure_rm_virtualmachinescalesetextension_info:
+  azure.azcollection.azure_rm_virtualmachinescalesetextension_info:
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
     name: testExtension
@@ -521,7 +521,7 @@
       - results.extensions[0]['provisioning_state'] != None
 
 - name: List extensions
-  azure_rm_virtualmachinescalesetextension_info:
+  azure.azcollection.azure_rm_virtualmachinescalesetextension_info:
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
   register: results
@@ -541,7 +541,7 @@
       - results.extensions[0]['provisioning_state'] != None
 
 - name: Delete VMSS Extension
-  azure_rm_virtualmachinescalesetextension:
+  azure.azcollection.azure_rm_virtualmachinescalesetextension:
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
     name: testExtension
@@ -553,7 +553,7 @@
     that: results.changed
 
 - name: Upgrade instance to the latest image
-  azure_rm_virtualmachinescalesetinstance:
+  azure.azcollection.azure_rm_virtualmachinescalesetinstance:
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
     instance_id: "{{ instances.instances[0].instance_id }}"
@@ -565,7 +565,7 @@
     that: results.changed
 
 - name: Stop virtual machine
-  azure_rm_virtualmachinescalesetinstance:
+  azure.azcollection.azure_rm_virtualmachinescalesetinstance:
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
     instance_id: "{{ instances.instances[0].instance_id }}"
@@ -577,7 +577,7 @@
     that: results.changed
 
 - name: Delete instance
-  azure_rm_virtualmachinescalesetinstance:
+  azure.azcollection.azure_rm_virtualmachinescalesetinstance:
     resource_group: "{{ resource_group }}"
     vmss_name: testVMSS{{ rpfx }}
     instance_id: "{{ instances.instances[0].instance_id }}"
@@ -589,13 +589,13 @@
     that: results.changed
 
 - name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
     state: absent
 
 - name: Create VMSS with security group in same resource group, with accelerated networking(check mode).
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_D3_v2
@@ -623,7 +623,7 @@
     that: results.changed
 
 - name: Create VMSS with security group in same resource group, with accelerated networking.
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_D3_v2
@@ -653,7 +653,7 @@
       - 'results.ansible_facts.azure_vmss.virtual_machine_profile.network_profile.network_interface_configurations[0].network_security_group != {}'
 
 - name: Create VMSS with security group in same resource group, with accelerated networking.
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_D3_v2
@@ -681,7 +681,7 @@
       - not results.changed
 
 - name: Create VMSS with security group in same resource group, with accelerated networking.
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_D3_v2
@@ -709,7 +709,7 @@
       - results.changed
 
 - name: Update VMSS with security group in different resource group.
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
     vm_size: Standard_B1s
@@ -740,13 +740,13 @@
 #      - '"testNetworkSecurityGroup2" in results.ansible_facts.azure_vmss.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.0.properties.networkSecurityGroup.id'
 
 - name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
     state: absent
 
 - name: Create VMSS with ephmeral OS disk.
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}3
     vm_size: Standard_DS2_v2
@@ -777,7 +777,7 @@
       - results.ansible_facts.azure_vmss.virtual_machine_profile.storage_profile.os_disk.diff_disk_settings.option == 'Local'
 
 - name: Check VMSS ephmeral OS disk can't udpate
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}3
     vm_size: Standard_DS2_v2
@@ -803,13 +803,13 @@
   register: ignore_errors_register
 
 - name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}3
     state: absent
 
 - name: Fail when instance type is not supported to enable accelerated networking
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}4
     vm_size: Standard_B1s
@@ -838,37 +838,37 @@
       - '"VMSizeIsNotPermittedToEnableAcceleratedNetworkingForVmss" in results.msg'
 
 - name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}4
     state: absent
 
 - name: Delete network security group
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: testNetworkSecurityGroup
     state: absent
 
 - name: Delete network security group
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group_secondary }}"
     name: testNetworkSecurityGroup2
     state: absent
 
 - name: Delete load balancer
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: "{{ resource_group }}"
     name: testLB
     state: absent
 
 - name: Delete public IP address
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     state: absent
     name: testPublicIP
 
 - name: Delete virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: VMSStestVnet
     state: absent
@@ -877,7 +877,7 @@
 # TODO: Until we have a module to create/delete images this is the best tests
 # I can do
 - name: Assert error thrown with invalid image dict
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testvm002
     vm_size: Standard_B1s
@@ -887,7 +887,7 @@
   failed_when: 'fail_invalid_image_dict.msg != "parameter error: expecting image to contain [publisher, offer, sku, version], [name, resource_group] or [id]"'
 
 - name: Assert error thrown with invalid image type
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testvm002
     vm_size: Standard_B1s
@@ -897,7 +897,7 @@
   failed_when: 'fail_invalid_image_type.msg != "parameter error: expecting image to be a string or dict not list"'
 
 - name: Assert error finding missing custom image
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testvm002
     vm_size: Standard_B1s
@@ -906,7 +906,7 @@
   failed_when: fail_missing_custom_image.msg != "Error could not find image with name invalid-image"
 
 - name: Assert error finding missing custom image (dict style)
-  azure_rm_virtualmachinescaleset:
+  azure.azcollection.azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testvm002
     vm_size: Standard_B1s

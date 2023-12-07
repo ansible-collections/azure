@@ -7,21 +7,21 @@
   run_once: true
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group_secondary }}"
     name: "tn{{ rpfx }}"
     address_prefixes: ["10.10.0.0/16", "fdae:f296:2787::/48"]
   register: vn
 
 - name: Add subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group_secondary }}"
     name: "tn{{ rpfx }}"
     address_prefixes_cidr: ["10.10.0.0/24", "fdae:f296:2787::/64"]
     virtual_network: "tn{{ rpfx }}"
 
 - name: Create public IP addresses
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     name: '{{ item.name }}'
     resource_group: '{{ resource_group }}'
     sku: 'standard'
@@ -38,7 +38,7 @@
       version: 'ipv6'
 
 - name: Create load balancer with multiple parameters
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "lb{{ rpfx }}"
     sku: 'Standard'
@@ -83,7 +83,7 @@
   register: lb
 
 - name: Create most simple NIC with virtual_network id (check mode)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
@@ -99,7 +99,7 @@
       - output.changed
 
 - name: Create most simple NIC with virtual_network resource_group
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network:
@@ -118,7 +118,7 @@
       - output.state.ip_configuration.primary
 
 - name: Get fact of the new created NIC
-  azure_rm_networkinterface_info:
+  azure.azcollection.azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
   register: facts
@@ -136,7 +136,7 @@
       - not facts.networkinterfaces[0].enable_accelerated_networking
 
 - name: Create most simple NIC with ip configurations (idempotent)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ facts.networkinterfaces[0].resource_group }}"
     name: "{{ facts.networkinterfaces[0].name }}"
     virtual_network: "{{ facts.networkinterfaces[0].virtual_network }}"
@@ -155,7 +155,7 @@
       - not output.changed
 
 - name: Create most simple NIC (idempotent)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
@@ -170,7 +170,7 @@
       - not output.changed
 
 - name: Update security group (check mode)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
@@ -186,7 +186,7 @@
       - output.changed
 
 - name: Update public ip address (check mode)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
@@ -202,7 +202,7 @@
       - output.changed
 
 - name: Update accelerated networking (check mode)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
@@ -219,7 +219,7 @@
       - output.changed
 
 - name: Update IP forwarding networking (check mode)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
@@ -236,7 +236,7 @@
       - output.changed
 
 - name: Update dns server (check mode)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
@@ -255,7 +255,7 @@
       - output.changed
 
 - name: Update NIC
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
@@ -296,7 +296,7 @@
       - output.state.enable_accelerated_networking
 
 - name: Complicated NIC (idempontent)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
@@ -333,7 +333,7 @@
       - not output.changed
 
 - name: Get fact of the new created NIC
-  azure_rm_networkinterface_info:
+  azure.azcollection.azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
   register: facts
@@ -351,7 +351,7 @@
       - facts.networkinterfaces[0].ip_configurations[1].primary == False
 
 - name: Remove one dns server and ip configuration
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
@@ -383,7 +383,7 @@
       - output.state.enable_accelerated_networking
 
 - name: Create application security group(check mode)
-  azure_rm_applicationsecuritygroup:
+  azure.azcollection.azure_rm_applicationsecuritygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ applicationsecuritygroup_name1 }}"
     tags:
@@ -397,7 +397,7 @@
       - output.changed
 
 - name: Create Application security group
-  azure_rm_applicationsecuritygroup:
+  azure.azcollection.azure_rm_applicationsecuritygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ applicationsecuritygroup_name1 }}"
     tags:
@@ -411,7 +411,7 @@
       - output.id != ''
 
 - name: Get Application security group
-  azure_rm_applicationsecuritygroup_info:
+  azure.azcollection.azure_rm_applicationsecuritygroup_info:
     resource_group: "{{ resource_group }}"
     name: "{{ applicationsecuritygroup_name1 }}"
   register: facts
@@ -425,7 +425,7 @@
       - facts['applicationsecuritygroups'][0]['provisioning_state'] != None
 
 - name: Create application security group (idempotent)
-  azure_rm_applicationsecuritygroup:
+  azure.azcollection.azure_rm_applicationsecuritygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ applicationsecuritygroup_name1 }}"
     tags:
@@ -438,7 +438,7 @@
       - not output.changed
 
 - name: Update application security group
-  azure_rm_applicationsecuritygroup:
+  azure.azcollection.azure_rm_applicationsecuritygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ applicationsecuritygroup_name1 }}"
     tags:
@@ -452,13 +452,13 @@
       - output.changed
 
 - name: Create Application security group in secondary resource group
-  azure_rm_applicationsecuritygroup:
+  azure.azcollection.azure_rm_applicationsecuritygroup:
     resource_group: "{{ resource_group_secondary }}"
     name: "{{ applicationsecuritygroup_name2 }}"
   register: asg
 
 - name: Create Nic with application security groups
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ nic_name1 }}"
     virtual_network: "{{ vn.state.id }}"
@@ -479,7 +479,7 @@
       - output.changed
 
 - name: Create Nic with application security groups (idempotent)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ nic_name1 }}"
     virtual_network: "{{ vn.state.id }}"
@@ -500,7 +500,7 @@
       - not output.changed
 
 - name: Update Nic with application security groups
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ nic_name1 }}"
     virtual_network: "{{ vn.state.id }}"
@@ -520,7 +520,7 @@
       - output.changed
 
 - name: Get fact of the new created NIC
-  azure_rm_networkinterface_info:
+  azure.azcollection.azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}"
     name: "{{ nic_name1 }}"
   register: facts
@@ -531,7 +531,7 @@
       - "facts.networkinterfaces[0].ip_configurations[0].application_security_groups | length == 1"
 
 - name: Create subnet for appgw
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     name: appgw-subnet{{ rpfx }}
     virtual_network_name: tn{{ rpfx }}
     resource_group: "{{ resource_group_secondary }}"
@@ -539,7 +539,7 @@
   register: appgw_subnet_output
 
 - name: Create public IP addresses
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     name: my-appgw-pip
     resource_group: "{{ resource_group_secondary }}"
     sku: 'standard'
@@ -547,7 +547,7 @@
     version: 'ipv4'
 
 - name: Create application gateway to connect NIC to
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group_secondary }}"
     name: "appgateway{{ rpfx }}"
     sku:
@@ -585,14 +585,14 @@
   register: appgw_output
 
 - name: Create subnet for appgw connected NIC
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     name: nic-appgw-subnet{{ rpfx }}
     virtual_network_name: tn{{ rpfx }}
     resource_group: "{{ resource_group_secondary }}"
     address_prefix_cidr: 10.10.2.0/24
 
 - name: "Create NIC attached to application gateway"
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     name: "appgw-nic{{ rpfx }}"
     resource_group: "{{ resource_group_secondary }}"
     virtual_network: "tn{{ rpfx }}"
@@ -615,7 +615,7 @@
       - output.state.ip_configurations[0].application_gateway_backend_address_pools[0] == appgw_output.id + '/backendAddressPools/test_backend_address_pool'
 
 - name: "Create NIC attached to application gateway - idempotent"
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     name: "appgw-nic{{ rpfx }}"
     resource_group: "{{ resource_group_secondary }}"
     virtual_network: "tn{{ rpfx }}"
@@ -635,7 +635,7 @@
       - not output.changed
 
 - name: Get facts for appgw nic
-  azure_rm_networkinterface_info:
+  azure.azcollection.azure_rm_networkinterface_info:
     name: "appgw-nic{{ rpfx }}"
     resource_group: "{{ resource_group_secondary }}"
   register: facts
@@ -649,7 +649,7 @@
       - facts.networkinterfaces[0].ip_configurations[0].application_gateway_backend_address_pools[0] == appgw_output.id + '/backendAddressPools/test_backend_address_pool'
 
 - name: "Delete NIC attached to application gateway"
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     name: "appgw-nic{{ rpfx }}"
     resource_group: "{{ resource_group_secondary }}"
     state: absent
@@ -660,7 +660,7 @@
       - output.changed
 
 - name: Delete application gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     name: "appgateway{{ rpfx }}"
     resource_group: "{{ resource_group_secondary }}"
     state: absent
@@ -671,7 +671,7 @@
       - output.changed
 
 - name: Delete the NIC (check mode)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     state: absent
@@ -684,7 +684,7 @@
       - output.changed
 
 - name: Delete the NIC
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     state: absent
@@ -696,7 +696,7 @@
       - output.changed
 
 - name: Delete the NIC (idempotent)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     state: absent
@@ -708,13 +708,13 @@
       - not output.changed
 
 - name: Delete load balancer
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "lb{{ rpfx }}"
     state: absent
 
 - name: Delete public ip addresses
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     name: "{{ item }}"
     resource_group: '{{ resource_group }}'
     state: absent
@@ -732,13 +732,13 @@
       - output.results | length == 4
 
 - name: Delete the NIC
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ nic_name1 }}"
     state: absent
 
 - name: Delete the application security group (check mode)
-  azure_rm_applicationsecuritygroup:
+  azure.azcollection.azure_rm_applicationsecuritygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ applicationsecuritygroup_name1 }}"
     state: absent
@@ -751,7 +751,7 @@
       - output.changed
 
 - name: Delete the application security group
-  azure_rm_applicationsecuritygroup:
+  azure.azcollection.azure_rm_applicationsecuritygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ applicationsecuritygroup_name1 }}"
     state: absent
@@ -763,14 +763,14 @@
       - output.changed
 
 - name: Delete second application security group
-  azure_rm_applicationsecuritygroup:
+  azure.azcollection.azure_rm_applicationsecuritygroup:
     resource_group: "{{ resource_group_secondary }}"
     name: "{{ applicationsecuritygroup_name2 }}"
     state: absent
   register: output
 
 - name: Delete network security groups
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: '{{ resource_group }}'
     name: '{{ item }}'
     state: 'absent'
@@ -786,7 +786,7 @@
       - output.results | length == 2
 
 - name: Delete virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: '{{ resource_group_secondary }}'
     name: 'tn{{ rpfx }}'
     state: 'absent'

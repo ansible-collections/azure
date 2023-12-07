@@ -6,14 +6,14 @@
     policy_name_weekly: "bp-weekly-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create Azure Recovery Service vault
-  azure_rm_recoveryservicesvault:
+  azure.azcollection.azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
     name: "{{ vault_name }}"
     location: "{{ location }}"
     state: "present"
 
 - name: Create a daily VM backup policy
-  azure_rm_backuppolicy:
+  azure.azcollection.azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_daily }}"
     resource_group: "{{ resource_group }}"
@@ -27,7 +27,7 @@
   register: daily_policy_output
 
 - name: Create a daily VM backup policy
-  azure_rm_backuppolicy_info:
+  azure.azcollection.azure_rm_backuppolicy_info:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_daily }}"
     resource_group: "{{ resource_group }}"
@@ -48,7 +48,7 @@
       - backup_policy_exists.type == daily_policy_output.type
 
 - name: Update daily VM backup policy
-  azure_rm_backuppolicy:
+  azure.azcollection.azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_daily }}"
     resource_group: "{{ resource_group }}"
@@ -68,7 +68,7 @@
       - daily_policy_output_update.name == policy_name_daily
 
 - name: Create a weekly VM backup policy
-  azure_rm_backuppolicy:
+  azure.azcollection.azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_weekly }}"
     resource_group: "{{ resource_group }}"
@@ -92,7 +92,7 @@
       - weekly_policy_output.name == policy_name_weekly
 
 - name: Update weekly VM backup policy
-  azure_rm_backuppolicy:
+  azure.azcollection.azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_weekly }}"
     resource_group: "{{ resource_group }}"
@@ -116,7 +116,7 @@
       - weekly_policy_output_update.name == policy_name_weekly
 
 - name: Delete a daily VM backup policy
-  azure_rm_backuppolicy:
+  azure.azcollection.azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_daily }}"
     resource_group: "{{ resource_group }}"
@@ -129,7 +129,7 @@
       - daily_policy_output_delete.changed
 
 - name: Delete a weekly VM backup policy
-  azure_rm_backuppolicy:
+  azure.azcollection.azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_weekly }}"
     resource_group: "{{ resource_group }}"
@@ -142,7 +142,7 @@
       - weekly_policy_output_delete.changed
 
 - name: Delete a daily VM backup policy (idempotent)
-  azure_rm_backuppolicy:
+  azure.azcollection.azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_daily }}"
     resource_group: "{{ resource_group }}"
@@ -155,7 +155,7 @@
       - not daily_policy_output_delete_idempotent.changed
 
 - name: Delete a weekly VM backup policy (idempotent)
-  azure_rm_backuppolicy:
+  azure.azcollection.azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
     name: "{{ policy_name_weekly }}"
     resource_group: "{{ resource_group }}"

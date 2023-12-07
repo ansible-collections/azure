@@ -3,7 +3,7 @@
     name_rpfx: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: To create api management service
-  azure_rm_apimanagementservice:
+  azure.azcollection.azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     publisher_email: user@example.com
@@ -19,7 +19,7 @@
       - output.failed == False
 
 - name: Recreate api management service idempotent test
-  azure_rm_apimanagementservice:
+  azure.azcollection.azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     publisher_email: user@example.com
@@ -35,7 +35,7 @@
       - output.failed == False
 
 - name: Get api management service information
-  azure_rm_apimanagementservice_info:
+  azure.azcollection.azure_rm_apimanagementservice_info:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
   register: output
@@ -46,7 +46,7 @@
       - output.api_management_service.name == "{{ name_rpfx }}"
 
 - name: To delete an api management service
-  azure_rm_apimanagementservice:
+  azure.azcollection.azure_rm_apimanagementservice:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     state: absent

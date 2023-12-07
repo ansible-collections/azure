@@ -2,7 +2,7 @@
   ansible.builtin.include_tasks: setup.yml
 
 - name: Create minimal VM with Spot Instance default values
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     priority: Spot
@@ -29,14 +29,14 @@
       - azure_vm.properties.billingProfile.maxPrice == -1.0
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     state: absent
     vm_size: Standard_A1_v2
 
 - name: Create minimal VM with custom Spot Instance values
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     priority: Spot
@@ -64,21 +64,21 @@
       - azure_vm.properties.billingProfile.maxPrice == 1.0
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     state: absent
     vm_size: Standard_A1_v2
 
 - name: Destroy subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     virtual_network: "{{ network_name }}"
     name: "{{ subnet_name }}"
     state: absent
 
 - name: Destroy virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ network_name }}"
     state: absent

@@ -2,7 +2,7 @@
   ansible.builtin.include_tasks: setup.yml
 
 - name: List available versions for 0001-com-ubuntu-server-focal image
-  azure_rm_virtualmachineimage_info:
+  azure.azcollection.azure_rm_virtualmachineimage_info:
     location: eastus
     publisher: Canonical
     offer: 0001-com-ubuntu-server-focal
@@ -14,7 +14,7 @@
     latest_image_name: "{{ (image_list['vmimages'] | map(attribute='name') | sort(reverse=True))[0] }}"
 
 - name: Create minimal VM with defaults
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     admin_username: "testuser"
@@ -37,33 +37,33 @@
       - vm_output.azure_vm.properties.storageProfile.imageReference.version == latest_image_name
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     remove_on_absent: all_autocreated
     state: absent
 
 - name: Destroy subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     virtual_network: "{{ network_name }}"
     name: "{{ subnet_name }}"
     state: absent
 
 - name: Destroy virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ network_name }}"
     state: absent
 
 - name: Destroy availability set
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     resource_group: "{{ resource_group }}"
     name: "{{ availability_set }}"
     state: absent
 
 - name: Destroy storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
     force_delete_nonempty: true

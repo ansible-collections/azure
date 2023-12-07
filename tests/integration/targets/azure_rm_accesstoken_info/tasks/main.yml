@@ -1,5 +1,5 @@
 - name: Get access token for graphql
-  azure.azcollection.azure_rm_accesstoken_info:
+  azure.azcollection.azure.azcollection.azure_rm_accesstoken_info:
     scopes:
       - https://graph.microsoft.com/.default
   register: result

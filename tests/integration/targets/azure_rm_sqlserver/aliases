@@ -1,8 +1,8 @@
 cloud/azure
 destructive
 shippable/azure/group9
-azure_rm_sqlserver_facts
-azure_rm_sqldatabase
-azure_rm_sqldatabase_facts
-azure_rm_sqlfirewallrule
-azure_rm_sqlfirewallrule_facts
+azure.azcollection.azure_rm_sqlserver_facts
+azure.azcollection.azure_rm_sqldatabase
+azure.azcollection.azure_rm_sqldatabase_facts
+azure.azcollection.azure_rm_sqlfirewallrule
+azure.azcollection.azure_rm_sqlfirewallrule_facts

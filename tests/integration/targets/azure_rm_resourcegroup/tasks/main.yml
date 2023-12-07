@@ -1,5 +1,5 @@
 - name: Get resource group datalake info
-  azure_rm_resourcegroup_info:
+  azure.azcollection.azure_rm_resourcegroup_info:
     name: "{{ resource_group_datalake }}"
     list_resources: true
   register: rg
@@ -11,7 +11,7 @@
       - rg.resourcegroups[0].resources | length >= 0
 
 - name: Get resource group info
-  azure_rm_resourcegroup_info:
+  azure.azcollection.azure_rm_resourcegroup_info:
   register: rg
 
 - name: Assert all resource group facts
@@ -20,7 +20,7 @@
       - rg.resourcegroups | length >= 1
 
 - name: Get resource group info
-  azure_rm_resourcegroup_info:
+  azure.azcollection.azure_rm_resourcegroup_info:
     name: "{{ resource_group }}"
     list_resources: true
   register: rg
@@ -32,7 +32,7 @@
       - rg.resourcegroups[0].resources | length >= 0
 
 - name: Create resource group (idempontent)
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}"
     location: "{{ rg.resourcegroups[0].location }}"
   register: output
@@ -43,7 +43,7 @@
       - not output.changed
 
 - name: Delete resource group
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}"
     state: absent
   check_mode: true

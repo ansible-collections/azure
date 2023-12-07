@@ -5,7 +5,7 @@
   run_once: true
 
 - name: Create automation account
-  azure_rm_automationaccount:
+  azure.azcollection.azure_rm_automationaccount:
     name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
   check_mode: true
@@ -17,7 +17,7 @@
       - output.changed
 
 - name: Create automation account
-  azure_rm_automationaccount:
+  azure.azcollection.azure_rm_automationaccount:
     name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
   register: output
@@ -29,7 +29,7 @@
       - output.id
 
 - name: Create automation account
-  azure_rm_automationaccount:
+  azure.azcollection.azure_rm_automationaccount:
     name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
   register: output
@@ -40,7 +40,7 @@
       - not output.changed
 
 - name: Get automation account
-  azure_rm_automationaccount_info:
+  azure.azcollection.azure_rm_automationaccount_info:
     name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     list_statistics: true
@@ -58,7 +58,7 @@
       - facts.automation_accounts[0].state == "Ok"
 
 - name: Delete account
-  azure_rm_automationaccount:
+  azure.azcollection.azure_rm_automationaccount:
     name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
@@ -71,7 +71,7 @@
       - output.changed
 
 - name: Delete account
-  azure_rm_automationaccount:
+  azure.azcollection.azure_rm_automationaccount:
     name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
@@ -83,7 +83,7 @@
       - output.changed
 
 - name: Delete account
-  azure_rm_automationaccount:
+  azure.azcollection.azure_rm_automationaccount:
     name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent

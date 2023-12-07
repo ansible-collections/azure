@@ -1,5 +1,5 @@
 - name: Create an container registry
-  azure_rm_containerregistry:
+  azure.azcollection.azure_rm_containerregistry:
     name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     resource_group: "{{ resource_group }}"
     location: eastus2
@@ -24,7 +24,7 @@
       - output.credentials['password2'] is defined
 
 - name: Update the ACR instance sku, tags and admin_user_enabled
-  azure_rm_containerregistry:
+  azure.azcollection.azure_rm_containerregistry:
     name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     resource_group: "{{ resource_group }}"
     location: eastus2
@@ -37,7 +37,7 @@
   register: output
 
 - name: Create second container registry (to test facts)
-  azure_rm_containerregistry:
+  azure.azcollection.azure_rm_containerregistry:
     name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
     resource_group: "{{ resource_group }}"
     location: eastus2
@@ -59,7 +59,7 @@
       - output.credentials['password2'] is not defined
 
 - name: Gather facts for single Container Registry
-  azure_rm_containerregistry_info:
+  azure.azcollection.azure_rm_containerregistry_info:
     resource_group: "{{ resource_group }}"
     name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
   register: output
@@ -78,7 +78,7 @@
       - output.registries[0]['credentials'] != None
 
 - name: Gather facts for all Container Registries in the resource group
-  azure_rm_containerregistry_info:
+  azure.azcollection.azure_rm_containerregistry_info:
     resource_group: "{{ resource_group }}"
   register: output
 
@@ -104,13 +104,13 @@
       - output.registries[1]['credentials'] != None
 
 - name: Delete first container registry
-  azure_rm_containerregistry:
+  azure.azcollection.azure_rm_containerregistry:
     name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     resource_group: "{{ resource_group }}"
     state: absent
 
 - name: Delete second container registry
-  azure_rm_containerregistry:
+  azure.azcollection.azure_rm_containerregistry:
     name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
     resource_group: "{{ resource_group }}"
     state: absent

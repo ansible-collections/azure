@@ -2,21 +2,21 @@
   ansible.builtin.include_tasks: setup.yml
 
 - name: Create virtual network in secondary resource group
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group_secondary }}"
     name: "{{ network_name ~ '-2' }}"
     address_prefixes: "{{ secondary_network }}"
   register: create_virt_net_result
 
 - name: Create subnet in secondary resource group
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group_secondary }}"
     name: "{{ subnet_name ~ '-2' }}"
     address_prefix: "{{ secondary_subnet }}"
     virtual_network: "{{ network_name ~ '-2' }}"
 
 - name: Create NICs for dual NIC VM in secondary resource group
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ item.resource_group }}"
     name: "{{ item.name }}"
     virtual_network: "{{ network_name ~ '-2' }}"
@@ -24,7 +24,7 @@
   loop: "{{ nic_list }}"
 
 - name: Create virtual machine with two NICs
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
@@ -57,7 +57,7 @@
       - azure_vm.storage_profile.os_disk.name == 'testosdiskxx'
 
 - name: Retrieve VM facts (filtering by name)
-  azure_rm_virtualmachine_info:
+  azure.azcollection.azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
   register: vm_facts_results
@@ -73,7 +73,7 @@
       - vm_facts_results.vms[0].power_state != None
 
 - name: Retrieve facts by tags
-  azure_rm_virtualmachine_info:
+  azure.azcollection.azure_rm_virtualmachine_info:
     tags:
       - abc:def
   register: facts_by_tags_results
@@ -84,7 +84,7 @@
       - facts_by_tags_results.vms | length >= 1
 
 - name: Should be idempotent with a dual NICs
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
@@ -113,7 +113,7 @@
     that: dual_nics_result is not changed
 
 - name: Get VM facts
-  azure_rm_virtualmachine_info:
+  azure.azcollection.azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
   register: vm_state
@@ -123,13 +123,13 @@
   changed_when: true
 
 - name: Generalize VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
     generalized: true
 
 - name: Gather facts and check if machine is generalized
-  azure_rm_virtualmachine_info:
+  azure.azcollection.azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
   register: generalized_output
@@ -139,7 +139,7 @@
     that: generalized_output.vms[0].power_state == 'generalized'
 
 - name: Delete dual NIC VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
     state: absent

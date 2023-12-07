@@ -11,7 +11,7 @@
   run_once: true
 
 - name: Create a windows plan
-  azure_rm_appserviceplan:
+  azure.azcollection.azure_rm_appserviceplan:
     name: "{{ win_plan_name }}1"
     resource_group: "{{ resource_group }}"
     sku: B1
@@ -24,7 +24,7 @@
       - output.id
 
 - name: Create a linux plan
-  azure_rm_appserviceplan:
+  azure.azcollection.azure_rm_appserviceplan:
     resource_group: "{{ linux_plan_resource_group }}"
     name: "{{ linux_plan_name }}1"
     sku: S1
@@ -39,7 +39,7 @@
       - output.id
 
 - name: Get app service plan by name
-  azure_rm_appserviceplan_info:
+  azure.azcollection.azure_rm_appserviceplan_info:
     resource_group: "{{ linux_plan_resource_group }}"
     name: "{{ linux_plan_name }}1"
   register: output
@@ -51,7 +51,7 @@
       - output.appserviceplans[0].is_linux == True
 
 - name: Create linux app service plan idempotent
-  azure_rm_appserviceplan:
+  azure.azcollection.azure_rm_appserviceplan:
     resource_group: "{{ linux_plan_resource_group }}"
     name: "{{ linux_plan_name }}1"
     sku: S1
@@ -64,7 +64,7 @@
     that: not output.changed
 
 - name: Update a windows plan sku
-  azure_rm_appserviceplan:
+  azure.azcollection.azure_rm_appserviceplan:
     name: "{{ win_plan_name }}1"
     resource_group: "{{ resource_group }}"
     sku: B2
@@ -76,7 +76,7 @@
       - output.changed
 
 - name: Update a linux plan number of workers
-  azure_rm_appserviceplan:
+  azure.azcollection.azure_rm_appserviceplan:
     resource_group: "{{ linux_plan_resource_group }}"
     name: "{{ linux_plan_name }}1"
     sku: S1
@@ -90,7 +90,7 @@
       - output.changed
 
 - name: Create premium linux plan
-  azure_rm_appserviceplan:
+  azure.azcollection.azure_rm_appserviceplan:
     resource_group: "{{ linux_plan_resource_group }}"
     name: "{{ linux_plan_name }}-premium"
     sku: P1v2
@@ -104,7 +104,7 @@
       - output.id
 
 - name: Create premium linux plan idempotent
-  azure_rm_appserviceplan:
+  azure.azcollection.azure_rm_appserviceplan:
     resource_group: "{{ linux_plan_resource_group }}"
     name: "{{ linux_plan_name }}-premium"
     sku: P1v2

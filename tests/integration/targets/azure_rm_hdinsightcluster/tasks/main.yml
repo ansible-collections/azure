@@ -4,14 +4,14 @@
   run_once: true
 
 - name: Create storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "storage{{ rpfx }}"
     account_type: Standard_LRS
     location: eastus2
 
 - name: Sample for Azure REST API - StorageAccounts_ListKeys
-  azure_rm_resource:
+  azure.azcollection.azure_rm_resource:
     api_version: '2018-07-01'
     method: POST
     resource_group: "{{ resource_group }}"
@@ -27,7 +27,7 @@
     var: storage_output
 
 - name: Create instance of Cluster -- check mode
-  azure_rm_hdinsightcluster:
+  azure.azcollection.azure_rm_hdinsightcluster:
     resource_group: "{{ resource_group }}"
     name: "cluster{{ rpfx }}"
     location: eastus2
@@ -70,7 +70,7 @@
       - output.changed
 
 - name: Create instance of Cluster
-  azure_rm_hdinsightcluster:
+  azure.azcollection.azure_rm_hdinsightcluster:
     resource_group: "{{ resource_group }}"
     name: "cluster{{ rpfx }}"
     location: eastus2
@@ -113,7 +113,7 @@
       - output.changed
 
 - name: Create again instance of Cluster -- idempotent
-  azure_rm_hdinsightcluster:
+  azure.azcollection.azure_rm_hdinsightcluster:
     resource_group: "{{ resource_group }}"
     name: "cluster{{ rpfx }}"
     location: eastus2
@@ -155,7 +155,7 @@
       - output.changed == false
 
 - name: Create again instance of Cluster -- resize and add tags
-  azure_rm_hdinsightcluster:
+  azure.azcollection.azure_rm_hdinsightcluster:
     resource_group: "{{ resource_group }}"
     name: "cluster{{ rpfx }}"
     location: eastus2
@@ -202,7 +202,7 @@
       - output.changed
 
 - name: Get facts of Cluster
-  azure_rm_hdinsightcluster_info:
+  azure.azcollection.azure_rm_hdinsightcluster_info:
     resource_group: "{{ resource_group }}"
     name: "cluster{{ rpfx }}"
   register: output
@@ -223,7 +223,7 @@
       - output.clusters[0]['connectivity_endpoints'] != None
 
 - name: Delete instance of Cluster -- check mode
-  azure_rm_hdinsightcluster:
+  azure.azcollection.azure_rm_hdinsightcluster:
     resource_group: "{{ resource_group }}"
     name: "cluster{{ rpfx }}"
     state: absent
@@ -235,7 +235,7 @@
       - output.changed
 
 - name: Delete instance of Cluster
-  azure_rm_hdinsightcluster:
+  azure.azcollection.azure_rm_hdinsightcluster:
     resource_group: "{{ resource_group }}"
     name: "cluster{{ rpfx }}"
     state: absent

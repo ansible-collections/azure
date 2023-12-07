@@ -3,7 +3,7 @@
     policy_name: "fp{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create firewall policy
-  azure_rm_firewallpolicy:
+  azure.azcollection.azure_rm_firewallpolicy:
     resource_group: "{{ resource_group }}"
     name: "{{ policy_name }}"
     threat_intel_mode: alert
@@ -22,7 +22,7 @@
     that: results.changed
 
 - name: Create a firewall policy again (Idempotent test)
-  azure_rm_firewallpolicy:
+  azure.azcollection.azure_rm_firewallpolicy:
     resource_group: "{{ resource_group }}"
     name: "{{ policy_name }}"
     threat_intel_mode: alert
@@ -41,7 +41,7 @@
     that: not results.changed
 
 - name: Update a firewall policy
-  azure_rm_firewallpolicy:
+  azure.azcollection.azure_rm_firewallpolicy:
     resource_group: "{{ resource_group }}"
     name: "{{ policy_name }}"
     threat_intel_mode: deny
@@ -62,7 +62,7 @@
     that: results.changed
 
 - name: Get firewall policy facts
-  azure_rm_firewallpolicy_info:
+  azure.azcollection.azure_rm_firewallpolicy_info:
     resource_group: "{{ resource_group }}"
     name: "{{ policy_name }}"
   register: results
@@ -79,7 +79,7 @@
       - results.firewallpolicies[0].tags | length > 0
 
 - name: Delete the firewall policy
-  azure_rm_firewallpolicy:
+  azure.azcollection.azure_rm_firewallpolicy:
     resource_group: "{{ resource_group }}"
     name: "{{ policy_name }}"
     state: absent
@@ -90,7 +90,7 @@
     that: results.changed
 
 - name: Delete firewall policy again (Idempotent test)
-  azure_rm_firewallpolicy:
+  azure.azcollection.azure_rm_firewallpolicy:
     resource_group: "{{ resource_group }}"
     name: "{{ policy_name }}"
     state: absent

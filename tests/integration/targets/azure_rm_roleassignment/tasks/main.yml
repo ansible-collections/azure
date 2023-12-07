@@ -5,11 +5,11 @@
     az_role_definition_guid: '3e5e47e6-65f7-47ef-90b5-e5dd4d455f24'
 
 - name: List All
-  azure_rm_roleassignment_info:
+  azure.azcollection.azure_rm_roleassignment_info:
   register: az_role_assignments
 
 - name: Fetch specific assignments
-  azure_rm_roleassignment_info:
+  azure.azcollection.azure_rm_roleassignment_info:
     name: "{{ item.name | default(omit) }}"
     assignee: "{{ item.assignee | default(omit) }}"
     id: "{{ item.id | default(omit) }}"
@@ -32,7 +32,7 @@
   loop: "{{ az_role_assignment_specific.results }}"
 
 - name: Intentional mutual exclusion info
-  azure_rm_roleassignment_info:
+  azure.azcollection.azure_rm_roleassignment_info:
     name: "{{ item.name | default(omit) }}"
     assignee: "{{ item.assignee | default(omit) }}"
     id: "{{ item.id | default(omit) }}"
@@ -54,7 +54,7 @@
   loop: "{{ failures_info.results }}"
 
 - name: Intentional failures mutable
-  azure_rm_roleassignment:
+  azure.azcollection.azure_rm_roleassignment:
     name: "{{ item.name | default(omit) }}"
     assignee_object_id: "{{ item.assignee | default(omit) }}"
     id: "{{ item.id | default(omit) }}"
@@ -94,19 +94,19 @@
   loop: "{{ failures_mutable.results }} "
 
 - name: Get resource group info
-  azure_rm_resourcegroup_info:
+  azure.azcollection.azure_rm_resourcegroup_info:
     name: "{{ resource_group }}"
   register: az_resource_group
 
 - name: Create role assignment by id
-  azure_rm_roleassignment:
+  azure.azcollection.azure_rm_roleassignment:
     id: "{{ az_resource_group.resourcegroups[0].id }}/providers/Microsoft.Authorization/roleAssignments/{{ uuid }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
   register: az_role_assignment_create
 
 - name: Create role assignment by scope
-  azure_rm_roleassignment:
+  azure.azcollection.azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
@@ -118,18 +118,18 @@
       - az_role_assignment_idempotent.changed == False
 
 - name: List Role Assignments by Name
-  azure_rm_roleassignment_info:
+  azure.azcollection.azure_rm_roleassignment_info:
     name: "{{ az_role_assignment_create.name }}"
     scope: "{{ az_role_assignment_create.scope }}"
   register: az_role_assignment_by_name
 
 - name: List Role Assignments at scope
-  azure_rm_roleassignment_info:
+  azure.azcollection.azure_rm_roleassignment_info:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
   register: az_role_assignment_by_scope
 
 - name: List Role Assignments at scope with strict matching
-  azure_rm_roleassignment_info:
+  azure.azcollection.azure_rm_roleassignment_info:
     scope: "{{ az_role_assignments.roleassignments[0].scope }}"
     strict_scope_match: true
   register: az_role_assignment_by_scope_strict
@@ -141,24 +141,24 @@
   loop: "{{ az_role_assignment_by_scope_strict.roleassignments }}"
 
 - name: List Role Assignments at id
-  azure_rm_roleassignment_info:
+  azure.azcollection.azure_rm_roleassignment_info:
     id: "{{ az_role_assignment_create.id }}"
   register: az_role_assignment_by_id
 
 - name: List Role Assignments by assignee
-  azure_rm_roleassignment_info:
+  azure.azcollection.azure_rm_roleassignment_info:
     assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
   register: az_role_assignment_by_assignee
 
 - name: Delete Role Assignment by id
-  azure_rm_roleassignment:
+  azure.azcollection.azure_rm_roleassignment:
     id: "{{ az_role_assignment_create.id }}"
     state: absent
   register: az_role_assignment_delete
   when: az_role_assignment_create.changed
 
 - name: Create role assignment with name
-  azure_rm_roleassignment:
+  azure.azcollection.azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
@@ -166,7 +166,7 @@
   register: az_role_assignment_create
 
 - name: Delete Role by Name
-  azure_rm_roleassignment:
+  azure.azcollection.azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
     name: "{{ uuid }}"
     state: absent
@@ -174,14 +174,14 @@
   when: az_role_assignment_create.changed
 
 - name: Create role assignment by scope
-  azure_rm_roleassignment:
+  azure.azcollection.azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
   register: az_role_assignment_create_by_scope
 
 - name: Delete by scope, assignee_object_id and role_definition_id
-  azure_rm_roleassignment:
+  azure.azcollection.azure_rm_roleassignment:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
@@ -190,20 +190,20 @@
   when: az_role_assignment_create.changed
 
 - name: Absent assignment that doesn't exist - id
-  azure.azcollection.azure_rm_roleassignment:
+  azure.azcollection.azure.azcollection.azure_rm_roleassignment:
     id: "{{ az_role_assignment_delete.id }}"
     state: absent
   register: absent_nochange_id
 
 - name: Absent assignment that doesn't exist - name
-  azure.azcollection.azure_rm_roleassignment:
+  azure.azcollection.azure.azcollection.azure_rm_roleassignment:
     name: "{{ az_role_assignment_delete.name }}"
     scope: "{{ az_role_assignment_delete.scope }}"
     state: absent
   register: absent_nochange_name
 
 - name: Absent assignment that doesn't exist - properties
-  azure.azcollection.azure_rm_roleassignment:
+  azure.azcollection.azure.azcollection.azure_rm_roleassignment:
     scope: "{{ az_role_assignment_delete.scope }}"
     assignee_object_id: "{{ az_role_assignment_delete.assignee_object_id }}"
     role_definition_id: "{{ az_role_assignment_delete.role_definition_id }}"

@@ -3,14 +3,14 @@
     name_rpfx: "{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create a VirtualHub (check mode)
-  azure_rm_virtualhub:
+  azure.azcollection.azure_rm_virtualhub:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     sku: Standard
   check_mode: true
 
 - name: Create a VirtualHub
-  azure_rm_virtualhub:
+  azure.azcollection.azure_rm_virtualhub:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     sku: Standard
@@ -23,7 +23,7 @@
       - output.state.provisioning_state == 'Succeeded'
 
 - name: Create a VirtualHub (idempotent)
-  azure_rm_virtualhub:
+  azure.azcollection.azure_rm_virtualhub:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     sku: Standard
@@ -35,7 +35,7 @@
       - not output.changed
 
 - name: Get Virtual Hub Info
-  azure_rm_virtualhub_info:
+  azure.azcollection.azure_rm_virtualhub_info:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
   register: output
@@ -47,7 +47,7 @@
       - output.virtual_hubs[0].sku == "Standard"
 
 - name: Create a VirtualWan
-  azure_rm_virtualwan:
+  azure.azcollection.azure_rm_virtualwan:
     resource_group: "{{ resource_group }}"
     name: "wan-{{ name_rpfx }}"
     disable_vpn_encryption: true
@@ -57,7 +57,7 @@
   register: output
 
 - name: Create Second VirtualHub
-  azure_rm_virtualhub:
+  azure.azcollection.azure_rm_virtualhub:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}-seondary"
     sku: Standard
@@ -77,13 +77,13 @@
       - output.state.provisioning_state == 'Succeeded'
 
 - name: Delete Second VirtualHub
-  azure_rm_virtualhub:
+  azure.azcollection.azure_rm_virtualhub:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}-seondary"
     state: absent
 
 - name: Delete  virtual hub
-  azure_rm_virtualhub:
+  azure.azcollection.azure_rm_virtualhub:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     state: absent

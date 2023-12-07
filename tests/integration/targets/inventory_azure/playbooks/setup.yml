@@ -7,31 +7,31 @@
     - name: Set facts
       ansible.builtin.include_vars: vars.yml
     - name: SETUP | Create storage account
-      azure_rm_storageaccount:
+      azure.azcollection.azure_rm_storageaccount:
         resource_group: "{{ resource_group }}"
         name: "{{ storage_account }}"
         account_type: Standard_LRS
 
     - name: SETUP | Create availability set
-      azure_rm_availabilityset:
+      azure.azcollection.azure_rm_availabilityset:
         name: "{{ availability_set }}"
         resource_group: "{{ resource_group }}"
 
     - name: SETUP | Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}"
         name: "{{ network_name }}"
         address_prefixes: "{{ network }}"
 
     - name: SETUP | Create subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}"
         name: "{{ subnet_name }}"
         address_prefix: "{{ subnet }}"
         virtual_network: "{{ network_name }}"
 
     - name: Create minimal VM with defaults
-      azure_rm_virtualmachine:
+      azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}"
         name: "{{ vm_name }}"
         admin_username: testuser

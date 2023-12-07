@@ -3,7 +3,7 @@
 
 # # Tests possible when CI user acccount setup with required authority
 # - name: Create virtual machine with image and plan which requires acceptance of terms
-#   azure_rm_virtualmachine:
+#   azure.azcollection.azure_rm_virtualmachine:
 #     resource_group: "{{ resource_group }}"
 #     name: testvm009
 #     vm_size: Standard_A0
@@ -25,7 +25,7 @@
 #       - create_image_plan_result.ansible_facts.azure_vm.properties.storageProfile.imageReference.publisher == image_paid.publisher
 
 # - name: Should be idempotent with image and plan which requires acceptance of terms
-#   azure_rm_virtualmachine:
+#   azure.azcollection.azure_rm_virtualmachine:
 #     resource_group: "{{ resource_group }}"
 #     name: testvm009
 #     vm_size: Standard_A0
@@ -45,7 +45,7 @@
 #     that: create_image_plan_again is not changed
 
 - name: Create minimal VM with defaults
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     admin_username: "testuser"
@@ -63,7 +63,7 @@
   register: vm_output
 
 - name: Query auto created security group before deleting
-  azure_rm_securitygroup_info:
+  azure.azcollection.azure_rm_securitygroup_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}01"
   register: nsg_result
@@ -75,26 +75,26 @@
       - nsg_result.securitygroups[0].network_interfaces | length == 1
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     remove_on_absent: all_autocreated
     state: absent
 
 - name: Query auto created NIC
-  azure_rm_networkinterface_info:
+  azure.azcollection.azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}01"
   register: nic_result
 
 - name: Query auto created security group
-  azure_rm_securitygroup_info:
+  azure.azcollection.azure_rm_securitygroup_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}01"
   register: nsg_result
 
 - name: Query auto created public IP
-  azure_rm_publicipaddress_info:
+  azure.azcollection.azure_rm_publicipaddress_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}01"
   register: pip_result
@@ -108,26 +108,26 @@
       - pip_result.publicipaddresses | length == 0
 
 - name: Destroy subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     virtual_network: "{{ network_name }}"
     name: "{{ subnet_name }}"
     state: absent
 
 - name: Destroy virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ network_name }}"
     state: absent
 
 - name: Destroy availability set
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     resource_group: "{{ resource_group }}"
     name: "{{ availability_set }}"
     state: absent
 
 - name: Destroy storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
     force_delete_nonempty: true

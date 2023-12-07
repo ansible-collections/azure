@@ -4,12 +4,12 @@
   run_once: true
 
 - name: Create automation account
-  azure_rm_automationaccount:
+  azure.azcollection.azure_rm_automationaccount:
     name: "account-{{ rpfx }}"
     resource_group: "{{ resource_group }}"
 
 - name: Create automation runbook (check mode)
-  azure_rm_automationrunbook:
+  azure.azcollection.azure_rm_automationrunbook:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}"
@@ -18,7 +18,7 @@
   check_mode: true
 
 - name: Create automation runbook with default parameters
-  azure_rm_automationrunbook:
+  azure.azcollection.azure_rm_automationrunbook:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}"
@@ -32,7 +32,7 @@
       - output.changed
 
 - name: Create automation runbook with default parameters (idempotent)
-  azure_rm_automationrunbook:
+  azure.azcollection.azure_rm_automationrunbook:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}"
@@ -46,7 +46,7 @@
       - not output.changed
 
 - name: Create automation runbook with more paramters
-  azure_rm_automationrunbook:
+  azure.azcollection.azure_rm_automationrunbook:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}-secondary"
@@ -65,7 +65,7 @@
       - output.changed
 
 - name: Update automation runbook with more paramters
-  azure_rm_automationrunbook:
+  azure.azcollection.azure_rm_automationrunbook:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}-secondary"
@@ -84,7 +84,7 @@
       - output.changed
 
 - name: Publish automation runbook
-  azure_rm_automationrunbook:
+  azure.azcollection.azure_rm_automationrunbook:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}-secondary"
@@ -97,7 +97,7 @@
       - output.changed
 
 - name: Get automation runbook
-  azure_rm_automationrunbook_info:
+  azure.azcollection.azure_rm_automationrunbook_info:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}-secondary"
@@ -114,7 +114,7 @@
       - output.automation_runbook[0].state == 'Published'
 
 - name: Get all automation runbook
-  azure_rm_automationrunbook_info:
+  azure.azcollection.azure_rm_automationrunbook_info:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"
   register: output
@@ -125,14 +125,14 @@
       - output.automation_runbook | length == 2
 
 - name: Delete automation runbook
-  azure_rm_automationrunbook:
+  azure.azcollection.azure_rm_automationrunbook:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}"
     state: absent
 
 - name: Delete automation runbook
-  azure_rm_automationrunbook:
+  azure.azcollection.azure_rm_automationrunbook:
     resource_group: "{{ resource_group }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}-secondary"

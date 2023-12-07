@@ -5,7 +5,7 @@
   run_once: true
 
 - name: Clearing (if) previous disks were created
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}{{ item }}"
     managed_by: ''
@@ -16,7 +16,7 @@
     - 3
 
 - name: Test invalid account name (should give error)
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "invalid_char$"
     disk_size_gb: 1
@@ -28,7 +28,7 @@
   ansible.builtin.assert: { that: "output['failed'] == True" }
 
 - name: Create managed disk (Check Mode)
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}1"
     storage_account_type: "Standard_LRS"
@@ -46,7 +46,7 @@
       - output.state
 
 - name: Create new managed disk succesfully
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}1"
     storage_account_type: "Standard_LRS"
@@ -66,7 +66,7 @@
       - output.state.storage_account_type == "Standard_LRS"
 
 - name: Copy disk to a new managed disk
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}2"
     create_option: "copy"
@@ -81,7 +81,7 @@
       - disk2.state.id is defined
 
 - name: Create disk to a new managed disk with zone and os type
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}3"
     source_uri: "{{ output.state.id }}"
@@ -99,7 +99,7 @@
       - disk3.state.os_type == "windows"
 
 - name: Change storage account type to an invalid type
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}1"
     storage_account_type: "PremiumL"
@@ -111,7 +111,7 @@
   ansible.builtin.assert: { that: "output['failed'] == True" }
 
 - name: Update disk options (os_type, account_type, size, tags)
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}1"
     disk_size_gb: 2
@@ -133,7 +133,7 @@
       - output.state.os_type == 'linux'
 
 - name: Gather facts to one specific disk
-  azure_rm_manageddisk_info:
+  azure.azcollection.azure_rm_manageddisk_info:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}1"
   register: output
@@ -153,7 +153,7 @@
   with_dict: "{{ output.ansible_info.azure_managed_disk[0] }}"
 
 - name: Create disk with facts return value
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     location: "{{ parameter.location }}"
     name: "{{ parameter.name }}"
@@ -169,7 +169,7 @@
       - not output.changed
 
 - name: Create new managed disk with  I(account_type=StandardSSD_ZRS)
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}4"
     storage_account_type: "StandardSSD_ZRS"
@@ -185,7 +185,7 @@
       - output.state.disk_size_gb == 2
 
 - name: Gather facts to one specific disk
-  azure_rm_manageddisk_info:
+  azure.azcollection.azure_rm_manageddisk_info:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}4"
   register: output
@@ -198,7 +198,7 @@
       - output.ansible_info.azure_managed_disk[0].disk_size_gb == 2
 
 - name: Create new managed disk with  I(account_type=Premium_ZRS)
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}5"
     storage_account_type: "Premium_ZRS"
@@ -214,7 +214,7 @@
       - output.state.disk_size_gb == 2
 
 - name: Gather facts to one specific disk
-  azure_rm_manageddisk_info:
+  azure.azcollection.azure_rm_manageddisk_info:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}5"
   register: output
@@ -227,7 +227,7 @@
       - output.ansible_info.azure_managed_disk[0].disk_size_gb == 2
 
 - name: Delete managed disk (Check Mode)
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}1"
     state: absent
@@ -241,7 +241,7 @@
       - output.state
 
 - name: Delete all managed disk
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}{{ item }}"
     managed_by: ''
@@ -254,14 +254,14 @@
     - 5
 
 - name: Delete virtual machine
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "tr{{ rpfx }}"
     state: absent
     vm_size: Standard_DS1_v2
 
 - name: Delete public ip
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
     name: "tr{{ rpfx }}"

@@ -5,26 +5,26 @@
     protected_settings_file: "files/test-protected-settings.json"
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: testVnet1
     address_prefixes: "10.0.0.0/16"
 
 - name: Add subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: testSubnet
     address_prefix: "10.0.1.0/24"
     virtual_network: testVnet1
 
 - name: Create public IP address
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Dynamic
     name: testPublicIP
 
 - name: Create Network Security Group that allows SSH
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: testNetworkSecurityGroup
     rules:
@@ -36,7 +36,7 @@
         direction: Inbound
 
 - name: Create virtual network interface card
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: testNIC
     virtual_network: testVnet1
@@ -45,13 +45,13 @@
     security_group_name: testNetworkSecurityGroup
 
 - name: Create a storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
     type: Standard_LRS
 
 - name: Create VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: testVM
     vm_size: Standard_DS1_v2
@@ -73,7 +73,7 @@
       version: latest
 
 - name: Create VM Extension
-  azure_rm_virtualmachineextension:
+  azure.azcollection.azure_rm_virtualmachineextension:
     resource_group: "{{ resource_group }}"
     name: testVMExtension
     virtual_machine_name: testVM
@@ -88,7 +88,7 @@
     that: results.changed
 
 - name: Query extension
-  azure_rm_virtualmachineextension_info:
+  azure.azcollection.azure_rm_virtualmachineextension_info:
     resource_group: "{{ resource_group }}"
     name: testVMExtension
     virtual_machine_name: testVM
@@ -109,7 +109,7 @@
       - results.extensions[0]['provisioning_state'] != None
 
 - name: Create VM Extension (idempotent)
-  azure_rm_virtualmachineextension:
+  azure.azcollection.azure_rm_virtualmachineextension:
     resource_group: "{{ resource_group }}"
     name: testVMExtension
     virtual_machine_name: testVM
@@ -124,7 +124,7 @@
     that: not results.changed
 
 - name: Create VM Extension (force update)
-  azure_rm_virtualmachineextension:
+  azure.azcollection.azure_rm_virtualmachineextension:
     resource_group: "{{ resource_group }}"
     name: testVMExtension
     virtual_machine_name: testVM
@@ -140,7 +140,7 @@
     that: results.changed
 
 - name: List extensions
-  azure_rm_virtualmachineextension_info:
+  azure.azcollection.azure_rm_virtualmachineextension_info:
     resource_group: "{{ resource_group }}"
     virtual_machine_name: testVM
   register: results
@@ -160,7 +160,7 @@
       - results.extensions[0]['provisioning_state'] != None
 
 - name: Delete VM Extension
-  azure_rm_virtualmachineextension:
+  azure.azcollection.azure_rm_virtualmachineextension:
     resource_group: "{{ resource_group }}"
     name: testVMExtension
     virtual_machine_name: testVM
@@ -171,7 +171,7 @@
     that: results.changed
 
 - name: Delete VM Extension (idempotent)
-  azure_rm_virtualmachineextension:
+  azure.azcollection.azure_rm_virtualmachineextension:
     resource_group: "{{ resource_group }}"
     name: testVMExtension
     virtual_machine_name: testVM
@@ -182,7 +182,7 @@
     that: not results.changed
 
 - name: Create VM Extension to configure python required for VM diagnostic extension
-  azure_rm_virtualmachineextension:
+  azure.azcollection.azure_rm_virtualmachineextension:
     resource_group: "{{ resource_group }}"
     name: python-install
     virtual_machine_name: testVM
@@ -197,7 +197,7 @@
     that: results.changed
 
 - name: Install VM Extension for diagnostics
-  azure_rm_virtualmachineextension:
+  azure.azcollection.azure_rm_virtualmachineextension:
     resource_group: "{{ resource_group }}"
     name: "linux-diagnostics"
     virtual_machine_name: testVM
@@ -213,7 +213,7 @@
     that: results.changed
 
 - name: Install VM Extension for diagnostics (idempotent)
-  azure_rm_virtualmachineextension:
+  azure.azcollection.azure_rm_virtualmachineextension:
     resource_group: "{{ resource_group }}"
     name: "linux-diagnostics"
     virtual_machine_name: testVM
@@ -229,7 +229,7 @@
     that: not results.changed
 
 - name: List extensions
-  azure_rm_virtualmachineextension_info:
+  azure.azcollection.azure_rm_virtualmachineextension_info:
     resource_group: "{{ resource_group }}"
     virtual_machine_name: testVM
   register: results
@@ -242,14 +242,14 @@
       - "'linux-diagnostics' in results.extensions | map(attribute='name')"
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: testVM
     state: absent
     remove_on_absent: ['all']
 
 - name: Delete a storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
     type: Standard_LRS
@@ -257,13 +257,13 @@
     force_delete_nonempty: true
 
 - name: Delete Network Security Group that allows SSH
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: testNetworkSecurityGroup
     state: absent
 
 - name: Delete virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: testVnet1
     state: absent

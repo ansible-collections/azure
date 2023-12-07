@@ -2,13 +2,13 @@
   ansible.builtin.include_tasks: setup.yml
 
 - name: Create public ip
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
     name: "{{ public_ip_name }}"
 
 - name: Create security group
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ security_group }}"
     purge_rules: true
@@ -28,7 +28,7 @@
         direction: Inbound
 
 - name: Create network interface
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ interface_name }}"
     virtual_network: "{{ network_name }}"
@@ -38,7 +38,7 @@
 
 - name: Create virtual machine with a single NIC and no boot diagnostics
   register: output
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
@@ -78,7 +78,7 @@
       - "'diagnostics_profile' not in azure_vm or not azure_vm.diagnostics_profile.boot_diagnostics.enabled"
 
 - name: Get facts for virtual machine without boot diagnostics disabled
-  azure_rm_virtualmachine_info:
+  azure.azcollection.azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
   register: vm_facts_no_boot_diag_result
@@ -91,13 +91,13 @@
       - not vm_facts_no_boot_diag_result.vms[0].boot_diagnostics.storage_uri
 
 - name: Get VM facts
-  azure_rm_virtualmachine_info:
+  azure.azcollection.azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
   register: vm_state
 
 - name: Enable boot diagnostics on an existing VM for the first time without specifying a storage account
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     boot_diagnostics:
@@ -113,7 +113,7 @@
       - azure_vm.instance_view.boot_diagnostics.serial_console_log_blob_uri is defined
 
 - name: Get facts for virtual machine with boot diagnostics enabled
-  azure_rm_virtualmachine_info:
+  azure.azcollection.azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
   register: vm_facts_boot_diag_result
@@ -128,7 +128,7 @@
       - vm_facts_boot_diag_result.vms[0].boot_diagnostics.serial_console_log_uri is defined
 
 - name: Change the boot diagnostics storage account while enabled
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     boot_diagnostics:
@@ -138,7 +138,7 @@
   register: ignore_errors_register
 
 - name: Disable boot diagnostics and change the storage account at the same time
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     boot_diagnostics:
@@ -151,7 +151,7 @@
       - not azure_vm.diagnostics_profile.boot_diagnostics.enabled
 
 - name: Re-enable boot diagnostics on an existing VM where it was previously configured
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     boot_diagnostics:
@@ -207,7 +207,7 @@
 #     timeout: 20
 
 - name: Should be idempotent with a single NIC
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
@@ -234,7 +234,7 @@
     that: single_nic_result is not changed
 
 - name: Resize VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     vm_size: Standard_A1
@@ -263,14 +263,14 @@
       - resize_result.ansible_facts.azure_vm.hardware_profile.vm_size == "Standard_A1"
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     state: absent
     vm_size: Standard_B1ms
 
 - name: NIC should be gone
-  azure_rm_networkinterface_info:
+  azure.azcollection.azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}"
     name: "{{ interface_name }}"
   register: output
@@ -280,7 +280,7 @@
     that: output.networkinterfaces | length == 0
 
 - name: Public IP should be gone
-  azure_rm_publicipaddress_info:
+  azure.azcollection.azure_rm_publicipaddress_info:
     resource_group: "{{ resource_group }}"
     name: "{{ public_ip_name }}"
   register: output
@@ -290,44 +290,44 @@
     that: output.publicipaddresses | length == 0
 
 - name: Destroy NIC
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ interface_name }}"
     state: absent
 
 - name: Destroy security group
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ security_group }}"
     state: absent
 
 - name: Destroy subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     virtual_network: "{{ network_name }}"
     name: "{{ subnet_name }}"
     state: absent
 
 - name: Destroy virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ network_name }}"
     state: absent
 
 - name: Destroy public ip
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     name: "{{ public_ip_name }}"
     state: absent
 
 - name: Destroy availability set
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     resource_group: "{{ resource_group }}"
     name: "{{ availability_set }}"
     state: absent
 
 - name: Destroy storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
     force_delete_nonempty: true

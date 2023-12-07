@@ -6,7 +6,7 @@
   run_once: true
 
 - name: Create a role definition (Check Mode)
-  azure_rm_roledefinition:
+  azure.azcollection.azure_rm_roledefinition:
     name: "{{ my_role_name }}"
     scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
     permissions:
@@ -29,7 +29,7 @@
       - output.changed
 
 - name: Create a role definition
-  azure_rm_roledefinition:
+  azure.azcollection.azure_rm_roledefinition:
     name: "{{ my_role_name }}"
     scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
     permissions:
@@ -54,7 +54,7 @@
 ## because of the bug of azure service , the following tasks will cause failures randomly
 #
 # - name: Get facts by type
-#  azure_rm_roledefinition_info:
+#  azure.azcollection.azure_rm_roledefinition_info:
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    type: custom
 #  register: facts
@@ -65,7 +65,7 @@
 #      - facts['roledefinitions'] | length > 1
 #
 # - name: Get facts by name
-#  azure_rm_roledefinition_info:
+#  azure.azcollection.azure_rm_roledefinition_info:
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    role_name: "{{ my_role_name }}"
 #  register: facts
@@ -82,7 +82,7 @@
 #      - facts['roledefinitions'][0]['permissions'][0]['data_actions'] | length == 1
 #
 # - name: Update the role definition (idempotent)
-#  azure_rm_roledefinition:
+#  azure.azcollection.azure_rm_roledefinition:
 #    name: "{{ my_role_name }}"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    permissions:
@@ -104,7 +104,7 @@
 #      - not output.changed
 #
 # - name: Update the role definition
-#  azure_rm_roledefinition:
+#  azure.azcollection.azure_rm_roledefinition:
 #    name: "{{ my_role_name }}"
 #    description: "update description"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
@@ -128,7 +128,7 @@
 #      - output.changed
 #
 # - name: Get role definition facts
-#  azure_rm_roledefinition_info:
+#  azure.azcollection.azure_rm_roledefinition_info:
 #    role_name: "{{ my_role_name }}"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    type: custom
@@ -144,7 +144,7 @@
 #      - roledef['roledefinitions'][0]['id']
 #
 # - name: Create a role assignment (Check Mode)
-#  azure_rm_roleassignment:
+#  azure.azcollection.azure_rm_roleassignment:
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    assignee_object_id: "{{ principal_id }}"
 #    role_definition_id: "{{ roledef['roledefinitions'][0]['id'] }}"
@@ -157,7 +157,7 @@
 #      - output.changed
 #
 # - name: Create a role assignment
-#  azure_rm_roleassignment:
+#  azure.azcollection.azure_rm_roleassignment:
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    assignee_object_id: "{{ principal_id }}"
 #    role_definition_id: "{{ roledef['roledefinitions'][0]['id'] }}"
@@ -169,7 +169,7 @@
 #      - output.changed
 #
 # - name: Get facts
-#  azure_rm_roleassignment_info:
+#  azure.azcollection.azure_rm_roleassignment_info:
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    assignee: "{{ principal_id }}"
 #    role_definition_id: "{{ roledef['roledefinitions'][0]['id'] }}"
@@ -182,13 +182,13 @@
 #      - facts['roleassignments'][0]['id']
 #
 # - name: delete role assignment
-#  azure_rm_roleassignment:
+#  azure.azcollection.azure_rm_roleassignment:
 #    name: "{{ facts['roleassignments'][0]['id'].split('/')[-1] }}"
 #    scope: "/subscriptions/{{ subscription_id }}"
 #    state: absent
 #
 # - name: Delete the role definition (Check Mode)
-#  azure_rm_roledefinition:
+#  azure.azcollection.azure_rm_roledefinition:
 #    name: "{{ my_role_name }}"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    state: absent
@@ -200,7 +200,7 @@
 #    that: output.changed
 #
 # - name: Delete the role definition
-#  azure_rm_roledefinition:
+#  azure.azcollection.azure_rm_roledefinition:
 #    name: "{{ my_role_name }}"
 #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
 #    state: absent

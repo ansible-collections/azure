@@ -1,6 +1,6 @@
 # Create managed disks with missing required parameters
 - name: Create managed disks with missing required parameters
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
       - resource_group: "{{ resource_group_secondary }}"
         name: "disk-copy-without-source-uri"
@@ -28,7 +28,7 @@
 
 # Test managed disks creation
 - name: Create managed disks
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks: "{{ shared_disks }}"
   register: azure_disks
 
@@ -39,14 +39,14 @@
       - azure_disks.state | length == 2
 
 - name: Ensure disks exist
-  azure_rm_manageddisk_info:
+  azure.azcollection.azure_rm_manageddisk_info:
     name: "{{ item.name }}"
     resource_group: "{{ item.resource_group }}"
   register: azure_disks_info
   with_items: "{{ shared_disks }}"
 
 - name: Create disks again to validate idempotency
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks: "{{ shared_disks }}"
   register: create_idempotency
 
@@ -65,14 +65,14 @@
 
 # setup: create virtual machines to attach disks on
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group_secondary }}"
     name: "vnet-{{ item.name }}"
     address_prefixes: "{{ shared_virtual_network_cidr }}"
   with_items: "{{ shared_virtual_machines }}"
 
 - name: Add subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group_secondary }}"
     name: "sub-{{ item.name }}"
     address_prefix: "{{ shared_subnet_cidr }}"
@@ -80,7 +80,7 @@
   with_items: "{{ shared_virtual_machines }}"
 
 - name: Create virtual machines
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ item.resource_group }}"
     name: "{{ item.name }}"
     vm_size: Standard_E2_v3
@@ -109,7 +109,7 @@
   loop: "{{ create_vms.results }}"
 
 - name: Get virtual machine info
-  azure_rm_virtualmachine_info:
+  azure.azcollection.azure_rm_virtualmachine_info:
     resource_group: "{{ item.resource_group }}"
     name: "{{ item.name }}"
   register: vm_result
@@ -121,7 +121,7 @@
 
 # Test attach disk on VMs
 - name: Attach existing disks to VMs
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks: "{{ shared_disks }}"
     managed_by_extended:
       - "{{ item }}"
@@ -135,7 +135,7 @@
       - attach_disks.results | length == 2
 
 - name: Retrieve managed disks info
-  azure_rm_manageddisk_info:
+  azure.azcollection.azure_rm_manageddisk_info:
     resource_group: "{{ item.resource_group }}"
     name: "{{ item.name }}"
   register: azure_disks
@@ -155,7 +155,7 @@
     azure_managed_disks: "{{ azure_disks.results | map(attribute='ansible_info') | list | map(attribute='azure_managed_disk') | flatten | list }}"
 
 - name: Attach disks once again (idempotency)
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks: "{{ shared_disks }}"
     managed_by_extended: "{{ shared_virtual_machines }}"
   register: attach_idempotency
@@ -167,7 +167,7 @@
 
 # Test: Detach managed disk from specific VM
 - name: Detach disk item 1 from VM item 1
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
       - "{{ shared_disks[0] }}"
     managed_by_extended:
@@ -181,7 +181,7 @@
       - detach_disks is changed
 
 - name: Retrieve managed disks info
-  azure_rm_manageddisk_info:
+  azure.azcollection.azure_rm_manageddisk_info:
     resource_group: "{{ item.resource_group }}"
     name: "{{ item.name }}"
   register: azure_disks
@@ -202,7 +202,7 @@
     azure_managed_disks: "{{ azure_disks.results | map(attribute='ansible_info') | list | map(attribute='azure_managed_disk') | flatten | list }}"
 
 - name: Detach disks once again (idempotency)
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
       - "{{ shared_disks[0] }}"
     managed_by_extended:
@@ -217,7 +217,7 @@
 
 # Test Detach disks from all VMs
 - name: Detach disk 2 from all VMs
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
       - "{{ shared_disks[1] }}"
     managed_by_extended: []
@@ -225,7 +225,7 @@
   register: detach_from_vms
 
 - name: Retrieve managed disks info
-  azure_rm_manageddisk_info:
+  azure.azcollection.azure_rm_manageddisk_info:
     resource_group: "{{ shared_disks[1].resource_group }}"
     name: "{{ shared_disks[1].name }}"
   register: azure_disks
@@ -239,7 +239,7 @@
       - not azure_disks.ansible_info.azure_managed_disk.0.managed_by_extended
 
 - name: Detach disk 2 from all VMs once again (idempotency)
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
       - "{{ shared_disks[1] }}"
     managed_by_extended: []
@@ -253,7 +253,7 @@
 
 # Test delete disk attached to a VM
 - name: Retrieve managed disks info
-  azure_rm_manageddisk_info:
+  azure.azcollection.azure_rm_manageddisk_info:
     resource_group: "{{ shared_disks[0].resource_group }}"
     name: "{{ shared_disks[0].name }}"
   register: azure_disks
@@ -265,14 +265,14 @@
       - azure_disks.ansible_info.azure_managed_disk.0.managed_by_extended | length > 0
 
 - name: Delete managed disk attached to VM
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
       - "{{ shared_disks[0] }}"
     state: absent
   register: delete_attached_disk
 
 - name: Retrieve managed disks info
-  azure_rm_manageddisk_info:
+  azure.azcollection.azure_rm_manageddisk_info:
     resource_group: "{{ shared_disks[0].resource_group }}"
     name: "{{ shared_disks[0].name }}"
   register: azure_disks
@@ -284,7 +284,7 @@
       - azure_disks.ansible_info.azure_managed_disk | length == 0
 
 - name: Delete managed disk once again (idempotency)
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
       - "{{ shared_disks[0] }}"
     state: absent
@@ -297,7 +297,7 @@
 
 # Test managed disks deletion with managed_by_extended set to []
 - name: Trying to delete managed disks with managed_by_extended set to []
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
       - "{{ shared_disks[1] }}"
     managed_by_extended: []
@@ -311,14 +311,14 @@
 
 # Test managed disks deletion
 - name: Delete managed disks
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
       - "{{ shared_disks[1] }}"
     state: absent
   register: delete_disk
 
 - name: Retrieve managed disks info
-  azure_rm_manageddisk_info:
+  azure.azcollection.azure_rm_manageddisk_info:
     resource_group: "{{ shared_disks[1].resource_group }}"
     name: "{{ shared_disks[1].name }}"
   register: azure_disks
@@ -330,7 +330,7 @@
       - azure_disks.ansible_info.azure_managed_disk | length == 0
 
 - name: Delete managed disks once again (idempotency)
-  azure.azcollection.azure_rm_multiplemanageddisks:
+  azure.azcollection.azure.azcollection.azure_rm_multiplemanageddisks:
     managed_disks:
       - "{{ shared_disks[1] }}"
     state: absent

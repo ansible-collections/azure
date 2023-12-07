@@ -1,4 +1,4 @@
 cloud/azure
 shippable/azure/group14
 destructive
-azure_rm_autoscale
+azure.azcollection.azure_rm_autoscale

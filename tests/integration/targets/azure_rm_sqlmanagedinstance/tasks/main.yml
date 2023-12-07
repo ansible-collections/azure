@@ -3,7 +3,7 @@
     random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ random_postfix }}"
     address_prefixes_cidr:
       - 10.1.0.0/16
@@ -15,14 +15,14 @@
     resource_group: "{{ resource_group }}"
 
 - name: Create a route table
-  azure_rm_routetable:
+  azure.azcollection.azure_rm_routetable:
     name: "{{ random_postfix }}"
     resource_group: "{{ resource_group }}"
     tags:
       purpose: testing
 
 - name: Create security group
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
     tags:
@@ -46,7 +46,7 @@
         direction: Inbound
 
 - name: Add the subnet back
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     name: foobar
     virtual_network_name: "{{ random_postfix }}"
     resource_group: "{{ resource_group }}"
@@ -63,7 +63,7 @@
   register: subnet_output
 
 - name: Create sql managed instance (Checkmode test)
-  azure_rm_sqlmanagedinstance:
+  azure.azcollection.azure_rm_sqlmanagedinstance:
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
     subnet_id: "{{ subnet_output.state.id }}"
@@ -88,7 +88,7 @@
       - output.changed
 
 - name: Create sql managed instance
-  azure_rm_sqlmanagedinstance:
+  azure.azcollection.azure_rm_sqlmanagedinstance:
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
     subnet_id: "{{ subnet_output.state.id }}"
@@ -113,7 +113,7 @@
       - output.changed
 
 - name: Create sql managed instance (Idempotent test)
-  azure_rm_sqlmanagedinstance:
+  azure.azcollection.azure_rm_sqlmanagedinstance:
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
     subnet_id: "{{ subnet_output.state.id }}"
@@ -137,7 +137,7 @@
       - not output.changed
 
 - name: Upgarde sql managed instance with tags
-  azure_rm_sqlmanagedinstance:
+  azure.azcollection.azure_rm_sqlmanagedinstance:
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
     subnet_id: "{{ subnet_output.state.id }}"
@@ -163,7 +163,7 @@
       - output.changed
 
 - name: Get SQL managed instance by name
-  azure_rm_sqlmanagedinstance_info:
+  azure.azcollection.azure_rm_sqlmanagedinstance_info:
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
   register: output
@@ -176,7 +176,7 @@
       - output.sql_managed_instance[0].sku.name == 'GP_Gen5'
 
 - name: Delete sql managed instance
-  azure_rm_sqlmanagedinstance:
+  azure.azcollection.azure_rm_sqlmanagedinstance:
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
     state: absent

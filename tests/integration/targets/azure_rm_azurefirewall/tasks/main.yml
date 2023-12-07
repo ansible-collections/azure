@@ -6,7 +6,7 @@
     azure_firewall_name: myFirewall
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "{{ virtual_network_name }}"
     address_prefixes_cidr:
       - 10.1.0.0/16
@@ -20,14 +20,14 @@
     resource_group: "{{ resource_group }}"
 
 - name: Create subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     name: "{{ subnet_name }}"
     virtual_network_name: "{{ virtual_network_name }}"
     resource_group: "{{ resource_group }}"
     address_prefix_cidr: "10.1.0.0/24"
 
 - name: Create public IP address
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
     name: "{{ public_ipaddress_name }}"
@@ -39,7 +39,7 @@
     var: pip_output
 
 - name: Create Azure Firewall
-  azure_rm_azurefirewall:
+  azure.azcollection.azure_rm_azurefirewall:
     resource_group: '{{ resource_group }}'
     name: '{{ azure_firewall_name }}'
     # tags:
@@ -112,7 +112,7 @@
       - output.changed
 
 - name: Create Azure Firewall -- idempotent
-  azure_rm_azurefirewall:
+  azure.azcollection.azure_rm_azurefirewall:
     resource_group: '{{ resource_group }}'
     name: '{{ azure_firewall_name }}'
     application_rule_collections:
@@ -183,7 +183,7 @@
       - not output.changed
 
 - name: Create Azure Firewall -- change something
-  azure_rm_azurefirewall:
+  azure.azcollection.azure_rm_azurefirewall:
     resource_group: '{{ resource_group }}'
     name: '{{ azure_firewall_name }}'
     application_rule_collections:
@@ -251,7 +251,7 @@
       - output.changed
 
 - name: Get info of the Azure Firewall
-  azure_rm_azurefirewall_info:
+  azure.azcollection.azure_rm_azurefirewall_info:
     resource_group: '{{ resource_group }}'
     name: '{{ azure_firewall_name }}'
   register: output
@@ -270,7 +270,7 @@
       - output.firewalls['provisioning_state'] != None
 
 - name: Delete Azure Firewall
-  azure_rm_azurefirewall:
+  azure.azcollection.azure_rm_azurefirewall:
     resource_group: '{{ resource_group }}'
     name: '{{ azure_firewall_name }}'
     state: absent

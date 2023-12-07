@@ -1,5 +1,5 @@
 - name: Create an availability set with default options - Check Mode
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset1
     resource_group: "{{ resource_group }}"
     tags:
@@ -12,7 +12,7 @@
     that: results.changed
 
 - name: Create an availability set with default options
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset1
     resource_group: "{{ resource_group }}"
     tags:
@@ -28,7 +28,7 @@
     ppgroup_name: "ppg{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create a proximity placement group
-  azure_rm_proximityplacementgroup:
+  azure.azcollection.azure_rm_proximityplacementgroup:
     resource_group: "{{ resource_group }}"
     location: eastus
     name: "{{ ppgroup_name }}"
@@ -36,7 +36,7 @@
   register: results
 
 - name: Create an availability set with advanced options
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset2
     resource_group: "{{ resource_group }}"
     platform_update_domain_count: 5
@@ -50,7 +50,7 @@
     that: results.changed
 
 - name: Modify availabilty set immutable options - no changes, fail for immutable options
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset2
     resource_group: "{{ resource_group }}"
     platform_update_domain_count: 2
@@ -67,7 +67,7 @@
       - results.msg == 'You tried to change platform_update_domain_count but is was unsuccessful. An Availability Set is immutable, except tags'
 
 - name: Modify availabilty set immutable options and set tags - change tags and fail for immutable options
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset2
     resource_group: "{{ resource_group }}"
     platform_update_domain_count: 2
@@ -86,7 +86,7 @@
       - results.msg == 'You tried to change platform_update_domain_count but is was unsuccessful. An Availability Set is immutable, except tags'
 
 - name: Modify availabilty set options to update tags
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset2
     resource_group: "{{ resource_group }}"
     platform_update_domain_count: 5
@@ -103,7 +103,7 @@
       - results.state.tags.test2 == 'modified'
 
 - name: Create availability set with incorrect fault domain parameter
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset3
     resource_group: "{{ resource_group }}"
     platform_update_domain_count: 5
@@ -117,7 +117,7 @@
     { that: "'The specified fault domain count 4 must fall in the range 1 to' in results['msg']" }
 
 - name: Test check_mode
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset2
     resource_group: "{{ resource_group }}"
     platform_update_domain_count: 5
@@ -137,10 +137,10 @@
       - results.state.tags.checktest1 == 'modified1'
 
 #
-# azure_rm_availabilityset_facts tests
+# azure.azcollection.azure_rm_availabilityset_facts tests
 #
 - name: Get facts for created availability set
-  azure_rm_availabilityset_info:
+  azure.azcollection.azure_rm_availabilityset_info:
     name: myavailabilityset2
     resource_group: "{{ resource_group }}"
   register: results
@@ -156,7 +156,7 @@
       - results.ansible_info.azure_availabilitysets[0].proximity_placement_group.id.split('/')[-1] == ppgroup_name
 
 - name: Delete an availability set - Check Mode
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset1
     resource_group: "{{ resource_group }}"
     state: absent
@@ -168,13 +168,13 @@
       - results.changed
 
 - name: Delete an availability set
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset1
     resource_group: "{{ resource_group }}"
     state: absent
 
 - name: Delete an availability set already deleted - Check Mode
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset1
     resource_group: "{{ resource_group }}"
     state: absent
@@ -186,19 +186,19 @@
       - not results.changed
 
 - name: Delete an availability set
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset2
     resource_group: "{{ resource_group }}"
     state: absent
 
 - name: Delete an availability set
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     name: myavailabilityset3
     resource_group: "{{ resource_group }}"
     state: absent
 
 - name: Delete proximity placement group
-  azure_rm_proximityplacementgroup:
+  azure.azcollection.azure_rm_proximityplacementgroup:
     resource_group: "{{ resource_group }}"
     name: "{{ ppgroup_name }}"
     state: absent

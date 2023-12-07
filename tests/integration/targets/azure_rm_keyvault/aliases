@@ -1,5 +1,5 @@
 cloud/azure
 destructive
 shippable/azure/group9
-azure_rm_keyvaultkey
-azure_rm_keyvaultsecret
+azure.azcollection.azure_rm_keyvaultkey
+azure.azcollection.azure_rm_keyvaultsecret

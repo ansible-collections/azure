@@ -1,5 +1,5 @@
 cloud/azure
 shippable/azure/group11
 destructive
-azure_rm_automationrunbook
-azure_rm_automationrunbook_info
+azure.azcollection.azure_rm_automationrunbook
+azure.azcollection.azure_rm_automationrunbook_info

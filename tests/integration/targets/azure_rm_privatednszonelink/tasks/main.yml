@@ -12,13 +12,13 @@
     domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create a Private DNS zone
-  azure_rm_privatednszone:
+  azure.azcollection.azure_rm_privatednszone:
     resource_group: "{{ resource_group }}"
     name: "{{ domain_name }}.com"
     state: present
 
 - name: Create a virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "vnet{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     address_prefixes_cidr:
@@ -29,14 +29,14 @@
       - 127.0.0.2
 
 - name: Create a subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     name: "subnet{{ rpfx }}"
     virtual_network_name: "vnet{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     address_prefix_cidr: 10.1.0.0/24
 
 - name: Create a virtual network link
-  azure_rm_privatednszonelink:
+  azure.azcollection.azure_rm_privatednszonelink:
     resource_group: "{{ resource_group }}"
     name: "{{ link_name }}"
     zone_name: "{{ domain_name }}.com"
@@ -49,7 +49,7 @@
     that: results.changed
 
 - name: Create a virtual network link (Idempotent test)
-  azure_rm_privatednszonelink:
+  azure.azcollection.azure_rm_privatednszonelink:
     resource_group: "{{ resource_group }}"
     name: "{{ link_name }}"
     zone_name: "{{ domain_name }}.com"
@@ -62,7 +62,7 @@
     that: not results.changed
 
 - name: Update a virtual network link
-  azure_rm_privatednszonelink:
+  azure.azcollection.azure_rm_privatednszonelink:
     resource_group: "{{ resource_group }}"
     name: "{{ link_name }}"
     zone_name: "{{ domain_name }}.com"
@@ -76,7 +76,7 @@
     that: results.changed
 
 - name: Get virtual network link
-  azure_rm_privatednszonelink_info:
+  azure.azcollection.azure_rm_privatednszonelink_info:
     resource_group: "{{ resource_group }}"
     name: "{{ link_name }}"
     zone_name: "{{ domain_name }}.com"
@@ -91,7 +91,7 @@
       - results.virtualnetworklinks[0].provisioning_state == "Succeeded"
 
 - name: Delete virtual network link
-  azure_rm_privatednszonelink:
+  azure.azcollection.azure_rm_privatednszonelink:
     resource_group: "{{ resource_group }}"
     name: "{{ link_name }}"
     zone_name: "{{ domain_name }}.com"
@@ -103,7 +103,7 @@
     that: results.changed
 
 - name: Delete virtual network link (Idempotent test)
-  azure_rm_privatednszonelink:
+  azure.azcollection.azure_rm_privatednszonelink:
     resource_group: "{{ resource_group }}"
     name: "{{ link_name }}"
     zone_name: "{{ domain_name }}.com"
@@ -115,13 +115,13 @@
     that: not results.changed
 
 - name: Delete virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: "vnet{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
 
 - name: Delete private DNS zone
-  azure_rm_privatednszone:
+  azure.azcollection.azure_rm_privatednszone:
     resource_group: "{{ resource_group }}"
     name: "{{ domain_name }}.com"
     state: absent

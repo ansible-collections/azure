@@ -1,4 +1,4 @@
 cloud/azure
 shippable/azure/group5
 destructive
-azure_rm_applicationsecuritygroup
+azure.azcollection.azure_rm_applicationsecuritygroup

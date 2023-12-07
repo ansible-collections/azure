@@ -1,5 +1,5 @@
 - name: Create an ACS instance - DCOS
-  azure_rm_acs:
+  azure.azcollection.azure_rm_acs:
     name: "acsdcos{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     resource_group: "{{ resource_group }}"
     location: eastus
@@ -26,7 +26,7 @@
       - output.state.provisioning_state == 'Succeeded'
 
 - name: Scale the ACS instance from 1 to 2 - DCOS
-  azure_rm_acs:
+  azure.azcollection.azure_rm_acs:
     name: "acsdcos{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     resource_group: "{{ resource_group }}"
     location: eastus
@@ -53,7 +53,7 @@
       - output.state.agent_pool_profiles[0].count == 2
 
 - name: Delete the DCOS ACS instance - DCOS
-  azure_rm_acs:
+  azure.azcollection.azure_rm_acs:
     name: "acsdcos{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     resource_group: "{{ resource_group }}"
     location: eastus
@@ -74,7 +74,7 @@
     diagnostics_profile: false
 
 - name: Create an ACS instance - Swarm
-  azure_rm_acs:
+  azure.azcollection.azure_rm_acs:
     name: "acssw{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     resource_group: "{{ resource_group }}"
     location: eastus
@@ -101,7 +101,7 @@
       - output.state.provisioning_state == 'Succeeded'
 
 - name: Scale the ACS instance from 1 to 2 - Swarm
-  azure_rm_acs:
+  azure.azcollection.azure_rm_acs:
     name: "acssw{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     resource_group: "{{ resource_group }}"
     location: eastus
@@ -128,7 +128,7 @@
       - output.state.agent_pool_profiles[0].count == 2
 
 - name: Delete the ACS instance - Swarm
-  azure_rm_acs:
+  azure.azcollection.azure_rm_acs:
     name: "acssw{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     resource_group: "{{ resource_group }}"
     location: eastus

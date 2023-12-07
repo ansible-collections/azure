@@ -3,7 +3,7 @@
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
 - name: Create sample container instance
-  azure_rm_containerinstance:
+  azure.azcollection.azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}"
     os_type: linux
@@ -31,7 +31,7 @@
       - output.provisioning_state == 'Succeeded'
 
 - name: Create sample container instance -- same parameters
-  azure_rm_containerinstance:
+  azure.azcollection.azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}"
     os_type: linux
@@ -54,7 +54,7 @@
       - output.changed == False
 
 - name: Create sample container instance -- force update
-  azure_rm_containerinstance:
+  azure.azcollection.azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}"
     os_type: linux
@@ -79,7 +79,7 @@
       - output.provisioning_state == 'Succeeded'
 
 - name: Create second container instance for testing purposes
-  azure_rm_containerinstance:
+  azure.azcollection.azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}sec"
     os_type: linux
@@ -102,7 +102,7 @@
   register: output
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "vnet{{ rpfx }}"
     address_prefixes_cidr:
@@ -110,7 +110,7 @@
       - 172.100.0.0/16
 
 - name: Create a subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: "sub{{ rpfx }}"
     virtual_network_name: "vnet{{ rpfx }}"
@@ -123,7 +123,7 @@
   register: subnet_output
 
 - name: Create third container instance for subnet_ids
-  azure_rm_containerinstance:
+  azure.azcollection.azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}thi"
     os_type: linux
@@ -148,7 +148,7 @@
       - output.changed
 
 - name: Gather facts for single Container Instance
-  azure_rm_containerinstance_info:
+  azure.azcollection.azure_rm_containerinstance_info:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}sec"
   register: output
@@ -172,7 +172,7 @@
       - output.containerinstances[0]['restart_policy'] == 'on_failure'
 
 - name: Gather facts for all Container Instances in the resource group
-  azure_rm_containerinstance_info:
+  azure.azcollection.azure_rm_containerinstance_info:
     resource_group: "{{ resource_group }}"
   register: output
 
@@ -196,7 +196,7 @@
       - output.containerinstances[1]['containers'] != None
 
 - name: Create sample container instance with volume
-  azure_rm_containerinstance:
+  azure.azcollection.azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}thi"
     os_type: linux
@@ -238,7 +238,7 @@
   ignore_errors: true
 
 - name: Gather facts for Container Instance
-  azure_rm_containerinstance_info:
+  azure.azcollection.azure_rm_containerinstance_info:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}thi"
   register: output
@@ -269,7 +269,7 @@
   register: ignore_errors_register
 
 - name: Remove container instance
-  azure_rm_containerinstance:
+  azure.azcollection.azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}thi"
     os_type: linux
@@ -298,7 +298,7 @@
   ignore_errors: true
 
 - name: Remove container instance
-  azure_rm_containerinstance:
+  azure.azcollection.azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}"
     os_type: linux
@@ -322,7 +322,7 @@
       - output.changed
 
 - name: Remove container instance
-  azure_rm_containerinstance:
+  azure.azcollection.azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}sec"
     os_type: linux
@@ -340,7 +340,7 @@
     state: absent
 
 - name: Remove container instance again
-  azure_rm_containerinstance:
+  azure.azcollection.azure_rm_containerinstance:
     resource_group: "{{ resource_group }}"
     name: "aci{{ rpfx }}"
     os_type: linux

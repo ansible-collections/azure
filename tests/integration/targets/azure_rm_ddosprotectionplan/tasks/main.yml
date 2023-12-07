@@ -3,7 +3,7 @@
     ddosprotectionplan: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create DDoS protection plan (check mode)
-  azure_rm_ddosprotectionplan:
+  azure.azcollection.azure_rm_ddosprotectionplan:
     location: eastus2
     name: "{{ ddosprotectionplan }}"
     resource_group: "{{ resource_group }}"
@@ -15,7 +15,7 @@
     that: results.changed
 
 - name: Create DDoS protection plan
-  azure_rm_ddosprotectionplan:
+  azure.azcollection.azure_rm_ddosprotectionplan:
     location: eastus2
     name: "{{ ddosprotectionplan }}"
     resource_group: "{{ resource_group }}"
@@ -26,7 +26,7 @@
     that: results.changed
 
 - name: Update DDoS protection plan
-  azure_rm_ddosprotectionplan:
+  azure.azcollection.azure_rm_ddosprotectionplan:
     location: eastus2
     name: "{{ ddosprotectionplan }}"
     resource_group: "{{ resource_group }}"
@@ -41,7 +41,7 @@
       - results.state.tags.test == 'modified'
 
 - name: Retrieve DDoS protection plan
-  azure_rm_ddosprotectionplan_info:
+  azure.azcollection.azure_rm_ddosprotectionplan_info:
     name: "{{ ddosprotectionplan }}"
     resource_group: "{{ resource_group }}"
   register: results
@@ -52,7 +52,7 @@
       - results.ddosprotectionplan[0].tags.test == 'modified'
 
 - name: Test idempotent
-  azure_rm_ddosprotectionplan:
+  azure.azcollection.azure_rm_ddosprotectionplan:
     location: eastus2
     name: "{{ ddosprotectionplan }}"
     resource_group: "{{ resource_group }}"
@@ -64,18 +64,18 @@
       - not results.changed
 
 #
-# azure_rm_ddosprotectionplan cleanup
+# azure.azcollection.azure_rm_ddosprotectionplan cleanup
 #
 
 - name: Delete DDoS protection plan
-  azure_rm_ddosprotectionplan:
+  azure.azcollection.azure_rm_ddosprotectionplan:
     location: eastus2
     name: "{{ ddosprotectionplan }}"
     resource_group: "{{ resource_group }}"
     state: absent
 
 - name: Delete DDoS protection plan
-  azure_rm_ddosprotectionplan:
+  azure.azcollection.azure_rm_ddosprotectionplan:
     location: eastus2
     name: "{{ ddosprotectionplan }}"
     resource_group: "{{ resource_group }}"

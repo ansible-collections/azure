@@ -3,7 +3,7 @@
     group_name: "ipgroup{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create IP group (check mode)
-  azure_rm_ipgroup:
+  azure.azcollection.azure_rm_ipgroup:
     resource_group: "{{ resource_group }}"
     name: "{{ group_name }}"
     location: eastus
@@ -17,7 +17,7 @@
   check_mode: true
 
 - name: Create IP group
-  azure_rm_ipgroup:
+  azure.azcollection.azure_rm_ipgroup:
     resource_group: "{{ resource_group }}"
     name: "{{ group_name }}"
     location: eastus
@@ -35,7 +35,7 @@
     that: results.changed
 
 - name: Create same IP group again (Idempotent test)
-  azure_rm_ipgroup:
+  azure.azcollection.azure_rm_ipgroup:
     resource_group: "{{ resource_group }}"
     name: "{{ group_name }}"
     location: eastus
@@ -53,7 +53,7 @@
     that: not results.changed
 
 - name: Update IP group
-  azure_rm_ipgroup:
+  azure.azcollection.azure_rm_ipgroup:
     resource_group: "{{ resource_group }}"
     name: "{{ group_name }}"
     location: eastus
@@ -68,7 +68,7 @@
     that: results.changed
 
 - name: Get IP group facts
-  azure_rm_ipgroup_info:
+  azure.azcollection.azure_rm_ipgroup_info:
     resource_group: "{{ resource_group }}"
     name: "{{ group_name }}"
   register: results
@@ -85,7 +85,7 @@
       - results.ipgroups[0].tags | length > 0
 
 - name: Delete IP group
-  azure_rm_ipgroup:
+  azure.azcollection.azure_rm_ipgroup:
     resource_group: "{{ resource_group }}"
     name: "{{ group_name }}"
     state: absent
@@ -96,7 +96,7 @@
     that: results.changed
 
 - name: Delete IP group again (Idempotent test)
-  azure_rm_ipgroup:
+  azure.azcollection.azure_rm_ipgroup:
     resource_group: "{{ resource_group }}"
     name: "{{ group_name }}"
     state: absent

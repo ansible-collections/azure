@@ -1,23 +1,23 @@
 - name: Create storage account name
   ansible.builtin.set_fact:
     storage_account: "sb{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-    test1_file: "./targets/azure_rm_storageblob/files/Ratings.png"
+    test1_file: "./targets/azure.azcollection.azure_rm_storageblob/files/Ratings.png"
 
 - name: Create storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
     account_type: Standard_LRS
 
 - name: Create container
-  azure_rm_storageblob:
+  azure.azcollection.azure_rm_storageblob:
     auth_mode: login
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
     container_name: my-blobs
 
 - name: Force upload blob
-  azure_rm_storageblob:
+  azure.azcollection.azure_rm_storageblob:
     auth_mode: login
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
@@ -31,7 +31,7 @@
     force: true
 
 - name: Upload blob idempotence
-  azure_rm_storageblob:
+  azure.azcollection.azure_rm_storageblob:
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
     container_name: my-blobs
@@ -47,7 +47,7 @@
     that: "not upload_facts.changed"
 
 - name: Download file idempotence
-  azure_rm_storageblob:
+  azure.azcollection.azure_rm_storageblob:
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
     container_name: my-blobs
@@ -64,7 +64,7 @@
     state: absent
 
 - name: Download file
-  azure_rm_storageblob:
+  azure.azcollection.azure_rm_storageblob:
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
     container_name: my-blobs
@@ -85,7 +85,7 @@
     that: "find_results['matched'] == 1"
 
 - name: Do not delete container that has blobs
-  azure_rm_storageblob:
+  azure.azcollection.azure_rm_storageblob:
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
     container_name: my-blobs
@@ -96,7 +96,7 @@
     that: "not output.changed"
 
 - name: Delete blob object
-  azure_rm_storageblob:
+  azure.azcollection.azure_rm_storageblob:
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
     container_name: my-blobs
@@ -108,7 +108,7 @@
     that: "output.changed"
 
 - name: Delete container
-  azure_rm_storageblob:
+  azure.azcollection.azure_rm_storageblob:
     resource_group: "{{ resource_group }}"
     account_name: "{{ storage_account }}"
     container_name: my-blobs
@@ -119,7 +119,7 @@
     that: "output.changed"
 
 - name: Delete storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}"
     name: "{{ storage_account }}"
     state: absent

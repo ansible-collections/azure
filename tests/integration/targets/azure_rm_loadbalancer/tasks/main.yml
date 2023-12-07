@@ -11,25 +11,25 @@
   run_once: true
 
 - name: Create public ip
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     name: "{{ pipbname }}"
     sku: Standard
     allocation_method: Static
     resource_group: '{{ resource_group }}'
 
 - name: Create public ip
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     name: "{{ pipaname }}"
     resource_group: '{{ resource_group }}'
 
 - name: Clear load balancer
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
     state: absent
 
 - name: Create load balancer -- check mode
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
     public_ip: "{{ pipaname }}"
@@ -41,7 +41,7 @@
     that: output.changed
 
 - name: Create load balancer
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
     public_ip: "{{ pipaname }}"
@@ -52,7 +52,7 @@
     that: output.changed
 
 - name: Create load balancer -- idempotent
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
     public_ip: "{{ pipaname }}"
@@ -64,7 +64,7 @@
       - not output.changed
 
 - name: Delete load balancer
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
     state: absent
@@ -75,7 +75,7 @@
     that: output.changed
 
 - name: Delete load balancer (idempotent)
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
     state: absent
@@ -86,7 +86,7 @@
     that: not output.changed
 
 - name: Create another load balancer with more options
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_b }}"
     sku: Standard
@@ -113,7 +113,7 @@
       - output.state.sku.name == 'Standard'
 
 - name: Create load balancer again to check idempotency
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_b }}"
     sku: Standard
@@ -139,7 +139,7 @@
       - not output.changed
 
 - name: Create load balancer again to check idempotency - change something
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_b }}"
     sku: Standard
@@ -165,13 +165,13 @@
       - output.changed
 
 - name: Delete load balancer
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_b }}"
     state: absent
 
 - name: Create load balancer with multiple parameters
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_c1 }}"
     frontend_ip_configurations:
@@ -205,13 +205,13 @@
       - output.changed
 
 - name: Delete load balancer
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_c1 }}"
     state: absent
 
 - name: Create load balancer with multiple parameters
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_c2 }}"
     frontend_ip_configurations:
@@ -243,19 +243,19 @@
     that: output.changed
 
 - name: Delete load balancer
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_c2 }}"
     state: absent
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ lbvnname }}"
     address_prefixes: "10.10.0.0/16"
 
 - name: Add subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: "lb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}sb"
     address_prefix: "10.10.0.0/24"
@@ -263,7 +263,7 @@
   register: subnet
 
 - name: Create internal loadbalancer
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_d }}"
     sku: Standard
@@ -305,13 +305,13 @@
       - output.state.frontend_ip_configurations[0].zones | length == 3
 
 - name: Delete load balancer
-  azure_rm_loadbalancer:
+  azure.azcollection.azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_d }}"
     state: absent
 
 - name: Cleanup public ip
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     name: "{{ item }}"
     resource_group: '{{ resource_group }}'
     state: absent
@@ -320,14 +320,14 @@
     - "{{ pipbname }}"
 
 - name: Cleanup subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: "lb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}sb"
     virtual_network: "{{ lbvnname }}"
     state: absent
 
 - name: Cleanup virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ lbvnname }}"
     state: absent

@@ -4,7 +4,7 @@
     location: "eastus"
 
 - name: Create Azure Recovery Service vault
-  azure_rm_recoveryservicesvault:
+  azure.azcollection.azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     location: "{{ location }}"
@@ -17,7 +17,7 @@
       - output.changed
 
 - name: Create Azure Recovery Service vault (idempotent)
-  azure_rm_recoveryservicesvault:
+  azure.azcollection.azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     location: "{{ location }}"
@@ -30,7 +30,7 @@
       - not output.changed
 
 - name: Get Azure Recovery Service Vault Details
-  azure_rm_recoveryservicesvault_info:
+  azure.azcollection.azure_rm_recoveryservicesvault_info:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
   register: output
@@ -42,7 +42,7 @@
       - output.response.name != None
 
 - name: Delete Azure Recovery Service vault
-  azure_rm_recoveryservicesvault:
+  azure.azcollection.azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     location: "{{ location }}"

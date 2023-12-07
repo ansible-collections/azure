@@ -3,12 +3,12 @@
     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
 - name: Create resource group
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}"
     location: eastus
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "vnet{{ rpfx }}"
     address_prefixes_cidr:
@@ -18,7 +18,7 @@
       - 127.0.0.1
 
 - name: Create a subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: AzureBastionSubnet
     virtual_network_name: "vnet{{ rpfx }}"
@@ -26,20 +26,20 @@
   register: subnet_output
 
 - name: Create public ip
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     name: "pip{{ rpfx }}"
     allocation_method: Static
     sku: Standard
 
 - name: Get public ip ID
-  azure_rm_publicipaddress_info:
+  azure.azcollection.azure_rm_publicipaddress_info:
     resource_group: "{{ resource_group }}"
     name: "pip{{ rpfx }}"
   register: publicip_output
 
 - name: Create bastion host (checkmode test)
-  azure_rm_bastionhost:
+  azure.azcollection.azure_rm_bastionhost:
     resource_group: "{{ resource_group }}"
     name: "bh{{ rpfx }}"
     ip_configurations:
@@ -63,7 +63,7 @@
   register: output
 
 - name: Create bastion host
-  azure_rm_bastionhost:
+  azure.azcollection.azure_rm_bastionhost:
     resource_group: "{{ resource_group }}"
     name: "bh{{ rpfx }}"
     ip_configurations:
@@ -91,7 +91,7 @@
       - output.changed
 
 - name: Create bastion host (Idempotent Test)
-  azure_rm_bastionhost:
+  azure.azcollection.azure_rm_bastionhost:
     resource_group: "{{ resource_group }}"
     name: "bh{{ rpfx }}"
     ip_configurations:
@@ -124,7 +124,7 @@
   changed_when: true
 
 - name: Update bastion host
-  azure_rm_bastionhost:
+  azure.azcollection.azure_rm_bastionhost:
     resource_group: "{{ resource_group }}"
     name: "bh{{ rpfx }}"
     ip_configurations:
@@ -152,7 +152,7 @@
       - output.changed
 
 - name: Get bastion host info
-  azure_rm_bastionhost_info:
+  azure.azcollection.azure_rm_bastionhost_info:
     resource_group: "{{ resource_group }}"
     name: "bh{{ rpfx }}"
   register: output
@@ -169,7 +169,7 @@
       - output.bastion_host[0].sku.name == 'Basic'
 
 - name: Delete bastion host
-  azure_rm_bastionhost:
+  azure.azcollection.azure_rm_bastionhost:
     resource_group: "{{ resource_group }}"
     name: "bh{{ rpfx }}"
     state: absent

@@ -12,7 +12,7 @@
   register: object_id_facts
 
 - name: Create a key vault
-  azure_rm_keyvault:
+  azure.azcollection.azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     vault_name: "myvault{{ rpfx }}"
     enabled_for_disk_encryption: true
@@ -38,12 +38,12 @@
           - purge
 
 - name: Create a key in key vault
-  azure_rm_keyvaultkey:
+  azure.azcollection.azure_rm_keyvaultkey:
     key_name: testkey
     keyvault_uri: https://myvault{{ rpfx }}.vault.azure.net
 
 - name: Get latest version of key
-  azure_rm_keyvaultkey_info:
+  azure.azcollection.azure_rm_keyvaultkey_info:
     vault_uri: https://myvault{{ rpfx }}.vault.azure.net
     name: testkey
   register: results
@@ -53,7 +53,7 @@
     key_url: "{{ results['keys'][0]['kid'] }}"
 
 - name: Create disk encryption set
-  azure_rm_diskencryptionset:
+  azure.azcollection.azure_rm_diskencryptionset:
     resource_group: "{{ resource_group }}"
     name: "des{{ rpfx }}"
     source_vault: "myvault{{ rpfx }}"
@@ -62,33 +62,33 @@
   register: des_results
 
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "testVnet{{ rpfx }}"
     address_prefixes: "10.0.0.0/16"
 
 - name: Add subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: "testSubnet{{ rpfx }}"
     address_prefix: "10.0.1.0/24"
     virtual_network: "testVnet{{ rpfx }}"
 
 - name: Create public IP address
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
     name: "testPublicIP{{ rpfx }}"
 
 - name: Create virtual network inteface cards for VM A and B
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}nic"
     virtual_network: "testVnet{{ rpfx }}"
     subnet: "testSubnet{{ rpfx }}"
 
 - name: Create VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
     location: eastus
@@ -106,7 +106,7 @@
       version: latest
 
 - name: Get VM facts
-  azure_rm_virtualmachine_info:
+  azure.azcollection.azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
   register: output
@@ -117,7 +117,7 @@
   changed_when: true
 
 - name: Create a snapshot by importing an unmanaged blob from the same subscription.
-  azure_rm_snapshot:
+  azure.azcollection.azure_rm_snapshot:
     resource_group: "{{ resource_group }}"
     name: "mySnapshot-{{ rpfx }}"
     location: eastus
@@ -132,14 +132,14 @@
       - output.changed
 
 - name: Create a managed disk
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "disk-{{ rpfx }}"
     disk_size_gb: 1
   register: disk_output
 
 - name: Create a snapshot with I(incremental=True)
-  azure_rm_snapshot:
+  azure.azcollection.azure_rm_snapshot:
     resource_group: "{{ resource_group }}"
     name: "mySnapshot-{{ rpfx }}02"
     location: eastus
@@ -155,17 +155,17 @@
       - output.changed
 
 - name: Generalize VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
     generalized: true
 - name: Create custom image
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}"
     name: testimagea
     source: "vmforimage{{ rpfx }}"
 - name: Create or update a simple gallery.
-  azure_rm_gallery:
+  azure.azcollection.azure_rm_gallery:
     resource_group: "{{ resource_group }}"
     name: myGallery{{ rpfx }}
     location: eastus
@@ -178,7 +178,7 @@
       - output.changed
 
 - name: Create or update a simple gallery - idempotent
-  azure_rm_gallery:
+  azure.azcollection.azure_rm_gallery:
     resource_group: "{{ resource_group }}"
     name: myGallery{{ rpfx }}
     location: eastus
@@ -191,7 +191,7 @@
       - not output.changed
 
 - name: Create or update a simple gallery - change description
-  azure_rm_gallery:
+  azure.azcollection.azure_rm_gallery:
     resource_group: "{{ resource_group }}"
     name: myGallery{{ rpfx }}
     location: eastus
@@ -204,7 +204,7 @@
       - output.changed
 
 - name: Get a gallery info.
-  azure_rm_gallery_info:
+  azure.azcollection.azure_rm_gallery_info:
     resource_group: "{{ resource_group }}"
     name: myGallery{{ rpfx }}
   register: output
@@ -220,7 +220,7 @@
       - output.galleries['provisioning_state'] != None
 
 - name: Create or update gallery image
-  azure_rm_galleryimage:
+  azure.azcollection.azure_rm_galleryimage:
     resource_group: "{{ resource_group }}"
     gallery_name: myGallery{{ rpfx }}
     name: myImage
@@ -244,7 +244,7 @@
       - output.changed
 
 - name: Create or update gallery image - idempotent
-  azure_rm_galleryimage:
+  azure.azcollection.azure_rm_galleryimage:
     resource_group: "{{ resource_group }}"
     gallery_name: myGallery{{ rpfx }}
     name: myImage
@@ -268,7 +268,7 @@
       - not output.changed
 
 - name: Create or update gallery image - change description
-  azure_rm_galleryimage:
+  azure.azcollection.azure_rm_galleryimage:
     resource_group: "{{ resource_group }}"
     gallery_name: myGallery{{ rpfx }}
     name: myImage
@@ -292,7 +292,7 @@
       - output.changed
 
 - name: Get a gallery image info.
-  azure_rm_galleryimage_info:
+  azure.azcollection.azure_rm_galleryimage_info:
     resource_group: "{{ resource_group }}"
     gallery_name: myGallery{{ rpfx }}
     name: myImage
@@ -310,7 +310,7 @@
       - output.images['identifier'] != None
 
 - name: Create or update a simple gallery Image Version.
-  azure_rm_galleryimageversion:
+  azure.azcollection.azure_rm_galleryimageversion:
     resource_group: "{{ resource_group }}"
     gallery_name: myGallery{{ rpfx }}
     gallery_image_name: myImage
@@ -349,7 +349,7 @@
       - output.changed
 
 - name: Create or update a simple gallery Image Version - idempotent
-  azure_rm_galleryimageversion:
+  azure.azcollection.azure_rm_galleryimageversion:
     resource_group: "{{ resource_group }}"
     gallery_name: myGallery{{ rpfx }}
     gallery_image_name: myImage
@@ -388,7 +388,7 @@
       - not output.changed
 
 - name: Create or update a simple gallery Image Version - change end of life
-  azure_rm_galleryimageversion:
+  azure.azcollection.azure_rm_galleryimageversion:
     resource_group: "{{ resource_group }}"
     gallery_name: myGallery{{ rpfx }}
     gallery_image_name: myImage
@@ -427,7 +427,7 @@
       - output.changed
 
 - name: Get a simple gallery Image Version info.
-  azure_rm_galleryimageversion_info:
+  azure.azcollection.azure_rm_galleryimageversion_info:
     resource_group: "{{ resource_group }}"
     gallery_name: myGallery{{ rpfx }}
     gallery_image_name: myImage
@@ -445,7 +445,7 @@
       - output.versions['provisioning_state'] != None
 
 - name: Delete gallery image Version.
-  azure_rm_galleryimageversion:
+  azure.azcollection.azure_rm_galleryimageversion:
     resource_group: "{{ resource_group }}"
     gallery_name: myGallery{{ rpfx }}
     gallery_image_name: myImage
@@ -464,7 +464,7 @@
   changed_when: true
 
 - name: Delete gallery image
-  azure_rm_galleryimage:
+  azure.azcollection.azure_rm_galleryimage:
     resource_group: "{{ resource_group }}"
     gallery_name: myGallery{{ rpfx }}
     name: myImage
@@ -482,7 +482,7 @@
   changed_when: true
 
 - name: Delete gallery
-  azure_rm_gallery:
+  azure.azcollection.azure_rm_gallery:
     resource_group: "{{ resource_group }}"
     name: myGallery{{ rpfx }}
     state: absent

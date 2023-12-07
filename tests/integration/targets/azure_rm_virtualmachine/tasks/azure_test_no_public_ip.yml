@@ -2,7 +2,7 @@
   ansible.builtin.include_tasks: setup.yml
 
 - name: Create virtual machine without public ip address and with boot diagnostics enabled
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
@@ -36,7 +36,7 @@
       - not 'public_ip_address' in create_vm_public_result.ansible_facts.azure_vm.network_profile.network_interfaces[0].properties.ip_configurations[0]
 
 - name: Delete VM with no public ip
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
     state: absent

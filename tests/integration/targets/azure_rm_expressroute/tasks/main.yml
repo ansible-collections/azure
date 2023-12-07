@@ -3,7 +3,7 @@
     express_route: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create Express route (check mode)
-  azure_rm_expressroute:
+  azure.azcollection.azure_rm_expressroute:
     location: eastus
     name: "{{ express_route }}"
     resource_group: "{{ resource_group }}"
@@ -29,7 +29,7 @@
 
 
 - name: Create Express route
-  azure_rm_expressroute:
+  azure.azcollection.azure_rm_expressroute:
     location: eastus
     name: "{{ express_route }}"
     resource_group: "{{ resource_group }}"
@@ -54,7 +54,7 @@
 
 
 - name: Update Express route
-  azure_rm_expressroute:
+  azure.azcollection.azure_rm_expressroute:
     location: eastus
     name: "{{ express_route }}"
     resource_group: "{{ resource_group }}"
@@ -81,7 +81,7 @@
 
 
 - name: Retrieve Express Route
-  azure_rm_expressroute_info:
+  azure.azcollection.azure_rm_expressroute_info:
     resource_group: "{{ resource_group }}"
     name: "{{ express_route }}"
   register: results
@@ -93,7 +93,7 @@
       - results.expressroute[0].type == 'Microsoft.Network/expressRouteCircuits'
 
 - name: Test idempotent
-  azure_rm_expressroute:
+  azure.azcollection.azure_rm_expressroute:
     name: "{{ express_route }}"
     resource_group: "{{ resource_group }}"
   register: results
@@ -104,16 +104,16 @@
       - not results.changed
 
 #
-# azure_rm_expressroute cleanup
+# azure.azcollection.azure_rm_expressroute cleanup
 #
 - name: Delete Express Route
-  azure_rm_expressroute:
+  azure.azcollection.azure_rm_expressroute:
     resource_group: "{{ resource_group }}"
     name: "{{ express_route }}"
     state: absent
 
 - name: Delete Express Route (idempotent)
-  azure_rm_expressroute:
+  azure.azcollection.azure_rm_expressroute:
     resource_group: "{{ resource_group }}"
     name: "{{ express_route }}"
     state: absent

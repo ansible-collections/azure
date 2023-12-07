@@ -3,7 +3,7 @@
     domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
 - name: Create a private DNS zone (check mode)
-  azure_rm_privatednszone:
+  azure.azcollection.azure_rm_privatednszone:
     resource_group: "{{ resource_group }}"
     name: "{{ domain_name }}.com"
   register: results
@@ -14,7 +14,7 @@
     that: results.changed
 
 - name: Create a private DNS zone
-  azure_rm_privatednszone:
+  azure.azcollection.azure_rm_privatednszone:
     resource_group: "{{ resource_group }}"
     name: "{{ domain_name }}.com"
   register: results
@@ -24,7 +24,7 @@
     that: results.changed
 
 - name: Update private DNS zone with tags
-  azure_rm_privatednszone:
+  azure.azcollection.azure_rm_privatednszone:
     resource_group: "{{ resource_group }}"
     name: "{{ domain_name }}.com"
     tags:
@@ -38,7 +38,7 @@
       - results.state.tags.test == 'modified'
 
 - name: Test idempotent
-  azure_rm_privatednszone:
+  azure.azcollection.azure_rm_privatednszone:
     name: "{{ domain_name }}.com"
     resource_group: "{{ resource_group }}"
   register: results
@@ -49,7 +49,7 @@
       - not results.changed
 
 - name: Retrieve DNS Zone Facts
-  azure_rm_privatednszone_info:
+  azure.azcollection.azure_rm_privatednszone_info:
     resource_group: "{{ resource_group }}"
     name: "{{ domain_name }}.com"
   register: zones
@@ -61,17 +61,17 @@
       - zones.privatednszones[0].number_of_record_sets == 1
 
 #
-# azure_rm_privatednszone cleanup
+# azure.azcollection.azure_rm_privatednszone cleanup
 #
 
 - name: Delete private DNS zone
-  azure_rm_privatednszone:
+  azure.azcollection.azure_rm_privatednszone:
     resource_group: "{{ resource_group }}"
     name: "{{ domain_name }}.com"
     state: absent
 
 - name: Delete private DNS zone (idempotent)
-  azure_rm_privatednszone:
+  azure.azcollection.azure_rm_privatednszone:
     resource_group: "{{ resource_group }}"
     name: "{{ domain_name }}.com"
     state: absent

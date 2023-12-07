@@ -3,7 +3,7 @@
     rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
 
 - name: Create a DevTest Lab (check mode)
-  azure_rm_devtestlab:
+  azure.azcollection.azure_rm_devtestlab:
     resource_group: "{{ resource_group }}"
     name: "dev-{{ rpfx }}"
     storage_type: standard
@@ -13,7 +13,7 @@
   check_mode: true
 
 - name: Create a DevTest Lab
-  azure_rm_devtestlab:
+  azure.azcollection.azure_rm_devtestlab:
     resource_group: "{{ resource_group }}"
     name: "dev-{{ rpfx }}"
     storage_type: standard
@@ -27,7 +27,7 @@
     that: output.changed
 
 - name: Create a DevTest Lab (Idempotent test)
-  azure_rm_devtestlab:
+  azure.azcollection.azure_rm_devtestlab:
     resource_group: "{{ resource_group }}"
     name: "dev-{{ rpfx }}"
     storage_type: standard
@@ -41,7 +41,7 @@
     that: not output.changed
 
 - name: Get devtest lab facts
-  azure_rm_devtestlab_info:
+  azure.azcollection.azure_rm_devtestlab_info:
     resource_group: "{{ resource_group }}"
     name: "dev-{{ rpfx }}"
   register: output
@@ -53,7 +53,7 @@
       - output.labs[0].provisioning_state == "Succeeded"
 
 - name: Create a devtest lab virtual network
-  azure_rm_devtestlabvirtualnetwork:
+  azure.azcollection.azure_rm_devtestlabvirtualnetwork:
     resource_group: "{{ resource_group }}"
     lab_name: "dev-{{ rpfx }}"
     name: "vnet-{{ rpfx }}"
@@ -68,7 +68,7 @@
       - output.changed
 
 - name: Get the devtest lab virtual network
-  azure_rm_devtestlabvirtualnetwork_info:
+  azure.azcollection.azure_rm_devtestlabvirtualnetwork_info:
     resource_group: "{{ resource_group }}"
     lab_name: "dev-{{ rpfx }}"
     name: "vnet-{{ rpfx }}"
@@ -82,7 +82,7 @@
       - output.virtualnetworks[0].provisioning_state == "Succeeded"
 
 - name: Create a dev test lab Virtual machine
-  azure_rm_devtestlabvirtualmachine:
+  azure.azcollection.azure_rm_devtestlabvirtualmachine:
     resource_group: "{{ resource_group }}"
     lab_name: "dev-{{ rpfx }}"
     name: "vm-{{ rpfx }}"
@@ -110,7 +110,7 @@
       - output.changed
 
 - name: Get devtest lab info
-  azure_rm_devtestlabvirtualmachine_info:
+  azure.azcollection.azure_rm_devtestlabvirtualmachine_info:
     resource_group: "{{ resource_group }}"
     lab_name: "dev-{{ rpfx }}"
     name: "vm-{{ rpfx }}"
@@ -124,7 +124,7 @@
       - output.virtualmachines[0].expiration_date == "2025-10-22T01:49:12.117974Z"
 
 - name: Create a instance devtest lab image
-  azure_rm_devtestlabcustomimage:
+  azure.azcollection.azure_rm_devtestlabcustomimage:
     resource_group: "{{ resource_group }}"
     lab_name: "dev-{{ rpfx }}"
     name: "image-{{ rpfx }}"
@@ -138,7 +138,7 @@
       - output.changed
 
 - name: Get custom image
-  azure_rm_devtestlabcustomimage_info:
+  azure.azcollection.azure_rm_devtestlabcustomimage_info:
     resource_group: "{{ resource_group }}"
     lab_name: "dev-{{ rpfx }}"
     name: "image-{{ rpfx }}"
@@ -152,7 +152,7 @@
       - output.custom_images[0].id
 
 - name: Get devtest lab armtemplate facts
-  azure_rm_devtestlabarmtemplate_info:
+  azure.azcollection.azure_rm_devtestlabarmtemplate_info:
     resource_group: "{{ resource_group }}"
     lab_name: "dev-{{ rpfx }}"
     artifact_source_name: "public environment repo"
@@ -164,7 +164,7 @@
       - output.armtemplates | length >= 1
 
 - name: Create a Devtest lab policy
-  azure_rm_devtestlabpolicy:
+  azure.azcollection.azure_rm_devtestlabpolicy:
     resource_group: "{{ resource_group }}"
     lab_name: "dev-{{ rpfx }}"
     policy_set_name: default
@@ -179,7 +179,7 @@
       - output.changed
 
 - name: Get the devtest lab policy facts
-  azure_rm_devtestlabpolicy_info:
+  azure.azcollection.azure_rm_devtestlabpolicy_info:
     resource_group: "{{ resource_group }}"
     lab_name: "dev-{{ rpfx }}"
     policy_set_name: default
@@ -191,7 +191,7 @@
       - output.policies | length >= 1
 
 - name: Create a Devtest lab schedule
-  azure_rm_devtestlabschedule:
+  azure.azcollection.azure_rm_devtestlabschedule:
     resource_group: "{{ resource_group }}"
     lab_name: "dev-{{ rpfx }}"
     name: lab_vms_shutdown
@@ -205,7 +205,7 @@
       - output.changed
 
 - name: Get devtest lab schedule
-  azure_rm_devtestlabschedule_info:
+  azure.azcollection.azure_rm_devtestlabschedule_info:
     resource_group: "{{ resource_group }}"
     lab_name: "dev-{{ rpfx }}"
     name: lab_vms_shutdown

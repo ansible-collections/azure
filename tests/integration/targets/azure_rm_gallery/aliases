@@ -1,6 +1,6 @@
 cloud/azure
 shippable/azure/group4
 destructive
-azure_rm_galleryimage
-azure_rm_galleryimageversion
-azure_rm_snapshot
+azure.azcollection.azure_rm_galleryimage
+azure.azcollection.azure_rm_galleryimageversion
+azure.azcollection.azure_rm_snapshot

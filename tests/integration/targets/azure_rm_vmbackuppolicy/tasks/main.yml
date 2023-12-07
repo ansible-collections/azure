@@ -5,7 +5,7 @@
     location: "eastus"
 
 - name: Create Azure Recovery Service vault
-  azure_rm_recoveryservicesvault:
+  azure.azcollection.azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     location: "{{ location }}"
@@ -13,7 +13,7 @@
   register: vault
 
 - name: Create VM Backup Policy
-  azure_rm_vmbackuppolicy:
+  azure.azcollection.azure_rm_vmbackuppolicy:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     vault_name: "{{ vault.response.name }}"
@@ -26,7 +26,7 @@
       - output.changed
 
 - name: Create VM Backup Policy (idempotent)
-  azure_rm_vmbackuppolicy:
+  azure.azcollection.azure_rm_vmbackuppolicy:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     vault_name: "{{ vault.response.name }}"
@@ -39,7 +39,7 @@
       - not output.changed
 
 - name: Get VM Backup Policy Details
-  azure_rm_vmbackuppolicy_info:
+  azure.azcollection.azure_rm_vmbackuppolicy_info:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     vault_name: "{{ vault.response.name }}"
@@ -52,7 +52,7 @@
       - output.response.name != None
 
 - name: Delete VM Backup Policy
-  azure_rm_vmbackuppolicy:
+  azure.azcollection.azure_rm_vmbackuppolicy:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
     vault_name: "{{ vault.response.name }}"
@@ -65,7 +65,7 @@
       - output.changed
 
 - name: Delete Azure Recovery Service vault
-  azure_rm_recoveryservicesvault:
+  azure.azcollection.azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"
     name: "{{ vault.response.name }}"
     location: "{{ location }}"

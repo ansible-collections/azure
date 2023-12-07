@@ -11,7 +11,7 @@
   run_once: true
 
 - name: Load app gateways
-  azure_rm_appgateway_info:
+  azure.azcollection.azure_rm_appgateway_info:
   register: appgw_output
 - name: Assert there are no gateways
   ansible.builtin.assert:
@@ -19,7 +19,7 @@
       - appgw_output.gateways | community.general.json_query(query) | length == 0
 
 - name: Create a virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: vnet{{ rpfx }}
     resource_group: "{{ resource_group }}"
     address_prefixes_cidr:
@@ -30,7 +30,7 @@
       - 127.0.0.2
   register: vnet_output
 - name: Create a subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     name: subnet{{ rpfx }}
     virtual_network_name: vnet{{ rpfx }}
     resource_group: "{{ resource_group }}"
@@ -38,7 +38,7 @@
   register: subnet_output
 
 - name: Create instance of Application Gateway -- check mode
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     sku:
@@ -120,7 +120,7 @@
       - output.changed
 
 - name: Create instance of application gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     sku:
@@ -201,7 +201,7 @@
       - output.changed
 
 - name: Load app gateway
-  azure_rm_appgateway_info:
+  azure.azcollection.azure_rm_appgateway_info:
     name: "appgateway{{ rpfx }}"
     resource_group: "{{ resource_group }}"
   register: output
@@ -215,7 +215,7 @@
       - output.gateways[0].ssl_policy.policy_name == 'ssl_policy20150501'
 
 - name: Stop instance of Application Gateway -- check mode
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     gateway_state: stopped
@@ -227,7 +227,7 @@
       - output.changed
 
 - name: Stop instance of Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     gateway_state: stopped
@@ -239,7 +239,7 @@
       - output.operational_state == 'Stopped'
 
 - name: Stop already stopped instance of Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     gateway_state: stopped
@@ -251,7 +251,7 @@
       - output.operational_state == 'Stopped'
 
 - name: Start instance of Application Gateway -- check mode
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     gateway_state: started
@@ -263,7 +263,7 @@
       - output.changed
 
 - name: Start instance of Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     gateway_state: started
@@ -275,7 +275,7 @@
       - output.operational_state == 'Running'
 
 - name: Start already started instance of Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     gateway_state: started
@@ -287,7 +287,7 @@
       - output.operational_state == 'Running'
 
 - name: Try to update instance of Application Gateway - no change
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     sku:
@@ -368,7 +368,7 @@
       - not output.changed
 
 - name: Try to update instance of Application Gateway - single change
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     sku:
@@ -449,7 +449,7 @@
       - output.changed
 
 - name: Update SSL config for Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     sku:
@@ -534,7 +534,7 @@
       - output.changed
 
 - name: Load app gateway
-  azure_rm_appgateway_info:
+  azure.azcollection.azure_rm_appgateway_info:
     name: "appgateway{{ rpfx }}"
     resource_group: "{{ resource_group }}"
   register: output
@@ -544,7 +544,7 @@
       - output.gateways[0].ssl_policy.policy_type == 'custom'
 
 - name: Try to update SSL config for Application Gateway - no change
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     sku:
@@ -629,7 +629,7 @@
       - not output.changed
 
 - name: Create instance of Application Gateway by looking up virtual network and subnet
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-subnet-lookup{{ rpfx }}"
     sku:
@@ -712,7 +712,7 @@
       - output.changed
 
 - name: Load app gateways
-  azure_rm_appgateway_info:
+  azure.azcollection.azure_rm_appgateway_info:
   register: appgw_output
 - name: Assert there are the correct number of gateways
   ansible.builtin.assert:
@@ -720,7 +720,7 @@
       - appgw_output.gateways | community.general.json_query(query) | length == 2
 
 - name: Load app gateway by name
-  azure_rm_appgateway_info:
+  azure.azcollection.azure_rm_appgateway_info:
     name: "appgateway-subnet-lookup{{ rpfx }}"
     resource_group: "{{ resource_group }}"
   register: appgw_output
@@ -733,7 +733,7 @@
       - (appgw_output.gateways | community.general.json_query(query))[0].operational_state == 'Running'
 
 - name: Create instance of Application Gateway with probe using hostname from backend http settings
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group_secondary }}"
     name: "appgateway-probe-{{ rpfx }}"
     location: "{{ vnet_output.state.location }}"
@@ -816,7 +816,7 @@
       - output.changed
 
 - name: Test no update instance of Application Gateway with probe using hostname from backend http settings
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group_secondary }}"
     name: "appgateway-probe-{{ rpfx }}"
     location: "{{ vnet_output.state.location }}"
@@ -899,7 +899,7 @@
       - not output.changed
 
 - name: Load app gateway by resource group
-  azure_rm_appgateway_info:
+  azure.azcollection.azure_rm_appgateway_info:
     resource_group: "{{ resource_group_secondary }}"
   register: appgw_output
 - name: Assert there are the correct number of gateways and they are the right ones
@@ -909,7 +909,7 @@
       - (appgw_output.gateways | community.general.json_query(query))[0].name == 'appgateway-probe-{{ rpfx }}'
 
 - name: Load app gateway not found in resource group
-  azure_rm_appgateway_info:
+  azure.azcollection.azure_rm_appgateway_info:
     name: "appgateway{{ rpfx }}"
     resource_group: "{{ resource_group_secondary }}"
   register: appgw_output
@@ -919,7 +919,7 @@
       - appgw_output.gateways | community.general.json_query(query) | length == 0
 
 - name: Create instance of Application Gateway with path based rules
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-path-rules{{ rpfx }}"
     sku:
@@ -1010,7 +1010,7 @@
       - output.changed
 
 - name: Try to update instance of Application Gateway with path based rules - no change
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-path-rules{{ rpfx }}"
     sku:
@@ -1101,7 +1101,7 @@
       - not output.changed
 
 - name: Create instance of Application Gateway with complex routing and redirect rules
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-complex{{ rpfx }}"
     sku:
@@ -1228,7 +1228,7 @@
       - output.changed
 
 - name: Try to update instance of Application Gateway with complex routing and redirect rules - no change
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-complex{{ rpfx }}"
     sku:
@@ -1355,14 +1355,14 @@
       - not output.changed
 
 - name: Configure public IP for v2 gateway
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     name: "appgateway-v2-{{ rpfx }}-pip"
     resource_group: "{{ resource_group }}"
     sku: "standard"
     allocation_method: "static"
 
 - name: Try to create v2 instance of Application Gateway with rewrite rules
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-v2-{{ rpfx }}"
     sku:
@@ -1517,7 +1517,7 @@
       - output.changed
 
 - name: Try to create v2 instance of Application Gateway with rewrite rules - no update
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-v2-{{ rpfx }}"
     sku:
@@ -1672,7 +1672,7 @@
       - not output.changed
 
 - name: Try to create v2 instance of Application Gateway with rewrite rules - update rewrite rule
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-v2-{{ rpfx }}"
     sku:
@@ -1830,7 +1830,7 @@
       - output.changed
 
 - name: Try to create v2 instance of Application Gateway with autoscale configuration and trusted root certificates
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-v2-{{ rpfx }}"
     sku:
@@ -1998,7 +1998,7 @@
 
 
 - name: Try to create v2 instance of Application Gateway with autoscale configuration and trusted root certificates - no update
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-v2-{{ rpfx }}"
     sku:
@@ -2165,14 +2165,14 @@
       - not output.changed
 
 - name: Configure public IP for waf_v2 gateway
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     name: "appgateway-waf-v2-{{ rpfx }}-pip"
     resource_group: "{{ resource_group }}"
     sku: "standard"
     allocation_method: "static"
 
 - name: Try to create waf_v2 instance of Application Gateway with waf configuration
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-waf-v2-{{ rpfx }}"
     sku:
@@ -2336,7 +2336,7 @@
       - output.changed
 
 - name: Try to create waf_v2 instance of Application Gateway with waf configuration - no update
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-waf-v2-{{ rpfx }}"
     sku:
@@ -2500,7 +2500,7 @@
       - not output.changed
 
 - name: Delete instance of Application Gateway -- check mode
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     state: absent
@@ -2512,7 +2512,7 @@
       - output.changed
 
 - name: Delete instance of Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     state: absent
@@ -2523,7 +2523,7 @@
       - output.changed
 
 - name: Delete unexisting instance of Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway{{ rpfx }}"
     state: absent
@@ -2534,7 +2534,7 @@
       - output.changed == false
 
 - name: Delete path-based rules instance of Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-path-rules{{ rpfx }}"
     state: absent
@@ -2545,7 +2545,7 @@
       - output.changed
 
 - name: Delete custom probe instance of Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group_secondary }}"
     name: "appgateway-probe-{{ rpfx }}"
     state: absent
@@ -2556,7 +2556,7 @@
       - output.changed
 
 - name: Delete subnet-lookup instance of Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-subnet-lookup{{ rpfx }}"
     state: absent
@@ -2567,7 +2567,7 @@
       - output.changed
 
 - name: Delete v2 instance of Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-v2-{{ rpfx }}"
     state: absent
@@ -2578,7 +2578,7 @@
       - output.changed
 
 - name: Delete waf_v2 instance of Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-waf-v2-{{ rpfx }}"
     state: absent
@@ -2589,7 +2589,7 @@
       - output.changed
 
 - name: Delete public IP for v2 gateway
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     name: "appgateway-v2-{{ rpfx }}-pip"
     resource_group: "{{ resource_group }}"
     state: absent
@@ -2600,7 +2600,7 @@
       - output.changed
 
 - name: Delete public IP for waf v2 gateway
-  azure_rm_publicipaddress:
+  azure.azcollection.azure_rm_publicipaddress:
     name: "appgateway-waf-v2-{{ rpfx }}-pip"
     resource_group: "{{ resource_group }}"
     state: absent
@@ -2611,7 +2611,7 @@
       - output.changed
 
 - name: Delete complex instance of Application Gateway
-  azure_rm_appgateway:
+  azure.azcollection.azure_rm_appgateway:
     resource_group: "{{ resource_group }}"
     name: "appgateway-complex{{ rpfx }}"
     state: absent
@@ -2622,7 +2622,7 @@
       - output.changed
 
 - name: Delete virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     name: vnet{{ rpfx }}
     resource_group: "{{ resource_group }}"
     state: absent

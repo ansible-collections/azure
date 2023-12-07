@@ -3,7 +3,7 @@
     group_name: "ppg{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create a proximity placement group
-  azure_rm_proximityplacementgroup:
+  azure.azcollection.azure_rm_proximityplacementgroup:
     resource_group: "{{ resource_group }}"
     location: eastus
     name: "{{ group_name }}"
@@ -15,7 +15,7 @@
     that: results.changed
 
 - name: Create a proximity placement group again (Idempotent test)
-  azure_rm_proximityplacementgroup:
+  azure.azcollection.azure_rm_proximityplacementgroup:
     resource_group: "{{ resource_group }}"
     location: eastus
     name: "{{ group_name }}"
@@ -27,7 +27,7 @@
     that: not results.changed
 
 - name: Update a proximity placement group
-  azure_rm_proximityplacementgroup:
+  azure.azcollection.azure_rm_proximityplacementgroup:
     resource_group: "{{ resource_group }}"
     location: eastus
     name: "{{ group_name }}"
@@ -41,7 +41,7 @@
     that: results.changed
 
 - name: Get proximity placement group facts
-  azure_rm_proximityplacementgroup_info:
+  azure.azcollection.azure_rm_proximityplacementgroup_info:
     resource_group: "{{ resource_group }}"
     name: "{{ group_name }}"
   register: results
@@ -55,7 +55,7 @@
       - results.proximityplacementgroups[0].proximity_placement_group_type == "Standard"
 
 - name: Delete proximity placement group
-  azure_rm_proximityplacementgroup:
+  azure.azcollection.azure_rm_proximityplacementgroup:
     resource_group: "{{ resource_group }}"
     name: "{{ group_name }}"
     state: absent
@@ -66,7 +66,7 @@
     that: results.changed
 
 - name: Delete proximity placement group again (Idempotent test)
-  azure_rm_proximityplacementgroup:
+  azure.azcollection.azure_rm_proximityplacementgroup:
     resource_group: "{{ resource_group }}"
     name: "{{ group_name }}"
     state: absent

@@ -4,7 +4,7 @@
   run_once: true
 
 - name: Create a web app
-  azure_rm_webapp:
+  azure.azcollection.azure_rm_webapp:
     resource_group: "{{ resource_group }}"
     name: webapp{{ rpfx }}
     plan:
@@ -14,7 +14,7 @@
       sku: S1
 
 - name: "Create webapp access restriction - check mode"
-  azure_rm_webappaccessrestriction:
+  azure.azcollection.azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -34,7 +34,7 @@
     that: output.changed
 
 - name: "Create webapp access restriction"
-  azure_rm_webappaccessrestriction:
+  azure.azcollection.azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -60,7 +60,7 @@
       - output.scm_ip_security_restrictions_use_main == true
 
 - name: "Check webapp access restriction facts 1"
-  azure_rm_webappaccessrestriction_info:
+  azure.azcollection.azure_rm_webappaccessrestriction_info:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
   register: output
@@ -76,7 +76,7 @@
       - output.scm_ip_security_restrictions_use_main == true
 
 - name: "Create webapp access restriction - idempotent"
-  azure_rm_webappaccessrestriction:
+  azure.azcollection.azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -95,7 +95,7 @@
     that: not output.changed
 
 - name: "Delete specific webapp access restriction"
-  azure_rm_webappaccessrestriction:
+  azure.azcollection.azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -115,7 +115,7 @@
       - output.scm_ip_security_restrictions_use_main == true
 
 - name: "Update existing webapp access restriction 1"
-  azure_rm_webappaccessrestriction:
+  azure.azcollection.azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -135,7 +135,7 @@
       - output.scm_ip_security_restrictions_use_main == true
 
 - name: "Update existing webapp access restriction 1"
-  azure_rm_webappaccessrestriction:
+  azure.azcollection.azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -155,7 +155,7 @@
       - output.scm_ip_security_restrictions_use_main == false
 
 - name: "Update existing webapp access restriction 3"
-  azure_rm_webappaccessrestriction:
+  azure.azcollection.azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -183,7 +183,7 @@
       - output.scm_ip_security_restrictions_use_main == false
 
 - name: "Update existing webapp access restriction 4"
-  azure_rm_webappaccessrestriction:
+  azure.azcollection.azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -217,7 +217,7 @@
       - output.scm_ip_security_restrictions_use_main == false
 
 - name: "Update existing webapp access restriction - idempotent"
-  azure_rm_webappaccessrestriction:
+  azure.azcollection.azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     ip_security_restrictions:
@@ -241,7 +241,7 @@
     that: not output.changed
 
 - name: "Delete webapp access restrictions"
-  azure_rm_webappaccessrestriction:
+  azure.azcollection.azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
     state: "absent"
@@ -255,7 +255,7 @@
       - output.scm_ip_security_restrictions_use_main == false
 
 - name: "Check webapp access restriction facts 3"
-  azure_rm_webappaccessrestriction_info:
+  azure.azcollection.azure_rm_webappaccessrestriction_info:
     name: webapp{{ rpfx }}
     resource_group: "{{ resource_group }}"
   register: output
