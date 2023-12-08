@@ -23,11 +23,6 @@ options:
         description:
             - The application ID.
         type: str
-    tenant:
-        description:
-            - (deprecated) The tenant ID.
-            - This option has been deprecated, and will be removed in the future.
-        type: str
     object_id:
         description:
             - It's service principal's object ID.
@@ -92,10 +87,8 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             app_id=dict(type='str'),
             object_id=dict(type='str'),
-            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection')
         )
 
-        self.tenant = None
         self.app_id = None
         self.object_id = None
         self.results = dict(changed=False)

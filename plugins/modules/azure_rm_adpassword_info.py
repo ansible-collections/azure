@@ -31,11 +31,6 @@ options:
         description:
             - The password key ID.
         type: str
-    tenant:
-        description:
-            - (deprecated) The tenant ID.
-            - This option has been deprecated, and will be removed in the future.
-        type: str
     end_date:
         description:
             - Date or datemtime after which credentials expire.
@@ -120,12 +115,10 @@ class AzureRMADPasswordInfo(AzureRMModuleBase):
             app_object_id=dict(type='str'),
             service_principal_object_id=dict(type='str'),
             key_id=dict(type='str'),
-            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
             value=dict(type='str'),
             end_date=dict(type='str'),
         )
 
-        self.tenant = None
         self.app_id = None
         self.service_principal_object_id = None
         self.app_object_id = None

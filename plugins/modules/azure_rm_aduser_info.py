@@ -19,11 +19,6 @@ description:
     - Get Azure Active Directory user info.
 
 options:
-    tenant:
-        description:
-            - (deprecated) The tenant ID.
-            - This option has been deprecated, and will be removed in the future.
-        type: str
     object_id:
         description:
             - The object id for the user.
@@ -164,10 +159,8 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             attribute_value=dict(type='str'),
             odata_filter=dict(type='str'),
             all=dict(type='bool'),
-            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection')
         )
 
-        self.tenant = None
         self.user_principal_name = None
         self.object_id = None
         self.attribute_name = None

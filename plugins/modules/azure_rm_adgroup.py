@@ -15,12 +15,6 @@ short_description: Manage Azure Active Directory group
 description:
     - Create, update or delete Azure Active Directory group.
 options:
-    tenant:
-        description:
-            - (deprecated) The tenant ID.
-            - This option has been deprecated, and will be removed in the future.
-        type: str
-
     state:
         description:
             - Assert the state of the resource group. Use C(present) to create or update and C(absent) to delete.
@@ -234,7 +228,6 @@ class AzureRMADGroup(AzureRMModuleBase):
             present_owners=dict(type='list', elements='str'),
             absent_members=dict(type='list', elements='str'),
             absent_owners=dict(type='list', elements='str'),
-            tenant=dict(type='str', removed_in_version='3.0.0', removed_from_collection='azure.azcollection'),
             state=dict(
                 type='str',
                 default='present',
@@ -242,7 +235,6 @@ class AzureRMADGroup(AzureRMModuleBase):
             ),
         )
 
-        self.tenant = None
         self.display_name = None
         self.mail_nickname = None
         self.object_id = None
