@@ -354,7 +354,7 @@
 
 - name: Create a web app with various site config params
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ linux_app_plan_resource_group }}"
     name: "{{ linux_app_name }}-siteconfig"
     plan:
       resource_group: "{{ linux_app_plan_resource_group }}"
@@ -379,7 +379,7 @@
 
 - name: Create a web app with various site config params - idempotent
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ linux_app_plan_resource_group }}"
     name: "{{ linux_app_name }}-siteconfig"
     plan:
       resource_group: "{{ linux_app_plan_resource_group }}"
@@ -404,7 +404,7 @@
 
 - name: Get facts for site config params
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ linux_app_plan_resource_group }}"
     name: "{{ linux_app_name }}-siteconfig"
   register: facts
 - name: Assert site config params meet expectations
@@ -413,10 +413,11 @@
       - facts.webapps[0].always_on
       - facts.webapps[0].min_tls_version == '1.2'
       - facts.webapps[0].ftps_state == 'Disabled'
+      - not facts.webapps[0].http20_enabled
 
 - name: Update web app with various site config params - single change
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ linux_app_plan_resource_group }}"
     name: "{{ linux_app_name }}-siteconfig"
     plan:
       resource_group: "{{ linux_app_plan_resource_group }}"
@@ -441,7 +442,7 @@
 
 - name: Get facts for site config params
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ linux_app_plan_resource_group }}"
     name: "{{ linux_app_name }}-siteconfig"
   register: facts
 - name: Assert site config params meet expectations
@@ -450,6 +451,111 @@
       - facts.webapps[0].always_on
       - facts.webapps[0].min_tls_version == '1.2'
       - facts.webapps[0].ftps_state == 'FtpsOnly'
+      - not facts.webapps[0].http20_enabled
+
+- name: Create a web app with HTTP 2.0
+  azure_rm_webapp:
+    resource_group: "{{ linux_app_plan_resource_group }}"
+    name: "{{ linux_app_name }}-http20"
+    plan:
+      resource_group: "{{ linux_app_plan_resource_group }}"
+      name: "{{ linux_app_name }}-http20-plan"
+      is_linux: true
+      sku: S1
+    frameworks:
+      - name: java
+        version: "8"
+        settings:
+          java_container: "tomcat"
+          java_container_version: "8.5"
+    client_affinity_enabled: false
+    https_only: true
+    always_on: true
+    min_tls_version: "1.2"
+    ftps_state: "Disabled"
+    http20_enabled: true
+  register: output
+- name: Assert the web app was created
+  ansible.builtin.assert:
+    that: output.changed
+
+- name: Create a web app with HTTP 2.0 - idempotent
+  azure_rm_webapp:
+    resource_group: "{{ linux_app_plan_resource_group }}"
+    name: "{{ linux_app_name }}-http20"
+    plan:
+      resource_group: "{{ linux_app_plan_resource_group }}"
+      name: "{{ linux_app_name }}-http20-plan"
+      is_linux: true
+      sku: S1
+    frameworks:
+      - name: java
+        version: "8"
+        settings:
+          java_container: "tomcat"
+          java_container_version: "8.5"
+    client_affinity_enabled: false
+    https_only: true
+    always_on: true
+    min_tls_version: "1.2"
+    ftps_state: "Disabled"
+    http20_enabled: true
+  register: output
+- name: Assert the web app not changed
+  ansible.builtin.assert:
+    that: not output.changed
+
+- name: Get facts for HTTP 2.0 appp
+  azure_rm_webapp_info:
+    resource_group: "{{ linux_app_plan_resource_group }}"
+    name: "{{ linux_app_name }}-http20"
+  register: facts
+- name: Assert site config params meet expectations
+  ansible.builtin.assert:
+    that:
+      - facts.webapps[0].always_on
+      - facts.webapps[0].min_tls_version == '1.2'
+      - facts.webapps[0].ftps_state == 'Disabled'
+      - facts.webapps[0].http20_enabled
+
+- name: Update web app to disable HTTP 2.0
+  azure_rm_webapp:
+    resource_group: "{{ linux_app_plan_resource_group }}"
+    name: "{{ linux_app_name }}-http20"
+    plan:
+      resource_group: "{{ linux_app_plan_resource_group }}"
+      name: "{{ linux_app_name }}-http20-plan"
+      is_linux: true
+      sku: S1
+    frameworks:
+      - name: java
+        version: "8"
+        settings:
+          java_container: "tomcat"
+          java_container_version: "8.5"
+    client_affinity_enabled: false
+    https_only: true
+    always_on: true
+    min_tls_version: "1.2"
+    ftps_state: "Disabled"
+    http20_enabled: false
+  register: output
+- name: Assert the web app was updated
+  ansible.builtin.assert:
+    that: output.changed
+
+- name: Get facts for HTTP 2.0 appp
+  azure_rm_webapp_info:
+    resource_group: "{{ linux_app_plan_resource_group }}"
+    name: "{{ linux_app_name }}-http20"
+  register: facts
+- name: Assert site config params meet expectations
+  ansible.builtin.assert:
+    that:
+      - facts.webapps[0].always_on
+      - facts.webapps[0].min_tls_version == '1.2'
+      - facts.webapps[0].ftps_state == 'Disabled'
+      - not facts.webapps[0].http20_enabled
 
 - name: Create a webapp slot (Check mode)
   azure_rm_webappslot:

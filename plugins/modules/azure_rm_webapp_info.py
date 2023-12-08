@@ -138,6 +138,12 @@ webapps:
             returned: always
             type: bool
             sample: true
+        http20_enabled:
+            description:
+                - Configures a web site to allow clients to connect over HTTP 2.0.
+            returned: always
+            type: bool
+            sample: true
         min_tls_version:
             description:
                 - The minimum TLS encryption version required for the app.
@@ -486,6 +492,7 @@ class AzureRMWebAppInfo(AzureRMModuleBase):
                     curated_output['frameworks'].append({'name': tmp[0].lower(), 'version': tmp[1]})
 
             curated_output['always_on'] = configuration.get('always_on')
+            curated_output['http20_enabled'] = configuration.get('http20_enabled')
             curated_output['ftps_state'] = configuration.get('ftps_state')
             curated_output['min_tls_version'] = configuration.get('min_tls_version')
 
