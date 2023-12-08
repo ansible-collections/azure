@@ -258,7 +258,7 @@ try:
     from azure.mgmt.datafactory import DataFactoryManagementClient
     import azure.mgmt.datafactory.models as DataFactoryModel
     from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
-    # from azure.identity import AzureCliCredential
+    from azure.identity import AzureCliCredential
     from msgraph import GraphServiceClient
 
 except ImportError as exc:
@@ -1586,9 +1586,9 @@ class AzureRMAuth(object):
             subscription_id=subscription_id)
         cloud_environment = get_cli_active_cloud()
 
-        # az_cli = AzureCliCredential()
+        az_cli = AzureCliCredential()
         cli_credentials = {
-            'credentials': cred,
+            'credentials': az_cli if self.is_ad_resource else cred,
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment
         }
