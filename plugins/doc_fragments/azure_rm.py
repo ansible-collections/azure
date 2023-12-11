@@ -66,8 +66,8 @@ options:
         description:
         - By default this plugin is using a general group name sanitization to create safe and usable group names for use in Ansible.
             This option allows you to override that, in efforts to allow migration from the old inventory script and
-            matches the sanitization of groups when the script's ``replace_dash_in_groups`` option is set to ``False``.
-            To replicate behavior of ``replace_dash_in_groups = True`` with constructed groups,
+            matches the sanitization of groups when the script's C(replace_dash_in_groups) option is set to C(false).
+            To replicate behavior of C(replace_dash_in_groups = true) with constructed groups,
             you will need to replace hyphens with underscores via the regex_replace filter for those entries.
         - For this to work you should also turn off the TRANSFORM_INVALID_GROUP_CHARS setting,
             otherwise the core engine will just use the standard sanitization on top.
@@ -91,9 +91,9 @@ options:
         - Ignores expression if result is an empty string or None value.
         - By default, inventory_hostname is generated to be globally unique based on the VM host name.
             See C(plain_host_names) for more details on the default.
-        - An expression of 'default' will force using the default hostname generator if no previous hostname expression
+        - An expression of C(default) will force using the default hostname generator if no previous hostname expression
             resulted in a valid hostname.
-        - Use ``default_inventory_hostname`` to access the default hostname generator's value in any of the Jinja2 expressions.
+        - Use C(default_inventory_hostname) to access the default hostname generator's value in any of the Jinja2 expressions.
         type: list
         elements: str
         default: [default]
