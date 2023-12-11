@@ -7,10 +7,6 @@
     - name: Set facts
       ansible.builtin.include_vars: vars.yml
 
-    - name: Pause for 10 mimutes for updating
-      ansible.builtin.command: sleep 600
-      changed_when: false
-
     - name: Refresh inventory
       ansible.builtin.meta: refresh_inventory
 

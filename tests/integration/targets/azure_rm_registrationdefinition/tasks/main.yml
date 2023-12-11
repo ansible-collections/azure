@@ -100,7 +100,7 @@
 - name: Assert the registration definition info
   ansible.builtin.assert:
     that:
-      - output.registration_definitions[0].name == "{{ output1.state.name }}"
+      - output.registration_definitions[0].name == output1.state.name
       - output.registration_definitions[0].properties.authorizations[0].principal_id == "{{ principal_id }}"
       - output.registration_definitions[0].properties.authorizations[0].role_definition_id == "{{ role_definition_id }}"
       - output.registration_definitions[0].properties.provisioning_state == "Succeeded"

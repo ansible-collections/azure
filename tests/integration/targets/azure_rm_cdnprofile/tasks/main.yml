@@ -24,7 +24,8 @@
 
 - name: Check there is no CDN profile created
   ansible.builtin.assert:
-    { that: "{{ fact.cdnprofiles | length }} == 0" }
+    that:
+      - fact.cdnprofiles | length == 0
 
 - name: Create a CDN profile
   azure_rm_cdnprofile:
