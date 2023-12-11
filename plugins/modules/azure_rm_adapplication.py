@@ -628,12 +628,12 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         password_creds = None
         key_creds = None
         if password:
-            password_creds = [PasswordCredential(start_date=start_date, end_date=end_date, key_id=str(self.gen_guid()),
-                                                 value=password,
+            password_creds = [PasswordCredential(start_date_time=start_date, end_date_time=end_date, key_id=str(self.gen_guid()),
+                                                 secret_text=password,
                                                  custom_key_identifier=custom_key_id)]  # value ? secret_text
         elif key_value:
             key_creds = [
-                KeyCredential(start_date=start_date, end_date=end_date, key_id=str(self.gen_guid()), value=key_value,
+                KeyCredential(start_date_time=start_date, end_date_time=end_date, key_id=str(self.gen_guid()), key=key_value,
                               # value ? key
                               usage=key_usage, type=key_type, custom_key_identifier=custom_key_id)]
 
