@@ -11,7 +11,9 @@
 ### FEATURE ENHANCEMENT
   - azure_rm_storageaccount: Add support for `large_file_shares_state` ([#1210](https://github.com/ansible-collections/azure/pull/1210))
   - azure_rm_storageaccount_info: Add support for `large_file_shares_state`([#1210](https://github.com/ansible-collections/azure/pull/1210))
-  - azure_rm(`inventory`): Add support for `include_host_filters` ([#1347](https://github.com/ansible-collections/azure/pull/1347))
+  - azure_rm(`inventory`): 
+    - Add support for `include_host_filters` ([#1347](https://github.com/ansible-collections/azure/pull/1347))
+    - Enhance inventory name checking  ([#1348](https://github.com/ansible-collections/azure/pull/1348))
   - azure_rm_webapp : Add support for `http20_enabled` ([#1360](https://github.com/ansible-collections/azure/pull/1360))
   - azure_rm_webapp_info : Add support for `http20_enabled` ([#1360](https://github.com/ansible-collections/azure/pull/1360))
   - azure_rm_virtualmachine : Add retry logic for VM state synchronization ([#1354](https://github.com/ansible-collections/azure/pull/1354))
@@ -34,6 +36,10 @@
   - azure_rm_adgroup_info: Fix get group error ([#1355](https://github.com/ansible-collections/azure/pull/1355))
   - azure_rm_aduser_info: Fix get user error ([#1355](https://github.com/ansible-collections/azure/pull/1355))
   - azure_rm(`inventory`): Fix dynamic VM fetch failure when `batch_fetch=true` ([#1344](https://github.com/ansible-collections/azure/pull/1344))
+  - azure_rm_adapplication: Fix parameter error ([#1369](https://github.com/ansible-collections/azure/pull/1369))
+
+### BREAKING CHANGE
+  - azure_rm: Rename `public_ipv4_addresses` to `public_ip_address`and change type to list ([#1214](https://github.com/ansible-collections/azure/pull/1214))
 
 ## v2.0.0 (2023-11-17)
 
