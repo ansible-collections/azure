@@ -1854,6 +1854,9 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 type='str',
                 default='present',
                 choices=['present', 'absent']
+            ),
+            tags=dict(
+                type='dict'
             )
         )
 
@@ -2239,6 +2242,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     self.parameters["web_application_firewall_configuration"] = kwargs[key]
                 elif key == "enable_http2":
                     self.parameters["enable_http2"] = kwargs[key]
+                elif key == "tags":
+                    self.parameters["tags"] = kwargs[key]
 
         response = None
 
@@ -2291,7 +2296,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     not compare_arrays(old_response, self.parameters, 'url_path_maps') or
                     not compare_arrays(old_response, self.parameters, 'trusted_root_certificates') or
                     not compare_dicts(old_response, self.parameters, 'autoscale_configuration') or
-                    not compare_dicts(old_response, self.parameters, 'web_application_firewall_configuration')):
+                    not compare_dicts(old_response, self.parameters, 'web_application_firewall_configuration') or
+                    not compare_dicts(old_response, self.parameters, 'tags')):
                 self.to_do = Actions.Update
             else:
                 self.to_do = Actions.NoAction
