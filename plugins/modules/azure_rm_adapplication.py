@@ -539,7 +539,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 app_roles=app_roles,
                 optional_claims=self.optional_claims)
             asyncio.get_event_loop().run_until_complete(self.update_application(
-                appid=old_response['object_id'], update_app=app_update_param))
+                obj_id=old_response['object_id'], update_app=app_update_param))
 
             self.results['changed'] = True
             self.results.update(self.get_resource())
@@ -628,16 +628,16 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         password_creds = None
         key_creds = None
         if password:
-            password_creds = [PasswordCredential(start_date_time=start_date, end_date_time=end_date, key_id=str(self.gen_guid()),
-                                                 secret_text=password,
+            password_creds = [PasswordCredential(start_date_time=start_date, end_date_time=end_date,
+                                                 key_id=self.gen_guid(), secret_text=password,
                                                  custom_key_identifier=custom_key_id)]  # value ? secret_text
         elif key_value:
             key_creds = [
-                KeyCredential(start_date_time=start_date, end_date_time=end_date, key_id=str(self.gen_guid()), key=key_value,
+                KeyCredential(start_date_time=start_date, end_date_time=end_date, key_id=self.gen_guid(), key=key_value,
                               # value ? key
                               usage=key_usage, type=key_type, custom_key_identifier=custom_key_id)]
 
-        return (password_creds, key_creds)
+        return password_creds, key_creds
 
     def encode_custom_key_description(self, key_description):
         # utf16 is used by AAD portal. Do not change it to other random encoding
