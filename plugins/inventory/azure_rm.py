@@ -209,7 +209,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             if re.match(r'.{0,}azure_rm\.y(a)?ml$', path):
                 return True
         # display.debug("azure_rm inventory filename must end with 'azure_rm.yml' or 'azure_rm.yaml'")
-        return False
+        raise AnsibleError("azure_rm inventory filename must end with 'azure_rm.yml' or 'azure_rm.yaml'")
 
     def parse(self, inventory, loader, path, cache=True):
         super(InventoryModule, self).parse(inventory, loader, path)
