@@ -349,7 +349,6 @@ RECORDSET_VALUE_MAP = dict(
 ) if HAS_AZURE else {}
 
 
-new_list = RECORD_ARGSPECS.keys()
 class AzureRMRecordSet(AzureRMModuleBase):
 
     def __init__(self):
@@ -361,8 +360,8 @@ class AzureRMRecordSet(AzureRMModuleBase):
             resource_group=dict(type='str', required=True),
             relative_name=dict(type='str', required=True),
             zone_name=dict(type='str', required=True),
-            record_type=dict(choices=new_list, required=True, type='str'),
-            record_mode=dict(choices=['append', 'purge'], default='purge'),
+            record_type=dict(choices=RECORD_ARGSPECS.keys(), required=True, type='str'),
+            record_mode=dict(type='str', choices=['append', 'purge'], default='purge'),
             state=dict(choices=['present', 'absent'], default='present', type='str'),
             time_to_live=dict(type='int', default=3600),
             records=dict(type='list', elements='dict'),
