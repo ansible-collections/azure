@@ -101,7 +101,7 @@ databases:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -159,6 +159,8 @@ class AzureRMMySqlDatabaseInfo(AzureRMModuleBase):
             self.log("Response : {0}".format(response))
         except ResourceNotFoundError as e:
             self.log('Could not get facts for Databases.')
+        except HttpResponseError as e:
+            self.log("(GatewayTimeout) The gateway did not receive a response from 'Microsoft.DBforMySQL' within the specified time period")
 
         if response is not None:
             results.append(self.format_item(response))
