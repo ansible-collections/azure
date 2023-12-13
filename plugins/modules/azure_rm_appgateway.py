@@ -1854,9 +1854,6 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 type='str',
                 default='present',
                 choices=['present', 'absent']
-            ),
-            tags=dict(
-                type='dict'
             )
         )
 
