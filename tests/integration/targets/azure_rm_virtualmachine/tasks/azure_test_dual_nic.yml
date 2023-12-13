@@ -118,10 +118,6 @@
     name: "{{ vm_name }}"
   register: vm_state
 
-- name: Pause for 10 mimutes to VM updating
-  ansible.builtin.command: sleep 600
-  changed_when: true
-
 - name: Generalize VM
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?

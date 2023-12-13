@@ -47,7 +47,3 @@
           sku: 20_04-lts
           version: latest
       register: vm_output
-
-    - name: Pause for 5 mimutes for updating
-      ansible.builtin.command: sleep 300
-      changed_when: false
