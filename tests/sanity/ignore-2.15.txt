@@ -1,5 +1,4 @@
 plugins/modules/azure_rm_apimanagement.py validate-modules:invalid-ansiblemodule-schema
-plugins/modules/azure_rm_dnsrecordset.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_gallery.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_galleryimage.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_galleryimageversion.py validate-modules:invalid-ansiblemodule-schema
@@ -13,6 +12,5 @@ plugins/modules/azure_rm_batchaccount.py validate-modules:invalid-ansiblemodule-
 plugins/modules/azure_rm_azurefirewall.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_apimanagementservice.py validate-modules:invalid-ansiblemodule-schema
 plugins/modules/azure_rm_openshiftmanagedcluster.py validate-modules:invalid-ansiblemodule-schema
-plugins/modules/azure_rm_privatednsrecordset.py validate-modules:invalid-ansiblemodule-schema
 tests/utils/shippable/check_matrix.py replace-urlopen
 tests/utils/shippable/timing.py shebang
