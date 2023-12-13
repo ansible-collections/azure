@@ -175,7 +175,7 @@
   azure.azcollection.azure_rm_autoscale:
     resource_group: "{{ resource_group }}"
     name: "{{ name_rpfx }}"
-    state: absent
+    state: "absent"
   check_mode: true
   register: output
 
