@@ -1,6 +1,6 @@
 # Change Log
 
-## v2.1.0 (2023-12-12)
+## v2.1.0 (2023-12-13)
 
 ### NEW MODULES
   - azure_rm_accesstoken_info ([#1318](https://github.com/ansible-collections/azure/pull/1318))
@@ -48,6 +48,7 @@
   - azure_rm_galleryimageversion: Add support for `encryption` ([#1311](https://github.com/ansible-collections/azure/pull/1311))
   - azure_rm_galleryimage: Add support for `features` ([#1310](https://github.com/ansible-collections/azure/pull/1310))
   - azure_rm_apimanagement: Bump API version to `v2022-08-01` ([#1327](https://github.com/ansible-collections/azure/pull/1327))
+
   - azure_rm_apimanagement_info: Bump API version to `v2022-08-01` ([#1327](https://github.com/ansible-collections/azure/pull/1327))
   - azure_rm_apimanagementservice: Bump API version to `v2022-08-01` ([#1327](https://github.com/ansible-collections/azure/pull/1327))
   - azure_rm_apimanagementservice_info: Bump API version to `v2022-08-01` ([#1327](https://github.com/ansible-collections/azure/pull/1327))
