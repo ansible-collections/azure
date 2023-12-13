@@ -1,5 +1,46 @@
 # Change Log
 
+## v2.1.0 (2023-12-13)
+
+### NEW MODULES
+  - azure_rm_accesstoken_info ([#1318](https://github.com/ansible-collections/azure/pull/1318))
+  - azure_rm_openshiftmanagedclusterkubeconfig_info ([#1238](https://github.com/ansible-collections/azure/pull/1238))
+  - azure_rm_sshpublickey ([#1190](https://github.com/ansible-collections/azure/pull/1190))
+  - azure_rm_sshpublickey_info ([#1190](https://github.com/ansible-collections/azure/pull/1190))
+
+### FEATURE ENHANCEMENT
+  - azure_rm_storageaccount: Add support for `large_file_shares_state` ([#1210](https://github.com/ansible-collections/azure/pull/1210))
+  - azure_rm_storageaccount_info: Add support for `large_file_shares_state`([#1210](https://github.com/ansible-collections/azure/pull/1210))
+  - azure_rm(`inventory`): 
+    - Add support for `include_host_filters` ([#1347](https://github.com/ansible-collections/azure/pull/1347))
+    - Enhance inventory name checking  ([#1348](https://github.com/ansible-collections/azure/pull/1348))
+  - azure_rm_webapp : Add support for `http20_enabled` ([#1360](https://github.com/ansible-collections/azure/pull/1360))
+  - azure_rm_webapp_info : Add support for `http20_enabled` ([#1360](https://github.com/ansible-collections/azure/pull/1360))
+  - azure_rm_virtualmachine : Add retry logic for VM state synchronization ([#1354](https://github.com/ansible-collections/azure/pull/1354))
+  - azure_rm_virtualmachinescaleset : Add retry logic for VM state synchronization ([#1354](https://github.com/ansible-collections/azure/pull/1354))
+  - azure_keyvault_secret: Added support for `use_msi`(disable MSI autodiscover feature in `azure_keyvault_secret` lookup plugin) ([#1353](https://github.com/ansible-collections/azure/pull/1353))
+  - sanity-requirements-azure.txt: Bump cryptography from `41.0.4` to `41.0.6` ([#1349](https://github.com/ansible-collections/azure/pull/1349))
+
+### BUG FIXING
+  - AD resources : Fix get resource with CLI credentials ([#1364](https://github.com/ansible-collections/azure/pull/1364))
+  - azure_rm_iotdevice: Fixed the issue of failed to obtain alias parameters  ([#1278](https://github.com/ansible-collections/azure/pull/1278))
+  - azure_rm_iotdevicemodule: Fixed the issue of failed to obtain alias parameters ([#1278](https://github.com/ansible-collections/azure/pull/1278))
+  - azure_rm_virtualmachine: Support update `proximity_placement_group` ([#1329](https://github.com/ansible-collections/azure/pull/1329))
+  - azure_rm_common: Fix the CLI authorization obtain token error ([#1340](https://github.com/ansible-collections/azure/pull/1340))
+  - azure_rm_adapplication: Fix get application error ([#1345](https://github.com/ansible-collections/azure/pull/1345))
+  - azure_rm_adapplication_info: Fix get application error ([#1345](https://github.com/ansible-collections/azure/pull/1345))
+  - azure_rm_manageddisk: Support unmount disk from VMs in different resource group ([#1201](https://github.com/ansible-collections/azure/pull/1201))
+  - azure_rm_resource: Fix failure on response for non-json body ([#1341](https://github.com/ansible-collections/azure/pull/1341))
+  - azure_rm_deployment: Fix delete the whole resource group when state is `absent` ([#1231](https://github.com/ansible-collections/azure/pull/1231))
+  - azure_rm_adgroup: Fix get group error ([#1355](https://github.com/ansible-collections/azure/pull/1355))
+  - azure_rm_adgroup_info: Fix get group error ([#1355](https://github.com/ansible-collections/azure/pull/1355))
+  - azure_rm_aduser_info: Fix get user error ([#1355](https://github.com/ansible-collections/azure/pull/1355))
+  - azure_rm(`inventory`): Fix dynamic VM fetch failure when `batch_fetch=true` ([#1344](https://github.com/ansible-collections/azure/pull/1344))
+  - azure_rm_adapplication: Fix parameter error ([#1369](https://github.com/ansible-collections/azure/pull/1369))
+
+### BREAKING CHANGE
+  - azure_rm: Rename `public_ipv4_addresses` to `public_ip_address`and change type to list ([#1214](https://github.com/ansible-collections/azure/pull/1214))
+
 ## v2.0.0 (2023-11-17)
 
 ### FEATURE ENHANCEMENT
@@ -7,6 +48,7 @@
   - azure_rm_galleryimageversion: Add support for `encryption` ([#1311](https://github.com/ansible-collections/azure/pull/1311))
   - azure_rm_galleryimage: Add support for `features` ([#1310](https://github.com/ansible-collections/azure/pull/1310))
   - azure_rm_apimanagement: Bump API version to `v2022-08-01` ([#1327](https://github.com/ansible-collections/azure/pull/1327))
+
   - azure_rm_apimanagement_info: Bump API version to `v2022-08-01` ([#1327](https://github.com/ansible-collections/azure/pull/1327))
   - azure_rm_apimanagementservice: Bump API version to `v2022-08-01` ([#1327](https://github.com/ansible-collections/azure/pull/1327))
   - azure_rm_apimanagementservice_info: Bump API version to `v2022-08-01` ([#1327](https://github.com/ansible-collections/azure/pull/1327))
