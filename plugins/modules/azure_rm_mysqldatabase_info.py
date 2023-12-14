@@ -160,7 +160,7 @@ class AzureRMMySqlDatabaseInfo(AzureRMModuleBase):
         except ResourceNotFoundError as e:
             self.log('Could not get facts for Databases.')
         except HttpResponseError as e:
-            self.log("(GatewayTimeout) The gateway did not receive a response from 'Microsoft.DBforMySQL' within the specified time period")
+            self.log("Get MySQL Database instance error. code: {0}, message: {1}".format(e.status_code, str(e.error)))
 
         if response is not None:
             results.append(self.format_item(response))
