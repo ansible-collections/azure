@@ -63,6 +63,21 @@ options:
                     - The Public SSH Key used to access the cluster.
                 required: true
                 type: str
+    windows_profile:
+        description:
+            - The Windows profile suboptions.
+        type: dict
+        suboptions:
+            admin_username:
+                description:
+                    - The Admin Username for the cluster.
+                required: true
+                type: str
+            admin_password:
+                description:
+                    - The Admin password for the cluster.
+                required: true
+                type: str
     agent_pool_profiles:
         description:
             - The agent pool profile suboptions.
@@ -602,8 +617,8 @@ def create_linux_profile_dict(linuxprofile):
 
 def create_windows_profile_dict(windowsprofile):
     '''
-    Helper method to deserialize a ContainerServiceLinuxProfile to a dict
-    :param: windowsprofile: ContainerServiceWindowsProfile with the Azure callback object
+    Helper method to deserialize a ManagedClusterWindowsProfile to a dict
+    :param: windowsprofile: ManagedClusterWindowsProfile with the Azure callback object
     :return: dict with the state on Azure
     '''
     if windowsprofile:
@@ -1262,11 +1277,11 @@ class AzureRMManagedCluster(AzureRMModuleBase):
 
     def create_windows_profile_instance(self, windowsprofile):
         '''
-        Helper method to serialize a dict to a ContainerServiceWindowsProfile
-        :param: windowsprofile: dict with the parameters to setup the ContainerServiceWindowsProfile
-        :return: ContainerServiceWindowsProfile
+        Helper method to serialize a dict to a ManagedClusterWindowsProfile
+        :param: windowsprofile: dict with the parameters to setup the ManagedClusterWindowsProfile
+        :return: ManagedClusterWindowsProfile
         '''
-        return self.managedcluster_models.ContainerServiceWindowsProfile(
+        return self.managedcluster_models.ManagedClusterWindowsProfile(
             admin_username=windowsprofile['admin_username'],
             admin_password=windowsprofile['admin_password']
         )
