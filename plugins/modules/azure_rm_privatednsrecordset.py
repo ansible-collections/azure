@@ -325,7 +325,7 @@ class AzureRMPrivateDNSRecordSet(AzureRMModuleBase):
             relative_name=dict(type='str', required=True),
             zone_name=dict(type='str', required=True),
             record_type=dict(choices=RECORD_ARGSPECS.keys(), required=True, type='str'),
-            record_mode=dict(choices=['append', 'purge'], default='purge'),
+            record_mode=dict(type='str', choices=['append', 'purge'], default='purge'),
             state=dict(choices=['present', 'absent'], default='present', type='str'),
             time_to_live=dict(type='int', default=3600),
             records=dict(type='list', elements='dict')

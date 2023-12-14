@@ -412,32 +412,23 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
         self.module_arg_spec = dict(
             resource_group=dict(
                 type='str',
-                updatable=False,
-                disposition='resourceGroupName',
                 required=True
             ),
             name=dict(
                 type='str',
-                updatable=False,
-                disposition='resourceName',
                 required=True
             ),
             location=dict(
                 type='str',
-                updatable=False,
-                required=True,
-                disposition='/'
+                required=True
             ),
             cluster_profile=dict(
                 type='dict',
-                disposition='/properties/clusterProfile',
                 default=dict(),
                 options=dict(
                     pull_secret=dict(
                         type='str',
                         no_log=True,
-                        updatable=False,
-                        disposition='pullSecret',
                         purgeIfNone=True
                     ),
                     cluster_resource_group_id=dict(
