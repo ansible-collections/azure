@@ -85,24 +85,17 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
         self.module_arg_spec = dict(
             resource_group=dict(
                 type='str',
-                updatable=False,
-                disposition='resourceGroupName',
                 required=True
             ),
             name=dict(
                 type='str',
-                updatable=False,
-                disposition='galleryName',
                 required=True
             ),
             location=dict(
-                type='str',
-                updatable=False,
-                disposition='/'
+                type='str'
             ),
             description=dict(
                 type='str',
-                disposition='/properties/*'
             ),
             state=dict(
                 type='str',
