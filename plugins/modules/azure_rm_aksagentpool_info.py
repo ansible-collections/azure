@@ -168,6 +168,12 @@ aks_agent_pools:
             type: str
             returned: always
             sample: Linux
+        os_sku:
+            description:
+                - OS SKU to be used to specify os type.
+            type: str
+            returned: always
+            sample: Windows2022
         provisioning_state:
             description:
                 - The current deployment or provisioning state, which only appears in the response.
@@ -301,6 +307,7 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             vnet_subnet_id=agent_pool.vnet_subnet_id,
             max_pods=agent_pool.max_pods,
             os_type=agent_pool.os_type,
+            os_sku=agent_pool.os_sku,
             max_count=agent_pool.max_count,
             min_count=agent_pool.min_count,
             enable_auto_scaling=agent_pool.enable_auto_scaling,

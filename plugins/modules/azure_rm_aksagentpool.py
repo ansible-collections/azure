@@ -64,6 +64,14 @@ options:
         choices:
             - Linux
             - Windows
+    os_sku:
+        description:
+            - The operating system sku.
+        type: str
+        choices:
+            - Ubuntu
+            - Windows2019
+            - Windows2022 
     orchestrator_version:
         description:
             - Version of orchestrator specified when creating the managed cluster.
@@ -259,6 +267,12 @@ aks_agent_pools:
             type: str
             returned: always
             sample: Linux
+        os_sku:
+            description:
+                - SKU to be used to specify os type.
+            type: str
+            returned: always
+            sample: Linux
         provisioning_state:
             description:
                 - The current deployment or provisioning state, which only appears in the response.
@@ -361,6 +375,10 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
                 type='str',
                 choices=['Linux', 'Windows']
             ),
+            os_sku=dict(
+                type='str',
+                choices=['Ubuntu', 'Windows2019', 'Windows2022']
+            ),
             orchestrator_version=dict(
                 type='str',
             ),
@@ -406,6 +424,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
         self.vnet_subnet_id = None
         self.availability_zones = None
         self.os_type = None
+        self.os_sku = None
         self.orchestrator_version = None
         self.type_properties_type = None
         self.enable_auto_scaling = None
@@ -493,6 +512,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             vnet_subnet_id=agent_pool.vnet_subnet_id,
             max_pods=agent_pool.max_pods,
             os_type=agent_pool.os_type,
+            os_sku=agent_pool.os_sku,
             max_count=agent_pool.max_count,
             min_count=agent_pool.min_count,
             enable_auto_scaling=agent_pool.enable_auto_scaling,
