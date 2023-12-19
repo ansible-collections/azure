@@ -63,10 +63,6 @@
       #!/bin/sh
       echo "custom_data was executed" > /tmp/custom_data.txt
 
-- name: Pause for 10 mimutes to VM updating
-  ansible.builtin.command: sleep 600
-  changed_when: true
-
 - name: Ensure VM was created properly
   ansible.builtin.assert:
     that:
