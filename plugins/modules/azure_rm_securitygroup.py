@@ -44,8 +44,11 @@ options:
                 type: str
                 choices:
                     - Udp
+                    - UDP
                     - Tcp
+                    - TCP
                     - Icmp
+                    - ICMP
                     - "*"
                 default: "*"
             source_port_range:
@@ -722,7 +725,7 @@ def create_network_security_group_dict(nsg):
 rule_spec = dict(
     name=dict(type='str', required=True),
     description=dict(type='str'),
-    protocol=dict(type='str', choices=['Udp', 'Tcp', 'Icmp', '*'], default='*'),
+    protocol=dict(type='str', choices=['Udp', 'UDP', 'Tcp', 'TCP', 'Icmp', 'ICMP', '*'], default='*'),
     source_port_range=dict(type='raw', default='*'),
     destination_port_range=dict(type='raw', default='*'),
     source_address_prefix=dict(type='raw', default='*'),
