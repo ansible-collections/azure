@@ -316,7 +316,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             self.inventory.add_host(inventory_hostname)
             # FUTURE: configurable default IP list? can already do this via hostvar_expressions
             self.inventory.set_variable(inventory_hostname, "ansible_host",
-                                        next(chain([h.hostvars['public_ip_address'][0]['ipv4_address']], h.hostvars['private_ipv4_addresses']), None))
+                                        next(chain([h.hostvars['public_ipv4_address']], h.hostvars['private_ipv4_addresses']), None))
             for k, v in iteritems(h.hostvars):
                 # FUTURE: configurable hostvar prefix? Makes docs harder...
                 self.inventory.set_variable(inventory_hostname, k, v)
@@ -556,6 +556,7 @@ class AzureHost(object):
             security_group_id=[],
             security_group=[],
             public_ip_address=[],
+            public_ipv4_address=[],
             public_dns_hostnames=[],
             private_ipv4_addresses=[],
             id=self._vm_model['id'],
@@ -593,6 +594,7 @@ class AzureHost(object):
                     pip_id = ipc['properties'].get('publicIPAddress', {}).get('id')
                     if pip_id and pip_id in nic.public_ips:
                         pip = nic.public_ips[pip_id]
+                        new_hostvars['public_ipv4_address'].append(pip._pip_model['properties'].get('ipAddress', None))
                         new_hostvars['public_ip_address'].append({
                             'id': pip_id,
                             'name': pip._pip_model['name'],
