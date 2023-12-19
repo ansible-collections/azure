@@ -1,5 +1,16 @@
 # Change Log
 
+## v2.1.1 (2023-12-19)
+
+### FEATURE ENHANCEMENT
+  - **/task/main.yml: Remove unneed waits in test cases ([#1374](https://github.com/ansible-collections/azure/pull/1374))
+  - azure_rm_securitygroup: Add upper letter protocol to security group ([#1381](https://github.com/ansible-collections/azure/pull/1381))
+  - Update min Ansible core version to v2.14 - Ansible v2.13 EOF Nov.6 2023 ([#1382](https://github.com/ansible-collections/azure/pull/1382))
+
+### BUG FIXING
+  - plugins/inventory/azure_rm.py: Restore the return of 'public_ipv4_address' and fix the bug that the VM does not have a public IP address ([#1379](https://github.com/ansible-collections/azure/pull/1379))
+
+
 ## v2.1.0 (2023-12-13)
 
 ### NEW MODULES
