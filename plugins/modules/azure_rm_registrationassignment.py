@@ -141,11 +141,9 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
             ),
             properties=dict(
                 type='dict',
-                disposition='/properties',
                 options=dict(
                     registration_definition_id=dict(
                         type='str',
-                        disposition='registration_definition_id',
                         required=True
                     )
                 )
@@ -199,12 +197,10 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                modifiers = {}
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                self.results['modifiers'] = modifiers
-                self.results['compare'] = []
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
+                if self.body.get('properties') is not None and self.body.get('properties') != old_response.get('properties'):
                     self.to_do = Actions.Update
+                else:
+                    self.body['properties'] = old_response.get('properties')
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.results['changed'] = True
