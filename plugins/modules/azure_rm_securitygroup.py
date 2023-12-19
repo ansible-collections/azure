@@ -167,8 +167,11 @@ options:
                 type: str
                 choices:
                     - Udp
+                    - UDP
                     - Tcp
+                    - TCP
                     - Icmp
+                    - ICMP
                     - "*"
                 default: "*"
             source_port_range:
