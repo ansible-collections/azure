@@ -334,7 +334,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
                     else:
                         self.body[key] = old_response[key]
 
-                update_tags, new_tags = self.update_tags(old_response.get('tags'))
+                update_tags, self.tags = self.update_tags(old_response.get('tags'))
                 if update_tags:
                     self.to_do = Actions.Update_tags
 
@@ -347,7 +347,7 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             self.results['changed'] = True
             if self.check_mode:
                 return self.results
-            response = self.update_resource_tags(dict(tags=new_tags))
+            response = self.update_resource_tags(dict(tags=self.tags))
         elif self.to_do == Actions.Delete:
             self.results['changed'] = True
             if self.check_mode:
