@@ -116,6 +116,7 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
         self.to_do = Actions.NoAction
 
         self.body = {}
+        self.body['properties'] = {}
         self.query_parameters = {}
         self.query_parameters['api-version'] = '2019-07-01'
         self.header_parameters = {}
@@ -130,9 +131,10 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                self.body[key] = kwargs[key]
-
-        self.inflate_parameters(self.module_arg_spec, self.body, 0)
+                if key == 'description':
+                    self.body['properties']['description'] = kwargs[key]
+                else:
+                    self.body[key] = kwargs[key]
 
         old_response = None
         response = None

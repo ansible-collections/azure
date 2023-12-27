@@ -177,7 +177,7 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
                 if key == 'publisher_name':
                     self.body['properties']['publisherName'] = kwargs[key]
                 elif key == 'publisher_email':
-                    self.body['properties']['publisherName'] = kwargs[key]
+                    self.body['properties']['publisherEmail'] = kwargs[key]
                 elif key == 'sku_name':
                     self.body['sku']['name'] = kwargs[key]
                 elif key == 'sku_capacity':

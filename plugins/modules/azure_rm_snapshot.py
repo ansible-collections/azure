@@ -274,15 +274,20 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                if self.body.get('sku') is not None and self.body['sku'] != old_response['sku']:
+                if self.body.get('sku') is not None and\
+                    not all(self.body['sku'][item] == old_response['sku'].get(item) for item in self.body['sku'].keys()):
                     self.to_do = Actions.Update
-                else:
-                    self.body['sku'] = old_response['sku']
-                if self.body['properties'].get('incremental') is not None and self.body['properties']['incremental'] != old_response['properties']['incremental']:
+                if self.body['properties'].get('incremental') is not None and\
+                    self.body['properties']['incremental'] != old_response['properties']['incremental']:
                     self.to_do = Actions.Update
-                else:
-                    self.body['properties']['incremental'] = old_response['properties']['incremental']
-                update_tags, self.body['tags'] = self.update_tags(old_response['tags'])
+                if self.body['properties'].get('osType') is not None and\
+                    self.body['properties']['osType'] != old_response['properties'].get('osType'):
+                    self.to_do = Actions.Update
+                if self.body['properties'].get('creationData') is not None and\
+                    not all(self.body['properties']['creationData'][item] == old_response['properties']['creationData'].get(item) for item in self.body['properties']['creationData'].keys()):
+                    self.to_do = Actions.Update
+
+                update_tags, self.body['tags'] = self.update_tags(old_response.get('tags'))
                 if update_tags:
                     self.to_do = Actions.Update
 
@@ -322,27 +327,15 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
         # self.log('Creating / Updating the Snapshot instance {0}'.format(self.))
         response = None
         try:
-            if self.to_do == Actions.Create:
-                response = self.mgmt_client.query(url=self.url,
-                                                  method='PUT',
-                                                  query_parameters=self.query_parameters,
-                                                  header_parameters=self.header_parameters,
-                                                  body=self.body,
-                                                  expected_status_codes=self.status_code,
-                                                  polling_timeout=600,
-                                                  polling_interval=30)
-
-            else:
-                response = self.mgmt_client.query(url=self.url,
-                                                  method='PATCH',
-                                                  query_parameters=self.query_parameters,
-                                                  header_parameters=self.header_parameters,
-                                                  body=self.body,
-                                                  expected_status_codes=self.status_code,
-                                                  polling_timeout=600,
-                                                  polling_interval=30)
+            response = self.mgmt_client.query(url=self.url,
+                                              method='PUT',
+                                              query_parameters=self.query_parameters,
+                                              header_parameters=self.header_parameters,
+                                              body=self.body,
+                                              expected_status_codes=self.status_code,
+                                              polling_timeout=600,
+                                              polling_interval=30)
         except Exception as exc:
-            self.fail(exc.text())
             self.log('Error attempting to create the Snapshot instance.')
             self.fail('Error creating the Snapshot instance: {0}'.format(str(exc)))
 

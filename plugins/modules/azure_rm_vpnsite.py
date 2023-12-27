@@ -506,14 +506,10 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
                 if self.body.get('virtual_wan') is not None and self.body['virtual_wan'] != old_response.get('virtual_wan'):
                     self.to_do = Actions.Update
                 for key in self.body.keys():
-                    if key == 'tags':
-                        pass
-                    elif key == 'address_space':
+                    if key == 'address_space':
                         if old_response.get('address_space') is None or\
-                           len(self.body['address_space']['address_prefixes']) > len(old_response['address_space']['address_prefixes']) or\
-                           not all(key in old_response['address_space']['address_prefixes'] for key in self.body['address_space']['address_prefixes']):
-                            self.to_do = Actions.Update
-                        else:
+                            len(self.body['address_space']['address_prefixes']) > len(old_response['address_space']['address_prefixes']) or\
+                            not all(key in old_response['address_space']['address_prefixes'] for key in self.body['address_space']['address_prefixes']):
                             self.to_do = Actions.Update
                     elif key == 'device_properties':
                         if old_response.get('device_properties') is None or\
@@ -531,13 +527,14 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
                         if old_response.get('bgp_properties') is None:
                             self.to_do = Actions.Update
                         else:
-                            for key in self.body['bgp_properties'].keys():
-                                if key != 'bgp_peering_addresses' and self.body['bgp_properties'][key] != old_response['bgp_properties'].get(key):
-                                    self.to_do = Actions.Update
+                            for item in self.body['bgp_properties'].keys():
+                                if item != 'bgp_peering_addresses' and item != 'peer_weight':
+                                    if self.body['bgp_properties'][item] != old_response['bgp_properties'].get(item):
+                                        self.to_do = Actions.Update
                                 else:
                                     if self.body['bgp_properties'].get('bgp_peering_addresses') is not None:
                                         if old_response['bgp_properties'].get('bgp_peering_addresses') is None or\
-                                            not all(self.body['bgp_properties']['bgp_peering_addresses'][key] != old_response['bgp_properties']['bgp_peering_addresses'].get(key) for key in ['ipconfiguration_id', 'custom_bgp_ip_addresses']):
+                                            not all(self.body['bgp_properties']['bgp_peering_addresses'][value] == old_response['bgp_properties']['bgp_peering_addresses'].get(value) for value in ['ipconfiguration_id', 'custom_bgp_ip_addresses']):
                                             self.to_do = Actions.Update
 
                     elif self.body[key] != old_response.get(key):

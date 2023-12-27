@@ -167,12 +167,14 @@ class AzureRMRegistrationAssignmentInfo(AzureRMModuleBase):
     def format_item(self, item):
         if hasattr(item, 'as_dict'):
             return [item.as_dict()]
-        else:
+        elif item is not None:
             result = []
             items = list(item)
             for tmp in items:
                 result.append(tmp.as_dict())
             return result
+        else:
+            return []
 
 
 def main():
