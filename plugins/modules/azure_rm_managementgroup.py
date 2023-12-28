@@ -246,7 +246,6 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
         self.status_code = [200, 201, 202]
         self.to_do = Actions.NoAction
         self.body = {}
-        self.body['properties'] = {}
         self.query_parameters = {}
         self.query_parameters['api-version'] = '2018-03-01-preview'
         self.header_parameters = {}
@@ -261,6 +260,7 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif key == 'properties' and kwargs[key] is not None:
+                self.body['properties'] = {}
                 for item in kwargs['properties'].keys():
                     if item == 'tenant_id':
                         self.body['properties']['tenantId'] = kwargs['properties'][item]
@@ -306,9 +306,8 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
                         if old_response.get('properties') is None or\
                             not all(self.body['properties'][item] == old_response['properties'].get(item) for item in self.body['properties'].keys()):
                             self.to_do = Actions.Update
-                    else:
-                        if self.body[key] != old_response.get(key):
-                            self.to_do = Actions.Update
+                    elif self.body[key] != old_response.get(key):
+                        self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.log('Need to Create / Update the ManagementGroup instance')

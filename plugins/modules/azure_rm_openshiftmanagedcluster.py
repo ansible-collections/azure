@@ -570,7 +570,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
         self.to_do = Actions.NoAction
 
         self.body = {}
-        self.body['properties'] = None
+        self.body['properties'] = {}
         self.query_parameters = {}
         self.header_parameters = {}
 
@@ -589,13 +589,13 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                 if key == 'cluster_profile':
                     self.body['properties']['clusterProfile'] = {}
                     for item in ['pull_secret', 'cluster_resource_group_id', 'domain', 'version']:
-                        if item == 'pull_secret' and kwargs[key].get(item) is None:
+                        if item == 'pull_secret':
                             self.body['properties']['clusterProfile']['pullSecret'] = kwargs[key].get(item)
-                        elif item == 'cluster_resource_group_id' and kwargs[key].get(item) is None:
+                        elif item == 'cluster_resource_group_id':
                             self.body['properties']['clusterProfile']['resourceGroupId'] = kwargs[key].get(item)
-                        elif item == 'domain' and kwargs[key].get(item) is None:
+                        elif item == 'domain':
                             self.body['properties']['clusterProfile']['domain'] = kwargs[key].get(item)
-                        elif item == 'version' and kwargs[key].get(item) is None:
+                        elif item == 'version':
                             self.body['properties']['clusterProfile']['version'] = kwargs[key].get(item)
                 elif key == 'service_principal_profile':
                     self.body['properties']['servicePrincipalProfile'] = {}
@@ -610,24 +610,22 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                             self.body['properties']['networkProfile']['serviceCidr'] = kwargs[key].get(item)
                 elif key == 'master_profile':
                     self.body['properties']['masterProfile'] = {}
-                    for item in kwargs[key].keys():
-                        if item == 'subnet_id' and kwargs[key].get('subnet_id') is not None:
-                            self.body['properties']['masterProfile']['subnetId'] = kwargs[key].get('subnet_id')
-                        elif item == 'vm_size':
-                            self.body['properties']['masterProfile']['vmSize'] = kwargs[key].get('vm_size')
+                    if 'subnet_id' in kwargs[key].keys():
+                        self.body['properties']['masterProfile']['subnetId'] = kwargs[key].get('subnet_id')
+                    self.body['properties']['masterProfile']['vmSize'] = kwargs[key].get('vm_size')
                 elif key == 'worker_profiles':
-                    self.body['properties']['workerProfiles'] = {}
-                    for item in kwargs[key].keys():
-                        if item == 'name':
-                            self.body['properties']['workerProfiles']['name'] = kwargs[key].get('name')
-                        elif item == 'count':
-                            self.body['properties']['workerProfiles']['count'] = kwargs[key].get('count')
-                        elif item == 'vm_size':
-                            self.body['properties']['workerProfiles']['vmSize'] = kwargs[key].get('vm_size')
-                        elif item == 'disk_size':
-                            self.body['properties']['workerProfiles']['diskSizeGB'] = kwargs[key].get('disk_size')
-                        elif kwargs[key].get('subnet_id') is not None:
-                            self.body['properties']['workerProfiles']['subnetId'] = kwargs[key].get('subnetId')
+                    self.body['properties']['workerProfiles'] = []
+                    for item in kwargs[key]:
+                        worker_profile = {}
+                        if item.get('name') is not None:
+                            worker_profile['name'] = item['name']
+                        if item.get('subnet_id') is not None:
+                            worker_profile['subnetId'] = item['subnet_id']
+                        worker_profile['count'] = item.get('count')
+                        worker_profile['vmSize'] = item.get('vm_size')
+                        worker_profile['diskSizeGB'] = item.get('disk_size')
+
+                        self.body['properties']['workerProfiles'].append(worker_profile)
                 elif key == 'api_server_profile':
                     self.body['properties']['apiserverProfile'] = kwargs[key]
                 elif key == 'ingress_profiles':
