@@ -475,42 +475,42 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('eula') is not None and self.body['properties']['eula'] != old_response['properties'].get('eula'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('privacyStatementUri') is not None and\
+                elif self.body['properties'].get('privacyStatementUri') is not None and \
                    self.body['properties']['privacyStatementUri'] != old_response['properties'].get('privacyStatementUri'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('releaseNoteUri') is not None and\
+                elif self.body['properties'].get('releaseNoteUri') is not None and \
                    self.body['properties']['releaseNoteUri'] != old_response['properties'].get('releaseNoteUri'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('osType') is not None and\
+                elif self.body['properties'].get('osType') is not None and \
                    self.body['properties']['osType'].lower() != old_response['properties'].get('osType', '').lower():
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('osState') is not None and\
+                elif self.body['properties'].get('osState') is not None and \
                    self.body['properties']['osState'].lower() != old_response['properties'].get('osState', '').lower():
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('hyperVGeneration') is not None and\
+                elif self.body['properties'].get('hyperVGeneration') is not None and \
                    self.body['properties']['hyperVGeneration'] != old_response['properties'].get('hyperVGeneration'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('endOfLifeDate') is not None and\
+                elif self.body['properties'].get('endOfLifeDate') is not None and \
                    self.body['properties']['endOfLifeDate'] != old_response['properties'].get('endOfLifeDate'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('identifier') is not None and\
-                   self.body['properties']['identifier'].get('offer') != old_response['properties']['identifier'].get('offer') or \
+                elif self.body['properties'].get('identifier') is not None and \
+                  self.body['properties']['identifier'].get('offer') != old_response['properties']['identifier'].get('offer') or \
                    self.body['properties']['identifier'].get('sku') != old_response['properties']['identifier'].get('sku'):
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('recommended') is not None:
-                    if self.body['properties']['recommended'].get('vCPUS') is not None and\
-                       not all(self.body['properties']['recommended']['vCPUS'].get(item) == old_response['properties']['recommended']['vCPUS'].get(item) \
+                    if self.body['properties']['recommended'].get('vCPUS') is not None and \
+                      not all(self.body['properties']['recommended']['vCPUS'].get(item) == old_response['properties']['recommended']['vCPUS'].get(item)
                        for item in self.body['properties']['recommended']['vCPUS'].keys()):
                         self.to_do = Actions.Update
-                    elif self.body['properties']['recommended'].get('memory') is not None and\
-                       not all(self.body['properties']['recommended']['memory'].get(item) == old_response['properties']['recommended']['memory'].get(item) \
+                    elif self.body['properties']['recommended'].get('memory') is not None and \
+                      not all(self.body['properties']['recommended']['memory'].get(item) == old_response['properties']['recommended']['memory'].get(item)
                        for item in self.body['properties']['recommended']['memory'].keys()):
                         self.to_do = Actions.Update
                 elif self.body['properties'].get('disallowed') is not None and \
                    self.body['properties']['disallowed'].get('diskTypes') != old_response['properties']['disallowed'].get('diskTypes'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('purchasePlan') is not None and\
-                   not all(self.body['properties']['purchasePlan'][item] == old_response['properties']['purchasePlan'].get(item) \
+                elif self.body['properties'].get('purchasePlan') is not None and \
+                  not all(self.body['properties']['purchasePlan'][item] == old_response['properties']['purchasePlan'].get(item)
                    for item in self.body['properties']['purchasePlan'].keys()):
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('features') is not None:

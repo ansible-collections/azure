@@ -533,8 +533,9 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                                                                              kwargs[key]['source_image'].get('resource_group') +
                                                                                              '/providers/Microsoft.Compute/images/' +
                                                                                              kwargs[key]['source_image'].get('name'))
-                            elif kwargs[key]['source_image'].get('resource_group') is not None and kwargs[key]['source_image'].get('gallery_name') is not None and\
-                                kwargs[key]['source_image'].get('gallery_image_name') is not None and kwargs[key]['source_image'].get('version') is not None:
+                            elif kwargs[key]['source_image'].get('resource_group') is not None and \
+                               kwargs[key]['source_image'].get('gallery_name') is not None and \
+                               kwargs[key]['source_image'].get('gallery_image_name') is not None and kwargs[key]['source_image'].get('version') is not None:
                                 self.body['properties']['storageProfile']['source']['id'] = ('/subscriptions/' +
                                                                                              self.subscription_id +
                                                                                              '/resourceGroups/' +
@@ -560,13 +561,13 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                             elif isinstance(kwargs[key]['os_disk']['source'], dict):
                                 if kwargs[key]['os_disk']['source'].get('id') is not None:
                                     self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = kwargs[key]['os_disk']['source'].get('id')
-                                if kwargs[key]['os_disk']['source'].get('resource_gorup') is not None and \
+                                if kwargs[key]['os_disk']['source'].get('resource_group') is not None and \
                                    kwargs[key]['os_disk']['source'].get('name') is not None:
-                                    resource_group = kwargs[key]['os_disk']['source'].get('resource_gorup')
+                                    resource_group = kwargs[key]['os_disk']['source'].get('resource_group')
                                     self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = ('/subscriptions/' +
                                                                                                                 self.subscription_id +
                                                                                                                 '/resourceGroups/' +
-                                                                                                                resource_gorup +
+                                                                                                                resource_group +
                                                                                                                 '/providers/Microsoft.Compute/snapshots/' +
                                                                                                                 kwargs[key]['os_disk']['source'].get('name'))
                                 else:
@@ -750,10 +751,10 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                         if key == 'targetRegions':
                             if len(self.body['properties']['publishingProfile'][key]) != len(old_response['properties']['publishingProfile'][key]):
                                 self.to_do = Actions.Update
-                        if key == 'endOfLifeDate':
+                        elif key == 'endOfLifeDate':
                             if self.body['properties']['publishingProfile'][key].lower() != old_response['properties']['publishingProfile'][key].lower():
                                 self.to_do = Actions.Update
-                        if self.body['properties']['publishingProfile'].get(key) != old_response['properties']['publishingProfile'].get(key):
+                        elif self.body['properties']['publishingProfile'].get(key) != old_response['properties']['publishingProfile'].get(key):
                             self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):

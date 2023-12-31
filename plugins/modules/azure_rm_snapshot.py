@@ -274,17 +274,17 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                if self.body.get('sku') is not None and\
+                if self.body.get('sku') is not None and \
                    not all(self.body['sku'][item] == old_response['sku'].get(item) for item in self.body['sku'].keys()):
                     self.to_do = Actions.Update
-                if self.body['properties'].get('incremental') is not None and\
+                if self.body['properties'].get('incremental') is not None and \
                    self.body['properties']['incremental'] != old_response['properties']['incremental']:
                     self.to_do = Actions.Update
-                if self.body['properties'].get('osType') is not None and\
+                if self.body['properties'].get('osType') is not None and \
                    self.body['properties']['osType'] != old_response['properties'].get('osType'):
                     self.to_do = Actions.Update
-                if self.body['properties'].get('creationData') is not None and\
-                   not all(self.body['properties']['creationData'][item] == old_response['properties']['creationData'].get(item) \
+                if self.body['properties'].get('creationData') is not None and \
+                   not all(self.body['properties']['creationData'][item] == old_response['properties']['creationData'].get(item)
                    for item in self.body['properties']['creationData'].keys()):
                     self.to_do = Actions.Update
 

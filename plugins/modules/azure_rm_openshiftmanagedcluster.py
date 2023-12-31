@@ -432,15 +432,12 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                     ),
                     cluster_resource_group_id=dict(
                         type='str',
-                        updatable=False,
                     ),
                     domain=dict(
                         type='str',
-                        updatable=False,
                     ),
                     version=dict(
                         type='str',
-                        updatable=False,
                     )
                 ),
             ),

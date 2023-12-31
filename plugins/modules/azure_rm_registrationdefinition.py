@@ -364,13 +364,13 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
             else:
                 if self.body.get('plan') is not None:
                     if old_response.get('plan') is not None and \
-                       not all(self.body['plan'][item] == old_response['plan'].get(item) \
+                       not all(self.body['plan'][item] == old_response['plan'].get(item)
                        for item in self.body['plan'].keys()):
                         self.to_do = Actions.Update
                     else:
                         self.to_do = Actions.Update
                 elif self.body.get('properties') is not None and \
-                   not all(self.body['properties'][item] == old_response['properties'].get(item) \
+                   not all(self.body['properties'][item] == old_response['properties'].get(item)
                    for item in self.body['properties'].keys()):
                     self.to_do = Actions.Update
 

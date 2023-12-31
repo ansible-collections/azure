@@ -587,10 +587,10 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                 elif self.body['properties'].get('authenticationSettings') is not None:
                     if old_response['properties'].get('authenticationSettings') is None:
                         self.to_do = Actions.Update
-                    elif self.body['properties']['authenticationSettings'].get('oAuth2') is not None and\
+                    elif self.body['properties']['authenticationSettings'].get('oAuth2') is not None and \
                        self.body['properties']['authenticationSettings'].get('oAuth2') != old_response['authenticationSettings'].get('oAuth2'):
                         self.to_do = Actions.Update
-                    elif self.body['properties']['authenticationSettings'].get('openid') is not None and\
+                    elif self.body['properties']['authenticationSettings'].get('openid') is not None and \
                        self.body['properties']['authenticationSettings'].get('openid') != old_response['authenticationSettings'].get('openid'):
                         self.to_do = Actions.Update
                 elif self.body['properties'].get('subscriptionKeyParameterNames') is not None:
