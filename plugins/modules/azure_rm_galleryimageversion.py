@@ -560,11 +560,13 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                             elif isinstance(kwargs[key]['os_disk']['source'], dict):
                                 if kwargs[key]['os_disk']['source'].get('id') is not None:
                                     self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = kwargs[key]['os_disk']['source'].get('id')
-                                if kwargs[key]['os_disk']['source'].get('resource_gorup') is not None and kwargs[key]['os_disk']['source'].get('name') is not None:
+                                if kwargs[key]['os_disk']['source'].get('resource_gorup') is not None and \
+                                   kwargs[key]['os_disk']['source'].get('name') is not None:
+                                    resource_group = kwargs[key]['os_disk']['source'].get('resource_gorup')
                                     self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = ('/subscriptions/' +
                                                                                                                 self.subscription_id +
                                                                                                                 '/resourceGroups/' +
-                                                                                                                kwargs[key]['os_disk']['source'].get('resource_gorup') +
+                                                                                                                resource_gorup +
                                                                                                                 '/providers/Microsoft.Compute/snapshots/' +
                                                                                                                 kwargs[key]['os_disk']['source'].get('name'))
                                 else:
@@ -627,26 +629,21 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                     if item['encryption'].get('os_disk_image') is not None:
                                         target_regions['encryption']['osDiskImage'] = {}
                                         if item['encryption']['os_disk_image'].get('disk_encryption_set_id') is not None:
-                                            target_regions['encryption']['osDiskImage']['diskEncryptionSetId'] = \
-                                            item['encryption']['os_disk_image']['disk_encryption_set_id']
+                                            target_regions['encryption']['osDiskImage']['diskEncryptionSetId'] = item['encryption']['os_disk_image']['disk_encryption_set_id']
                                         if item['encryption']['os_disk_image'].get('security_profile') is not None:
                                             target_regions['encryption']['osDiskImage']['securityProfile'] = {}
                                             if item['encryption']['os_disk_image']['security_profile'].get('secure_vm_disk_encryption_set_id') is not None:
-                                                target_regions['encryption']['osDiskImage']['securityProfile']['secureVMDiskEncryptionSetId'] = \
-                                                item['encryption']['os_disk_image']['security_profile']['secure_vm_disk_encryption_set_id']
+                                                target_regions['encryption']['osDiskImage']['securityProfile']['secureVMDiskEncryptionSetId'] = item['encryption']['os_disk_image']['security_profile']['secure_vm_disk_encryption_set_id']
 
                                             if item['encryption']['os_disk_image']['security_profile'].get('confidential_vm_encryption_type') is not None:
                                                 target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType'] = {}
                                                 security = item['encryption']['os_disk_image']['security_profile']
                                                 if security['confidential_vm_encryption_type'].get('encrypted_vm_guest_state_only_with_pmk') is not None:
-                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedVMGuestStateOnlyWithPmk'] = \
-                                                    security['confidential_vm_encryption_type'].get('encrypted_vm_guest_state_only_with_pmk')
+                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedVMGuestStateOnlyWithPmk'] = security['confidential_vm_encryption_type'].get('encrypted_vm_guest_state_only_with_pmk')
                                                 if security['confidential_vm_encryption_type'].get('encrypted_with_cmk') is not None:
-                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedWithCmk'] = \
-                                                    security['confidential_vm_encryption_type'].get('encrypted_with_cmk')
+                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedWithCmk'] = security['confidential_vm_encryption_type'].get('encrypted_with_cmk')
                                                 if security['confidential_vm_encryption_type'].get('encrypted_with_pmk') is not None:
-                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedWithPmk'] = \
-                                                    security['confidential_vm_encryption_type'].get('encrypted_with_pmk')
+                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedWithPmk'] = security['confidential_vm_encryption_type'].get('encrypted_with_pmk')
                             self.body['properties']['publishingProfile']['targetRegions'].append(target_regions)
                     if kwargs[key].get('managed_image') is not None:
                         if isinstance(kwargs[key]['managed_image'], str):
@@ -751,9 +748,9 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                 if self.body['properties'].get('publishingProfile') is not None:
                     for key in self.body['properties']['publishingProfile'].keys():
                         if key == 'targetRegions':
-                           if len(self.body['properties']['publishingProfile'][key]) != len(old_response['properties']['publishingProfile'][key]):
+                            if len(self.body['properties']['publishingProfile'][key]) != len(old_response['properties']['publishingProfile'][key]):
                                 self.to_do = Actions.Update
-                        elif key == 'endOfLifeDate':
+                        if key == 'endOfLifeDate':
                             if self.body['properties']['publishingProfile'][key].lower() != old_response['properties']['publishingProfile'][key].lower():
                                 self.to_do = Actions.Update
                         if self.body['properties']['publishingProfile'].get(key) != old_response['properties']['publishingProfile'].get(key):

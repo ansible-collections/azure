@@ -284,8 +284,8 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
                    self.body['properties']['osType'] != old_response['properties'].get('osType'):
                     self.to_do = Actions.Update
                 if self.body['properties'].get('creationData') is not None and\
-                   not all(self.body['properties']['creationData'][item] == \
-                   old_response['properties']['creationData'].get(item) for item in self.body['properties']['creationData'].keys()):
+                   not all(self.body['properties']['creationData'][item] == old_response['properties']['creationData'].get(item) \
+                   for item in self.body['properties']['creationData'].keys()):
                     self.to_do = Actions.Update
 
                 update_tags, self.body['tags'] = self.update_tags(old_response.get('tags'))

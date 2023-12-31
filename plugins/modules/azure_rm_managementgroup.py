@@ -304,8 +304,8 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
                 for key in self.body.keys():
                     if key == 'properties':
                         if old_response.get('properties') is None or \
-                           not all(self.body['properties'][item] == \
-                           old_response['properties'].get(item) for item in self.body['properties'].keys()):
+                           not all(self.body['properties'][item] == old_response['properties'].get(item) \
+                           for item in self.body['properties'].keys()):
                             self.to_do = Actions.Update
                     elif self.body[key] != old_response.get(key):
                         self.to_do = Actions.Update
