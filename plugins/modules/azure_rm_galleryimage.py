@@ -495,23 +495,23 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('identifier') is not None and \
                   self.body['properties']['identifier'].get('offer') != old_response['properties']['identifier'].get('offer') or \
-                   self.body['properties']['identifier'].get('sku') != old_response['properties']['identifier'].get('sku'):
+                  self.body['properties']['identifier'].get('sku') != old_response['properties']['identifier'].get('sku'):
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('recommended') is not None:
                     if self.body['properties']['recommended'].get('vCPUS') is not None and \
                       not all(self.body['properties']['recommended']['vCPUS'].get(item) == old_response['properties']['recommended']['vCPUS'].get(item)
-                       for item in self.body['properties']['recommended']['vCPUS'].keys()):
+                              for item in self.body['properties']['recommended']['vCPUS'].keys()):
                         self.to_do = Actions.Update
                     elif self.body['properties']['recommended'].get('memory') is not None and \
                       not all(self.body['properties']['recommended']['memory'].get(item) == old_response['properties']['recommended']['memory'].get(item)
-                       for item in self.body['properties']['recommended']['memory'].keys()):
+                              for item in self.body['properties']['recommended']['memory'].keys()):
                         self.to_do = Actions.Update
                 elif self.body['properties'].get('disallowed') is not None and \
                    self.body['properties']['disallowed'].get('diskTypes') != old_response['properties']['disallowed'].get('diskTypes'):
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('purchasePlan') is not None and \
                   not all(self.body['properties']['purchasePlan'][item] == old_response['properties']['purchasePlan'].get(item)
-                   for item in self.body['properties']['purchasePlan'].keys()):
+                          for item in self.body['properties']['purchasePlan'].keys()):
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('features') is not None:
                     if old_response['properties'].get('features') is None:
