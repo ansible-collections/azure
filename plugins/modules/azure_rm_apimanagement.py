@@ -499,16 +499,19 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                         self.body['properties']['authenticationSettings']['oAuth2'] = {}
                         for item in kwargs[key]['o_auth2'].keys():
                             if item == 'authorization_server_id':
-                                self.body['properties']['authenticationSettings']['oAuth2']['authorizationServerId'] = kwargs[key]['o_auth2']['authorization_server_id']
+                                authorization_id = kwargs[key]['o_auth2']['authorization_server_id']
+                                self.body['properties']['authenticationSettings']['oAuth2']['authorizationServerId'] = authorization_id
                             elif item == 'scope':
                                 self.body['properties']['authenticationSettings']['oAuth2']['scope'] = kwargs[key]['o_auth2']['scope']
                     elif kwargs[key].get('openid') is not None:
                         self.body['properties']['authenticationSettings']['openid'] = {}
                         for item in kwargs[key]['openid'].keys():
                             if item == 'openid_provider_id' and kwargs[key]['openid'].get('openid_provider_id') is not None:
-                                self.body['properties']['authenticationSettings']['openid']['openidProviderId'] = kwargs[key]['openid'].get('openid_provider_id')
+                                openid_pro = kwargs[key]['openid'].get('openid_provider_id')
+                                self.body['properties']['authenticationSettings']['openid']['openidProviderId'] = openid_pro
                             elif item == 'bearer_token_sending_methods' and kwargs[key]['openid'].get('bearer_token_sending_methods') is not None:
-                                self.body['properties']['authenticationSettings']['openid']['bearerTokenSendingMethods'] = kwargs[key]['openid']['bearer_token_sending_methods']
+                                bearer_token = kwargs[key]['openid']['bearer_token_sending_methods']
+                                self.body['properties']['authenticationSettings']['openid']['bearerTokenSendingMethods'] = bearer_token
                 elif key == 'subscription_key_parameter_names':
                     self.body['properties']['subscriptionKeyParameterNames'] = kwargs[key]
                 elif key == 'type':
@@ -578,45 +581,58 @@ class AzureApiManagement(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                if self.body['properties'].get('description') is not None and self.body['properties']['description'] != old_response['properties']['description']:
+                if self.body['properties'].get('description') is not None and \
+                   self.body['properties']['description'] != old_response['properties']['description']:
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('authenticationSettings') is not None:
                     if old_response['properties'].get('authenticationSettings') is None:
                         self.to_do = Actions.Update
                     elif self.body['properties']['authenticationSettings'].get('oAuth2') is not None and\
-                        self.body['properties']['authenticationSettings'].get('oAuth2') != old_response['authenticationSettings'].get('oAuth2'):
+                       self.body['properties']['authenticationSettings'].get('oAuth2') != old_response['authenticationSettings'].get('oAuth2'):
                         self.to_do = Actions.Update
                     elif self.body['properties']['authenticationSettings'].get('openid') is not None and\
-                        self.body['properties']['authenticationSettings'].get('openid') != old_response['authenticationSettings'].get('openid'):
+                       self.body['properties']['authenticationSettings'].get('openid') != old_response['authenticationSettings'].get('openid'):
                         self.to_do = Actions.Update
                 elif self.body['properties'].get('subscriptionKeyParameterNames') is not None:
                     if old_response['properties'].get('subscriptionKeyParameterNames') is None:
                         self.to_do = Actions.Update
-                    elif not all(self.body['properties']['subscriptionKeyParameterNames'].get(item) == old_response['properties']['subscriptionKeyParameterNames'].get(item) for item in self.body['properties']['subscriptionKeyParameterNames'].keys()):
+                    elif not all(self.body['properties']['subscriptionKeyParameterNames'].get(item) == \
+                       old_response['properties']['subscriptionKeyParameterNames'].get(item) for item in self.body['properties']['subscriptionKeyParameterNames'].keys()):
                         self.to_do = Actions.Update
-                elif self.body['properties'].get('apiRevision') is not None and self.body['properties']['apiRevision'] != old_response['properties'].get('apiRevision'):
+                elif self.body['properties'].get('apiRevision') is not None and \
+                   self.body['properties']['apiRevision'] != old_response['properties'].get('apiRevision'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('apiVersion') is not None and self.body['properties']['apiVersion'] != old_response['properties'].get('apiVersion'):
+                elif self.body['properties'].get('apiVersion') is not None and \
+                   self.body['properties']['apiVersion'] != old_response['properties'].get('apiVersion'):
                     self.to_do == Actions.Update
-                elif self.body['properties'].get('isCurrent') is not None and self.body['properties']['isCurrent'] != old_response['properties'].get('isCurrent'):
+                elif self.body['properties'].get('isCurrent') is not None and \
+                   self.body['properties']['isCurrent'] != old_response['properties'].get('isCurrent'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('apiRevisionDescription') is not None and self.body['properties']['apiRevisionDescription'] != old_response['properties'].get('apiRevisionDescription'):
+                elif self.body['properties'].get('apiRevisionDescription') is not None and self.body['properties']['apiRevisionDescription'] != \
+                   old_response['properties'].get('apiRevisionDescription'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('apiVersionDescription') is not None and self.body['properties']['apiVersionDescription'] != old_response['properties'].get('apiVersionDescription'):
+                elif self.body['properties'].get('apiVersionDescription') is not None and \
+                   self.body['properties']['apiVersionDescription'] != old_response['properties'].get('apiVersionDescription'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('apiVersionSetId') is not None and self.body['properties']['apiVersionSetId'] != old_response['properties'].get('apiVersionSetId'):
+                elif self.body['properties'].get('apiVersionSetId') is not None and \
+                   self.body['properties']['apiVersionSetId'] != old_response['properties'].get('apiVersionSetId'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('subscriptionRequired') is not None and self.body['properties']['subscriptionRequired'] != old_response['properties'].get('subscriptionRequired'):
+                elif self.body['properties'].get('subscriptionRequired') is not None and \
+                   self.body['properties']['subscriptionRequired'] != old_response['properties'].get('subscriptionRequired'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('sourceApiId') is not None and self.body['properties']['sourceApiId'] != old_response['properties'].get('sourceApiId'):
+                elif self.body['properties'].get('sourceApiId') is not None and \
+                   self.body['properties']['sourceApiId'] != old_response['properties'].get('sourceApiId'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('displayName') is not None and self.body['properties']['displayName'] != old_response['properties'].get('displayName'):
+                elif self.body['properties'].get('displayName') is not None and \
+                   self.body['properties']['displayName'] != old_response['properties'].get('displayName'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('serviceUrl') is not None and self.body['properties']['serviceUrl'] != old_response['properties'].get('serviceUrl'):
+                elif self.body['properties'].get('serviceUrl') is not None and \
+                   self.body['properties']['serviceUrl'] != old_response['properties'].get('serviceUrl'):
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('path') is not None and self.body['properties']['path'] != old_response['properties'].get('path'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('protocols') is not None and self.body['properties']['protocols'] != old_response['properties'].get('protocols'):
+                elif self.body['properties'].get('protocols') is not None and \
+                   self.body['properties']['protocols'] != old_response['properties'].get('protocols'):
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('type') is not None and self.body['properties']['type'] != old_response['properties'].get('type'):
                     self.to_do = Actions.Update
@@ -626,11 +642,13 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('format') is not None and self.body['properties']['format'] != old_response['properties'].get('format'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('wsdlSelector') is not None and\
-                    not all(self.body['properties']['wsdlSelector'][item] ==  old_response['properties']['wsdlSelector'].get(item) for item in self.body['properties']['wsdlSelector'].keys()):
+                elif self.body['properties'].get('wsdlSelector') is not None and \
+                   not all(self.body['properties']['wsdlSelector'][item] == \
+                   old_response['properties']['wsdlSelector'].get(item) for item in self.body['properties']['wsdlSelector'].keys()):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('apiVersionSet') is not None and\
-                    not all(self.body['properties']['apiVersionSet'][item] != old_response['properties']['apiVersionSet'].get(item) for item in self.body['properties']['apiVersionSet'].keys()):
+                elif self.body['properties'].get('apiVersionSet') is not None and \
+                   not all(self.body['properties']['apiVersionSet'][item] == \
+                   old_response['properties']['apiVersionSet'].get(item) for item in self.body['properties']['apiVersionSet'].keys()):
                     self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):

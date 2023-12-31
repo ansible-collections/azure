@@ -627,20 +627,26 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                     if item['encryption'].get('os_disk_image') is not None:
                                         target_regions['encryption']['osDiskImage'] = {}
                                         if item['encryption']['os_disk_image'].get('disk_encryption_set_id') is not None:
-                                            target_regions['encryption']['osDiskImage']['diskEncryptionSetId'] = item['encryption']['os_disk_image']['disk_encryption_set_id']
+                                            target_regions['encryption']['osDiskImage']['diskEncryptionSetId'] = \
+                                            item['encryption']['os_disk_image']['disk_encryption_set_id']
                                         if item['encryption']['os_disk_image'].get('security_profile') is not None:
                                             target_regions['encryption']['osDiskImage']['securityProfile'] = {}
                                             if item['encryption']['os_disk_image']['security_profile'].get('secure_vm_disk_encryption_set_id') is not None:
-                                                target_regions['encryption']['osDiskImage']['securityProfile']['secureVMDiskEncryptionSetId'] = item['encryption']['os_disk_image']['security_profile']['secure_vm_disk_encryption_set_id']
+                                                target_regions['encryption']['osDiskImage']['securityProfile']['secureVMDiskEncryptionSetId'] = \
+                                                item['encryption']['os_disk_image']['security_profile']['secure_vm_disk_encryption_set_id']
 
                                             if item['encryption']['os_disk_image']['security_profile'].get('confidential_vm_encryption_type') is not None:
                                                 target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType'] = {}
-                                                if item['encryption']['os_disk_image']['security_profile']['confidential_vm_encryption_type'].get('encrypted_vm_guest_state_only_with_pmk') is not None:
-                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedVMGuestStateOnlyWithPmk'] = item['encryption']['os_disk_image']['security_profile']['confidential_vm_encryption_type'].get('encrypted_vm_guest_state_only_with_pmk')
-                                                if item['encryption']['os_disk_image']['security_profile']['confidential_vm_encryption_type'].get('encrypted_with_cmk') is not None:
-                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedWithCmk'] = item['encryption']['os_disk_image']['security_profile']['confidential_vm_encryption_type'].get('encrypted_with_cmk')
-                                                if item['encryption']['os_disk_image']['security_profile']['confidential_vm_encryption_type'].get('encrypted_with_pmk') is not None:
-                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedWithPmk'] = item['encryption']['os_disk_image']['security_profile']['confidential_vm_encryption_type'].get('encrypted_with_pmk')
+                                                security = item['encryption']['os_disk_image']['security_profile']
+                                                if security['confidential_vm_encryption_type'].get('encrypted_vm_guest_state_only_with_pmk') is not None:
+                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedVMGuestStateOnlyWithPmk'] = \
+                                                    security['confidential_vm_encryption_type'].get('encrypted_vm_guest_state_only_with_pmk')
+                                                if security['confidential_vm_encryption_type'].get('encrypted_with_cmk') is not None:
+                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedWithCmk'] = \
+                                                    security['confidential_vm_encryption_type'].get('encrypted_with_cmk')
+                                                if security['confidential_vm_encryption_type'].get('encrypted_with_pmk') is not None:
+                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedWithPmk'] = \
+                                                    security['confidential_vm_encryption_type'].get('encrypted_with_pmk')
                             self.body['properties']['publishingProfile']['targetRegions'].append(target_regions)
                     if kwargs[key].get('managed_image') is not None:
                         if isinstance(kwargs[key]['managed_image'], str):
@@ -650,11 +656,11 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                 self.body['properties']['publishingProfile']['managed_image'] = kwargs[key]['managed_image']['id']
                             elif kwargs[key]['managed_image'].get('resource_group') is not None and kwargs[key]['managed_image'].get('name') is not None:
                                 self.body['properties']['publishingProfile']['managed_image'] = ('/subscriptions/' +
-                                                                                                  self.subscription_id +
-                                                                                                  '/resourceGroups/' +
-                                                                                                  kwargs[key]['managed_image'].get('resource_group') +
-                                                                                                  '/providers/Microsoft.Compute/images/' +
-                                                                                                  kwargs[key]['managed_image'].get('name'))
+                                                                                                 self.subscription_id +
+                                                                                                 '/resourceGroups/' +
+                                                                                                 kwargs[key]['managed_image'].get('resource_group') +
+                                                                                                 '/providers/Microsoft.Compute/images/' +
+                                                                                                 kwargs[key]['managed_image'].get('name'))
                             else:
                                 self.fail("The managed_image parameters config errors")
                         else:
@@ -744,8 +750,12 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                     self.to_do = Actions.Update
                 if self.body['properties'].get('publishingProfile') is not None:
                     for key in self.body['properties']['publishingProfile'].keys():
-                        if key == 'targetRegions' and len(self.body['properties']['publishingProfile'][key]) != len(old_response['properties']['publishingProfile'][key]):
-                            self.to_do = Actions.Update
+                        if key == 'targetRegions':
+                           if len(self.body['properties']['publishingProfile'][key]) != len(old_response['properties']['publishingProfile'][key]):
+                                self.to_do = Actions.Update
+                        elif key == 'endOfLifeDate':
+                            if self.body['properties']['publishingProfile'][key].lower() != old_response['properties']['publishingProfile'][key].lower():
+                                self.to_do = Actions.Update
                         if self.body['properties']['publishingProfile'].get(key) != old_response['properties']['publishingProfile'].get(key):
                             self.to_do = Actions.Update
 

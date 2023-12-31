@@ -197,8 +197,9 @@ class AzureRMRegistrationAssignment(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                if self.body.get('properties') is not None and\
-                    self.body['properties']['registration_definition_id'] != old_response['properties']['registration_definition_id']:
+                if self.body.get('properties') is not None and \
+                   self.body['properties']['registration_definition_id'] != \
+                   old_response['properties']['registration_definition_id']:
                     self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):

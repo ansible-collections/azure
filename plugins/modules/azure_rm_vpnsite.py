@@ -508,20 +508,23 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
                 for key in self.body.keys():
                     if key == 'address_space':
                         if old_response.get('address_space') is None or\
-                            len(self.body['address_space']['address_prefixes']) > len(old_response['address_space']['address_prefixes']) or\
-                            not all(key in old_response['address_space']['address_prefixes'] for key in self.body['address_space']['address_prefixes']):
+                           len(self.body['address_space']['address_prefixes']) > len(old_response['address_space']['address_prefixes']) or\
+                           not all(key in old_response['address_space']['address_prefixes'] for key in self.body['address_space']['address_prefixes']):
                             self.to_do = Actions.Update
                     elif key == 'device_properties':
                         if old_response.get('device_properties') is None or\
-                            not all(self.body['device_properties'][key] == old_response['device_properties'].get(key) for key in self.body['device_properties'].keys()):
+                           not all(self.body['device_properties'][key] == \
+                           old_response['device_properties'].get(key) for key in self.body['device_properties'].keys()):
                             self.to_do = Actions.Update
                     elif key == 'o365_policy':
                         if old_response.get('o365_policy') is None or\
-                            not all(self.body['o365_policy']['break_out_categories'][key] == old_response['o365_policy']['break_out_categories'].get(key) for key in self.body['o365_policy']['break_out_categories'].keys()):
+                           not all(self.body['o365_policy']['break_out_categories'][key] == \
+                           old_response['o365_policy']['break_out_categories'].get(key) for key in self.body['o365_policy']['break_out_categories'].keys()):
                             self.to_do = Actions.Update
                     elif key == 'vpn_site_links':
                         if old_response.get('vpn_site_links') is None or\
-                            not all(self.body['vpn_site_links'][key] == old_response['vpn_site_links'].get(key) for key in self.body['vpn_site_links'].keys()):
+                           not all(self.body['vpn_site_links'][key] == \
+                           old_response['vpn_site_links'].get(key) for key in self.body['vpn_site_links'].keys()):
                             self.to_do = Actions.Update
                     elif key == 'bgp_properties':
                         if old_response.get('bgp_properties') is None:
@@ -534,7 +537,8 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
                                 else:
                                     if self.body['bgp_properties'].get('bgp_peering_addresses') is not None:
                                         if old_response['bgp_properties'].get('bgp_peering_addresses') is None or\
-                                            not all(self.body['bgp_properties']['bgp_peering_addresses'][value] == old_response['bgp_properties']['bgp_peering_addresses'].get(value) for value in ['ipconfiguration_id', 'custom_bgp_ip_addresses']):
+                                           not all(self.body['bgp_properties']['bgp_peering_addresses'][value] == \
+                                           old_response['bgp_properties']['bgp_peering_addresses'].get(value) for value in ['ipconfiguration_id', 'custom_bgp_ip_addresses']):
                                             self.to_do = Actions.Update
 
                     elif self.body[key] != old_response.get(key):
