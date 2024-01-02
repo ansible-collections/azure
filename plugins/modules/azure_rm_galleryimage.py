@@ -498,10 +498,10 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                       self.body['properties']['identifier'].get('sku') != old_response['properties']['identifier'].get('sku')):
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('recommended') is not None:
-                    if self.body['properties']['recommended'].get('vCPUS') is not None and \
-                      (not all(self.body['properties']['recommended']['vCPUS'].get(item) == old_response['properties']['recommended']['vCPUS'].get(item)
-                       for item in self.body['properties']['recommended']['vCPUS'].keys())):
-                        self.to_do = Actions.Update
+                    if self.body['properties']['recommended'].get('vCPUS') is not None:
+                        for item in self.body['properties']['recommended']['vCPUS'].keys():
+                            if self.body['properties']['recommended']['vCPUS'].get(item) != old_response['properties']['recommended']['vCPUS'].get(item):
+                                self.to_do = Actions.Update
                     elif (self.body['properties']['recommended'].get('memory') is not None and
                           not all(self.body['properties']['recommended']['memory'].get(item) == old_response['properties']['recommended']['memory'].get(item)
                           for item in self.body['properties']['recommended']['memory'].keys())):
