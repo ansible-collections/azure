@@ -509,7 +509,7 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                 elif (self.body['properties'].get('disallowed') is not None and
                       self.body['properties']['disallowed'].get('diskTypes') != old_response['properties']['disallowed'].get('diskTypes')):
                     self.to_do = Actions.Update
-                elif (self.body['properties'].get('purchasePlan') is not None:
+                elif self.body['properties'].get('purchasePlan') is not None:
                     for item in self.body['properties']['purchasePlan'].keys():
                         if self.body['properties']['purchasePlan'][item] != old_response['properties']['purchasePlan'].get(item):
                             self.to_do = Actions.Update
