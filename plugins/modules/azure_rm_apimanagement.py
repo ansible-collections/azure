@@ -588,15 +588,16 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                     if old_response['properties'].get('authenticationSettings') is None:
                         self.to_do = Actions.Update
                     elif (self.body['properties']['authenticationSettings'].get('oAuth2') is not None and
-                          self.body['properties']['authenticationSettings'].get('oAuth2') != old_response['properties']['authenticationSettings'].get('oAuth2')):
+                          self.body['properties']['authenticationSettings']['oAuth2'] != old_response['properties']['authenticationSettings'].get('oAuth2')):
                         self.to_do = Actions.Update
                     elif (self.body['properties']['authenticationSettings'].get('openid') is not None and
-                          self.body['properties']['authenticationSettings'].get('openid') != old_response['properties']['authenticationSettings'].get('openid')):
+                          self.body['properties']['authenticationSettings']['openid'] != old_response['properties']['authenticationSettings'].get('openid')):
                         self.to_do = Actions.Update
                 elif self.body['properties'].get('subscriptionKeyParameterNames') is not None:
+                    tt = old_response['properties']
                     if old_response['properties'].get('subscriptionKeyParameterNames') is None:
                         self.to_do = Actions.Update
-                    elif (not all(self.body['properties']['subscriptionKeyParameterNames'].get(item) == old_response['properties']['subscriptionKeyParameterNames'].get(item)
+                    elif (not all(self.body['properties']['subscriptionKeyParameterNames'].get(item) == tt['subscriptionKeyParameterNames'].get(item)
                           for item in self.body['properties']['subscriptionKeyParameterNames'].keys())):
                         self.to_do = Actions.Update
                 elif (self.body['properties'].get('apiRevision') is not None and
