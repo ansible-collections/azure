@@ -534,7 +534,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                                                                              '/providers/Microsoft.Compute/images/' +
                                                                                              kwargs[key]['source_image'].get('name'))
                             elif kwargs[key]['source_image'].get('resource_group') is not None and \
-                              kwargs[key]['source_image'].get('gallery_name') is not None and \
+                               kwargs[key]['source_image'].get('gallery_name') is not None and \
                                kwargs[key]['source_image'].get('gallery_image_name') is not None and kwargs[key]['source_image'].get('version') is not None:
                                 self.body['properties']['storageProfile']['source']['id'] = ('/subscriptions/' +
                                                                                              self.subscription_id +
@@ -630,21 +630,24 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                     if item['encryption'].get('os_disk_image') is not None:
                                         target_regions['encryption']['osDiskImage'] = {}
                                         if item['encryption']['os_disk_image'].get('disk_encryption_set_id') is not None:
-                                            target_regions['encryption']['osDiskImage']['diskEncryptionSetId'] = item['encryption']['os_disk_image']['disk_encryption_set_id']
+                                            disk_encryption_set_id = item['encryption']['os_disk_image']['disk_encryption_set_id']
+                                            target_regions['encryption']['osDiskImage']['diskEncryptionSetId'] = disk_encryption_set_id
                                         if item['encryption']['os_disk_image'].get('security_profile') is not None:
                                             target_regions['encryption']['osDiskImage']['securityProfile'] = {}
                                             if item['encryption']['os_disk_image']['security_profile'].get('secure_vm_disk_encryption_set_id') is not None:
-                                                target_regions['encryption']['osDiskImage']['securityProfile']['secureVMDiskEncryptionSetId'] = item['encryption']['os_disk_image']['security_profile']['secure_vm_disk_encryption_set_id']
+                                                secure_id = item['encryption']['os_disk_image']['security_profile']['secure_vm_disk_encryption_set_id']
+                                                target_regions['encryption']['osDiskImage']['securityProfile']['secureVMDiskEncryptionSetId'] = secure_id
 
                                             if item['encryption']['os_disk_image']['security_profile'].get('confidential_vm_encryption_type') is not None:
                                                 target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType'] = {}
-                                                security = item['encryption']['os_disk_image']['security_profile']
-                                                if security['confidential_vm_encryption_type'].get('encrypted_vm_guest_state_only_with_pmk') is not None:
-                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedVMGuestStateOnlyWithPmk'] = security['confidential_vm_encryption_type'].get('encrypted_vm_guest_state_only_with_pmk')
-                                                if security['confidential_vm_encryption_type'].get('encrypted_with_cmk') is not None:
-                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedWithCmk'] = security['confidential_vm_encryption_type'].get('encrypted_with_cmk')
-                                                if security['confidential_vm_encryption_type'].get('encrypted_with_pmk') is not None:
-                                                    target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']['EncryptedWithPmk'] = security['confidential_vm_encryption_type'].get('encrypted_with_pmk')
+                                                security = item['encryption']['os_disk_image']['security_profile']['confidential_vm_encryption_type']
+                                                tt = target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']
+                                                if security.get('encrypted_vm_guest_state_only_with_pmk') is not None:
+                                                    tt['EncryptedVMGuestStateOnlyWithPmk'] = security.get('encrypted_vm_guest_state_only_with_pmk')
+                                                if security.get('encrypted_with_cmk') is not None:
+                                                    tt['EncryptedWithCmk'] = security.get('encrypted_with_cmk')
+                                                if security.get('encrypted_with_pmk') is not None:
+                                                    tt['EncryptedWithPmk'] = security.get('encrypted_with_pmk')
                             self.body['properties']['publishingProfile']['targetRegions'].append(target_regions)
                     if kwargs[key].get('managed_image') is not None:
                         if isinstance(kwargs[key]['managed_image'], str):

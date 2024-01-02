@@ -666,8 +666,8 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                             elif isinstance(item['subnet'], dict):
                                 if item['subnet'].get('id') is not None:
                                     ipconfig['properties']['subnet']['id'] = item['subnet'].get('id')
-                                elif item['subnet'].get('resource_group') is not None and \
-                                   item['subnet'].get('name') is not None and item['subnet'].get('virtual_network_name') is not None:
+                                elif item['subnet'].get('resource_group') is not None and item['subnet'].get('name') is not None and\
+                                   item['subnet'].get('virtual_network_name') is not None:
                                     ipconfig['properties']['subnet']['id'] = ('/subscriptions/' +
                                                                               self.subscription_id +
                                                                               '/resourceGroups/' +
