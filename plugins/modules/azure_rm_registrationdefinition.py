@@ -369,9 +369,9 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
                         self.to_do = Actions.Update
                     else:
                         self.to_do = Actions.Update
-                elif self.body.get('properties') is not None and \
-                   not all(self.body['properties'][item] == old_response['properties'].get(item)
-                   for item in self.body['properties'].keys()):
+                elif (self.body.get('properties') is not None and
+                      not all(self.body['properties'][item] == old_response['properties'].get(item)
+                      for item in self.body['properties'].keys())):
                     self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):

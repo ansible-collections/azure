@@ -533,9 +533,9 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                                                                              kwargs[key]['source_image'].get('resource_group') +
                                                                                              '/providers/Microsoft.Compute/images/' +
                                                                                              kwargs[key]['source_image'].get('name'))
-                            elif kwargs[key]['source_image'].get('resource_group') is not None and \
-                               kwargs[key]['source_image'].get('gallery_name') is not None and \
-                               kwargs[key]['source_image'].get('gallery_image_name') is not None and kwargs[key]['source_image'].get('version') is not None:
+                            elif (kwargs[key]['source_image'].get('resource_group') is not None and
+                                  kwargs[key]['source_image'].get('gallery_name') is not None and
+                                  kwargs[key]['source_image'].get('gallery_image_name') is not None and kwargs[key]['source_image'].get('version') is not None):
                                 self.body['properties']['storageProfile']['source']['id'] = ('/subscriptions/' +
                                                                                              self.subscription_id +
                                                                                              '/resourceGroups/' +
