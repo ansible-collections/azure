@@ -620,7 +620,7 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                 elif self.body['properties'].get('subscriptionRequired') is not None and \
                    self.body['properties']['subscriptionRequired'] != old_response['properties'].get('subscriptionRequired'):
                     self.to_do = Actions.Update
-                elif self.body['properties'].get('sourceApiId') is not None and
+                elif self.body['properties'].get('sourceApiId') is not None and \
                    self.body['properties']['sourceApiId'] != old_response['properties'].get('sourceApiId'):
                     self.to_do = Actions.Update
                 elif self.body['properties'].get('displayName') is not None and \
