@@ -174,7 +174,7 @@ options:
                 choices:
                     - Ubuntu
                     - Windows2019
-                    - Windows2022 
+                    - Windows2022
             storage_profiles:
                 description:
                     - Storage profile specifies what kind of storage used.
