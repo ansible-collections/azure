@@ -699,7 +699,7 @@ linux_profile_spec = dict(
 
 windows_profile_spec = dict(
     admin_username=dict(type='str', required=True),
-    admin_password=dict(type='str', required=True),
+    admin_password=dict(type='str', no_log=True, required=True),
 )
 
 service_principal_spec = dict(
