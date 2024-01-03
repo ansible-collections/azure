@@ -71,7 +71,7 @@ options:
         choices:
             - Ubuntu
             - Windows2019
-            - Windows2022 
+            - Windows2022
     orchestrator_version:
         description:
             - Version of orchestrator specified when creating the managed cluster.
