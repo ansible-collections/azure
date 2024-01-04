@@ -752,7 +752,10 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                 if self.body['properties'].get('publishingProfile') is not None:
                     for key in self.body['properties']['publishingProfile'].keys():
                         if key == 'targetRegions':
-                            if len(self.body['properties']['publishingProfile'][key]) != len(old_response['properties']['publishingProfile'][key]):
+                            result = dict(compare=[])
+                            modifies ={'/*/name': {'updatable': True, 'comparison': 'location'}}
+                            if not self.default_compare(modifies, self.body['properties']['publishingProfile'][key],
+                               old_response['properties']['publishingProfile'][key], '', result):
                                 self.to_do = Actions.Update
                         elif key == 'endOfLifeDate':
                             if self.body['properties']['publishingProfile'][key].lower() != old_response['properties']['publishingProfile'][key].lower():
