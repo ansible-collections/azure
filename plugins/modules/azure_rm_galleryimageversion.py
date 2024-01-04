@@ -753,7 +753,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                     for key in self.body['properties']['publishingProfile'].keys():
                         if key == 'targetRegions':
                             result = dict(compare=[])
-                            modifies ={'/*/name': {'updatable': True, 'comparison': 'location'}}
+                            modifies = {'/*/name': {'updatable': True, 'comparison': 'location'}}
                             if not self.default_compare(modifies, self.body['properties']['publishingProfile'][key],
                                old_response['properties']['publishingProfile'][key], '', result):
                                 self.to_do = Actions.Update
