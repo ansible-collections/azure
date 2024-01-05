@@ -1459,7 +1459,7 @@ class AzureRMAuth(object):
 
         if self.credentials.get('auth_source') == 'msi':
             # MSI Credentials
-            self.azure_credential_track2 = self.credentials['credential']
+            self.azure_credential_track2 = self.credentials['credentials']
         elif self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credential_track2 = self.credentials['credentials']
