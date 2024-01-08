@@ -173,6 +173,7 @@ options:
                 type: str
                 choices:
                     - Ubuntu
+                    - AzureLinux
                     - Windows2019
                     - Windows2022
             storage_profiles:
@@ -720,7 +721,7 @@ agent_pool_profile_spec = dict(
     vnet_subnet_id=dict(type='str'),
     availability_zones=dict(type='list', elements='int', choices=[1, 2, 3]),
     os_type=dict(type='str', choices=['Linux', 'Windows']),
-    os_sku=dict(type='str', choices=['Ubuntu', 'Windows2019', 'Windows2022']),
+    os_sku=dict(type='str', choices=['Ubuntu', 'AzureLinux', 'Windows2019', 'Windows2022']),
     orchestrator_version=dict(type='str', required=False),
     type=dict(type='str', choices=['VirtualMachineScaleSets', 'AvailabilitySet']),
     mode=dict(type='str', choices=['System', 'User']),
