@@ -577,6 +577,16 @@ options:
                         description:
                             - Specifies whether vTPM should be enabled on the virtual machine.
                         type: bool
+    additional_capabilities:
+        description:
+            - Enables or disables a capability on the virtual machine.
+        type: dict
+        suboptions:
+            ultra_ssd_enabled:
+                description:
+                    - The flag that enables or disables a capability to have one or more managed data disks with UltraSSD_LRS storage account type on the VM.
+                    - Managed disks with storage account type UltraSSD_LRS can be added to a virtual machine set only if this property is enabled.
+                type: bool
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -864,6 +874,9 @@ azure_vm:
     type: dict
     sample: {
         "properties": {
+            "additional_capabilities": {
+                    "ultra_ssd_enabled": false
+            },
             "availabilitySet": {
                     "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Compute/availabilitySets/MYAVAILABILITYSET"
             },
@@ -1159,6 +1172,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             windows_config=dict(type='dict', options=windows_configuration_spec),
             linux_config=dict(type='dict', options=linux_configuration_spec),
             security_profile=dict(type='dict'),
+            additional_capabilities=dict(
+                type='dict',
+                options=dict(
+                    ultra_ssd_enabled=dict(type='bool')
+                )
+            )
         )
 
         self.resource_group = None
@@ -1212,6 +1231,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.linux_config = None
         self.windows_config = None
         self.security_profile = None
+        self.additional_capabilities = None
 
         self.results = dict(
             changed=False,
@@ -1559,6 +1579,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if update_security_profile:
                         changed = True
                         differences.append('security_profile')
+
+                if self.additional_capabilities is not None:
+                    if 'additional_capabilities' not in vm_dict.keys() or\
+                       bool(self.additional_capabilities['ultra_ssd_enabled']) != bool(vm_dict['additional_capabilities']['ultra_ssd_enabled']):
+                        changed = True
+                        differences.append('additional_capabilities')
 
                 if self.windows_config is not None and vm_dict['os_profile'].get('windows_configuration') is not None:
                     if self.windows_config['enable_automatic_updates'] != vm_dict['os_profile']['windows_configuration']['enable_automatic_updates']:
@@ -1966,6 +1992,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         )
                         vm_resource.security_profile = security_profile
 
+                    if self.additional_capabilities is not None:
+                        additional_capabilities = self.compute_models.AdditionalCapabilities(
+                            ultra_ssd_enabled=self.additional_capabilities.get('ultra_ssd_enabled')
+                        )
+                        vm_resource.additional_capabilities = additional_capabilities
+
                     self.log("Create virtual machine with parameters:")
                     self.create_or_update_vm(vm_resource, 'all_autocreated' in self.remove_on_absent)
 
@@ -2206,6 +2238,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             security_type=self.security_profile.get('security_type'),
                         )
                         vm_resource.security_profile = security_profile
+
+                    if self.additional_capabilities is not None:
+                        additional_capabilities = self.compute_models.AdditionalCapabilities(
+                            ultra_ssd_enabled=self.additional_capabilities.get('ultra_ssd_enabled')
+                        )
+                        vm_resource.additional_capabilities = additional_capabilities
 
                     self.log("Update virtual machine with parameters:")
                     self.create_or_update_vm(vm_resource, False)
