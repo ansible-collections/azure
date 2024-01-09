@@ -159,7 +159,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             object_id=object.id,
             app_display_name=object.display_name,
             identifier_uris=object.identifier_uris,
-            available_to_other_tenants=object.available_to_other_tenants
+            available_to_other_tenants=object.sign_in_audience
         )
 
     async def get_application(self, obj_id):
