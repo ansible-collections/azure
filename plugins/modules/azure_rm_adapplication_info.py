@@ -88,6 +88,12 @@ applications:
             returned: always
             type: str
             sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        available_to_other_tenants:
+            description:
+                - The application can be used from any Azure AD tenants
+            type: str
+            returned: always
+            sample: AzureADandPersonalMicrosoftAccount
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
@@ -152,7 +158,8 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             app_id=object.app_id,
             object_id=object.id,
             app_display_name=object.display_name,
-            identifier_uris=object.identifier_uris
+            identifier_uris=object.identifier_uris,
+            available_to_other_tenants=object.available_to_other_tenants
         )
 
     async def get_application(self, obj_id):

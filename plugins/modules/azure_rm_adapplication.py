@@ -72,8 +72,12 @@ options:
     available_to_other_tenants:
         description:
             - The application can be used from any Azure AD tenants.
-        type: bool
-
+        type: str
+        choices:
+            - AzureADMyOrg
+            - AzureADMultipleOrgs
+            - AzureADandPersonalMicrosoftAccount
+            - PersonalMicrosoftAccount
     credential_description:
         description:
             - The description of the password.
@@ -277,8 +281,8 @@ output:
             description:
                 - The application can be used from any Azure AD tenants.
             returned: always
-            type: bool
-            sample: false
+            type: str
+            sample: AzureADandPersonalMicrosoftAccount
         homepage:
             description:
                 - The url where users can sign in and use your app.
@@ -394,7 +398,10 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             app_id=dict(type='str'),
             display_name=dict(type='str', required=True),
             app_roles=dict(type='list', elements='dict', options=app_role_spec),
-            available_to_other_tenants=dict(type='bool'),
+            available_to_other_tenants=dict(
+                type='str',
+                choices=['AzureADMyOrg', 'AzureADMultipleOrgs', 'AzureADandPersonalMicrosoftAccount', 'PersonalMicrosoftAccount']
+            ),
             credential_description=dict(type='str'),
             end_date=dict(type='str'),
             homepage=dict(type='str'),
