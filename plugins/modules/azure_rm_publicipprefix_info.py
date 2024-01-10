@@ -44,16 +44,16 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Get facts for one Public IP Prefix
-      azure_rm_publicipprefix_info:
-        resource_group: myResourceGroup
-        name: publicipprefix
+- name: Get facts for one Public IP Prefix
+  azure_rm_publicipprefix_info:
+    resource_group: myResourceGroup
+    name: publicipprefix
 
-    - name: Get facts for all Public IPs within a resource groups
-      azure_rm_publicipprefix_info:
-        resource_group: myResourceGroup
-        tags:
-          - key:value
+- name: Get facts for all Public IPs within a resource groups
+  azure_rm_publicipprefix_info:
+    resource_group: myResourceGroup
+    tags:
+      - key:value
 '''
 
 RETURN = '''

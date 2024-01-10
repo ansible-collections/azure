@@ -118,25 +118,25 @@ author:
 '''
 
 EXAMPLES = '''
-    - name: Create a public ip prefix
-      azure_rm_publicipprefix:
-        resource_group: myResourceGroup
-        name: my_public_ip
-        public_ip_address_version: IPV4
-        prefix_length: 29
-        sku:
-          name: Standard
-          tier: Regional
-        zones:
-          - 1
-        tags:
-          key1: value1
+- name: Create a public ip prefix
+  azure_rm_publicipprefix:
+    resource_group: myResourceGroup
+    name: my_public_ip
+    public_ip_address_version: IPV4
+    prefix_length: 29
+    sku:
+      name: Standard
+      tier: Regional
+    zones:
+      - 1
+    tags:
+      key1: value1
 
-    - name: Delete public ip prefix
-      azure_rm_publicipprefix:
-        resource_group: myResourceGroup
-        name: my_public_ipprefix
-        state: absent
+- name: Delete public ip prefix
+  azure_rm_publicipprefix:
+    resource_group: myResourceGroup
+    name: my_public_ipprefix
+    state: absent
 '''
 
 RETURN = '''
