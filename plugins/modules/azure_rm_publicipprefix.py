@@ -55,7 +55,7 @@ options:
                     - Standard
             tier:
                 description:
-                    - Tier of a public IP prefix SKU. 
+                    - Tier of a public IP prefix SKU.
                 type: str
                 choices:
                     - Regional
@@ -67,7 +67,7 @@ options:
         suboptions:
             id：
                 descritption:
-                    - 
+                    - Resource ID.
                 type: str
     extended_location:
         description:
