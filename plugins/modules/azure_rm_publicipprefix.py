@@ -48,7 +48,7 @@ options:
         type: dict
         suboptions:
             name:
-                descritpion:
+                description:
                     - Name of a public IP prefix SKU.
                 type: str
                 choices:
@@ -81,11 +81,11 @@ options:
         suboptions:
             ip_tag_type:
                 description:
-                    - The IP tag type. Example: FirstPartyUsage.
+                    - The IP tag type. Example as FirstPartyUsage.
                 type: str
             tag:
                 description:
-                    - The value of the IP tag associated with the public IP. Example: SQL.
+                    - The value of the IP tag associated with the public IP. Example as SQL.
                 type: str
     public_ip_address_version:
         description:
@@ -93,7 +93,6 @@ options:
         choices:
             - IPV4
             - IPV6
-        default: ipv4
     zones:
         description:
             - A list of availability zones denoting the IP prefix allocated for the resource needs to come from.
@@ -190,6 +189,7 @@ state:
             description:
                 - The list of tags associated with the public IP prefixes.
             returned: always
+            type: dict
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
