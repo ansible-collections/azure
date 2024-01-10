@@ -93,6 +93,7 @@ parameters:
       - "azure_rm_privatelinkservice"
       - "azure_rm_privatednszonelink"
       - "azure_rm_publicipaddress"
+      - "azure_rm_publicipprefix"
       - "azure_rm_proximityplacementgroup"
       - "azure_rm_rediscache"
       - "azure_rm_resource"
