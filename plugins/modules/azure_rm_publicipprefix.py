@@ -62,11 +62,11 @@ options:
                     - Global
     custom_ip_prefix:
         description:
-            - The customIpPrefix that this prefix is associated with.
+            - The Custom IP prefix that this prefix is associated with.
         type: dict
         suboptions:
-            id：
-                descritption:
+            id:
+                description:
                     - Resource ID.
                 type: str
     extended_location:
@@ -90,6 +90,7 @@ options:
     public_ip_address_version:
         description:
             - The public IP address version.
+        type: str
         choices:
             - IPV4
             - IPV6
@@ -102,7 +103,7 @@ options:
             - '1'
             - '2'
             - '3'
-    prefix_lenth:
+    prefix_length:
         description:
             - The Length of the Public IP Prefix.
         type: int
