@@ -72,6 +72,8 @@ options:
     sign_in_audience:
         description:
             - The application can be used from any Azure AD tenants.
+            - Microsoft Graph SDK deprecate I(available_to_other_tenants), replace by I(sign_in_audience).
+            - Refer to link U(https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-property-differences#application-property-differences)
         type: str
         choices:
             - AzureADMyOrg
@@ -82,9 +84,8 @@ options:
     available_to_other_tenants:
         description:
             - (Deprecated) The application can be used from any Azure AD tenants.
-            - This parameter was not supported after the migration to Microsoft Graph and was replaced by sign_in_audience.
-            - It will deprecated in next version.
-            - Refer to link U(https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-property-differences#application-property-differences)
+            - This parameter was not supported after the migration to Microsoft Graph and was replaced by I(sign_in_audience).
+            - It will deprecated in next version(V2.2.0).
         type: bool
     credential_description:
         description:
