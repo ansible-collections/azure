@@ -84,6 +84,7 @@ options:
             - (Deprecated) The application can be used from any Azure AD tenants.
             - This parameter was not supported after the migration to Microsoft Graph and was replaced by sign_in_audience.
             - It will deprecated in next version.
+            - Refer to link L(https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-property-differences#application-property-differences)
         type: bool
     credential_description:
         description:
