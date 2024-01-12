@@ -588,6 +588,7 @@ def nic_to_dict(nic):
     )
 
 
+# keys need to be synced with construct_ip_configuration_set to determine changes
 ip_configuration_spec = dict(
     name=dict(type='str', required=True),
     private_ip_address=dict(type='str'),
@@ -779,9 +780,7 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                     changed = True
 
                 # check the ip_configuration is changed
-                # construct two set with the same structure and then compare
-                # the list should contains:
-                # name, private_ip_address, public_ip_address_name, private_ip_allocation_method, subnet_name
+                # construct two sets with the same structure and then compare all attributes
                 ip_configuration_result = self.construct_ip_configuration_set(results['ip_configurations'])
                 ip_configuration_request = self.construct_ip_configuration_set(self.ip_configurations)
                 ip_configuration_result_name = [item['name'] for item in ip_configuration_result]
@@ -950,20 +949,24 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
         return val
 
     def construct_ip_configuration_set(self, raw):
+        # same order as ip_configuration_spec for readability
         configurations = [dict(
+            name=to_native(item.get('name')),
+            private_ip_address=to_native(item.get('private_ip_address')),
+            private_ip_address_version=to_native(item.get('private_ip_address_version')),
             private_ip_allocation_method=to_native(item.get('private_ip_allocation_method')),
             public_ip_address_name=(to_native(item.get('public_ip_address').get('name'))
                                     if item.get('public_ip_address') else to_native(item.get('public_ip_address_name'))),
-            primary=item.get('primary'),
+            public_ip_allocation_method=to_native(item.get('public_ip_allocation_method', 'Dynamic')),
             load_balancer_backend_address_pools=(set([to_native(self.backend_addr_pool_id(id))
                                                       for id in item.get('load_balancer_backend_address_pools')])
                                                  if item.get('load_balancer_backend_address_pools') else None),
             application_gateway_backend_address_pools=(set([to_native(self.gateway_backend_addr_pool_id(id))
                                                            for id in item.get('application_gateway_backend_address_pools')])
                                                        if item.get('application_gateway_backend_address_pools') else None),
+            primary=item.get('primary'),
             application_security_groups=(set([to_native(asg_id) for asg_id in item.get('application_security_groups')])
                                          if item.get('application_security_groups') else None),
-            name=to_native(item.get('name'))
         ) for item in raw]
         return configurations
 
