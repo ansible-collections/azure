@@ -69,11 +69,24 @@ options:
                     - Any other character, including the space character, are not allowed.
                 type: str
 
-    available_to_other_tenants:
+    sign_in_audience:
         description:
             - The application can be used from any Azure AD tenants.
-        type: bool
+            - Microsoft Graph SDK deprecate I(available_to_other_tenants), replace by I(sign_in_audience).
+            - Refer to link U(https://learn.microsoft.com/en-us/graph/migrate-azure-ad-graph-property-differences#application-property-differences)
+        type: str
+        choices:
+            - AzureADMyOrg
+            - AzureADMultipleOrgs
+            - AzureADandPersonalMicrosoftAccount
+            - PersonalMicrosoftAccount
 
+    available_to_other_tenants:
+        description:
+            - (Deprecated) The application can be used from any Azure AD tenants.
+            - This parameter was not supported after the migration to Microsoft Graph and was replaced by I(sign_in_audience).
+            - It will deprecated in next version(V3.0.0).
+        type: bool
     credential_description:
         description:
             - The description of the password.
@@ -236,7 +249,7 @@ EXAMPLES = '''
 - name: Create application with more parameter
   azure_rm_adapplication:
     display_name: "{{ display_name }}"
-    available_to_other_tenants: false
+    sign_in_audience: AzureADandPersonalMicrosoftAccount
     credential_description: "for test"
     end_date: 2021-10-01
     start_date: 2021-05-18
@@ -273,12 +286,18 @@ output:
             returned: always
             type: str
             sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        sign_in_audience:
+            description:
+                - The application can be used from any Azure AD tenants.
+            returned: always
+            type: str
+            sample: AzureADandPersonalMicrosoftAccount
         available_to_other_tenants:
             description:
                 - The application can be used from any Azure AD tenants.
             returned: always
-            type: bool
-            sample: false
+            type: str
+            sample: AzureADandPersonalMicrosoftAccount
         homepage:
             description:
                 - The url where users can sign in and use your app.
@@ -394,7 +413,15 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             app_id=dict(type='str'),
             display_name=dict(type='str', required=True),
             app_roles=dict(type='list', elements='dict', options=app_role_spec),
-            available_to_other_tenants=dict(type='bool'),
+            sign_in_audience=dict(
+                type='str',
+                choices=['AzureADMyOrg', 'AzureADMultipleOrgs', 'AzureADandPersonalMicrosoftAccount', 'PersonalMicrosoftAccount']
+            ),
+            available_to_other_tenants=dict(
+                type='bool',
+                removed_in_version='3.0.0',
+                removed_from_collection='azure.azcollection'
+            ),
             credential_description=dict(type='str'),
             end_date=dict(type='str'),
             homepage=dict(type='str'),
@@ -436,6 +463,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         self.allow_guests_sign_in = None
         self.results = dict(changed=False)
         self._client = None
+        self.sign_in_audience = None
 
         super(AzureRMADApplication, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                    supports_check_mode=False,
@@ -480,7 +508,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 app_roles = self.build_app_roles(self.app_roles)
 
             create_app = Application(
-                sign_in_audience=self.available_to_other_tenants,
+                sign_in_audience=self.sign_in_audience,
                 web=WebApplication(
                     home_page_url=self.homepage,
                     redirect_uris=self.reply_urls,
@@ -522,7 +550,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 app_roles = self.build_app_roles(self.app_roles)
 
             app_update_param = Application(
-                sign_in_audience=self.available_to_other_tenants,
+                sign_in_audience=self.sign_in_audience,
                 web=WebApplication(
                     home_page_url=self.homepage,
                     redirect_uris=self.reply_urls,
@@ -595,6 +623,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             display_name=object.display_name,
             app_roles=app_roles,
             available_to_other_tenants=object.sign_in_audience,
+            sign_in_audience=object.sign_in_audience,
             homepage=object.web.home_page_url,
             identifier_uris=object.identifier_uris,
             oauth2_allow_implicit_flow=object.web.implicit_grant_settings.enable_access_token_issuance,

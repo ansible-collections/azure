@@ -24,7 +24,7 @@
 - name: Create application with more parameter
   azure_rm_adapplication:
     display_name: "{{ display_name }}-01"
-    available_to_other_tenants: false
+    sign_in_audience: AzureADandPersonalMicrosoftAccount
     credential_description: "for test"
     end_date: 2021-10-01
     start_date: 2021-05-18
