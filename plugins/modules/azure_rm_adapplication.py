@@ -85,7 +85,7 @@ options:
         description:
             - (Deprecated) The application can be used from any Azure AD tenants.
             - This parameter was not supported after the migration to Microsoft Graph and was replaced by I(sign_in_audience).
-            - It will deprecated in next version(V2.2.0).
+            - It will deprecated in next version(V3.0.0).
         type: bool
     credential_description:
         description:
