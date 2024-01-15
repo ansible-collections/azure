@@ -231,8 +231,13 @@ class AzureRMPublicIPPrefixInfo(AzureRMModuleBase):
             sku=dict(),
             ip_tags=dict(),
             custom_ip_prefix=dict(),
+            ip_prefix=prefix.ip_prefix,
+            resource_guid=prefix.resource_guid,
+            public_ip_addresses=dict(),
             extended_location=prefix.extended_location
         )
+        if prefix.public_ip_addresses:
+            result['public_ip_addresses']['id'] = prefix.public_ip_addresses.id
         if prefix.sku:
             result['sku']['name'] = prefix.sku.name
             result['sku']['tier'] = prefix.sku.tier
