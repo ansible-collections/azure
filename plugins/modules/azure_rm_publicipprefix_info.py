@@ -157,6 +157,21 @@ publicipprefix:
             type: dict
             returned: always
             sample: {}
+        public_ip_addresses:
+            description:
+                - The list of all referenced PublicIPAddresses.
+            type: list
+            sample: []
+        resource_guid:
+            description:
+                - The resource GUID property of the public IP prefix resource.
+            type: str
+            sample: "47cafa04-851d-4579-894d-74ad6afe3233"
+        ip_prefix:
+            description:
+                - The allocated Prefix.
+            type: str
+            sample: 20.199.95.80/29
 '''
 try:
     from azure.core.exceptions import ResourceNotFoundError
@@ -229,15 +244,15 @@ class AzureRMPublicIPPrefixInfo(AzureRMModuleBase):
             etag=prefix.etag,
             zones=prefix.zones,
             sku=dict(),
-            ip_tags=dict(),
+            ip_tags=list(),
             custom_ip_prefix=dict(),
             ip_prefix=prefix.ip_prefix,
             resource_guid=prefix.resource_guid,
-            public_ip_addresses=dict(),
+            public_ip_addresses=list(),
             extended_location=prefix.extended_location
         )
         if prefix.public_ip_addresses:
-            result['public_ip_addresses']['id'] = prefix.public_ip_addresses.id
+            result['public_ip_addresses'] = [x.id for x in prefix.public_ip_addresses]
         if prefix.sku:
             result['sku']['name'] = prefix.sku.name
             result['sku']['tier'] = prefix.sku.tier
