@@ -316,7 +316,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             self.inventory.add_host(inventory_hostname)
             # FUTURE: configurable default IP list? can already do this via hostvar_expressions
             self.inventory.set_variable(inventory_hostname, "ansible_host",
-                                        next(chain([h.hostvars['public_ipv4_address']], h.hostvars['private_ipv4_addresses']), None))
+                                        next(chain(h.hostvars['public_ipv4_address'], h.hostvars['private_ipv4_addresses']), None))
             for k, v in iteritems(h.hostvars):
                 # FUTURE: configurable hostvar prefix? Makes docs harder...
                 self.inventory.set_variable(inventory_hostname, k, v)
