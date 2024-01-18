@@ -1492,7 +1492,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     differences.append('Zones')
                     changed = True
 
-                if self.license_type is not None and vm_dict.get('licenseType') != self.license_type:
+                if self.license_type is not None and vm_dict.get('license_type') != self.license_type:
                     differences.append('License Type')
                     changed = True
 
@@ -1529,7 +1529,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                 if self.security_profile is not None:
                     update_security_profile = False
-                    if 'securityProfile' not in vm_dict.keys():
+                    if 'security_profile' not in vm_dict.keys():
                         update_security_profile = True
                         differences.append('security_profile')
                     else:
