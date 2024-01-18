@@ -2261,7 +2261,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     time.sleep(150)
                     vm = self.compute_client.virtual_machines.get(self.resource_group, self.name, expand='instanceview')
                 else:
-                    break
+                    p_state = None
+                    for s in vm.instance_view.statuses:
+                        if s.code.startswith('PowerState'):
+                            p_state = s.code
+                    if p_state is not None:
+                        break
             return vm
         except Exception as exc:
             self.fail("Error getting virtual machine {0} - {1}".format(self.name, str(exc)))
