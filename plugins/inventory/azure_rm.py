@@ -581,6 +581,7 @@ class AzureHost(object):
             resource_group=parse_resource_id(self._vm_model['id']).get('resource_group').lower(),
             default_inventory_hostname=self.default_inventory_hostname,
             creation_time=self._vm_model['properties']['timeCreated'],
+            license_type=self._vm_model['properties'].get('licenseType', 'Unknown')
         )
 
         # set nic-related values from the primary NIC first
