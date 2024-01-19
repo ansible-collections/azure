@@ -1461,7 +1461,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     self.log('CHANGED: virtual machine {0} - short hostname'.format(self.name))
                     differences.append('Short Hostname')
                     changed = True
-                    vm_dict['os_orofile']['computer_name'] = self.short_hostname
+                    vm_dict['os_profile']['computer_name'] = self.short_hostname
 
                 if self.started and vm_dict['powerstate'] not in ['starting', 'running'] and self.allocated:
                     self.log("CHANGED: virtual machine {0} not running and requested state 'running'".format(self.name))
