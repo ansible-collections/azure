@@ -1512,7 +1512,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     differences.append('Zones')
                     changed = True
 
-                if self.license_type is not None and vm_dict.get('licenseType') != self.license_type:
+                if self.license_type is not None and vm_dict.get('license_type') != self.license_type:
                     differences.append('License Type')
                     changed = True
 
@@ -1549,7 +1549,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                 if self.security_profile is not None:
                     update_security_profile = False
-                    if 'securityProfile' not in vm_dict.keys():
+                    if 'security_profile' not in vm_dict.keys():
                         update_security_profile = True
                         differences.append('security_profile')
                     else:
@@ -2172,8 +2172,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             )
                         else:
                             vm_resource.os_profile.windows_configuration = self.compute_models.WindowsConfiguration(
-                                provision_vm_agent=windows_config.get('provisionVMAgent', True),
-                                enable_automatic_updates=windows_config.get('enableAutomaticUpdates', True)
+                                provision_vm_agent=windows_config.get('provision_vm_agent', True),
+                                enable_automatic_updates=windows_config.get('enable_automatic_updates', True)
                             )
 
                     # Add linux configuration, if applicable
@@ -2189,12 +2189,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             )
                         ssh_config = linux_config.get('ssh', None)
                         if ssh_config:
-                            public_keys = ssh_config.get('publicKeys')
+                            public_keys = ssh_config.get('public_keys')
                             if public_keys:
                                 vm_resource.os_profile.linux_configuration.ssh = self.compute_models.SshConfiguration(public_keys=[])
                                 for key in public_keys:
                                     vm_resource.os_profile.linux_configuration.ssh.public_keys.append(
-                                        self.compute_models.SshPublicKey(path=key['path'], key_data=key['keyData'])
+                                        self.compute_models.SshPublicKey(path=key['path'], key_data=key['key_data'])
                                     )
 
                     # data disk
