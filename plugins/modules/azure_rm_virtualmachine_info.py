@@ -70,6 +70,12 @@ vms:
     returned: always
     type: complex
     contains:
+        additional_capabilities:
+            description:
+                - Enables or disables a capability on the virtual machine.
+            type: dict
+            returned: always
+            sample: {ultra_ssd_enabled: False}
         admin_username:
             description:
                 - Administrator user name.
@@ -494,6 +500,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         new_result['vm_size'] = result['hardware_profile']['vm_size']
         new_result['proximityPlacementGroup'] = result.get('proximity_placement_group')
         new_result['zones'] = result.get('zones', None)
+        new_result['additional_capabilities'] = result.get('additional_capabilities')
         os_profile = result.get('os_profile')
         if os_profile is not None:
             new_result['admin_username'] = os_profile.get('admin_username')

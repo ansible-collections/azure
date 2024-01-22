@@ -13,7 +13,7 @@ It is recommended to run ansible in [Virtualenv](https://virtualenv.pypa.io/en/l
 
 ## Requirements
 
-- ansible version >= 2.9
+- ansible version >= 2.14
 
 To install Azure collection hosted in Galaxy:
 

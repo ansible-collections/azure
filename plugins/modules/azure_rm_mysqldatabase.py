@@ -92,7 +92,7 @@ import time
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
     from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
@@ -282,6 +282,8 @@ class AzureRMMySqlDatabase(AzureRMModuleBase):
             self.log("MySQL Database instance : {0} found".format(response.name))
         except ResourceNotFoundError as e:
             self.log('Did not find the MySQL Database instance.')
+        except HttpResponseError as e:
+            self.log("Get MySQL Database instance error. code: {0}, message: {1}".format(e.status_code, str(e.error)))
         if found is True:
             return response.as_dict()
 

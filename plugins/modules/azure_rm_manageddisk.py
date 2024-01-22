@@ -499,7 +499,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                     if vm_name:
                         self.detach(resource_group, vm_name, result)
                     if self.managed_by:
-                        self.attach(resource_group, self.managed_by, result)
+                        self.attach(self.resource_group, self.managed_by, result)
                     result = self.get_managed_disk()
 
         if self.state == 'absent' and disk_instance:

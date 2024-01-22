@@ -417,6 +417,7 @@ options:
     zones:
         description:
             - A list of Availability Zones for your VM.
+            - A maximum of one zone can be configured.
         type: list
         elements: str
     license_type:
@@ -577,6 +578,16 @@ options:
                         description:
                             - Specifies whether vTPM should be enabled on the virtual machine.
                         type: bool
+    additional_capabilities:
+        description:
+            - Enables or disables a capability on the virtual machine.
+        type: dict
+        suboptions:
+            ultra_ssd_enabled:
+                description:
+                    - The flag that enables or disables a capability to have one or more managed data disks with UltraSSD_LRS storage account type on the VM.
+                    - Managed disks with storage account type UltraSSD_LRS can be added to a virtual machine set only if this property is enabled.
+                type: bool
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -864,6 +875,9 @@ azure_vm:
     type: dict
     sample: {
         "properties": {
+            "additional_capabilities": {
+                    "ultra_ssd_enabled": false
+            },
             "availabilitySet": {
                     "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Compute/availabilitySets/MYAVAILABILITYSET"
             },
@@ -1159,6 +1173,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             windows_config=dict(type='dict', options=windows_configuration_spec),
             linux_config=dict(type='dict', options=linux_configuration_spec),
             security_profile=dict(type='dict'),
+            additional_capabilities=dict(
+                type='dict',
+                options=dict(
+                    ultra_ssd_enabled=dict(type='bool')
+                )
+            )
         )
 
         self.resource_group = None
@@ -1212,6 +1232,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.linux_config = None
         self.windows_config = None
         self.security_profile = None
+        self.additional_capabilities = None
 
         self.results = dict(
             changed=False,
@@ -1461,7 +1482,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     self.log('CHANGED: virtual machine {0} - short hostname'.format(self.name))
                     differences.append('Short Hostname')
                     changed = True
-                    vm_dict['os_orofile']['computer_name'] = self.short_hostname
+                    vm_dict['os_profile']['computer_name'] = self.short_hostname
 
                 if self.started and vm_dict['powerstate'] not in ['starting', 'running'] and self.allocated:
                     self.log("CHANGED: virtual machine {0} not running and requested state 'running'".format(self.name))
@@ -1492,7 +1513,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     differences.append('Zones')
                     changed = True
 
-                if self.license_type is not None and vm_dict.get('licenseType') != self.license_type:
+                if self.license_type is not None and vm_dict.get('license_type') != self.license_type:
                     differences.append('License Type')
                     changed = True
 
@@ -1529,7 +1550,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                 if self.security_profile is not None:
                     update_security_profile = False
-                    if 'securityProfile' not in vm_dict.keys():
+                    if 'security_profile' not in vm_dict.keys():
                         update_security_profile = True
                         differences.append('security_profile')
                     else:
@@ -1559,6 +1580,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if update_security_profile:
                         changed = True
                         differences.append('security_profile')
+
+                if self.additional_capabilities is not None:
+                    if 'additional_capabilities' not in vm_dict.keys() or\
+                       bool(self.additional_capabilities['ultra_ssd_enabled']) != bool(vm_dict['additional_capabilities']['ultra_ssd_enabled']):
+                        changed = True
+                        differences.append('additional_capabilities')
 
                 if self.windows_config is not None and vm_dict['os_profile'].get('windows_configuration') is not None:
                     if self.windows_config['enable_automatic_updates'] != vm_dict['os_profile']['windows_configuration']['enable_automatic_updates']:
@@ -1966,6 +1993,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         )
                         vm_resource.security_profile = security_profile
 
+                    if self.additional_capabilities is not None:
+                        additional_capabilities = self.compute_models.AdditionalCapabilities(
+                            ultra_ssd_enabled=self.additional_capabilities.get('ultra_ssd_enabled')
+                        )
+                        vm_resource.additional_capabilities = additional_capabilities
+
                     self.log("Create virtual machine with parameters:")
                     self.create_or_update_vm(vm_resource, 'all_autocreated' in self.remove_on_absent)
 
@@ -2140,8 +2173,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             )
                         else:
                             vm_resource.os_profile.windows_configuration = self.compute_models.WindowsConfiguration(
-                                provision_vm_agent=windows_config.get('provisionVMAgent', True),
-                                enable_automatic_updates=windows_config.get('enableAutomaticUpdates', True)
+                                provision_vm_agent=windows_config.get('provision_vm_agent', True),
+                                enable_automatic_updates=windows_config.get('enable_automatic_updates', True)
                             )
 
                     # Add linux configuration, if applicable
@@ -2157,12 +2190,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             )
                         ssh_config = linux_config.get('ssh', None)
                         if ssh_config:
-                            public_keys = ssh_config.get('publicKeys')
+                            public_keys = ssh_config.get('public_keys')
                             if public_keys:
                                 vm_resource.os_profile.linux_configuration.ssh = self.compute_models.SshConfiguration(public_keys=[])
                                 for key in public_keys:
                                     vm_resource.os_profile.linux_configuration.ssh.public_keys.append(
-                                        self.compute_models.SshPublicKey(path=key['path'], key_data=key['keyData'])
+                                        self.compute_models.SshPublicKey(path=key['path'], key_data=key['key_data'])
                                     )
 
                     # data disk
@@ -2206,6 +2239,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             security_type=self.security_profile.get('security_type'),
                         )
                         vm_resource.security_profile = security_profile
+
+                    if self.additional_capabilities is not None:
+                        additional_capabilities = self.compute_models.AdditionalCapabilities(
+                            ultra_ssd_enabled=self.additional_capabilities.get('ultra_ssd_enabled')
+                        )
+                        vm_resource.additional_capabilities = additional_capabilities
 
                     self.log("Update virtual machine with parameters:")
                     self.create_or_update_vm(vm_resource, False)
@@ -2261,7 +2300,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     time.sleep(150)
                     vm = self.compute_client.virtual_machines.get(self.resource_group, self.name, expand='instanceview')
                 else:
-                    break
+                    p_state = None
+                    for s in vm.instance_view.statuses:
+                        if s.code.startswith('PowerState'):
+                            p_state = s.code
+                    if p_state is not None:
+                        break
             return vm
         except Exception as exc:
             self.fail("Error getting virtual machine {0} - {1}".format(self.name, str(exc)))
