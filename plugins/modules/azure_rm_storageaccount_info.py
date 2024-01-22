@@ -211,6 +211,12 @@ storageaccounts:
             type: bool
             returned: always
             sample: true
+        enable_nfs_v3:
+            description:
+                - NFS 3.0 protocol.
+            type: bool
+            returned: always
+            sample: false
         kind:
             description:
                 - The kind of storage.
@@ -681,6 +687,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             allow_blob_public_access=account_obj.allow_blob_public_access,
             is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
             large_file_shares_state=account_obj.large_file_shares_state,
+            enable_nfs_v3=account_obj.enable_nfs_v3 if hasattr(account_obj, 'enable_nfs_v3') else None,
             static_website=dict(
                 enabled=False,
                 index_document=None,

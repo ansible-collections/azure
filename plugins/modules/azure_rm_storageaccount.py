@@ -87,6 +87,10 @@ options:
             - Account HierarchicalNamespace enabled if sets to true.
             - When I(is_hns_enabled=True), I(kind) cannot be C(Storage).
         type: bool
+    enable_nfs_v3:
+        description:
+            - NFS 3.0 protocol.
+        type: bool
     access_tier:
         description:
             - The access tier for this storage account. Required when I(kind=BlobStorage).
@@ -340,6 +344,16 @@ EXAMPLES = '''
     tags:
       testing: testing
 
+- name: Create storage account with I(enable_nfs_v3=false)
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: c1h0002
+    account_type: Premium_LRS
+    kind: FileStorage
+    enable_nfs_v3: false
+    static_website:
+      enabled: true
+
 - name: configure firewall and virtual networks
   azure_rm_storageaccount:
     resource_group: myResourceGroup
@@ -469,6 +483,12 @@ state:
             type: bool
             returned: always
             sample: true
+        enable_nfs_v3:
+            description:
+                - NFS 3.0 protocol.
+            type: bool
+            returned: always
+            sample: false
         location:
             description:
                 - Valid Azure location. Defaults to location of the resource group.
@@ -725,6 +745,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             static_website=dict(type='dict', options=static_website_spec),
             is_hns_enabled=dict(type='bool'),
             large_file_shares_state=dict(type='str', choices=['Enabled', 'Disabled']),
+            enable_nfs_v3=dict(type='bool'),
             encryption=dict(
                 type='dict',
                 options=dict(
@@ -781,6 +802,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
         self.encryption = None
         self.is_hns_enabled = None
         self.large_file_shares_state = None
+        self.enable_nfs_v3 = None
 
         super(AzureRMStorageAccount, self).__init__(self.module_arg_spec,
                                                     supports_check_mode=True)
@@ -885,6 +907,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
             allow_blob_public_access=account_obj.allow_blob_public_access,
             network_acls=account_obj.network_rule_set,
             is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
+            enable_nfs_v3=account_obj.enable_nfs_v3 if hasattr(account_obj, 'enable_nfs_v3') else None,
             large_file_shares_state=account_obj.large_file_shares_state,
             static_website=dict(
                 enabled=False,
@@ -1035,6 +1058,10 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 if self.network_acls.get('ip_rules', None) is not None and self.account_dict['network_acls']['ip_rules'] == []:
                     self.results['changed'] = True
                     self.update_network_rule_set()
+
+        if self.enable_nfs_v3 is not None and bool(self.enable_nfs_v3) != bool(self.account_dict.get('enable_nfs_v3')):
+            self.results['changed'] = True
+            self.account_dict['enable_nfs_v3'] = self.enable_nfs_v3
 
         if self.is_hns_enabled is not None and bool(self.is_hns_enabled) != bool(self.account_dict.get('is_hns_enabled')):
             self.results['changed'] = True
@@ -1229,6 +1256,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                 allow_blob_public_access=self.allow_blob_public_access,
                 encryption=self.encryption,
                 is_hns_enabled=self.is_hns_enabled,
+                enable_nfs_v3=self.enable_nfs_v3,
                 large_file_shares_state=self.large_file_shares_state,
                 tags=dict()
             )
@@ -1255,6 +1283,7 @@ class AzureRMStorageAccount(AzureRMModuleBase):
                                                                         allow_blob_public_access=self.allow_blob_public_access,
                                                                         encryption=self.encryption,
                                                                         is_hns_enabled=self.is_hns_enabled,
+                                                                        enable_nfs_v3=self.enable_nfs_v3,
                                                                         access_tier=self.access_tier,
                                                                         large_file_shares_state=self.large_file_shares_state)
         self.log(str(parameters))
