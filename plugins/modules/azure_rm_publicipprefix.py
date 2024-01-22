@@ -190,7 +190,24 @@ state:
             description:
                 - The list of tags associated with the public IP prefixes.
             returned: always
+            type: list
+            sample: [{'type': 'FirstPartyUsage', 'value': 'Storage'}]
+        resource_guid:
+            description:
+                - The resource GUID property of the public IP prefix resource.
+            type: str
+            sample: "47cafa04-851d-4579-894d-74ad6afe3233"
+        custom_ip_prefix:
+            description:
+                - The customIpPrefix that this prefix is associated with.
             type: dict
+            returned: always
+            sample: {}
+        public_ip_addresses:
+            description:
+                - The list of all referenced PublicIPAddresses.
+            type: list
+            sample: []
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -215,10 +232,15 @@ def prefix_to_dict(prefix):
         etag=prefix.etag,
         zones=prefix.zones,
         sku=dict(),
-        ip_tags=dict(),
+        ip_tags=list(),
         custom_ip_prefix=dict(),
+        ip_prefix=prefix.ip_prefix,
+        resource_guid=prefix.resource_guid,
+        public_ip_addresses=list(),
         extended_location=prefix.extended_location
     )
+    if prefix.public_ip_addresses:
+        result['public_ip_addresses'] = [x.id for x in prefix.public_ip_addresses]
     if prefix.sku:
         result['sku']['name'] = prefix.sku.name
         result['sku']['tier'] = prefix.sku.tier
