@@ -417,6 +417,7 @@ options:
     zones:
         description:
             - A list of Availability Zones for your VM.
+            - A maximum of one zone can be configured.
         type: list
         elements: str
     license_type:
