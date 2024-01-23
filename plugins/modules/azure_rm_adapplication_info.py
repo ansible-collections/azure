@@ -26,11 +26,15 @@ options:
         type: str
     object_id:
         description:
-            - It's application's object ID.
+            - The application's object ID.
         type: str
     identifier_uri:
         description:
-            - It's identifier_uri's object ID.
+            - The identifier_uri's object ID.
+        type: str
+    app_display_name:
+        description:
+            - The applications' Name.
         type: str
 
 extends_documentation_fragment:
@@ -55,6 +59,10 @@ EXAMPLES = '''
 - name: get ad app info ---- by identifier uri
   azure_rm_adapplication_info:
     identifier_uri: "{{ identifier_uri }}"
+
+- name: get ad app info ---- by display name
+  azure_rm_adapplication_info:
+    app_display_name: "{{ display_name }}"
 '''
 
 RETURN = '''
@@ -119,9 +127,11 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             app_id=dict(type='str'),
             object_id=dict(type='str'),
-            identifier_uri=dict(type='str')
+            identifier_uri=dict(type='str'),
+            app_display_name=dict(type='str')
         )
         self.app_id = None
+        self.app_display_name = None
         self.object_id = None
         self.identifier_uri = None
         self.results = dict(changed=False)
@@ -147,9 +157,10 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
                     sub_filters.append("identifierUris/any(s:s eq '{0}')".format(self.identifier_uri))
                 if self.app_id:
                     sub_filters.append("appId eq '{0}'".format(self.app_id))
-
+                if self.app_display_name:
+                    sub_filters.append("displayName eq '{0}'".format(self.app_display_name))
                 apps = asyncio.get_event_loop().run_until_complete(self.get_applications(sub_filters))
-                applications = list(apps.value)
+                applications = list(apps)
             self.results['applications'] = [self.to_dict(app) for app in applications]
         except APIError as e:
             if e.response_status_code != 404:
@@ -179,9 +190,25 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
                     filter=(' and '.join(sub_filters)),
                 ),
             )
-            return await self._client.applications.get(request_configuration=request_configuration)
+            applications = await self._client.applications.get(request_configuration=request_configuration)
+            return applications.value
         else:
-            return await self._client.applications.get()
+            applications_list = []
+            applications = await self._client.applications.get()
+            for app in applications.value:
+                applications_list.append(app)
+            
+            if applications.odata_next_link:
+                next_link = applications.odata_next_link
+            else:
+                next_link = None
+
+            while next_link:
+                applications = await self._client.applications.with_url(next_link).get()
+                next_link = applications.odata_next_link
+                for app in applications.value:
+                    applications_list.append(app)
+            return applications_list
 
 
 def main():
