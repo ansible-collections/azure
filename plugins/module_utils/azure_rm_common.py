@@ -110,7 +110,28 @@ AZURE_API_PROFILES = {
         'ManagementLockClient': '2016-09-01',
         'DataLakeStoreAccountManagementClient': '2016-11-01',
         'NotificationHubsManagementClient': '2016-03-01',
-        'EventHubManagementClient': '2018-05-04'
+        'EventHubManagementClient': '2021-11-01',
+        'GenericRestClient': 'latest',
+        'DnsManagementClient': '2018-05-01',
+        'PrivateDnsManagementClient': 'latest',
+        'ContainerServiceClient': '2022-02-01',
+        'SqlManagementClient': 'latest',
+        'ContainerRegistryManagementClient': '2021-09-01',
+        'MarketplaceOrderingAgreements': 'latest',
+        'TrafficManagerManagementClient': 'latest',
+        'MonitorManagementClient': '2016-03-01',
+        'LogAnalyticsManagementClient': 'latest',
+        'ServiceBusManagementClient': 'latest',
+        'AutomationClient': 'latest',
+        'IotHubClient': 'latest',
+        'RecoveryServicesBackupClient': 'latest',
+        'DataFactoryManagementClient': 'latest',
+        'KeyVaultManagementClient': '2021-10-01',
+        'HDInsightManagementClient': 'latest',
+        'DevTestLabsClient': 'latest',
+        'CosmosDBManagementClient': 'latest',
+        'CdnManagementClient': '2017-04-02',
+        'BatchManagementClient': 'latest',
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
@@ -1459,7 +1480,7 @@ class AzureRMAuth(object):
 
         if self.credentials.get('auth_source') == 'msi':
             # MSI Credentials
-            self.azure_credential_track2 = self.credentials['credential']
+            self.azure_credential_track2 = self.credentials['credentials']
         elif self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credential_track2 = self.credentials['credentials']

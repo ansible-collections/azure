@@ -1,0 +1,102 @@
+- name: Create random variable
+  ansible.builtin.set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+
+- name: Create public ip prefix (Check mode)
+  azure_rm_publicipprefix:
+    resource_group: "{{ resource_group }}"
+    name: "pipprefix{{ rpfx }}"
+    zones:
+      - 1
+    public_ip_address_version: IPV4
+    prefix_length: 29
+    sku:
+      name: Standard
+      tier: Regional
+    tags:
+      testing: testing
+  check_mode: true
+
+- name: Create public ip prefix
+  azure_rm_publicipprefix:
+    resource_group: "{{ resource_group }}"
+    name: "pipprefix{{ rpfx }}"
+    zones:
+      - 1
+    public_ip_address_version: IPV4
+    prefix_length: 29
+    sku:
+      name: Standard
+      tier: Regional
+    tags:
+      testing: testing
+  register: output
+
+- name: Assert the public IP prefix is well created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create public ip prefix (Idempotent test)
+  azure_rm_publicipprefix:
+    resource_group: "{{ resource_group }}"
+    name: "pipprefix{{ rpfx }}"
+    zones:
+      - 1
+    public_ip_address_version: IPV4
+    prefix_length: 29
+    sku:
+      name: Standard
+      tier: Regional
+    tags:
+      testing: testing
+  register: output
+
+- name: Assert the public IP prefix no change
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Update public ip prefix (Update tags)
+  azure_rm_publicipprefix:
+    resource_group: "{{ resource_group }}"
+    name: "pipprefix{{ rpfx }}"
+    zones:
+      - 1
+    public_ip_address_version: IPV4
+    prefix_length: 29
+    sku:
+      name: Standard
+      tier: Regional
+    tags:
+      testing2: testing2
+  register: output
+
+- name: Assert the public IP prefix change
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Gather facts for a public ip prefix
+  azure_rm_publicipprefix_info:
+    resource_group: "{{ resource_group }}"
+    name: "pipprefix{{ rpfx }}"
+  register: output
+
+- name: Assert the public IP prefix facts
+  ansible.builtin.assert:
+    that:
+      - output.publicipprefixes[0].tags | length == 2
+      - output.publicipprefixes[0].prefix_length == 29
+
+- name: Delete the public IP prefix
+  azure_rm_publicipprefix:
+    resource_group: "{{ resource_group }}"
+    name: "pipprefix{{ rpfx }}"
+    state: absent
+  register: output
+
+- name: Assert the public IP prefix deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
