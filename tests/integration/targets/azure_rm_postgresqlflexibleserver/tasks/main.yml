@@ -32,7 +32,7 @@
       start_hour: 8
       start_minute: 4
       day_of_week: 3
-    availability_zone: 1
+    availability_zone: 2
     create_mode: Create
   check_mode: true
 
@@ -59,7 +59,7 @@
       start_hour: 8
       start_minute: 4
       day_of_week: 3
-    availability_zone: 1
+    availability_zone: 2
     create_mode: Create
   register: output
 
@@ -91,7 +91,7 @@
       start_hour: 8
       start_minute: 4
       day_of_week: 3
-    availability_zone: 1
+    availability_zone: 2
     create_mode: Create
   register: output
 
@@ -123,7 +123,7 @@
       start_hour: 10
       start_minute: 6
       day_of_week: 6
-    availability_zone: 1
+    availability_zone: 2
     create_mode: Create
     tags:
       key1: value1
