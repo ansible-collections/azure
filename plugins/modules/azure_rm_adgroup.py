@@ -93,16 +93,16 @@ EXAMPLES = '''
     mail_nickname: "Group-Mail-Nickname"
     state: 'present'
     present_members:
-      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
-      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
+      - "{{ ad_object_1_object_id }}"
+      - "{{ ad_object_2_object_id }}"
 
 - name: Ensure Users are Members of a Group using object_id
   azure_rm_adgroup:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: 'present'
     present_members:
-      - "https://graph.windows.net/{{ ad_object_1_tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
-      - "https://graph.windows.net/{{ ad_object_2_tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
+      - "{{ ad_object_1_object_id }}"
+      - "{{ ad_object_2_object_id }}"
 
 - name: Ensure Users are not Members of a Group using display_name and mail_nickname
   azure_rm_adgroup:
@@ -125,16 +125,16 @@ EXAMPLES = '''
     mail_nickname: "Group-Mail-Nickname"
     state: 'present'
     present_owners:
-      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
-      - "https://graph.windows.net/{{ tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
+      - "{{ ad_object_1_object_id }}"
+      - "{{ ad_object_2_object_id }}"
 
 - name: Ensure Users are Owners of a Group using object_id
   azure_rm_adgroup:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: 'present'
     present_owners:
-      - "https://graph.windows.net/{{ ad_object_1_tenant_id }}/directoryObjects/{{ ad_object_1_object_id }}"
-      - "https://graph.windows.net/{{ ad_object_2_tenant_id }}/directoryObjects/{{ ad_object_2_object_id }}"
+      - "{{ ad_object_1_object_id }}"
+      - "{{ ad_object_2_object_id }}"
 
 - name: Ensure Users are not Owners of a Group using display_name and mail_nickname
   azure_rm_adgroup:
