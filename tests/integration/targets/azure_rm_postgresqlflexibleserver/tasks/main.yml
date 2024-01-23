@@ -1,11 +1,17 @@
 - name: Prepare random number
   ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+    new_resource_group: "{{ resource_group }}-02"
   run_once: true
+
+- name: Create a new resource group
+  azure_rm_resourcegroup:
+    name: "{{ new_resource_group }}"
+    location: southeastasia
 
 - name: Create post gresql flexible server (check mode)
   azure_rm_postgresqlflexibleserver:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     name: postflexible{{ rpfx }}
     sku:
       name: Standard_B1ms
@@ -32,7 +38,7 @@
 
 - name: Create post gresql flexible server
   azure_rm_postgresqlflexibleserver:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     name: postflexible{{ rpfx }}
     sku:
       name: Standard_B1ms
@@ -64,7 +70,7 @@
 
 - name: Create post gresql flexible server (Idempotent Test)
   azure_rm_postgresqlflexibleserver:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     name: postflexible{{ rpfx }}
     sku:
       name: Standard_B1ms
@@ -96,7 +102,7 @@
 
 - name: Update post gresql flexible server with multiple parameters
   azure_rm_postgresqlflexibleserver:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     name: postflexible{{ rpfx }}
     sku:
       name: Standard_B1ms
@@ -131,7 +137,7 @@
 
 - name: Gather facts postgresql flexible Server
   azure_rm_postgresqlflexibleserver_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     name: postflexible{{ rpfx }}
   register: output
 
@@ -147,7 +153,7 @@
 
 - name: Create a post gresql flexible database(check mode)
   azure_rm_postgresqlflexibledatabase:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     name: database{{ rpfx }}
     collation: en_US.utf8
@@ -156,7 +162,7 @@
 
 - name: Create a post gresql flexible database
   azure_rm_postgresqlflexibledatabase:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     name: database{{ rpfx }}
     collation: en_US.utf8
@@ -170,7 +176,7 @@
 
 - name: Create a post gresql flexible database(Idempotent test)
   azure_rm_postgresqlflexibledatabase:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     name: database{{ rpfx }}
     collation: en_US.utf8
@@ -184,7 +190,7 @@
 
 - name: Get the post gresql flexibe database facts
   azure_rm_postgresqlflexibledatabase_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     name: database{{ rpfx }}
   register: output
@@ -197,7 +203,7 @@
 
 - name: Delete the post gresql flexibe database
   azure_rm_postgresqlflexibledatabase:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     name: database{{ rpfx }}
     state: absent
@@ -210,7 +216,7 @@
 
 - name: Create a post gresql flexible firwall rule (Check mode)
   azure_rm_postgresqlflexiblefirewallrule:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     name: firewall{{ rpfx }}
     start_ip_address: 10.0.0.15
@@ -219,7 +225,7 @@
 
 - name: Create the post gresql flexible firwall rule
   azure_rm_postgresqlflexiblefirewallrule:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     name: firewall{{ rpfx }}
     start_ip_address: 10.0.0.15
@@ -233,7 +239,7 @@
 
 - name: Create the post gresql flexible firwall rule (Idempotent test)
   azure_rm_postgresqlflexiblefirewallrule:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     name: firewall{{ rpfx }}
     start_ip_address: 10.0.0.15
@@ -247,7 +253,7 @@
 
 - name: Update the post gresql flexible firwall rule
   azure_rm_postgresqlflexiblefirewallrule:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     name: firewall{{ rpfx }}
     start_ip_address: 10.0.0.16
@@ -261,7 +267,7 @@
 
 - name: Get the post gresql flexible firwall rule facts
   azure_rm_postgresqlflexiblefirewallrule_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     name: firewall{{ rpfx }}
   register: output
@@ -274,7 +280,7 @@
 
 - name: Delete the post gresql flexible firwall rule
   azure_rm_postgresqlflexiblefirewallrule:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     name: firewall{{ rpfx }}
     state: absent
@@ -287,7 +293,7 @@
 
 - name: List the post gresql flexible config facts
   azure_rm_postgresqlflexibleconfiguration_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
   register: output
 
@@ -298,7 +304,7 @@
 
 - name: Stop the post gresql flexible server
   azure_rm_postgresqlflexibleserver:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     name: postflexible{{ rpfx }}
     is_stop: true
   register: output
@@ -315,7 +321,7 @@
 
 - name: Restart post gresql flexible server
   azure_rm_postgresqlflexibleserver:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     name: postflexible{{ rpfx }}
     is_restart: true
   register: output
@@ -327,12 +333,23 @@
 
 - name: Delete post gresql flexible server
   azure_rm_postgresqlflexibleserver:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     name: postflexible{{ rpfx }}
     state: absent
   register: output
 
 - name: Assert the post gresql server is well deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Delete the new resource group
+  azure_rm_resourcegroup:
+    name: "{{ new_resource_group }}"
+    state: absent
+  register: output
+
+- name: Assert the resource group is well deleted
   ansible.builtin.assert:
     that:
       - output.changed
