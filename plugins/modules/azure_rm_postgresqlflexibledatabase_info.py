@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexibledatabase_info
-version_added: "1.16.0"
+version_added: "2.2.0"
 short_description: Get Azure PostgreSQL Flexible Database facts
 description:
     - Get facts of PostgreSQL Flexible Database.

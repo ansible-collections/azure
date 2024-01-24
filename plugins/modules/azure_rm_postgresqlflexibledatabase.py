@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexibledatabase
-version_added: "1.16.0"
+version_added: "2.2.0"
 short_description: Manage PostgreSQL Flexible Database instance
 description:
     - Create, update and delete instance of PostgreSQL Flexible Database.

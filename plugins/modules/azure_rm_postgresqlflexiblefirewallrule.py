@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexiblefirewallrule
-version_added: "0.1.2"
+version_added: "2.2.0"
 short_description: Manage PostgreSQL flexible firewall rule instance
 description:
     - Create, update and delete instance of PostgreSQL flexible firewall rule.
