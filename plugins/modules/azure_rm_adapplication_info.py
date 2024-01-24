@@ -197,7 +197,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             applications = await self._client.applications.get()
             for app in applications.value:
                 applications_list.append(app)
-            
+
             if applications.odata_next_link:
                 next_link = applications.odata_next_link
             else:
