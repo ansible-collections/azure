@@ -86,6 +86,7 @@ parameters:
       - "azure_rm_notificationhub"
       - "azure_rm_openshiftmanagedcluster"
       - "azure_rm_postgresqlserver"
+      - "azure_rm_postgresqlflexibleserver"
       - "azure_rm_privatednsrecordset"
       - "azure_rm_privatednszone"
       - "azure_rm_privateendpoint"
