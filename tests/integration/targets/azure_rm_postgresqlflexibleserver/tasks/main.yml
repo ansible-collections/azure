@@ -346,6 +346,7 @@
 - name: Delete the new resource group
   azure_rm_resourcegroup:
     name: "{{ new_resource_group }}"
+    force_delete_nonempty: true
     state: absent
   register: output
 
