@@ -2293,11 +2293,15 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     not compare_arrays(old_response, self.parameters, 'url_path_maps') or
                     not compare_arrays(old_response, self.parameters, 'trusted_root_certificates') or
                     not compare_dicts(old_response, self.parameters, 'autoscale_configuration') or
-                    not compare_dicts(old_response, self.parameters, 'web_application_firewall_configuration') or
-                    not compare_dicts(old_response, self.parameters, 'tags')):
+                    not compare_dicts(old_response, self.parameters, 'web_application_firewall_configuration'):
                 self.to_do = Actions.Update
             else:
                 self.to_do = Actions.NoAction
+
+        update_tags, new_tags = self.update_tags(old_response['tags'])
+        if update_tags:
+            self.to_do = Actions.Update
+            self.parameters["tags"] = new_tags
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.log("Need to Create / Update the Application Gateway instance")
