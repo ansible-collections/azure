@@ -118,9 +118,9 @@
     that:
       - not output.changed
 
-- name: Pause for 20 mimutes to Bastion host updating
+- name: Pause for 15 mimutes to Bastion host updating
   ansible.builtin.command:
-    sleep 1200
+    sleep 900
   changed_when: true
 
 - name: Update bastion host
@@ -167,6 +167,11 @@
       - output.bastion_host[0].enable_tunneling == true
       - output.bastion_host[0].scale_units == 8
       - output.bastion_host[0].sku.name == 'Standard'
+
+- name: Pause for 15 mimutes to Bastion host deleting
+  ansible.builtin.command:
+    sleep 900
+  changed_when: true
 
 - name: Delete bastion host
   azure_rm_bastionhost:
