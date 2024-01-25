@@ -1,0 +1,356 @@
+- name: Prepare random number
+  ansible.builtin.set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+    new_resource_group: "{{ resource_group }}-02"
+  run_once: true
+
+- name: Create a new resource group
+  azure_rm_resourcegroup:
+    name: "{{ new_resource_group }}"
+    location: southeastasia
+
+- name: Create post gresql flexible server (check mode)
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ new_resource_group }}"
+    name: postflexible{{ rpfx }}
+    sku:
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: Fred@0329
+    version: 12
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup:
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    network:
+      public_network_access: Disabled
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 4
+      day_of_week: 3
+    availability_zone: 2
+    create_mode: Create
+  check_mode: true
+
+- name: Create post gresql flexible server
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ new_resource_group }}"
+    name: postflexible{{ rpfx }}
+    sku:
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: Fred@0329
+    version: 12
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup:
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    network:
+      public_network_access: Disabled
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 4
+      day_of_week: 3
+    availability_zone: 2
+    create_mode: Create
+  register: output
+
+- name: Assert the post grep sql server create success
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create post gresql flexible server (Idempotent Test)
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ new_resource_group }}"
+    name: postflexible{{ rpfx }}
+    sku:
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: Fred@0329
+    version: 12
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup:
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    network:
+      public_network_access: Disabled
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 4
+      day_of_week: 3
+    availability_zone: 2
+    create_mode: Create
+  register: output
+
+- name: Assert the post grep sql server create success
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Update post gresql flexible server with multiple parameters
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ new_resource_group }}"
+    name: postflexible{{ rpfx }}
+    sku:
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: Fred@0329
+    version: 12
+    storage:
+      storage_size_gb: 256
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup:
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    network:
+      public_network_access: Disabled
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 10
+      start_minute: 6
+      day_of_week: 6
+    availability_zone: 2
+    create_mode: Create
+    tags:
+      key1: value1
+      key2: value2
+  register: output
+
+- name: Assert the post grep sql server update success
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Gather facts postgresql flexible Server
+  azure_rm_postgresqlflexibleserver_info:
+    resource_group: "{{ new_resource_group }}"
+    name: postflexible{{ rpfx }}
+  register: output
+
+- name: Assert the post gresql server is well created
+  ansible.builtin.assert:
+    that:
+      - output.servers[0].tags | length == 2
+      - output.servers[0].storage.storage_size_gb == 256
+      - output.servers[0].maintenance_window.custom_window == 'Enabled'
+      - output.servers[0].maintenance_window.day_of_week == 6
+      - output.servers[0].maintenance_window.start_hour == 10
+      - output.servers[0].maintenance_window.start_minute == 6
+
+- name: Create a post gresql flexible database(check mode)
+  azure_rm_postgresqlflexibledatabase:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: database{{ rpfx }}
+    collation: en_US.utf8
+    charset: UTF8
+  check_mode: true
+
+- name: Create a post gresql flexible database
+  azure_rm_postgresqlflexibledatabase:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: database{{ rpfx }}
+    collation: en_US.utf8
+    charset: UTF8
+  register: output
+
+- name: Assert the post gresql flexible database created success
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create a post gresql flexible database(Idempotent test)
+  azure_rm_postgresqlflexibledatabase:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: database{{ rpfx }}
+    collation: en_US.utf8
+    charset: UTF8
+  register: output
+
+- name: Assert the post gresql flexible database no changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Get the post gresql flexibe database facts
+  azure_rm_postgresqlflexibledatabase_info:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: database{{ rpfx }}
+  register: output
+
+- name: Assert the post gresql flexible database facts
+  ansible.builtin.assert:
+    that:
+      - output.databases[0].collation == 'en_US.utf8'
+      - output.databases[0].charset == 'UTF8'
+
+- name: Delete the post gresql flexibe database
+  azure_rm_postgresqlflexibledatabase:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: database{{ rpfx }}
+    state: absent
+  register: output
+
+- name: Assert the post gresql flexible database deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create a post gresql flexible firwall rule (Check mode)
+  azure_rm_postgresqlflexiblefirewallrule:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: firewall{{ rpfx }}
+    start_ip_address: 10.0.0.15
+    end_ip_address: 10.0.0.20
+  check_mode: true
+
+- name: Create the post gresql flexible firwall rule
+  azure_rm_postgresqlflexiblefirewallrule:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: firewall{{ rpfx }}
+    start_ip_address: 10.0.0.15
+    end_ip_address: 10.0.0.20
+  register: output
+
+- name: Assert the post grepsql flexible firewall rule created well
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create the post gresql flexible firwall rule (Idempotent test)
+  azure_rm_postgresqlflexiblefirewallrule:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: firewall{{ rpfx }}
+    start_ip_address: 10.0.0.15
+    end_ip_address: 10.0.0.20
+  register: output
+
+- name: Assert the post grepsql flexible firewall rule support idempotent test
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Update the post gresql flexible firwall rule
+  azure_rm_postgresqlflexiblefirewallrule:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: firewall{{ rpfx }}
+    start_ip_address: 10.0.0.16
+    end_ip_address: 10.0.0.18
+  register: output
+
+- name: Assert the post grepsql flexible server update well
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Get the post gresql flexible firwall rule facts
+  azure_rm_postgresqlflexiblefirewallrule_info:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: firewall{{ rpfx }}
+  register: output
+
+- name: Assert the post gresql flexible firewall rule facts
+  ansible.builtin.assert:
+    that:
+      - output.firewall_rules[0].start_ip_address == '10.0.0.16'
+      - output.firewall_rules[0].end_ip_address == '10.0.0.18'
+
+- name: Delete the post gresql flexible firwall rule
+  azure_rm_postgresqlflexiblefirewallrule:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    name: firewall{{ rpfx }}
+    state: absent
+  register: output
+
+- name: Assert the post grepsql flexible server delete well
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: List the post gresql flexible config facts
+  azure_rm_postgresqlflexibleconfiguration_info:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+  register: output
+
+- name: Assert the post gresql flexible server configuration
+  ansible.builtin.assert:
+    that:
+      - output.settings | length > 0
+
+- name: Stop the post gresql flexible server
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ new_resource_group }}"
+    name: postflexible{{ rpfx }}
+    is_stop: true
+  register: output
+
+- name: Assert the post grep sql server stop success
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Pause for 10 mimutes
+  ansible.builtin.pause:
+    minutes: 10
+  changed_when: true
+
+- name: Restart post gresql flexible server
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ new_resource_group }}"
+    name: postflexible{{ rpfx }}
+    is_restart: true
+  register: output
+
+- name: Assert the post grep sql server restart success
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Delete post gresql flexible server
+  azure_rm_postgresqlflexibleserver:
+    resource_group: "{{ new_resource_group }}"
+    name: postflexible{{ rpfx }}
+    state: absent
+  register: output
+
+- name: Assert the post gresql server is well deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Delete the new resource group
+  azure_rm_resourcegroup:
+    name: "{{ new_resource_group }}"
+    force_delete_nonempty: true
+    state: absent
+  register: output
+
+- name: Assert the resource group is well deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
