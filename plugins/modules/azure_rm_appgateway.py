@@ -2293,7 +2293,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     not compare_arrays(old_response, self.parameters, 'url_path_maps') or
                     not compare_arrays(old_response, self.parameters, 'trusted_root_certificates') or
                     not compare_dicts(old_response, self.parameters, 'autoscale_configuration') or
-                    not compare_dicts(old_response, self.parameters, 'web_application_firewall_configuration'):
+                    not compare_dicts(old_response, self.parameters, 'web_application_firewall_configuration')):
                 self.to_do = Actions.Update
             else:
                 self.to_do = Actions.NoAction
