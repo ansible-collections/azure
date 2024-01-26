@@ -1,6 +1,6 @@
 - name: Setup basic facts
   ansible.builtin.set_fact:
-    uuid: bb21a88b-30e1-42b5-84e8-1d3f322de033
+    uuid: "{{ (2**128) | random | to_uuid }}"
     # Disk Backup Reader, unlikely to be already assigned in ansible-test resource groups.
     az_role_definition_guid: '3e5e47e6-65f7-47ef-90b5-e5dd4d455f24'
 
