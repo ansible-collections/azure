@@ -222,17 +222,16 @@ class Actions:
 class AzureRMManagementGroups(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
-            group_id=dict(type='str', updatable=False, required=True),
-            name=dict(type='str', updatable=False),
+            group_id=dict(type='str', required=True),
+            name=dict(type='str'),
             id=dict(type='str'),
             type=dict(type='str'),
             properties=dict(
                 type='dict',
-                disposition="/",
                 options=dict(
-                    tenant_id=dict(type='str', disposition="tenantId"),
-                    display_name=dict(type='str', disposition="displayName"),
-                    parent_id=dict(type='str', disposition="details/parent/id")
+                    tenant_id=dict(type='str'),
+                    display_name=dict(type='str'),
+                    parent_id=dict(type='str')
                 )
             ),
             state=dict(type='str', default='present', choices=['present', 'absent']),
@@ -260,10 +259,20 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
         for key in list(self.module_arg_spec.keys()):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
+            elif key == 'properties' and kwargs[key] is not None:
+                self.body['properties'] = {}
+                for item in kwargs['properties'].keys():
+                    if item == 'tenant_id':
+                        self.body['properties']['tenantId'] = kwargs['properties'][item]
+                    elif item == 'display_name':
+                        self.body['properties']['displayName'] = kwargs['properties'][item]
+                    elif item == 'parent_id':
+                        self.body['properties']['details'] = {}
+                        self.body['properties']['details']['parent'] = {}
+                        self.body['properties']['details']['parent']['id'] = kwargs['properties'][item]
+
             elif kwargs[key] is not None:
                 self.body[key] = kwargs[key]
-
-        self.inflate_parameters(self.module_arg_spec, self.body, 0)
 
         old_response = None
         response = None
@@ -292,13 +301,14 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                modifiers = {}
-                self.results['compare'] = []
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                self.results['modifiers'] = modifiers
-
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
-                    self.to_do = Actions.Update
+                for key in self.body.keys():
+                    if key == 'properties':
+                        if old_response.get('properties') is None or \
+                           not all(self.body['properties'][item] == old_response['properties'].get(item)
+                           for item in self.body['properties'].keys()):
+                            self.to_do = Actions.Update
+                    elif self.body[key] != old_response.get(key):
+                        self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.log('Need to Create / Update the ManagementGroup instance')
@@ -345,14 +355,24 @@ class AzureRMManagementGroups(AzureRMModuleBaseExt):
         # self.log('Creating / Updating the ManagementGroup instance {0}'.format(self.))
 
         try:
-            response = self.mgmt_client.query(self.url,
-                                              'PUT',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              self.body,
-                                              self.status_code,
-                                              600,
-                                              30)
+            if self.to_do == Actions.Create:
+                response = self.mgmt_client.query(self.url,
+                                                  'PUT',
+                                                  self.query_parameters,
+                                                  self.header_parameters,
+                                                  self.body,
+                                                  self.status_code,
+                                                  600,
+                                                  30)
+            else:
+                response = self.mgmt_client.query(self.url,
+                                                  'PATCH',
+                                                  self.query_parameters,
+                                                  self.header_parameters,
+                                                  self.body,
+                                                  self.status_code,
+                                                  600,
+                                                  30)
         except Exception as exc:
             self.log('Error attempting to create the ManagementGroup instance.')
             self.fail('Error creating the ManagementGroup instance: {0}'.format(str(exc)))

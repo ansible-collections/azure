@@ -412,86 +412,57 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
         self.module_arg_spec = dict(
             resource_group=dict(
                 type='str',
-                updatable=False,
-                disposition='resourceGroupName',
                 required=True
             ),
             name=dict(
                 type='str',
-                updatable=False,
-                disposition='resourceName',
                 required=True
             ),
             location=dict(
                 type='str',
-                updatable=False,
-                required=True,
-                disposition='/'
+                required=True
             ),
             cluster_profile=dict(
                 type='dict',
-                disposition='/properties/clusterProfile',
                 default=dict(),
                 options=dict(
                     pull_secret=dict(
                         type='str',
                         no_log=True,
-                        updatable=False,
-                        disposition='pullSecret',
-                        purgeIfNone=True
                     ),
                     cluster_resource_group_id=dict(
                         type='str',
-                        updatable=False,
-                        disposition='resourceGroupId',
-                        purgeIfNone=True
                     ),
                     domain=dict(
                         type='str',
-                        updatable=False,
-                        disposition='domain',
-                        purgeIfNone=True
                     ),
                     version=dict(
                         type='str',
-                        updatable=False,
-                        disposition='version',
-                        purgeIfNone=True
                     )
                 ),
             ),
             service_principal_profile=dict(
                 type='dict',
-                disposition='/properties/servicePrincipalProfile',
                 options=dict(
                     client_id=dict(
                         type='str',
-                        updatable=False,
-                        disposition='clientId',
                         required=True
                     ),
                     client_secret=dict(
                         type='str',
                         no_log=True,
-                        updatable=False,
-                        disposition='clientSecret',
                         required=True
                     )
                 )
             ),
             network_profile=dict(
                 type='dict',
-                disposition='/properties/networkProfile',
                 options=dict(
                     pod_cidr=dict(
                         type='str',
-                        updatable=False,
-                        disposition='podCidr'
                     ),
                     service_cidr=dict(
                         type='str',
-                        updatable=False,
-                        disposition='serviceCidr'
                     )
                 ),
                 default=dict(
@@ -501,21 +472,15 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             ),
             master_profile=dict(
                 type='dict',
-                disposition='/properties/masterProfile',
                 options=dict(
                     vm_size=dict(
                         type='str',
-                        updatable=False,
-                        disposition='vmSize',
                         choices=['Standard_D8s_v3',
                                  'Standard_D16s_v3',
                                  'Standard_D32s_v3'],
-                        purgeIfNone=True
                     ),
                     subnet_id=dict(
                         type='str',
-                        updatable=False,
-                        disposition='subnetId',
                         required=True
                     )
                 )
@@ -523,94 +488,66 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             worker_profiles=dict(
                 type='list',
                 elements='dict',
-                disposition='/properties/workerProfiles',
                 options=dict(
                     name=dict(
                         type='str',
-                        disposition='name',
-                        updatable=False,
                         required=True,
                         choices=['worker']
                     ),
                     count=dict(
                         type='int',
-                        disposition='count',
-                        updatable=False,
-                        purgeIfNone=True
                     ),
                     vm_size=dict(
                         type='str',
-                        disposition='vmSize',
-                        updatable=False,
                         choices=['Standard_D4s_v3',
                                  'Standard_D8s_v3'],
-                        purgeIfNone=True
                     ),
                     subnet_id=dict(
                         type='str',
-                        disposition='subnetId',
-                        updatable=False,
                         required=True
                     ),
                     disk_size=dict(
                         type='int',
-                        disposition='diskSizeGB',
-                        updatable=False,
-                        purgeIfNone=True
                     )
                 )
             ),
             api_server_profile=dict(
                 type='dict',
-                disposition='/properties/apiserverProfile',
                 options=dict(
                     visibility=dict(
                         type='str',
-                        disposition='visibility',
                         choices=['Public', 'Private'],
                         default='Public'
                     ),
                     url=dict(
                         type='str',
-                        disposition='*',
-                        updatable=False
                     ),
                     ip=dict(
                         type='str',
-                        disposition='*',
-                        updatable=False
                     )
                 )
             ),
             ingress_profiles=dict(
                 type='list',
                 elements='dict',
-                disposition='/properties/ingressProfiles',
                 options=dict(
                     name=dict(
                         type='str',
-                        disposition='name',
-                        updatable=False,
                         choices=['default'],
                         default='default'
                     ),
                     visibility=dict(
                         type='str',
-                        disposition='visibility',
-                        updatable=False,
                         choices=['Public', 'Private'],
                         default='Public'
                     ),
                     ip=dict(
                         type='str',
-                        disposition='*',
-                        updatable=False
                     )
                 )
             ),
             provisioning_state=dict(
                 type='str',
-                disposition='/properties/provisioningState'
             ),
             state=dict(
                 type='str',
@@ -630,6 +567,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
         self.to_do = Actions.NoAction
 
         self.body = {}
+        self.body['properties'] = {}
         self.query_parameters = {}
         self.header_parameters = {}
 
@@ -645,9 +583,55 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                self.body[key] = kwargs[key]
+                if key == 'cluster_profile':
+                    self.body['properties']['clusterProfile'] = {}
+                    for item in ['pull_secret', 'cluster_resource_group_id', 'domain', 'version']:
+                        if item == 'pull_secret':
+                            self.body['properties']['clusterProfile']['pullSecret'] = kwargs[key].get(item)
+                        elif item == 'cluster_resource_group_id':
+                            self.body['properties']['clusterProfile']['resourceGroupId'] = kwargs[key].get(item)
+                        elif item == 'domain':
+                            self.body['properties']['clusterProfile']['domain'] = kwargs[key].get(item)
+                        elif item == 'version':
+                            self.body['properties']['clusterProfile']['version'] = kwargs[key].get(item)
+                elif key == 'service_principal_profile':
+                    self.body['properties']['servicePrincipalProfile'] = {}
+                    self.body['properties']['servicePrincipalProfile']['ClientId'] = kwargs[key].get('client_id')
+                    self.body['properties']['servicePrincipalProfile']['clientSecret'] = kwargs[key].get('client_secret')
+                elif key == 'network_profile':
+                    self.body['properties']['networkProfile'] = {}
+                    for item in kwargs[key].keys():
+                        if item == 'pod_cidr':
+                            self.body['properties']['networkProfile']['podCidr'] = kwargs[key].get(item)
+                        elif item == 'service_cidr':
+                            self.body['properties']['networkProfile']['serviceCidr'] = kwargs[key].get(item)
+                elif key == 'master_profile':
+                    self.body['properties']['masterProfile'] = {}
+                    if 'subnet_id' in kwargs[key].keys():
+                        self.body['properties']['masterProfile']['subnetId'] = kwargs[key].get('subnet_id')
+                    self.body['properties']['masterProfile']['vmSize'] = kwargs[key].get('vm_size')
+                elif key == 'worker_profiles':
+                    self.body['properties']['workerProfiles'] = []
+                    for item in kwargs[key]:
+                        worker_profile = {}
+                        if item.get('name') is not None:
+                            worker_profile['name'] = item['name']
+                        if item.get('subnet_id') is not None:
+                            worker_profile['subnetId'] = item['subnet_id']
+                        worker_profile['count'] = item.get('count')
+                        worker_profile['vmSize'] = item.get('vm_size')
+                        worker_profile['diskSizeGB'] = item.get('disk_size')
 
-        self.inflate_parameters(self.module_arg_spec, self.body, 0)
+                        self.body['properties']['workerProfiles'].append(worker_profile)
+                elif key == 'api_server_profile':
+                    self.body['properties']['apiserverProfile'] = kwargs[key]
+                elif key == 'ingress_profiles':
+                    self.body['properties']['ingressProfiles'] = kwargs[key]
+                elif key == 'provisioning_state':
+                    self.body['properties']['provisioningState'] = kwargs[key]
+                else:
+                    self.body[key] = kwargs[key]
+
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,

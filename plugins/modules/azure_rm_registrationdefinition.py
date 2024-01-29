@@ -261,63 +261,51 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
             ),
             properties=dict(
                 type='dict',
-                disposition='/properties',
                 options=dict(
                     description=dict(
                         type='str',
-                        disposition='description'
                     ),
                     authorizations=dict(
                         type='list',
-                        disposition='authorizations',
                         required=True,
                         elements='dict',
                         options=dict(
                             principal_id=dict(
                                 type='str',
-                                disposition='principal_id',
                                 required=True
                             ),
                             role_definition_id=dict(
                                 type='str',
-                                disposition='role_definition_id',
                                 required=True
                             )
                         )
                     ),
                     registration_definition_name=dict(
                         type='str',
-                        disposition='registration_definition_name'
                     ),
                     managed_by_tenant_id=dict(
                         type='str',
-                        disposition='managed_by_tenant_id',
                         required=True
                     )
                 )
             ),
             plan=dict(
                 type='dict',
-                disposition='/plan',
                 options=dict(
                     name=dict(
                         type='str',
-                        disposition='name',
                         required=True
                     ),
                     publisher=dict(
                         type='str',
-                        disposition='publisher',
                         required=True
                     ),
                     product=dict(
                         type='str',
-                        disposition='product',
                         required=True
                     ),
                     version=dict(
                         type='str',
-                        disposition='version',
                         required=True
                     )
                 )
@@ -349,8 +337,6 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
             elif kwargs[key] is not None:
                 self.body[key] = kwargs[key]
 
-        self.inflate_parameters(self.module_arg_spec, self.body, 0)
-
         if self.registration_definition_id is None:
             self.registration_definition_id = str(uuid.uuid4())
 
@@ -376,11 +362,16 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                modifiers = {}
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                self.results['modifiers'] = modifiers
-                self.results['compare'] = []
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
+                if self.body.get('plan') is not None:
+                    if old_response.get('plan') is not None and \
+                       not all(self.body['plan'][item] == old_response['plan'].get(item)
+                       for item in self.body['plan'].keys()):
+                        self.to_do = Actions.Update
+                    else:
+                        self.to_do = Actions.Update
+                elif (self.body.get('properties') is not None and
+                      not all(self.body['properties'][item] == old_response['properties'].get(item)
+                      for item in self.body['properties'].keys())):
                     self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):

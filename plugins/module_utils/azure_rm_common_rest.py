@@ -82,7 +82,7 @@ class GenericRestClient(object):
         response = self._client.send_request(request, **operation_config)
 
         if response.status_code not in expected_status_codes:
-            exp = SendRequestException(response, response.status_code)
+            exp = SendRequestException(response.text(), response.status_code)
             raise exp
         elif response.status_code == 202 and polling_timeout > 0:
             def get_long_running_output(response):

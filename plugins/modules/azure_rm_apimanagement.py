@@ -296,41 +296,30 @@ class AzureApiManagement(AzureRMModuleBaseExt):
         self.module_arg_spec = dict(
             resource_group=dict(
                 type='str',
-                updatable=False,
-                disposition='resourceGroupName',
                 required=True
             ),
             service_name=dict(
                 type='str',
-                updatable=False,
-                disposition='serviceName',
                 required=True
             ),
             api_id=dict(
                 type='str',
-                updatable=False,
-                disposition='apiId',
                 required=True
             ),
             description=dict(
                 type='str',
-                disposition='/properties/description'
             ),
             authentication_settings=dict(
                 type='dict',
-                disposition='/properties/authenticationSettings',
                 options=dict(
                     o_auth2=dict(
                         type='dict',
-                        disposition='oAuth2',
                         options=dict(
                             authorization_server_id=dict(
                                 type='str',
-                                disposition='authorizationServerId'
                             ),
                             scope=dict(
                                 type='str',
-                                disposition='scope'
                             )
                         )
                     ),
@@ -339,12 +328,10 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                         options=dict(
                             openid_provider_id=dict(
                                 type='str',
-                                disposition='openidProviderId'
                             ),
                             bearer_token_sending_methods=dict(
                                 type='list',
                                 elements='str',
-                                disposition='bearerTokenSendingMethods',
                                 choices=['authorizationHeader', 'query']
                             )
                         )
@@ -354,7 +341,6 @@ class AzureApiManagement(AzureRMModuleBaseExt):
             subscription_key_parameter_names=dict(
                 type='dict',
                 no_log=True,
-                disposition='/properties/subscriptionKeyParameterNames',
                 options=dict(
                     header=dict(
                         type='str',
@@ -368,63 +354,49 @@ class AzureApiManagement(AzureRMModuleBaseExt):
             ),
             type=dict(
                 type='str',
-                disposition='/properties/type',
                 choices=['http', 'soap']
             ),
             api_revision=dict(
                 type='str',
-                disposition='/properties/apiRevision'
             ),
             api_version=dict(
                 type='str',
-                disposition='/properties/apiVersion'
             ),
             is_current=dict(
                 type='bool',
-                disposition='/properties/isCurrent'
             ),
             api_revision_description=dict(
                 type='str',
-                disposition='/properties/apiRevisionDescription'
             ),
             api_version_description=dict(
                 type='str',
-                disposition='/properties/apiVersionDescription'
             ),
             api_version_set_id=dict(
                 type='str',
-                disposition='/properties/apiVersionSetId',
             ),
             subscription_required=dict(
                 type='bool',
-                disposition='/properties/subscriptionRequired'
             ),
             source_api_id=dict(
                 type='str',
-                disposition='/properties/sourceApiId',
             ),
             display_name=dict(
                 type='str',
-                disposition='/properties/displayName'
             ),
             service_url=dict(
                 type='str',
-                disposition='/properties/serviceUrl'
             ),
             path=dict(
                 type='str',
-                disposition='/properties/*',
             ),
             protocols=dict(
                 type='list',
                 elements='str',
-                disposition='/properties/protocols',
                 choices=['http',
                          'https']
             ),
             api_version_set=dict(
                 type='dict',
-                disposition='/properties/apiVersionSet',
                 options=dict(
                     id=dict(
                         type='str'
@@ -437,28 +409,23 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                     ),
                     versioning_scheme=dict(
                         type='str',
-                        disposition='versioningScheme',
                         choices=['Segment',
                                  'Query',
                                  'Header']
                     ),
                     version_query_name=dict(
                         type='str',
-                        disposition='versionQueryName'
                     ),
                     version_header_name=dict(
                         type='str',
-                        disposition='versionHeaderName'
                     )
                 )
             ),
             value=dict(
                 type='str',
-                disposition='/properties/*'
             ),
             format=dict(
                 type='str',
-                disposition='/properties/*',
                 choices=['wadl-xml',
                          'wadl-link-json',
                          'swagger-json',
@@ -471,21 +438,17 @@ class AzureApiManagement(AzureRMModuleBaseExt):
             ),
             wsdl_selector=dict(
                 type='dict',
-                disposition='/properties/wsdlSelector',
                 options=dict(
                     wsdl_service_name=dict(
                         type='str',
-                        disposition='wsdlServiceName'
                     ),
                     wsdl_endpoint_name=dict(
                         type='str',
-                        disposition='wsdlEndpointName'
                     )
                 )
             ),
             api_type=dict(
                 type='str',
-                disposition='/properties/apiType',
                 choices=['http', 'soap']
             ),
             state=dict(
@@ -507,6 +470,7 @@ class AzureApiManagement(AzureRMModuleBaseExt):
         self.to_do = Actions.NoAction
 
         self.body = {}
+        self.body['properties'] = {}
         self.query_parameters = {}
         self.query_parameters['api-version'] = '2022-08-01'
         self.header_parameters = {}
@@ -527,10 +491,76 @@ class AzureApiManagement(AzureRMModuleBaseExt):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                self.body[key] = kwargs[key]
+                if key == 'description':
+                    self.body['properties']['description'] = kwargs[key]
+                elif key == 'authentication_settings':
+                    self.body['properties']['authenticationSettings'] = {}
+                    if kwargs[key].get('o_auth2') is not None:
+                        self.body['properties']['authenticationSettings']['oAuth2'] = {}
+                        for item in kwargs[key]['o_auth2'].keys():
+                            if item == 'authorization_server_id':
+                                authorization_id = kwargs[key]['o_auth2']['authorization_server_id']
+                                self.body['properties']['authenticationSettings']['oAuth2']['authorizationServerId'] = authorization_id
+                            elif item == 'scope':
+                                self.body['properties']['authenticationSettings']['oAuth2']['scope'] = kwargs[key]['o_auth2']['scope']
+                    elif kwargs[key].get('openid') is not None:
+                        self.body['properties']['authenticationSettings']['openid'] = {}
+                        for item in kwargs[key]['openid'].keys():
+                            if item == 'openid_provider_id' and kwargs[key]['openid'].get('openid_provider_id') is not None:
+                                openid_pro = kwargs[key]['openid'].get('openid_provider_id')
+                                self.body['properties']['authenticationSettings']['openid']['openidProviderId'] = openid_pro
+                            elif item == 'bearer_token_sending_methods' and kwargs[key]['openid'].get('bearer_token_sending_methods') is not None:
+                                bearer_token = kwargs[key]['openid']['bearer_token_sending_methods']
+                                self.body['properties']['authenticationSettings']['openid']['bearerTokenSendingMethods'] = bearer_token
+                elif key == 'subscription_key_parameter_names':
+                    self.body['properties']['subscriptionKeyParameterNames'] = kwargs[key]
+                elif key == 'type':
+                    self.body['properties']['type'] = kwargs[key]
+                elif key == 'api_revision':
+                    self.body['properties']['apiRevision'] = kwargs[key]
+                elif key == 'api_version':
+                    self.body['properties']['apiVersion'] = kwargs[key]
+                elif key == 'is_current':
+                    self.body['properties']['isCurrent'] = kwargs[key]
+                elif key == 'api_revision_description':
+                    self.body['properties']['apiRevisionDescription'] = kwargs[key]
+                elif key == 'api_version_description':
+                    self.body['properties']['apiVersionDescription'] = kwargs[key]
+                elif key == 'api_version_set_id':
+                    self.body['properties']['apiVersionSetId'] = kwargs[key]
+                elif key == 'subscription_required':
+                    self.body['properties']['subscriptionRequired'] = kwargs[key]
+                elif key == 'source_api_id':
+                    self.body['properties']['sourceApiId'] = kwargs[key]
+                elif key == 'display_name':
+                    self.body['properties']['displayName'] = kwargs[key]
+                elif key == 'service_url':
+                    self.body['properties']['serviceUrl'] = kwargs[key]
+                elif key == 'protocols':
+                    self.body['properties']['protocols'] = kwargs[key]
+                elif key == 'api_version_set':
+                    self.body['properties']['apiVersionSet'] = {}
+                    for item in kwargs[key].keys():
+                        if item == 'versioning_scheme':
+                            self.body['properties']['apiVersionSet'] = kwargs[key].get('versioning_scheme')
+                        elif item == 'version_query_name':
+                            self.body['properties']['versionQueryName'] = kwargs[key].get('version_query_name')
+                        elif item == 'version_header_name':
+                            self.body['properties']['versionHeaderName'] = kwargs[key].get('version_header_name')
+                        else:
+                            self.body['properties'][item] = kwargs[key].get(item)
+                elif key == 'wsdl_selector':
+                    self.body['properties']['wsdlSelector'] = {}
+                    for item in kwargs[key].keys():
+                        if item == 'wsdl_service_name':
+                            self.body['properties']['wsdlSelector']['wsdlServiceName'] = kwargs[key].get(item)
+                        if item == 'wsdl_endpoint_name':
+                            self.body['properties']['wsdlSelector']['wsdlEndpointName'] = kwargs[key].get(item)
+                elif key == 'api_type':
+                    self.body['properties']['apiType'] = kwargs[key]
+                else:
+                    self.body['properties'][key] = kwargs[key]
 
-        # https://docs.microsoft.com/en-us/azure/templates/microsoft.apimanagement/service/apis
-        self.inflate_parameters(self.module_arg_spec, self.body, 0)
         self.url = self.get_url()
         old_response = None
         response = None
@@ -551,11 +581,75 @@ class AzureApiManagement(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                modifiers = {}
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                self.results['modifiers'] = modifiers
-                self.results['compare'] = []
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
+                if self.body['properties'].get('description') is not None and \
+                   self.body['properties']['description'] != old_response['properties']['description']:
+                    self.to_do = Actions.Update
+                elif self.body['properties'].get('authenticationSettings') is not None:
+                    if old_response['properties'].get('authenticationSettings') is None:
+                        self.to_do = Actions.Update
+                    elif (self.body['properties']['authenticationSettings'].get('oAuth2') is not None and
+                          self.body['properties']['authenticationSettings']['oAuth2'] != old_response['properties']['authenticationSettings'].get('oAuth2')):
+                        self.to_do = Actions.Update
+                    elif (self.body['properties']['authenticationSettings'].get('openid') is not None and
+                          self.body['properties']['authenticationSettings']['openid'] != old_response['properties']['authenticationSettings'].get('openid')):
+                        self.to_do = Actions.Update
+                elif self.body['properties'].get('subscriptionKeyParameterNames') is not None:
+                    tt = old_response['properties']
+                    if old_response['properties'].get('subscriptionKeyParameterNames') is None:
+                        self.to_do = Actions.Update
+                    elif (not all(self.body['properties']['subscriptionKeyParameterNames'].get(item) == tt['subscriptionKeyParameterNames'].get(item)
+                          for item in self.body['properties']['subscriptionKeyParameterNames'].keys())):
+                        self.to_do = Actions.Update
+                elif (self.body['properties'].get('apiRevision') is not None and
+                      self.body['properties']['apiRevision'] != old_response['properties'].get('apiRevision')):
+                    self.to_do = Actions.Update
+                elif (self.body['properties'].get('apiVersion') is not None and
+                      self.body['properties']['apiVersion'] != old_response['properties'].get('apiVersion')):
+                    self.to_do == Actions.Update
+                elif (self.body['properties'].get('isCurrent') is not None and
+                      self.body['properties']['isCurrent'] != old_response['properties'].get('isCurrent')):
+                    self.to_do = Actions.Update
+                elif (self.body['properties'].get('apiRevisionDescription') is not None and self.body['properties']['apiRevisionDescription'] !=
+                      old_response['properties'].get('apiRevisionDescription')):
+                    self.to_do = Actions.Update
+                elif (self.body['properties'].get('apiVersionDescription') is not None and
+                      self.body['properties']['apiVersionDescription'] != old_response['properties'].get('apiVersionDescription')):
+                    self.to_do = Actions.Update
+                elif (self.body['properties'].get('apiVersionSetId') is not None and
+                      self.body['properties']['apiVersionSetId'] != old_response['properties'].get('apiVersionSetId')):
+                    self.to_do = Actions.Update
+                elif (self.body['properties'].get('subscriptionRequired') is not None and
+                      self.body['properties']['subscriptionRequired'] != old_response['properties'].get('subscriptionRequired')):
+                    self.to_do = Actions.Update
+                elif (self.body['properties'].get('sourceApiId') is not None and
+                      self.body['properties']['sourceApiId'] != old_response['properties'].get('sourceApiId')):
+                    self.to_do = Actions.Update
+                elif (self.body['properties'].get('displayName') is not None and
+                      self.body['properties']['displayName'] != old_response['properties'].get('displayName')):
+                    self.to_do = Actions.Update
+                elif (self.body['properties'].get('serviceUrl') is not None and
+                      self.body['properties']['serviceUrl'] != old_response['properties'].get('serviceUrl')):
+                    self.to_do = Actions.Update
+                elif self.body['properties'].get('path') is not None and self.body['properties']['path'] != old_response['properties'].get('path'):
+                    self.to_do = Actions.Update
+                elif (self.body['properties'].get('protocols') is not None and
+                      self.body['properties']['protocols'] != old_response['properties'].get('protocols')):
+                    self.to_do = Actions.Update
+                elif self.body['properties'].get('type') is not None and self.body['properties']['type'] != old_response['properties'].get('type'):
+                    self.to_do = Actions.Update
+                elif self.body['properties'].get('apiType') is not None and self.body['properties']['apiType'] != old_response['properties'].get('apiType'):
+                    self.to_do = Actions.Update
+                elif self.body['properties'].get('value') is not None and self.body['properties']['value'] != old_response['properties'].get('value'):
+                    self.to_do = Actions.Update
+                elif self.body['properties'].get('format') is not None and self.body['properties']['format'] != old_response['properties'].get('format'):
+                    self.to_do = Actions.Update
+                elif (self.body['properties'].get('wsdlSelector') is not None and
+                      not all(self.body['properties']['wsdlSelector'][item] == old_response['properties']['wsdlSelector'].get(item)
+                      for item in self.body['properties']['wsdlSelector'].keys())):
+                    self.to_do = Actions.Update
+                elif (self.body['properties'].get('apiVersionSet') is not None and
+                      not all(self.body['properties']['apiVersionSet'][item] == old_response['properties']['apiVersionSet'].get(item)
+                      for item in self.body['properties']['apiVersionSet'].keys())):
                     self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):

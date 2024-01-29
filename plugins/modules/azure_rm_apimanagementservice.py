@@ -113,32 +113,23 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
         self.module_arg_spec = dict(
             resource_group=dict(
                 type='str',
-                updatable=False,
-                disposition='resourceGroupName',
                 required=True
             ),
             name=dict(
                 type='str',
-                updatable=False,
-                disposition='serviceName',
                 required=True
             ),
             location=dict(
                 type='str',
-                updatable=False,
-                disposition='location'
             ),
             publisher_name=dict(
                 type='str',
-                disposition='/properties/publisherName'
             ),
             publisher_email=dict(
                 type='str',
-                disposition='/properties/publisherEmail'
             ),
             sku_name=dict(
                 type='str',
-                disposition='/sku/name',
                 choices=['Developer',
                          'Standard',
                          'Premium',
@@ -147,7 +138,6 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
             ),
             sku_capacity=dict(
                 type='int',
-                disposition='/sku/capacity'
             ),
             state=dict(
                 type='str',
@@ -168,6 +158,8 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
         self.to_do = Actions.NoAction
 
         self.body = {}
+        self.body['properties'] = {}
+        self.body['sku'] = {}
         self.query_parameters = {}
         self.query_parameters['api-version'] = '2022-08-01'
         self.header_parameters = {}
@@ -182,9 +174,16 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                self.body[key] = kwargs[key]
-
-        self.inflate_parameters(self.module_arg_spec, self.body, 0)
+                if key == 'publisher_name':
+                    self.body['properties']['publisherName'] = kwargs[key]
+                elif key == 'publisher_email':
+                    self.body['properties']['publisherEmail'] = kwargs[key]
+                elif key == 'sku_name':
+                    self.body['sku']['name'] = kwargs[key]
+                elif key == 'sku_capacity':
+                    self.body['sku']['capacity'] = kwargs[key]
+                else:
+                    self.body[key] = kwargs[key]
 
         old_response = None
         response = None
@@ -224,12 +223,15 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                modifiers = {}
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                self.results['modifiers'] = modifiers
-                self.results['compare'] = []
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
-                    self.to_do = Actions.Update
+                for key in self.body.keys():
+                    if key == 'properties':
+                        for key in self.body['properties'].keys():
+                            if self.body['properties'][key] != old_response['properties'].get(key):
+                                self.to_do = Actions.Update
+                    elif key == 'sku':
+                        for key in self.body['sku'].keys():
+                            if self.body['sku'][key] != old_response['sku'].get(key):
+                                self.to_do = Actions.Update
 
         self.body['location'] = self.location
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
@@ -271,14 +273,24 @@ class AzureRMApiManagementService(AzureRMModuleBaseExt):
     def create_update_resource(self):
         # Creating / Updating the ApiManagementService instance.
         try:
-            response = self.mgmt_client.query(self.url,
-                                              'PUT',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              self.body,
-                                              self.status_code,
-                                              600,
-                                              30)
+            if self.to_do == Actions.Create:
+                response = self.mgmt_client.query(self.url,
+                                                  'PUT',
+                                                  self.query_parameters,
+                                                  self.header_parameters,
+                                                  self.body,
+                                                  self.status_code,
+                                                  600,
+                                                  30)
+            else:
+                response = self.mgmt_client.query(self.url,
+                                                  'PATCH',
+                                                  self.query_parameters,
+                                                  self.header_parameters,
+                                                  self.body,
+                                                  self.status_code,
+                                                  600,
+                                                  30)
         except Exception as exc:
             self.log('Error attempting to create the ApiManagementService instance.')
             self.fail('Error creating the ApiManagementService instance: {0}'.format(str(exc)))

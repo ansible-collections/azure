@@ -142,24 +142,17 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
         self.module_arg_spec = dict(
             resource_group=dict(
                 type='str',
-                updatable=False,
-                disposition='resourceGroupName',
                 required=True
             ),
             name=dict(
                 type='str',
-                updatable=False,
-                disposition='snapshotName',
                 required=True
             ),
             location=dict(
-                type='str',
-                updatable=False,
-                disposition='/'
+                type='str'
             ),
             sku=dict(
                 type='dict',
-                disposition='/',
                 options=dict(
                     name=dict(
                         type='str',
@@ -174,29 +167,22 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
             ),
             os_type=dict(
                 type='str',
-                disposition='/properties/osType',
                 choices=['Windows',
                          'Linux']
             ),
             incremental=dict(type='bool', default=False),
             creation_data=dict(
                 type='dict',
-                disposition='/properties/creationData',
                 options=dict(
                     create_option=dict(
                         type='str',
-                        disposition='createOption',
                         choices=['Import', 'Copy'],
                     ),
                     source_uri=dict(
-                        type='str',
-                        disposition='sourceUri',
-                        purgeIfNone=True
+                        type='str'
                     ),
                     source_id=dict(
-                        type='str',
-                        disposition='sourceResourceId',
-                        purgeIfNone=True
+                        type='str'
                     )
                 )
             ),
@@ -233,16 +219,22 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
                                                supports_tags=True)
 
     def exec_module(self, **kwargs):
-        for key in list(self.module_arg_spec.keys()):
+        for key in list(self.module_arg_spec.keys()) + ['tags']:
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
                 if key == 'incremental':
                     self.body['properties']['incremental'] = kwargs[key]
+                elif key == 'os_type':
+                    self.body['properties']['osType'] = kwargs[key]
+                elif key == 'creation_data':
+                    self.body['properties']['creationData'] = dict()
+                    if kwargs[key].get('create_option') is not None:
+                        self.body['properties']['creationData']['createOption'] = kwargs[key].get('create_option')
+                        self.body['properties']['creationData']['sourceUri'] = kwargs[key].get('source_uri')
+                        self.body['properties']['creationData']['sourceResourceId'] = kwargs[key].get('source_id')
                 else:
                     self.body[key] = kwargs[key]
-
-        self.inflate_parameters(self.module_arg_spec, self.body, 0)
 
         old_response = None
         response = None
@@ -282,12 +274,22 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                modifiers = {}
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                self.results['modifiers'] = modifiers
-                self.results['compare'] = []
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
+                if self.body.get('sku') is not None and \
+                   not all(self.body['sku'][item] == old_response['sku'].get(item) for item in self.body['sku'].keys()):
+                    self.to_do = Actions.Update
+                if self.body['properties'].get('incremental') is not None and \
+                   self.body['properties']['incremental'] != old_response['properties']['incremental']:
+                    self.to_do = Actions.Update
+                if self.body['properties'].get('osType') is not None and \
+                   self.body['properties']['osType'] != old_response['properties'].get('osType'):
+                    self.to_do = Actions.Update
+                if self.body['properties'].get('creationData') is not None and \
+                   not all(self.body['properties']['creationData'][item] == old_response['properties']['creationData'].get(item)
+                   for item in self.body['properties']['creationData'].keys()):
+                    self.to_do = Actions.Update
+
+                update_tags, self.body['tags'] = self.update_tags(old_response.get('tags'))
+                if update_tags:
                     self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):

@@ -354,40 +354,30 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
         self.module_arg_spec = dict(
             resource_group=dict(
                 type='str',
-                disposition='resource_group_name',
                 required=True
             ),
             name=dict(
                 type='str',
-                disposition='azure_firewall_name',
                 required=True
             ),
             location=dict(
                 type='str',
-                updatable=False,
-                disposition='/',
-                comparison='location'
             ),
             application_rule_collections=dict(
                 type='list',
                 elements='dict',
-                disposition='/properties/applicationRuleCollections',
                 options=dict(
                     priority=dict(
                         type='int',
-                        disposition='properties/*'
                     ),
                     action=dict(
                         type='str',
                         choices=['allow',
                                  'deny'],
-                        disposition='properties/action/type',
-                        pattern='camelize'
                     ),
                     rules=dict(
                         type='list',
                         elements='raw',
-                        disposition='properties/*',
                         options=dict(
                             name=dict(
                                 type='str'
@@ -398,7 +388,6 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                             source_addresses=dict(
                                 type='list',
                                 elements='str',
-                                disposition='sourceAddresses'
                             ),
                             protocols=dict(
                                 type='list',
@@ -406,7 +395,6 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                                 options=dict(
                                     type=dict(
                                         type='str',
-                                        disposition='protocolType'
                                     ),
                                     port=dict(
                                         type='str'
@@ -416,12 +404,10 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                             target_fqdns=dict(
                                 type='list',
                                 elements='raw',
-                                disposition='targetFqdns'
                             ),
                             fqdn_tags=dict(
                                 type='list',
                                 elements='raw',
-                                disposition='fqdnTags'
                             )
                         )
                     ),
@@ -433,23 +419,18 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             nat_rule_collections=dict(
                 type='list',
                 elements='dict',
-                disposition='/properties/natRuleCollections',
                 options=dict(
                     priority=dict(
                         type='int',
-                        disposition='properties/*'
                     ),
                     action=dict(
                         type='str',
-                        disposition='properties/action/type',
                         choices=['snat',
                                  'dnat'],
-                        pattern='camelize'
                     ),
                     rules=dict(
                         type='list',
                         elements='dict',
-                        disposition='properties/*',
                         options=dict(
                             name=dict(
                                 type='str'
@@ -460,17 +441,14 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                             source_addresses=dict(
                                 type='list',
                                 elements='str',
-                                disposition='sourceAddresses'
                             ),
                             destination_addresses=dict(
                                 type='list',
                                 elements='str',
-                                disposition='destinationAddresses'
                             ),
                             destination_ports=dict(
                                 type='list',
                                 elements='str',
-                                disposition='destinationPorts'
                             ),
                             protocols=dict(
                                 type='list',
@@ -478,11 +456,9 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                             ),
                             translated_address=dict(
                                 type='str',
-                                disposition='translatedAddress'
                             ),
                             translated_port=dict(
                                 type='str',
-                                disposition='translatedPort'
                             )
                         )
                     ),
@@ -494,23 +470,18 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             network_rule_collections=dict(
                 type='list',
                 elements='dict',
-                disposition='/properties/networkRuleCollections',
                 options=dict(
                     priority=dict(
                         type='int',
-                        disposition='properties/*'
                     ),
                     action=dict(
                         type='str',
                         choices=['allow',
                                  'deny'],
-                        disposition='properties/action/type',
-                        pattern='camelize'
                     ),
                     rules=dict(
                         type='list',
                         elements='dict',
-                        disposition='properties/*',
                         options=dict(
                             name=dict(
                                 type='str'
@@ -525,17 +496,14 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                             source_addresses=dict(
                                 type='list',
                                 elements='str',
-                                disposition='sourceAddresses'
                             ),
                             destination_addresses=dict(
                                 type='list',
                                 elements='str',
-                                disposition='destinationAddresses'
                             ),
                             destination_ports=dict(
                                 type='list',
                                 elements='str',
-                                disposition='destinationPorts'
                             )
                         )
                     ),
@@ -547,22 +515,12 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             ip_configurations=dict(
                 type='list',
                 elements='dict',
-                disposition='/properties/ipConfigurations',
                 options=dict(
                     subnet=dict(
                         type='raw',
-                        disposition='properties/subnet/id',
-                        pattern=('/subscriptions/{subscription_id}/resourceGroups'
-                                 '/{resource_group}/providers/Microsoft.Network'
-                                 '/virtualNetworks/{virtual_network_name}/subnets'
-                                 '/{name}')
                     ),
                     public_ip_address=dict(
                         type='raw',
-                        disposition='properties/publicIPAddress/id',
-                        pattern=('/subscriptions/{subscription_id}/resourceGroups'
-                                 '/{resource_group}/providers/Microsoft.Network'
-                                 '/publicIPAddresses/{name}')
                     ),
                     name=dict(
                         type='str'
@@ -579,6 +537,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
         self.resource_group = None
         self.name = None
         self.body = {}
+        self.body['properties'] = {}
 
         self.results = dict(changed=False)
         self.mgmt_client = None
@@ -587,7 +546,6 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
         self.status_code = [200, 201, 202]
         self.to_do = Actions.NoAction
 
-        self.body = {}
         self.query_parameters = {}
         self.query_parameters['api-version'] = '2018-11-01'
         self.header_parameters = {}
@@ -602,9 +560,166 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                self.body[key] = kwargs[key]
+                if key == 'application_rule_collections':
+                    self.body['properties']['applicationRuleCollections'] = []
+                    for item in kwargs[key]:
+                        app_rule = dict(properties={})
+                        if item.get('priority') is not None:
+                            app_rule['properties']['priority'] = item['priority']
+                        if item.get('action') is not None:
+                            app_rule['properties']['action'] = dict(type=item['action'])
+                        if item.get('name') is not None:
+                            app_rule['name'] = item['name']
+                        if item.get('rules') is not None:
+                            app_rule['properties']['rules'] = []
+                            for value in item['rules']:
+                                rule_value = {}
+                                if value.get('name') is not None:
+                                    rule_value['name'] = value['name']
+                                if value.get('description') is not None:
+                                    rule_value['description'] = value['description']
+                                if value.get('source_addresses') is not None:
+                                    rule_value['sourceAddresses'] = value.get('source_addresses')
+                                if value.get('target_fqdns') is not None:
+                                    rule_value['targetFqdns'] = value.get('target_fqdns')
+                                if value.get('fqdn_tags') is not None:
+                                    rule_value['fqdnTags'] = value.get('fqdn_tags')
+                                if value.get('protocols') is not None:
+                                    rule_value['protocols'] = []
+                                    for pp in value['protocols']:
+                                        pro = {}
+                                        if pp.get('type') is not None:
+                                            pro['protocolType'] = pp.get('type')
+                                        if pp.get('port') is not None:
+                                            pro['port'] = pp.get('port')
+                                        rule_value['protocols'].append(pro)
+                                app_rule['properties']['rules'].append(rule_value)
+                        self.body['properties']['applicationRuleCollections'].append(app_rule)
+                elif key == 'nat_rule_collections':
+                    self.body['properties']['natRuleCollections'] = []
+                    for item in kwargs[key]:
+                        nat_rule = dict(properties={})
+                        if item.get('priority') is not None:
+                            nat_rule['properties']['priority'] = item['priority']
+                        if item.get('action') is not None:
+                            nat_rule['properties']['action'] = dict(type=item['action'])
+                        if item.get('name') is not None:
+                            nat_rule['name'] = item['name']
+                        if item.get('rules') is not None:
+                            nat_rule['properties']['rules'] = []
+                            for value in item['rules']:
+                                nat_value = {}
+                                if value.get('name') is not None:
+                                    nat_value['name'] = value.get('name')
+                                if value.get('description') is not None:
+                                    nat_value['description'] = value.get('description')
+                                if value.get('source_addresses') is not None:
+                                    nat_value['sourceAddresses'] = value.get('source_addresses')
+                                if value.get('destination_addresses') is not None:
+                                    nat_value['destinationAddresses'] = value.get('destination_addresses')
+                                if value.get('destination_ports') is not None:
+                                    nat_value['destinationPorts'] = value.get('destination_ports')
+                                if value.get('protocols') is not None:
+                                    nat_value['protocols'] = value.get('protocols')
+                                if value.get('translated_address') is not None:
+                                    nat_value['translatedAddress'] = value.get('translated_address')
+                                if value.get('translated_port') is not None:
+                                    nat_value['translatedPort'] = value.get('translated_port')
+                                nat_rule['properties']['rules'].append(nat_value)
+                        self.body['properties']['natRuleCollections'].append(nat_rule)
+                elif key == 'network_rule_collections':
+                    self.body['properties']['networkRuleCollections'] = []
+                    for item in kwargs[key]:
+                        network_rule = dict(properties={})
+                        if item.get('priority') is not None:
+                            network_rule['properties']['priority'] = item['priority']
+                        if item.get('action') is not None:
+                            network_rule['properties']['action'] = dict(type=item['action'])
+                        if item.get('name') is not None:
+                            network_rule['name'] = item['name']
+                        if item.get('rules') is not None:
+                            network_rule['properties']['rules'] = []
+                            for value in item['rules']:
+                                net_value = {}
+                                if value.get('name') is not None:
+                                    net_value['name'] = value.get('name')
+                                if value.get('description') is not None:
+                                    net_value['description'] = value.get('description')
+                                if value.get('source_addresses') is not None:
+                                    net_value['sourceAddresses'] = value.get('source_addresses')
+                                if value.get('destination_addresses') is not None:
+                                    net_value['destinationAddresses'] = value.get('destination_addresses')
+                                if value.get('destination_ports') is not None:
+                                    net_value['destinationPorts'] = value.get('destination_ports')
+                                if value.get('protocols') is not None:
+                                    net_value['protocols'] = value.get('protocols')
+                                network_rule['properties']['rules'].append(net_value)
+                        self.body['properties']['networkRuleCollections'].append(network_rule)
+                elif key == 'ip_configurations':
+                    self.body['properties']['ipConfigurations'] = []
+                    for item in kwargs[key]:
+                        ipconfig = dict(properties={})
+                        if item.get('subnet') is not None:
+                            ipconfig['properties']['subnet'] = {}
+                            if isinstance(item['subnet'], str):
+                                ipconfig['properties']['subnet']['id'] = item['subnet']
+                            elif isinstance(item['subnet'], dict):
+                                if item['subnet'].get('id') is not None:
+                                    ipconfig['properties']['subnet']['id'] = item['subnet'].get('id')
+                                elif (item['subnet'].get('resource_group') is not None and item['subnet'].get('name') is not None and
+                                      item['subnet'].get('virtual_network_name') is not None):
+                                    ipconfig['properties']['subnet']['id'] = ('/subscriptions/' +
+                                                                              self.subscription_id +
+                                                                              '/resourceGroups/' +
+                                                                              item['subnet'].get('resource_group') +
+                                                                              '/providers/Microsoft.Network/virtualNetworks/' +
+                                                                              item['subnet'].get('virtual_network_name') +
+                                                                              '/subnets/' +
+                                                                              item['subnet'].get('name'))
+                                elif item['subnet'].get('name') is not None and item['subnet'].get('virtual_network_name') is not None:
+                                    ipconfig['properties']['subnet']['id'] = ('/subscriptions/' +
+                                                                              self.subscription_id +
+                                                                              '/resourceGroups/' +
+                                                                              self.resource_group +
+                                                                              '/providers/Microsoft.Network/virtualNetworks/' +
+                                                                              item['subnet'].get('virtual_network_name') +
+                                                                              '/subnets/' +
+                                                                              item['subnet'].get('name'))
+                                else:
+                                    self.fail("The ip_configuration's subnet config error")
+                            else:
+                                self.fail("The ip_configuration's subnet config error")
+                        if item.get('public_ip_address') is not None:
+                            ipconfig['properties']['publicIPAddress'] = {}
+                            if isinstance(item.get('public_ip_address'), str):
+                                ipconfig['properties']['publicIPAddress']['id'] = item.get('public_ip_address')
+                            elif isinstance(item.get('public_ip_address'), dict):
+                                if item['public_ip_address'].get('id') is not None:
+                                    ipconfig['properties']['publicIPAddress']['id'] = item['public_ip_address'].get('id')
+                                elif item['public_ip_address'].get('resource_group') is not None and item['public_ip_address'].get('name') is not None:
+                                    ipconfig['properties']['publicIPAddress']['id'] = ('/subscriptions/' +
+                                                                                       self.subscription_id +
+                                                                                       '/resourceGroups/' +
+                                                                                       item['public_ip_address'].get('resource_group') +
+                                                                                       '/providers/Microsoft.Network/publicIPAddresses/' +
+                                                                                       item['public_ip_address'].get('name'))
+                                elif item['public_ip_address'].get('name') is not None:
+                                    ipconfig['properties']['publicIPAddress']['id'] = ('/subscriptions/' +
+                                                                                       self.subscription_id +
+                                                                                       '/resourceGroups/' +
+                                                                                       self.resource_group +
+                                                                                       '/providers/Microsoft.Network/publicIPAddresses/' +
+                                                                                       item['public_ip_address'].get('name'))
+                                else:
+                                    self.fail("The ip_configuration's public ip address config error")
+                            else:
+                                self.fail("The ip_configuration's public ip address config error")
 
-        self.inflate_parameters(self.module_arg_spec, self.body, 0)
+                        if item.get('name') is not None:
+                            ipconfig['name'] = item['name']
+                        self.body['properties']['ipConfigurations'].append(ipconfig)
+                else:
+                    self.body[key] = kwargs[key]
 
         old_response = None
         response = None
@@ -641,11 +756,12 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                modifiers = {}
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                self.results['modifiers'] = modifiers
-                self.results['compare'] = []
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
+                update_tags, new_tags = self.update_tags(old_response.get('tags'))
+                if update_tags:
+                    self.to_do = Actions.Update
+                    self.body['tags'] = new_tags
+
+                if not self.default_compare({}, self.body, old_response, '', dict(compare=[])):
                     self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):

@@ -85,24 +85,17 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
         self.module_arg_spec = dict(
             resource_group=dict(
                 type='str',
-                updatable=False,
-                disposition='resourceGroupName',
                 required=True
             ),
             name=dict(
                 type='str',
-                updatable=False,
-                disposition='galleryName',
                 required=True
             ),
             location=dict(
-                type='str',
-                updatable=False,
-                disposition='/'
+                type='str'
             ),
             description=dict(
                 type='str',
-                disposition='/properties/*'
             ),
             state=dict(
                 type='str',
@@ -123,6 +116,7 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
         self.to_do = Actions.NoAction
 
         self.body = {}
+        self.body['properties'] = {}
         self.query_parameters = {}
         self.query_parameters['api-version'] = '2019-07-01'
         self.header_parameters = {}
@@ -133,13 +127,14 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
                                                supports_tags=True)
 
     def exec_module(self, **kwargs):
-        for key in list(self.module_arg_spec.keys()):
+        for key in list(self.module_arg_spec.keys()) + ['tags']:
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
-                self.body[key] = kwargs[key]
-
-        self.inflate_parameters(self.module_arg_spec, self.body, 0)
+                if key == 'description':
+                    self.body['properties']['description'] = kwargs[key]
+                else:
+                    self.body[key] = kwargs[key]
 
         old_response = None
         response = None
@@ -179,28 +174,36 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                modifiers = {}
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                self.results['modifiers'] = modifiers
-                self.results['compare'] = []
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
+                if self.body.get('properties') is not None and self.body['properties']['description'] != old_response['properties']['description']:
                     self.to_do = Actions.Update
-                    self.body['properties'].pop('identifier', None)
+                else:
+                    self.body['properties']['description'] = old_response['properties']['description']
 
-        if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
-            self.log('Need to Create / Update the Gallery instance')
+                update_tags, new_tags = self.update_tags(old_response.get('tags'))
+                if update_tags:
+                    self.to_do = Actions.Update
+                    self.body['tags'] = new_tags
 
+        if self.to_do == Actions.Create:
+            self.log('Need to Create the Gallery instance')
             if self.check_mode:
                 self.results['changed'] = True
                 return self.results
-
-            response = self.create_update_resource()
-
+            response = self.create_resource()
             # if not old_response:
             self.results['changed'] = True
             # else:
             #     self.results['changed'] = old_response.__ne__(response)
-            self.log('Creation / Update done')
+            self.log('Creation done')
+        elif self.to_do == Actions.Update:
+            self.log('Need to Update the Gallery instance')
+            if self.check_mode:
+                self.results['changed'] = True
+                return self.results
+            response = self.update_resource()
+            # if not old_response:
+            self.results['changed'] = True
+            self.log('Update done')
         elif self.to_do == Actions.Delete:
             self.log('Gallery instance deleted')
             self.results['changed'] = True
@@ -224,8 +227,33 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
 
         return self.results
 
-    def create_update_resource(self):
-        # self.log('Creating / Updating the Gallery instance {0}'.format(self.))
+    def update_resource(self):
+        # self.log('Updating the Gallery instance {0}'.format(self.))
+
+        try:
+            response = self.mgmt_client.query(self.url,
+                                              'PATCH',
+                                              self.query_parameters,
+                                              self.header_parameters,
+                                              self.body,
+                                              self.status_code,
+                                              600,
+                                              30)
+        except Exception as exc:
+            self.log('Error attempting to update the Gallery instance.')
+            self.fail('Error updating the Gallery instance: {0}'.format(str(exc)))
+
+        if hasattr(response, 'body'):
+            response = json.loads(response.body())
+        elif hasattr(response, 'context'):
+            response = response.context['deserialized_data']
+        else:
+            self.fail("Updating fail, no match message return, return info as {0}".format(response))
+
+        return response
+
+    def create_resource(self):
+        # self.log('Creating the Gallery instance {0}'.format(self.))
 
         try:
             response = self.mgmt_client.query(self.url,
@@ -245,7 +273,7 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
         elif hasattr(response, 'context'):
             response = response.context['deserialized_data']
         else:
-            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
+            self.fail("Create fail, no match message return, return info as {0}".format(response))
 
         return response
 

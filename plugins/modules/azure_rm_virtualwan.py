@@ -229,7 +229,7 @@ except ImportError:
 
 
 class Actions:
-    NoAction, Create, Update, Delete = range(4)
+    NoAction, Create, Update, Update_tags, Delete = range(5)
 
 
 class AzureRMVirtualWan(AzureRMModuleBaseExt):
@@ -251,45 +251,34 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
                 required=True
             ),
             disable_vpn_encryption=dict(
-                type='bool',
-                disposition='/disable_vpn_encryption'
+                type='bool'
             ),
             virtual_hubs=dict(
                 type='list',
                 elements='dict',
-                updatable=False,
-                disposition='/virtual_hubs',
                 options=dict(
                     id=dict(
-                        type='str',
-                        disposition='id'
+                        type='str'
                     )
                 )
             ),
             vpn_sites=dict(
                 type='list',
                 elements='dict',
-                updatable=False,
-                disposition='/vpn_sites',
                 options=dict(
                     id=dict(
-                        type='str',
-                        disposition='id'
+                        type='str'
                     )
                 )
             ),
             allow_branch_to_branch_traffic=dict(
-                type='bool',
-                disposition='/allow_branch_to_branch_traffic'
+                type='bool'
             ),
             allow_vnet_to_vnet_traffic=dict(
-                type='bool',
-                updatable=False,
-                disposition='/allow_vnet_to_vnet_traffic'
+                type='bool'
             ),
             virtual_wan_type=dict(
                 type='str',
-                disposition='/virtual_wan_type',
                 choices=['Basic', 'Standard']
             ),
             state=dict(
@@ -313,13 +302,11 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
                                                 supports_tags=True)
 
     def exec_module(self, **kwargs):
-        for key in list(self.module_arg_spec.keys()):
+        for key in list(self.module_arg_spec.keys()) + ['tags']:
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
                 self.body[key] = kwargs[key]
-
-        self.inflate_parameters(self.module_arg_spec, self.body, 0)
 
         resource_group = self.get_resource_group(self.resource_group)
         if self.location is None:
@@ -339,18 +326,28 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                modifiers = {}
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                self.results['modifiers'] = modifiers
-                self.results['compare'] = []
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
-                    self.to_do = Actions.Update
+                compare_list = ['disable_vpn_encryption', 'allow_branch_to_branch_traffic']
+                for key in compare_list:
+                    if self.body.get(key) is not None and self.body[key] != old_response[key]:
+                        self.log('parameter {0} does not match the configuration'.format(key))
+                        self.to_do = Actions.Update
+                    else:
+                        self.body[key] = old_response[key]
+
+                update_tags, self.tags = self.update_tags(old_response.get('tags'))
+                if update_tags:
+                    self.to_do = Actions.Update_tags
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.results['changed'] = True
             if self.check_mode:
                 return self.results
             response = self.create_update_resource()
+        elif self.to_do == Actions.Update_tags:
+            self.results['changed'] = True
+            if self.check_mode:
+                return self.results
+            response = self.update_resource_tags(dict(tags=self.tags))
         elif self.to_do == Actions.Delete:
             self.results['changed'] = True
             if self.check_mode:
@@ -362,6 +359,18 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
         if response is not None:
             self.results['state'] = response
         return self.results
+
+    def update_resource_tags(self, tags_parameters):
+        try:
+            response = self.network_client.virtual_wans.update_tags(resource_group_name=self.resource_group,
+                                                                    virtual_wan_name=self.name,
+                                                                    wan_parameters=tags_parameters)
+            if isinstance(response, LROPoller):
+                response = self.get_poller_result(response)
+        except Exception as exc:
+            self.log('Error attempting to Update the VirtualWan instance.')
+            self.fail('Error Updating the VirtualWan instance tags: {0}'.format(str(exc)))
+        return response.as_dict()
 
     def create_update_resource(self):
         try:

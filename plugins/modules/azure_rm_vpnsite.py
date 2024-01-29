@@ -307,7 +307,7 @@ except ImportError:
 
 
 class Actions:
-    NoAction, Create, Update, Delete = range(4)
+    NoAction, Create, Update, Delete, Update_tags = range(5)
 
 
 class AzureRMVpnSite(AzureRMModuleBaseExt):
@@ -326,92 +326,71 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
             ),
             virtual_wan=dict(
                 type='dict',
-                disposition='/virtual_wan',
                 options=dict(
                     id=dict(
                         type='str',
-                        disposition='id'
                     )
                 )
             ),
             device_properties=dict(
                 type='dict',
-                disposition='/device_properties',
                 options=dict(
                     device_vendor=dict(
                         type='str',
-                        disposition='device_vendor'
                     ),
                     device_model=dict(
                         type='str',
-                        disposition='device_model'
                     ),
                     link_speed_in_mbps=dict(
                         type='int',
-                        disposition='link_speed_in_mbps'
                     )
                 )
             ),
             ip_address=dict(
                 type='str',
-                disposition='/ip_address'
             ),
             site_key=dict(
                 type='str',
                 no_log=True,
-                disposition='/site_key'
             ),
             address_space=dict(
                 type='dict',
-                disposition='/address_space',
                 options=dict(
                     address_prefixes=dict(
                         type='list',
-                        disposition='address_prefixes',
                         elements='str'
                     )
                 )
             ),
             bgp_properties=dict(
                 type='dict',
-                disposition='/bgp_properties',
                 options=dict(
                     asn=dict(
                         type='int',
-                        disposition='asn'
                     ),
                     bgp_peering_address=dict(
                         type='str',
-                        disposition='bgp_peering_address'
                     ),
                     peer_weight=dict(
                         type='int',
-                        disposition='peer_weight'
                     ),
                     bgp_peering_addresses=dict(
                         type='list',
-                        disposition='bgp_peering_addresses',
                         elements='dict',
                         options=dict(
                             ipconfiguration_id=dict(
                                 type='str',
-                                disposition='ipconfiguration_id'
                             ),
                             default_bgp_ip_addresses=dict(
                                 type='list',
-                                updatable=False,
-                                disposition='default_bgp_ip_addresses',
                                 elements='str'
                             ),
                             custom_bgp_ip_addresses=dict(
                                 type='list',
-                                disposition='custom_bgp_ip_addresses',
                                 elements='str'
                             ),
                             tunnel_ip_addresses=dict(
                                 type='list',
-                                updatable=False,
-                                disposition='tunnel_ip_addresses',
                                 elements='str'
                             )
                         )
@@ -420,50 +399,39 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
             ),
             is_security_site=dict(
                 type='bool',
-                disposition='/is_security_site'
             ),
             vpn_site_links=dict(
                 type='list',
-                disposition='/vpn_site_links',
                 elements='dict',
                 options=dict(
                     name=dict(
                         type='str',
-                        disposition='name'
                     ),
                     link_properties=dict(
                         type='dict',
-                        disposition='link_properties',
                         options=dict(
                             link_provider_name=dict(
                                 type='str',
-                                disposition='link_provider_name'
                             ),
                             link_speed_in_mbps=dict(
                                 type='int',
-                                disposition='link_speed_in_mbps'
                             )
                         )
                     ),
                     ip_address=dict(
                         type='str',
-                        disposition='ip_address'
                     ),
                     fqdn=dict(
                         type='str',
-                        disposition='fqdn'
                     ),
                     bgp_properties=dict(
                         type='dict',
-                        disposition='bgp_properties',
                         options=dict(
                             asn=dict(
                                 type='int',
-                                disposition='asn'
                             ),
                             bgp_peering_address=dict(
                                 type='str',
-                                disposition='bgp_peering_address'
                             )
                         )
                     )
@@ -471,23 +439,18 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
             ),
             o365_policy=dict(
                 type='dict',
-                disposition='/o365_policy',
                 options=dict(
                     break_out_categories=dict(
                         type='dict',
-                        disposition='break_out_categories',
                         options=dict(
                             allow=dict(
                                 type='bool',
-                                disposition='allow'
                             ),
                             optimize=dict(
                                 type='bool',
-                                disposition='optimize'
                             ),
                             default=dict(
                                 type='bool',
-                                disposition='default'
                             )
                         )
                     )
@@ -514,7 +477,7 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
                                              supports_tags=True)
 
     def exec_module(self, **kwargs):
-        for key in list(self.module_arg_spec.keys()):
+        for key in list(self.module_arg_spec.keys()) + ['tags']:
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
@@ -540,18 +503,62 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                modifiers = {}
-                self.create_compare_modifiers(self.module_arg_spec, '', modifiers)
-                self.results['modifiers'] = modifiers
-                self.results['compare'] = []
-                if not self.default_compare(modifiers, self.body, old_response, '', self.results):
+                if self.body.get('virtual_wan') is not None and self.body['virtual_wan'] != old_response.get('virtual_wan'):
                     self.to_do = Actions.Update
+                for key in self.body.keys():
+                    if key == 'address_space':
+                        if old_response.get('address_space') is None or\
+                           len(self.body['address_space']['address_prefixes']) > len(old_response['address_space']['address_prefixes']) or\
+                           not all(key in old_response['address_space']['address_prefixes'] for key in self.body['address_space']['address_prefixes']):
+                            self.to_do = Actions.Update
+                    elif key == 'device_properties':
+                        if old_response.get('device_properties') is None or\
+                           not all(self.body['device_properties'][key] == old_response['device_properties'].get(key)
+                           for key in self.body['device_properties'].keys()):
+                            self.to_do = Actions.Update
+                    elif key == 'o365_policy':
+                        if old_response.get('o365_policy') is None or\
+                           not all(self.body['o365_policy']['break_out_categories'][key] == old_response['o365_policy']['break_out_categories'].get(key)
+                           for key in self.body['o365_policy']['break_out_categories'].keys()):
+                            self.to_do = Actions.Update
+                    elif key == 'vpn_site_links':
+                        if old_response.get('vpn_site_links') is None or\
+                           not all(self.body['vpn_site_links'][key] == old_response['vpn_site_links'].get(key)
+                           for key in self.body['vpn_site_links'].keys()):
+                            self.to_do = Actions.Update
+                    elif key == 'bgp_properties':
+                        if old_response.get('bgp_properties') is None:
+                            self.to_do = Actions.Update
+                        else:
+                            for item in self.body['bgp_properties'].keys():
+                                if item != 'bgp_peering_addresses' and item != 'peer_weight':
+                                    if self.body['bgp_properties'][item] != old_response['bgp_properties'].get(item):
+                                        self.to_do = Actions.Update
+                                else:
+                                    if self.body['bgp_properties'].get('bgp_peering_addresses') is not None:
+                                        bgp_address = old_response['bgp_properties']['bgp_peering_addresses']
+                                        if old_response['bgp_properties'].get('bgp_peering_addresses') is None or\
+                                           not all(self.body['bgp_properties']['bgp_peering_addresses'][value] == bgp_address.get(value)
+                                           for value in ['ipconfiguration_id', 'custom_bgp_ip_addresses']):
+                                            self.to_do = Actions.Update
+
+                    elif self.body[key] != old_response.get(key):
+                        self.to_do = Actions.Update
+
+                update_tags, self.tags = self.update_tags(old_response.get('tags'))
+                if update_tags:
+                    self.to_do = Actions.Update_tags
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.results['changed'] = True
             if self.check_mode:
                 return self.results
             response = self.create_update_resource()
+        elif self.to_do == Actions.Update_tags:
+            self.results['changed'] = True
+            if self.check_mode:
+                return self.results
+            response = self.update_resource_tags(dict(tags=self.tags))
         elif self.to_do == Actions.Delete:
             self.results['changed'] = True
             if self.check_mode:
@@ -564,6 +571,18 @@ class AzureRMVpnSite(AzureRMModuleBaseExt):
         if response is not None:
             self.results['state'] = response
         return self.results
+
+    def update_resource_tags(self, tags_parameters):
+        try:
+            response = self.network_client.vpn_sites.update_tags(resource_group_name=self.resource_group,
+                                                                 vpn_site_name=self.name,
+                                                                 vpn_site_parameters=tags_parameters)
+            if isinstance(response, LROPoller):
+                response = self.get_poller_result(response)
+        except Exception as exc:
+            self.log('Error attempting to update the VpnSite instance tags.')
+            self.fail('Error updating the VpnSite instance: {0}'.format(str(exc)))
+        return response.as_dict()
 
     def create_update_resource(self):
         try:
