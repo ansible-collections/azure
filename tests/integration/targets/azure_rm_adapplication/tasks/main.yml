@@ -53,6 +53,11 @@
     app_id: "{{ create_output.app_id }}"
   register: output
 
+- name: Get ad app info by display name
+  azure_rm_adapplication_info:
+    object_id: "{{ create_output.app_display_name }}"
+  register: output
+
 - name: Assert the application facts
   ansible.builtin.assert:
     that:
