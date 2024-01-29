@@ -559,6 +559,7 @@ class AzureHost(object):
             public_ipv4_address=[],
             public_dns_hostnames=[],
             private_ipv4_addresses=[],
+            subnet=[],
             id=self._vm_model['id'],
             location=self._vm_model['location'],
             name=self._vm_model['name'],
@@ -589,6 +590,9 @@ class AzureHost(object):
             # and from the primary IP config per NIC first
             for ipc in sorted(nic._nic_model['properties']['ipConfigurations'], key=lambda i: i['properties'].get('primary', False), reverse=True):
                 try:
+                    subnet = ipc['properties'].get('subnet')
+                    if subnet:
+                        new_hostvars['subnet'].append(subnet)
                     private_ip = ipc['properties'].get('privateIPAddress')
                     if private_ip:
                         new_hostvars['private_ipv4_addresses'].append(private_ip)
