@@ -124,6 +124,7 @@ options:
                 required: True
                 type: str
                 choices:
+                    - Microsoft.ContainerService/managedClusters
                     - Microsoft.Web/serverFarms
                     - Microsoft.ContainerInstance/containerGroups
                     - Microsoft.Netapp/volumes
@@ -352,7 +353,8 @@ delegations_spec = dict(
                  'Microsoft.DBforPostgreSQL/serversv2', 'Microsoft.AzureCosmosDB/clusters', 'Microsoft.MachineLearningServices/workspaces',
                  'Microsoft.DBforPostgreSQL/singleServers', 'Microsoft.DBforPostgreSQL/flexibleServers', 'Microsoft.DBforMySQL/serversv2',
                  'Microsoft.DBforMySQL/flexibleServers', 'Microsoft.ApiManagement/service', 'Microsoft.Synapse/workspaces',
-                 'Microsoft.PowerPlatform/vnetaccesslinks', 'Microsoft.Network/managedResolvers', 'Microsoft.Kusto/clusters']
+                 'Microsoft.PowerPlatform/vnetaccesslinks', 'Microsoft.Network/managedResolvers', 'Microsoft.Kusto/clusters',
+                 'Microsoft.ContainerService/managedClusters']
     ),
     actions=dict(
         type='list',
