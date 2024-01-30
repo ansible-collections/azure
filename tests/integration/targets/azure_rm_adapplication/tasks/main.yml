@@ -55,7 +55,7 @@
 
 - name: Get ad app info by display name
   azure_rm_adapplication_info:
-    object_id: "{{ create_output.app_display_name }}"
+    app_display_name: "{{ create_output.app_display_name }}"
   register: output
 
 - name: Assert the application facts
