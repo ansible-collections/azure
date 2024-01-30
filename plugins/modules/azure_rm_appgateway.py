@@ -2298,10 +2298,10 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             else:
                 self.to_do = Actions.NoAction
 
-        update_tags, new_tags = self.update_tags(old_response['tags'])
-        if update_tags:
-            self.to_do = Actions.Update
-            self.parameters["tags"] = new_tags
+            update_tags, new_tags = self.update_tags(old_response['tags'])
+            if update_tags:
+                self.to_do = Actions.Update
+                self.parameters["tags"] = new_tags
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.log("Need to Create / Update the Application Gateway instance")
