@@ -56,13 +56,15 @@
 - name: Get ad app info by display name
   azure_rm_adapplication_info:
     app_display_name: "{{ create_output.app_display_name }}"
-  register: output
+  register: display_name_test_output
 
 - name: Assert the application facts
   ansible.builtin.assert:
     that:
       - output.applications[0].app_display_name == "{{ display_name }}"
       - output.applications | length == 1
+      - display_name_test_output.applications[0].app_display_name == "{{ display_name }}"
+      - display_name_test_output.applications | length == 1
 
 - name: Delete ad app  by app id
   azure_rm_adapplication:
