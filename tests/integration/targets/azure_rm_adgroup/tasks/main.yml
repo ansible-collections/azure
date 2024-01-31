@@ -186,7 +186,7 @@
     object_id: "{{ group_create_unchanged_shouldpass.object_id }}"
   register: get_deleted_object_group_root_shouldfail
   failed_when:
-    - '"failed to get ad group info Resource" not in get_deleted_object_group_root_shouldfail.msg'
+    - '"does not exist or one of its queried" not in get_deleted_object_group_root_shouldfail.msg'
 
 - name: Delete group Group Member 1 on object_id
   azure_rm_adgroup:
@@ -199,7 +199,7 @@
     object_id: "{{ create_pass_first.object_id }}"
   register: get_deleted_object_group_member_1_shouldfail
   failed_when:
-    - '"failed to get ad group info Resource" not in get_deleted_object_group_member_1_shouldfail.msg'
+    - '"does not exist or one of its queried" not in get_deleted_object_group_member_1_shouldfail.msg'
 
 - name: Delete group Group Member 2 on object_id
   azure_rm_adgroup:
@@ -212,4 +212,4 @@
     object_id: "{{ create_pass_second.object_id }}"
   register: get_deleted_object_group_member_2_shouldfail
   failed_when:
-    - '"failed to get ad group info Resource" not in get_deleted_object_group_member_2_shouldfail.msg'
+    - '"does not exist or one of its queried" not in get_deleted_object_group_member_2_shouldfail.msg'
