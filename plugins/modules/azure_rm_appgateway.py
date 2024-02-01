@@ -2239,6 +2239,8 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                     self.parameters["web_application_firewall_configuration"] = kwargs[key]
                 elif key == "enable_http2":
                     self.parameters["enable_http2"] = kwargs[key]
+                elif key == "tags":
+                    self.parameters["tags"] = kwargs[key]
 
         response = None
 
@@ -2295,6 +2297,11 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                 self.to_do = Actions.Update
             else:
                 self.to_do = Actions.NoAction
+
+            update_tags, new_tags = self.update_tags(old_response['tags'])
+            if update_tags:
+                self.to_do = Actions.Update
+                self.parameters["tags"] = new_tags
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.log("Need to Create / Update the Application Gateway instance")
