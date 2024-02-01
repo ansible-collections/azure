@@ -1,6 +1,6 @@
 # Change Log
 
-## v2.1.2 (2024-02-01)
+## v2.2.0 (2024-02-01)
 
 ### NEW MODULES
   - azure_rm_publicipprefix ([#1403](https://github.com/ansible-collections/azure/pull/1403))
