@@ -270,6 +270,11 @@ options:
                 description:
                     - ID of disk encryption set for data disk.
                 type: str
+            managed_disk_id:
+                description:
+                    - The ID of the existing data disk.
+                    - If specified, attach mode will be chosen.
+                type: str
             managed_disk_type:
                 description:
                     - Managed data disk type.
@@ -1136,6 +1141,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     lun=dict(type='int', required=True),
                     disk_size_gb=dict(type='int'),
                     disk_encryption_set=dict(type='str'),
+                    managed_disk_id=dict(type='str'),
                     managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS',
                                            'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
                     storage_account_name=dict(type='str'),
@@ -1909,41 +1915,49 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         count = 0
 
                         for data_disk in self.data_disks:
-                            if not data_disk.get('managed_disk_type'):
-                                if not data_disk.get('storage_blob_name'):
-                                    data_disk['storage_blob_name'] = self.name + '-data-' + str(count) + '.vhd'
-                                    count += 1
+                            data_disk_vhd = None
+                            disk_name = None
 
-                                if data_disk.get('storage_account_name'):
-                                    data_disk_storage_account = self.get_storage_account(self.resource_group, data_disk['storage_account_name'])
-                                else:
-                                    data_disk_storage_account = self.create_default_storage_account()
-                                    self.log("data disk storage account:")
-                                    self.log(self.serialize_obj(data_disk_storage_account, 'StorageAccount'), pretty_print=True)
-
-                                if not data_disk.get('storage_container_name'):
-                                    data_disk['storage_container_name'] = 'vhds'
-
-                                data_disk_requested_vhd_uri = 'https://{0}.blob.{1}/{2}/{3}'.format(
-                                    data_disk_storage_account.name,
-                                    self._cloud_environment.suffixes.storage_endpoint,
-                                    data_disk['storage_container_name'],
-                                    data_disk['storage_blob_name']
-                                )
-
-                            if not data_disk.get('managed_disk_type'):
-                                data_disk_managed_disk = None
-                                disk_name = data_disk['storage_blob_name']
-                                data_disk_vhd = self.compute_models.VirtualHardDisk(uri=data_disk_requested_vhd_uri)
+                            if data_disk.get('managed_disk_id'):
+                                create_option = self.compute_models.DiskCreateOptionTypes.attach
+                                data_disk_managed_disk = self.compute_models.ManagedDiskParameters(id=data_disk.get('managed_disk_id'))
                             else:
-                                data_disk_vhd = None
-                                data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=data_disk['managed_disk_type'])
-                                if data_disk.get('disk_encryption_set'):
-                                    data_disk_managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
-                                        id=data_disk['disk_encryption_set']
+                                create_option = self.compute_models.DiskCreateOptionTypes.empty
+
+                                if not data_disk.get('managed_disk_type'):
+                                    if not data_disk.get('storage_blob_name'):
+                                        data_disk['storage_blob_name'] = self.name + '-data-' + str(count) + '.vhd'
+                                        count += 1
+
+                                    if data_disk.get('storage_account_name'):
+                                        data_disk_storage_account = self.get_storage_account(self.resource_group, data_disk['storage_account_name'])
+                                    else:
+                                        data_disk_storage_account = self.create_default_storage_account()
+                                        self.log("data disk storage account:")
+                                        self.log(self.serialize_obj(data_disk_storage_account, 'StorageAccount'), pretty_print=True)
+
+                                    if not data_disk.get('storage_container_name'):
+                                        data_disk['storage_container_name'] = 'vhds'
+
+                                    data_disk_requested_vhd_uri = 'https://{0}.blob.{1}/{2}/{3}'.format(
+                                        data_disk_storage_account.name,
+                                        self._cloud_environment.suffixes.storage_endpoint,
+                                        data_disk['storage_container_name'],
+                                        data_disk['storage_blob_name']
                                     )
-                                disk_name = self.name + "-datadisk-" + str(count)
-                                count += 1
+
+                                if not data_disk.get('managed_disk_type'):
+                                    data_disk_managed_disk = None
+                                    disk_name = data_disk['storage_blob_name']
+                                    data_disk_vhd = self.compute_models.VirtualHardDisk(uri=data_disk_requested_vhd_uri)
+                                else:
+                                    data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=data_disk['managed_disk_type'])
+                                    if data_disk.get('disk_encryption_set'):
+                                        data_disk_managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
+                                            id=data_disk['disk_encryption_set']
+                                        )
+                                    disk_name = self.name + "-datadisk-" + str(count)
+                                    count += 1
 
                             data_disk['caching'] = data_disk.get(
                                 'caching', 'ReadOnly'
@@ -1954,7 +1968,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 name=disk_name,
                                 vhd=data_disk_vhd,
                                 caching=data_disk['caching'],
-                                create_option=self.compute_models.DiskCreateOptionTypes.empty,
+                                create_option=create_option,
                                 disk_size_gb=data_disk['disk_size_gb'],
                                 managed_disk=data_disk_managed_disk,
                             ))
