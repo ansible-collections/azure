@@ -1,5 +1,54 @@
 # Change Log
 
+## v2.2.0 (2024-02-04)
+
+### NEW MODULES
+  - azure_rm_publicipprefix ([#1403](https://github.com/ansible-collections/azure/pull/1403))
+  - azure_rm_publicipprefix_info ([#1403](https://github.com/ansible-collections/azure/pull/1403))
+  - azure_rm_sshpublickey ([#1190](https://github.com/ansible-collections/azure/pull/1190))
+  - azure_rm_sshpublickey_info ([#1190](https://github.com/ansible-collections/azure/pull/1190))
+  - azure_rm_postgresqlflexibleserver ([1192](https://github.com/ansible-collections/azure/pull/1192))
+  - azure_rm_postgresqlflexibleserver_info ([1192](https://github.com/ansible-collections/azure/pull/1192))
+  - azure_rm_postgresqlflexibleconfiguration_info ([1192](https://github.com/ansible-collections/azure/pull/1192))
+  - azure_rm_postgresqlflexibledatabase ([1192](https://github.com/ansible-collections/azure/pull/1192))
+  - azure_rm_postgresqlflexibledatabase_info ([1192](https://github.com/ansible-collections/azure/pull/1192))
+  - azure_rm_postgresqlflexiblefirewallrule ([1192](https://github.com/ansible-collections/azure/pull/1192))
+  - azure_rm_postgresqlflexiblefirewallrule_info ([1192](https://github.com/ansible-collections/azure/pull/1192))
+
+### FEATURE ENHANCEMENT
+  - azure_rm_adapplication: Add support for `sign_in_audience` ([#1401](https://github.com/ansible-collections/azure/pull/1401))
+  - plugins/inventory/azure_rm.py:
+    - Add support for export `lincense_type` ([#1411](https://github.com/ansible-collections/azure/pull/1411))
+    - Set `andible_host` to Public IP Address, use Private IP Address if not exist ([#1406](https://github.com/ansible-collections/azure/pull/1406))
+    - Add support for export `subnet` ([#1422](https://github.com/ansible-collections/azure/pull/1422))
+  - azure_rm_virtualmachine: Add support for `additional_capabilities` ([#1399](https://github.com/ansible-collections/azure/pull/1399))
+  - azure_rm_storageaccount: Add support for `enable_nfs_v3` ([#1346](https://github.com/ansible-collections/azure/pull/1346))
+  - azure_rm_subnet: Add `Microsoft.ContainerService/managedClusters` to subnet delegations ([#1414](https://github.com/ansible-collections/azure/pull/1414))
+  - azure_rm_adapplication_info: 
+    - Searching by tenant returns all AD applications ([#1420](https://github.com/ansible-collections/azure/pull/1420)) 
+    - Enhance search for application by `app_display_name` ([#1420](https://github.com/ansible-collections/azure/pull/1420))
+  - azure_rm_appgateway: Add support `tags` ([#1373](https://github.com/ansible-collections/azure/pull/1373))
+
+### BUG FIXING
+  - azure_rm_common.py:
+    - Fix missing `client_id` in payload error when using only username/password ([#1409](https://github.com/ansible-collections/azure/pull/1409))
+    - Add missing Azure API Profiles ([#1395](https://github.com/ansible-collections/azure/pull/1395))
+    - Fix MSI authorization credentials ([#1393](https://github.com/ansible-collections/azure/pull/1393))
+    - Fix the `client_id` value ([#1421](https://github.com/ansible-collections/azure/pull/1421))
+  - azure_rm_virtualmachine:
+    - Fix `os_profile` error [#1397](https://github.com/ansible-collections/azure/pull/1397))
+    - Fixed disk mount error ([#1407](https://github.com/ansible-collections/azure/pull/1407))
+    - Fixed properties mapping error ([#1410](https://github.com/ansible-collections/azure/pull/1410))
+    - Detect the VM's `powerstate` value ([#1412](https://github.com/ansible-collections/azure/pull/1412))
+    - Limit zones to at most one ([#1392](https://github.com/ansible-collections/azure/pull/1392))
+  - azure_rm_*: Deprecate custom properties ([#1388](https://github.com/ansible-collections/azure/pull/1388))
+  - azure_rm_networkinterface: Fixed `subscription_id` not used ([#1416](https://github.com/ansible-collections/azure/pull/1416))
+  - azure_rm_adgroup: 
+    - Update test cases to use `object_id` ([#1418](https://github.com/ansible-collections/azure/pull/1418))
+    - Fix test case ([#1426](https://github.com/ansible-collections/azure/pull/1426))
+  - azure_rm_adapplication: Fix test case ([#1425](https://github.com/ansible-collections/azure/pull/1425))
+
+
 ## v2.1.1 (2023-12-19)
 
 ### FEATURE ENHANCEMENT
