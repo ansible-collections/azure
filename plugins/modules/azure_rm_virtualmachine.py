@@ -221,6 +221,7 @@ options:
             - Type of OS disk caching.
         type: str
         choices:
+            - None
             - ReadOnly
             - ReadWrite
         aliases:
@@ -318,6 +319,7 @@ options:
                     - Type of data disk caching.
                 type: str
                 choices:
+                    - None
                     - ReadOnly
                     - ReadWrite
     public_ip_allocation_method:
@@ -1113,7 +1115,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             storage_account_name=dict(type='str', aliases=['storage_account']),
             storage_container_name=dict(type='str', aliases=['storage_container'], default='vhds'),
             storage_blob_name=dict(type='str', aliases=['storage_blob']),
-            os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite']),
+            os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['None', 'ReadOnly', 'ReadWrite']),
             os_disk_size_gb=dict(type='int'),
             os_disk_encryption_set=dict(type='str'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS', 'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
@@ -1147,7 +1149,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     storage_account_name=dict(type='str'),
                     storage_container_name=dict(type='str', default='vhds'),
                     storage_blob_name=dict(type='str'),
-                    caching=dict(type='str', choices=['ReadOnly', 'ReadWrite'])
+                    caching=dict(type='str', choices=['None', 'ReadOnly', 'ReadWrite'])
                 )
             ),
             plan=dict(type='dict'),
