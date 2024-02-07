@@ -592,7 +592,7 @@ options:
                     - The swap OS disk's name.
                 type: str
             os_disk_resource_group:
-                descritpion:
+                description:
                     - The swap OS disk's resource group.
                 type: str
     additional_capabilities:
@@ -808,8 +808,8 @@ EXAMPLES = '''
         key_data: "ssh-rsa *******************@qq.com"
     vm_size: Standard_D4s_v3
     swap_os_disk:
-      os_disk_name: {{ os_disk_name }}
-      os_disk_resource_group: {{ os_disk_resource_group }}
+      os_disk_name: "{{ os_disk_name }}"
+      os_disk_resource_group: "{{ os_disk_resource_group }}"
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
@@ -2138,7 +2138,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     )
 
                     if swap_os_disk_flag:
-                        storage_profile=self.compute_models.StorageProfile(
+                        storage_profile = self.compute_models.StorageProfile(
                             os_disk=self.compute_models.OSDisk(
                                 name=swap_os_disk.get('name'),
                                 managed_disk=swap_os_disk.get('managed_disk'),
@@ -2147,7 +2147,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             image_reference=image_reference
                         )
                     else:
-                        storage_profile=self.compute_models.StorageProfile(
+                        storage_profile = self.compute_models.StorageProfile(
                             os_disk=self.compute_models.OSDisk(
                                 name=vm_dict['storage_profile']['os_disk'].get('name'),
                                 vhd=vhd,
