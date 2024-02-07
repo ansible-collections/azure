@@ -2316,12 +2316,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         vm_resource.additional_capabilities = additional_capabilities
 
                     self.log("Update virtual machine with parameters:")
-                    if swap_os_disk_flag:
-                        self.power_off_vm()
-                        self.create_or_update_vm(vm_resource, False)
-                        self.power_on_vm()
-                    else:
-                        self.create_or_update_vm(vm_resource, False)
+                    self.create_or_update_vm(vm_resource, False)
 
                 # Make sure we leave the machine in requested power state
                 if (powerstate_change == 'poweron' and
