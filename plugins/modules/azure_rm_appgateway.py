@@ -2274,7 +2274,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
                   (old_response['operational_state'] == 'Running' and self.gateway_state == 'started')):
                 self.to_do = Actions.NoAction
             elif (self.parameters['location'] != old_response['location'] or
-                    self.parameters['enable_http2'] != old_response['enable_http2'] or
+                    self.parameters['enable_http2'] != old_response.get('enable_http2', False) or
                     self.parameters['sku']['name'] != old_response['sku']['name'] or
                     self.parameters['sku']['tier'] != old_response['sku']['tier'] or
                     self.parameters['sku'].get('capacity', None) != old_response['sku'].get('capacity', None) or
