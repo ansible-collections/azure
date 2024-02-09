@@ -289,7 +289,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
                 self._enqueue_vm_list(vm_rg)
 
         if os.environ.get('ANSIBLE_AZURE_VMSS_RESOURCE_GROUPS'):
-            for vm_rg in os.environ['ANSIBLE_AZURE_VMSS_RESOURCE_GROUPS'].split(","):
+            for vmss_rg in os.environ['ANSIBLE_AZURE_VMSS_RESOURCE_GROUPS'].split(","):
                 self._enqueue_vmss_list(vmss_rg)
         else:
             for vmss_rg in self.get_option('include_vmss_resource_groups'):
