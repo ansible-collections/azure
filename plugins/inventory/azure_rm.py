@@ -407,6 +407,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         # FUTURE: add direct VMSS filtering by tag here (performance optimization)?
         for vmss in response['value']:
             url = '{0}/virtualMachines'.format(vmss['id'])
+
+            # Since Flexible instance is a standalone VM, we are replacing ss provider to the vm one in order to allow inventory get instance view.
+            if vmss['properties']['orchestrationMode'] == 'Flexible':
+                newProvider = 'Microsoft.Compute/virtualMachineScaleSets/{0}/virtualMachines'.format(vmss['name'])
+                url = url.replace(newProvider, "Microsoft.Compute/virtualMachines")
+
             # VMSS instances look close enough to regular VMs that we can share the handler impl...
             self._enqueue_get(url=url, api_version=self._compute_api_version, handler=self._on_vm_page_response, handler_args=dict(vmss=vmss))
 
