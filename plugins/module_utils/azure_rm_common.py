@@ -49,6 +49,7 @@ AZURE_COMMON_ARGS = dict(
     log_path=dict(type='str', no_log=True),
     x509_certificate_path=dict(type='path', no_log=True),
     thumbprint=dict(type='str', no_log=True),
+    disable_instance_discovery=dict(type='bool', default=False),
 )
 
 AZURE_CREDENTIAL_ENV_MAPPING = dict(
@@ -63,7 +64,8 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
     cert_validation_mode='AZURE_CERT_VALIDATION_MODE',
     adfs_authority_url='AZURE_ADFS_AUTHORITY_URL',
     x509_certificate_path='AZURE_X509_CERTIFICATE_PATH',
-    thumbprint='AZURE_THUMBPRINT'
+    thumbprint='AZURE_THUMBPRINT',
+    disable_instance_discovery='AZURE_DISABLE_INSTANCE_DISCOVERY'
 )
 
 
@@ -1411,7 +1413,8 @@ class AzureRMAuth(object):
     def __init__(self, auth_source=None, profile=None, subscription_id=None, client_id=None, secret=None,
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
                  api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False,
-                 x509_certificate_path=None, thumbprint=None, track1_cred=False, **kwargs):
+                 x509_certificate_path=None, thumbprint=None, track1_cred=False,
+                 disable_instance_discovery=False, **kwargs):
 
         if fail_impl:
             self._fail_impl = fail_impl
@@ -1434,7 +1437,8 @@ class AzureRMAuth(object):
             api_profile=api_profile,
             adfs_authority_url=adfs_authority_url,
             x509_certificate_path=x509_certificate_path,
-            thumbprint=thumbprint)
+            thumbprint=thumbprint,
+            disable_instance_discovery=disable_instance_discovery)
 
         if not self.credentials:
             if HAS_AZURE_CLI_CORE:
@@ -1452,6 +1456,12 @@ class AzureRMAuth(object):
 
         if self._cert_validation_mode not in ['validate', 'ignore']:
             self.fail('invalid cert_validation_mode: {0}'.format(self._cert_validation_mode))
+
+        # Disable instance discovery: module-arg, credential profile, env, "False"
+        self._disable_instance_discovery = disable_instance_discovery or \
+            self.credentials.get('disable_instance_discovery') or \
+            self._get_env('disable_instance_discovery') or \
+            False
 
         # if cloud_environment specified, look up/build Cloud object
         raw_cloud_env = self.credentials.get('cloud_environment')
@@ -1500,7 +1510,8 @@ class AzureRMAuth(object):
             self.azure_credential_track2 = client_secret.ClientSecretCredential(client_id=self.credentials['client_id'],
                                                                                 client_secret=self.credentials['secret'],
                                                                                 tenant_id=self.credentials['tenant'],
-                                                                                authority=self._adfs_authority_url)
+                                                                                authority=self._adfs_authority_url,
+                                                                                disable_instance_discovery=self._disable_instance_discovery)
 
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None and \
@@ -1509,7 +1520,8 @@ class AzureRMAuth(object):
             self.azure_credential_track2 = certificate.CertificateCredential(tenant_id=self.credentials['tenant'],
                                                                              client_id=self.credentials['client_id'],
                                                                              certificate_path=self.credentials['x509_certificate_path'],
-                                                                             authority=self._adfs_authority_url)
+                                                                             authority=self._adfs_authority_url,
+                                                                             disable_instance_discovery=self._disable_instance_discovery)
 
         elif self.credentials.get('ad_user') is not None and \
                 self.credentials.get('password') is not None and \
@@ -1519,7 +1531,8 @@ class AzureRMAuth(object):
                                                                                     password=self.credentials['password'],
                                                                                     tenant_id=self.credentials.get('tenant'),
                                                                                     client_id=self.credentials.get('client_id'),
-                                                                                    authority=self._adfs_authority_url)
+                                                                                    authority=self._adfs_authority_url,
+                                                                                    disable_instance_discovery=self._disable_instance_discovery)
 
         elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
             client_id = self.credentials.get('client_id')
@@ -1529,7 +1542,8 @@ class AzureRMAuth(object):
                                                                                     password=self.credentials['password'],
                                                                                     tenant_id=self.credentials.get('tenant', 'organizations'),
                                                                                     client_id=client_id,
-                                                                                    authority=self._adfs_authority_url)
+                                                                                    authority=self._adfs_authority_url,
+                                                                                    disable_instance_discovery=self._disable_instance_discovery)
 
         else:
             self.fail("Failed to authenticate with provided credentials. Some attributes were missing. "
