@@ -311,6 +311,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         return await self._client.groups.by_group_id(group_id).get()
 
     async def get_group_list(self, filter=None):
+        kwargs = {}
         if filter:
             request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
                 query_parameters=GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
@@ -318,12 +319,17 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
                     filter=filter,
                 ),
             )
-            groups = await self._client.groups.get(request_configuration=request_configuration)
-        else:
-            groups = await self._client.groups.get()
+            kwargs["request_configuration"] = request_configuration
 
-        if groups and groups.value:
-            return groups.value
+        groups = []
+        # paginated response can be quite large
+        response = await self._client.groups.get(**kwargs)
+        if response:
+            groups += response.value
+        while response is not None and response.odata_next_link is not None:
+            response = self._client.groups.with_url(response.odata_next_link).get(**kwargs)
+            if response:
+                groups += response.value
 
         return []
 
