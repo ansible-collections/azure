@@ -257,7 +257,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         if response:
             users += response.value
         while response is not None and response.odata_next_link is not None:
-            response = self._client.users.with_url(response.odata_next_link).get(request_configuration=request_configuration)
+            response = await self._client.users.with_url(response.odata_next_link).get(request_configuration=request_configuration)
             if response:
                 users += response.value
 

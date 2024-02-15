@@ -327,7 +327,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         if response:
             groups += response.value
         while response is not None and response.odata_next_link is not None:
-            response = self._client.groups.with_url(response.odata_next_link).get(**kwargs)
+            response = await self._client.groups.with_url(response.odata_next_link).get(**kwargs)
             if response:
                 groups += response.value
 
