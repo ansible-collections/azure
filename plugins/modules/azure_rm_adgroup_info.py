@@ -331,7 +331,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             if response:
                 groups += response.value
 
-        return []
+        return groups
 
     async def get_group_owners(self, group_id):
         request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
