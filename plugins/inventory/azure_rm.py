@@ -392,7 +392,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         if 'value' in response:
             for h in response['value']:
                 # FUTURE: add direct VM filtering by tag here (performance optimization)?
-                self._hosts.append(AzureHost(h, self, vmss=vmss, legacy_name=self._legacy_hostnames))
+                if 'properties' in h.keys():
+                    self._hosts.append(AzureHost(h, self, vmss=vmss, legacy_name=self._legacy_hostnames))
 
     def _on_vmss_page_response(self, response):
         next_link = response.get('nextLink')
