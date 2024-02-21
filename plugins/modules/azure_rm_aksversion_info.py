@@ -30,7 +30,7 @@ options:
             - Get the upgrade versions available for a managed Kubernetes cluster version.
         type: str
     allow_preview:
-        descritpion:
+        description:
             - Whether Kubernetes version is currently in preview.
             - If I(allow_preview=True), returns the current preview status of the current Kubernetes version.
             - If I(allow_preview=False), returns the Kubernetes version in a non-current preview state.
