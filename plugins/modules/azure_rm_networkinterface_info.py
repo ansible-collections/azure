@@ -263,7 +263,7 @@ networkinterfaces:
                     description:
                         - Relative DNS name for this NIC used for internal communications between VMs in the same virtual network.
                     type: str
-                    returned； always
+                    returned: always
                     sample: null
                 internal_fqdn:
                     description:
