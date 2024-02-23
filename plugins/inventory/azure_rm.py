@@ -395,7 +395,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         if 'value' in response:
             for h in response['value']:
-                # FUTURE: add direct VM filtering by tag here (performance optimization)?
                 self._hosts.append(AzureHost(h, self, vmss=vmss, legacy_name=self._legacy_hostnames))
 
     def _on_vmss_page_response(self, response):
@@ -408,13 +407,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         for vmss in response['value']:
             url = '{0}/virtualMachines'.format(vmss['id'])
 
-            # Since Flexible instance is a standalone VM, we are replacing ss provider to the vm one in order to allow inventory get instance view.
-            if vmss['properties']['orchestrationMode'] == 'Flexible':
-                newProvider = 'Microsoft.Compute/virtualMachineScaleSets/{0}/virtualMachines'.format(vmss['name'])
-                url = url.replace(newProvider, "Microsoft.Compute/virtualMachines")
-
-            # VMSS instances look close enough to regular VMs that we can share the handler impl...
-            self._enqueue_get(url=url, api_version=self._compute_api_version, handler=self._on_vm_page_response, handler_args=dict(vmss=vmss))
+            # Since Flexible instance is a standalone VM we are processing them as regular VM.
+            if vmss['properties']['orchestrationMode'] != 'Flexible':
+                # VMSS instances look close enough to regular VMs that we can share the handler impl...
+                self._enqueue_get(url=url, api_version=self._compute_api_version, handler=self._on_vm_page_response, handler_args=dict(vmss=vmss))
 
     # use the undocumented /batch endpoint to bulk-send up to 500 requests in a single round-trip
     #
