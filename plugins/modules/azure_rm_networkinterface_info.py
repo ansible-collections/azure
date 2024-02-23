@@ -270,7 +270,7 @@ networkinterfaces:
                         - Fully qualified DNS name supporting internal communications between VMs in the same virtual network.
                     type: str
                     returned: always
-                    asmple: null
+                    sample: null
 '''  # NOQA
 try:
     from azure.core.exceptions import ResourceNotFoundError
