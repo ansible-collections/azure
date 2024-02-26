@@ -63,7 +63,10 @@ options:
                 suboptions:
                     source:
                         description:
-                            - Reference to os disk snapshot. Could be resource ID or dictionary containing I(resource_group) and I(name)
+                            - Reference to os disk snapshot.
+                            - Could be resource ID.
+                            - Could be a dictionary containing I(resource_group) and I(name).
+                            - Could be a dictionary containing I(resource_group), I(storage_account), and I(uri) if the snapshot is stored as a PageBlob in a storage account container.
                         type: raw
                     host_caching:
                         description:
@@ -303,6 +306,28 @@ EXAMPLES = '''
             name: data_snapshot_vma
         - lun: 1
           source: "/subscriptions/mySub/resourceGroups/myGroup/providers/Microsoft.Compute/snapshots/data_snapshot_vmb"
+
+- name: Create gallery image by using a os disk snapshot stored in Storage Account container
+  azure_rm_galleryimageversion:
+    resource_group: myResourceGroup
+    gallery_name: myGallery
+    gallery_image_name: myGalleryImage
+    name: 3.4.0
+    location: East  US
+    publishing_profile:
+      end_of_life_date: "2020-10-01t00:00:00+00:00"
+      exclude_from_latest: true
+      replica_count: 1
+      storage_account_type: Standard_LRS
+      target_regions:
+        - name: East US
+          regional_replica_count: 1
+          storage_account_type: Standard_LRS
+    storage_profile:
+      os_disk:
+        resource_group: myResourceGroup
+        storage_account: myStorageAccount
+        uri: "https://myStorageAccount.blob.core.windows.net/myContainer/myImage.vhd"
 '''
 
 RETURN = '''
@@ -561,7 +586,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                             elif isinstance(kwargs[key]['os_disk']['source'], dict):
                                 if kwargs[key]['os_disk']['source'].get('id') is not None:
                                     self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = kwargs[key]['os_disk']['source'].get('id')
-                                if kwargs[key]['os_disk']['source'].get('resource_group') is not None and \
+                                elif kwargs[key]['os_disk']['source'].get('resource_group') is not None and \
                                    kwargs[key]['os_disk']['source'].get('name') is not None:
                                     resource_group = kwargs[key]['os_disk']['source'].get('resource_group')
                                     self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = ('/subscriptions/' +
@@ -570,6 +595,18 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                                                                                                 resource_group +
                                                                                                                 '/providers/Microsoft.Compute/snapshots/' +
                                                                                                                 kwargs[key]['os_disk']['source'].get('name'))
+                                elif kwargs[key]['os_disk']['source'].get('uri') is not None and \
+                                  kwargs[key]['os_disk']['source'].get('resource_group') is not None and \
+                                  kwargs[key]['os_disk']['source'].get('storage_account') is not None:
+                                    resource_group = kwargs[key]['os_disk']['source'].get('resource_group')
+                                    storage_account = kwargs[key]['os_disk']['source'].get('storage_account')
+                                    self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = ('/subscriptions/' +
+                                                                                                                self.subscription_id +
+                                                                                                                '/resourceGroups/' +
+                                                                                                                resource_group +
+                                                                                                                '/providers/Microsoft.Storage/storageAccounts/' +
+                                                                                                                storage_account)
+                                    self.body['properties']['storageProfile']['osDiskImage']['source']['uri'] = kwargs[key]['os_disk']['source'].get('uri')
                                 else:
                                     self.fail("The os_disk.source parameters config errors")
 
