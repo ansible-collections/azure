@@ -479,7 +479,6 @@ class AzureRMADGroup(AzureRMModuleBase):
             query_parameters=GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
                 count=True,
             ),
-            headers={'ConsistencyLevel': "eventual", }
         )
         return await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
 
