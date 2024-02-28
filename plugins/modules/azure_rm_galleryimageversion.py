@@ -66,7 +66,8 @@ options:
                             - Reference to os disk snapshot.
                             - Could be resource ID.
                             - Could be a dictionary containing I(resource_group) and I(name).
-                            - Could be a dictionary containing I(resource_group), I(storage_account), and I(uri) if the snapshot is stored as a PageBlob in a storage account container.
+                            - Could be a dictionary containing I(resource_group), I(storage_account), and I(uri)
+                              if the snapshot is stored as a PageBlob in a storage account container.
                         type: raw
                     host_caching:
                         description:
@@ -587,7 +588,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                 if kwargs[key]['os_disk']['source'].get('id') is not None:
                                     self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = kwargs[key]['os_disk']['source'].get('id')
                                 elif kwargs[key]['os_disk']['source'].get('resource_group') is not None and \
-                                   kwargs[key]['os_disk']['source'].get('name') is not None:
+                                        kwargs[key]['os_disk']['source'].get('name') is not None:
                                     resource_group = kwargs[key]['os_disk']['source'].get('resource_group')
                                     self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = ('/subscriptions/' +
                                                                                                                 self.subscription_id +
@@ -596,15 +597,16 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                                                                                                 '/providers/Microsoft.Compute/snapshots/' +
                                                                                                                 kwargs[key]['os_disk']['source'].get('name'))
                                 elif kwargs[key]['os_disk']['source'].get('uri') is not None and \
-                                  kwargs[key]['os_disk']['source'].get('resource_group') is not None and \
-                                  kwargs[key]['os_disk']['source'].get('storage_account') is not None:
+                                        kwargs[key]['os_disk']['source'].get('resource_group') is not None and \
+                                        kwargs[key]['os_disk']['source'].get('storage_account') is not None:
                                     resource_group = kwargs[key]['os_disk']['source'].get('resource_group')
                                     storage_account = kwargs[key]['os_disk']['source'].get('storage_account')
                                     self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = ('/subscriptions/' +
                                                                                                                 self.subscription_id +
                                                                                                                 '/resourceGroups/' +
                                                                                                                 resource_group +
-                                                                                                                '/providers/Microsoft.Storage/storageAccounts/' +
+                                                                                                                '/providers/Microsoft.Storage' +
+                                                                                                                '/storageAccounts/' +
                                                                                                                 storage_account)
                                     self.body['properties']['storageProfile']['osDiskImage']['source']['uri'] = kwargs[key]['os_disk']['source'].get('uri')
                                 else:
