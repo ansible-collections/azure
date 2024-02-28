@@ -1583,6 +1583,11 @@ ssl_policy_spec = dict(
 )
 
 
+match_spec = dict(
+    status_codes=dict(type='list', elements='str')
+)
+
+
 probe_spec = dict(
     host=dict(type='str'),
     interval=dict(type='int'),
@@ -1594,11 +1599,6 @@ probe_spec = dict(
     pick_host_name_from_backend_http_settings=dict(type='bool', default=False),
     port=dict(type='int'),
     match=dict(type='dict', options=match_spec)
-)
-
-
-match_spec = dict(
-    status_codes=dict(type='list', elements='str')
 )
 
 
@@ -2371,7 +2371,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             else:
                 self.to_do = Actions.NoAction
 
-            update_tags, new_tags = self.update_tags(old_response['tags'])
+            update_tags, new_tags = self.update_tags(old_response.get('tags'))
             if update_tags:
                 self.to_do = Actions.Update
                 self.parameters["tags"] = new_tags
