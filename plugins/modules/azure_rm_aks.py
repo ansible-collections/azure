@@ -284,7 +284,7 @@ options:
                 type: str
             managed:
                 description:
-                    - Whether to enable manged AAD.
+                    - Whether to enable managed AAD.
                 type: bool
                 default: false
             admin_group_object_ids:

@@ -282,7 +282,7 @@ def keyitem_to_dict(keyitem):
         kid=keyitem._id,
         version=keyitem.version,
         tags=keyitem._tags,
-        manged=keyitem._managed,
+        managed=keyitem._managed,
         attributes=dict(
             enabled=keyitem.enabled,
             not_before=keyitem.not_before,

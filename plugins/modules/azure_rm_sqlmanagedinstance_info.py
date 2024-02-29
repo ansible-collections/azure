@@ -14,7 +14,7 @@ module: azure_rm_sqlmanagedinstance_info
 version_added: "0.15.0"
 short_description: Get Azure SQL managed instance facts
 description:
-    - Get facts of Azure SQL manged instance facts.
+    - Get facts of Azure SQL managed instance facts.
 
 options:
     resource_group:
@@ -49,7 +49,7 @@ EXAMPLES = '''
   azure_rm_sqlmanagedinstance_info:
     resource_group: testrg
 
-- name: List SQL manged instance by subscription and filter by tags
+- name: List SQL managed instance by subscription and filter by tags
   azure_rm_sqlmanagedinstance_info:
     tags:
       - foo
@@ -70,7 +70,7 @@ sql_managed_instance:
             sample: "/subscription/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Sql/managedInstances/fredsqlinstance"
         name:
             description:
-                - SQL manged instance name.
+                - SQL managed instance name.
             returned: always
             type: str
             sample: testmanagedinstance

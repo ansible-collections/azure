@@ -14,7 +14,7 @@
     sku_name: Developer
     sku_capacity: 1
 
-- name: Pause for 60 mimutes to create api mangement
+- name: Pause for 60 minutes to create api management
   ansible.builtin.pause:
     minutes: 60
   changed_when: true

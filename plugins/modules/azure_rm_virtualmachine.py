@@ -249,7 +249,7 @@ options:
     data_disks:
         description:
             - Describes list of data disks.
-            - Use M(azure.azcollection.azure_rm_mangeddisk) to manage the specific disk.
+            - Use M(azure.azcollection.azure_rm_manageddisk) to manage the specific disk.
         type: list
         elements: dict
         suboptions:
