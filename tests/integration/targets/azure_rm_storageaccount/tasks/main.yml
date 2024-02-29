@@ -601,3 +601,4 @@
     - "{{ storage_account_name_default }}03"
     - "{{ storage_account_name_default }}04"
     - "{{ storage_account_name_default }}05"
+    - "{{ storage_account_name_default }}06"
