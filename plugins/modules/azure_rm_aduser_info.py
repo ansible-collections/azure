@@ -216,8 +216,8 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                 users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(self.odata_filter))
                 ad_users = list(users.value)
             elif self.all:
-                users = asyncio.get_event_loop().run_until_complete(self.get_users())
-                ad_users = list(users.value)
+                # this returns as a list, since we parse multiple pages
+                ad_users = asyncio.get_event_loop().run_until_complete(self.get_users())
 
             self.results['ad_users'] = [self.to_dict(user) for user in ad_users]
 
@@ -251,7 +251,17 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                 select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
             ),
         )
-        return await self._client.users.get(request_configuration=request_configuration)
+        users = []
+        # paginated response can be quite large
+        response = await self._client.users.get(request_configuration=request_configuration)
+        if response:
+            users += response.value
+        while response is not None and response.odata_next_link is not None:
+            response = await self._client.users.with_url(response.odata_next_link).get(request_configuration=request_configuration)
+            if response:
+                users += response.value
+
+        return users
 
     async def get_users_by_filter(self, filter):
         return await self._client.users.get(
