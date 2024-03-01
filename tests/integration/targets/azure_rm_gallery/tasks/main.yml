@@ -109,7 +109,7 @@
   azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
-  register: output
+  register: vm_output
 
 - name: Create a snapshot by importing an unmanaged blob from the same subscription.
   azure_rm_snapshot:
@@ -118,7 +118,7 @@
     location: eastus
     creation_data:
       create_option: Import
-      source_uri: 'https://{{ output.vms[0].storage_account_name }}.blob.core.windows.net/{{ output.vms[0].storage_container_name }}/{{ output.vms[0].storage_blob_name }}'
+      source_uri: 'https://{{ vm_output.vms[0].storage_account_name }}.blob.core.windows.net/{{ vm_output.vms[0].storage_container_name }}/{{ vm_output.vms[0].storage_blob_name }}'
   register: output
 
 - name: Assert the snapshot created
@@ -372,10 +372,11 @@
               disk_encryption_set_id: "{{ des_results.state.id }}"
           storage_account_type: Standard_ZRS
     storage_profile:
-      source_image:
-        resource_group: "{{ resource_group }}"
-        storage_account: '{{ output.vms[0].storage_account_name }}'
-        uri: 'https://{{ output.vms[0].storage_account_name }}.blob.core.windows.net/{{ output.vms[0].storage_container_name }}/{{ output.vms[0].storage_blob_name }}'
+      os_disk:
+        source:
+          resource_group: "{{ resource_group }}"
+          storage_account: '{{ vm_output.vms[0].storage_account_name }}'
+          uri: 'https://{{ vm_output.vms[0].storage_account_name }}.blob.core.windows.net/{{ vm_output.vms[0].storage_container_name }}/{{ vm_output.vms[0].storage_blob_name }}'
   register: output
 
 - name: Assert the gallery image version created

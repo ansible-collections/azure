@@ -326,9 +326,10 @@ EXAMPLES = '''
           storage_account_type: Standard_LRS
     storage_profile:
       os_disk:
-        resource_group: myResourceGroup
-        storage_account: myStorageAccount
-        uri: "https://myStorageAccount.blob.core.windows.net/myContainer/myImage.vhd"
+        source:
+          resource_group: myResourceGroup
+          storage_account: myStorageAccount
+          uri: "https://myStorageAccount.blob.core.windows.net/myContainer/myImage.vhd"
 '''
 
 RETURN = '''
