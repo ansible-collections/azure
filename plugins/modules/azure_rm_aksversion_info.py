@@ -29,6 +29,13 @@ options:
         description:
             - Get the upgrade versions available for a managed Kubernetes cluster version.
         type: str
+    allow_preview:
+        description:
+            - Whether Kubernetes version is currently in preview.
+            - If I(allow_preview=True), returns the current preview status of the current Kubernetes version.
+            - If I(allow_preview=False), returns the Kubernetes version in a non-current preview state.
+            - If no set C(allow_preview), returns all the avaiable Kubernetes version.
+        type: bool
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -38,6 +45,10 @@ author:
 '''
 
 EXAMPLES = '''
+- name: Get current preview versions for AKS in location eastus
+  azure_rm_aksversion_info:
+    location: eastus
+    allow_preview: true
 - name: Get available versions for AKS in location eastus
   azure_rm_aksversion_info:
     location: eastus
@@ -63,7 +74,8 @@ class AzureRMAKSVersion(AzureRMModuleBase):
 
         self.module_args = dict(
             location=dict(type='str', required=True),
-            version=dict(type='str')
+            version=dict(type='str'),
+            allow_preview=dict(type='bool')
         )
 
         self.results = dict(
@@ -73,6 +85,7 @@ class AzureRMAKSVersion(AzureRMModuleBase):
 
         self.location = None
         self.version = None
+        self.allow_preview = None
 
         super(AzureRMAKSVersion, self).__init__(
             derived_arg_spec=self.module_args,
@@ -104,7 +117,14 @@ class AzureRMAKSVersion(AzureRMModuleBase):
             response = self.containerservice_client.container_services.list_orchestrators(self.location, resource_type='managedClusters')
             orchestrators = response.orchestrators
             for item in orchestrators:
-                result[item.orchestrator_version] = [x.orchestrator_version for x in item.upgrades] if item.upgrades else []
+                if self.allow_preview is None:
+                    result[item.orchestrator_version] = [x.orchestrator_version for x in item.upgrades] if item.upgrades else []
+                elif self.allow_preview:
+                    if item.is_preview:
+                        result[item.orchestrator_version] = [x.orchestrator_version for x in item.upgrades] if item.upgrades else []
+                else:
+                    if not item.is_preview:
+                        result[item.orchestrator_version] = [x.orchestrator_version for x in item.upgrades] if item.upgrades else []
             if version:
                 return result.get(version) or []
             else:

@@ -250,6 +250,18 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             adfs_authority_url=self.get_option('adfs_authority_url')
         )
 
+        if self.templar.is_template(auth_options["tenant"]):
+            auth_options["tenant"] = self.templar.template(variable=auth_options["tenant"], disable_lookups=False)
+
+        if self.templar.is_template(auth_options["client_id"]):
+            auth_options["client_id"] = self.templar.template(variable=auth_options["client_id"], disable_lookups=False)
+
+        if self.templar.is_template(auth_options["secret"]):
+            auth_options["secret"] = self.templar.template(variable=auth_options["secret"], disable_lookups=False)
+
+        if self.templar.is_template(auth_options["subscription_id"]):
+            auth_options["subscription_id"] = self.templar.template(variable=auth_options["subscription_id"], disable_lookups=False)
+
         self.azure_auth = AzureRMAuth(**auth_options)
 
         self._clientconfig = AzureRMRestConfiguration(self.azure_auth.azure_credential_track2, self.azure_auth.subscription_id,
