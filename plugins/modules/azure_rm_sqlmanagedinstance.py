@@ -262,7 +262,7 @@ sql_managed_instance:
             sample: "/subscription/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Sql/managedInstances/fredsqlinstance"
         name:
             description:
-                - SQL manged instance name.
+                - SQL managed instance name.
             returned: always
             type: str
             sample: testmanagedinstance

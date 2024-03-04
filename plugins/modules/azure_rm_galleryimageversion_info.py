@@ -257,6 +257,8 @@ class AzureRMGalleryImageVersionsInfo(AzureRMModuleBase):
         return [self.format_item(x) for x in results['response']] if results['response'] else []
 
     def format_item(self, item):
+        if not item:
+            return None
         d = {
             'id': item['id'],
             'name': item['name'],

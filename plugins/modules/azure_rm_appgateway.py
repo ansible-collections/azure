@@ -519,6 +519,24 @@ options:
                     - Whether host header should be picked from the host name of the backend HTTP settings. Default value is false.
                 type: bool
                 default: False
+            port:
+                description:
+                    - Custom port which will be used for probing the backend servers.
+                    - The valid value ranges from 1 to 65535.
+                    - In case not set, port from http settings will be used.
+                    - This property is valid for C(Standard_v2) and C(WAF_v2) only.
+                type: int
+            match:
+                description:
+                    - Criterion for classifying a healthy probe response.
+                type: dict
+                suboptions:
+                    status_codes:
+                        description:
+                            - Allowed ranges of healthy status codes.
+                            - Default range of healthy status codes is 200-399.
+                        type: list
+                        elements: str
     backend_http_settings_collection:
         description:
             - Backend http settings of the application gateway resource.
@@ -1419,6 +1437,54 @@ EXAMPLES = '''
         max_request_body_size_in_kb: 128
         file_upload_limit_in_mb: 100
 
+- name: Create application gateway with multi parameters
+  azure_rm_appgateway:
+    resource_group: myResourceGroup
+    name: myappgateway
+    sku:
+      name: standard_v2
+      tier: standard_v2
+      capacity: 2
+    gateway_ip_configurations:
+      - subnet:
+          id: "{{ subnet_id }}"
+        name: app_gateway_ip_config
+    frontend_ip_configurations:
+      - name: sample_gateway_frontend_ip_config
+        public_ip_address: "pip{{ rpfx }}"
+    frontend_ports:
+      - port: 80
+        name: http_frontend_port
+    backend_address_pools:
+      - name: test_backend_address_pool  # empty pool which will receive attachment to NIC.
+    backend_http_settings_collection:
+      - port: 80
+        protocol: http
+        cookie_based_affinity: enabled
+        name: sample_appgateway_http_settings
+    http_listeners:
+      - frontend_ip_configuration: sample_gateway_frontend_ip_config
+        frontend_port: http_frontend_port
+        protocol: http
+        name: http_listener
+    probes:
+      - name: testprobes01
+        protocol: http
+        path: '/'
+        timeout: 30
+        host: testazure
+        interval: 90
+        port: 80
+        match:
+          status_codes:
+            - 200
+    request_routing_rules:
+      - rule_type: basic
+        backend_address_pool: test_backend_address_pool
+        backend_http_settings: sample_appgateway_http_settings
+        http_listener: http_listener
+        name: rule1
+
 - name: Stop an Application Gateway instance
   azure_rm_appgateway:
     resource_group: myResourceGroup
@@ -1517,6 +1583,11 @@ ssl_policy_spec = dict(
 )
 
 
+match_spec = dict(
+    status_codes=dict(type='list', elements='str')
+)
+
+
 probe_spec = dict(
     host=dict(type='str'),
     interval=dict(type='int'),
@@ -1525,7 +1596,9 @@ probe_spec = dict(
     protocol=dict(type='str', choices=['http', 'https']),
     timeout=dict(type='int'),
     unhealthy_threshold=dict(type='int'),
-    pick_host_name_from_backend_http_settings=dict(type='bool', default=False)
+    pick_host_name_from_backend_http_settings=dict(type='bool', default=False),
+    port=dict(type='int'),
+    match=dict(type='dict', options=match_spec)
 )
 
 
@@ -2298,7 +2371,7 @@ class AzureRMApplicationGateways(AzureRMModuleBase):
             else:
                 self.to_do = Actions.NoAction
 
-            update_tags, new_tags = self.update_tags(old_response['tags'])
+            update_tags, new_tags = self.update_tags(old_response.get('tags'))
             if update_tags:
                 self.to_do = Actions.Update
                 self.parameters["tags"] = new_tags
