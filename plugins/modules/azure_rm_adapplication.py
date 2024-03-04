@@ -146,33 +146,104 @@ options:
     optional_claims:
         description:
             - Declare the optional claims for the application.
-        type: list
-        elements: dict
+        type: complex
         suboptions:
-            name:
+            access_token:
                 description:
-                    - The name of the optional claim.
-                type: str
-                required: True
-            source:
+                    - The optional claims returned in the JWT access token
+                type: list
+                elements: dict
+                suboptions:
+                    name:
+                        description:
+                            - The name of the optional claim.
+                        type: str
+                        required: True
+                    source:
+                        description:
+                            - The source (directory object) of the claim.
+                            - There are predefined claims and user-defined claims from extension properties.
+                            - If the source value is null, the claim is a predefined optional claim.
+                            - If the source value is user, the value in the name property is the extension property 
+                            from the user object.
+                        type: str
+                    essential:
+                        description:
+                            - If the value is true, the claim specified by the client is necessary to ensure a 
+                            smooth authorization experience for the specific task requested by the end user.
+                            - The default value is false.
+                        default: false
+                        type: bool
+                    additional_properties:
+                        description:
+                            - Additional properties of the claim.
+                            - If a property exists in this collection, it modifies the behavior of the optional claim 
+                            specified in the name property.
+                        type: str
+            id_token:
                 description:
-                    - The source (directory object) of the claim.
-                    - There are predefined claims and user-defined claims from extension properties.
-                    - If the source value is null, the claim is a predefined optional claim.
-                    - If the source value is user, the value in the name property is the extension property from the user object.
-                type: str
-            essential:
+                    - The optional claims returned in the JWT ID token
+                type: list
+                elements: dict
+                suboptions:
+                    name:
+                        description:
+                            - The name of the optional claim.
+                        type: str
+                        required: True
+                    source:
+                        description:
+                            - The source (directory object) of the claim.
+                            - There are predefined claims and user-defined claims from extension properties.
+                            - If the source value is null, the claim is a predefined optional claim.
+                            - If the source value is user, the value in the name property is the extension property 
+                            from the user object.
+                        type: str
+                    essential:
+                        description:
+                            - If the value is true, the claim specified by the client is necessary to ensure a 
+                            smooth authorization experience for the specific task requested by the end user.
+                            - The default value is false.
+                        default: false
+                        type: bool
+                    additional_properties:
+                        description:
+                            - Additional properties of the claim.
+                            - If a property exists in this collection, it modifies the behavior of the optional 
+                            claim specified in the name property.
+                        type: str
+            saml2_token:
                 description:
-                    - If the value is true, the claim specified by the client is necessary to ensure a smooth authorization experience
-                      for the specific task requested by the end user.
-                    - The default value is false.
-                default: false
-                type: bool
-            additional_properties:
-                description:
-                    - Additional properties of the claim.
-                    - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
-                type: str
+                    - The optional claims returned in the SAML token
+                type: list
+                elements: dict
+                suboptions:
+                    name:
+                        description:
+                            - The name of the optional claim.
+                        type: str
+                        required: True
+                    source:
+                        description:
+                            - The source (directory object) of the claim.
+                            - There are predefined claims and user-defined claims from extension properties.
+                            - If the source value is null, the claim is a predefined optional claim.
+                            - If the source value is user, the value in the name property is the extension property 
+                            from the user object.
+                        type: str
+                    essential:
+                        description:
+                            - If the value is true, the claim specified by the client is necessary to ensure a smooth 
+                            authorization experience for the specific task requested by the end user.
+                            - The default value is false.
+                        default: false
+                        type: bool
+                    additional_properties:
+                        description:
+                            - Additional properties of the claim.
+                            - If a property exists in this collection, it modifies the behavior of the optional 
+                            claim specified in the name property.
+                        type: str
     password:
         description:
             - App password, aka 'client secret'.
@@ -266,7 +337,7 @@ output:
     description:
         - Current state of the adapplication.
     type: complex
-    returned: awalys
+    returned: always
     contains:
         display_name:
             description:
@@ -347,6 +418,8 @@ try:
     from msgraph.generated.models.app_role import AppRole
     from msgraph.generated.models.web_application import WebApplication
     from msgraph.generated.models.implicit_grant_settings import ImplicitGrantSettings
+    from msgraph.generated.models.optional_claim import OptionalClaim
+    from msgraph.generated.models.optional_claims import OptionalClaims
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -371,7 +444,7 @@ app_role_spec = dict(
     )
 )
 
-optional_claims_spec = dict(
+claims_spec = dict(
     name=dict(
         type='str',
         required=True
@@ -387,6 +460,14 @@ optional_claims_spec = dict(
         type='str'
     )
 )
+
+optional_claims_spec = dict(
+    access_token=dict(type='list', elements='dict', options=claims_spec),
+    id_token=dict(type='list', elements='dict', options=claims_spec),
+    saml2_token=dict(type='list', elements='dict', options=claims_spec),
+    type=dict
+)
+
 required_resource_accesses_spec = dict(
     resource_app_id=dict(
         type='str'
@@ -433,7 +514,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             key_value=dict(type='str', no_log=True),
             native_app=dict(type='bool'),
             oauth2_allow_implicit_flow=dict(type='bool'),
-            optional_claims=dict(type='list', elements='dict', options=optional_claims_spec),
+            optional_claims=optional_claims_spec,
             password=dict(type='str', no_log=True),
             reply_urls=dict(type='list', elements='str'),
             start_date=dict(type='str'),
@@ -507,6 +588,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             if self.app_roles:
                 app_roles = self.build_app_roles(self.app_roles)
 
+            if self.optional_claims:
+                optional_claims = self.build_optional_claims(self.optional_claims)
+
             create_app = Application(
                 sign_in_audience=self.sign_in_audience,
                 web=WebApplication(
@@ -522,7 +606,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 password_credentials=password_creds,
                 required_resource_access=required_accesses,
                 app_roles=app_roles,
-                optional_claims=self.optional_claims
+                optional_claims=optional_claims
                 # allow_guests_sign_in=self.allow_guests_sign_in,
             )
             response = asyncio.get_event_loop().run_until_complete(self.create_application(create_app))
@@ -549,6 +633,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             if self.app_roles:
                 app_roles = self.build_app_roles(self.app_roles)
 
+            if self.optional_claims:
+                optional_claims = self.build_optional_claims(self.optional_claims)
+
             app_update_param = Application(
                 sign_in_audience=self.sign_in_audience,
                 web=WebApplication(
@@ -565,7 +652,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 required_resource_access=required_accesses,
                 # allow_guests_sign_in=self.allow_guests_sign_in,
                 app_roles=app_roles,
-                optional_claims=self.optional_claims)
+                optional_claims=optional_claims)
             asyncio.get_event_loop().run_until_complete(self.update_application(
                 obj_id=old_response['object_id'], update_app=app_update_param))
 
@@ -609,6 +696,15 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                     return True
         return False
 
+    def serialize_claims(self, claims):
+        if claims is None:
+            return None
+        return [{
+            "additional_properties": claim.additional_properties,
+            "essential": claim.essential,
+            "name": claim.name,
+            "source": claim.source} for claim in claims]
+
     def to_dict(self, object):
         app_roles = [{
             'id': app_role.id,
@@ -617,6 +713,11 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             'value': app_role.value,
             "description": app_role.description
         } for app_role in object.app_roles]
+        optional_claims = {
+            "access_token": self.serialize_claims(object.optional_claims.access_token),
+            "id_token": self.serialize_claims(object.optional_claims.id_token),
+            "saml2_token": self.serialize_claims(object.optional_claims.saml2_token)
+        }
         return dict(
             app_id=object.app_id,
             object_id=object.id,
@@ -627,7 +728,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             homepage=object.web.home_page_url,
             identifier_uris=object.identifier_uris,
             oauth2_allow_implicit_flow=object.web.implicit_grant_settings.enable_access_token_issuance,
-            optional_claims=object.optional_claims,
+            optional_claims=optional_claims,
             # allow_guests_sign_in=object.allow_guests_sign_in,
             reply_urls=object.web.redirect_uris
         )
@@ -703,6 +804,25 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                            is_enabled=x.get('is_enabled', None), value=x.get('value', None))  # value ? additional_data
             result.append(role)
         return result
+
+    def build_optional_claims(self, optional_claims):
+
+        def build_claims(claims_dict):
+            if claims_dict is None:
+                return None
+            return [OptionalClaim(
+                essential=claim.get("essential"),
+                name=claim.get("name"),
+                source=claim.get("source"),
+                additional_properties=claim.get("additional_properties")
+            ) for claim in claims_dict]
+
+        claims = OptionalClaims(
+            access_token=build_claims(optional_claims.get("access_token")),
+            id_token=build_claims(optional_claims.get("id_token")),
+            saml2_token=build_claims(optional_claims.get("saml2_token"))
+        )
+        return claims
 
     async def create_application(self, creat_app):
         return await self._client.applications.post(body=creat_app)

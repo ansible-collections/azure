@@ -21,7 +21,7 @@
   ansible.builtin.assert:
     that: not output.changed
 
-- name: Create application with more parameter
+- name: Create application with more parameters
   azure_rm_adapplication:
     display_name: "{{ display_name }}-01"
     sign_in_audience: AzureADandPersonalMicrosoftAccount
@@ -37,6 +37,16 @@
         display_name: "{{ display_name }}_approle"
         is_enabled: true
         value: Password@0329
+    optional_claims:
+      access_token:
+        - name: aud
+          essential: true
+      id_token:
+        - name: aud
+          essential: true
+      saml2_token:
+        - name: aud
+          essential: true
   register: second_output
 
 - name: Assert secondary resource create success
