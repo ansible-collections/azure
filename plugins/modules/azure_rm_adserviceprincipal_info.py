@@ -113,8 +113,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
 
         try:
             if self.object_id is None:
-                sps = asyncio.get_event_loop().run_until_complete(self.get_service_principals())
-                service_principals = list(sps.value)
+                service_principals = asyncio.get_event_loop().run_until_complete(self.get_service_principals())
             else:
                 service_principals = [asyncio.get_event_loop().run_until_complete(self.get_service_principal())]
 
@@ -138,11 +137,20 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
     async def get_service_principals(self):
         kwargs = {}
         if self.app_id is not None:
-            kwargs = {"filter": "servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id)}
-        request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
-            query_parameters=ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(**kwargs)
-        )
-        return await self._client.service_principals.get(request_configuration=request_configuration)
+            request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
+                query_parameters=ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
+                    filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id))
+            )
+            kwargs['request_configuration'] = request_configuration
+        service_principals = []
+        response = self._client.service_principals.get(**kwargs)
+        if response:
+            service_principals += response.value
+        while response is not None and response.odata_next_link is not None:
+            response = await self._client.service_principals.with_url(response.odata_next_link).get(**kwargs)
+            if response:
+                service_principals += response.value
+        return service_principals
 
 
 def main():
