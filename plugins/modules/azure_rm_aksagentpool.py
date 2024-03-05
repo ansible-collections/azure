@@ -129,6 +129,7 @@ options:
             - This also effects the cluster autoscaler behavior.
             - If not specified, it defaults to C(Delete).
         type: str
+        default: Delete
         choices:
             - Delete
             - Deallocate
@@ -138,7 +139,7 @@ options:
         type: dict
         suboptions:
             max_surge:
-                descrition:
+                description:
                     - This can either be set to an integer, sucha as C(5) or percentage C(50%).
                     - If a percentage is specified, it is the percentage of the total agent pool size at the time of the upgrade.
                     - For percentages, fractional nodes are rounded up.
@@ -234,7 +235,8 @@ options:
                 description:
                     - Kubernetes Topology Manager policies.
                     - The default is C(none).
-                type: int
+                type: str
+                default: none
                 choices:
                     - none
                     - best-effort
@@ -330,7 +332,7 @@ options:
                     net_ipv4_ip_local_port_range:
                         description:
                             - Sysctl setting net.ipv4.ip_local_port_range.
-                        type: int
+                        type: str
                     net_ipv4_neigh_default_gc_thresh1:
                         description:
                             - Sysctl setting net.ipv4.neigh.default.gc_thresh1.
@@ -375,20 +377,26 @@ options:
                         description:
                             - Sysctl setting vm.vfs_cache_pressure.
                         type: int
+                    net_netfilter_nf_conntrack_max:
+                        description:
+                            - sysctl setting net.netfilter.nf_conntrack_max.
+                        type: int
             transparent_huge_page_enabled:
-                descripiton:
+                description:
                     - The node agent pool transparent hugepage.
                     - The default is C(always).
                 type: str
+                default: always
                 choices:
                     - always
                     - madvise
                     - never
             transparent_huge_page_defrag:
-                descrition:
+                description:
                     - The node agent pool transparent huge page deferag.
                     - The default is C(madvise).
                 type: str
+                default: madvise
                 choices:
                     - always
                     - defer

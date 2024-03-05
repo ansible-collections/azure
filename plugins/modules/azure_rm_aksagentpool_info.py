@@ -259,12 +259,6 @@ aks_agent_pools:
             type: dict
             returned: always
             sample: {code: Running}
-        os_sku:
-            description:
-                - The node agent pool's SKU.
-            type: str
-            returned: always
-            sample: Ubuntu
         tags:
             description:
                 - The tags of the node agent pool.

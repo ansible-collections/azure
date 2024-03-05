@@ -181,7 +181,7 @@
   azure_rm_aksagentpool:
     resource_group: "{{ resource_group }}"
     cluster_name: "min{{ rpfx }}"
-    name: default-secondary
+    name: default06
     count: 1
     vm_size: Standard_B2s
     type_properties_type: VirtualMachineScaleSets
@@ -223,7 +223,7 @@
   azure_rm_aksagentpool:
     resource_group: "{{ resource_group }}"
     cluster_name: "min{{ rpfx }}"
-    name: default-secondary
+    name: default06
     count: 1
     vm_size: Standard_B2s
     type_properties_type: VirtualMachineScaleSets
@@ -265,7 +265,7 @@
   azure_rm_aksagentpool:
     resource_group: "{{ resource_group }}"
     cluster_name: "min{{ rpfx }}"
-    name: default-secondary
+    name: default06
     state: absent
 
 - name: Delete node agent pool
