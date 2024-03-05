@@ -381,6 +381,10 @@ options:
                         description:
                             - sysctl setting net.netfilter.nf_conntrack_max.
                         type: int
+                    net_netfilter_nf_conntrack_buckets:
+                        description:
+                            - Sysctl setting net.netfilter.nf_conntrack_buckets.
+                        type: int
             transparent_huge_page_enabled:
                 description:
                     - The node agent pool transparent hugepage.
