@@ -43,30 +43,34 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-app_display_name:
-    description:
-        - Object's display name or its prefix.
-    type: str
-    returned: always
-    sample: sp
-app_id:
-    description:
-        - The application ID.
-    returned: always
-    type: str
-    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-app_role_assignment_required:
-    description:
-        - Whether the Role of the Service Principal is set.
-    type: bool
-    returned: always
-    sample: false
-object_id:
-    description:
-        - It's service principal's object ID.
-    returned: always
-    type: str
-    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+service_principals:
+    type: list
+    elements: dict
+    contains:
+        app_display_name:
+            description:
+                - Object's display name or its prefix.
+            type: str
+            returned: always
+            sample: sp
+        app_id:
+            description:
+                - The application ID.
+            returned: always
+            type: str
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        app_role_assignment_required:
+            description:
+                - Whether the Role of the Service Principal is set.
+            type: bool
+            returned: always
+            sample: false
+        object_id:
+            description:
+                - It's service principal's object ID.
+            returned: always
+            type: str
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 
 '''
@@ -132,10 +136,11 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         return await self._client.service_principals.by_service_principal_id(self.object_id).get()
 
     async def get_service_principals(self):
+        kwargs = {}
+        if self.app_id is not None:
+            kwargs = {"filter": "servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id)}
         request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
-            query_parameters=ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
-                filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
-            ),
+            query_parameters=ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(**kwargs)
         )
         return await self._client.service_principals.get(request_configuration=request_configuration)
 
