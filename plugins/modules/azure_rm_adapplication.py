@@ -333,72 +333,66 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-output:
+display_name:
     description:
-        - Current state of the adapplication.
-    type: complex
+        - Object's display name or its prefix.
+    type: str
     returned: always
-    contains:
-        display_name:
-            description:
-                - Object's display name or its prefix.
-            type: str
-            returned: always
-            sample: fredAKSCluster
-        app_id:
-            description:
-                - The application ID.
-            returned: always
-            type: str
-            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        object_id:
-            description:
-                - Object ID of the application
-            returned: always
-            type: str
-            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        sign_in_audience:
-            description:
-                - The application can be used from any Azure AD tenants.
-            returned: always
-            type: str
-            sample: AzureADandPersonalMicrosoftAccount
-        available_to_other_tenants:
-            description:
-                - The application can be used from any Azure AD tenants.
-            returned: always
-            type: str
-            sample: AzureADandPersonalMicrosoftAccount
-        homepage:
-            description:
-                - The url where users can sign in and use your app.
-            returned: always
-            type: str
-            sample: null
-        identifier_uris:
-            description:
-                - Space-separated unique URIs that Azure AD can use for this app.
-            returned: always
-            type: list
-            sample: []
-        oauth2_allow_implicit_flow:
-            description:
-                - Whether to allow implicit grant flow for OAuth2.
-            returned: always
-            type: bool
-            sample: false
-        optional_claims:
-            description:
-                - The optional claims for the application.
-            returned: always
-            type: list
-            sample: []
-        reply_urls:
-            description:
-                - Space-separated URIs to which Azure AD will redirect in response to an OAuth 2.0 request.
-            returned: always
-            type: list
-            sample: []
+    sample: fredAKSCluster
+app_id:
+    description:
+        - The application ID.
+    returned: always
+    type: str
+    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+object_id:
+    description:
+        - Object ID of the application
+    returned: always
+    type: str
+    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+sign_in_audience:
+    description:
+        - The application can be used from any Azure AD tenants.
+    returned: always
+    type: str
+    sample: AzureADandPersonalMicrosoftAccount
+available_to_other_tenants:
+    description:
+        - The application can be used from any Azure AD tenants.
+    returned: always
+    type: str
+    sample: AzureADandPersonalMicrosoftAccount
+homepage:
+    description:
+        - The url where users can sign in and use your app.
+    returned: always
+    type: str
+    sample: null
+identifier_uris:
+    description:
+        - Space-separated unique URIs that Azure AD can use for this app.
+    returned: always
+    type: list
+    sample: []
+oauth2_allow_implicit_flow:
+    description:
+        - Whether to allow implicit grant flow for OAuth2.
+    returned: always
+    type: bool
+    sample: false
+optional_claims:
+    description:
+        - The optional claims for the application.
+    returned: always
+    type: list
+    sample: []
+reply_urls:
+    description:
+        - Space-separated URIs to which Azure AD will redirect in response to an OAuth 2.0 request.
+    returned: always
+    type: list
+    sample: []
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
