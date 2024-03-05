@@ -203,7 +203,7 @@ options:
                     - Kubernetes CPU management policies.
                     - The default is C(none).
                 type: str
-                default none
+                default: none
                 choices:
                     - none
                     - static
@@ -325,7 +325,7 @@ options:
                         type: int
                     net_ipv4_tcp_tw_reuse:
                         description:
-                            - Sysctl setting net.ipv4.tcp_tw_reuse. 
+                            - Sysctl setting net.ipv4.tcp_tw_reuse.
                         type: bool
                     net_ipv4_ip_local_port_range:
                         description:
@@ -385,7 +385,7 @@ options:
                     - madvise
                     - never
             transparent_huge_page_defrag:
-                descrition: 
+                descrition:
                     - The node agent pool transparent huge page deferag.
                     - The default is C(madvise).
                 type: str
@@ -683,7 +683,7 @@ aks_agent_pools:
                     transparent_huge_page_enabled: madvise
                 }
         power_state:
-            descritpion:
+            description:
                 - The agent pool's power state.
             type: dict
             returned: always
@@ -1024,9 +1024,12 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             if agent_pool:
                 update_tags, self.body['tags'] = self.update_tags(agent_pool.get('tags'))
                 for key in self.body.keys():
-                    if self.body[key] is not None and isinstance(self.body[key], dict) and key != 'tags':
+                    if key == 'tags':
+                        if update_tags:
+                            changed = True
+                    elif self.body[key] is not None and isinstance(self.body[key], dict):
                         for item in self.body[key].keys():
-                            if self.body[key][item] is not None and self.body[key][item] != agent_pool[key][item]:
+                            if self.body[key][item] is not None and self.body[key][item] != agent_pool[key].get(item):
                                 changed = True
                     elif self.body[key] is not None and self.body[key] != agent_pool[key] and key not in ['scale_set_priority', 'spot_max_price']:
                         changed = True

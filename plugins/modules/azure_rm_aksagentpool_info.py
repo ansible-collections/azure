@@ -254,7 +254,7 @@ aks_agent_pools:
                     transparent_huge_page_enabled: madvise
                 }
         power_state:
-            descritpion:
+            description:
                 - The agent pool's power state.
             type: dict
             returned: always
