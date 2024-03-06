@@ -711,7 +711,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             "access_token": self.serialize_claims(object.optional_claims.access_token),
             "id_token": self.serialize_claims(object.optional_claims.id_token),
             "saml2_token": self.serialize_claims(object.optional_claims.saml2_token)
-        }
+        } if object.optional_claims is not None else object.optional_claims
         return dict(
             app_id=object.app_id,
             object_id=object.id,
