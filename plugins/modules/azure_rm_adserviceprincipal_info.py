@@ -40,12 +40,19 @@ EXAMPLES = '''
 - name: get ad sp info
   azure_rm_adserviceprincipal_info:
     app_id: "{{ app_id }}"
+    
+- name: get all service principals
+  azure_rm_adserviceprincipal_info:
 '''
 
 RETURN = '''
 service_principals:
+    description: 
+        - A list of service principals in the tenant. If app_id or object_id is set, the maximum length
+          of this list should be one.
     type: list
     elements: dict
+    returned: always
     contains:
         app_display_name:
             description:
