@@ -150,7 +150,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
             )
             kwargs['request_configuration'] = request_configuration
         service_principals = []
-        response = self._client.service_principals.get(**kwargs)
+        response = await self._client.service_principals.get(**kwargs)
         if response:
             service_principals += response.value
         while response is not None and response.odata_next_link is not None:
