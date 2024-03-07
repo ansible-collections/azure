@@ -31,17 +31,17 @@ options:
         type: str
         required: true
     show_admin_credentials:
-        descritpion:
+        description:
             - Whether list Cluster Admin Credentials.
         type: bool
         default: false
     show_user_credentials:
-        descritpion:
+        description:
             - Whether list Cluster User Credentials.
         type: bool
         default: false
     show_monitor_credentials:
-        descritpion:
+        description:
             - Whether list Cluster Monitoring User Credentials.
         type: bool
         default: false
@@ -55,19 +55,19 @@ author:
 '''
 
 EXAMPLES = '''
-- name: Get managecluter admin credentials
+- name: Get managecluster admin credentials
   azure_rm_akscredentials_info:
     resource_group: "{{ resource_group }}"
     cluster_name: cluter_name
     show_admin_credentials: true
 
-- name: Get managecluter user credentials
+- name: Get managecluster user credentials
   azure_rm_akscredentials_info:
     resource_group: "{{ resource_group }}"
     cluster_name: cluster_name
     show_user_credentials: true
 
-- name: Get managecluter monitor user credentials
+- name: Get managecluster monitor user credentials
   azure_rm_akscredentials_info:
     resource_group: "{{ resource_group }}"
     cluster_name: cluster_name
@@ -196,10 +196,7 @@ class AzureRMAksCredentialsInfo(AzureRMModuleBase):
     def format_response(self, item):
         if not item:
             return
-        return dict(
-                    name=item.name,
-                    value=item.value.decode('utf-8')
-                    )
+        return dict(name=item.name, value=item.value.decode('utf-8'))
 
 
 def main():
