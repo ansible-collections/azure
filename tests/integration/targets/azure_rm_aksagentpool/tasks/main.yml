@@ -33,10 +33,10 @@
       outbound_type: loadBalancer
   register: output
 
-- name: Get managecluter admin credentials
+- name: Get managecluster admin credentials
   azure_rm_akscredentials_info:
     resource_group: "{{ resource_group }}"
-    cluster_name: cluter_name
+    cluster_name: "min{{ rpfx }}"
     show_admin_credentials: true
   register: output
 
@@ -45,10 +45,10 @@
     that:
       - output.cluster_credentials | length == 1
 
-- name: Get managecluter user credentials
+- name: Get managecluster user credentials
   azure_rm_akscredentials_info:
     resource_group: "{{ resource_group }}"
-    cluster_name: cluster_name
+    cluster_name: "min{{ rpfx }}"
     show_user_credentials: true
   register: output
 
@@ -57,10 +57,10 @@
     that:
       - output.cluster_credentials | length == 1
 
-- name: Get managecluter monitor user credentials
+- name: Get managecluster monitor user credentials
   azure_rm_akscredentials_info:
     resource_group: "{{ resource_group }}"
-    cluster_name: cluster_name
+    cluster_name: "min{{ rpfx }}"
     show_monitor_credentials: true
   register: output
 
