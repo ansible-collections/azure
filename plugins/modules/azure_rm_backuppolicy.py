@@ -67,6 +67,7 @@ options:
         choices:
             - Daily
             - Weekly
+            - Hourly
         type: str
     schedule_days:
         description:
@@ -74,6 +75,14 @@ options:
             - Does not apply to Daily frequency.
         type: list
         elements: str
+    monthly_retention_count:
+        description:
+            - The amount of months to retain backups.
+        type: int
+    yearly_retention_count:
+        description:
+            - The amount of years to retain backups.
+        type: int
     weekly_retention_count:
         description:
             - The amount of weeks to retain backups.
@@ -191,10 +200,12 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             backup_management_type=dict(type='str', choices=['AzureIaasVM']),
             schedule_run_time=dict(type='int'),
             instant_recovery_snapshot_retention=dict(type='int'),
-            schedule_run_frequency=dict(type='str', choices=['Daily', 'Weekly']),
+            schedule_run_frequency=dict(type='str', choices=['Daily', 'Weekly', 'Hourly']),
             schedule_days=dict(type='list', elements='str'),
             weekly_retention_count=dict(type='int'),
             daily_retention_count=dict(type='int'),
+            monthly_retention_count=dict(type='int'),
+            yearly_retention_count=dict(type='int'),
             schedule_weekly_frequency=dict(type='int'),
             time_zone=dict(type='str', default='UTC'),
         )
@@ -208,6 +219,8 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         self.schedule_run_frequency = None
         self.schedule_days = None
         self.weekly_retention_count = None
+        self.monthly_retention_count = None
+        self.yearly_retention_count = None
         self.schedule_weekly_frequency = None
         self.daily_retention_count = None
         self.time_zone = None
@@ -347,6 +360,8 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
             daily_retention_schedule = None
             weekly_retention_schedule = None
+            monthly_retention_schedule = None
+            yearly_retention_schedule = None
 
             # Daily backups can have a daily retention or weekly but Weekly backups cannot have a daily retention
             if (self.daily_retention_count and self.schedule_run_frequency == "Daily"):
@@ -361,8 +376,24 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                                                                                                          retention_times=schedule_run_times_as_datetimes,
                                                                                                          retention_duration=retention_duration)
 
+            if (self.monthly_retention_count):
+                retention_duration = self.recovery_services_backup_models.RetentionDuration(count=self.monthly_retention_count,
+                                                                                            duration_type="Months")
+                monthly_retention_schedule = self.recovery_services_backup_models.WeeklyRetentionSchedule(days_of_the_week=self.schedule_days,
+                                                                                                         retention_times=schedule_run_times_as_datetimes,
+                                                                                                         retention_duration=retention_duration)
+
+            if (self.yearly_retention_count):
+                retention_duration = self.recovery_services_backup_models.RetentionDuration(count=self.yearly_retention_count,
+                                                                                            duration_type="Years")
+                yearly_retention_schedule = self.recovery_services_backup_models.WeeklyRetentionSchedule(days_of_the_week=self.schedule_days,
+                                                                                                         retention_times=schedule_run_times_as_datetimes,
+                                                                                                         retention_duration=retention_duration)
+
             retention_policy = self.recovery_services_backup_models.LongTermRetentionPolicy(daily_schedule=daily_retention_schedule,
-                                                                                            weekly_schedule=weekly_retention_schedule)
+                                                                                            weekly_schedule=weekly_retention_schedule,
+                                                                                            monthly_schedule=weekly_retention_schedule,
+                                                                                            yearly_schedule=weekly_retention_schedule)
 
             policy_definition = None
 
