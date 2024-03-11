@@ -272,12 +272,13 @@ try:
     from azure.mgmt.iothub import IotHubClient
     from azure.mgmt.iothub import models as IoTHubModels
     from azure.mgmt.resource.locks import ManagementLockClient
-    from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
     try:
         #  Older versions of the library exposed the modules at the root of the package
         import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
+        from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
     except ImportError:
         import azure.mgmt.recoveryservicesbackup.activestamp.models as RecoveryServicesBackupModels
+        from import azure.mgmt.recoveryservicesbackup.activestamp import RecoveryServicesBackupClient
     from azure.mgmt.search import SearchManagementClient
     from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
