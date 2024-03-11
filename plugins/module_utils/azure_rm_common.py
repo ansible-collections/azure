@@ -278,7 +278,7 @@ try:
         from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
     except ImportError:
         import azure.mgmt.recoveryservicesbackup.activestamp.models as RecoveryServicesBackupModels
-        from import azure.mgmt.recoveryservicesbackup.activestamp import RecoveryServicesBackupClient
+        from azure.mgmt.recoveryservicesbackup.activestamp import RecoveryServicesBackupClient
     from azure.mgmt.search import SearchManagementClient
     from azure.mgmt.datalake.store import DataLakeStoreAccountManagementClient
     import azure.mgmt.datalake.store.models as DataLakeStoreAccountModel
