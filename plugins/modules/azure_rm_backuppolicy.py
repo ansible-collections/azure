@@ -254,7 +254,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             yearly_retention_count=dict(type='int'),
             schedule_weekly_frequency=dict(type='int'),
             time_zone=dict(type='str', default='UTC'),
-            retention_schedule_format_type=dict(type='str', choices=['Daily',  'Weekly']),
+            retention_schedule_format_type=dict(type='str', choices=['Daily', 'Weekly']),
             months_of_year=dict(type='list', elements='str'),
             retention_schedule_daily=dict(
                 type='dict',
@@ -263,7 +263,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                         type='list',
                         elements='dict',
                         options=dict(
-                            data=dict(type='int'),
+                            date=dict(type='int'),
                             is_last=dict(type='bool'),
                         )
                     )
@@ -451,22 +451,22 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                 retention_duration = self.recovery_services_backup_models.RetentionDuration(count=self.monthly_retention_count,
                                                                                             duration_type="Months")
                 monthly_retention_schedule = self.recovery_services_backup_models.MonthlyRetentionSchedule(
-                                                                                                           retention_schedule_format_type=self.retention_schedule_format_type,
-                                                                                                           retention_schedule_daily=self.retention_schedule_daily,
-                                                                                                           retention_schedule_weekly=self.retention_schedule_weekly,
-                                                                                                           retention_times=schedule_run_times_as_datetimes,
-                                                                                                           retention_duration=retention_duration)
+                    retention_schedule_format_type=self.retention_schedule_format_type,
+                    retention_schedule_daily=self.retention_schedule_daily,
+                    retention_schedule_weekly=self.retention_schedule_weekly,
+                    retention_times=schedule_run_times_as_datetimes,
+                    retention_duration=retention_duration)
 
             if (self.yearly_retention_count):
                 retention_duration = self.recovery_services_backup_models.RetentionDuration(count=self.yearly_retention_count,
                                                                                             duration_type="Years")
                 yearly_retention_schedule = self.recovery_services_backup_models.YearlyRetentionSchedule(
-                                                                                                         retention_schedule_format_type=self.retention_schedule_format_type,
-                                                                                                         months_of_year=self.months_of_year,
-                                                                                                         retention_schedule_daily=self.retention_schedule_daily,
-                                                                                                         retention_schedule_weekly=self.retention_schedule_weekly,
-                                                                                                         retention_times=schedule_run_times_as_datetimes,
-                                                                                                         retention_duration=retention_duration)
+                   retention_schedule_format_type=self.retention_schedule_format_type,
+                   months_of_year=self.months_of_year,
+                   retention_schedule_daily=self.retention_schedule_daily,
+                   retention_schedule_weekly=self.retention_schedule_weekly,
+                   retention_times=schedule_run_times_as_datetimes,
+                   retention_duration=retention_duration)
 
             retention_policy = self.recovery_services_backup_models.LongTermRetentionPolicy(daily_schedule=daily_retention_schedule,
                                                                                             weekly_schedule=weekly_retention_schedule,
