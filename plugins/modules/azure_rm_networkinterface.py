@@ -785,6 +785,10 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                 ip_configuration_result = self.construct_ip_configuration_set(results['ip_configurations'])
                 ip_configuration_request = self.construct_ip_configuration_set(self.ip_configurations)
                 ip_configuration_result_name = [item['name'] for item in ip_configuration_result]
+                if_configuration_request_name = [item['name'] for item in self.ip_configurations]
+                for item_result in ip_configuration_result:
+                    if item_result['name'] not in if_configuration_request_name:
+                        self.ip_configurations.append(item_result)
                 for item_request in ip_configuration_request:
                     if item_request['name'] not in ip_configuration_result_name:
                         changed = True
