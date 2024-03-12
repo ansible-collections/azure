@@ -350,7 +350,7 @@
       - facts.networkinterfaces[0].ip_configurations[0].primary == True
       - facts.networkinterfaces[0].ip_configurations[1].primary == False
 
-- name: Remove one dns server and ip configuration
+- name: Remove one dns server and a new ip configuration
   azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
@@ -362,9 +362,9 @@
     dns_servers:
       - 8.9.10.11
     ip_configurations:
-      - name: ipconfig1
+      - name: ipconfig3
         public_ip_name: "tn{{ rpfx }}"
-        primary: true
+        primary: false
         load_balancer_backend_address_pools:
           - "{{ lb.state.backend_address_pools[0].id }}"
           - name: backendaddrpool1
@@ -378,7 +378,7 @@
       - output.state.dns_settings.dns_servers == ['8.9.10.11']
       - output.state.enable_ip_forwarding
       - output.state.network_security_group.name == "tn{{ rpfx }}sg"
-      - "output.state.ip_configurations | length == 1"
+      - "output.state.ip_configurations | length == 4"
       - output.state.ip_configurations[0].public_ip_address.name == "tn{{ rpfx }}"
       - output.state.enable_accelerated_networking
 
