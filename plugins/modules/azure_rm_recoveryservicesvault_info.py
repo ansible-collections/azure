@@ -34,6 +34,10 @@ author:
 '''
 
 EXAMPLES = '''
+- name: List all Azure Recovery Services Vault in same resource group
+  azure_rm_recoveryservicesvault_info:
+    resource_group: 'myResourceGroup'
+
 - name: Get Azure Recovery Services Vault Details.
   azure_rm_recoveryservicesvault_info:
     resource_group: 'myResourceGroup'
