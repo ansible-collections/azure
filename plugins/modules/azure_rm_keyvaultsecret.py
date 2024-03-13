@@ -96,6 +96,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.keyvault.secrets import SecretClient
+    from azure.core.exceptions import ResourceNotFoundError
     import dateutil.parser
 except ImportError:
     # This is handled in azure_rm_common
@@ -162,10 +163,12 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             elif self.secret_value and results['secret_value'] != self.secret_value:
                 changed = True
 
-        except Exception as ec:
+        except ResourceNotFoundError as ec:
             # Secret doesn't exist
             if self.state == 'present':
                 changed = True
+        except Exception as ec2:
+            self.fail("Find the key vault secret got exception, exception as {0}".format(str(ec2)))
 
         self.results['changed'] = changed
         self.results['state'] = results
