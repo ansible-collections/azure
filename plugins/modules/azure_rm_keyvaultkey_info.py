@@ -468,9 +468,9 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
                     results.append(response)
 
         except ResourceNotFoundError as ec:
-            self.log("Did not find the key vault key {0}: {1}".format(self.name, str(ce)))
+            self.log("Did not find the key vault key {0}: {1}".format(self.name, str(ec)))
         except Exception as ec:
-            self.fail("Find the key vault key got a exception {0}".format(self.name, str(ec)))
+            self.fail("Find the key vault key got a exception {0}".format(str(ec)))
 
         return results
 
