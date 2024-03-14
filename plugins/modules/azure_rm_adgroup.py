@@ -63,6 +63,12 @@ options:
             - The azure ad objects asserted to not be owners of the group.
         type: list
         elements: str
+    raw_membership:
+        description:
+            - By default the group_members return property is flattened and partially filtered of non-User objects
+              before return. This argument disables those transformations.
+        default: false
+        type: bool
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
@@ -104,6 +110,15 @@ EXAMPLES = '''
       - "{{ ad_object_1_object_id }}"
       - "{{ ad_object_2_object_id }}"
 
+- name: Ensure Users are Members of a Group using object_id. Specify the group_membership return should be unfiltered
+  azure_rm_adgroup:
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: 'present'
+    present_members:
+      - "{{ ad_object_1_object_id }}"
+      - "{{ ad_object_2_object_id }}"
+    raw_membership: true
+
 - name: Ensure Users are not Members of a Group using display_name and mail_nickname
   azure_rm_adgroup:
     display_name: "Group-Name"
@@ -112,7 +127,7 @@ EXAMPLES = '''
     absent_members:
       - "{{ ad_object_1_object_id }}"
 
-- name: Ensure Users are Members of a Group using object_id
+- name: Ensure Users are not Members of a Group using object_id
   azure_rm_adgroup:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: 'present'
@@ -145,7 +160,7 @@ EXAMPLES = '''
       - "{{ ad_object_1_object_id }}"
       - "{{ ad_object_2_object_id }}"
 
-- name: Ensure Users are Owners of a Group using object_id
+- name: Ensure Users are not Owners of a Group using object_id
   azure_rm_adgroup:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: 'present'
@@ -198,7 +213,8 @@ group_owners:
     type: list
 group_members:
     description:
-        - The members of the group.
+        - The members of the group. If raw_membership is true, this contains the transient members return property.
+          Otherwise, it contains the members return property.
     returned: always
     type: list
 '''
@@ -211,6 +227,7 @@ try:
     from msgraph.generated.models.group import Group
     from msgraph.generated.groups.item.transitive_members.transitive_members_request_builder import \
         TransitiveMembersRequestBuilder
+    from msgraph.generated.groups.item.group_item_request_builder import GroupItemRequestBuilder
     from msgraph.generated.models.reference_create import ReferenceCreate
 except ImportError:
     # This is handled in azure_rm_common
@@ -228,6 +245,7 @@ class AzureRMADGroup(AzureRMModuleBase):
             present_owners=dict(type='list', elements='str'),
             absent_members=dict(type='list', elements='str'),
             absent_owners=dict(type='list', elements='str'),
+            raw_membership=dict(type='bool', default=False),
             state=dict(
                 type='str',
                 default='present',
@@ -245,6 +263,8 @@ class AzureRMADGroup(AzureRMModuleBase):
         self.state = None
         self.results = dict(changed=False)
         self._client = None
+        self.include_service_principals = False
+        self.raw_membership = False
 
         super(AzureRMADGroup, self).__init__(derived_arg_spec=self.module_arg_spec,
                                              supports_check_mode=False,
@@ -254,9 +274,6 @@ class AzureRMADGroup(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-
-        # TODO remove ad_groups return. Returns as one object always
-        ad_groups = []
 
         try:
             self._client = self.get_msgraph_client()
@@ -455,6 +472,12 @@ class AzureRMADGroup(AzureRMModuleBase):
         return []
 
     async def get_group_members(self, group_id, filters=None):
+        if self.raw_membership:
+            return await self.get_raw_group_members(group_id, filters)
+        else:
+            return await self.get_transitive_group_members(group_id, filters)
+
+    async def get_transitive_group_members(self, group_id, filters=None):
         request_configuration = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetRequestConfiguration(
             query_parameters=TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
                 count=True,
@@ -464,6 +487,19 @@ class AzureRMADGroup(AzureRMModuleBase):
             request_configuration.query_parameters.filter = filters
         return await self._client.groups.by_group_id(group_id).transitive_members.get(
             request_configuration=request_configuration)
+
+    async def get_raw_group_members(self, group_id, filters=None):
+        request_configuration = GroupItemRequestBuilder.GroupItemRequestBuilderGetRequestConfiguration(
+            query_parameters=GroupItemRequestBuilder.GroupItemRequestBuilderGetQueryParameters(
+                # this ensures service principals are returned
+                # see https://learn.microsoft.com/en-us/graph/api/group-list-members?view=graph-rest-1.0&tabs=http
+                expand=["members"]
+            ),
+        )
+        # if filters:
+        #     request_configuration.query_parameters.filter = filters
+        group = await self._client.groups.by_group_id(group_id).get(request_configuration=request_configuration)
+        return group.members
 
     async def add_group_member(self, group_id, obj_id):
         request_body = ReferenceCreate(
