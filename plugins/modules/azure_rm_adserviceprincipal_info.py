@@ -40,7 +40,6 @@ EXAMPLES = '''
 - name: get ad sp info
   azure_rm_adserviceprincipal_info:
     app_id: "{{ app_id }}"
-    
 - name: get all service principals
   azure_rm_adserviceprincipal_info:
 '''
