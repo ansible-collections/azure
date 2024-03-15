@@ -6,7 +6,7 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-import logging
+
 import os
 import re
 import types
@@ -889,57 +889,7 @@ class AzureRMModuleBase(object):
     #    return client
 
     def get_msgraph_client(self):
-
-        from kiota_http.middleware import BaseMiddleware
-        import httpx
-        logger = logging.getLogger(__name__)
-        logger.addHandler(logging.FileHandler("msgraph.log"))
-        logger.setLevel(logging.DEBUG)
-        class DebugHandler(BaseMiddleware):
-
-            async def send(
-                    self, request: httpx.Request, transport: httpx.AsyncBaseTransport
-            ) -> httpx.Response:
-                logger.debug("")
-                logger.debug(f"{request.method} {request.url}")
-                for key, value in request.headers.items():
-                    logger.debug(f"{key}: {value}")
-                if request.content:
-                    logger.debug("")
-                    logger.debug("Request body:")
-                    logger.debug(request.content.decode())
-
-                response: httpx.Response = await super().send(request, transport)
-
-                logger.debug("")
-                logger.debug(f"Response: {response.status_code} {response.reason_phrase}")
-                logger.debug("Response headers:")
-                for key, value in response.headers.items():
-                    logger.debug(f"{key}: {value}")
-
-                logger.debug("")
-                logger.debug("Response body:")
-                response_content = await response.aread()
-                logger.debug(f"Response content: {response_content.decode()}")
-
-                return response
-
-        from kiota_authentication_azure.azure_identity_authentication_provider import (
-            AzureIdentityAuthenticationProvider
-        )
-        from msgraph import GraphServiceClient, GraphRequestAdapter
-        from msgraph_core import GraphClientFactory
-
-        _auth_provider = AzureIdentityAuthenticationProvider(self.azure_auth.azure_credential_track2)
-
-        _middleware = GraphClientFactory.get_default_middleware(None)
-        _middleware.append(DebugHandler())
-        _http_client = GraphClientFactory.create_with_custom_middleware(
-            _middleware
-        )
-        _adapter = GraphRequestAdapter(_auth_provider, _http_client)
-
-        return GraphServiceClient(self.azure_auth.azure_credential_track2, request_adapter=_adapter)
+        return GraphServiceClient(self.azure_auth.azure_credential_track2)
 
     def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False):
         self.log('Getting management service client {0}'.format(client_type.__name__))
