@@ -146,7 +146,7 @@ options:
     optional_claims:
         description:
             - Declare the optional claims for the application.
-        type: complex
+        type: dict
         suboptions:
             access_token:
                 description:
@@ -164,8 +164,7 @@ options:
                             - The source (directory object) of the claim.
                             - There are predefined claims and user-defined claims from extension properties.
                             - If the source value is null, the claim is a predefined optional claim.
-                            - If the source value is user, the value in the name property is the extension property 
-                            from the user object.
+                            - If the source value is user, the value in the name property is the extension property from the user object.
                         type: str
                     essential:
                         description:
@@ -455,13 +454,6 @@ claims_spec = dict(
     )
 )
 
-optional_claims_spec = dict(
-    access_token=dict(type='list', elements='dict', options=claims_spec),
-    id_token=dict(type='list', elements='dict', options=claims_spec),
-    saml2_token=dict(type='list', elements='dict', options=claims_spec),
-    type=dict
-)
-
 required_resource_accesses_spec = dict(
     resource_app_id=dict(
         type='str'
@@ -508,7 +500,11 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             key_value=dict(type='str', no_log=True),
             native_app=dict(type='bool'),
             oauth2_allow_implicit_flow=dict(type='bool'),
-            optional_claims=optional_claims_spec,
+            optional_claims=dict(
+                access_token=dict(type='list', elements='dict', options=claims_spec),
+                id_token=dict(type='list', elements='dict', options=claims_spec),
+                saml2_token=dict(type='list', elements='dict', options=claims_spec),
+                type=dict),
             password=dict(type='str', no_log=True),
             reply_urls=dict(type='list', elements='str'),
             start_date=dict(type='str'),
