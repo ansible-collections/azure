@@ -46,7 +46,7 @@ EXAMPLES = '''
 
 RETURN = '''
 service_principals:
-    description: 
+    description:
         - A list of service principals in the tenant. If app_id or object_id is set, the maximum length
           of this list should be one.
     type: list
