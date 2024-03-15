@@ -265,6 +265,18 @@ EXAMPLES = '''
   azure_rm_adapplication:
     display_name: "{{ display_name }}"
 
+- name: Create ad application with multi redirect urls
+  azure_rm_adapplication:
+    display_name: "{{ display_name }}"
+    web_reply_urls:
+      - https://web01.com
+    spa_reply_urls:
+      - https://spa01.com
+      - https://spa02.com
+    public_client_reply_urls:
+      - https://public01.com
+      - https://public02.com
+
 - name: Create application with more parameter
   azure_rm_adapplication:
     display_name: "{{ display_name }}"
@@ -472,7 +484,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             optional_claims=dict(type='list', elements='dict', options=optional_claims_spec),
             password=dict(type='str', no_log=True),
             public_client_reply_urls=dict(type='list', elements='str'),
-            web_reply_urls=dict(type='list', elements='str', aliases=['reply_url']),
+            web_reply_urls=dict(type='list', elements='str', aliases=['reply_urls']),
             spa_reply_urls=dict(type='list', elements='str'),
             start_date=dict(type='str'),
             required_resource_accesses=dict(type='list', elements='dict', options=required_resource_accesses_spec),
@@ -600,6 +612,8 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                         enable_access_token_issuance=self.oauth2_allow_implicit_flow,
                     ),
                 ),
+                spa=SpaApplication(redirect_uris=self.spa_reply_urls),
+                public_client=PublicClient(redirect_uris=self.public_client_reply_urls),
                 display_name=self.display_name,
                 identifier_uris=self.identifier_uris,
                 key_credentials=key_creds,
