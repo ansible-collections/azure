@@ -563,13 +563,13 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 sign_in_audience=self.sign_in_audience,
                 web=WebApplication(
                     home_page_url=self.homepage,
-                    redirect_uris=self.reply_urls,
+                    redirect_uris=self.web_reply_urls,
                     implicit_grant_settings=ImplicitGrantSettings(
                         enable_access_token_issuance=self.oauth2_allow_implicit_flow,
                     ),
                 ),
                 spa=SpaApplication(redirect_uris=self.spa_reply_urls),
-                public_client=PublicClient(redirect_uris=self.public_client_reply_urls),
+                public_client=PublicClientApplication(redirect_uris=self.public_client_reply_urls),
                 display_name=self.display_name,
                 identifier_uris=self.identifier_uris,
                 key_credentials=key_creds,
@@ -607,13 +607,13 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 sign_in_audience=self.sign_in_audience,
                 web=WebApplication(
                     home_page_url=self.homepage,
-                    redirect_uris=self.reply_urls,
+                    redirect_uris=self.web_reply_urls,
                     implicit_grant_settings=ImplicitGrantSettings(
                         enable_access_token_issuance=self.oauth2_allow_implicit_flow,
                     ),
                 ),
                 spa=SpaApplication(redirect_uris=self.spa_reply_urls),
-                public_client=PublicClient(redirect_uris=self.public_client_reply_urls),
+                public_client=PublicClientApplication(redirect_uris=self.public_client_reply_urls),
                 display_name=self.display_name,
                 identifier_uris=self.identifier_uris,
                 key_credentials=key_creds,
