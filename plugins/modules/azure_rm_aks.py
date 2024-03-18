@@ -63,6 +63,21 @@ options:
                     - The Public SSH Key used to access the cluster.
                 required: true
                 type: str
+    windows_profile:
+        description:
+            - The Windows profile suboptions.
+        type: dict
+        suboptions:
+            admin_username:
+                description:
+                    - The Admin Username for the cluster.
+                required: true
+                type: str
+            admin_password:
+                description:
+                    - The Admin password for the cluster.
+                required: true
+                type: str
     agent_pool_profiles:
         description:
             - The agent pool profile suboptions.
@@ -152,6 +167,15 @@ options:
                 choices:
                     - Linux
                     - Windows
+            os_sku:
+                description:
+                    - The operating system sku.
+                type: str
+                choices:
+                    - Ubuntu
+                    - AzureLinux
+                    - Windows2019
+                    - Windows2022
             storage_profiles:
                 description:
                     - Storage profile specifies what kind of storage used.
@@ -527,6 +551,7 @@ def create_aks_dict(aks):
         kubernetes_version=aks.kubernetes_version,
         tags=aks.tags,
         linux_profile=create_linux_profile_dict(aks.linux_profile),
+        windows_profile=create_windows_profile_dict(aks.windows_profile),
         service_principal_profile=create_service_principal_profile_dict(
             aks.service_principal_profile),
         provisioning_state=aks.provisioning_state,
@@ -591,6 +616,21 @@ def create_linux_profile_dict(linuxprofile):
         return None
 
 
+def create_windows_profile_dict(windowsprofile):
+    '''
+    Helper method to deserialize a ManagedClusterWindowsProfile to a dict
+    :param: windowsprofile: ManagedClusterWindowsProfile with the Azure callback object
+    :return: dict with the state on Azure
+    '''
+    if windowsprofile:
+        return dict(
+            admin_username=windowsprofile.admin_username,
+            admin_password=windowsprofile.admin_password
+        )
+    else:
+        return None
+
+
 def create_service_principal_profile_dict(serviceprincipalprofile):
     '''
     Helper method to deserialize a ContainerServiceServicePrincipalProfile to a dict
@@ -617,6 +657,7 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         vnet_subnet_id=profile.vnet_subnet_id,
         availability_zones=profile.availability_zones,
         os_type=profile.os_type,
+        os_sku=profile.os_sku,
         type=profile.type,
         mode=profile.mode,
         orchestrator_version=profile.orchestrator_version,
@@ -657,6 +698,10 @@ linux_profile_spec = dict(
     ssh_key=dict(type='str', no_log=True, required=True)
 )
 
+windows_profile_spec = dict(
+    admin_username=dict(type='str', required=True),
+    admin_password=dict(type='str', no_log=True, required=True),
+)
 
 service_principal_spec = dict(
     client_id=dict(type='str', required=True),
@@ -676,6 +721,7 @@ agent_pool_profile_spec = dict(
     vnet_subnet_id=dict(type='str'),
     availability_zones=dict(type='list', elements='int', choices=[1, 2, 3]),
     os_type=dict(type='str', choices=['Linux', 'Windows']),
+    os_sku=dict(type='str', choices=['Ubuntu', 'AzureLinux', 'Windows2019', 'Windows2022']),
     orchestrator_version=dict(type='str', required=False),
     type=dict(type='str', choices=['VirtualMachineScaleSets', 'AvailabilitySet']),
     mode=dict(type='str', choices=['System', 'User']),
@@ -746,6 +792,10 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                 type='dict',
                 options=linux_profile_spec
             ),
+            windows_profile=dict(
+                type='dict',
+                options=windows_profile_spec
+            ),
             agent_pool_profiles=dict(
                 type='list',
                 elements='dict',
@@ -788,6 +838,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         self.tags = None
         self.state = None
         self.linux_profile = None
+        self.windows_profile = None
         self.agent_pool_profiles = None
         self.service_principal = None
         self.enable_rbac = False
@@ -864,6 +915,20 @@ class AzureRMManagedCluster(AzureRMModuleBase):
                                   .format(response['linux_profile']['admin_username'], self.linux_profile.get('admin_username'))))
                         to_be_updated = True
                         # self.module.warn("linux_profile.admin_username cannot be updated")
+
+                    # Cannot Update the Username for now // Let service to handle it
+                    if self.windows_profile and is_property_changed('windows_profile', 'admin_username'):
+                        self.log(("Windows Profile Diff User, Was {0} / Now {1}"
+                                  .format(response['windows_profile']['admin_username'], self.windows_profile.get('admin_username'))))
+                        to_be_updated = True
+                        # self.module.warn("windows_profile.admin_username cannot be updated")
+
+                    # Cannot Update the Username for now // Let service to handle it
+                    if self.windows_profile and is_property_changed('windows_profile', 'admin_password'):
+                        self.log(("Windows Profile Diff User, Was {0} / Now {1}"
+                                  .format(response['windows_profile']['admin_password'], self.windows_profile.get('admin_password'))))
+                        to_be_updated = True
+                        # self.module.warn("windows_profile.admin_password cannot be updated")
 
                     # Cannot have more that one agent pool profile for now
                     if len(response['agent_pool_profiles']) != len(self.agent_pool_profiles):
@@ -1044,6 +1109,11 @@ class AzureRMManagedCluster(AzureRMModuleBase):
         else:
             linux_profile = None
 
+        if self.windows_profile:
+            windows_profile = self.create_windows_profile_instance(self.windows_profile)
+        else:
+            windows_profile = None
+
         parameters = self.managedcluster_models.ManagedCluster(
             location=self.location,
             dns_prefix=self.dns_prefix,
@@ -1052,6 +1122,7 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             service_principal_profile=service_principal_profile,
             agent_pool_profiles=agentpools,
             linux_profile=linux_profile,
+            windows_profile=windows_profile,
             identity=identity,
             enable_rbac=self.enable_rbac,
             network_profile=self.create_network_profile_instance(self.network_profile),
@@ -1203,6 +1274,17 @@ class AzureRMManagedCluster(AzureRMModuleBase):
             admin_username=linuxprofile['admin_username'],
             ssh=self.managedcluster_models.ContainerServiceSshConfiguration(public_keys=[
                 self.managedcluster_models.ContainerServiceSshPublicKey(key_data=str(linuxprofile['ssh_key']))])
+        )
+
+    def create_windows_profile_instance(self, windowsprofile):
+        '''
+        Helper method to serialize a dict to a ManagedClusterWindowsProfile
+        :param: windowsprofile: dict with the parameters to setup the ManagedClusterWindowsProfile
+        :return: ManagedClusterWindowsProfile
+        '''
+        return self.managedcluster_models.ManagedClusterWindowsProfile(
+            admin_username=windowsprofile['admin_username'],
+            admin_password=windowsprofile['admin_password']
         )
 
     def create_network_profile_instance(self, network):
