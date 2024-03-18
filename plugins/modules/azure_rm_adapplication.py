@@ -169,7 +169,7 @@ options:
                     essential:
                         description:
                             - If the value is true, the claim specified by the client is necessary to ensure a 
-                            smooth authorization experience for the specific task requested by the end user.
+                            - smooth authorization experience for the specific task requested by the end user.
                             - The default value is false.
                         default: false
                         type: bool
@@ -177,7 +177,7 @@ options:
                         description:
                             - Additional properties of the claim.
                             - If a property exists in this collection, it modifies the behavior of the optional claim 
-                            specified in the name property.
+                            - specified in the name property.
                         type: str
             id_token:
                 description:
@@ -196,12 +196,12 @@ options:
                             - There are predefined claims and user-defined claims from extension properties.
                             - If the source value is null, the claim is a predefined optional claim.
                             - If the source value is user, the value in the name property is the extension property 
-                            from the user object.
+                            - from the user object.
                         type: str
                     essential:
                         description:
                             - If the value is true, the claim specified by the client is necessary to ensure a 
-                            smooth authorization experience for the specific task requested by the end user.
+                            - smooth authorization experience for the specific task requested by the end user.
                             - The default value is false.
                         default: false
                         type: bool
@@ -209,7 +209,7 @@ options:
                         description:
                             - Additional properties of the claim.
                             - If a property exists in this collection, it modifies the behavior of the optional 
-                            claim specified in the name property.
+                            - claim specified in the name property.
                         type: str
             saml2_token:
                 description:
@@ -228,12 +228,12 @@ options:
                             - There are predefined claims and user-defined claims from extension properties.
                             - If the source value is null, the claim is a predefined optional claim.
                             - If the source value is user, the value in the name property is the extension property 
-                            from the user object.
+                            - from the user object.
                         type: str
                     essential:
                         description:
                             - If the value is true, the claim specified by the client is necessary to ensure a smooth 
-                            authorization experience for the specific task requested by the end user.
+                            - authorization experience for the specific task requested by the end user.
                             - The default value is false.
                         default: false
                         type: bool
@@ -241,7 +241,7 @@ options:
                         description:
                             - Additional properties of the claim.
                             - If a property exists in this collection, it modifies the behavior of the optional 
-                            claim specified in the name property.
+                            - claim specified in the name property.
                         type: str
     password:
         description:
@@ -501,7 +501,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             native_app=dict(type='bool'),
             oauth2_allow_implicit_flow=dict(type='bool'),
             optional_claims=dict(
-                access_token=dict(type='list', elements='dict', options=claims_spec),
+                access_token_claims=dict(type='list', elements='dict', options=claims_spec),
                 id_token=dict(type='list', elements='dict', options=claims_spec),
                 saml2_token=dict(type='list', elements='dict', options=claims_spec),
                 type=dict),
