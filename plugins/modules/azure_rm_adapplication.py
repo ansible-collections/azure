@@ -168,7 +168,7 @@ options:
                         type: str
                     essential:
                         description:
-                            - If the value is true, the claim specified by the client is necessary to ensure a 
+                            - If the value is true, the claim specified by the client is necessary to ensure a
                             - smooth authorization experience for the specific task requested by the end user.
                             - The default value is false.
                         default: false
@@ -176,7 +176,7 @@ options:
                     additional_properties:
                         description:
                             - Additional properties of the claim.
-                            - If a property exists in this collection, it modifies the behavior of the optional claim 
+                            - If a property exists in this collection, it modifies the behavior of the optional claim
                             - specified in the name property.
                         type: str
             id_token:
@@ -195,12 +195,12 @@ options:
                             - The source (directory object) of the claim.
                             - There are predefined claims and user-defined claims from extension properties.
                             - If the source value is null, the claim is a predefined optional claim.
-                            - If the source value is user, the value in the name property is the extension property 
+                            - If the source value is user, the value in the name property is the extension property
                             - from the user object.
                         type: str
                     essential:
                         description:
-                            - If the value is true, the claim specified by the client is necessary to ensure a 
+                            - If the value is true, the claim specified by the client is necessary to ensure a
                             - smooth authorization experience for the specific task requested by the end user.
                             - The default value is false.
                         default: false
@@ -208,7 +208,7 @@ options:
                     additional_properties:
                         description:
                             - Additional properties of the claim.
-                            - If a property exists in this collection, it modifies the behavior of the optional 
+                            - If a property exists in this collection, it modifies the behavior of the optional
                             - claim specified in the name property.
                         type: str
             saml2_token:
@@ -227,12 +227,12 @@ options:
                             - The source (directory object) of the claim.
                             - There are predefined claims and user-defined claims from extension properties.
                             - If the source value is null, the claim is a predefined optional claim.
-                            - If the source value is user, the value in the name property is the extension property 
+                            - If the source value is user, the value in the name property is the extension property
                             - from the user object.
                         type: str
                     essential:
                         description:
-                            - If the value is true, the claim specified by the client is necessary to ensure a smooth 
+                            - If the value is true, the claim specified by the client is necessary to ensure a smooth
                             - authorization experience for the specific task requested by the end user.
                             - The default value is false.
                         default: false
@@ -240,7 +240,7 @@ options:
                     additional_properties:
                         description:
                             - Additional properties of the claim.
-                            - If a property exists in this collection, it modifies the behavior of the optional 
+                            - If a property exists in this collection, it modifies the behavior of the optional
                             - claim specified in the name property.
                         type: str
     password:
@@ -501,15 +501,11 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             native_app=dict(type='bool'),
             oauth2_allow_implicit_flow=dict(type='bool'),
             optional_claims=dict(
-                access_token_claims=dict(type='list', elements='dict', options=claims_spec),
-                id_token=dict(type='list', elements='dict', options=claims_spec),
-                saml2_token=dict(type='list', elements='dict', options=claims_spec),
-            optional_claims=dict(
                 type=dict,
                 options=dict(
-                access_token_claims=dict(type='list', elements='dict', options=claims_spec),
-                id_token=dict(type='list', elements='dict', options=claims_spec),
-                saml2_token=dict(type='list', elements='dict', options=claims_spec),
+                    access_token_claims=dict(type='list', elements='dict', options=claims_spec),
+                    id_token=dict(type='list', elements='dict', options=claims_spec),
+                    saml2_token=dict(type='list', elements='dict', options=claims_spec),
                 )
             ),
             password=dict(type='str', no_log=True),
