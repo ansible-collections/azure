@@ -12,9 +12,9 @@ DOCUMENTATION = \
 ---
 module: azure_rm_recoveryservicesvault_info
 version_added: '1.1.0'
-short_description: Get Azure Recovery Services vault Details
+short_description: Get or list the Azure Recovery Services vault Details
 description:
-    - Get Azure Recovery Services vault Details.
+    - Get or list the Azure Recovery Services vault Details.
 options:
     resource_group:
         description:
@@ -23,8 +23,8 @@ options:
         type: str
     name:
         description:
+            - If this parameter is not configured, all Vaults in the resource group are listed.
             - The name of the Azure Recovery Service Vault.
-        required: true
         type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -34,6 +34,10 @@ author:
 '''
 
 EXAMPLES = '''
+- name: List all Azure Recovery Services Vault in same resource group
+  azure_rm_recoveryservicesvault_info:
+    resource_group: 'myResourceGroup'
+
 - name: Get Azure Recovery Services Vault Details.
   azure_rm_recoveryservicesvault_info:
     resource_group: 'myResourceGroup'
@@ -110,7 +114,6 @@ class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
             ),
             name=dict(
                 type='str',
-                required=True
             )
         )
 
@@ -137,13 +140,21 @@ class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
         return '2016-06-01'
 
     def get_url(self):
-        return '/subscriptions/' \
-               + self.subscription_id \
-               + '/resourceGroups/' \
-               + self.resource_group \
-               + '/providers/Microsoft.RecoveryServices' \
-               + '/vaults' + '/' \
-               + self.name
+        if self.name is not None:
+            return '/subscriptions/' \
+                   + self.subscription_id \
+                   + '/resourceGroups/' \
+                   + self.resource_group \
+                   + '/providers/Microsoft.RecoveryServices' \
+                   + '/vaults' + '/' \
+                   + self.name
+        else:
+            return '/subscriptions/' \
+                   + self.subscription_id \
+                   + '/resourceGroups/' \
+                   + self.resource_group \
+                   + '/providers/Microsoft.RecoveryServices' \
+                   + '/vaults'
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
@@ -162,7 +173,7 @@ class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
         self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager)
 
-        changed = True
+        changed = False
         response = self.get_recovery_service_vault_info()
 
         self.results['response'] = response
