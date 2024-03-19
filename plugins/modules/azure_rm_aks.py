@@ -527,6 +527,7 @@ EXAMPLES = '''
     linux_profile:
       admin_username: azureuser
       ssh_key: ssh-rsa AAAAB3Ip6***************
+    agent_pool_profiles:
       - name: default
         count: 1
         vm_size: Standard_B2s
@@ -1111,6 +1112,10 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                         if not matched:
                             self.log("Agent Pool not found")
                             to_be_updated = True
+                        if not self.default_compare({}, self.pod_identity_profile, response['pod_identity_profile'], '', dict(compare=[])):
+                            to_be_updated = True
+                        else:
+                            self.pod_identity_profile = response['pod_identity_profile']
 
             if update_agentpool:
                 self.log("Need to update agentpool")
@@ -1128,11 +1133,6 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                         self.results['agent_pool_profiles'].extend(self.create_update_agentpool(to_update))
                     self.log("Creation / Update done")
                 self.results['changed'] = True
-
-            if not self.default_compare({}, self.pod_identity_profile, response['pod_identity_profile'], '', dict(compare=[])):
-                to_be_updated = True
-            else:
-                self.pod_identity_profile = response['pod_identity_profile']
 
             if to_be_updated:
                 self.log("Need to Create / Update the AKS instance")
