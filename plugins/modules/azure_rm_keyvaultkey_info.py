@@ -195,6 +195,7 @@ keyvaults:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
+    from azure.core.exceptions import ResourceNotFoundError
     from azure.keyvault.keys import KeyClient
 except ImportError:
     # This is handled in azure_rm_common
@@ -398,9 +399,10 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
                     self.log("Response : {0}".format(response))
                     results.append(response)
 
-        except Exception as e:
-            self.fail(e)
+        except ResourceNotFoundError as e:
             self.log("Did not find the key vault key {0}: {1}".format(self.name, str(e)))
+        except Exception as ec:
+            self.fail("Find the key vault key got a exception as {0}".format(ec))
         return results
 
     def get_key_versions(self):
@@ -422,7 +424,7 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
                     if self.has_tags(item['tags'], self.tags):
                         results.append(item)
         except Exception as e:
-            self.log("Did not find key versions {0} : {1}.".format(self.name, str(e)))
+            self.fail("Did not find key versions {0} : {1}.".format(self.name, str(e)))
         return results
 
     def list_keys(self):
@@ -444,7 +446,7 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
                     if self.has_tags(item['tags'], self.tags):
                         results.append(item)
         except Exception as e:
-            self.log("Did not find key vault in current subscription {0}.".format(str(e)))
+            self.fail("Did not find key vault in current subscription {0}.".format(str(e)))
         return results
 
     def get_deleted_key(self):
@@ -465,8 +467,11 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
                     self.log("Response : {0}".format(response))
                     results.append(response)
 
-        except Exception as e:
-            self.log("Did not find the key vault key {0}: {1}".format(self.name, str(e)))
+        except ResourceNotFoundError as ec:
+            self.log("Did not find the key vault key {0}: {1}".format(self.name, str(ec)))
+        except Exception as ec:
+            self.fail("Find the key vault key got a exception {0}".format(str(ec)))
+
         return results
 
     def list_deleted_keys(self):
@@ -488,7 +493,7 @@ class AzureRMKeyVaultKeyInfo(AzureRMModuleBase):
                     if self.has_tags(item['tags'], self.tags):
                         results.append(item)
         except Exception as e:
-            self.log("Did not find key vault in current subscription {0}.".format(str(e)))
+            self.fail("Did not find key vault in current subscription {0}.".format(str(e)))
         return results
 
 
