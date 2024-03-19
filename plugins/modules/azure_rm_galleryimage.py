@@ -76,6 +76,14 @@ options:
             - V1
             - V2
         type: str
+    architecture:
+        description:
+            - This property allows you to specify the hardware architecture of the Virtual Machines.
+            - Arm64 is only supported with Hyper V Version 2.
+        choices:
+            - Arm64
+            - x64
+        type: str
     end_of_life_date:
         description:
             - The end of life date of the gallery Image Definition.
@@ -275,6 +283,11 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                 choices=['V1',
                          'V2']
             ),
+            architecture=dict(
+                type='str',
+                choices=['Arm64',
+                         'x64']
+            ),
             end_of_life_date=dict(
                 type='str',
             ),
@@ -408,6 +421,8 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                     self.body['properties']['osState'] = kwargs[key]
                 elif key == 'hypervgeneration':
                     self.body['properties']['hyperVGeneration'] = kwargs[key]
+                elif key == 'architecture':
+                    self.body['properties']['architecture'] = kwargs[key]
                 elif key == 'end_of_life_date':
                     self.body['properties']['endOfLifeDate'] = kwargs[key]
                 elif key == 'identifier':
@@ -489,6 +504,9 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
                     self.to_do = Actions.Update
                 elif (self.body['properties'].get('hyperVGeneration') is not None and
                       self.body['properties']['hyperVGeneration'] != old_response['properties'].get('hyperVGeneration')):
+                    self.to_do = Actions.Update
+                elif (self.body['properties'].get('architecture') is not None and
+                      self.body['properties']['architecture'] != old_response['properties'].get('architecture')):
                     self.to_do = Actions.Update
                 elif (self.body['properties'].get('endOfLifeDate') is not None and
                       self.body['properties']['endOfLifeDate'] != old_response['properties'].get('endOfLifeDate')):
