@@ -504,7 +504,14 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 access_token_claims=dict(type='list', elements='dict', options=claims_spec),
                 id_token=dict(type='list', elements='dict', options=claims_spec),
                 saml2_token=dict(type='list', elements='dict', options=claims_spec),
-                type=dict),
+            optional_claims=dict(
+                type=dict,
+                options=dict(
+                access_token_claims=dict(type='list', elements='dict', options=claims_spec),
+                id_token=dict(type='list', elements='dict', options=claims_spec),
+                saml2_token=dict(type='list', elements='dict', options=claims_spec),
+                )
+            ),
             password=dict(type='str', no_log=True),
             reply_urls=dict(type='list', elements='str'),
             start_date=dict(type='str'),
