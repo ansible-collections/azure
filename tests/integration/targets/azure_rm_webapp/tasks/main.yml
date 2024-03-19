@@ -83,7 +83,7 @@
     plan: "{{ win_plan_name }}"
     frameworks:
       - name: "java"
-        version: "1.8"
+        version: "17"
         settings:
           java_container: "Tomcat"
           java_container_version: "8.0"
@@ -115,7 +115,7 @@
     plan: "{{ win_plan_name }}"
     frameworks:
       - name: "java"
-        version: "1.7"
+        version: "17"
         settings:
           java_container: "Tomcat"
           java_container_version: "8.5"
@@ -230,7 +230,7 @@
       name: "{{ linux_plan_name }}"
     frameworks:
       - name: node
-        version: "6.6"
+        version: "18"
   register: output
 
 - name: Should be idempotent with linux web app created
@@ -242,7 +242,7 @@
       name: "{{ linux_plan_name }}"
     frameworks:
       - name: node
-        version: "6.6"
+        version: "18"
   register: output
 
 - name: Assert idempotent
@@ -258,7 +258,7 @@
       name: "{{ linux_plan_name }}"
     frameworks:
       - name: node
-        version: "6.9"
+        version: "20"
   register: output
 
 - name: Assert the web app was created
@@ -300,9 +300,9 @@
     plan: "{{ win_plan_name }}"
     frameworks:
       - name: "python"
-        version: "2.7"
+        version: "3.11"
       - name: "java"
-        version: "1.8"
+        version: "17"
   register: fail_win_java_version_mutual_exclusive
   failed_when: 'fail_win_java_version_mutual_exclusive.msg != "Java is mutually exclusive with other frameworks."'
 
@@ -315,9 +315,9 @@
       name: "{{ linux_plan_name }}"
     frameworks:
       - name: "python"
-        version: "2.7"
+        version: "3.11"
       - name: "node"
-        version: "6.6"
+        version: "18"
   register: fail_linux_one_framework_only
   failed_when: fail_linux_one_framework_only.msg != "Can specify one framework only for Linux web app."
 

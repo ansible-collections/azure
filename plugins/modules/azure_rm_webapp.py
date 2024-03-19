@@ -76,13 +76,13 @@ options:
             version:
                 description:
                     - Version of the framework. For Linux web app supported value, see U(https://aka.ms/linux-stacks) for more info.
-                    - C(net_framework) supported value sample, C(v4.0) for .NET 4.6 and C(v3.0) for .NET 3.5.
-                    - C(php) supported value sample, C(5.5), C(5.6), C(7.0).
-                    - C(python) supported value sample, C(2.7), C(3.8), C(3.10).
-                    - C(node) supported value sample, C(6.6), C(6.9).
-                    - C(dotnetcore) supported value sample, C(1.0), C(1.1), C(1.2).
+                    - C(net_framework) supported value sample, C(v4.8) for .NET 4.8 and C(v3.5) for .NET 3.5.
+                    - C(php) supported value sample, C(8.1), C(8.2).
+                    - C(python) supported value sample, C(3.8), C(3.9), C(3.10), C(3.11), C(3.12).
+                    - C(node) supported value sample, C(18), C(20).
+                    - C(dotnetcore) supported value sample, C(8), C(7), C(6).
                     - C(ruby) supported value sample, C(2.3).
-                    - C(java) supported value sample, C(1.9) for Windows web app. C(1.8) for Linux web app.
+                    - C(java) supported value sample, C(21), C(17), C(11) and C(8).
                 type: str
                 required: true
             settings:
@@ -93,14 +93,14 @@ options:
                     java_container:
                         description:
                             - Name of Java container.
-                            - Supported only when I(frameworks=java). Sample values C(Tomcat), C(Jetty).
+                            - Supported only when I(frameworks=java). Sample values C(Tomcat), C(JavaSE), C(RedHat).
                         type: str
                         required: True
                     java_container_version:
                         description:
                             - Version of Java container.
                             - Supported only when I(frameworks=java).
-                            - Sample values for C(Tomcat), C(8.0), C(8.5), C(9.0). For C(Jetty,), C(9.1), C(9.3).
+                            - Sample values for C(Tomcat), C(8.5), C(9.0), C(10.0), C(10.1).
                         type: str
                         required: True
 
@@ -294,7 +294,7 @@ EXAMPLES = '''
       testkey: testvalue
     frameworks:
       - name: "node"
-        version: "6.6"
+        version: "18"
 
 - name: Create a windows web app with node, php
   azure_rm_webapp:
@@ -307,9 +307,9 @@ EXAMPLES = '''
       testkey: testvalue
     frameworks:
       - name: "node"
-        version: 6.6
+        version: 18
       - name: "php"
-        version: "7.0"
+        version: 8.2
 
 - name: Create a stage deployment slot for an existing web app
   azure_rm_webapp:
@@ -600,7 +600,7 @@ class AzureRMWebApps(AzureRMModuleBase):
                                      "https_only"]
 
         self.supported_linux_frameworks = ['ruby', 'php', 'python', 'dotnetcore', 'node', 'java']
-        self.supported_windows_frameworks = ['net_framework', 'php', 'python', 'node', 'java']
+        self.supported_windows_frameworks = ['net_framework', 'php', 'python', 'node', 'java', 'dotnetcore']
 
         super(AzureRMWebApps, self).__init__(derived_arg_spec=self.module_arg_spec,
                                              mutually_exclusive=mutually_exclusive,
@@ -664,15 +664,15 @@ class AzureRMWebApps(AzureRMModuleBase):
                     self.site_config['linux_fx_version'] = (self.frameworks[0]['name'] + '|' + self.frameworks[0]['version']).upper()
 
                     if self.frameworks[0]['name'] == 'java':
-                        if self.frameworks[0]['version'] != '8':
-                            self.fail("Linux web app only supports java 8.")
+                        if self.frameworks[0]['version'] not in ['8', '11', '17', '21']:
+                            self.fail("Linux web app only supports java 8, 11, 17 and 21.")
                         if self.frameworks[0]['settings'] and self.frameworks[0]['settings']['java_container'].lower() != 'tomcat':
                             self.fail("Linux web app only supports tomcat container.")
 
                         if self.frameworks[0]['settings'] and self.frameworks[0]['settings']['java_container'].lower() == 'tomcat':
                             self.site_config['linux_fx_version'] = 'TOMCAT|' + self.frameworks[0]['settings']['java_container_version'] + '-jre8'
                         else:
-                            self.site_config['linux_fx_version'] = 'JAVA|8-jre8'
+                            self.site_config['linux_fx_version'] = 'JAVA|{0}-jre{0}'.format(self.frameworks[0]['version'])
                 else:
                     for fx in self.frameworks:
                         if fx.get('name') not in self.supported_windows_frameworks:
