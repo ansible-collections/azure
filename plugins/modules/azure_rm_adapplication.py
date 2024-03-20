@@ -501,7 +501,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             native_app=dict(type='bool'),
             oauth2_allow_implicit_flow=dict(type='bool'),
             optional_claims=dict(
-                type=dict,
+                type='dict',
                 options=dict(
                     access_token_claims=dict(type='list', elements='dict', options=claims_spec),
                     id_token=dict(type='list', elements='dict', options=claims_spec),
