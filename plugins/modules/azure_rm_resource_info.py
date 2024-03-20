@@ -82,6 +82,7 @@ options:
             - Each key-value pair in the dictionary specifies a tag name and its value to filter on differente resources. 
         type: dict
         required: false
+        default: {}
 
 extends_documentation_fragment:
     - azure.azcollection.azure
