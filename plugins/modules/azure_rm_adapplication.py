@@ -228,7 +228,6 @@ options:
                             - There are predefined claims and user-defined claims from extension properties.
                             - If the source value is null, the claim is a predefined optional claim.
                             - If the source value is user, the value in the name property is the extension property
-                            - from the user object.
                         type: str
                     essential:
                         description:
