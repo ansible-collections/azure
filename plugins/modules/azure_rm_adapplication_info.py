@@ -108,6 +108,27 @@ applications:
             type: str
             returned: always
             sample: AzureADandPersonalMicrosoftAccount
+        public_client_reply_urls:
+            description:
+                - The public client redirect urls.
+                - Space-separated URIs to which Azure AD will redirect in response to an OAuth 2.0 request.
+            returned: always
+            type: list
+            sample: []
+        web_reply_urls:
+            description:
+                - The web redirect urls.
+                - Space-separated URIs to which Azure AD will redirect in response to an OAuth 2.0 request.
+            returned: always
+            type: list
+            sample: []
+        spa_reply_urls:
+            description:
+                - The spa redirect urls.
+                - Space-separated URIs to which Azure AD will redirect in response to an OAuth 2.0 request.
+            returned: always
+            type: list
+            sample: []
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
@@ -177,7 +198,10 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             app_display_name=object.display_name,
             identifier_uris=object.identifier_uris,
             available_to_other_tenants=object.sign_in_audience,
-            sign_in_audience=object.sign_in_audience
+            sign_in_audience=object.sign_in_audience,
+            web_reply_urls=object.web.redirect_uris,
+            spa_reply_urls=object.spa.redirect_uris,
+            public_client_reply_urls=object.public_client.redirect_uris
         )
 
     async def get_application(self, obj_id):

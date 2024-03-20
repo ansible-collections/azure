@@ -15,6 +15,7 @@
   azure_rm_adgroup:
     display_name: "{{ resource_prefix }}-Group-Root"
     mail_nickname: "{{ resource_prefix }}-Group-Root"
+    description: 'for test'
     state: 'present'
   register: group_create_changed_shouldpass
 
@@ -22,6 +23,7 @@
   azure_rm_adgroup:
     display_name: "{{ resource_prefix }}-Group-Root"
     mail_nickname: "{{ resource_prefix }}-Group-Root"
+    description: 'for test'
     state: 'present'
   register: group_create_unchanged_shouldpass
 
@@ -45,6 +47,7 @@
   ansible.builtin.assert:
     that:
       - get_created_object_id_shouldpass.ad_groups[0].object_id == group_create_unchanged_shouldpass.object_id
+      - get_created_object_id_shouldpass.ad_groups[0].description == 'for test'
 
 - name: Create Group Member 1
   azure_rm_adgroup:
