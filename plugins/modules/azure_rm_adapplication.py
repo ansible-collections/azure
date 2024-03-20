@@ -148,7 +148,7 @@ options:
             - Declare the optional claims for the application.
         type: dict
         suboptions:
-            access_token:
+            access_token_claims :
                 description:
                     - The optional claims returned in the JWT access token
                 type: list
