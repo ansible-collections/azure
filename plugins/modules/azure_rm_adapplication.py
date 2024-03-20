@@ -177,7 +177,7 @@ options:
                             - Additional properties of the claim.
                             - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
                         type: str
-            id_token:
+            id_token_claims:
                 description:
                     - The optional claims returned in the JWT ID token
                 type: list
@@ -206,7 +206,7 @@ options:
                             - Additional properties of the claim.
                             - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
                         type: str
-            saml2_token:
+            saml2_token_claims:
                 description:
                     - The optional claims returned in the SAML token
                 type: list
@@ -496,8 +496,8 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 type='dict',
                 options=dict(
                     access_token_claims=dict(type='list', elements='dict', no_log=True, options=claims_spec),
-                    id_token=dict(type='list', elements='dict', no_log=True, options=claims_spec),
-                    saml2_token=dict(type='list', elements='dict', no_log=True, options=claims_spec),
+                    id_token_claims=dict(type='list', elements='dict', no_log=True, options=claims_spec),
+                    saml2_token_claims=dict(type='list', elements='dict', no_log=True, options=claims_spec),
                 )
             ),
             password=dict(type='str', no_log=True),
