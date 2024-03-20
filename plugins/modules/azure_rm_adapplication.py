@@ -239,7 +239,6 @@ options:
                         description:
                             - Additional properties of the claim.
                             - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
-                            - claim specified in the name property.
                         type: str
     password:
         description:
