@@ -312,7 +312,7 @@ class AzureRMDatalakeStoreInfo(AzureRMModuleBase):
                                                        supports_tags=False)
 
     def exec_module(self, **kwargs):
-        self.module.deprecate("The 'azure_rm_datalakestore_info.py' module will deprecated. Azure Data Lake Storage Gen1 retired on February 29,2024", version=(2.3, ))
+        self.module.deprecate("The azure_rm_datalakestore_info.py will deprecated. Azure Data Lake Storage Gen1 retired on February 29,2024", version=(2.3, ))
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
