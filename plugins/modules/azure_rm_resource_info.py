@@ -79,7 +79,7 @@ options:
     tags:
         description:
             - A dictionary of tags to filter on.
-            - Each key-value pair in the dictionary specifies a tag name and its value to filter on differente resources. 
+            - Each key-value pair in the dictionary specifies a tag name and its value to filter on differente resources.
         type: dict
         required: false
         default: {}
