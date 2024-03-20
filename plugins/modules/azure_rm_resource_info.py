@@ -110,7 +110,7 @@ EXAMPLES = '''
     provider: compute
     resource_type: snapshots
     tags:
-        enviroment: dev
+      enviroment: dev
         department: hr
 '''
 
