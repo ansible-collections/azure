@@ -79,47 +79,6 @@ options:
             - Windows
             - Linux
         default: Linux
-    private_ip_address:
-        description:
-            - (Deprecate) Valid IPv4 address that falls within the specified subnet.
-            - This option will be deprecated in 2.9, use I(ip_configurations) instead.
-        type: str
-    private_ip_allocation_method:
-        description:
-            - (Deprecate) Whether or not the assigned IP address is permanent.
-            - When creating a network interface, if you specify I(private_ip_address=Static), you must provide a value for I(private_ip_address).
-            - You can update the allocation method to C(Static) after a dynamic private IP address has been assigned.
-            - This option will be deprecated in 2.9, use I(ip_configurations) instead.
-        default: Dynamic
-        type: str
-        choices:
-            - Dynamic
-            - Static
-    public_ip:
-        description:
-            - (Deprecate) When creating a network interface, if no public IP address name is provided a default public IP address will be created.
-            - Set to C(false) if you do not want a public IP address automatically created.
-            - This option will be deprecated in 2.9, use I(ip_configurations) instead.
-        type: bool
-        default: 'yes'
-    public_ip_address_name:
-        description:
-            - (Deprecate) Name of an existing public IP address object to associate with the security group.
-            - This option will be deprecated in 2.9, use I(ip_configurations) instead.
-        type: str
-        aliases:
-            - public_ip_address
-            - public_ip_name
-    public_ip_allocation_method:
-        description:
-            - (Deprecate) If a I(public_ip_address_name) is not provided, a default public IP address will be created.
-            - The allocation method determines whether or not the public IP address assigned to the network interface is permanent.
-            - This option will be deprecated in 2.9, use I(ip_configurations) instead.
-        type: str
-        choices:
-            - Dynamic
-            - Static
-        default: Dynamic
     ip_configurations:
         description:
             - List of IP configurations. Each configuration object should include
@@ -323,7 +282,6 @@ EXAMPLES = '''
     virtual_network: vnet001
     subnet_name: subnet001
     create_with_security_group: false
-    public_ip: false
     ip_configurations:
       - name: default
         primary: true
@@ -614,13 +572,8 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
             create_with_security_group=dict(type='bool', default=True),
             security_group=dict(type='raw', aliases=['security_group_name']),
             state=dict(default='present', choices=['present', 'absent']),
-            private_ip_address=dict(type='str'),
-            private_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
-            public_ip_address_name=dict(type='str', aliases=['public_ip_address', 'public_ip_name']),
-            public_ip=dict(type='bool', default=True),
             subnet_name=dict(type='str', aliases=['subnet']),
             virtual_network=dict(type='raw', aliases=['virtual_network_name']),
-            public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static'], default='Dynamic'),
             ip_configurations=dict(type='list', default=[], elements='dict', options=ip_configuration_spec),
             os_type=dict(type='str', choices=['Windows', 'Linux'], default='Linux'),
             open_ports=dict(type='list', elements='str'),
@@ -638,13 +591,8 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
         self.create_with_security_group = None
         self.enable_accelerated_networking = None
         self.security_group = None
-        self.private_ip_address = None
-        self.private_ip_allocation_method = None
-        self.public_ip_address_name = None
-        self.public_ip = None
         self.subnet_name = None
         self.virtual_network = None
-        self.public_ip_allocation_method = None
         self.state = None
         self.tags = None
         self.os_type = None
@@ -703,17 +651,13 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
                     if len(asgs) > 0:
                         config['application_security_groups'] = asgs
 
+        # If ip_confiurations is not specified then provide the default
+        # private interface
         if self.state == 'present' and not self.ip_configurations:
-            # construct the ip_configurations array for compatible
-            self.deprecate('Setting ip_configuration flatten is deprecated and will be removed.'
-                           ' Using ip_configurations list to define the ip configuration', version=(2, 9))
             self.ip_configurations = [
                 dict(
-                    private_ip_address=self.private_ip_address,
-                    private_ip_allocation_method=self.private_ip_allocation_method,
-                    public_ip_address_name=self.public_ip_address_name if self.public_ip else None,
-                    public_ip_allocation_method=self.public_ip_allocation_method,
                     name='default',
+                    private_ip_allocation_method='Dynamic',
                     primary=True
                 )
             ]
@@ -875,7 +819,7 @@ class AzureRMNetworkInterface(AzureRMModuleBase):
     def get_or_create_public_ip_address(self, ip_config):
         name = ip_config.get('public_ip_address_name')
 
-        if not (self.public_ip and name):
+        if not name:
             return None
 
         pip = self.get_public_ip_address(name)

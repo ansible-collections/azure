@@ -33,9 +33,12 @@
   azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
+    ip_configurations:
+      - name: default
+        public_ip_address_name: "{{ public_ip_name }}"
+        primary: true
     virtual_network: "{{ vm_name }}"
     subnet: "{{ vm_name }}"
-    public_ip_name: "{{ public_ip_name }}"
     security_group: "{{ security_group_name }}"
 
 - name: Create virtual machine
