@@ -385,7 +385,7 @@ servicebuses:
             returned: always
             sample: [{
                         "id": "/subscriptions/xxxxxx/resourceGroups/myRG/providers/Microsoft.ServiceBus/namespaces/fredVM/privateEndpointConnections/xxxxxxxx",
-                        "name": "xxxxxx,
+                        "name": "xxxxxx",
                         "private_endpoint": {
                             "id": "/subscriptions/xxxxx/resourceGroups/myRG/providers/Microsoft.Network/privateEndpoints/fredprivateendpoint"
                         },
