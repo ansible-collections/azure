@@ -106,7 +106,7 @@ EXAMPLES = '''
     resource_type: resources
 
 - name: Get all snapshots of all resource groups of a subscription but filtering with two tags.
-    azure_rm_resource_info:
+  azure_rm_resource_info:
     provider: compute
     resource_type: snapshots
     tags:
