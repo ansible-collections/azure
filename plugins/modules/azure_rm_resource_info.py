@@ -105,7 +105,7 @@ EXAMPLES = '''
     resource_group: "{{ resource_group }}"
     resource_type: resources
 
-- name: Get all snapshots of all resource groups of a subscription but filtering with two tags. 
+- name: Get all snapshots of all resource groups of a subscription but filtering with two tags.
     azure_rm_resource_info:
     provider: compute
     resource_type: snapshots
