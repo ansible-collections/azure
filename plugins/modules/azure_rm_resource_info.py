@@ -111,7 +111,7 @@ EXAMPLES = '''
     resource_type: snapshots
     tags:
       enviroment: dev
-        department: hr
+      department: hr
 '''
 
 RETURN = '''
