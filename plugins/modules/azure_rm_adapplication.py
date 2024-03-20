@@ -505,7 +505,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 options=dict(
                     access_token_claims=dict(type='list', elements='dict', no_log=True, options=claims_spec),
                     id_token=dict(type='list', elements='dict', no_log=True, options=claims_spec),
-                    saml2_token=dict(type='list', elements='dict', options=claims_spec),
+                    saml2_token=dict(type='list', elements='dict', no_log=True, options=claims_spec),
                 )
             ),
             password=dict(type='str', no_log=True),
