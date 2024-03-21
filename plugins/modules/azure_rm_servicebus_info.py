@@ -378,6 +378,25 @@ servicebuses:
                             "type": "Microsoft.ServiceBus/Namespaces/Queues/AuthorizationRules"
                         }
                      }
+        private_endpoint_connections:
+            description:
+                - Properties of the PrivateEndpointConnection.
+            type: list
+            returned: always
+            sample: [{
+                        "id": "/subscriptions/xxxxxx/resourceGroups/myRG/providers/Microsoft.ServiceBus/namespaces/fredVM/privateEndpointConnections/xxxxxxxx",
+                        "name": "xxxxxx",
+                        "private_endpoint": {
+                            "id": "/subscriptions/xxxxx/resourceGroups/myRG/providers/Microsoft.Network/privateEndpoints/fredprivateendpoint"
+                        },
+                        "private_link_service_connection_state": {
+                            "description": "Auto-Approved",
+                            "status": "Approved"
+                        },
+                        "provisioning_state": "Succeeded",
+                        "type": "Microsoft.ServiceBus/Namespaces/PrivateEndpointConnections"
+                    }]
+
 '''
 
 try:
@@ -385,7 +404,6 @@ try:
 except Exception:
     # This is handled in azure_rm_common
     pass
-
 from ansible.module_utils.common.dict_transformations import _camel_to_snake
 from ansible.module_utils._text import to_native
 from datetime import datetime, timedelta
@@ -484,6 +502,8 @@ class AzureRMServiceBusInfo(AzureRMModuleBase):
                 result[attribute] = to_native(value)
             elif attribute == 'max_size_in_megabytes':
                 result['max_size_in_mb'] = value
+            elif attribute == 'private_endpoint_connections':
+                result['private_endpoint_connections'] = [item.as_dict() for item in value]
             else:
                 result[attribute] = value
         if self.show_sas_policies and self.type != 'subscription':

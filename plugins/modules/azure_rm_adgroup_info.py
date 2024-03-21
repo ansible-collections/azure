@@ -168,6 +168,12 @@ group_members:
         - The members of the group. If raw_membership is set, this field may contain non-user objects (groups, service principals, etc)
     returned: always
     type: list
+description:
+    description:
+        - An optional description for the group.
+    type: str
+    returned: always
+    sample: 'fortest'
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
@@ -274,7 +280,8 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             mail_nickname=object.mail_nickname,
             mail_enabled=object.mail_enabled,
             security_enabled=object.security_enabled,
-            mail=object.mail
+            mail=object.mail,
+            description=object.description
         )
 
     def user_to_dict(self, object):

@@ -43,6 +43,14 @@ options:
         description:
             - Optional valid-from datetime for secret
         type: str
+    recover_if_need:
+        description:
+            - Whether to permanently recover delete secrets.
+        type: bool
+    purge_if_need:
+        description:
+            - Whether to permanently delete secrets.
+        type: bool
     state:
         description:
             - Assert the state of the subnet. Use C(present) to create or update a secret and C(absent) to delete a secret .
@@ -76,6 +84,18 @@ EXAMPLES = '''
     secret_name: MySecret
     keyvault_uri: https://contoso.vault.azure.net/
     state: absent
+
+- name: Recover a delete secret
+  azure_rm_keyvaultsecret:
+    secret_name: MySecret
+    keyvault_uri: https://contoso.vault.azure.net/
+    recover_if_need: true
+
+- name: Purge a delete secret
+  azure_rm_keyvaultsecret:
+    secret_name: MySecret
+    keyvault_uri: https://contoso.vault.azure.net/
+    purge_if_need: true
 '''
 
 RETURN = '''
@@ -96,6 +116,8 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.keyvault.secrets import SecretClient
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import HttpResponseError
     import dateutil.parser
 except ImportError:
     # This is handled in azure_rm_common
@@ -114,6 +136,8 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             secret_expiry=dict(type='str', no_log=True),
             keyvault_uri=dict(type='str', no_log=True, required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
+            recover_if_need=dict(type='bool'),
+            purge_if_need=dict(type='bool'),
             content_type=dict(type='str')
         )
 
@@ -135,6 +159,8 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         self.data_creds = None
         self.client = None
         self.tags = None
+        self.recover_if_need = None
+        self.purge_if_need = None
         self.content_type = None
 
         super(AzureRMKeyVaultSecret, self).__init__(self.module_arg_spec,
@@ -162,10 +188,12 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             elif self.secret_value and results['secret_value'] != self.secret_value:
                 changed = True
 
-        except Exception as ec:
+        except ResourceNotFoundError as ec:
             # Secret doesn't exist
             if self.state == 'present':
                 changed = True
+        except Exception as ec2:
+            self.fail("Find the key vault secret got exception, exception as {0}".format(str(ec2)))
 
         self.results['changed'] = changed
         self.results['state'] = results
@@ -181,9 +209,21 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         if not self.check_mode:
             # Create secret
             if self.state == 'present' and changed:
-                results['secret_id'] = self.create_update_secret(self.secret_name, self.secret_value, self.tags, self.content_type, valid_from, expiry)
+                if self.get_delete_secret(self.secret_name):
+                    if self.recover_if_need:
+                        results['secret_id'] = self.recover_delete_secret(self.secret_name)
+                        status = 'Recover'
+                    elif self.purge_if_need:
+                        self.purge_deleted_secret(self.secret_name)
+                        status = 'Purged'
+                    else:
+                        self.fail("Secret {0} is currently in a deleted but recoverable state, and its name cannot be reused; in this state,\
+                                  the secret can only be recovered or purged.".format(self.secret_name))
+                else:
+                    results['secret_id'] = self.create_update_secret(self.secret_name, self.secret_value, self.tags, self.content_type, valid_from, expiry)
+                    status = 'Created'
                 self.results['state'] = results
-                self.results['state']['status'] = 'Created'
+                self.results['state']['status'] = status
             # Delete secret
             elif self.state == 'absent' and changed:
                 results['secret_id'] = self.delete_secret(self.secret_name)
@@ -224,6 +264,31 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
         deleted_secret = self.client.begin_delete_secret(name)
         result = self.get_poller_result(deleted_secret)
         return result.properties._id
+
+    def recover_delete_secret(self, name):
+        ''' Recover a delete secret '''
+        try:
+            recover_delete_secret = self.client.begin_recover_deleted_secret(name)
+            result = self.get_poller_result(recover_delete_secret)
+            return result._id
+        except HttpResponseError as ec:
+            self.fail("Recover the delete secret fail, detail info {0}".format(ec))
+
+    def purge_deleted_secret(self, name):
+        ''' Purge delete secret '''
+        try:
+            purge_deleted_secret = self.client.purge_deleted_secret(name)
+            return purge_deleted_secret
+        except HttpResponseError as ec:
+            self.fail("Purge delete secret fail, detail info {0}".format(ec))
+
+    def get_delete_secret(self, name):
+        ''' Get delete secret '''
+        try:
+            self.client.get_deleted_secret(name=name)
+        except ResourceNotFoundError:
+            return False
+        return True
 
 
 def main():

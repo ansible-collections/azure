@@ -163,12 +163,14 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.keyvault.secrets import SecretClient
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
 
 
 def secretbundle_to_dict(bundle):
+
     return dict(tags=bundle._properties._tags,
                 attributes=dict(
                     enabled=bundle._properties._attributes.enabled,
@@ -302,9 +304,11 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                     self.log("Response : {0}".format(response))
                     results.append(response)
 
-        except Exception as e:
+        except ResourceNotFoundError as ec:
             self.log("Did not find the key vault secret {0}: {1}".format(
-                self.name, str(e)))
+                self.name, str(ec)))
+        except Exception as ec2:
+            self.fail("Find the key vault secret got exception, exception as {0}".format(str(ec2)))
         return results
 
     def get_secret_versions(self):
@@ -326,7 +330,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                     if self.has_tags(item['tags'], self.tags):
                         results.append(item)
         except Exception as e:
-            self.log("Did not find secret versions {0} : {1}.".format(
+            self.fail("Did not find secret versions {0} : {1}.".format(
                 self.name, str(e)))
         return results
 
@@ -349,7 +353,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                     if self.has_tags(item['tags'], self.tags):
                         results.append(item)
         except Exception as e:
-            self.log(
+            self.fail(
                 "Did not find key vault in current subscription {0}.".format(
                     str(e)))
         return results
@@ -372,9 +376,12 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                     self.log("Response : {0}".format(response))
                     results.append(response)
 
-        except Exception as e:
+        except ResourceNotFoundError as ec:
             self.log("Did not find the key vault secret {0}: {1}".format(
-                self.name, str(e)))
+                self.name, str(ec)))
+        except Exception as ec2:
+            self.fail("Did not find the key vault secret {0}: {1}".format(
+                self.name, str(ec2)))
         return results
 
     def list_deleted_secrets(self):
@@ -396,7 +403,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                     if self.has_tags(item['tags'], self.tags):
                         results.append(item)
         except Exception as e:
-            self.log(
+            self.fail(
                 "Did not find key vault in current subscription {0}.".format(
                     str(e)))
         return results

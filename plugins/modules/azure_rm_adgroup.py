@@ -68,6 +68,10 @@ options:
             - By default the group_members return property is flattened and partially filtered of non-User objects before return. This argument disables those transformations.
         default: false
         type: bool
+    description:
+        description:
+            - An optional description for the group.
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
@@ -79,6 +83,7 @@ EXAMPLES = '''
   azure_rm_adgroup:
     display_name: "Group-Name"
     mail_nickname: "Group-Mail-Nickname"
+    description: 'fortest'
     state: 'present'
 
 - name: Delete Group using display_name and mail_nickname
@@ -215,6 +220,12 @@ group_members:
         - The members of the group. If raw_membership is false, this contains the transitive members property. Otherwise, it contains the members property.
     returned: always
     type: list
+description:
+    description:
+        - An optional description for the group.
+    type: str
+    returned: always
+    sample: 'fortest'
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
@@ -244,6 +255,7 @@ class AzureRMADGroup(AzureRMModuleBase):
             absent_members=dict(type='list', elements='str'),
             absent_owners=dict(type='list', elements='str'),
             raw_membership=dict(type='bool', default=False),
+            description=dict(type='str'),
             state=dict(
                 type='str',
                 default='present',
@@ -301,6 +313,7 @@ class AzureRMADGroup(AzureRMModuleBase):
                             group_types=[],
                             display_name=self.display_name,
                             mail_nickname=self.mail_nickname,
+                            description=self.description
                         )
 
                         ad_groups = [asyncio.get_event_loop().run_until_complete(self.create_group(group))]
@@ -404,7 +417,8 @@ class AzureRMADGroup(AzureRMModuleBase):
             mail_nickname=object.mail_nickname,
             mail_enabled=object.mail_enabled,
             security_enabled=object.security_enabled,
-            mail=object.mail
+            mail=object.mail,
+            description=object.description
         )
 
     def user_to_dict(self, object):

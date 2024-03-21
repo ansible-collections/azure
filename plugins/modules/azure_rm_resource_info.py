@@ -76,6 +76,13 @@ options:
                 description:
                     - Subresource name.
                 type: str
+    tags:
+        description:
+            - A dictionary of tags to filter on.
+            - Each key-value pair in the dictionary specifies a tag name and its value to filter on differente resources.
+        type: dict
+        required: false
+        default: {}
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -98,6 +105,14 @@ EXAMPLES = '''
   azure_rm_resource_info:
     resource_group: "{{ resource_group }}"
     resource_type: resources
+
+- name: Get all snapshots of all resource groups of a subscription but filtering with two tags.
+  azure_rm_resource_info:
+    provider: compute
+    resource_type: snapshots
+    tags:
+      enviroment: dev
+      department: hr
 '''
 
 RETURN = '''
@@ -346,7 +361,8 @@ class AzureRMResourceInfo(AzureRMModuleBase):
             ),
             api_version=dict(
                 type='str'
-            )
+            ),
+            tags=dict(type='dict', default={})
         )
         # store the results of the module operation
         self.results = dict(
@@ -449,6 +465,12 @@ class AzureRMResourceInfo(AzureRMModuleBase):
                 self.fail('Failed to parse response: ' + str(e))
             if not skiptoken:
                 break
+        if kwargs['tags']:
+            filtered_response = []
+            for resource in self.results['response']:
+                if all(resource.get('tags', {}).get(tag_key) == tag_value for tag_key, tag_value in kwargs['tags'].items()):
+                    filtered_response.append(resource)
+            self.results['response'] = filtered_response
         return self.results
 
 
