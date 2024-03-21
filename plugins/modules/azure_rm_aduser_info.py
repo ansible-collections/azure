@@ -137,6 +137,12 @@ user_type:
     returned: always
     type: str
     sample: Member
+company_name:
+    description:
+        - The name of the company that the user is associated with.
+    type: str
+    returned: always
+    sample: "Test Company"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
@@ -234,13 +240,14 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             mail_nickname=object.mail_nickname,
             mail=object.mail,
             account_enabled=object.account_enabled,
-            user_type=object.user_type
+            user_type=object.user_type,
+            company_name=object.company_name
         )
 
     async def get_user(self, object):
         request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
             query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
-                select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
+                select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType", "companyName"]
             ),
         )
         return await self._client.users.by_user_id(object).get(request_configuration=request_configuration)
@@ -248,7 +255,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
     async def get_users(self):
         request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
             query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
-                select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType"]
+                select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType", "companyName"]
             ),
         )
         users = []
@@ -269,7 +276,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                 query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
                     filter=filter,
                     select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
-                            "userType"],
+                            "userType", "companyName"],
                     count=True
                 ),
             ))
