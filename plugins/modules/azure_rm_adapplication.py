@@ -168,7 +168,8 @@ options:
                         type: str
                     essential:
                         description:
-                            - If the value is true, the claim specified by the client is necessary to ensure a smooth authorization experience for the specific task requested by the end user.
+                            - If the value is true, the claim specified by the client is necessary to ensure a smooth authorization experience\
+                               for the specific task requested by the end user.
                             - The default value is false.
                         default: false
                         type: bool
@@ -197,7 +198,8 @@ options:
                         type: str
                     essential:
                         description:
-                            - If the value is true, the claim specified by the client is necessary to ensure a smooth authorization experience for the specific task requested by the end user.
+                            - If the value is true, the claim specified by the client is necessary to ensure a smooth authorization experience\
+                               for the specific task requested by the end user.
                             - The default value is false.
                         default: false
                         type: bool
@@ -226,7 +228,8 @@ options:
                         type: str
                     essential:
                         description:
-                            - If the value is true, the claim specified by the client is necessary to ensure a smooth authorization experience for the specific task requested by the end user.
+                            - If the value is true, the claim specified by the client is necessary to ensure a smooth authorization experience\
+                               for the specific task requested by the end user.
                             - The default value is false.
                         default: false
                         type: bool
