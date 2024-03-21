@@ -90,7 +90,7 @@ EXAMPLES = '''
     return_owners: true
     return_group_members: true
     
-- name: Return a specific group using object_id and return the owners and members of the group. Return service_principals and nested groups.
+- name: Return a specific group using object_id and return the owners and members of the group. Return service principals and nested groups.
   azure_rm_adgroup_info:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     return_owners: true
