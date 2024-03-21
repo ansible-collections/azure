@@ -263,7 +263,6 @@ class AzureRMADGroup(AzureRMModuleBase):
         self.state = None
         self.results = dict(changed=False)
         self._client = None
-        self.include_service_principals = False
         self.raw_membership = False
 
         super(AzureRMADGroup, self).__init__(derived_arg_spec=self.module_arg_spec,
