@@ -79,11 +79,6 @@ EXAMPLES = '''
   azure_rm_adgroup_info:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-- name: Return a specific group using object_id and include service principals
-  azure_rm_adgroup_info:
-    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    include_service_principals: true
-
 - name: Return a specific group using object_id and  return the owners of the group
   azure_rm_adgroup_info:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -95,8 +90,7 @@ EXAMPLES = '''
     return_owners: true
     return_group_members: true
     
-- name: Return a specific group using object_id and return the owners and members of the group. Specify the
-return should be unfiltered
+- name: Return a specific group using object_id and return the owners and members of the group. Return service_principals and nested groups.
   azure_rm_adgroup_info:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     return_owners: true
