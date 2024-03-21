@@ -329,7 +329,7 @@ class AzureRMADGroup(AzureRMModuleBase):
 
         if self.present_members or self.absent_members:
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(group_id))
-            current_members = [object.id for object in ret.value]
+            current_members = [object.id for object in ret]
 
         if self.present_members:
             present_members_by_object_id = self.dictionary_from_object_urls(self.present_members)
@@ -365,7 +365,7 @@ class AzureRMADGroup(AzureRMModuleBase):
             if owners_to_add:
                 for owner_object_id in owners_to_add:
                     asyncio.get_event_loop().run_until_complete(
-                        self.add_gropup_owner(group_id, present_owners_by_object_id[owner_object_id]))
+                        self.add_group_owner(group_id, present_owners_by_object_id[owner_object_id]))
                 self.results["changed"] = True
 
         if self.absent_owners:
@@ -373,7 +373,7 @@ class AzureRMADGroup(AzureRMModuleBase):
 
             if owners_to_remove:
                 for owner in owners_to_remove:
-                    asyncio.get_event_loop().run_until_complete(self.remove_gropup_owner(group_id, owner))
+                    asyncio.get_event_loop().run_until_complete(self.remove_group_owner(group_id, owner))
                 self.results["changed"] = True
 
     def dictionary_from_object_urls(self, object_urls):
@@ -442,7 +442,7 @@ class AzureRMADGroup(AzureRMModuleBase):
 
         if results["object_id"] and (self.present_members or self.absent_members):
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"]))
-            results["group_members"] = [self.result_to_dict(object) for object in ret.value]
+            results["group_members"] = [self.result_to_dict(object) for object in ret]
 
         return results
 
@@ -485,8 +485,9 @@ class AzureRMADGroup(AzureRMModuleBase):
         )
         if filters:
             request_configuration.query_parameters.filter = filters
-        return await self._client.groups.by_group_id(group_id).transitive_members.get(
+        response = await self._client.groups.by_group_id(group_id).transitive_members.get(
             request_configuration=request_configuration)
+        return response.value
 
     async def get_raw_group_members(self, group_id, filters=None):
         request_configuration = GroupItemRequestBuilder.GroupItemRequestBuilderGetRequestConfiguration(
@@ -496,8 +497,8 @@ class AzureRMADGroup(AzureRMModuleBase):
                 expand=["members"]
             ),
         )
-        # if filters:
-        #     request_configuration.query_parameters.filter = filters
+        if filters:
+            request_configuration.query_parameters.filter = filters
         group = await self._client.groups.by_group_id(group_id).get(request_configuration=request_configuration)
         return group.members
 
@@ -518,13 +519,13 @@ class AzureRMADGroup(AzureRMModuleBase):
         )
         return await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
 
-    async def add_gropup_owner(self, group_id, obj_id):
+    async def add_group_owner(self, group_id, obj_id):
         request_body = ReferenceCreate(
             odata_id="https://graph.microsoft.com/v1.0/users/{0}".format(obj_id),
         )
         await self._client.groups.by_group_id(group_id).owners.ref.post(body=request_body)
 
-    async def remove_gropup_owner(self, group_id, obj_id):
+    async def remove_group_owner(self, group_id, obj_id):
         await self._client.groups.by_group_id(group_id).owners.by_directory_object_id(obj_id).ref.delete()
 
 
