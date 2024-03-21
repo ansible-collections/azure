@@ -65,8 +65,7 @@ options:
         elements: str
     raw_membership:
         description:
-            - By default the group_members return property is flattened and partially filtered of non-User objects
-              before return. This argument disables those transformations.
+            - By default the group_members return property is flattened and partially filtered of non-User objects before return. This argument disables those transformations.
         default: false
         type: bool
 extends_documentation_fragment:
@@ -213,8 +212,7 @@ group_owners:
     type: list
 group_members:
     description:
-        - The members of the group. If raw_membership is true, this contains the transient members return property.
-          Otherwise, it contains the members return property.
+        - The members of the group. If raw_membership is false, this contains the transitive members property. Otherwise, it contains the members property.
     returned: always
     type: list
 '''

@@ -57,8 +57,7 @@ options:
         type: bool
     raw_membership:
         description:
-            - By default the group_members return property is flattened and partially filtered of non-User objects
-              before return. This argument disables those transformations.
+            - By default the group_members return property is flattened and partially filtered of non-User objects before return. This argument disables those transformations.
         default: false
         type: bool
     all:
@@ -172,8 +171,7 @@ group_owners:
     type: list
 group_members:
     description:
-        - The members of the group. If raw_membership is set, this field may contain non-user objects 
-          (groups, service principals, etc)
+        - The members of the group. If raw_membership is set, this field may contain non-user objects (groups, service principals, etc)
     returned: always
     type: list
 '''
