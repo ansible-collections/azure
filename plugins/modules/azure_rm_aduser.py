@@ -112,6 +112,13 @@ options:
             - Filter that can be used to specify a user to update or delete.
             - Mutually exclusive with I(object_id), I(attribute_name), and I(user_principal_name).
         type: str
+    company_name:
+        description:
+            - The name of the company that the user is associated with.
+            - This property can be useful for describing the company that an external user comes from.
+            - The maximum length is 64 characters.Returned only on $select.
+            - Supports $filter (eq, ne, not, ge, le, in, startsWith, and eq on null values).
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 
@@ -135,6 +142,7 @@ EXAMPLES = '''
     user_type: "Member"
     usage_location: "US"
     mail: "{{ user_principal_name }}@contoso.com"
+    company_name: 'Test Company'
 
 - name: Update user with new value for account_enabled
   azure_rm_aduser:
@@ -191,6 +199,12 @@ user_type:
     returned: always
     type: str
     sample: Member
+company_name:
+    description:
+        - The name of the company that the user is associated with.
+    type: str
+    returned: always
+    sample: 'Test Company'
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
@@ -225,6 +239,7 @@ class AzureRMADUser(AzureRMModuleBase):
             surname=dict(type='str'),
             user_type=dict(type='str'),
             mail=dict(type='str'),
+            company_name=dict(type='str')
         )
 
         self.user_principal_name = None
@@ -243,6 +258,7 @@ class AzureRMADUser(AzureRMModuleBase):
         self.surname = None
         self.user_type = None
         self.mail = None
+        self.company_name = None
         self.log_path = None
         self.log_mode = None
 
@@ -302,6 +318,8 @@ class AzureRMADUser(AzureRMModuleBase):
                     if should_update or self.user_principal_name and ad_user.user_principal_name != self.user_principal_name:
                         should_update = True
                     if should_update or self.mail_nickname and ad_user.mail_nickname != self.mail_nickname:
+                        should_update = True
+                    if should_update or self.company_name and ad_user.company_name != self.company_name:
                         should_update = True
 
                     if should_update:
@@ -381,7 +399,8 @@ class AzureRMADUser(AzureRMModuleBase):
             mail_nickname=object.mail_nickname,
             mail=object.mail,
             account_enabled=object.account_enabled,
-            user_type=object.user_type
+            user_type=object.user_type,
+            company_name=object.company_name
         )
 
     async def update_user(self, ad_user, password):
@@ -395,7 +414,8 @@ class AzureRMADUser(AzureRMModuleBase):
             display_name=self.display_name,
             password_profile=password,
             user_principal_name=self.user_principal_name,
-            mail_nickname=self.mail_nickname
+            mail_nickname=self.mail_nickname,
+            company_name=self.company_name
         )
         return await self._client.users.by_user_id(ad_user.id).patch(body=request_body)
 
@@ -414,7 +434,8 @@ class AzureRMADUser(AzureRMModuleBase):
             given_name=self.given_name,
             surname=self.surname,
             user_type=self.user_type,
-            mail=self.mail
+            mail=self.mail,
+            company_name=self.company_name
         )
         return await self._client.users.post(body=request_body)
 
@@ -425,7 +446,7 @@ class AzureRMADUser(AzureRMModuleBase):
         request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
             query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
                 select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName", "userType",
-                        "onPremisesImmutableId", "usageLocation", "givenName", "surname"]
+                        "onPremisesImmutableId", "usageLocation", "givenName", "surname", "companyName"]
             ),
         )
         return await self._client.users.by_user_id(object).get(request_configuration=request_configuration)
@@ -436,7 +457,7 @@ class AzureRMADUser(AzureRMModuleBase):
                 query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
                     filter=filter,
                     select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
-                            "userType", "onPremisesImmutableId", "usageLocation", "givenName", "surname"],
+                            "userType", "onPremisesImmutableId", "usageLocation", "givenName", "surname", "companyName"],
                     count=True
                 ),
                 headers={'ConsistencyLevel': "eventual", }
