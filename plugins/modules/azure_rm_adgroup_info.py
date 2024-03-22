@@ -55,6 +55,12 @@ options:
             - Indicate whether the groups in which a groups is a member should be returned with the returned groups.
         default: False
         type: bool
+    raw_membership:
+        description:
+            - By default the group_members return property is flattened and partially filtered of non-User objects before return.\
+              This argument disables those transformations.
+        default: false
+        type: bool
     all:
         description:
             - If True, will return all groups in tenant.
@@ -84,6 +90,12 @@ EXAMPLES = '''
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     return_owners: true
     return_group_members: true
+- name: Return a specific group using object_id and return the owners and members of the group. Return service principals and nested groups.
+  azure_rm_adgroup_info:
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    return_owners: true
+    return_group_members: true
+    raw_membership: true
 
 - name: Return a specific group using object_id and return the groups the group is a member of
   azure_rm_adgroup_info:
@@ -153,7 +165,7 @@ group_owners:
     type: list
 group_members:
     description:
-        - The members of the group.
+        - The members of the group. If raw_membership is set, this field may contain non-user objects (groups, service principals, etc)
     returned: always
     type: list
 description:
@@ -173,6 +185,7 @@ try:
         TransitiveMembersRequestBuilder
     from msgraph.generated.groups.item.get_member_groups.get_member_groups_post_request_body import \
         GetMemberGroupsPostRequestBody
+    from msgraph.generated.groups.item.group_item_request_builder import GroupItemRequestBuilder
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -190,6 +203,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             return_owners=dict(type='bool', default=False),
             return_group_members=dict(type='bool', default=False),
             return_member_groups=dict(type='bool', default=False),
+            raw_membership=dict(type='bool', default=False),
             all=dict(type='bool', default=False),
         )
 
@@ -201,6 +215,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         self.return_owners = False
         self.return_group_members = False
         self.return_member_groups = False
+        self.raw_membership = False
         self.all = False
 
         self.results = dict(changed=False)
@@ -301,7 +316,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
 
         if results["object_id"] and self.return_group_members:
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"]))
-            results["group_members"] = [self.result_to_dict(object) for object in ret.value]
+            results["group_members"] = [self.result_to_dict(object) for object in ret]
 
         if results["object_id"] and self.return_member_groups:
             ret = asyncio.get_event_loop().run_until_complete(self.get_member_groups(results["object_id"]))
@@ -310,7 +325,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         if results["object_id"] and self.check_membership:
             filter = "id eq '{0}' ".format(self.check_membership)
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"], filter))
-            results["is_member_of"] = True if ret.value and len(ret.value) != 0 else False
+            results["is_member_of"] = True if ret and len(ret) != 0 else False
 
         return results
 
@@ -352,17 +367,34 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         return await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
 
     async def get_group_members(self, group_id, filters=None):
+        if self.raw_membership:
+            return await self.get_raw_group_members(group_id, filters)
+        else:
+            return await self.get_transitive_group_members(group_id, filters)
+
+    async def get_transitive_group_members(self, group_id, filters=None):
         request_configuration = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetRequestConfiguration(
             query_parameters=TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
                 count=True,
-                select=['id', 'displayName', 'userPrincipalName', 'mailNickname', 'mail', 'accountEnabled', 'userType',
-                        'appId', 'appRoleAssignmentRequired']
-
             ),
         )
         if filters:
             request_configuration.query_parameters.filter = filters
-        return await self._client.groups.by_group_id(group_id).transitive_members.get(
+        response = await self._client.groups.by_group_id(group_id).transitive_members.get(
+            request_configuration=request_configuration)
+        return response.value
+
+    async def get_raw_group_members(self, group_id, filters=None):
+        request_configuration = GroupItemRequestBuilder.GroupItemRequestBuilderGetRequestConfiguration(
+            query_parameters=GroupItemRequestBuilder.GroupItemRequestBuilderGetQueryParameters(
+                # this ensures service principals are returned
+                # see https://learn.microsoft.com/en-us/graph/api/group-list-members?view=graph-rest-1.0&tabs=http
+                expand=["members"]
+            ),
+        )
+        if filters:
+            request_configuration.query_parameters.filter = filters
+        return await self._client.groups.by_group_id(group_id).members.get(
             request_configuration=request_configuration)
 
     async def get_member_groups(self, obj_id):

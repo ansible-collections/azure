@@ -63,6 +63,12 @@ options:
             - The azure ad objects asserted to not be owners of the group.
         type: list
         elements: str
+    raw_membership:
+        description:
+            - By default the group_members return property is flattened and partially filtered of non-User objects before return. \
+             This argument disables those transformations.
+        default: false
+        type: bool
     description:
         description:
             - An optional description for the group.
@@ -109,6 +115,15 @@ EXAMPLES = '''
       - "{{ ad_object_1_object_id }}"
       - "{{ ad_object_2_object_id }}"
 
+- name: Ensure Users are Members of a Group using object_id. Specify the group_membership return should be unfiltered
+  azure_rm_adgroup:
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: 'present'
+    present_members:
+      - "{{ ad_object_1_object_id }}"
+      - "{{ ad_object_2_object_id }}"
+    raw_membership: true
+
 - name: Ensure Users are not Members of a Group using display_name and mail_nickname
   azure_rm_adgroup:
     display_name: "Group-Name"
@@ -117,7 +132,7 @@ EXAMPLES = '''
     absent_members:
       - "{{ ad_object_1_object_id }}"
 
-- name: Ensure Users are Members of a Group using object_id
+- name: Ensure Users are not Members of a Group using object_id
   azure_rm_adgroup:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: 'present'
@@ -150,7 +165,7 @@ EXAMPLES = '''
       - "{{ ad_object_1_object_id }}"
       - "{{ ad_object_2_object_id }}"
 
-- name: Ensure Users are Owners of a Group using object_id
+- name: Ensure Users are not Owners of a Group using object_id
   azure_rm_adgroup:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: 'present'
@@ -203,7 +218,7 @@ group_owners:
     type: list
 group_members:
     description:
-        - The members of the group.
+        - The members of the group. If raw_membership is false, this contains the transitive members property. Otherwise, it contains the members property.
     returned: always
     type: list
 description:
@@ -222,6 +237,7 @@ try:
     from msgraph.generated.models.group import Group
     from msgraph.generated.groups.item.transitive_members.transitive_members_request_builder import \
         TransitiveMembersRequestBuilder
+    from msgraph.generated.groups.item.group_item_request_builder import GroupItemRequestBuilder
     from msgraph.generated.models.reference_create import ReferenceCreate
 except ImportError:
     # This is handled in azure_rm_common
@@ -239,6 +255,7 @@ class AzureRMADGroup(AzureRMModuleBase):
             present_owners=dict(type='list', elements='str'),
             absent_members=dict(type='list', elements='str'),
             absent_owners=dict(type='list', elements='str'),
+            raw_membership=dict(type='bool', default=False),
             description=dict(type='str'),
             state=dict(
                 type='str',
@@ -257,6 +274,7 @@ class AzureRMADGroup(AzureRMModuleBase):
         self.state = None
         self.results = dict(changed=False)
         self._client = None
+        self.raw_membership = False
 
         super(AzureRMADGroup, self).__init__(derived_arg_spec=self.module_arg_spec,
                                              supports_check_mode=False,
@@ -266,9 +284,6 @@ class AzureRMADGroup(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-
-        # TODO remove ad_groups return. Returns as one object always
-        ad_groups = []
 
         try:
             self._client = self.get_msgraph_client()
@@ -325,7 +340,7 @@ class AzureRMADGroup(AzureRMModuleBase):
 
         if self.present_members or self.absent_members:
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(group_id))
-            current_members = [object.id for object in ret.value]
+            current_members = [object.id for object in ret]
 
         if self.present_members:
             present_members_by_object_id = self.dictionary_from_object_urls(self.present_members)
@@ -361,7 +376,7 @@ class AzureRMADGroup(AzureRMModuleBase):
             if owners_to_add:
                 for owner_object_id in owners_to_add:
                     asyncio.get_event_loop().run_until_complete(
-                        self.add_gropup_owner(group_id, present_owners_by_object_id[owner_object_id]))
+                        self.add_group_owner(group_id, present_owners_by_object_id[owner_object_id]))
                 self.results["changed"] = True
 
         if self.absent_owners:
@@ -369,7 +384,7 @@ class AzureRMADGroup(AzureRMModuleBase):
 
             if owners_to_remove:
                 for owner in owners_to_remove:
-                    asyncio.get_event_loop().run_until_complete(self.remove_gropup_owner(group_id, owner))
+                    asyncio.get_event_loop().run_until_complete(self.remove_group_owner(group_id, owner))
                 self.results["changed"] = True
 
     def dictionary_from_object_urls(self, object_urls):
@@ -439,7 +454,7 @@ class AzureRMADGroup(AzureRMModuleBase):
 
         if results["object_id"] and (self.present_members or self.absent_members):
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"]))
-            results["group_members"] = [self.result_to_dict(object) for object in ret.value]
+            results["group_members"] = [self.result_to_dict(object) for object in ret]
 
         return results
 
@@ -469,6 +484,12 @@ class AzureRMADGroup(AzureRMModuleBase):
         return []
 
     async def get_group_members(self, group_id, filters=None):
+        if self.raw_membership:
+            return await self.get_raw_group_members(group_id, filters)
+        else:
+            return await self.get_transitive_group_members(group_id, filters)
+
+    async def get_transitive_group_members(self, group_id, filters=None):
         request_configuration = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetRequestConfiguration(
             query_parameters=TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
                 count=True,
@@ -476,8 +497,22 @@ class AzureRMADGroup(AzureRMModuleBase):
         )
         if filters:
             request_configuration.query_parameters.filter = filters
-        return await self._client.groups.by_group_id(group_id).transitive_members.get(
+        response = await self._client.groups.by_group_id(group_id).transitive_members.get(
             request_configuration=request_configuration)
+        return response.value
+
+    async def get_raw_group_members(self, group_id, filters=None):
+        request_configuration = GroupItemRequestBuilder.GroupItemRequestBuilderGetRequestConfiguration(
+            query_parameters=GroupItemRequestBuilder.GroupItemRequestBuilderGetQueryParameters(
+                # this ensures service principals are returned
+                # see https://learn.microsoft.com/en-us/graph/api/group-list-members?view=graph-rest-1.0&tabs=http
+                expand=["members"]
+            ),
+        )
+        if filters:
+            request_configuration.query_parameters.filter = filters
+        group = await self._client.groups.by_group_id(group_id).get(request_configuration=request_configuration)
+        return group.members
 
     async def add_group_member(self, group_id, obj_id):
         request_body = ReferenceCreate(
@@ -496,13 +531,13 @@ class AzureRMADGroup(AzureRMModuleBase):
         )
         return await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
 
-    async def add_gropup_owner(self, group_id, obj_id):
+    async def add_group_owner(self, group_id, obj_id):
         request_body = ReferenceCreate(
             odata_id="https://graph.microsoft.com/v1.0/users/{0}".format(obj_id),
         )
         await self._client.groups.by_group_id(group_id).owners.ref.post(body=request_body)
 
-    async def remove_gropup_owner(self, group_id, obj_id):
+    async def remove_group_owner(self, group_id, obj_id):
         await self._client.groups.by_group_id(group_id).owners.by_directory_object_id(obj_id).ref.delete()
 
 
