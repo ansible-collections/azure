@@ -177,7 +177,8 @@ options:
                         description:
                             - Additional properties of the claim.
                             - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
-                        type: str
+                        type: list
+                        elements: str
             id_token_claims:
                 description:
                     - The optional claims returned in the JWT ID token
@@ -207,7 +208,8 @@ options:
                         description:
                             - Additional properties of the claim.
                             - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
-                        type: str
+                        type: list
+                        elements: str
             saml2_token_claims:
                 description:
                     - The optional claims returned in the SAML token
@@ -237,7 +239,8 @@ options:
                         description:
                             - Additional properties of the claim.
                             - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
-                        type: str
+                        type: list
+                        elements: str
     password:
         description:
             - App password, aka 'client secret'.
@@ -433,6 +436,30 @@ spa_reply_urls:
     returned: always
     type: list
     sample: []
+optional_claims:
+    description:
+        - Declare the optional claims for the application.
+    type: complex
+    returned: always
+    contains:
+        access_token_claims :
+            description:
+                - The optional claims returned in the JWT access token
+            type: list
+            returned: always
+            sample: ['name': 'aud', 'source': null, 'essential': false, 'additional_properties': []]
+        id_token_claims:
+            description:
+                - The optional claims returned in the JWT ID token
+            type: list
+            returned: always
+            sample: ['name': 'acct', 'source': null, 'essential': false, 'additional_properties': []]
+        saml2_token_claims:
+            description:
+                - The optional claims returned in the SAML token
+            type: list
+            returned: always
+            sample: ['name': 'acct', 'source': null, 'essential': false, 'additional_properties': []]
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
@@ -493,7 +520,8 @@ claims_spec = dict(
         default=False
     ),
     additional_properties=dict(
-        type='str'
+        type='list',
+        elements='str'
     )
 )
 
@@ -864,9 +892,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             ) for claim in claims_dict]
 
         claims = OptionalClaims(
-            access_token=build_claims(optional_claims.get("access_token")),
-            id_token=build_claims(optional_claims.get("id_token")),
-            saml2_token=build_claims(optional_claims.get("saml2_token"))
+            access_token=build_claims(optional_claims.get("access_token_claims")),
+            id_token=build_claims(optional_claims.get("id_token_claims")),
+            saml2_token=build_claims(optional_claims.get("saml2_token_claims"))
         )
         return claims
 

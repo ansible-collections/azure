@@ -129,6 +129,30 @@ applications:
             returned: always
             type: list
             sample: []
+        optional_claims:
+            description:
+                - Declare the optional claims for the application.
+            type: complex
+            returned: always
+            contains:
+                access_token_claims :
+                    description:
+                        - The optional claims returned in the JWT access token
+                    type: list
+                    returned: always
+                    sample: ['name': 'aud', 'source': null, 'essential': false, 'additional_properties': []]
+                id_token_claims:
+                    description:
+                        - The optional claims returned in the JWT ID token
+                    type: list
+                    returned: always
+                    sample: ['name': 'acct', 'source': null, 'essential': false, 'additional_properties': []]
+                saml2_token_claims:
+                    description:
+                        - The optional claims returned in the SAML token
+                    type: list
+                    returned: always
+                    sample: ['name': 'acct', 'source': null, 'essential': false, 'additional_properties': []]
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
@@ -191,8 +215,17 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
 
         return self.results
 
+    def serialize_claims(self, claims):
+        if claims is None:
+            return None
+        return [{
+            "additional_properties": claim.additional_properties,
+            "essential": claim.essential,
+            "name": claim.name,
+            "source": claim.source} for claim in claims]
+
     def to_dict(self, object):
-        return dict(
+        response = dict(
             app_id=object.app_id,
             object_id=object.id,
             app_display_name=object.display_name,
@@ -201,8 +234,15 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             sign_in_audience=object.sign_in_audience,
             web_reply_urls=object.web.redirect_uris,
             spa_reply_urls=object.spa.redirect_uris,
-            public_client_reply_urls=object.public_client.redirect_uris
+            public_client_reply_urls=object.public_client.redirect_uris,
+            optional_claims=dict(access_token=[], id_token=[], saml2_token=[])
         )
+
+        if object.optional_claims is not None:
+            response['optional_claims']['id_token'] = self.serialize_claims(object.optional_claims.id_token)
+            response['optional_claims']['saml2_token'] = self.serialize_claims(object.optional_claims.saml2_token)
+            response['optional_claims']['access_token'] = self.serialize_claims(object.optional_claims.access_token)
+        return response
 
     async def get_application(self, obj_id):
         return await self._client.applications.by_application_id(obj_id).get()
