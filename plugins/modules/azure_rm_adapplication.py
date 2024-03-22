@@ -176,7 +176,8 @@ options:
                         description:
                             - Additional properties of the claim.
                             - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
-                        type: str
+                        type: list
+                        elements: str
             id_token_claims:
                 description:
                     - The optional claims returned in the JWT ID token
@@ -205,7 +206,8 @@ options:
                         description:
                             - Additional properties of the claim.
                             - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
-                        type: str
+                        type: list
+                        elements: str
             saml2_token_claims:
                 description:
                     - The optional claims returned in the SAML token
@@ -234,7 +236,8 @@ options:
                         description:
                             - Additional properties of the claim.
                             - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
-                        type: str
+                        type: list
+                        elements: str
     password:
         description:
             - App password, aka 'client secret'.
@@ -514,7 +517,8 @@ claims_spec = dict(
         default=False
     ),
     additional_properties=dict(
-        type='str'
+        type='list',
+        elements='str'
     )
 )
 
