@@ -2142,7 +2142,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             os_disk=self.compute_models.OSDisk(
                                 name=swap_os_disk.get('name'),
                                 managed_disk=swap_os_disk.get('managed_disk'),
-                                create_option=swap_os_disk.get('create_option'),
+                                create_option=vm_dict['storage_profile']['os_disk'].get('create_option'),
                             ),
                             image_reference=image_reference
                         )
