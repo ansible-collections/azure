@@ -38,14 +38,14 @@
         is_enabled: true
         value: Password@0329
     optional_claims:
-      access_token:
+      access_token_claims:
         - name: aud
           essential: true
-      id_token:
-        - name: aud
+      id_token_claims:
+        - name: acct
           essential: true
-      saml2_token:
-        - name: aud
+      saml2_token_claims:
+        - name: acct
           essential: true
   register: second_output
 

@@ -430,6 +430,30 @@ spa_reply_urls:
     returned: always
     type: list
     sample: []
+optional_claims:
+    description:
+        - Declare the optional claims for the application.
+    type: complex
+    returned: always
+    contains:
+        access_token_claims :
+            description:
+                - The optional claims returned in the JWT access token
+            type: list
+            returned: always
+            sample: ['name': 'aud', 'source': null, 'essential': false, 'additional_properties': []]
+        id_token_claims:
+            description:
+                - The optional claims returned in the JWT ID token
+            type: list
+            returned: always
+            sample: ['name': 'acct', 'source': null, 'essential': false, 'additional_properties': []]
+        saml2_token_claims:
+            description:
+                - The optional claims returned in the SAML token
+            type: list
+            returned: always
+            sample: ['name': 'acct', 'source': null, 'essential': false, 'additional_properties': []]
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
@@ -861,9 +885,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             ) for claim in claims_dict]
 
         claims = OptionalClaims(
-            access_token=build_claims(optional_claims.get("access_token")),
-            id_token=build_claims(optional_claims.get("id_token")),
-            saml2_token=build_claims(optional_claims.get("saml2_token"))
+            access_token=build_claims(optional_claims.get("access_token_claims")),
+            id_token=build_claims(optional_claims.get("id_token_claims")),
+            saml2_token=build_claims(optional_claims.get("saml2_token_claims"))
         )
         return claims
 
