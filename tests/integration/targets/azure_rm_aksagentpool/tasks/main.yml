@@ -33,6 +33,42 @@
       outbound_type: loadBalancer
   register: output
 
+- name: Get managecluster admin credentials
+  azure_rm_akscredentials_info:
+    resource_group: "{{ resource_group }}"
+    cluster_name: "min{{ rpfx }}"
+    show_admin_credentials: true
+  register: output
+
+- name: Verify that the cluster credentials are successfully obtained
+  ansible.builtin.assert:
+    that:
+      - output.cluster_credentials | length == 1
+
+- name: Get managecluster user credentials
+  azure_rm_akscredentials_info:
+    resource_group: "{{ resource_group }}"
+    cluster_name: "min{{ rpfx }}"
+    show_user_credentials: true
+  register: output
+
+- name: Verify that the cluster credentials are successfully obtained
+  ansible.builtin.assert:
+    that:
+      - output.cluster_credentials | length == 1
+
+- name: Get managecluster monitor user credentials
+  azure_rm_akscredentials_info:
+    resource_group: "{{ resource_group }}"
+    cluster_name: "min{{ rpfx }}"
+    show_monitor_credentials: true
+  register: output
+
+- name: Verify that the cluster credentials are successfully obtained
+  ansible.builtin.assert:
+    that:
+      - output.cluster_credentials | length == 1
+
 - name: Get cluster's node agent pool info
   azure_rm_aksagentpool_info:
     resource_group: "{{ resource_group }}"
