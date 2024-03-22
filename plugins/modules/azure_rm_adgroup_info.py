@@ -57,7 +57,8 @@ options:
         type: bool
     raw_membership:
         description:
-            - By default the group_members return property is flattened and partially filtered of non-User objects before return. This argument disables those transformations.
+            - By default the group_members return property is flattened and partially filtered of non-User objects before return.\
+              This argument disables those transformations.
         default: false
         type: bool
     all:
@@ -89,7 +90,6 @@ EXAMPLES = '''
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     return_owners: true
     return_group_members: true
-    
 - name: Return a specific group using object_id and return the owners and members of the group. Return service principals and nested groups.
   azure_rm_adgroup_info:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx

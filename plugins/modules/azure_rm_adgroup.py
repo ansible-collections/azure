@@ -65,7 +65,8 @@ options:
         elements: str
     raw_membership:
         description:
-            - By default the group_members return property is flattened and partially filtered of non-User objects before return. This argument disables those transformations.
+            - By default the group_members return property is flattened and partially filtered of non-User objects before return. \
+             This argument disables those transformations.
         default: false
         type: bool
     description:
