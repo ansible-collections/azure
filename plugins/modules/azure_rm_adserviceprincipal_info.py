@@ -40,33 +40,43 @@ EXAMPLES = '''
 - name: get ad sp info
   azure_rm_adserviceprincipal_info:
     app_id: "{{ app_id }}"
+- name: get all service principals
+  azure_rm_adserviceprincipal_info:
 '''
 
 RETURN = '''
-app_display_name:
+service_principals:
     description:
-        - Object's display name or its prefix.
-    type: str
+        - A list of service principals in the tenant. If app_id or object_id is set, the maximum length
+          of this list should be one.
+    type: list
+    elements: dict
     returned: always
-    sample: sp
-app_id:
-    description:
-        - The application ID.
-    returned: always
-    type: str
-    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-app_role_assignment_required:
-    description:
-        - Whether the Role of the Service Principal is set.
-    type: bool
-    returned: always
-    sample: false
-object_id:
-    description:
-        - It's service principal's object ID.
-    returned: always
-    type: str
-    sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    contains:
+        app_display_name:
+            description:
+                - Object's display name or its prefix.
+            type: str
+            returned: always
+            sample: sp
+        app_id:
+            description:
+                - The application ID.
+            returned: always
+            type: str
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        app_role_assignment_required:
+            description:
+                - Whether the Role of the Service Principal is set.
+            type: bool
+            returned: always
+            sample: false
+        object_id:
+            description:
+                - It's service principal's object ID.
+            returned: always
+            type: str
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 
 '''
@@ -109,8 +119,7 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
 
         try:
             if self.object_id is None:
-                sps = asyncio.get_event_loop().run_until_complete(self.get_service_principals())
-                service_principals = list(sps.value)
+                service_principals = asyncio.get_event_loop().run_until_complete(self.get_service_principals())
             else:
                 service_principals = [asyncio.get_event_loop().run_until_complete(self.get_service_principal())]
 
@@ -132,12 +141,22 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
         return await self._client.service_principals.by_service_principal_id(self.object_id).get()
 
     async def get_service_principals(self):
-        request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
-            query_parameters=ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
-                filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id),
-            ),
-        )
-        return await self._client.service_principals.get(request_configuration=request_configuration)
+        kwargs = {}
+        if self.app_id is not None:
+            request_configuration = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
+                query_parameters=ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
+                    filter="servicePrincipalNames/any(c:c eq '{0}')".format(self.app_id))
+            )
+            kwargs['request_configuration'] = request_configuration
+        service_principals = []
+        response = await self._client.service_principals.get(**kwargs)
+        if response:
+            service_principals += response.value
+        while response is not None and response.odata_next_link is not None:
+            response = await self._client.service_principals.with_url(response.odata_next_link).get(**kwargs)
+            if response:
+                service_principals += response.value
+        return service_principals
 
 
 def main():
