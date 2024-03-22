@@ -138,6 +138,7 @@ from ansible.errors import AnsibleParserError, AnsibleError
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils._text import to_native, to_bytes, to_text
 from itertools import chain
+from os import environ
 
 try:
     from azure.core._pipeline_client import PipelineClient
@@ -234,8 +235,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             raise
 
     def _credential_setup(self):
+        auth_source = environ.get('ANSIBLE_AZURE_AUTH_SOURCE', None) or self.get_option('auth_source')
         auth_options = dict(
-            auth_source=self.get_option('auth_source'),
+            auth_source=auth_source,
             profile=self.get_option('profile'),
             subscription_id=self.get_option('subscription_id'),
             client_id=self.get_option('client_id'),
