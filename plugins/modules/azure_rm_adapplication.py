@@ -409,12 +409,6 @@ oauth2_allow_implicit_flow:
     returned: always
     type: bool
     sample: false
-optional_claims:
-    description:
-        - The optional claims for the application.
-    returned: always
-    type: list
-    sample: []
 public_client_reply_urls:
     description:
         - The public client redirect urls.
