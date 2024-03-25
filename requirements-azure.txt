@@ -45,7 +45,6 @@ azure-mgmt-devtestlabs==9.0.0
 azure-mgmt-loganalytics==12.0.0
 azure-mgmt-automation==1.0.0
 azure-mgmt-iothub==2.2.0
-azure-iot-hub==2.6.1
 azure-mgmt-recoveryservices==2.0.0
 azure-mgmt-recoveryservicesbackup==3.0.0
 azure-mgmt-notificationhubs==7.0.0
