@@ -578,6 +578,23 @@ options:
                         description:
                             - Specifies whether vTPM should be enabled on the virtual machine.
                         type: bool
+    swap_os_disk:
+        description:
+            - The swap OS disk parameters.
+        type: dict
+        suboptions:
+            os_disk_id:
+                description:
+                    - The swap OS disk's ID.
+                type: str
+            os_disk_name:
+                description:
+                    - The swap OS disk's name.
+                type: str
+            os_disk_resource_group:
+                description:
+                    - The swap OS disk's resource group.
+                type: str
     additional_capabilities:
         description:
             - Enables or disables a capability on the virtual machine.
@@ -777,6 +794,26 @@ EXAMPLES = '''
       offer: CentOS
       publisher: OpenLogic
       sku: '7.1'
+      version: latest
+
+- name: Update VM to swap OS disk
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "vmforimage{{ rpfx }}"
+    admin_username: testuser
+    ssh_password_enabled: false
+    managed_disk_type: Premium_LRS
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa *******************@qq.com"
+    vm_size: Standard_D4s_v3
+    swap_os_disk:
+      os_disk_name: "{{ os_disk_name }}"
+      os_disk_resource_group: "{{ os_disk_resource_group }}"
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
       version: latest
 
 - name: Power Off
@@ -1129,6 +1166,14 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             started=dict(type='bool'),
             force=dict(type='bool', default=False),
             generalized=dict(type='bool', default=False),
+            swap_os_disk=dict(
+                type='dict',
+                options=dict(
+                    os_disk_resource_group=dict(type='str'),
+                    os_disk_name=dict(type='str'),
+                    os_disk_id=dict(type='str')
+                )
+            ),
             data_disks=dict(
                 type='list',
                 elements='dict',
@@ -1233,6 +1278,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.windows_config = None
         self.security_profile = None
         self.additional_capabilities = None
+        self.swap_os_disk = None
 
         self.results = dict(
             changed=False,
@@ -1311,11 +1357,15 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         vm_dict = None
         image_reference = None
         custom_image = False
+        swap_os_disk_flag = False
 
         resource_group = self.get_resource_group(self.resource_group)
         if not self.location:
             # Set default location
             self.location = resource_group.location
+
+        if self.swap_os_disk is not None:
+            swap_os_disk = self.get_os_disk(self.swap_os_disk)
 
         self.location = normalize_location_name(self.location)
 
@@ -1444,6 +1494,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                         for i, id in enumerate(network_interfaces)]
                         vm_dict['network_profile']['network_interfaces'] = updated_nics
                         changed = True
+
+                if self.swap_os_disk is not None and swap_os_disk.get('name') != vm_dict['storage_profile']['os_disk']['name']:
+                    self.log('CHANGED: Swap virtual machine {0} - OS disk name'.format(self.name))
+                    differences.append('Swap OS Disk')
+                    changed = True
+                    swap_os_disk_flag = True
 
                 if self.os_disk_caching and \
                    self.os_disk_caching != vm_dict['storage_profile']['os_disk']['caching']:
@@ -2074,7 +2130,24 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         hardware_profile=self.compute_models.HardwareProfile(
                             vm_size=vm_dict['hardware_profile'].get('vm_size')
                         ),
-                        storage_profile=self.compute_models.StorageProfile(
+                        availability_set=availability_set_resource,
+                        proximity_placement_group=proximity_placement_group_resource,
+                        network_profile=self.compute_models.NetworkProfile(
+                            network_interfaces=nics
+                        )
+                    )
+
+                    if swap_os_disk_flag:
+                        storage_profile = self.compute_models.StorageProfile(
+                            os_disk=self.compute_models.OSDisk(
+                                name=swap_os_disk.get('name'),
+                                managed_disk=swap_os_disk.get('managed_disk'),
+                                create_option=vm_dict['storage_profile']['os_disk'].get('create_option'),
+                            ),
+                            image_reference=image_reference
+                        )
+                    else:
+                        storage_profile = self.compute_models.StorageProfile(
                             os_disk=self.compute_models.OSDisk(
                                 name=vm_dict['storage_profile']['os_disk'].get('name'),
                                 vhd=vhd,
@@ -2085,13 +2158,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 disk_size_gb=vm_dict['storage_profile']['os_disk'].get('disk_size_gb')
                             ),
                             image_reference=image_reference
-                        ),
-                        availability_set=availability_set_resource,
-                        proximity_placement_group=proximity_placement_group_resource,
-                        network_profile=self.compute_models.NetworkProfile(
-                            network_interfaces=nics
                         )
-                    )
+
+                    vm_resource.storage_profile = storage_profile
 
                     if self.license_type is not None:
                         vm_resource.license_type = self.license_type
@@ -2281,6 +2350,32 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         del self.results['actions']
 
         return self.results
+
+    def get_os_disk(self, os_disk):
+        resource_group_name = None
+        os_disk_name = None
+        if os_disk.get('os_disk_id') is not None:
+            os_disk_dict = self.parse_resource_to_dict(os_disk.get('os_disk_id'))
+            os_disk_name = os_disk_dict.get('name')
+            resource_group_name = os_disk_dict.get('resource_group')
+        elif os_disk.get('os_disk_resource_group') is not None and os_disk.get('os_disk_name') is not None:
+            os_disk_name = os_disk.get('os_disk_name')
+            resource_group_name = os_disk.get('os_disk_resource_group')
+        elif os_disk.get('os_disk_name') is not None:
+            os_disk_name = os_disk.get('name')
+            resource_group_name = self.resource_group
+        else:
+            self.fail("The swap_os_disk must contain one of 'os_disk_name' and 'os_disk_id'")
+
+        try:
+            os_disk = {}
+            response = self.compute_client.disks.get(resource_group_name, os_disk_name)
+            os_disk['name'] = response.name
+            os_disk['managed_disk'] = dict(id=response.id)
+            os_disk['create_option'] = response.creation_data.create_option
+            return os_disk
+        except Exception as ec:
+            self.fail('Could not find os disk {0} in resource group {1}'.format(os_disk_name, resource_group_name))
 
     def get_vm(self):
         '''
