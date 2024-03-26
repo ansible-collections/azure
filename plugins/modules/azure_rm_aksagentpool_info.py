@@ -168,6 +168,12 @@ aks_agent_pools:
             type: str
             returned: always
             sample: Linux
+        os_sku:
+            description:
+                - OS SKU to be used to specify os type.
+            type: str
+            returned: always
+            sample: Windows2022
         provisioning_state:
             description:
                 - The current deployment or provisioning state, which only appears in the response.
@@ -222,6 +228,91 @@ aks_agent_pools:
             type: str
             returned: always
             sample: null
+        kubelet_config:
+            description:
+                - The Kubelet configuration on the agent pool nodes.
+            type: dict
+            returned: always
+            sample: {
+                    cpu_cfs_quota: true,
+                    cpu_cfs_quota_period: 100ms,
+                    cpu_manager_policy: static,
+                    fail_swap_on: false,
+                    image_gc_high_threshold: 85,
+                    image_gc_low_threshold: 80,
+                    topology_manager_policy: none
+                }
+        linux_os_config:
+            description:
+                - The OS configuration of Linux agent nodes.
+            type: dict
+            returned: always
+            sample: {
+                    swap_file_size_mb: 1500,
+                    sysctls: {},
+                    transparent_huge_page_defrag: defer+madvise,
+                    transparent_huge_page_enabled: madvise
+                }
+        power_state:
+            description:
+                - The agent pool's power state.
+            type: dict
+            returned: always
+            sample: {code: Running}
+        tags:
+            description:
+                - The tags of the node agent pool.
+            type: dict
+            returned: always
+            sample: {key1: value1, key2: value2}
+        kubelet_disk_type:
+            description:
+                - Determines the placement of emptyDir volumes, container runtime data root, and Kubelet ephemeral storage.
+            type: str
+            returned: always
+            sample: OS
+        workload_runtime:
+            description:
+                - Determines the type of workload a node can run.
+            type: str
+            returned: always
+            sample: OCIContainer
+        scale_down_mode:
+            description:
+                - This also effects the cluster autoscaler behavior.
+            type: str
+            returned: always
+            sample: Delete
+        node_public_ip_prefix_id:
+            description:
+                - The Azure Public IP prefix's ID.
+            type: str
+            returned: always
+            sample: "/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/publicIPPrefixes/pip01"
+        proximity_placement_group_id:
+            description:
+                - The ID for Proximity Placement Group.
+            type: str
+            returned: always
+            sample: /subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Compute/proximityPlacementGroups/proxi01
+        enable_encryption_at_host:
+            description:
+                - This is only supported on certain VM sizes and in certain Azure regions.
+            type: bool
+            returned: always
+            sample: false
+        enable_ultra_ssd:
+            description:
+                - Whether enable FIPS node pool.
+            type: bool
+            returned: always
+            sample: false
+        gpu_instance_profile:
+            description:
+                - GPUInstanceProfile to be used to specify GPU MIG instance profile for supported GPU VM SKU.
+            type: str
+            returned: always
+            sample: MIG1g
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -301,6 +392,7 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             vnet_subnet_id=agent_pool.vnet_subnet_id,
             max_pods=agent_pool.max_pods,
             os_type=agent_pool.os_type,
+            os_sku=agent_pool.os_sku,
             max_count=agent_pool.max_count,
             min_count=agent_pool.min_count,
             enable_auto_scaling=agent_pool.enable_auto_scaling,
@@ -317,14 +409,53 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             spot_max_price=agent_pool.spot_max_price,
             node_labels=agent_pool.node_labels,
             node_taints=agent_pool.node_taints,
+            tags=agent_pool.tags,
+            kubelet_disk_type=agent_pool.kubelet_disk_type,
+            workload_runtime=agent_pool.workload_runtime,
+            scale_down_mode=agent_pool.scale_down_mode,
+            power_state=dict(),
+            node_public_ip_prefix_id=agent_pool.node_public_ip_prefix_id,
+            proximity_placement_group_id=agent_pool.proximity_placement_group_id,
+            kubelet_config=dict(),
+            linux_os_config=dict(),
+            enable_encryption_at_host=agent_pool.enable_encryption_at_host,
+            enable_ultra_ssd=agent_pool.enable_ultra_ssd,
+            enable_fips=agent_pool.enable_fips,
+            gpu_instance_profile=agent_pool.gpu_instance_profile
         )
 
         if agent_pool.upgrade_settings is not None:
             agent_pool_dict['upgrade_settings']['max_surge'] = agent_pool.upgrade_settings.max_surge
+        else:
+            agent_pool_dict['upgrade_settings'] = None
 
         if agent_pool.availability_zones is not None:
             for key in agent_pool.availability_zones:
                 agent_pool_dict['availability_zones'].append(int(key))
+        else:
+            agent_pool_dict['availability_zones'] = None
+
+        if agent_pool.kubelet_config is not None:
+            agent_pool_dict['kubelet_config'] = agent_pool.kubelet_config.as_dict()
+        else:
+            agent_pool_dict['kubelet_config'] = None
+
+        if agent_pool.linux_os_config is not None:
+            agent_pool_dict['linux_os_config']['transparent_huge_page_enabled'] = agent_pool.linux_os_config.transparent_huge_page_enabled
+            agent_pool_dict['linux_os_config']['transparent_huge_page_defrag'] = agent_pool.linux_os_config.transparent_huge_page_defrag
+            agent_pool_dict['linux_os_config']['swap_file_size_mb'] = agent_pool.linux_os_config.swap_file_size_mb
+            agent_pool_dict['linux_os_config']['sysctls'] = dict()
+            if agent_pool.linux_os_config.sysctls is not None:
+                agent_pool_dict['linux_os_config']['sysctls'] = agent_pool.linux_os_config.sysctls.as_dict()
+            else:
+                agent_pool_dict['linux_os_config']['sysctls'] = None
+        else:
+            agent_pool_dict['linux_os_config'] = None
+
+        if agent_pool.power_state is not None:
+            agent_pool_dict['power_state']['code'] = agent_pool.power_state.code
+        else:
+            agent_pool_dict['power_state'] = None
 
         return agent_pool_dict
 
