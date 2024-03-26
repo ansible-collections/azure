@@ -130,7 +130,7 @@ class AzureRMAccountInfo(AzureRMModuleBase):
         super(AzureRMAccountInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                  supports_check_mode=True,
                                                  supports_tags=False,
-                                                 is_ad_resource=False)
+                                                 is_ad_resource=True)
 
     def exec_module(self, **kwargs):
         self.results['account_info'] = self.list_items()
