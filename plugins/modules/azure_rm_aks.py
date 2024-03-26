@@ -580,7 +580,7 @@ state:
         changed: false
         dns_prefix: aks9860bdcd89
         id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourcegroups/myResourceGroup/providers/Microsoft.ContainerService/managedClusters/aks9860bdc"
-        kube_config: "......"
+        kube_config: ["......"]
         kubernetes_version: 1.14.6
         linux_profile:
            admin_username: azureuser
@@ -612,6 +612,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import HttpResponseError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -1323,10 +1324,12 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
 
         :return: AKS instance kubeconfig
         '''
-        access_profile = self.managedcluster_client.managed_clusters.get_access_profile(resource_group_name=self.resource_group,
-                                                                                        resource_name=self.name,
-                                                                                        role_name="clusterUser")
-        return access_profile.kube_config.decode('utf-8')
+        try:
+            access_profile = self.managedcluster_client.managed_clusters.list_cluster_user_credentials(self.resource_group, self.name)
+        except HttpResponseError as ec:
+            self.log("Lists the cluster user credentials of a managed cluster Failed, Exception as {0}".format(ec))
+            return []
+        return [item.value.decode('utf-8') for item in access_profile.kubeconfigs]
 
     def create_agent_pool_profile_instance(self, agentpoolprofile):
         '''
