@@ -37,10 +37,14 @@ options:
         description:
             - Show kubeconfig of the AKS cluster.
             - Note the operation will cost more network overhead, not recommended when listing AKS.
+            - I(show_kubeconfig=monitoring) to lists the cluster monitoring user credentials of a managed cluster.
+            - I(show_kubeconfig=admin) to lists the cluster admin credentials of a managed cluster.
+            - I(show_kubeconfig=user) to lists the cluster user credentials of a managed cluster.
         type: str
         choices:
             - user
             - admin
+            - monitoring
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -75,6 +79,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import HttpResponseError
 except Exception:
     # handled in azure_rm_common
     pass
@@ -91,7 +96,7 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
             name=dict(type='str'),
             resource_group=dict(type='str'),
             tags=dict(type='list', elements='str'),
-            show_kubeconfig=dict(type='str', choices=['user', 'admin']),
+            show_kubeconfig=dict(type='str', choices=['user', 'admin', 'monitoring']),
         )
 
         self.results = dict(
@@ -196,11 +201,29 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
 
         :return: AKS instance kubeconfig
         '''
-        if not self.show_kubeconfig:
-            return ''
-        role_name = 'cluster{0}'.format(str.capitalize(self.show_kubeconfig))
-        access_profile = self.managedcluster_client.managed_clusters.get_access_profile(resource_group, name, role_name)
-        return access_profile.kube_config.decode('utf-8')
+        if self.show_kubeconfig == 'user':
+            try:
+                access_profile = self.managedcluster_client.managed_clusters.list_cluster_user_credentials(self.resource_group, self.name)
+            except HttpResponseError as ec:
+                self.log("Lists the cluster user credentials of a managed cluster Failed, Exception as {0}".format(ec))
+                return []
+            return [item.value.decode('utf-8') for item in access_profile.kubeconfigs]
+        elif self.show_kubeconfig == 'admin':
+            try:
+                access_profile = self.managedcluster_client.managed_clusters.list_cluster_admin_credentials(self.resource_group, self.name)
+            except HttpResponseError as ec:
+                self.log("Lists the cluster admin credentials of a managed cluster Failed, Exception as {0}".format(ec))
+                return []
+            return [item.value.decode('utf-8') for item in access_profile.kubeconfigs]
+        elif self.show_kubeconfig == 'monitoring':
+            try:
+                access_profile = self.managedcluster_client.managed_clusters.list_cluster_monitoring_user_credentials(self.resource_group, self.name)
+            except HttpResponseError as ec:
+                self.log("Lists the cluster monitoring credentials of a managed cluster Failed, Exception as {0}".format(ec))
+                return []
+            return [item.value.decode('utf-8') for item in access_profile.kubeconfigs]
+        else:
+            return []
 
 
 def main():
