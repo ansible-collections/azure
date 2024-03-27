@@ -140,7 +140,6 @@ TOKEN_ACQUIRED = False
 logger = logging.getLogger("azure.identity").setLevel(logging.ERROR)
 
 
-
 def lookup_secret_non_msi(terms, vault_url, kwargs):
 
     client_id = kwargs['client_id'] if kwargs.get('client_id') else None
