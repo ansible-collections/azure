@@ -1,5 +1,56 @@
 # Change Log
 
+## v2.3.0 (2024-03-27)
+
+### NEW MODULES
+  - azure_rm_akscredentials_info: Support to obtain Azure Kubernetes Service Credentials ([#1484](https://github.com/ansible-collections/azure/pull/1484))
+
+### FEATURE ENHANCEMENT
+  - sanity-requirements-azure.txt:
+    - Bump cryptography from 41.0.6 to 42.0.2 ([#1450](https://github.com/ansible-collections/azure/pull/1450))
+    - Bump cryptography from 42.0.2 to 42.0.4 ([#1458](https://github.com/ansible-collections/azure/pull/1458))
+  - azure_rm_networkinterface_info: Return the subnet ID ([#1462](https://github.com/ansible-collections/azure/pull/1462))
+  - azure_rm_appgateway: Add support for `port` and `match` in `probes` ([#1470](https://github.com/ansible-collections/azure/pull/1470))
+  - azure_rm_common.py:
+    - Add support for import new version `azure-mgmt-recoveryservicesbackup` modules ([#1469](https://github.com/ansible-collections/azure/pull/1469))
+    - Add support for `disable_instance_discovery` ([#1442](https://github.com/ansible-collections/azure/pull/1442))
+    - Respect `AZURE_CLIENT_ID`, `ANSIBLE_AZURE_AUTH_SOURCE` on inventory plugin ([#713](https://github.com/ansible-collections/azure/pull/713))
+  - azure_rm_aksversion_info: Add support for `allow_preview` ([#1456](https://github.com/ansible-collections/azure/pull/1456))
+  - azure_rm_adgroup: Add Support for `description` ([#1492](https://github.com/ansible-collections/azure/pull/1492))
+  - azure_rm_adgroup_info: Add support for `description` ([#1492](https://github.com/ansible-collections/azure/pull/1492))
+  - azure_rm_wbapp: Support to create Web App with Java11/Java17/Java21 ([#1495](https://github.com/ansible-collections/azure/pull/1495))
+  - azure_rm_adapplication: Add support for `spa_redirect_urls` and `public_client_redirect_urls` ([#1494](https://github.com/ansible-collections/azure/pull/1494))
+  - azure_rm_adapplication_info: Add support for `spa_redirect_urls` and `public_client_redirect_urls` ([#1494](https://github.com/ansible-collections/azure/pull/1494))
+  - azure_rm_galleryimage: Add support for `architecture` ([#1493](https://github.com/ansible-collections/azure/pull/1493))
+  - azure_rm_keyvaultsecret: Support recover/purge deleted secrets ([#1489](https://github.com/ansible-collections/azure/pull/1489))
+  - azure_rm_keyvaultsecret_info: Support recover/purge deleted secrets ([#1489](https://github.com/ansible-collections/azure/pull/1489))
+  - azure_rm_recoveryservicesvault_info: Support listing the vaults in same resource group ([#1487](https://github.com/ansible-collections/azure/pull/1487))
+  - azure_rm_resource_info: Add support for `tags` ([#1498](https://github.com/ansible-collections/azure/pull/1498))
+  - azure_rm_aduser: Add support for `company_name` ([#1504](https://github.com/ansible-collections/azure/pull/1504))
+  - azure_rm_aduser_info: Add support for `company_name` ([#1504](https://github.com/ansible-collections/azure/pull/1504))
+  - azure_rm_aks: Support manage pod identities in managed Kubernetes cluster ([#1497](https://github.com/ansible-collections/azure/pull/1497))
+  - azure_rm_adserviceprincipal_info: Fix listing all service principals ([#1482](https://github.com/ansible-collections/azure/pull/1482))
+  - azure_rm_virtualmachie: Add support for swap OS disk ([#1435](https://github.com/ansible-collections/azure/pull/1435))
+
+### BUG FIXING
+  - azure_rm_adgroup: Fix unsupported header in azure_rm_adgroup ([#1467](https://github.com/ansible-collections/azure/pull/1467))
+  - azure_rm_keyvaultkey_info: Typos fix ([#1468](https://github.com/ansible-collections/azure/pull/1468))
+  - azure_rm_sqlmanagedinstance: Typos fix ([#1468](https://github.com/ansible-collections/azure/pull/1468))
+  - azure_rm_sqlmanagedinstance_info: Typos fix ([#1468](https://github.com/ansible-collections/azure/pull/1468))
+  - azure_rm_virtualmachine: Typos fix ([#1468](https://github.com/ansible-collections/azure/pull/1468))
+  - ../azure_rm_storageaccount/tasks/main.yml: Removing leftover storage account from test ([#1449](https://github.com/ansible-collections/azure/pull/1449))
+  - azure_rm_aduser_info: Parse paginated replies for listing all users/groups ([#1448](https://github.com/ansible-collections/azure/pull/1448))
+  - azure_rm_adgroup_info: Parse paginated replies for listing all users/groups ([#1448](https://github.com/ansible-collections/azure/pull/1448))
+  - azure_rm.py: Allow for template expressions in some parameters ([#1446](https://github.com/ansible-collections/azure/pull/1446))
+  - azure_rm_galleryimageversion_info: Check the return value ([#1436](https://github.com/ansible-collections/azure/pull/1436))
+  - azure_rm_servicebus_info: Fixed return value format error ([#1503](https://github.com/ansible-collections/azure/pull/1503))
+  - azure_rm_appgateway: Ensure `enable_http2` works when targeting existing Application Gateways ([#1439](https://github.com/ansible-collections/azure/pull/1439))
+  - azure_rm_datalakestore: Disable testings due to the Azure Data Lake Store Gen1 retired ([#1501](https://github.com/ansible-collections/azure/pull/1501))
+  - azure_rm_datalakestore_info: Disable testings due to the Azure Data Lake Store Gen1 retired ([#1501](https://github.com/ansible-collections/azure/pull/1501))
+  - azure_rm_gallery_info: Detects the return value and returns None if the return value is empty ([#1483](https://github.com/ansible-collections/azure/pull/1483))
+  - azure_rm_account_info: Change the default value of `is_ad_resource` to True ([#1510](https://github.com/ansible-collections/azure/pull/1510))
+
+
 ## v2.2.0 (2024-02-04)
 
 ### NEW MODULES
