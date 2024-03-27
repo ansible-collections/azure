@@ -39,9 +39,12 @@
   azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: testNIC
+    ip_configurations:
+      - name: default
+        primary: true
+        public_ip_address_name: testPublicIP
     virtual_network: testVnet1
     subnet: testSubnet
-    public_ip_name: testPublicIP
     security_group_name: testNetworkSecurityGroup
 
 - name: Create a storage account

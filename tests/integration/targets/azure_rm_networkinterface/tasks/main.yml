@@ -87,8 +87,7 @@
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
-    public_ip: false
+    subnet_name: "tn{{ rpfx }}"
     create_with_security_group: false
   register: output
   check_mode: true
@@ -105,8 +104,7 @@
     virtual_network:
       name: "tn{{ rpfx }}"
       resource_group: "{{ resource_group_secondary }}"
-    subnet: "tn{{ rpfx }}"
-    public_ip: false
+    subnet_name: "tn{{ rpfx }}"
     create_with_security_group: false
   register: output
 
@@ -146,7 +144,7 @@
         private_ip_address: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_address }}"
         private_ip_allocation_method: "{{ facts.networkinterfaces[0].ip_configurations[0].private_ip_allocation_method }}"
         primary: "{{ facts.networkinterfaces[0].ip_configurations[0].primary }}"
-    subnet: "{{ facts.networkinterfaces[0].subnet }}"
+    subnet_name: "{{ facts.networkinterfaces[0].subnet }}"
   register: output
 
 - name: Assert the NIC created
@@ -159,9 +157,8 @@
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
+    subnet_name: "tn{{ rpfx }}"
     create_with_security_group: false
-    public_ip: false
   register: output
 
 - name: Assert NIC created
@@ -174,8 +171,7 @@
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
-    public_ip: false
+    subnet_name: "tn{{ rpfx }}"
     security_group: "tn{{ rpfx }}sg"
   register: output
   check_mode: true
@@ -190,8 +186,10 @@
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
-    public_ip_address_name: "tn{{ rpfx }}"
+    subnet_name: "tn{{ rpfx }}"
+    ip_configurations:
+      - name: default
+        public_ip_address_name: "tn{{ rpfx }}"
     create_with_security_group: false
   register: output
   check_mode: true
@@ -206,10 +204,9 @@
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
+    subnet_name: "tn{{ rpfx }}"
     enable_accelerated_networking: true
     create_with_security_group: false
-    public_ip: false
   register: output
   check_mode: true
 
@@ -223,10 +220,9 @@
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
+    subnet_name: "tn{{ rpfx }}"
     create_with_security_group: false
     enable_ip_forwarding: true
-    public_ip: false
   register: output
   check_mode: true
 
@@ -240,9 +236,8 @@
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
+    subnet_name: "tn{{ rpfx }}"
     create_with_security_group: false
-    public_ip: false
     dns_servers:
       - 8.9.10.11
       - 7.8.9.10
@@ -259,7 +254,7 @@
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
+    subnet_name: "tn{{ rpfx }}"
     enable_accelerated_networking: true
     enable_ip_forwarding: true
     security_group: "tn{{ rpfx }}sg"
@@ -300,7 +295,7 @@
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
+    subnet_name: "tn{{ rpfx }}"
     enable_accelerated_networking: true
     security_group: "tn{{ rpfx }}sg"
     enable_ip_forwarding: true
@@ -355,7 +350,7 @@
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
+    subnet_name: "tn{{ rpfx }}"
     security_group: "tn{{ rpfx }}sg"
     enable_accelerated_networking: true
     enable_ip_forwarding: true
@@ -462,9 +457,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ nic_name1 }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
+    subnet_name: "tn{{ rpfx }}"
     create_with_security_group: true
-    public_ip: false
     ip_configurations:
       - name: ipconfig1
         application_security_groups:
@@ -483,9 +477,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ nic_name1 }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
+    subnet_name: "tn{{ rpfx }}"
     create_with_security_group: true
-    public_ip: false
     ip_configurations:
       - name: ipconfig1
         application_security_groups:
@@ -504,9 +497,8 @@
     resource_group: "{{ resource_group }}"
     name: "{{ nic_name1 }}"
     virtual_network: "{{ vn.state.id }}"
-    subnet: "tn{{ rpfx }}"
+    subnet_name: "tn{{ rpfx }}"
     create_with_security_group: true
-    public_ip: false
     ip_configurations:
       - name: ipconfig1
         application_security_groups:
@@ -598,7 +590,6 @@
     virtual_network: "tn{{ rpfx }}"
     subnet_name: "nic-appgw-subnet{{ rpfx }}"
     create_with_security_group: false
-    public_ip: false
     ip_configurations:
       - name: "default"
         primary: true
@@ -621,7 +612,6 @@
     virtual_network: "tn{{ rpfx }}"
     subnet_name: "nic-appgw-subnet{{ rpfx }}"
     create_with_security_group: false
-    public_ip: false
     ip_configurations:
       - name: "default"
         primary: true

@@ -31,9 +31,12 @@
   azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ interface_name }}"
+    ip_configurations:
+      - name: default
+        primary: true
+        public_ip_address_name: "{{ public_ip_name }}"
     virtual_network: "{{ network_name }}"
     subnet: "{{ subnet_name }}"
-    public_ip_name: "{{ public_ip_name }}"
     security_group: "{{ security_group }}"
 
 - name: Create virtual machine with a single NIC and no boot diagnostics
@@ -233,7 +236,7 @@
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
     name: "{{ vm_name }}"
-    vm_size: Standard_A1
+    vm_size: Standard_A1_v2
     storage_account: "{{ storage_account }}"
     storage_container: "{{ vm_name }}"
     storage_blob: "{{ vm_name }}.vhd"
@@ -256,7 +259,7 @@
   ansible.builtin.assert:
     that:
       - resize_result is changed
-      - resize_result.ansible_facts.azure_vm.hardware_profile.vm_size == "Standard_A1"
+      - resize_result.ansible_facts.azure_vm.hardware_profile.vm_size == "Standard_A1_v2"
 
 - name: Delete VM
   azure_rm_virtualmachine:

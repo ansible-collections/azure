@@ -27,7 +27,9 @@
   azure_rm_loadbalancer:
     resource_group: "{{ resource_group }}"
     name: testLB
-    public_ip_address_name: testPublicIP
+    frontend_ip_configurations:
+      - name: frontendipconf0
+        public_ip_address: testPublicIP
     sku: Standard
 
 - name: Create public IP address 1
@@ -41,7 +43,9 @@
   azure_rm_loadbalancer:
     resource_group: "{{ resource_group }}"
     name: testLB1
-    public_ip_address_name: testPublicIP1
+    frontend_ip_configurations:
+      - name: frontendipconf0
+        public_ip_address: testPublicIP1
     sku: Standard
 
 - name: Create network security group within same resource group of VMSS.
