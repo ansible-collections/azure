@@ -34,6 +34,8 @@ options:
         description: Tenant id of service principal.
     use_msi:
         description: MSI token autodiscover, default is true.
+    cloud_type:
+        description: Specify which cloud, such as C(azure), C(usgovcloudapi).
 notes:
     - If version is not provided, this plugin will return the latest version of the secret.
     - If ansible is running on Azure Virtual Machine with MSI enabled, client_id, secret and tenant isn't required.
@@ -50,6 +52,10 @@ EXAMPLE = """
 - name: Look up secret when azure cli login
   debug:
     msg: msg: "{{ lookup('azure.azcollection.azure_keyvault_secret', 'testsecret', vault_url=key_vault_uri)}}"
+
+- name: Look up secret with cloud type
+  debug:
+    msg: msg: "{{ lookup('azure.azcollection.azure_keyvault_secret', 'testsecret', cloud_type='usgovcloudapi', vault_url=key_vault_uri)}}"
 
 - name: Look up secret when ansible host is MSI enabled Azure VM
   debug:
@@ -133,15 +139,6 @@ TOKEN_ACQUIRED = False
 
 logger = logging.getLogger("azure.identity").setLevel(logging.ERROR)
 
-token_params = {
-    'api-version': '2018-02-01',
-    'resource': 'https://vault.azure.net'
-}
-
-token_headers = {
-    'Metadata': 'true'
-}
-
 
 def lookup_secret_non_msi(terms, vault_url, kwargs):
 
@@ -177,6 +174,15 @@ class LookupModule(LookupBase):
         use_msi = kwargs.pop('use_msi', True)
         TOKEN_ACQUIRED = False
         token = None
+
+        token_params = {
+            'api-version': '2018-02-01',
+            'resource': 'https://vault.{0}.net'.format(kwargs.get('cloud_type', 'azure'))
+        }
+
+        token_headers = {
+            'Metadata': 'true'
+        }
 
         if use_msi:
             try:
