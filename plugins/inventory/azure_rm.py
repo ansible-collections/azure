@@ -302,8 +302,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             for vm_rg in self.get_option('include_vm_resource_groups'):
                 self._enqueue_vm_list(vm_rg)
 
-        for vmss_rg in self.get_option('include_vmss_resource_groups'):
-            self._enqueue_vmss_list(vmss_rg)
+        if os.environ.get('ANSIBLE_AZURE_VMSS_RESOURCE_GROUPS'):
+            for vmss_rg in os.environ['ANSIBLE_AZURE_VMSS_RESOURCE_GROUPS'].split(","):
+                self._enqueue_vmss_list(vmss_rg)
+        else:
+            for vmss_rg in self.get_option('include_vmss_resource_groups'):
+                self._enqueue_vmss_list(vmss_rg)
 
         if self._batch_fetch:
             self._process_queue_batch()
@@ -405,7 +409,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         if 'value' in response:
             for h in response['value']:
-                # FUTURE: add direct VM filtering by tag here (performance optimization)?
                 self._hosts.append(AzureHost(h, self, vmss=vmss, legacy_name=self._legacy_hostnames))
 
     def _on_vmss_page_response(self, response):
@@ -417,8 +420,11 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         # FUTURE: add direct VMSS filtering by tag here (performance optimization)?
         for vmss in response['value']:
             url = '{0}/virtualMachines'.format(vmss['id'])
-            # VMSS instances look close enough to regular VMs that we can share the handler impl...
-            self._enqueue_get(url=url, api_version=self._compute_api_version, handler=self._on_vm_page_response, handler_args=dict(vmss=vmss))
+
+            # Since Flexible instance is a standalone VM we are processing them as regular VM.
+            if vmss['properties']['orchestrationMode'] != 'Flexible':
+                # VMSS instances look close enough to regular VMs that we can share the handler impl...
+                self._enqueue_get(url=url, api_version=self._compute_api_version, handler=self._on_vm_page_response, handler_args=dict(vmss=vmss))
 
     # use the undocumented /batch endpoint to bulk-send up to 500 requests in a single round-trip
     #
