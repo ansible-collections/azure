@@ -25,8 +25,43 @@ options:
     vault_name:
         description:
             - Name of the vault.
-        required: True
+            - It is mutually exclusive with I(hsm_name)
+        required: False
         type: str
+    hsm_name:
+        description:
+            - Name of the HSM.
+            - It is mutually exclusive with I(vault_name)
+        required: False
+        type: str
+    administrators:
+        description:
+            - List of administrator OID's for data plane operations for Managed HSM.
+            - It is mutually exclusive with I(vault_name)
+        required: False
+        type: list
+        elements: str
+        default: []
+    identity:
+        description:
+            - Identity for the HSM, not valid for vault_name.
+            - It is mutually exclusive with I(vault_name)
+        type: dict
+        version_added: '3.0.0'
+        suboptions:
+            type:
+                description:
+                    - Type of the managed identity
+                choices:
+                    - UserAssigned
+                    - None
+                default: None
+                type: str
+            user_assigned_identity:
+                description:
+                    - User Assigned Managed Identity associated to this resource
+                required: false
+                type: str
     location:
         description:
             - Resource location. If not set, location from the resource group will be used as default.
@@ -35,6 +70,8 @@ options:
         description:
             - The Azure Active Directory tenant ID that should be used for authenticating requests to the key vault.
         type: str
+        aliases:
+          - tenant_id
     sku:
         description:
             - SKU details.
@@ -57,6 +94,7 @@ options:
         description:
             - An array of 0 to 16 identities that have access to the key vault.
             - All identities in the array must use the same tenant ID as the key vault's tenant ID.
+            - It is mutually exclusive with I(hsm_name)
         type: list
         elements: dict
         suboptions:
@@ -142,14 +180,17 @@ options:
     enabled_for_deployment:
         description:
             - Property to specify whether Azure Virtual Machines are permitted to retrieve certificates stored as secrets from the key vault.
+            - It is mutually exclusive with I(hsm_name)
         type: bool
     enabled_for_disk_encryption:
         description:
             - Property to specify whether Azure Disk Encryption is permitted to retrieve secrets from the vault and unwrap keys.
+            - It is mutually exclusive with I(hsm_name)
         type: bool
     enabled_for_template_deployment:
         description:
             - Property to specify whether Azure Resource Manager is permitted to retrieve secrets from the key vault.
+            - It is mutually exclusive with I(hsm_name)
         type: bool
     enable_soft_delete:
         description:
@@ -285,6 +326,9 @@ try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.keyvault import KeyVaultManagementClient
+    from azure.mgmt.keyvault.models import (ManagedServiceIdentity, UserAssignedIdentity, NetworkRuleSet,
+                                            NetworkRuleBypassOptions, NetworkRuleAction, ManagedHsmProperties,
+                                            ManagedHsm, ManagedHsmSku)
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -304,17 +348,38 @@ class AzureRMVaults(AzureRMModuleBaseExt):
                 required=True
             ),
             vault_name=dict(
-                type='str',
-                required=True
+                type='str'
+            ),
+            hsm_name=dict(
+                type='str'
             ),
             location=dict(
                 type='str'
             ),
             vault_tenant=dict(
-                type='str'
+                type='str',
+                aliases=['tenant_id']
             ),
             sku=dict(
                 type='dict'
+            ),
+            administrators=dict(
+                type='list',
+                default=[],
+                elements='str'
+            ),
+            identity=dict(
+                type='dict',
+                options=dict(
+                    type=dict(
+                        type='str',
+                        choices=['UserAssigned', 'None'],
+                        default='None'
+                    ),
+                    user_assigned_identity=dict(
+                        type="str",
+                    ),
+                ),
             ),
             access_policies=dict(
                 type='list',
@@ -409,18 +474,41 @@ class AzureRMVaults(AzureRMModuleBaseExt):
 
         self.resource_group = None
         self.vault_name = None
+        self.hsm_name = None
         self.parameters = dict()
         self.tags = None
+        self.identity = None
+        self.administrators = None
 
         self.results = dict(changed=False)
         self.mgmt_client = None
         self.state = None
         self.to_do = Actions.NoAction
+        self._managed_identity = None
+
+        required_one_of = [('vault_name', 'hsm_name')]
+        mutually_exclusive = [('vault_name', 'hsm_name'),
+                              ('vault_name', 'identity'),
+                              ('vault_name', 'administrators'),
+                              ('hsm_name', 'enabled_for_deployment'),
+                              ('hsm_name', 'enabled_for_disk_encryption'),
+                              ('hsm_name', 'enabled_for_template_deployment'),
+                              ('hsm_name', 'access_policies')]
 
         super(AzureRMVaults, self).__init__(derived_arg_spec=self.module_arg_spec,
                                             supports_check_mode=True,
                                             supports_tags=True,
+                                            mutually_exclusive=mutually_exclusive,
+                                            required_one_of=required_one_of,
                                             required_if=self.module_required_if)
+
+    @property
+    def managed_identity(self):
+        if not self._managed_identity:
+            self._managed_identity = {"identity": ManagedServiceIdentity,
+                                      "user_assigned": UserAssignedIdentity
+                                      }
+        return self._managed_identity
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
@@ -434,8 +522,10 @@ class AzureRMVaults(AzureRMModuleBaseExt):
                     self.parameters["location"] = kwargs[key]
                 elif key == "vault_tenant":
                     self.parameters.setdefault("properties", {})["tenant_id"] = kwargs[key]
-                elif key == "sku":
+                elif key == "sku" and self.vault_name is not None:
                     self.parameters.setdefault("properties", {})["sku"] = kwargs[key]
+                elif key == "sku" and self.hsm_name is not None:
+                    self.parameters["sku"] = kwargs[key]
                 elif key == "public_network_access":
                     self.parameters.setdefault("properties", {})["public_network_access"] = kwargs[key]
                 elif key == "network_acls":
@@ -488,10 +578,16 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         if "location" not in self.parameters:
             self.parameters["location"] = resource_group.location
 
-        old_response = self.get_keyvault()
+        old_response = self.get_instance()
+
+        curr_identity = old_response.get('identity') if old_response else None
+        update_identity, identity_result = self.update_single_managed_identity(curr_identity=curr_identity,
+                                                                               new_identity=self.identity)
+        if update_identity:
+            self.parameters["identity"] = identity_result
 
         if not old_response:
-            self.log("Key Vault instance doesn't exist")
+            self.log("Old instance doesn't exist")
             if self.state == 'absent':
                 self.log("Old instance didn't exist")
             else:
@@ -499,11 +595,11 @@ class AzureRMVaults(AzureRMModuleBaseExt):
                 if not self.parameters['properties']['enable_purge_protection']:
                     self.parameters['properties'].pop('enable_purge_protection')
         else:
-            self.log("Key Vault instance already exists")
+            self.log("Instance already exists")
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             elif self.state == 'present':
-                self.log("Need to check if Key Vault instance has to be deleted or may be updated")
+                self.log("Need to check if instance has to be deleted or may be updated")
                 if not self.parameters['properties']['enable_purge_protection'] and \
                         ('enable_purge_protection' not in old_response['properties'] or
                          not old_response['properties']['enable_purge_protection']):
@@ -572,12 +668,19 @@ class AzureRMVaults(AzureRMModuleBaseExt):
 
                 update_tags, newtags = self.update_tags(old_response.get('tags', dict()))
 
+                if self.hsm_name and \
+                        self.administrators != old_response["properties"]["initial_admin_object_ids"]:
+                    self.to_do = Actions.Update
+
                 if update_tags:
                     self.to_do = Actions.Update
                     self.tags = newtags
 
+                if update_identity:
+                    self.to_do = Actions.Update
+
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
-            self.log("Need to Create / Update the Key Vault instance")
+            self.log("Need to Create / Update the instance")
 
             if self.check_mode:
                 self.results['changed'] = True
@@ -585,7 +688,13 @@ class AzureRMVaults(AzureRMModuleBaseExt):
 
             self.parameters["tags"] = self.tags
 
-            response = self.create_update_keyvault()
+            if self.vault_name is not None:
+                response = self.create_update_keyvault()
+            else:
+                response = self.create_update_hsm()
+
+            if response is None:
+                response = self.get_instance()
 
             if not old_response:
                 self.results['changed'] = True
@@ -593,19 +702,22 @@ class AzureRMVaults(AzureRMModuleBaseExt):
                 self.results['changed'] = old_response.__ne__(response)
             self.log("Creation / Update done")
         elif self.to_do == Actions.Delete:
-            self.log("Key Vault instance deleted")
+            self.log("Instance deleted")
             self.results['changed'] = True
 
             if self.check_mode:
                 return self.results
 
-            self.delete_keyvault()
+            if self.vault_name is not None:
+                self.delete_keyvault()
+            else:
+                self.hsm_begin_delete()
             # make sure instance is actually deleted, for some Azure resources, instance is hanging around
             # for some time after deletion -- this should be really fixed in Azure
-            while self.get_keyvault():
+            while self.get_instance():
                 time.sleep(20)
         else:
-            self.log("Key Vault instance unchanged")
+            self.log("Instance unchanged")
             self.results['changed'] = False
             response = old_response
 
@@ -632,7 +744,46 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         except Exception as exc:
             self.log('Error attempting to create the Key Vault instance.')
             self.fail("Error creating the Key Vault instance: {0}".format(str(exc)))
-        return response.as_dict()
+        return response and response.as_dict() or None
+
+    def create_update_hsm(self):
+        '''
+        Creates or updates HSM with the specified configuration.
+
+        :return: deserialized HSM instance state dictionary
+        '''
+        self.log("Creating / Updating the HSM instance {0}".format(self.hsm_name))
+
+        tenant_id = self.parameters.get('properties', {}).get('tenant_id')
+        enable_purge_protection = self.parameters.get('properties', {}).get('enable_purge_protection')
+        retention_days = self.parameters.get('properties', {}).get('soft_delete_retention_in_days')
+        administrators = self.administrators
+        bypass = None
+        default_action = None
+        public_network_access = None
+        properties = ManagedHsmProperties(tenant_id=tenant_id,
+                                          enable_purge_protection=enable_purge_protection,
+                                          soft_delete_retention_in_days=retention_days,
+                                          initial_admin_object_ids=administrators,
+                                          network_acls=_create_network_rule_set(bypass, default_action),
+                                          public_network_access=public_network_access)
+        sku = self.parameters.get('sku')
+        parameters = ManagedHsm(location=self.parameters.get('location'),
+                                tags=self.parameters.get('tags'),
+                                sku=ManagedHsmSku(name=sku.get('name'), family=sku.get('family')),
+                                identity=self.parameters.get('identity'),
+                                properties=properties)
+        try:
+            response = self.mgmt_client.managed_hsms.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                            name=self.hsm_name,
+                                                                            parameters=parameters)
+            if isinstance(response, LROPoller):
+                response = self.get_poller_result(response)
+
+        except Exception as exc:
+            self.log('Error attempting to create the HSM instance.')
+            self.fail("Error creating the HSM instance: {0}".format(str(exc)))
+        return response and response.as_dict() or None
 
     def delete_keyvault(self):
         '''
@@ -650,26 +801,61 @@ class AzureRMVaults(AzureRMModuleBaseExt):
 
         return True
 
-    def get_keyvault(self):
+    def hsm_begin_delete(self):
         '''
-        Gets the properties of the specified Key Vault.
+        Deletes specified hsm instance in the specified subscription and resource group.
 
-        :return: deserialized Key Vault instance state dictionary
+        :return: True
         '''
-        self.log("Checking if the Key Vault instance {0} is present".format(self.vault_name))
-        found = False
+        self.log("Deleting the hsm instance {0}".format(self.hsm_name))
         try:
-            response = self.mgmt_client.vaults.get(resource_group_name=self.resource_group,
-                                                   vault_name=self.vault_name)
-            found = True
-            self.log("Response : {0}".format(response))
-            self.log("Key Vault instance : {0} found".format(response.name))
-        except ResourceNotFoundError as e:
-            self.log('Did not find the Key Vault instance.')
+            response = self.mgmt_client.managed_hsms.begin_delete(resource_group_name=self.resource_group,
+                                                                  name=self.hsm_name)
+        except Exception as e:
+            self.log('Error attempting to delete the hsm instance.')
+            self.fail("Error deleting the hsm instance: {0}".format(str(e)))
+
+        return True
+
+    def get_instance(self):
+        '''
+        Gets the properties of the specified Key Vault or HSM.
+
+        :return: deserialized Key Vault or HSM instance state dictionary
+        '''
+        found = False
+
+        if self.vault_name is not None:
+            self.log("Checking if the Key Vault instance {0} is present".format(self.vault_name))
+            try:
+                response = self.mgmt_client.vaults.get(resource_group_name=self.resource_group,
+                                                       vault_name=self.vault_name)
+                found = True
+                self.log("Response : {0}".format(response))
+                self.log("Key Vault instance : {0} found".format(response.name))
+            except ResourceNotFoundError as e:
+                self.log('Did not find the Key Vault instance.')
+
+        if self.hsm_name is not None:
+            self.log("Checking if the hsm instance {0} is present".format(self.hsm_name))
+            try:
+                response = self.mgmt_client.managed_hsms.get(resource_group_name=self.resource_group,
+                                                             name=self.hsm_name)
+                found = True
+                self.log("Response : {0}".format(response))
+                self.log("HSM instance : {0} found".format(response.name))
+            except ResourceNotFoundError as e:
+                self.log('Did not find the hsm instance.')
+
         if found is True:
             return response.as_dict()
 
         return False
+
+
+def _create_network_rule_set(bypass=None, default_action=None):
+    return NetworkRuleSet(bypass=bypass or NetworkRuleBypassOptions.azure_services.value,
+                          default_action=default_action or NetworkRuleAction.allow.value)
 
 
 def main():

@@ -3,3 +3,4 @@ destructive
 shippable/azure/group9
 azure_rm_keyvaultkey
 azure_rm_keyvaultsecret
+needs/file/tests/integration_common_tasks/managed_identity.yml
