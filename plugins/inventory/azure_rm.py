@@ -7,6 +7,15 @@ __metaclass__ = type
 DOCUMENTATION = r'''
     name: azure_rm
     short_description: Azure Resource Manager inventory plugin
+    options:
+        batch_fetch_interval:
+            description: Interval with which to check if the batched requests are completed
+            default: 30
+            type: int
+        batch_fetch_timeout:
+            description: The timeout to use when polling for batched requests
+            default: 600
+            type: int
     extends_documentation_fragment:
       - azure.azcollection.azure
       - azure.azcollection.azure_rm
@@ -239,6 +248,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             self._sanitize_group_name = self._legacy_script_compatible_group_sanitization
 
         self._batch_fetch = self.get_option('batch_fetch')
+        self._batch_fetch_interval = self.get_option('batch_fetch_interval')
+        self._batch_fetch_timeout = self.get_option('batch_fetch_timeout')
 
         self._legacy_hostnames = self.get_option('plain_host_names')
 
@@ -561,8 +572,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         url = '/batch'
         query_parameters = {'api-version': '2015-11-01'}
         header_parameters = {'x-ms-client-request-id': str(uuid.uuid4()), 'Content-Type': 'application/json; charset=utf-8'}
-        polling_timeout = 600
-        polling_interval = 30
         operation_config = {}
         body_content = dict(requests=batched_requests)
 
@@ -578,8 +587,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             poller = LROPoller(self.new_client,
                                PipelineResponse(None, response, None),
                                get_long_running_output,
-                               ARMPolling(polling_interval, **operation_config))
-            response = self.get_poller_result(poller, polling_timeout)
+                               ARMPolling(self._batch_fetch_interval, **operation_config))
+            response = self.get_poller_result(poller, self._batch_fetch_timeout)
             if hasattr(response, 'body'):
                 response = json.loads(response.body())
             elif hasattr(response, 'context'):
