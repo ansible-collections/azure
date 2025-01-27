@@ -574,6 +574,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
             new_result['storage_container_name'] = url.path.split('/')[1]
             new_result['storage_blob_name'] = url.path.split('/')[-1]
 
+        new_result['os_disk'] = result['storage_profile']['os_disk']
         new_result['os_disk_caching'] = result['storage_profile']['os_disk']['caching']
         new_result['os_type'] = result['storage_profile']['os_disk']['os_type']
         new_result['data_disks'] = []
