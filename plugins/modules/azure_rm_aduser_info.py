@@ -107,6 +107,18 @@ display_name:
     returned: always
     type: str
     sample: John Smith
+given_name:
+    description:
+        - The given name of the user.
+    returned: always
+    type: str
+    sample: John
+surname:
+    description:
+        - The surname of the user.
+    returned: always
+    type: str
+    sample: Smith
 user_principal_name:
     description:
         - The principal name of the user.
@@ -192,6 +204,8 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         self.all = None
         self.log_path = None
         self.log_mode = None
+        self.given_name = None
+        self.surname = None
 
         self.results = dict(changed=False)
 
@@ -269,6 +283,8 @@ class AzureRMADUserInfo(AzureRMModuleBase):
             user_type=object.user_type,
             company_name=object.company_name,
             mobile_phone=object.mobile_phone,
+            surname=object.surname,
+            given_name=object.given_name,
             on_premises_extension_attributes=self.on_premises_extension_attributes_to_dict(object.on_premises_extension_attributes)
         )
 
@@ -276,7 +292,8 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
             query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
                 select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
-                        "userType", "companyName", "mobilePhone", "onPremisesExtensionAttributes"]
+                        "userType", "companyName", "mobilePhone", "onPremisesExtensionAttributes", "surname", 
+                        "givenName"]
             ),
         )
         return await self._client.users.by_user_id(object).get(request_configuration=request_configuration)
@@ -285,7 +302,8 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
             query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
                 select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
-                        "userType", "companyName", "mobilePhone", "onPremisesExtensionAttributes"]
+                        "userType", "companyName", "mobilePhone", "onPremisesExtensionAttributes", "surname", 
+                        "givenName"]
             ),
         )
         users = []
@@ -306,7 +324,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                 query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
                     filter=filter,
                     select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
-                            "userType", "companyName", "onPremisesExtensionAttributes"],
+                            "userType", "companyName", "onPremisesExtensionAttributes", "surname", "givenName"],
                     count=True
                 ),
             ))
