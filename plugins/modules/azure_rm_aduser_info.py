@@ -204,8 +204,6 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         self.all = None
         self.log_path = None
         self.log_mode = None
-        self.given_name = None
-        self.surname = None
 
         self.results = dict(changed=False)
 
@@ -292,7 +290,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
             query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
                 select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
-                        "userType", "companyName", "mobilePhone", "onPremisesExtensionAttributes", "surname", 
+                        "userType", "companyName", "mobilePhone", "onPremisesExtensionAttributes", "surname",
                         "givenName"]
             ),
         )
@@ -302,7 +300,7 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
             query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
                 select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
-                        "userType", "companyName", "mobilePhone", "onPremisesExtensionAttributes", "surname", 
+                        "userType", "companyName", "mobilePhone", "onPremisesExtensionAttributes", "surname",
                         "givenName"]
             ),
         )
