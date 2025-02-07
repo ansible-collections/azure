@@ -13,7 +13,6 @@
 - name: List All roleassignemnt for the resource group
   azure_rm_roleassignment_info:
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    strict_scope_match: true
   register: az_role_assignments
 
 - name: Create role assignment by id
