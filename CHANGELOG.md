@@ -10,27 +10,27 @@
 ### FEATURE ENHANCEMENT
   - azure_rm_dnsrecordset: Add support for `target_resource` ([#1767](https://github.com/ansible-collections/azure/pull/1767))
   - azure_rm_dnsrecordset_info: Support return `target_resource` ([#1767](https://github.com/ansible-collections/azure/pull/1767))
-  - azure_rm_loadbalancer: Add support for `enable_tcp_reset` ([#1774](https://github.com/ansible-collections/azure/pull/1774))
-  - azure_rm_privateendpoint: Add support for more parameters ([#1771](https://github.com/ansible-collections/azure/pull/1771))
-  - azure_rm_privateendpoint_info: Support return more parameters ([#1771](https://github.com/ansible-collections/azure/pull/1771))
+  - azure_rm_loadbalancer: Add support for `enable_tcp_reset` to `load_balancing_rules` ([#1774](https://github.com/ansible-collections/azure/pull/1774))
+  - azure_rm_privateendpoint: Add support for `application_security_groups`, `custom_dns_configs`,`custom_network_interface_name`, `ip_configurations` ([#1771](https://github.com/ansible-collections/azure/pull/1771))
+  - azure_rm_privateendpoint_info: Add support for `application_security_groups`, `custom_dns_configs`,`custom_network_interface_name`, `ip_configurations` ([#1771](https://github.com/ansible-collections/azure/pull/1771))
   - azure_rm_manageddisk:
     - Add support for `public_network_access` and `network_access_policy` ([#1782](https://github.com/ansible-collections/azure/pull/1782))
     - Add support for display/modification of disk performance `tier` ([#1787](https://github.com/ansible-collections/azure/pull/1787))
   - azure_rm_manageddisk_info:
     - Support return `public_network_access` and `network_access_policy` ([#1782](https://github.com/ansible-collections/azure/pull/1782))
     - Support return `tier` ([#1787]((https://github.com/ansible-collections/azure/pull/1787))
-  - azure_rm_iotdevice: Add support for device_scope ([#1790](https://github.com/ansible-collections/azure/pull/1790))
-  - azure_rm_cdnprofile: Add `sku` selection choices ([#1789](https://github.com/ansible-collections/azure/pull/1789))
-  - azure_rm_webapp: Add `site_config_updatable_properties` selection choices ([#1792](https://github.com/ansible-collections/azure/pull/1792))
-  - azure_rm_appgateway: Add support for `WAF policy` ([#1725](https://github.com/ansible-collections/azure/pull/1725))
-  - azure_rm_servicebus: Add support for more parameters ([#1793](https://github.com/ansible-collections/azure/pull/1793))
-  - azure_rm_servicebus_info: Support return more parameters ([#1793](https://github.com/ansible-collections/azure/pull/1793))
-  - plugins/inventory/azure_rm.py: Add support for `batch_fetch_interval` and `batch_fetch_time` ([#1804](https://github.com/ansible-collections/azure/pull/1804))
-  - azure_rm_aduser_info: Support return `surname` and `given_name` ([#1815]((https://github.com/ansible-collections/azure/pull/1815))
+  - azure_rm_iotdevice: Add support for `device_scope` ([#1790](https://github.com/ansible-collections/azure/pull/1790))
+  - azure_rm_cdnprofile: Add more `sku` selection options ([#1789](https://github.com/ansible-collections/azure/pull/1789))
+  - azure_rm_webapp: Add support for updating `startup_file` ([#1792](https://github.com/ansible-collections/azure/pull/1792))
+  - azure_rm_appgateway: Add support for setting WAF policy ([#1725](https://github.com/ansible-collections/azure/pull/1725))
+  - azure_rm_servicebus: Add support for `minimum_tls_version`, `zone_redundant`, `disable_local_auth`, `public_network_access` and `premium_messaging_partitions` ([#1793](https://github.com/ansible-collections/azure/pull/1793))
+  - plugins/inventory/azure_rm.py: Add support for `batch_fetch_interval` and `batch_fetch_timeout` ([#1804](https://github.com/ansible-collections/azure/pull/1804))
+  - azure_rm_aduser_info: Add support for `surname` and `given_name` ([#1815](https://github.com/ansible-collections/azure/pull/1815))
+  - azure_rm_keyvaultsecret - Remove unnecessary constraints ([#1810](https://github.com/ansible-collections/azure/pull/1810))
 
 ### BUG FIXING
-  - azure_rm.py: Change the NIC info returned by the VM is dynamically obtained ([#1770](https://github.com/ansible-collections/azure/pull/1770))
-  azure_keyvault_secret.py: Include `key vault URL` to error messages ([#1785](https://github.com/ansible-collections/azure/pull/1785))
+  - inventory azure_rm: Return the VM NIC details ([#1770](https://github.com/ansible-collections/azure/pull/1770))
+  - azure_keyvault_secret: Include Key Vault URL to error messages ([#1785](https://github.com/ansible-collections/azure/pull/1785))
 
 
 ## v3.1.0 (2024-12-02)
