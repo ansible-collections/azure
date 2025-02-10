@@ -16,14 +16,6 @@
     scope: "{{ az_resource_group.resourcegroups[0].id }}"
   register: az_role_assignments
 
-# - name: Create role assignment by id
-#   azure_rm_roleassignment:
-#     id: "{{ az_resource_group.resourcegroups[0].id }}/providers/Microsoft.Authorization/roleAssignments/{{ uuid }}"
-#     # assignee_object_id: "66cb5f4f-2576-4c0d-8bef-693679716b77"
-#     assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-#     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-#   register: az_role_assignment_create
-
 - name: Lookup service principal object id
   ansible.builtin.set_fact:
     object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
@@ -31,6 +23,14 @@
                    azure_secret=azure_secret,
                    azure_tenant=azure_tenant) }}"
   register: object_id_facts
+
+- name: Create role assignment by id
+  azure_rm_roleassignment:
+    id: "{{ az_resource_group.resourcegroups[0].id }}/providers/Microsoft.Authorization/roleAssignments/{{ uuid }}"
+    assignee_object_id: "{{ object_id }}"
+    # assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+    role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
+  register: az_role_assignment_create
 
 - name: Create a key vault
   azure_rm_keyvault:
