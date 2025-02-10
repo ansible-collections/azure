@@ -18,7 +18,7 @@
     - Add support for display/modification of disk performance `tier` ([#1787](https://github.com/ansible-collections/azure/pull/1787))
   - azure_rm_manageddisk_info:
     - Support return `public_network_access` and `network_access_policy` ([#1782](https://github.com/ansible-collections/azure/pull/1782))
-    - Support return `tier` ([#1787]((https://github.com/ansible-collections/azure/pull/1787))
+    - Support return `tier` ([#1787](https://github.com/ansible-collections/azure/pull/1787))
   - azure_rm_iotdevice: Add support for `device_scope` ([#1790](https://github.com/ansible-collections/azure/pull/1790))
   - azure_rm_cdnprofile: Add more `sku` selection options ([#1789](https://github.com/ansible-collections/azure/pull/1789))
   - azure_rm_webapp: Add support for updating `startup_file` ([#1792](https://github.com/ansible-collections/azure/pull/1792))
