@@ -27,6 +27,12 @@ Install dependencies required by the collection (adjust path to collection if ne
 pip3 install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt
 ```
 
+Or, if you can't use pip, e.g. when you are on Ubuntu/Debian:
+
+```bash
+pipx runpip ansible install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt
+```
+
 To upgrade to the latest version of Azure collection:
 
 ```bash
