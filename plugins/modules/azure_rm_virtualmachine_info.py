@@ -206,6 +206,14 @@ vms:
             returned: always
             type: str
             sample: japaneast
+        maintenance_redeploy_status:
+            description:
+                - If maintenance is scheduled for this server set to something like example, otherwise empty dict
+            returned: always
+            type: dict
+            sample: { "is_customer_initiated_maintenance_allowed": true, "last_operation_result_code": "None", "maintenance_window_end_time":
+                    "2025-06-18T23:59:00.000Z", "maintenance_window_start_time": "2025-06-12T00:00:00.000Z", "pre_maintenance_window_end_time":
+                    "2025-06-11T23:30:00.000Z", "pre_maintenance_window_start_time": "2025-01-30T00:00:00.000Z" }
         name:
             description:
                 - Resource name.
@@ -498,6 +506,11 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                 break
 
         new_result = {}
+
+        if instance.get('maintenance_redeploy_status') is not None:
+            new_result['maintenance_redeploy_status'] = instance['maintenance_redeploy_status']
+        else:
+            new_result['maintenance_redeploy_status'] = dict()
 
         if instance.get('vm_agent') is not None:
             new_result['vm_agent_version'] = instance['vm_agent'].get('vm_agent_version')
