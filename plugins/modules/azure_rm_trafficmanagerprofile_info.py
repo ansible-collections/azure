@@ -100,6 +100,18 @@ tms:
             returned: always
             type: str
             sample: performance
+        max_return:
+            description:
+                - Maximum number of endpoints to be returned for MultiValue routing type.
+            type: int
+            returned: always
+            sample: 10
+        allowed_endpoint_record_types:
+            description:
+                - The list of allowed endpoint record types.
+            type: list
+            returned: always
+            sample: None
         dns_config:
             description:
                 - The DNS settings of the Traffic Manager profile.
@@ -166,6 +178,18 @@ tms:
                     returned: always
                     type: int
                     sample: 3
+                custom_headers:
+                    description:
+                        - List of custom headers.
+                    type: list
+                    returned: always
+                    sample: [{'name': 'key1', 'value': 'value1'}, {'name': 'key2', 'value': 'value2'}]
+                expected_status_code_ranges:
+                    description:
+                        - List of expected status code ranges.
+                    type: list
+                    returned: always
+                    sample: [{'max': 205, 'min': 200}, {'max': 222, 'min': 211}]
         endpoints:
             description:
                 - The list of endpoints in the Traffic Manager profile.
@@ -394,6 +418,8 @@ class AzureRMTrafficManagerProfileInfo(AzureRMModuleBase):
         new_result['location'] = tm.location
         new_result['profile_status'] = tm.profile_status
         new_result['routing_method'] = tm.traffic_routing_method.lower()
+        new_result['max_return'] = tm.max_return
+        new_result['allowed_endpoint_record_types'] = tm.allowed_endpoint_record_types
         new_result['dns_config'] = dict(
             relative_name=tm.dns_config.relative_name,
             fqdn=tm.dns_config.fqdn,
@@ -406,8 +432,14 @@ class AzureRMTrafficManagerProfileInfo(AzureRMModuleBase):
             path=tm.monitor_config.path,
             interval=tm.monitor_config.interval_in_seconds,
             timeout=tm.monitor_config.timeout_in_seconds,
-            tolerated_failures=tm.monitor_config.tolerated_number_of_failures
+            tolerated_failures=tm.monitor_config.tolerated_number_of_failures,
+            custom_headers=[dict(name=x.name, value=x.value) for x in tm.monitor_config.custom_headers] if tm.monitor_config.custom_headers else None,
+            expected_status_code_ranges=[]
         )
+        if tm.monitor_config.expected_status_code_ranges:
+            for item in tm.monitor_config.expected_status_code_ranges:
+                new_result['monitor_config']['expected_status_code_ranges'].append(dict(min=item.min, max=item.max))
+
         new_result['endpoints'] = [serialize_endpoint(endpoint) for endpoint in tm.endpoints]
         new_result['tags'] = tm.tags
         return new_result
