@@ -847,7 +847,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             caching_options = self.compute_models.CachingTypes[self.attach_caching] if self.attach_caching and self.attach_caching != '' else None
             if correspondence and correspondence.caching != caching_options:
                 resp = True
-                if correspondence.caching == 'none' and (self.attach_caching == '' or self.attach_caching is None):
+                if correspondence.caching == 'None' and (self.attach_caching == '' or self.attach_caching is None):
                     resp = False
         return resp
 
