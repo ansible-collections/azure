@@ -210,7 +210,10 @@ options:
         choices:
             - Enabled
             - Disabled
-
+    write_accelerator_enabled:
+        description:
+            - Specifies whether writeAccelerator should be enabled or disabled on the disk.
+        type: bool
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -528,6 +531,9 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 type='str',
                 choices=['Enabled', 'Disabled']
             ),
+            write_accelerator_enabled=dict(
+                type='bool',
+            ),
             network_access_policy=dict(
                 type='str',
                 choices=['AllowAll', 'AllowPrivate', 'DenyAll']
@@ -565,6 +571,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         self.tier = None
         self.public_network_access = None
         self.network_access_policy = None
+        self.write_accelerator_enabled = None
 
         mutually_exclusive = [['managed_by_extended', 'managed_by']]
 
@@ -688,6 +695,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         data_disk = self.compute_models.DataDisk(lun=lun,
                                                  create_option=self.compute_models.DiskCreateOptionTypes.attach,
                                                  managed_disk=params,
+                                                 write_accelerator_enabled=self.write_accelerator_enabled,
                                                  caching=caching_options)
         vm.storage_profile.data_disks.append(data_disk)
         return self._update_vm(resource_group, vm_name, vm)
@@ -836,10 +844,10 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         if vm_name:
             vm = self._get_vm(self.resource_group, vm_name)
             correspondence = next((d for d in vm.storage_profile.data_disks if d.name.lower() == disk.get('name').lower()), None)
-            caching_options = self.disk_models.CachingTypes[self.attach_caching] if self.attach_caching and self.attach_caching != '' else None
+            caching_options = self.compute_models.CachingTypes[self.attach_caching] if self.attach_caching and self.attach_caching != '' else None
             if correspondence and correspondence.caching != caching_options:
                 resp = True
-                if correspondence.caching == 'none' and (self.attach_caching == '' or self.attach_caching is None):
+                if correspondence.caching == 'None' and (self.attach_caching == '' or self.attach_caching is None):
                     resp = False
         return resp
 

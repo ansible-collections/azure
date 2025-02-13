@@ -152,6 +152,12 @@ vms:
                     returned: always
                     type: str
                     sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/Microsoft.Compute/disks/diskName
+                write_accelerator_enabled:
+                    description:
+                        - Specifies whether writeAccelerator should be enabled or disabled on the disk.
+                    type: bool
+                    returned: always
+                    sample: False
         id:
             description:
                 - Resource ID.
@@ -586,7 +592,8 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                 'disk_size_gb': disks[disk_index].get('disk_size_gb'),
                 'managed_disk_type': disks[disk_index].get('managed_disk', {}).get('storage_account_type'),
                 'managed_disk_id': disks[disk_index].get('managed_disk', {}).get('id'),
-                'caching': disks[disk_index].get('caching')
+                'caching': disks[disk_index].get('caching'),
+                'write_accelerator_enabled': disks[disk_index].get('write_accelerator_enabled', False)
             })
 
         new_result['network_interface_names'] = []
