@@ -20,6 +20,7 @@ DOCUMENTATION = r'''
       - azure.azcollection.azure
       - azure.azcollection.azure_rm
       - constructed
+      - inventory_cache
     description:
         - Query VM details from Azure Resource Manager
         - Requires a YAML configuration file whose name ends with 'azure_rm.(yml|yaml)'
@@ -154,7 +155,7 @@ except ImportError:
     from Queue import Queue, Empty
 
 from collections import namedtuple
-from ansible.plugins.inventory import BaseInventoryPlugin, Constructable
+from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
 from ansible.module_utils.six import iteritems
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMAuth
 from ansible.errors import AnsibleParserError, AnsibleError
@@ -202,8 +203,7 @@ class AzureRMRestConfiguration(Configuration):
 UrlAction = namedtuple('UrlAction', ['url', 'api_version', 'handler', 'handler_args'])
 
 
-# FUTURE: add Cacheable support once we have a sane serialization format
-class InventoryModule(BaseInventoryPlugin, Constructable):
+class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     NAME = 'azure.azcollection.azure_rm'
 
@@ -257,11 +257,59 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         self._include_filters = self.get_option('include_host_filters')
 
+        # Load results from Cache if requested
+        result_was_cached, results = self.get_cached_result(path, cache)
+
+        if not result_was_cached:
+            try:
+                self._credential_setup()
+                self._get_hosts()
+                results = self._serialize(self._hosts)
+            except Exception:
+                raise
+
+        self._populate(results)
+
+        # Store results to Cache if requested
+        self.update_cached_result(path, cache, results)
+
+    def _serialize(self, hosts):
+        results = []
+        for h in hosts:
+            results.append(dict(default_inventory_hostname=h.default_inventory_hostname,
+                                hostvars=h.hostvars))
+        return results
+
+    def get_cached_result(self, path, cache):
+        # false when refresh_cache or --flush-cache is used
+        if not cache:
+            return False, None
+        # get the user-specified directive
+        if not self.get_option("cache"):
+            return False, None
+
+        cache_key = self.get_cache_key(path)
         try:
-            self._credential_setup()
-            self._get_hosts()
-        except Exception:
-            raise
+            cached_value = self._cache[cache_key]
+        except KeyError:
+            # if cache expires or cache file doesn"t exist
+            return False, None
+
+        return True, cached_value
+
+    def update_cached_result(self, path, cache, result):
+        if not cache:
+            return
+
+        cache_key = self.get_cache_key(path)
+        # We weren't explicitly told to flush the cache, and there's already a cache entry,
+        # this means that the result we're being passed came from the cache.  As such we don't
+        # want to "update" the cache as that could reset a TTL on the cache entry.
+        if cache and cache_key in self._cache:
+            return
+
+        self._cache[cache_key] = result
+        self.set_cache_plugin()
 
     def _credential_setup(self):
         auth_source = environ.get('ANSIBLE_AZURE_AUTH_SOURCE', None) or self.get_option('auth_source')
@@ -367,6 +415,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         else:
             self._process_queue_serial()
 
+    def _populate(self, results):
         constructable_config_strict = boolean(self.get_option('fail_on_template_errors'))
         if self.get_option('hostvar_expressions') is not None:
             constructable_config_compose = self.get_option('hostvar_expressions')
@@ -377,25 +426,26 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         constructable_hostnames = self.get_option('hostnames')
 
-        for h in self._hosts:
+        for h in results:
+            hostvars = h.get("hostvars")
             # FUTURE: track hostnames to warn if a hostname is repeated (can happen for legacy and for composed inventory_hostname)
             inventory_hostname = self._get_hostname(h, hostnames=constructable_hostnames, strict=constructable_config_strict)
-            if self._filter_exclude_host(inventory_hostname, h.hostvars):
+            if self._filter_exclude_host(inventory_hostname, hostvars):
                 continue
-            if not self._filter_include_host(inventory_hostname, h.hostvars):
+            if not self._filter_include_host(inventory_hostname, hostvars):
                 continue
             self.inventory.add_host(inventory_hostname)
             # FUTURE: configurable default IP list? can already do this via hostvar_expressions
             self.inventory.set_variable(inventory_hostname, "ansible_host",
-                                        next(chain(h.hostvars['public_ipv4_address'], h.hostvars['private_ipv4_addresses']), None))
-            for k, v in iteritems(h.hostvars):
+                                        next(chain(hostvars['public_ipv4_address'], hostvars['private_ipv4_addresses']), None))
+            for k, v in iteritems(hostvars):
                 # FUTURE: configurable hostvar prefix? Makes docs harder...
                 self.inventory.set_variable(inventory_hostname, k, v)
 
             # constructable delegation
-            self._set_composite_vars(constructable_config_compose, h.hostvars, inventory_hostname, strict=constructable_config_strict)
-            self._add_host_to_composed_groups(constructable_config_groups, h.hostvars, inventory_hostname, strict=constructable_config_strict)
-            self._add_host_to_keyed_groups(constructable_config_keyed_groups, h.hostvars, inventory_hostname, strict=constructable_config_strict)
+            self._set_composite_vars(constructable_config_compose, hostvars, inventory_hostname, strict=constructable_config_strict)
+            self._add_host_to_composed_groups(constructable_config_groups, hostvars, inventory_hostname, strict=constructable_config_strict)
+            self._add_host_to_keyed_groups(constructable_config_keyed_groups, hostvars, inventory_hostname, strict=constructable_config_strict)
 
     # FUTURE: fix underlying inventory stuff to allow us to quickly access known groupvars from reconciled host
     def _filter_host(self, filter, inventory_hostname, hostvars):
@@ -426,9 +476,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
 
         for preference in hostnames:
             if preference == 'default':
-                return host.default_inventory_hostname
+                return host.get("default_inventory_hostname")
             try:
-                hostname = self._compose(preference, host.hostvars)
+                hostname = self._compose(preference, host.get("hostvars"))
             except Exception as e:  # pylint: disable=broad-except
                 if strict:
                     raise AnsibleError("Could not compose %s as hostnames - %s" % (preference, to_native(e)))
