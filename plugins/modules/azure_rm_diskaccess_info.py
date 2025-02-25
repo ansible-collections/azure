@@ -56,7 +56,6 @@ EXAMPLES = '''
     tags:
       - key1
       - key2
-
 '''
 
 RETURN = '''
