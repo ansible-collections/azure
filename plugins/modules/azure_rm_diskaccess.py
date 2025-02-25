@@ -34,7 +34,29 @@ options:
     extended_location:
         description:
             - The extended location where the disk access will be created.
+        type: dict
+        suboptions:
+            name:
+                description:
+                    - The name of the extended location.
+                type: str
+                required: true
+            type:
+                description:
+                    - The type of the extended location.
+                type: str
+                default: EdgeZone
+                choices:
+                    - EdgeZone
+    state:
+        description:
+            - State of the disk access.
+            - Use C(present) to create or update a disk access and use C(absent) to delete.
         type: str
+        default: present
+        choices:
+            - present
+            - absent
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -50,13 +72,24 @@ EXAMPLES = '''
   azure_rm_diskaccess:
     resource_group: myRG
     name: testaccess
+    location: westus2
+
+- name: Create a new disk access
+  azure_rm_diskaccess:
+    resource_group: myRG
+    name: testaccess
+    location: westus
+    extended_location:
+      name: losangeles
+      type: EdgeZone
+    tags:
+      key1: value1
 
 - name: Delete the disk access
   azure_rm_diskaccess:
     resource_group: myRG
     name: testaccess
     state: absent
-
 '''
 
 RETURN = '''
@@ -114,6 +147,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
 except ImportError:
     pass
 
@@ -136,8 +170,8 @@ class AzureRMDiskAccess(AzureRMModuleBase):
             extended_location=dict(
                 type='dict',
                 options=dict(
-                    name=dict(type='str'),
-                    type=dict(type='str'),
+                    name=dict(type='str', required=True),
+                    type=dict(type='str', default='EdgeZone', choices=['EdgeZone']),
                 )
             ),
             state=dict(
@@ -171,6 +205,9 @@ class AzureRMDiskAccess(AzureRMModuleBase):
 
         if self.state == 'present':
             if response is not None:
+                if self.extended_location is not None and self.extended_location.get('name') != response['extended_location'].get('name'):
+                    self.fail("Extended location cannot be changed")
+
                 update_tags, self.tags = self.update_tags(response.get('tags'))
                 if update_tags:
                     changed = True
@@ -203,22 +240,29 @@ class AzureRMDiskAccess(AzureRMModuleBase):
 
     def create_or_update(self):
         try:
-            return self.to_dict(self.disk_client.disk_accesses.begin_create_or_update(self.resource_group, self.name, dict(tags=self.tags,
-                                                                                      location=self.location,
-                                                                                      extended_location=self.extended_location)
-                                                                                      ))
+            poller = self.disk_client.disk_accesses.begin_create_or_update(self.resource_group, self.name, dict(tags=self.tags,
+                                                                                                                location=self.location,
+                                                                                                                extended_location=self.extended_location)
+                                                                          )
+            if isinstance(poller, LROPoller):
+                response = self.get_poller_result(poller)
+                return self.to_dict(response)
+
         except Exception as ec:
             self.fail('Error when create disk access {0}: {1}'.format(self.name, ec))
 
     def update_diskaccess(self):
         try:
-            return self.to_dict(self.disk_client.disk_accesses.begin_update(self.resource_group, self.name, dict(tags=self.tags)))
+            poller = self.disk_client.disk_accesses.begin_update(self.resource_group, self.name, dict(tags=self.tags))
+            if isinstance(poller, LROPoller):
+                response = self.get_poller_result(poller)
+                return self.to_dict(response)
         except Exception as ec:
             self.fail('Error when update disk access {0}: {1}'.format(self.name, ec))
 
     def delete_diskaccess(self):
         try:
-            return self.disk_client.disk_accesses.begin_delete(self.resource_group, self.name)
+            self.disk_client.disk_accesses.begin_delete(self.resource_group, self.name)
         except Exception as ec:
             self.fail('Error when delete disk access {0}: {1}'.format(self.name, ec))
 
@@ -238,7 +282,8 @@ class AzureRMDiskAccess(AzureRMModuleBase):
             type=item.type,
             location = item.location,
             provisioning_state=item.provisioning_state,
-            extended_location=dict()
+            extended_location=dict(),
+            tags=item.tags
         )
         if item.extended_location is not None:
             disk_access['extended_location']['name'] = item.extended_location.name

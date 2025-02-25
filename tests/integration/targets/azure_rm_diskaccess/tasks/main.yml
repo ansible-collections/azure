@@ -1,0 +1,89 @@
+- name: Set varialbles
+  ansible.builtin.set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+
+- name: Create a new disk access (Checkmode Test)
+  azure_rm_diskaccess:
+    resource_group: "{{ resource_group }}"
+    name: 'test{{ rpfx }}'
+    location: westus
+    extended_location:
+      name: losangeles
+      type: "EdgeZone"
+    tags:
+      key1: value1
+  check_mode: true
+
+- name: Create a new disk access
+  azure_rm_diskaccess:
+    resource_group: "{{ resource_group }}"
+    name: 'test{{ rpfx }}'
+    location: westus
+    extended_location:
+      name: losangeles
+      type: "EdgeZone"
+    tags:
+      key1: value1
+  register: output
+
+- name: Assert the disk access created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create a new disk access(Idempotent Test)
+  azure_rm_diskaccess:
+    resource_group: "{{ resource_group }}"
+    name: 'test{{ rpfx }}'
+    location: westus
+    extended_location:
+      name: losangeles
+      type: "EdgeZone"
+    tags:
+      key1: value1
+  register: output
+
+- name: Assert the disk access no change
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Update the disk access
+  azure_rm_diskaccess:
+    resource_group: "{{ resource_group }}"
+    name: 'test{{ rpfx }}'
+    location: westus
+    extended_location:
+      name: losangeles
+      type: "EdgeZone"
+    tags:
+      key2: value2
+  register: output
+
+- name: Assert the disk access updated
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Get the disk access facts
+  azure_rm_diskaccess_info:
+    resource_group: "{{ resource_group }}"
+    name: 'test{{ rpfx }}'
+  register: output
+
+- name: Assert the disk access facts
+  ansible.builtin.assert:
+    that:
+      - output.disk_accesses[0].tags | length == 2
+
+- name: Delete the disk access
+  azure_rm_diskaccess:
+    resource_group: "{{ resource_group }}"
+    name: 'test{{ rpfx }}'
+    state: absent
+  register: output
+
+- name: Assert the disk access deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed

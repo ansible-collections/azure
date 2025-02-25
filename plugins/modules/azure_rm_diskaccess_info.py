@@ -188,7 +188,8 @@ class AzureRMDiskAccessInfo(AzureRMModuleBase):
             type=item.type,
             location = item.location,
             provisioning_state=item.provisioning_state,
-            extended_location=dict()
+            extended_location=dict(),
+            tags=item.tags
         )
         if item.extended_location is not None:
             disk_access['extended_location']['name'] = item.extended_location.name
