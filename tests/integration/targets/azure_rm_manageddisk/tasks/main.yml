@@ -51,7 +51,6 @@
   azure_rm_diskaccess:
     resource_group: "{{ resource_group }}"
     name: 'test{{ rpfx }}'
-    location: westus
   register: access_output
 
 - name: Create new managed disk succesfully
