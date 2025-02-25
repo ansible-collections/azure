@@ -47,20 +47,13 @@
       - output.changed
       - output.state
 
-- name: Create a new disk access
-  azure_rm_diskaccess:
-    resource_group: "{{ resource_group }}"
-    name: 'test{{ rpfx }}'
-  register: access_output
-
 - name: Create new managed disk succesfully
   azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}1"
     storage_account_type: "Standard_LRS"
     disk_size_gb: 1
-    network_access_policy: AllowPrivate
-    disk_access_id: "{{ access_output.state.id }}"
+    network_access_policy: DenyAll
     public_network_access: Disabled
     tags:
       testing: testing
@@ -311,6 +304,28 @@
       - output.ansible_info.azure_managed_disk[0].disk_m_bps_read_write == 60
       - output.ansible_info.azure_managed_disk[0].disk_iops_read_write == 300
 
+- name: Create a new disk access
+  azure_rm_diskaccess:
+    resource_group: "{{ resource_group }}"
+    name: 'test{{ rpfx }}'
+  register: access_output
+
+- name: Create new managed disk succesfully
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}7"
+    storage_account_type: "Standard_LRS"
+    disk_size_gb: 1
+    network_access_policy: AllowPrivate
+    disk_access_id: "{{ access_output.state.id }}"
+    public_network_access: Disabled
+  register: output
+
+- name: Assert status succeeded and results include an Id value
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
 - name: Delete managed disk (Check Mode)
   azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
@@ -338,6 +353,7 @@
     - 4
     - 5
     - 6
+    - 7
 
 - name: Delete virtual machine
   azure_rm_virtualmachine:
