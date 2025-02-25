@@ -70,7 +70,7 @@ disk_accesses:
                 - Resource ID.
             type: str
             returned: always
-            sample: 
+            sample: "/subscriptions/xxxx/resourceGroups/myRG/providers/Microsoft.Compute/diskAccesses/diskacc"
         resource_group:
             description:
                 - Resource group name.
@@ -185,7 +185,7 @@ class AzureRMDiskAccessInfo(AzureRMModuleBase):
             name=item.name,
             id=item.id,
             type=item.type,
-            location = item.location,
+            location=item.location,
             provisioning_state=item.provisioning_state,
             extended_location=dict(),
             tags=item.tags

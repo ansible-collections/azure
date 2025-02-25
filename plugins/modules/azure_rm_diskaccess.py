@@ -242,8 +242,7 @@ class AzureRMDiskAccess(AzureRMModuleBase):
         try:
             poller = self.disk_client.disk_accesses.begin_create_or_update(self.resource_group, self.name, dict(tags=self.tags,
                                                                                                                 location=self.location,
-                                                                                                                extended_location=self.extended_location)
-                                                                          )
+                                                                                                                extended_location=self.extended_location))
             if isinstance(poller, LROPoller):
                 response = self.get_poller_result(poller)
                 return self.to_dict(response)
@@ -280,7 +279,7 @@ class AzureRMDiskAccess(AzureRMModuleBase):
             name=item.name,
             id=item.id,
             type=item.type,
-            location = item.location,
+            location=item.location,
             provisioning_state=item.provisioning_state,
             extended_location=dict(),
             tags=item.tags

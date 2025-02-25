@@ -47,13 +47,21 @@
       - output.changed
       - output.state
 
+- name: Create a new disk access
+  azure_rm_diskaccess:
+    resource_group: "{{ resource_group }}"
+    name: 'test{{ rpfx }}'
+    location: westus
+  register: access_output
+
 - name: Create new managed disk succesfully
   azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}1"
     storage_account_type: "Standard_LRS"
     disk_size_gb: 1
-    network_access_policy: DenyAll
+    network_access_policy: AllowPrivate
+    disk_access_id: "{{ access_output.state.id }}"
     public_network_access: Disabled
     tags:
       testing: testing
