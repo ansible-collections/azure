@@ -244,6 +244,18 @@ EXAMPLES = '''
     os_type: windows
     storage_account_type: Premium_LRS
 
+- name: Create managed disk with I(create_option=upload)
+  azure_rm_manageddisk:
+    resource_group: myResourceGroup
+    name: mymanageddisk
+    storage_account_type: "Standard_LRS"
+    #disk_size_gb: 1024
+    upload_size_bytes: 20972032
+    location: westus
+    network_access_policy: DenyAll
+    public_network_access: Disabled
+    create_option: upload
+
 - name: Mount the managed disk to VM
   azure_rm_manageddisk:
     name: mymanageddisk
@@ -453,7 +465,23 @@ def managed_disk_to_dict(managed_disk):
         tier=managed_disk.tier,
         public_network_access=managed_disk.public_network_access,
         network_access_policy=managed_disk.network_access_policy,
-        disk_access_id=managed_disk.disk_access_id
+        disk_access_id=managed_disk.disk_access_id,
+        storage_account_id=create_data.storage_account_id,
+        upload_size_bytes=create_data.upload_size_bytes,
+        logical_sector_size=create_data.logical_sector_size,
+        security_data_uri=create_data.security_data_uri,
+        performance_plus=create_data.performance_plus,
+        elastic_san_resource_id=create_data.elastic_san_resource_id,
+        gallery_image_reference=dict(
+            id=create_data.gallery_image_reference.id,
+            shared_gallery_image_id=create_data.gallery_image_reference.shared_gallery_image_id,
+            community_gallery_image_id=create_data.gallery_image_reference.community_gallery_image_id
+        ) if create_data.gallery_image_reference is not None else None,
+        image_reference=dict(
+            id=create_data.gallery_image_reference.id,
+            shared_gallery_image_id=create_data.gallery_image_reference.shared_gallery_image_id,
+            community_gallery_image_id=create_data.gallery_image_reference.community_gallery_image_id
+        ) if create_data.image_reference is not None else None
     )
 
 
@@ -484,7 +512,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ),
             create_option=dict(
                 type='str',
-                choices=['empty', 'import', 'copy']
+                choices=['empty', 'import', 'copy', 'upload']
             ),
             storage_account_id=dict(
                 type='str'
@@ -551,12 +579,15 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ),
             disk_access_id=dict(
                 type='str'
-            )
+            ),
+            performance_plus=dict(type='bool'),
+            upload_size_bytes=dict(type='int')
         )
         required_if = [
             ('create_option', 'import', ['source_uri', 'storage_account_id']),
             ('create_option', 'copy', ['source_uri']),
             ('create_option', 'empty', ['disk_size_gb']),
+            ('create_option', 'upload', ['upload_size_bytes']),
             ('network_access_policy', 'AllowPrivate', ['disk_access_id'])
         ]
         self.results = dict(
@@ -588,6 +619,8 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         self.network_access_policy = None
         self.write_accelerator_enabled = None
         self.disk_access_id = None
+        self.performance_plus = None
+        self.upload_size_bytes = None
 
         mutually_exclusive = [['managed_by_extended', 'managed_by']]
 
@@ -754,7 +787,6 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             storage_account_type = self.disk_models.DiskSku(name=self.storage_account_type)
             disk_params['sku'] = storage_account_type
         disk_params['disk_size_gb'] = self.disk_size_gb
-        creation_data['create_option'] = self.disk_models.DiskCreateOption.empty
         if self.create_option == 'import':
             creation_data['create_option'] = self.disk_models.DiskCreateOption.import_enum
             creation_data['source_uri'] = self.source_uri
@@ -762,6 +794,12 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         elif self.create_option == 'copy':
             creation_data['create_option'] = self.disk_models.DiskCreateOption.copy
             creation_data['source_resource_id'] = self.source_uri
+        elif self.create_option == 'upload':
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.upload
+            creation_data['performance_plus'] = self.performance_plus
+            creation_data['upload_size_bytes'] = self.upload_size_bytes
+        else:
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.empty
         if self.os_type:
             disk_params['os_type'] = self.disk_models.OperatingSystemTypes(self.os_type.capitalize())
         else:

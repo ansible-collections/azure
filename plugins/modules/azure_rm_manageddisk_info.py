@@ -323,7 +323,23 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             tier=managed_disk.tier,
             network_access_policy=managed_disk.network_access_policy,
             public_network_access=managed_disk.public_network_access,
-            disk_access_id=managed_disk.disk_access_id
+            disk_access_id=managed_disk.disk_access_id,
+            storage_account_id=create_data.storage_account_id,
+            upload_size_bytes=create_data.upload_size_bytes,
+            logical_sector_size=create_data.logical_sector_size,
+            security_data_uri=create_data.security_data_uri,
+            performance_plus=create_data.performance_plus,
+            elastic_san_resource_id=create_data.elastic_san_resource_id,
+            gallery_image_reference=dict(
+                id=create_data.gallery_image_reference.id,
+                shared_gallery_image_id=create_data.gallery_image_reference.shared_gallery_image_id,
+                community_gallery_image_id=create_data.gallery_image_reference.community_gallery_image_id
+            ) if create_data.gallery_image_reference is not None else None,
+            image_reference=dict(
+                id=create_data.gallery_image_reference.id,
+                shared_gallery_image_id=create_data.gallery_image_reference.shared_gallery_image_id,
+                community_gallery_image_id=create_data.gallery_image_reference.community_gallery_image_id
+            ) if create_data.image_reference is not None else None
         )
 
 
