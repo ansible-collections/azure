@@ -552,7 +552,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         new_result['idenity'] = result.get('identity')
         new_result['capacity_reservation'] = dict()
         if result.get('capacity_reservation') is not None:
-            new_result['capacity_reservation']['capacity_reservation_group'] = result.get('capacity_reservation').as_dict()
+            new_result['capacity_reservation']['capacity_reservation_group'] = result.get('capacity_reservation', {}).get('capacity_reservation_group')
         os_profile = result.get('os_profile')
         if os_profile is not None:
             new_result['admin_username'] = os_profile.get('admin_username')
