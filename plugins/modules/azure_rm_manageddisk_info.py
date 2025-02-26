@@ -196,6 +196,40 @@ azure_managed_disk:
             type: str
             returned: always
             sample: '/subscriptions/*********/resourceGroups/myRG/providers/Microsoft.Compute/diskAccesses/diskacc'
+        performance_plus:                                                                                                           description:                                                                                                                - The flag of the performance target of the disk deployed.                                                          type: bool
+            returned: always                                                                                                        sample: False                                                                                                       upload_size_bytes:                                                                                                          description:                                                                                                                - This is the size of the contents of the upload including the VHD footer.                                          type: int
+            returned: always
+            sample: None
+        disk_image_reference:
+            description:
+                - Disk source information for PIR or user images or Gallery Image.
+            type: dict
+            returned: always
+            sample: None
+        logical_sector_size:
+            description:
+                - Logical sector size in bytes for Ultra disks.
+            type: int
+            returned: always
+            sample: None
+        security_data_uri:
+            description:
+                - This is the URI of a blob to be imported into VM guest state.
+            type: str
+            returned: always
+            sample: None
+        elastic_san_resource_id:
+            description:
+                - This is the ARM id of the source elastic san volume snapshot.
+            type: str
+            returned: always
+            sample: None
+        source_resource_id:
+            description:
+                - This is the ARM id of the source snapshot or disk.
+            type: str
+            returned: always
+            sample: None
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase

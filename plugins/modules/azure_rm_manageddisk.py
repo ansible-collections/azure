@@ -73,6 +73,13 @@ options:
             - empty
             - import
             - copy
+            - upload
+            - fromimage
+            - restore
+            - copystart
+            - importsecure
+            - uploadpreparedsecure
+            - copyfromsansnapshot
     storage_account_id:
         description:
             - The full path to the storage account the image is to be imported from.
@@ -218,6 +225,52 @@ options:
         description:
             - ARM ID of the DiskAccess resource for using private endpoints on disks.
         type: str
+    performance_plus:
+        description:
+            - Set this flag to true to get a boost on the performance target of the disk deployed, see here on the respective performance target.
+            - This flag can only be set on disk creation time and cannot be disabled after enabled.
+        type: bool
+    upload_size_bytes:
+        description:
+            - If I(create_option=upload), this is the size of the contents of the upload including the VHD footer.
+            - This value should be between 20972032 (20 MiB + 512 bytes for the VHD footer) and 35183298347520 bytes (32 TiB + 512 bytes for the VHD footer).
+        type: int
+    disk_image_reference:
+        description:
+            - Disk source information for PIR or user images or Gallery Image.
+        type: dict
+        suboptions:
+            id:
+                description:
+                    - A relative uri containing either a Platform Image Repository, user image, or Azure Compute Gallery image reference.
+                type: str
+            shared_gallery_image_id:
+                description:
+                    - A relative uri containing a direct shared Azure Compute Gallery image reference.
+                type: str
+            community_gallery_image_id:
+                description:
+                    - A relative uri containing a community Azure Compute Gallery image reference.
+                type: str
+    logical_sector_size:
+        description:
+            - Logical sector size in bytes for Ultra disks.
+            - Supported values are 512 ad 4096. 4096 is the default.
+        type: int
+        default: 4096
+    security_data_uri:
+        description:
+            - If I(create_option=importsecure), this is the URI of a blob to be imported into VM guest state.
+        type: str
+    elastic_san_resource_id:
+        description:
+            - Required if I(create_option=copyfromsansnapshot).
+            - This is the ARM id of the source elastic san volume snapshot.
+        type: str
+    source_resource_id:
+        description:
+            - If I(create_option=copy), this is the ARM id of the source snapshot or disk.
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -249,9 +302,7 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: mymanageddisk
     storage_account_type: "Standard_LRS"
-    #disk_size_gb: 1024
     upload_size_bytes: 20972032
-    location: westus
     network_access_policy: DenyAll
     public_network_access: Disabled
     create_option: upload
@@ -416,6 +467,48 @@ state:
             type: str
             returned: always
             sample: '/subscriptions/*********/resourceGroups/myRG/providers/Microsoft.Compute/diskAccesses/diskacc'
+        performance_plus:
+            description:
+                - The flag of the performance target of the disk deployed.
+            type: bool
+            returned: always
+            sample: False
+        upload_size_bytes:
+            description:
+                - This is the size of the contents of the upload including the VHD footer.
+            type: int
+            returned: always
+            sample: None
+        disk_image_reference:
+            description:
+                - Disk source information for PIR or user images or Gallery Image.
+            type: dict
+            returned: always
+            sample: None
+        logical_sector_size:
+            description:
+                - Logical sector size in bytes for Ultra disks.
+            type: int
+            returned: always
+            sample: None
+        security_data_uri:
+            description:
+                - This is the URI of a blob to be imported into VM guest state.
+            type: str
+            returned: always
+            sample: None
+        elastic_san_resource_id:
+            description:
+                - This is the ARM id of the source elastic san volume snapshot.
+            type: str
+            returned: always
+            sample: None
+        source_resource_id:
+            description:
+                - This is the ARM id of the source snapshot or disk.
+            type: str
+            returned: always
+            sample: None
 changed:
     description:
         - Whether or not the resource has changed.
@@ -512,7 +605,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ),
             create_option=dict(
                 type='str',
-                choices=['empty', 'import', 'copy', 'upload']
+                choices=['empty', 'import', 'copy', 'upload', 'fromimage', 'restore', 'copystart', 'importsecure', 'uploadpreparedsecure', 'copyfromsansnapshot']
             ),
             storage_account_id=dict(
                 type='str'
@@ -581,13 +674,35 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 type='str'
             ),
             performance_plus=dict(type='bool'),
-            upload_size_bytes=dict(type='int')
+            upload_size_bytes=dict(type='int'),
+            disk_image_reference=dict(
+                type='dict',
+                options=dict(
+                    id=dict(type='str'),
+                    shared_gallery_image_id=dict(type='str'),
+                    community_gallery_image_id=dict(type='str')
+                )
+            ),
+            logical_sector_size=dict(
+                type='int'
+            ),
+            security_data_uri=dict(
+                type='str'
+            ),
+            elastic_san_resource_id=dict(
+                type='str'
+            ),
+            source_resource_id=dict(
+                type='str'
+            )
         )
         required_if = [
             ('create_option', 'import', ['source_uri', 'storage_account_id']),
-            ('create_option', 'copy', ['source_uri']),
+            ('create_option', 'copy', ['source_resource_id']),
             ('create_option', 'empty', ['disk_size_gb']),
             ('create_option', 'upload', ['upload_size_bytes']),
+            ('create_option', 'fromimage', ['disk_image_reference']),
+            ('create_option', 'copyfromsansnapshot', ['elastic_san_resource_id']),
             ('network_access_policy', 'AllowPrivate', ['disk_access_id'])
         ]
         self.results = dict(
@@ -621,6 +736,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         self.disk_access_id = None
         self.performance_plus = None
         self.upload_size_bytes = None
+        self.source_resource_id = None
 
         mutually_exclusive = [['managed_by_extended', 'managed_by']]
 
@@ -787,17 +903,45 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             storage_account_type = self.disk_models.DiskSku(name=self.storage_account_type)
             disk_params['sku'] = storage_account_type
         disk_params['disk_size_gb'] = self.disk_size_gb
+
         if self.create_option == 'import':
             creation_data['create_option'] = self.disk_models.DiskCreateOption.import_enum
             creation_data['source_uri'] = self.source_uri
             creation_data['storage_account_id'] = self.storage_account_id
         elif self.create_option == 'copy':
             creation_data['create_option'] = self.disk_models.DiskCreateOption.copy
-            creation_data['source_resource_id'] = self.source_uri
+            creation_data['source_resource_id'] = self.source_resource_id
         elif self.create_option == 'upload':
             creation_data['create_option'] = self.disk_models.DiskCreateOption.upload
             creation_data['performance_plus'] = self.performance_plus
             creation_data['upload_size_bytes'] = self.upload_size_bytes
+        elif self.create_option == 'fromimage':
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.FromImage
+            if self.disk_image_reference.get('id') is not None:
+                image_reference = self.disk_models.ImageDiskReference(id=self.disk_image_reference.get('id'))
+                creation_data['image_reference'] = image_reference
+            else:
+                gallery_image_reference = self.disk_models.ImageDiskReference(shared_gallery_image_id=self.disk_image_reference.get('shared_gallery_image_id'),
+                                                                              community_gallery_image_id=self.disk_image_reference.get('community_gallery_image_id'))
+                creation_data['gallery_image_reference'] = gallery_image_reference
+
+        elif self.create_option == 'restore':
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.Restore
+            pass
+        elif self.create_option == 'copystart':
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.CopyStart
+            pass
+        elif self.create_option == 'importsecure':
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.ImportSecure
+            creation_data['source_uri'] = self.source_uri
+            creation_data['storage_account_id'] = self.storage_account_id
+            creation_data['security_data_uri'] = self.security_data_uri
+        elif self.create_option == 'uploadpreparedsecure':
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.UploadPreparedSecure
+            creation_data['upload_size_bytes'] = self.upload_size_bytes
+        elif self.create_option == 'copyfromsansnapshot':
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.CopyFromSanSnapshot
+            creation_data['elastic_san_resource_id'] = self.elastic_san_resource_id
         else:
             creation_data['create_option'] = self.disk_models.DiskCreateOption.empty
         if self.os_type:
