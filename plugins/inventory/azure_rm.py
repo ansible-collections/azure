@@ -258,20 +258,39 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         self._include_filters = self.get_option('include_host_filters')
 
         # Load results from Cache if requested
-        result_was_cached, results = self.get_cached_result(path, cache)
+        self.load_cache_plugin()
+        cache_key = self.get_cache_key(path)
 
-        if not result_was_cached:
+        # cache may be True or False at this point to indicate if the inventory is being refreshed
+        # get the user's cache option too to see if we should save the cache if it is changing
+        user_cache_setting = self.get_option('cache')
+
+        # read if the user has caching enabled and the cache isn't being refreshed
+        attempt_to_read_cache = user_cache_setting and cache
+        # update if the user has caching enabled and the cache is being refreshed;
+        # update this value to True if the cache has expired below
+        cache_needs_update = user_cache_setting and not cache
+
+        # attempt to read the cache if inventory isn't being refreshed and the user has caching enabled
+        if attempt_to_read_cache:
+            try:
+                results = self._cache[cache_key]
+            except KeyError:
+                # This occurs if the cache_key is not in the cache or if the cache_key
+                # expired, so the cache needs to be updated
+                cache_needs_update = True
+        if not attempt_to_read_cache or cache_needs_update:
+            # parse the provided inventory source
             try:
                 self._credential_setup()
                 self._get_hosts()
                 results = self._serialize(self._hosts)
             except Exception:
                 raise
+        if cache_needs_update:
+            self._cache[cache_key] = results
 
         self._populate(results)
-
-        # Store results to Cache if requested
-        self.update_cached_result(path, cache, results)
 
     def _serialize(self, hosts):
         results = []
@@ -279,37 +298,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             results.append(dict(default_inventory_hostname=h.default_inventory_hostname,
                                 hostvars=h.hostvars))
         return results
-
-    def get_cached_result(self, path, cache):
-        # false when refresh_cache or --flush-cache is used
-        if not cache:
-            return False, None
-        # get the user-specified directive
-        if not self.get_option("cache"):
-            return False, None
-
-        cache_key = self.get_cache_key(path)
-        try:
-            cached_value = self._cache[cache_key]
-        except KeyError:
-            # if cache expires or cache file doesn"t exist
-            return False, None
-
-        return True, cached_value
-
-    def update_cached_result(self, path, cache, result):
-        if not cache:
-            return
-
-        cache_key = self.get_cache_key(path)
-        # We weren't explicitly told to flush the cache, and there's already a cache entry,
-        # this means that the result we're being passed came from the cache.  As such we don't
-        # want to "update" the cache as that could reset a TTL on the cache entry.
-        if cache and cache_key in self._cache:
-            return
-
-        self._cache[cache_key] = result
-        self.set_cache_plugin()
 
     def _credential_setup(self):
         auth_source = environ.get('ANSIBLE_AZURE_AUTH_SOURCE', None) or self.get_option('auth_source')
