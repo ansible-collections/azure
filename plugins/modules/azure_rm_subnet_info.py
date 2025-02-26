@@ -260,15 +260,15 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
         response = None
         results = []
         try:
-            response = self.network_client.subnets.get(resource_group_name=self.resource_group,
-                                                       virtual_network_name=self.virtual_network_name)
+            response = self.network_client.subnets.list(resource_group_name=self.resource_group,
+                                                        virtual_network_name=self.virtual_network_name)
             self.log("Response : {0}".format(response))
         except ResourceNotFoundError as e:
             self.fail('Could not get facts for Subnet.')
 
         if response is not None:
             for item in response:
-                results.append(self.format_item(item))
+                results.append(self.format_response(item))
 
         return results
 
