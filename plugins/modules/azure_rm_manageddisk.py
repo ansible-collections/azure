@@ -214,6 +214,10 @@ options:
         description:
             - Specifies whether writeAccelerator should be enabled or disabled on the disk.
         type: bool
+    disk_access_id:
+        description:
+            - ARM ID of the DiskAccess resource for using private endpoints on disks.
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -394,6 +398,12 @@ state:
             type: str
             returned: always
             sample: Enabled
+        disk_access_id:
+            description:
+                - ARM ID of the DiskAccess resource for using private endpoints on disks.
+            type: str
+            returned: always
+            sample: '/subscriptions/*********/resourceGroups/myRG/providers/Microsoft.Compute/diskAccesses/diskacc'
 changed:
     description:
         - Whether or not the resource has changed.
@@ -442,7 +452,8 @@ def managed_disk_to_dict(managed_disk):
         disk_m_bps_read_only=managed_disk.disk_m_bps_read_only,
         tier=managed_disk.tier,
         public_network_access=managed_disk.public_network_access,
-        network_access_policy=managed_disk.network_access_policy
+        network_access_policy=managed_disk.network_access_policy,
+        disk_access_id=managed_disk.disk_access_id
     )
 
 
@@ -537,12 +548,16 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             network_access_policy=dict(
                 type='str',
                 choices=['AllowAll', 'AllowPrivate', 'DenyAll']
+            ),
+            disk_access_id=dict(
+                type='str'
             )
         )
         required_if = [
             ('create_option', 'import', ['source_uri', 'storage_account_id']),
             ('create_option', 'copy', ['source_uri']),
-            ('create_option', 'empty', ['disk_size_gb'])
+            ('create_option', 'empty', ['disk_size_gb']),
+            ('network_access_policy', 'AllowPrivate', ['disk_access_id'])
         ]
         self.results = dict(
             changed=False,
@@ -572,6 +587,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         self.public_network_access = None
         self.network_access_policy = None
         self.write_accelerator_enabled = None
+        self.disk_access_id = None
 
         mutually_exclusive = [['managed_by_extended', 'managed_by']]
 
@@ -612,6 +628,8 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 self.public_network_access = disk_instance.get('public_network_access')
             if self.network_access_policy is None:
                 self.network_access_policy = disk_instance.get('network_access_policy')
+            if self.disk_access_id is None:
+                self.disk_access_id = disk_instance.get('disk_access_id')
         result = disk_instance
 
         # need create or update
@@ -764,6 +782,8 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             disk_params['network_access_policy'] = self.network_access_policy
         if self.public_network_access is not None:
             disk_params['public_network_access'] = self.public_network_access
+        if self.disk_access_id is not None:
+            disk_params['disk_access_id'] = self.disk_access_id
         disk_params['creation_data'] = creation_data
         return disk_params
 
@@ -820,6 +840,12 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             resp = True
         if self.public_network_access is not None and found_disk['public_network_access'] != self.public_network_access:
             resp = True
+        if self.disk_access_id is not None:
+            if found_disk['disk_access_id'] is not None:
+                if found_disk['disk_access_id'].lower() != self.disk_access_id.lower():
+                    resp = True
+            else:
+                resp = True
         return resp
 
     def delete_managed_disk(self):

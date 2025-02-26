@@ -190,6 +190,12 @@ azure_managed_disk:
             type: str
             returned: always
             sample: Enabled
+        disk_access_id:
+            description:
+                - ARM ID of the DiskAccess resource for using private endpoints on disks.
+            type: str
+            returned: always
+            sample: '/subscriptions/*********/resourceGroups/myRG/providers/Microsoft.Compute/diskAccesses/diskacc'
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -316,7 +322,8 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             disk_m_bps_read_only=managed_disk.disk_m_bps_read_only,
             tier=managed_disk.tier,
             network_access_policy=managed_disk.network_access_policy,
-            public_network_access=managed_disk.public_network_access
+            public_network_access=managed_disk.public_network_access,
+            disk_access_id=managed_disk.disk_access_id
         )
 
 
