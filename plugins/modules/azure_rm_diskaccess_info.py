@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_diskaccess_info
-version_added: '3.2.0'
+version_added: '3.3.0'
 short_description: Show the details for the disk access
 description:
     - Get or list the details for the disk access.
