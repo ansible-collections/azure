@@ -7,6 +7,22 @@ This collection provides a series of Ansible modules and plugins for interacting
 
 Documentation of individual modules is [available in the Ansible docs site](https://docs.ansible.com/ansible/latest/collections/azure/azcollection/index.html#plugins-in-azure-azcollection)
 
+## Included content
+
+See the complete list of collection content in the [Plugin Index](https://docs.ansible.com/ansible/latest/collections/azure/azcollection/index.html#plugins-in-azure-azcollection).
+
+## Communication
+
+* Join the Ansible forum:
+  * [Get Help](https://forum.ansible.com/c/help/6): get help or help others. Please use appropriate tags, for example `cloud`.
+  * [Social Spaces](https://forum.ansible.com/c/chat/4): gather and interact with fellow enthusiasts.
+  * [News & Announcements](https://forum.ansible.com/c/news/5): track project-wide announcements including social events.
+
+* The Ansible [Bullhorn newsletter](https://docs.ansible.com/ansible/devel/community/communication.html#the-bullhorn): used to announce releases and important changes.
+
+For more information about communication, see the [Ansible communication guide](https://docs.ansible.com/ansible/devel/community/communication.html).
+
+
 ## Installation
 
 It is recommended to run ansible in [Virtualenv](https://virtualenv.pypa.io/en/latest/)
