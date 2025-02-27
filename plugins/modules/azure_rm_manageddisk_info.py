@@ -238,6 +238,24 @@ azure_managed_disk:
             type: str
             returned: always
             sample: None
+        security_profile:
+            description:
+                - The security related information for the resource.
+            type: complex
+            contains:
+                security_type:
+                    description:
+                        - Specifies the SecurityType of the VM.
+                    type: str
+                    returned: when-used
+                    sample: TrustedLaunch
+                secure_vm_disk_encryption_set_id:
+                    description:
+                        -  ResourceId of the disk encryption set associated to Confidential VM supported disk encrypted with customer managed key.
+                    type: str
+                    returned: when-used
+                    sample: None
+
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -366,6 +384,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             network_access_policy=managed_disk.network_access_policy,
             public_network_access=managed_disk.public_network_access,
             disk_access_id=managed_disk.disk_access_id,
+            source_resource_id = create_data.source_resource_id,
             storage_account_id=create_data.storage_account_id,
             upload_size_bytes=create_data.upload_size_bytes,
             logical_sector_size=create_data.logical_sector_size,
@@ -378,10 +397,14 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
                 community_gallery_image_id=create_data.gallery_image_reference.community_gallery_image_id
             ) if create_data.gallery_image_reference is not None else None,
             image_reference=dict(
-                id=create_data.gallery_image_reference.id,
-                shared_gallery_image_id=create_data.gallery_image_reference.shared_gallery_image_id,
-                community_gallery_image_id=create_data.gallery_image_reference.community_gallery_image_id
-            ) if create_data.image_reference is not None else None
+                id=create_data.image_reference.id,
+                shared_gallery_image_id=create_data.image_reference.shared_gallery_image_id,
+                community_gallery_image_id=create_data.image_reference.community_gallery_image_id
+            ) if create_data.image_reference is not None else None,
+            security_profile=dict(
+                security_type=managed_disk.security_profile.security_type,
+                secure_vm_disk_encryption_set_id=managed_disk.security_profile.secure_vm_disk_encryption_set_id
+            ) if managed_disk.security_profile is not None else None
         )
 
 
