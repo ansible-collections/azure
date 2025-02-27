@@ -704,6 +704,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ('create_option', 'empty', ['disk_size_gb']),
             ('create_option', 'upload', ['upload_size_bytes']),
             ('create_option', 'fromimage', ['disk_image_reference']),
+            ('create_option', 'importsecure', ['security_data_uri']),
             ('create_option', 'copyfromsansnapshot', ['elastic_san_resource_id']),
             ('network_access_policy', 'AllowPrivate', ['disk_access_id'])
         ]
@@ -946,6 +947,8 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             creation_data['elastic_san_resource_id'] = self.elastic_san_resource_id
         else:
             creation_data['create_option'] = self.disk_models.DiskCreateOption.empty
+        creation_data['logical_sector_size'] = self.logical_sector_size
+        creation_data['performance_plus'] = self.performance_plus
         if self.os_type:
             disk_params['os_type'] = self.disk_models.OperatingSystemTypes(self.os_type.capitalize())
         else:
