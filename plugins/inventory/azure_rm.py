@@ -258,7 +258,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         self._include_filters = self.get_option('include_host_filters')
 
         # Load results from Cache if requested
-        self.load_cache_plugin()
         cache_key = self.get_cache_key(path)
 
         # cache may be True or False at this point to indicate if the inventory is being refreshed
