@@ -605,7 +605,8 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ),
             create_option=dict(
                 type='str',
-                choices=['empty', 'import', 'copy', 'upload', 'fromimage', 'restore', 'copystart', 'importsecure', 'uploadpreparedsecure', 'copyfromsansnapshot']
+                choices=['empty', 'import', 'copy', 'upload', 'fromimage', 'restore', 'copystart', 'importsecure',
+                         'uploadpreparedsecure', 'copyfromsansnapshot']
             ),
             storage_account_id=dict(
                 type='str'
@@ -684,7 +685,8 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 )
             ),
             logical_sector_size=dict(
-                type='int'
+                type='int',
+                default=4096
             ),
             security_data_uri=dict(
                 type='str'
@@ -921,9 +923,9 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 image_reference = self.disk_models.ImageDiskReference(id=self.disk_image_reference.get('id'))
                 creation_data['image_reference'] = image_reference
             else:
-                gallery_image_reference = self.disk_models.ImageDiskReference(shared_gallery_image_id=self.disk_image_reference.get('shared_gallery_image_id'),
-                                                                              community_gallery_image_id=self.disk_image_reference.get('community_gallery_image_id'))
-                creation_data['gallery_image_reference'] = gallery_image_reference
+                image_reference = self.disk_models.ImageDiskReference(shared_gallery_image_id=self.disk_image_reference.get('shared_gallery_image_id'),
+                                                                      community_gallery_image_id=self.disk_image_reference.get('community_gallery_image_id'))
+                creation_data['gallery_image_reference'] = image_reference
 
         elif self.create_option == 'restore':
             creation_data['create_option'] = self.disk_models.DiskCreateOption.Restore

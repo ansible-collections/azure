@@ -196,8 +196,16 @@ azure_managed_disk:
             type: str
             returned: always
             sample: '/subscriptions/*********/resourceGroups/myRG/providers/Microsoft.Compute/diskAccesses/diskacc'
-        performance_plus:                                                                                                           description:                                                                                                                - The flag of the performance target of the disk deployed.                                                          type: bool
-            returned: always                                                                                                        sample: False                                                                                                       upload_size_bytes:                                                                                                          description:                                                                                                                - This is the size of the contents of the upload including the VHD footer.                                          type: int
+        performance_plus:
+            description:
+                - The flag of the performance target of the disk deployed.
+            type: bool
+            returned: always
+            sample: False
+        upload_size_bytes:
+            description:
+                - This is the size of the contents of the upload including the VHD footer.
+            type: int
             returned: always
             sample: None
         disk_image_reference:
