@@ -208,7 +208,13 @@ azure_managed_disk:
             type: int
             returned: always
             sample: None
-        disk_image_reference:
+        shared_image_reference:
+            description:
+                - The Gallery Image info.
+            type: dict
+            returned: always
+            sample: None
+        image_reference:
             description:
                 - Disk source information for PIR or user images or Gallery Image.
             type: dict
@@ -372,7 +378,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             network_access_policy=managed_disk.network_access_policy,
             public_network_access=managed_disk.public_network_access,
             disk_access_id=managed_disk.disk_access_id,
-            source_resource_id = create_data.source_resource_id,
+            source_resource_id=create_data.source_resource_id,
             storage_account_id=create_data.storage_account_id,
             upload_size_bytes=create_data.upload_size_bytes,
             logical_sector_size=create_data.logical_sector_size,

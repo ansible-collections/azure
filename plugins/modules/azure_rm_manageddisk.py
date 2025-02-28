@@ -232,7 +232,26 @@ options:
             - If I(create_option=upload), this is the size of the contents of the upload including the VHD footer.
             - This value should be between 20972032 (20 MiB + 512 bytes for the VHD footer) and 35183298347520 bytes (32 TiB + 512 bytes for the VHD footer).
         type: int
-    disk_image_reference:
+    shared_image_reference:
+        description:
+            - Required if creating from a Gallery Image.
+            - The id/sharedGalleryImageId/communityGalleryImageId of the ImageDiskReference
+              will be the ARM id of the shared galley image version from which to create a disk.
+        type: dict
+        suboptions:
+            id:
+                description:
+                    - A relative uri containing either a Platform Image Repository, user image, or Azure Compute Gallery image reference.
+                type: str
+            shared_gallery_image_id:
+                description:
+                    - A relative uri containing a direct shared Azure Compute Gallery image reference.
+                type: str
+            community_gallery_image_id:
+                description:
+                    - A relative uri containing a community Azure Compute Gallery image reference.
+                type: str
+    image_reference:
         description:
             - Disk source information for PIR or user images or Gallery Image.
         type: dict
@@ -340,7 +359,8 @@ EXAMPLES = '''
     network_access_policy: DenyAll
     public_network_access: Disabled
     performance_plus: true
-    source_resource_id: "/subscriptions/xxxx/resourceGroups/testRG/providers/Microsoft.Compute/restorePointCollections/point01/restorePoints/restorepoint01/diskRestorePoints/testVM_OsDisk_1
+    source_resource_id: "/subscriptions/xxxx/resourceGroups/testRG/providers/Microsoft.Compute/
+                         restorePointCollections/point01/restorePoints/restorepoint01/diskRestorePoints/testVM_OsDisk_1"
     create_option: restore
 
 - name: Create managed disk with I(create_option=uploadpreparedsecure)
@@ -527,9 +547,15 @@ state:
             type: int
             returned: always
             sample: None
-        disk_image_reference:
+        image_reference:
             description:
                 - Disk source information for PIR or user images or Gallery Image.
+            type: dict
+            returned: always
+            sample: None
+        shared_image_reference:
+            description:
+                - The Gallery Image info.
             type: dict
             returned: always
             sample: None
@@ -612,7 +638,7 @@ def managed_disk_to_dict(managed_disk):
         public_network_access=managed_disk.public_network_access,
         network_access_policy=managed_disk.network_access_policy,
         disk_access_id=managed_disk.disk_access_id,
-        source_resource_id = create_data.source_resource_id,
+        source_resource_id=create_data.source_resource_id,
         storage_account_id=create_data.storage_account_id,
         upload_size_bytes=create_data.upload_size_bytes,
         logical_sector_size=create_data.logical_sector_size,
@@ -758,7 +784,8 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 options=dict(
                     security_type=dict(
                         type='str',
-                        choices=["TrustedLaunch", "ConfidentialVM_VMGuestStateOnlyEncryptedWithPlatformKey", "ConfidentialVM_DiskEncryptedWithPlatformKey", "ConfidentialVM_DiskEncryptedWithCustomerKey"]
+                        choices=["TrustedLaunch", "ConfidentialVM_VMGuestStateOnlyEncryptedWithPlatformKey",
+                                 "ConfidentialVM_DiskEncryptedWithPlatformKey", "ConfidentialVM_DiskEncryptedWithCustomerKey"]
                     ),
                     secure_vm_disk_encryption_set_id=dict(type='str')
                 )
@@ -1011,8 +1038,9 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         creation_data['logical_sector_size'] = self.logical_sector_size
         creation_data['performance_plus'] = self.performance_plus
         if self.security_profile is not None:
+            disk_id = self.security_profile.get('secure_vm_disk_encryption_set_id')
             disk_params['security_profile'] = self.disk_models.DiskSecurityProfile(security_type=self.security_profile.get('security_type'),
-                                                                                   secure_vm_disk_encryption_set_id=self.security_profile.get('secure_vm_disk_encryption_set_id'))
+                                                                                   secure_vm_disk_encryption_set_id=disk_id)
         if self.os_type:
             disk_params['os_type'] = self.disk_models.OperatingSystemTypes(self.os_type.capitalize())
         else:
