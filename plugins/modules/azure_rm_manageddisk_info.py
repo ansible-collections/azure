@@ -220,18 +220,6 @@ azure_managed_disk:
             type: int
             returned: always
             sample: None
-        security_data_uri:
-            description:
-                - This is the URI of a blob to be imported into VM guest state.
-            type: str
-            returned: always
-            sample: None
-        elastic_san_resource_id:
-            description:
-                - This is the ARM id of the source elastic san volume snapshot.
-            type: str
-            returned: always
-            sample: None
         source_resource_id:
             description:
                 - This is the ARM id of the source snapshot or disk.
@@ -388,9 +376,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             storage_account_id=create_data.storage_account_id,
             upload_size_bytes=create_data.upload_size_bytes,
             logical_sector_size=create_data.logical_sector_size,
-            security_data_uri=create_data.security_data_uri,
             performance_plus=create_data.performance_plus,
-            elastic_san_resource_id=create_data.elastic_san_resource_id,
             gallery_image_reference=dict(
                 id=create_data.gallery_image_reference.id,
                 shared_gallery_image_id=create_data.gallery_image_reference.shared_gallery_image_id,

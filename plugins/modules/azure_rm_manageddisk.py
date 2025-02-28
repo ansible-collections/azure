@@ -76,10 +76,7 @@ options:
             - upload
             - fromimage
             - restore
-            - copystart
-            - importsecure
             - uploadpreparedsecure
-            - copyfromsansnapshot
     storage_account_id:
         description:
             - The full path to the storage account the image is to be imported from.
@@ -261,11 +258,6 @@ options:
         description:
             - If I(create_option=importsecure), this is the URI of a blob to be imported into VM guest state.
         type: str
-    elastic_san_resource_id:
-        description:
-            - Required if I(create_option=copyfromsansnapshot).
-            - This is the ARM id of the source elastic san volume snapshot.
-        type: str
     source_resource_id:
         description:
             - If I(create_option=copy), this is the ARM id of the source snapshot or disk.
@@ -343,7 +335,6 @@ EXAMPLES = '''
   azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}"
-    #storage_account_type: "UltraSSD_LRS"
     storage_account_type: "Standard_LRS"
     disk_size_gb: 1024
     network_access_policy: DenyAll
@@ -548,18 +539,6 @@ state:
             type: int
             returned: always
             sample: None
-        security_data_uri:
-            description:
-                - This is the URI of a blob to be imported into VM guest state.
-            type: str
-            returned: always
-            sample: None
-        elastic_san_resource_id:
-            description:
-                - This is the ARM id of the source elastic san volume snapshot.
-            type: str
-            returned: always
-            sample: None
         source_resource_id:
             description:
                 - This is the ARM id of the source snapshot or disk.
@@ -637,9 +616,7 @@ def managed_disk_to_dict(managed_disk):
         storage_account_id=create_data.storage_account_id,
         upload_size_bytes=create_data.upload_size_bytes,
         logical_sector_size=create_data.logical_sector_size,
-        security_data_uri=create_data.security_data_uri,
         performance_plus=create_data.performance_plus,
-        elastic_san_resource_id=create_data.elastic_san_resource_id,
         gallery_image_reference=dict(
             id=create_data.gallery_image_reference.id,
             shared_gallery_image_id=create_data.gallery_image_reference.shared_gallery_image_id,
@@ -684,8 +661,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ),
             create_option=dict(
                 type='str',
-                choices=['empty', 'import', 'copy', 'upload', 'fromimage', 'restore', 'copystart', 'importsecure',
-                         'uploadpreparedsecure', 'copyfromsansnapshot']
+                choices=['empty', 'import', 'copy', 'upload', 'fromimage', 'restore', 'uploadpreparedsecure']
             ),
             storage_account_id=dict(
                 type='str'
@@ -774,12 +750,6 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             logical_sector_size=dict(
                 type='int',
             ),
-            security_data_uri=dict(
-                type='str'
-            ),
-            elastic_san_resource_id=dict(
-                type='str'
-            ),
             source_resource_id=dict(
                 type='str'
             ),
@@ -801,10 +771,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ('create_option', 'upload', ['upload_size_bytes']),
             ('create_option', 'fromimage', ['security_profile']),
             ('create_option', 'restore', ['source_resource_id']),
-            ('create_option', 'copystart', ['source_resource_id']),
-            ('create_option', 'importsecure', ['security_data_uri', 'storage_account_id', 'security_profile', 'source_uri']),
             ('create_option', 'uploadpreparedsecure', ['upload_size_bytes', 'security_profile']),
-            ('create_option', 'copyfromsansnapshot', ['elastic_san_resource_id']),
             ('network_access_policy', 'AllowPrivate', ['disk_access_id'])
         ]
         self.results = dict(
@@ -839,8 +806,6 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         self.performance_plus = None
         self.upload_size_bytes = None
         self.source_resource_id = None
-        self.elastic_san_resource_id = None
-        self.security_data_uri = None
         self.image_reference = None
         self.gallery_image_reference = None
         self.logical_sector_size = None
@@ -1038,20 +1003,9 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 self.fail("When create_option=fromimage is configured, image_reference or gallery_image_reference must be configured")
         elif self.create_option == 'restore':
             creation_data['create_option'] = self.disk_models.DiskCreateOption.Restore
-        elif self.create_option == 'copystart':
-            creation_data['create_option'] = self.disk_models.DiskCreateOption.copy_start
-            creation_data['source_resource_id'] = self.source_resource_id
-        elif self.create_option == 'importsecure':
-            creation_data['create_option'] = self.disk_models.DiskCreateOption.import_secure
-            creation_data['source_uri'] = self.source_uri
-            creation_data['storage_account_id'] = self.storage_account_id
-            creation_data['security_data_uri'] = self.security_data_uri
         elif self.create_option == 'uploadpreparedsecure':
             creation_data['create_option'] = self.disk_models.DiskCreateOption.upload_prepared_secure
             creation_data['upload_size_bytes'] = self.upload_size_bytes
-        elif self.create_option == 'copyfromsansnapshot':
-            creation_data['create_option'] = self.disk_models.DiskCreateOption.copy_from_san_snapshot
-            creation_data['elastic_san_resource_id'] = self.elastic_san_resource_id
         else:
             creation_data['create_option'] = self.disk_models.DiskCreateOption.empty
         creation_data['logical_sector_size'] = self.logical_sector_size
@@ -1081,6 +1035,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             disk_params['public_network_access'] = self.public_network_access
         if self.disk_access_id is not None:
             disk_params['disk_access_id'] = self.disk_access_id
+        disk_params['hyper_v_generation'] = 'V2'
         disk_params['creation_data'] = creation_data
         return disk_params
 
