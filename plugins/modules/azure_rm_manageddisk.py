@@ -792,7 +792,6 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ('create_option', 'copy', ['source_resource_id']),
             ('create_option', 'empty', ['disk_size_gb']),
             ('create_option', 'upload', ['upload_size_bytes']),
-            ('create_option', 'fromimage', ['security_profile']),
             ('create_option', 'restore', ['source_resource_id']),
             ('create_option', 'uploadpreparedsecure', ['upload_size_bytes', 'security_profile']),
             ('network_access_policy', 'AllowPrivate', ['disk_access_id'])
@@ -1059,7 +1058,6 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             disk_params['public_network_access'] = self.public_network_access
         if self.disk_access_id is not None:
             disk_params['disk_access_id'] = self.disk_access_id
-        disk_params['hyper_v_generation'] = 'V2'
         disk_params['creation_data'] = creation_data
         return disk_params
 
