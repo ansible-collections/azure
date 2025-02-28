@@ -232,7 +232,7 @@ options:
             - If I(create_option=upload), this is the size of the contents of the upload including the VHD footer.
             - This value should be between 20972032 (20 MiB + 512 bytes for the VHD footer) and 35183298347520 bytes (32 TiB + 512 bytes for the VHD footer).
         type: int
-    shared_image_reference:
+    gallery_image_reference:
         description:
             - Required if creating from a Gallery Image.
             - The id/sharedGalleryImageId/communityGalleryImageId of the ImageDiskReference
@@ -273,10 +273,6 @@ options:
             - Logical sector size in bytes for Ultra disks.
             - Supported values are 512 ad 4096. 4096 is the default.
         type: int
-    security_data_uri:
-        description:
-            - If I(create_option=importsecure), this is the URI of a blob to be imported into VM guest state.
-        type: str
     source_resource_id:
         description:
             - If I(create_option=copy), this is the ARM id of the source snapshot or disk.
@@ -553,7 +549,7 @@ state:
             type: dict
             returned: always
             sample: None
-        shared_image_reference:
+        gallery_image_reference:
             description:
                 - The Gallery Image info.
             type: dict
@@ -1017,9 +1013,9 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         elif self.create_option == 'fromimage':
             creation_data['create_option'] = self.disk_models.DiskCreateOption.from_image
             if self.image_reference is not None:
-                image = self.disk_models.ImageDiskReference(id=self.disk_image_reference.get('id'),
-                                                            shared_gallery_image_id=self.disk_image_reference.get('shared_gallery_image_id'),
-                                                            community_gallery_image_id=self.disk_image_reference.get('community_gallery_image_id'))
+                image = self.disk_models.ImageDiskReference(id=self.image_reference.get('id'),
+                                                            shared_gallery_image_id=self.image_reference.get('shared_gallery_image_id'),
+                                                            community_gallery_image_id=self.image_reference.get('community_gallery_image_id'))
                 creation_data['image_reference'] = image
             elif self.gallery_image_reference is not None:
                 image = self.disk_models.ImageDiskReference(id=self.gallery_image_reference.get('id'),

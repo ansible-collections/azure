@@ -208,7 +208,7 @@ azure_managed_disk:
             type: int
             returned: always
             sample: None
-        shared_image_reference:
+        gallery_image_reference:
             description:
                 - The Gallery Image info.
             type: dict
