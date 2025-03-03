@@ -1,0 +1,47 @@
+---
+- name: Config hosts
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Set facts
+      ansible.builtin.include_vars: vars.yml
+
+    - name: Inventory powerstate is running
+      ansible.builtin.assert:
+        that:
+          - vm_name_2 in hostvars
+          - hostvars[vm_name_2].powerstate == "running"
+
+    - name: Show powerstate
+      ansible.builtin.debug:
+        var: hostvars[vm_name_2].powerstate
+
+    - name: Power off minimal VM 2
+      azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vm_name_2 }}"
+        started: false
+
+    - name: Inventory powerstate is still running
+      ansible.builtin.assert:
+        that:
+          - vm_name_2 in hostvars
+          - hostvars[vm_name_2].powerstate == "running"
+
+    - name: Show powerstate
+      ansible.builtin.debug:
+        var: hostvars[vm_name_2].powerstate
+
+    - name: Refresh inventory
+      ansible.builtin.meta: refresh_inventory
+
+    - name: Inventory powerstate is stopped
+      ansible.builtin.assert:
+        that:
+          - vm_name_2 in hostvars
+          - hostvars[vm_name_2].powerstate == "stopped"
+
+    - name: Show powerstate
+      ansible.builtin.debug:
+        var: hostvars[vm_name_2].powerstate

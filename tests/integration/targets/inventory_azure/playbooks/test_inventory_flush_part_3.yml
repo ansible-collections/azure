@@ -7,12 +7,12 @@
     - name: Set facts
       ansible.builtin.include_vars: vars.yml
 
-    - name: Test vm_name_2 in Inventory
+    - name: Inventory powerstate is running
       ansible.builtin.assert:
         that:
           - vm_name_2 in hostvars
+          - hostvars[vm_name_2].powerstate == "running"
 
-    - name: Test vm_name not in Inventory
-      ansible.builtin.assert:
-        that:
-          - vm_name not in hostvars
+    - name: Show powerstate
+      ansible.builtin.debug:
+        var: hostvars[vm_name_2].powerstate

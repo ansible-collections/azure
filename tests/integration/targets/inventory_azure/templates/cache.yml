@@ -1,0 +1,14 @@
+---
+plugin: azure.azcollection.azure_rm
+conditional_groups:
+  azure: true
+exclude_host_filters:
+  - location not in ['eastus', 'northcentralus']
+default_host_filters: []
+# fail_on_template_errors should be enabled for debugging and possibly all times.
+fail_on_template_errors: True
+plain_host_names: true
+cache: true
+cache_plugin: ansible.builtin.jsonfile
+cache_timeout: 7200
+cache_connection: /tmp/azure_inventory

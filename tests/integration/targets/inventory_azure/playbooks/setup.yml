@@ -54,6 +54,7 @@
       azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}"
         name: "{{ vm_name_2 }}"
+        started: true
         admin_username: testuser
         ssh_password_enabled: false
         open_ports:
