@@ -1012,7 +1012,7 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         security_profile=dict(
             enable_secure_boot=profile.security_profile.enable_secure_boot,
             enable_vtpm=profile.security_profile.enable_vtpm
-        ) if profile.security_profile is not None else None
+        )
     ) for profile in agentpoolprofiles] if agentpoolprofiles else None
 
 
