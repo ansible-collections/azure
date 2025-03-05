@@ -99,8 +99,7 @@ health_states:
                 context:
                     description:
                         - When an event is created, it can either be triggered by a customer or the platform of the resource and this field will illustrate that.
-                        - This field is connected to the
-     category field in this object.
+                        - This field is connected to the category field in this object.
                     type: str
                     returned: always
                     sample: "Not Applicable"
