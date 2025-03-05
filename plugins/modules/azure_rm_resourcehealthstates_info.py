@@ -220,8 +220,7 @@ class AzureRMResourceHealthStatesInfo(AzureRMModuleBase):
         try:
             response = self.resourcehealth_client.availability_statuses.list(resource_uri)
         except Exception as exc:
-            self.fail('Error when lists all historical availability transitions and impacting events for a single resource.
-                      Error msg: {0}'.format(exc.message or str(exc)))
+            self.fail('Error when lists all historical availability transitions and impacting events for a single resource. Error msg: {0}'.format(exc))
 
         return response
 
@@ -233,8 +232,7 @@ class AzureRMResourceHealthStatesInfo(AzureRMModuleBase):
         try:
             response = self.resourcehealth_client.availability_statuses.list_by_resource_group(resource_group)
         except Exception as exc:
-            self.fail('Error when lists the current availability status for all the resources in the resource group.
-                      Error msg: {0}'.format(exc.message or str(exc)))
+            self.fail('Error when lists the current availability status for all the resources in the resource group. Error msg: {0}'.format(exc))
 
         return response
 
@@ -246,8 +244,7 @@ class AzureRMResourceHealthStatesInfo(AzureRMModuleBase):
         try:
             response = self.resourcehealth_client.availability_statuses.list_by_subscription_id()
         except Exception as exc:
-            self.fail('Error when lists the current availability status for all the resources in the subscription.
-                      Error msg: {0}'.format(exc.message or str(exc)))
+            self.fail('Error when lists the current availability status for all the resources in the subscription Error msg: {0}'.format(exc))
 
         return response
 
