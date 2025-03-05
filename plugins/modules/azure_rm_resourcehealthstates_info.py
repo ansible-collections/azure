@@ -69,6 +69,7 @@ health_states:
     description:
         - The facts of availabilityStatus of a resource.
     type: complex
+    returned: always
     contains:
         id:
             description:
