@@ -97,7 +97,6 @@ health_states:
                 availability_state:
                     description:
                         - Availability status of the resource.
-                        - When it is null, this availabilityStatus object represents an availability impacting event.
                     type: str
                     returned: always
                     sample: "Unknown"
@@ -110,9 +109,7 @@ health_states:
                     sample: "Not Applicable"
                 context:
                     description:
-                        - When an event is created, it can either be triggered by a customer or the platform of the resource and this field will illustrate that.
-                        - This field is connected to the
-     category field in this object.
+                        - This field is connected to the category field in this object.
                     type: str
                     returned: always
                     sample: "Not Applicable"
@@ -223,7 +220,8 @@ class AzureRMResourceHealthStatesInfo(AzureRMModuleBase):
         try:
             response = self.resourcehealth_client.availability_statuses.list(resource_uri)
         except Exception as exc:
-            self.fail('Error when lists all historical availability transitions and impacting events for a single resource. Error msg: {0}'.format(exc.message or str(exc)))
+            self.fail('Error when lists all historical availability transitions and impacting events for a single resource.
+                      Error msg: {0}'.format(exc.message or str(exc)))
 
         return response
 
@@ -235,10 +233,10 @@ class AzureRMResourceHealthStatesInfo(AzureRMModuleBase):
         try:
             response = self.resourcehealth_client.availability_statuses.list_by_resource_group(resource_group)
         except Exception as exc:
-            self.fail('Error when lists the current availability status for all the resources in the resource group. Error msg: {0}'.format(exc.message or str(exc)))
+            self.fail('Error when lists the current availability status for all the resources in the resource group.
+                      Error msg: {0}'.format(exc.message or str(exc)))
 
         return response
-
 
     def list_by_subscription_id(self):
         '''
@@ -248,9 +246,11 @@ class AzureRMResourceHealthStatesInfo(AzureRMModuleBase):
         try:
             response = self.resourcehealth_client.availability_statuses.list_by_subscription_id()
         except Exception as exc:
-            self.fail('Error when lists the current availability status for all the resources in the subscription. Error msg: {0}'.format(exc.message or str(exc)))
+            self.fail('Error when lists the current availability status for all the resources in the subscription.
+                      Error msg: {0}'.format(exc.message or str(exc)))
 
         return response
+
 
 def main():
     """Main module execution code path"""
