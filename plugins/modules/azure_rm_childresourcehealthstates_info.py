@@ -188,7 +188,7 @@ class AzureRMChildResourceHealthStatesInfo(AzureRMModuleBase):
         :return: AvailabilityStatus or the result of cls(response)
         '''
         try:
-            response = [self.resourcehealth_client.child_availability_statuses.get_by_resource(resource_uri)]
+            response = [self.resourcehealth_client.child_availability_statuses.get_by_resource(self.resource_uri)]
         except Exception as exc:
             self.fail('Error when gets current availability status for a single child resource. Error msg: {0}'.format(exc.message or str(exc)))
 
@@ -201,7 +201,7 @@ class AzureRMChildResourceHealthStatesInfo(AzureRMModuleBase):
         :return: An iterator like instance of either AvailabilityStatus or the result of cls(response)
         '''
         try:
-            response = self.resourcehealth_client.child_availability_statuses.list(resource_uri)
+            response = self.resourcehealth_client.child_availability_statuses.list(self.resource_uri)
         except Exception as exc:
             self.fail('Error when lists all historical availability transitions. Error msg: {0}'.format(exc.message or str(exc)))
 
