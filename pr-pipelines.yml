@@ -157,6 +157,7 @@ parameters:
       - "azure_rm_applicationfirewallpolicy_info"
       - "azure_rm_diskaccess"
       - "azure_rm_diskaccess_info"
+      - "azure_rm_resourcehealthstates_info"
       - "inventory_azure"
       - "setup_azure"
 
