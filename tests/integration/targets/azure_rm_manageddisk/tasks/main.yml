@@ -74,7 +74,7 @@
     resource_group: "{{ resource_group }}"
     name: "md{{ rpfx }}2"
     create_option: "copy"
-    source_uri: "{{ output.state.id }}"
+    source_resource_id: "{{ output.state.id }}"
     disk_size_gb: 1
   register: disk2
 
