@@ -6,15 +6,26 @@
     # az_role_definition_guid: fb879df8-f326-4884-b1cf-06f3ad86be52
   run_once: true
 
+- name: Create a role definition
+  azure_rm_roledefinition:
+    name: "definition{{ rpfx }}"
+    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    permissions:
+      - actions:
+          - "Microsoft.Compute/virtualMachines/*"
+          - "Microsoft.Storage/storageAccounts/listKeys/action"
+          - "Microsoft.Storage/storageAccounts/read"
+          - "Microsoft.Compute/disks/write"
+          - "Microsoft.Compute/disks/read"
+          - "Microsoft.Compute/disks/delete"
+    assignable_scopes:
+      - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+  register: az_role_definition_create
+
 - name: Get resource group info
   azure_rm_resourcegroup_info:
     name: "{{ resource_group }}"
   register: az_resource_group
-
-- name: List All roleassignemnt for the resource group
-  azure_rm_roleassignment_info:
-    scope: "{{ az_resource_group.resourcegroups[0].id }}"
-  register: az_role_assignments
 
 - name: Lookup service principal object id
   ansible.builtin.set_fact:
@@ -28,8 +39,7 @@
   azure_rm_roleassignment:
     id: "{{ az_resource_group.resourcegroups[0].id }}/providers/Microsoft.Authorization/roleAssignments/{{ uuid }}"
     assignee_object_id: "{{ object_id }}"
-    # assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-    role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
+    role_definition_id: "{{ az_role_definition_create.id }}"
   register: az_role_assignment_create
 
 - name: Create a key vault
@@ -517,13 +527,6 @@
       - output.versions['publishing_profile'] != None
       - output.versions['provisioning_state'] != None
 
-- name: Delete Role Assignment by id
-  azure_rm_roleassignment:
-    id: "{{ az_role_assignment_create.id }}"
-    state: absent
-  register: az_role_assignment_delete
-  when: az_role_assignment_create.changed
-
 - name: Delete gallery image version from URI.
   azure_rm_galleryimageversion:
     resource_group: "{{ resource_group }}"
@@ -586,3 +589,16 @@
   ansible.builtin.assert:
     that:
       - output.changed
+
+- name: Delete Role Assignment by id
+  azure_rm_roleassignment:
+    id: "{{ az_role_assignment_create.id }}"
+    state: absent
+  when: az_role_assignment_create.changed
+
+- name: Create a role definition
+  azure_rm_roledefinition:
+    name: "definition{{ rpfx }}"
+    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    state: absent
+  when: az_role_definition_create.changed
