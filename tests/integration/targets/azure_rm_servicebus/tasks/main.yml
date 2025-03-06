@@ -190,7 +190,8 @@
   ansible.builtin.assert:
     that:
       - facts.servicebuses[0].disable_local_auth is false
-      - facts.servicebuses[0].zone_redundant is false
+      # The default value of zone_redundant is True and cannot be set
+      # - facts.servicebuses[0].zone_redundant is false
       - facts.servicebuses[0].minimum_tls_version == '1.2'
       - facts.servicebuses[0].public_network_access == 'Enabled'
       - facts.servicebuses[0].premium_messaging_partitions == 1
