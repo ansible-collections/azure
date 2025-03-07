@@ -2,24 +2,8 @@
   ansible.builtin.set_fact:
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     uuid: "{{ (2**128) | random | to_uuid }}"
-    subscription_id: "{{ azure_subscription_id }}"
+    az_role_definition_id: 9980e02c-c2be-4d73-94e8-173b1dc7cf3c
   run_once: true
-
-- name: Create a role definition
-  azure_rm_roledefinition:
-    name: "definition{{ rpfx }}"
-    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
-    permissions:
-      - actions:
-          - "Microsoft.Compute/virtualMachines/*"
-          - "Microsoft.Storage/storageAccounts/listKeys/action"
-          - "Microsoft.Storage/storageAccounts/read"
-          - "Microsoft.Compute/disks/write"
-          - "Microsoft.Compute/disks/read"
-          - "Microsoft.Compute/disks/delete"
-    assignable_scopes:
-      - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
-  register: az_role_definition_create
 
 - name: Get resource group info
   azure_rm_resourcegroup_info:
@@ -36,9 +20,9 @@
 
 - name: Create role assignment by id
   azure_rm_roleassignment:
-    id: "{{ az_resource_group.resourcegroups[0].id }}/providers/Microsoft.Authorization/roleAssignments/{{ uuid }}"
+    scope: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ resource_group }}"
     assignee_object_id: "{{ object_id }}"
-    role_definition_id: "{{ az_role_definition_create.id }}"
+    role_definition_id: "/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_id }}"
   register: az_role_assignment_create
 
 - name: Create a key vault
