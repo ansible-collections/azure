@@ -578,10 +578,3 @@
     id: "{{ az_role_assignment_create.id }}"
     state: absent
   when: az_role_assignment_create.changed
-
-- name: Create a role definition
-  azure_rm_roledefinition:
-    name: "definition{{ rpfx }}"
-    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
-    state: absent
-  when: az_role_definition_create.changed
