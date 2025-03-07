@@ -290,6 +290,7 @@ try:
     from msgraph import GraphServiceClient
     from azure.mgmt.batch import BatchManagementClient
     from azure.mgmt.batch import models as BatchManagementModel
+    from azure.mgmt.resourcehealth import ResourceHealthMgmtClient
 
 except ImportError as exc:
     Authentication = object
@@ -465,6 +466,7 @@ class AzureRMModuleBase(object):
         self._notification_hub_client = None
         self._event_hub_client = None
         self._batch_account_client = None
+        self._resourcehealth_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1474,6 +1476,14 @@ class AzureRMModuleBase(object):
             self._batch_account_client = self.get_mgmt_svc_client(BatchManagementClient,
                                                                   base_url=self._cloud_environment.endpoints.resource_manager)
         return self._batch_account_client
+
+    @property
+    def resourcehealth_client(self):
+        self.log('Getting resource health client...')
+        if not self._resourcehealth_client:
+            self._resourcehealth_client = self.get_mgmt_svc_client(ResourceHealthMgmtClient,
+                                                                   base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._resourcehealth_client
 
     @property
     def batch_account_model(self):

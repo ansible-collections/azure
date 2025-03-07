@@ -346,3 +346,4 @@ action_groups:
     - azure.azcollection.azure_rm_applicationfirewallpolicy_info
     - azure.azcollection.azure_rm_diskaccess
     - azure.azcollection.azure_rm_diskaccess_info
+    - azure.azcollection.azure_rm_resourcehealthstates_info

@@ -49,5 +49,6 @@ azure-mgmt-recoveryservices==3.0.0
 azure-mgmt-recoveryservicesbackup==9.1.0
 azure-mgmt-notificationhubs==8.1.0b1
 azure-mgmt-eventhub==11.1.0
+azure-mgmt-resourcehealth==1.0.0b6
 oras
 netaddr
