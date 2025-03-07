@@ -5,6 +5,7 @@
 ### NEW MODULES
   - azure_rm_diskaccess: ([#1831](https://github.com/ansible-collections/azure/pull/1831))
   - azure_rm_diskaccess_info: ([#1831](https://github.com/ansible-collections/azure/pull/1831))
+  - azure_rm_resourcehealthstates_info: ([#1838](https://github.com/ansible-collections/azure/pull/1838))
 
 ### FEATURE ENHANCEMENT
   - README.md:
@@ -25,12 +26,16 @@
     - Add support for more parameters ([#1833](https://github.com/ansible-collections/azure/pull/1833))
   - azure_rm_manageddisk_info: Support return more parametes ([#1833](https://github.com/ansible-collections/azure/pull/1833))
   - azure_rm.py: Add cache support to inventory plugin ([#1828](https://github.com/ansible-collections/azure/pull/1828))
+  - azure_keyvault_secret: Add support for use_cli , use CLI credential ([#1836](https://github.com/ansible-collections/azure/pull/1836))
 
 ### BUG FIXING
   - tests/integration/targets/azure_rm_dnsrecordset/tasks/main.yml: Modify the random value ([#1803](https://github.com/ansible-collections/azure/pull/1803))
   - azure_rm_roleassignment: Delete scope tail / when comparing scopes ([#1807](https://github.com/ansible-collections/azure/pull/1807))
   - azure_rm_subnet_info: Fix incorrect API call ([#1826](https://github.com/ansible-collections/azure/pull/1826))
   - azure_rm_virtualmachine_info: Fix the compute API return value change bug ([#1827](https://github.com/ansible-collections/azure/pull/1827))
+  - azure_rm_aks: Fixed an error caused by agent_pool.security_profile returning None ([#1835](https://github.com/ansible-collections/azure/pull/1835))
+  - azure_rm_servicebus: Do not compare the zone_redundant return value when idempotent testing ([#1840](https://github.com/ansible-collections/azure/pull/1840))
+  - azure_rm_subnet: Fixed an error caused by the user defining subscription_id in route_table ([#1837](https://github.com/ansible-collections/azure/pull/1837))
 
 
 ## v3.2.0 (2025-02-06)
