@@ -1,6 +1,6 @@
 # Change Log
 
-## v3.3.0 (2025-03-07)
+## v3.3.0 (2025-03-10)
 
 ### NEW MODULES
   - azure_rm_diskaccess: ([#1831](https://github.com/ansible-collections/azure/pull/1831))
@@ -16,26 +16,26 @@
   - azure_rm_trafficmanagerprofile: Add support for `custom_header`, `expected_status_code_ranges`, `max_return` and `allowed_endpoint_record_types` ([#1800](https://github.com/ansible-collections/azure/pull/1800))
   - azure_rm_trafficmanagerprofile_info: Support return `custom_header`, `expected_status_code_ranges`, `max_return` and `allowed_endpoint_record_types` ([#1800](https://github.com/ansible-collections/azure/pull/1800))
   - azure_rm_virtualmachine:
-    - VirtualMachine update to allow creation from snapshot image ([#1816](https://github.com/ansible-collections/azure/pull/1816))
+    - Allow creation from snapshot image ([#1816](https://github.com/ansible-collections/azure/pull/1816))
   - azure_rm_virtualmachine_info:
     - Support return `storage_profile.os_disk` ([#1816](https://github.com/ansible-collections/azure/pull/1816))
-    - Support return `caching` ([#1808](https://github.com/ansible-collections/azure/pull/1816))
-    - support retrun `maintenance_redeploy_status` ([#1822](https://github.com/ansible-collections/azure/pull/1822))
+    - Support return `write_accelerator_enabled` ([#1808](https://github.com/ansible-collections/azure/pull/1808))
+    - support return `maintenance_redeploy_status` ([#1822](https://github.com/ansible-collections/azure/pull/1822))
   - azure_rm_manageddisk:
-    - Add support for write_accelerator_enabled ([#1808](https://github.com/ansible-collections/azure/pull/1808))
-    - Add support for more parameters ([#1833](https://github.com/ansible-collections/azure/pull/1833))
-  - azure_rm_manageddisk_info: Support return more parametes ([#1833](https://github.com/ansible-collections/azure/pull/1833))
-  - azure_rm.py: Add cache support to inventory plugin ([#1828](https://github.com/ansible-collections/azure/pull/1828))
-  - azure_keyvault_secret: Add support for use_cli , use CLI credential ([#1836](https://github.com/ansible-collections/azure/pull/1836))
+    - Add support for `write_accelerator_enabled` ([#1808](https://github.com/ansible-collections/azure/pull/1808))
+    - Add `upload`, `fromimage`, `restore`, `uploadpreparedsecure`  to `create_option` and add support for `performance_plus`, `upload_size_bytes`, `gallery_image_reference`, `image_reference`, `logical_sector_size`, `source_resource_id`, `security_profile` ([#1833](https://github.com/ansible-collections/azure/pull/1833))
+  - azure_rm_manageddisk_info: Support return `performance_plus`, `upload_size_bytes`, `gallery_image_reference`, `image_reference`, `logical_sector_size`, `source_resource_id`, `security_profile` ([#1833](https://github.com/ansible-collections/azure/pull/1833))
+  - azure_rm.py: Add cache support to inventory plugin cache ([#1828](https://github.com/ansible-collections/azure/pull/1828))
+  - azure_keyvault_secret: Add support for `use_cli`, use CLI credential ([#1836](https://github.com/ansible-collections/azure/pull/1836))
 
 ### BUG FIXING
-  - tests/integration/targets/azure_rm_dnsrecordset/tasks/main.yml: Modify the random value ([#1803](https://github.com/ansible-collections/azure/pull/1803))
-  - azure_rm_roleassignment: Delete scope tail / when comparing scopes ([#1807](https://github.com/ansible-collections/azure/pull/1807))
+  - tests/integration/targets/azure_rm_dnsrecordset/tasks/main.yml: Update the random value ([#1803](https://github.com/ansible-collections/azure/pull/1803))
+  - azure_rm_roleassignment: Delete scope tail `/` when comparing scopes ([#1807](https://github.com/ansible-collections/azure/pull/1807))
   - azure_rm_subnet_info: Fix incorrect API call ([#1826](https://github.com/ansible-collections/azure/pull/1826))
-  - azure_rm_virtualmachine_info: Fix the compute API return value change bug ([#1827](https://github.com/ansible-collections/azure/pull/1827))
-  - azure_rm_aks: Fixed an error caused by agent_pool.security_profile returning None ([#1835](https://github.com/ansible-collections/azure/pull/1835))
-  - azure_rm_servicebus: Do not compare the zone_redundant return value when idempotent testing ([#1840](https://github.com/ansible-collections/azure/pull/1840))
-  - azure_rm_subnet: Fixed an error caused by the user defining subscription_id in route_table ([#1837](https://github.com/ansible-collections/azure/pull/1837))
+  - azure_rm_virtualmachine_info: Fix the bug that `capacity_reservation_group` not being handled ([#1827](https://github.com/ansible-collections/azure/pull/1827))
+  - azure_rm_aks: Fixed the bug that `agent_pool.security_profile` returning `None` ([#1835](https://github.com/ansible-collections/azure/pull/1835))
+  - azure_rm_servicebus: Do not compare the `zone_redundant` return value during idempotency testing ([#1840](https://github.com/ansible-collections/azure/pull/1840))
+  - azure_rm_subnet: Fixed the bug caused by the user defining `subscription_id` in `route_table` ([#1837](https://github.com/ansible-collections/azure/pull/1837))
 
 
 ## v3.2.0 (2025-02-06)
