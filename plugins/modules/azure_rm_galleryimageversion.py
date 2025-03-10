@@ -547,109 +547,70 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                     self.body['location'] = kwargs[key]
                 elif key == 'storage_profile':
                     self.body['properties']['storageProfile'] = {}
-                    self.storageprofile = {}
                     if kwargs[key].get('source_image') is not None:
                         self.body['properties']['storageProfile']['source'] = {}
-                        self.storageprofile['source'] = {}
                         if isinstance(kwargs[key].get('source_image'), str):
-                            self.body['properties']['storageProfile']['source']['id'] = kwargs[key].get('source_image')
-                            self.storageprofile['source']['virtualMachineId'] = kwargs[key].get('source_image')
+                            self.body['properties']['storageProfile']['source']['virtualMachineId'] = kwargs[key].get('source_image')
                         elif isinstance(kwargs[key].get('source_image'), dict):
                             if kwargs[key]['source_image'].get('id') is not None:
-                                self.body['properties']['storageProfile']['source']['id'] = kwargs[key]['source_image'].get('id')
-                                self.storageprofile['source']['virtualMachineId'] = kwargs[key]['source_image'].get('id')
+                                sself.body['properties']['storageProfile']['source']['virtualMachineId'] = kwargs[key]['source_image'].get('id')
                             if kwargs[key]['source_image'].get('resource_group') is not None and kwargs[key]['source_image'].get('name') is not None:
-                                self.body['properties']['storageProfile']['source']['id'] = ('/subscriptions/' +
-                                                                                             self.subscription_id +
-                                                                                             '/resourceGroups/' +
-                                                                                             kwargs[key]['source_image'].get('resource_group') +
-                                                                                             '/providers/Microsoft.Compute/images/' +
-                                                                                             kwargs[key]['source_image'].get('name'))
-                                self.storageprofile['source']['virtualMachineId'] = ('/subscriptions/' +
-                                                                                     self.subscription_id +
-                                                                                     '/resourceGroups/' +
-                                                                                     kwargs[key]['source_image'].get('resource_group') +
-                                                                                     '/providers/Microsoft.Compute/images/' +
-                                                                                     kwargs[key]['source_image'].get('name'))
+                                self.body['properties']['storageProfile']['source']['virtualMachineId'] = ('/subscriptions/' +
+                                                                                                           self.subscription_id +
+                                                                                                           '/resourceGroups/' +
+                                                                                                           kwargs[key]['source_image'].get('resource_group') +
+                                                                                                           '/providers/Microsoft.Compute/images/' +
+                                                                                                           kwargs[key]['source_image'].get('name'))
                             elif (kwargs[key]['source_image'].get('resource_group') is not None and
                                   kwargs[key]['source_image'].get('gallery_name') is not None and
                                   kwargs[key]['source_image'].get('gallery_image_name') is not None and kwargs[key]['source_image'].get('version') is not None):
-                                self.storageprofile['source']['virtualMachineId'] = ('/subscriptions/' +
-                                                                                     self.subscription_id +
-                                                                                     '/resourceGroups/' +
-                                                                                     kwargs[key]['source_image'].get('resource_group') +
-                                                                                     '/providers/Microsoft.Compute/galleries/' +
-                                                                                     kwargs[key]['source_image'].get('gallery_name') +
-                                                                                     '/images/' +
-                                                                                     kwargs[key]['source_image'].get('gallery_image_name') +
-                                                                                     '/versions/' +
-                                                                                     kwargs[key]['source_image'].get('version'))
-                                self.body['properties']['storageProfile']['source']['id'] = ('/subscriptions/' +
-                                                                                             self.subscription_id +
-                                                                                             '/resourceGroups/' +
-                                                                                             kwargs[key]['source_image'].get('resource_group') +
-                                                                                             '/providers/Microsoft.Compute/galleries/' +
-                                                                                             kwargs[key]['source_image'].get('gallery_name') +
-                                                                                             '/images/' +
-                                                                                             kwargs[key]['source_image'].get('gallery_image_name') +
-                                                                                             '/versions/' +
-                                                                                             kwargs[key]['source_image'].get('version'))
+                                self.body['properties']['storageProfile']['source']['virtualMachineId'] = ('/subscriptions/' +
+                                                                                                           self.subscription_id +
+                                                                                                           '/resourceGroups/' +
+                                                                                                           kwargs[key]['source_image'].get('resource_group') +
+                                                                                                           '/providers/Microsoft.Compute/galleries/' +
+                                                                                                           kwargs[key]['source_image'].get('gallery_name') +
+                                                                                                           '/images/' +
+                                                                                                           kwargs[key]['source_image'].get('gallery_image_name') +
+                                                                                                           '/versions/' +
+                                                                                                           kwargs[key]['source_image'].get('version'))
                             else:
                                 self.fail("The source_image parameters config errors")
                         else:
                             self.fail("The source_image parameters config errors")
                     if kwargs[key].get('os_disk') is not None:
                         self.body['properties']['storageProfile']['osDiskImage'] = {}
-                        self.storageprofile['osDiskImage'] = {}
                         if kwargs[key]['os_disk'].get('host_caching') is not None:
                             self.body['properties']['storageProfile']['osDiskImage']['hostCaching'] = kwargs[key]['os_disk'].get('host_caching')
-                            self.storageprofile['osDiskImage']['hostCaching'] = kwargs[key]['os_disk'].get('host_caching')
                         if kwargs[key]['os_disk'].get('source') is not None:
                             self.body['properties']['storageProfile']['osDiskImage']['source'] = {}
-                            self.storageprofile['osDiskImage']['source'] = {}
                             if isinstance(kwargs[key]['os_disk']['source'], str):
-                                self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = kwargs[key]['os_disk']['source']
-                                self.storageprofile['osDiskImage']['source']['storageAccountId'] = kwargs[key]['os_disk']['source']
+                                self.body['properties']['storageProfile']['osDiskImage']['source']['storageAccountId'] = kwargs[key]['os_disk']['source']
                             elif isinstance(kwargs[key]['os_disk']['source'], dict):
                                 if kwargs[key]['os_disk']['source'].get('id') is not None:
-                                    self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = kwargs[key]['os_disk']['source'].get('id')
-                                    self.storageprofile['osDiskImage']['source']['storageAccountId'] = kwargs[key]['os_disk']['source'].get('id')
+                                    self.body['properties']['storageProfile']['osDiskImage']['source']['source']['storageAccountId'] = kwargs[key]['os_disk']['source'].get('id')
                                 elif kwargs[key]['os_disk']['source'].get('resource_group') is not None and \
                                         kwargs[key]['os_disk']['source'].get('name') is not None:
                                     resource_group = kwargs[key]['os_disk']['source'].get('resource_group')
-                                    self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = ('/subscriptions/' +
-                                                                                                                self.subscription_id +
-                                                                                                                '/resourceGroups/' +
-                                                                                                                resource_group +
-                                                                                                                '/providers/Microsoft.Compute/snapshots/' +
-                                                                                                                kwargs[key]['os_disk']['source'].get('name'))
-                                    self.storageprofile['osDiskImage']['source']['storageAccountId'] = ('/subscriptions/' +
-                                                                                                        self.subscription_id +
-                                                                                                        '/resourceGroups/' +
-                                                                                                        resource_group +
-                                                                                                        '/providers/Microsoft.Compute/snapshots/' +
-                                                                                                        kwargs[key]['os_disk']['source'].get('name'))
+                                    self.body['properties']['storageProfile']['osDiskImage']['source']['storageAccountId'] = ('/subscriptions/' +
+                                                                                                                              self.subscription_id +
+                                                                                                                              '/resourceGroups/' +
+                                                                                                                              resource_group +
+                                                                                                                              '/providers/Microsoft.Compute/snapshots/' +
+                                                                                                                              kwargs[key]['os_disk']['source'].get('name'))
                                 elif kwargs[key]['os_disk']['source'].get('uri') is not None and \
                                         kwargs[key]['os_disk']['source'].get('resource_group') is not None and \
                                         kwargs[key]['os_disk']['source'].get('storage_account') is not None:
                                     resource_group = kwargs[key]['os_disk']['source'].get('resource_group')
                                     storage_account = kwargs[key]['os_disk']['source'].get('storage_account')
-                                    self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = ('/subscriptions/' +
-                                                                                                                self.subscription_id +
-                                                                                                                '/resourceGroups/' +
-                                                                                                                resource_group +
-                                                                                                                '/providers/Microsoft.Storage' +
-                                                                                                                '/storageAccounts/' +
-                                                                                                                storage_account)
+                                    self.body['properties']['storageProfile']['osDiskImage']['source']['storageAccountId'] = ('/subscriptions/' +
+                                                                                                                              self.subscription_id +
+                                                                                                                              '/resourceGroups/' +
+                                                                                                                              resource_group +
+                                                                                                                              '/providers/Microsoft.Storage' +
+                                                                                                                              '/storageAccounts/' +
+                                                                                                                              storage_account)
                                     self.body['properties']['storageProfile']['osDiskImage']['source']['uri'] = kwargs[key]['os_disk']['source'].get('uri')
-                                    self.storageprofile['osDiskImage']['source']['storageAccountId'] = ('/subscriptions/' +
-                                                                                                        self.subscription_id +
-                                                                                                        '/resourceGroups/' +
-                                                                                                        resource_group +
-                                                                                                        '/providers/Microsoft.Storage' +
-                                                                                                        '/storageAccounts/' +
-                                                                                                        storage_account)
-                                    self.storageprofile['osDiskImage']['source']['uri'] = kwargs[key]['os_disk']['source'].get('uri')
                                 else:
                                     self.fail("The os_disk.source parameters config errors")
 
@@ -658,7 +619,6 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
 
                     if kwargs[key].get('data_disks') is not None:
                         self.body['properties']['storageProfile']['dataDiskImages'] = []
-                        self.storageprofile['dataDiskImages'] = []
                         data_disk = {}
                         new_data_disk = {}
                         for item in kwargs[key].get('data_disks'):
@@ -669,33 +629,23 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                 data_disk['source'] = {}
                                 new_data_disk['source'] = {}
                                 if isinstance(item.get('source'), str):
-                                    data_disk['source']['id'] = item.get('source')
-                                    new_data_disk['source']['storageAccountId'] = item.get('source')
+                                    data_disk['source']['storageAccountId'] = item.get('source')
                                 elif isinstance(item.get('source'), dict):
                                     if item['source'].get('id') is not None:
-                                        data_disk['source']['id'] = item['source'].get('id')
-                                        new_data_disk['source']['storageAccountId'] = item['source'].get('id')
+                                        data_disk['source']['storageAccountId'] = item['source'].get('id')
                                     elif item['source'].get('resource_group') is not None and item['source'].get('name') is not None:
-                                        data_disk['source']['id'] = ('/subscriptions/' +
-                                                                     self.subscription_id +
-                                                                     '/resourceGroups/' +
-                                                                     item['source'].get('resource_group') +
-                                                                     '/providers/Microsoft.Compute/snapshots/' +
-                                                                     item['source'].get('name'))
-                                        new_data_disk['source']['storageAccountId'] = ('/subscriptions/' +
-                                                                                       self.subscription_id +
-                                                                                       '/resourceGroups/' +
-                                                                                       item['source'].get('resource_group') +
-                                                                                       '/providers/Microsoft.Compute/snapshots/' +
-                                                                                       item['source'].get('name'))
+                                        data_disk['source']['storageAccountId'] = ('/subscriptions/' +
+                                                                                   self.subscription_id +
+                                                                                   '/resourceGroups/' +
+                                                                                   item['source'].get('resource_group') +
+                                                                                   '/providers/Microsoft.Compute/snapshots/' +
+                                                                                   item['source'].get('name'))
                                     else:
                                         self.fail("The data_disk.source parameters config errors")
                                 else:
                                     self.fail("The data_disk.source parameters config errors")
                             if item.get('host_caching') is not None:
                                 data_disk['hostCaching'] = item['host_caching']
-                                new_data_disk['hostCaching'] = item['host_caching']
-                            self.storageprofile['dataDiskImages'].append(new_data_disk)
                             self.body['properties']['storageProfile']['dataDiskImages'].append(data_disk)
                 elif key == 'publishing_profile':
                     self.body['properties']['publishingProfile'] = {}
@@ -790,7 +740,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
         # keep backward compatibility
         snapshot = self.body.get('properties', {}).get('publishingProfile', {}).pop('snapshot', None)
         if snapshot is not None:
-            self.body['properties'].setdefault('storageProfile', {}).setdefault('osDiskImage', {}).setdefault('source', {})['id'] = snapshot
+            self.body['properties'].setdefault('storageProfile', {}).setdefault('osDiskImage', {}).setdefault('source', {})['storageAccountId'] = snapshot
         managed_image = self.body.get('properties', {}).get('publishingProfile', {}).pop('managed_image', None)
         if managed_image:
             self.body['properties'].setdefault('storageProfile', {}).setdefault('source', {})['id'] = managed_image
@@ -900,20 +850,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                               600,
                                               30)
         except Exception as exc:
-            self.log('Error attempting to create the GalleryImageVersion instance.')
-            try:
-                self.body['properties']['storageProfile'] = self.storageprofile
-                response = self.mgmt_client.query(self.url,
-                                                  'PUT',
-                                                  self.query_parameters,
-                                                  self.header_parameters,
-                                                  self.body,
-                                                  self.status_code,
-                                                  600,
-                                                  30)
-
-            except Exception as exc:
-                self.fail('Error creating the GalleryImageVersion instance: {0}'.format(str(exc)))
+            self.fail('Error creating the GalleryImageVersion instance: {0}'.format(str(exc)))
 
         if hasattr(response, 'body'):
             response = json.loads(response.body())

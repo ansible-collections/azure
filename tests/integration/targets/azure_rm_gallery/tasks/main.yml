@@ -24,6 +24,7 @@
     assignee_object_id: "{{ object_id }}"
     role_definition_id: "/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_id }}"
   register: az_role_assignment_create
+  ignore_errors: true
 
 - name: Create a key vault
   azure_rm_keyvault:
