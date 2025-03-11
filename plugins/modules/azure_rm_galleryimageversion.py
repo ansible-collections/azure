@@ -221,7 +221,7 @@ options:
                     - Standard_ZRS
     timeout:
         description:
-            - Set the timeout period for creating an Image Version (unit: minute).
+            - Set the timeout (minute) period for creating an Image Version.
         type: int
         default: 10
     state:
