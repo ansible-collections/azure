@@ -270,7 +270,11 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                 if self.version == 'all':
                     self.results['secrets'] = self.get_secret_versions()
                 else:
-                    self.results['secrets'] = [self.get_secret(self.name)]
+                    response = self.get_secret(self.name)
+                    if response is not None:
+                        self.results['secrets'] = [response]
+                    else:
+                        self.results['secrets'] = []
         else:
             if self.show_deleted_secret:
                 self.results['secrets'] = self.list_deleted_secrets()
