@@ -1,6 +1,6 @@
 # Change Log
 
-## v3.3.0 (2025-03-10)
+## v3.3.0 (2025-03-12)
 
 ### NEW MODULES
   - azure_rm_diskaccess: ([#1831](https://github.com/ansible-collections/azure/pull/1831))
@@ -17,6 +17,7 @@
   - azure_rm_trafficmanagerprofile_info: Support return `custom_header`, `expected_status_code_ranges`, `max_return` and `allowed_endpoint_record_types` ([#1800](https://github.com/ansible-collections/azure/pull/1800))
   - azure_rm_virtualmachine:
     - Allow creation from snapshot image ([#1816](https://github.com/ansible-collections/azure/pull/1816))
+    - Add support `user_data` ([#1844](https://github.com/ansible-collections/azure/pull/1844))
   - azure_rm_virtualmachine_info:
     - Support return `storage_profile.os_disk` ([#1816](https://github.com/ansible-collections/azure/pull/1816))
     - Support return `write_accelerator_enabled` ([#1808](https://github.com/ansible-collections/azure/pull/1808))
