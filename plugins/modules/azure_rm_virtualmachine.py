@@ -631,6 +631,11 @@ options:
                     - The flag that enables or disables a capability to have one or more managed data disks with UltraSSD_LRS storage account type on the VM.
                     - Managed disks with storage account type UltraSSD_LRS can be added to a virtual machine set only if this property is enabled.
                 type: bool
+    user_data:
+        description:
+            - UserData for the VM, which must be base-64 encoded.
+            - Customer should notpass any secrets in here. Minimum api-version '2021-03-01'.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -964,6 +969,7 @@ azure_vm:
                     "id": "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/proximityPlacementGroups/testid13"
             },
             "CapacityReservation": {},
+            "UserData": Null,
             "hardwareProfile": {
                 "vmSize": "Standard_D1"
             },
@@ -1275,7 +1281,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 options=dict(
                     ultra_ssd_enabled=dict(type='bool')
                 )
-            )
+            ),
+            user_data=dict(type='str'),
         )
 
         self.resource_group = None
@@ -1332,6 +1339,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.security_profile = None
         self.additional_capabilities = None
         self.swap_os_disk = None
+        self.user_data = None
 
         self.results = dict(
             changed=False,
@@ -1939,6 +1947,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         capacity_reservation=self.compute_models.CapacityReservationProfile(capacity_reservation_group=capacity_reservation_group_resource),
                         plan=plan,
                         zones=self.zones,
+                        user_data=to_native(base64.b64encode(to_bytes(self.user_data)))
                     )
 
                     if self.swap_os_disk is not None:
@@ -2264,7 +2273,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         capacity_reservation=self.compute_models.CapacityReservationProfile(capacity_reservation_group=capacity_reservation_group_resource),
                         network_profile=self.compute_models.NetworkProfile(
                             network_interfaces=nics
-                        )
+                        ),
+                        user_data=to_native(base64.b64encode(to_bytes(self.user_data)))
                     )
 
                     if swap_os_disk_flag:
