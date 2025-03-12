@@ -132,6 +132,11 @@ options:
             - An application which can be installed on a user's device or computer.
         type: bool
 
+    notes:
+        description:
+            - Notes relevant for the management of the application.
+        type: str
+
     oauth2_allow_implicit_flow:
         description:
             - Whether to allow implicit grant flow for OAuth2.
@@ -547,6 +552,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             key_usage=dict(type='str', default='Verify', choices=['Sign', 'Verify']),
             key_value=dict(type='str', no_log=True),
             native_app=dict(type='bool'),
+            notes=dict(type='str'),
             oauth2_allow_implicit_flow=dict(type='bool'),
             optional_claims=dict(
                 type='dict',
@@ -577,6 +583,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         self.key_usage = None
         self.key_value = None
         self.native_app = None
+        self.notes = None
         self.oauth2_allow_implicit_flow = None
         self.optional_claims = None
         self.password = None
@@ -649,6 +656,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 display_name=self.display_name,
                 identifier_uris=self.identifier_uris,
                 key_credentials=key_creds,
+                notes=self.notes,
                 password_credentials=password_creds,
                 required_resource_access=required_accesses,
                 app_roles=app_roles,
@@ -696,6 +704,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 display_name=self.display_name,
                 identifier_uris=self.identifier_uris,
                 key_credentials=key_creds,
+                notes=self.notes,
                 password_credentials=password_creds,
                 required_resource_access=required_accesses,
                 # allow_guests_sign_in=self.allow_guests_sign_in,
@@ -774,6 +783,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             sign_in_audience=object.sign_in_audience,
             homepage=object.web.home_page_url,
             identifier_uris=object.identifier_uris,
+            notes=object.notes,
             oauth2_allow_implicit_flow=object.web.implicit_grant_settings.enable_access_token_issuance,
             optional_claims=optional_claims,
             # allow_guests_sign_in=object.allow_guests_sign_in,
