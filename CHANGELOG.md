@@ -1,5 +1,9 @@
 # Change Log
 
+## v3.3.1 (2025-03-13)
+
+### Fix compile issue with python v3.6
+
 ## v3.3.0 (2025-03-12)
 
 ### NEW MODULES
