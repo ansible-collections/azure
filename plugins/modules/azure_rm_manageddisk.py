@@ -874,6 +874,13 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 self.network_access_policy = disk_instance.get('network_access_policy')
             if self.disk_access_id is None:
                 self.disk_access_id = disk_instance.get('disk_access_id')
+            if self.upload_size_bytes is None:
+                self.upload_size_bytes = disk_instance.get('upload_size_bytes')
+            if self.image_reference is None:
+                self.image_reference = disk_instance.get('image_reference')
+            if self.gallery_image_reference is None:
+                self.gallery_image_reference = disk_instance.get('gallery_image_reference')
+
         result = disk_instance
 
         # need create or update
