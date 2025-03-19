@@ -112,6 +112,10 @@ There are many ways in which you can participate in the project, for example:
 - Review the documentation and make pull requests for anything from typos to new content
 - If you are interested in fixing issues and contributing directly to the code base, please see the [CONTRIBUTING](https://github.com/ansible-collections/azure/blob/dev/CONTRIBUTING.md) document
 
+## Release notes
+
+See the [Changelog](https://github.com/ansible-collections/azure/blob/dev/CHANGELOG.md)
+
 ## License
 
 GNU General Public License v3.0
