@@ -407,7 +407,7 @@
       - output.state
       - output.state.tags.testtag1 is not defined
       - output.state.tags.testtag2 == 'TestValue2'
-      - output.state.tags.TestTag2 == 'TestValue3'
+      - output.state.tags.TestTag3 == 'TestValue3'
 
 - name: Delete all managed disk
   azure_rm_manageddisk:
