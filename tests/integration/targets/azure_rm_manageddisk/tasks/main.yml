@@ -125,6 +125,7 @@
     storage_account_type: "StandardSSD_LRS"
     network_access_policy: AllowAll
     public_network_access: Enabled
+    append_tags: false
     tags:
       galaxy: "no"
       delete: never
