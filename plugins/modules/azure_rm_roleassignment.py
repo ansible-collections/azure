@@ -337,7 +337,7 @@ class AzureRMRoleAssignment(AzureRMModuleBase):
                     response = [self.roleassignment_to_dict(role_assignment) for role_assignment in response]
                     response = [role_assignment for role_assignment in response if role_assignment.get('scope').lower() == self.scope.rstrip("/").lower()]
                     response = [role_assignment for role_assignment in response if (role_assignment.get('assignee_object_id').lower()
-                                                                                    == self.assignee_object_id.lower()])
+                                                                                    == self.assignee_object_id.lower())]
                     response = [role_assignment for role_assignment in response if (role_assignment.get('role_definition_id').split('/')[-1].lower()
                                                                                     == self.role_definition_id.split('/')[-1].lower())]
                 else:
