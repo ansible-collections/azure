@@ -279,6 +279,10 @@ options:
                     - This value is used to identify data disks within the VM and therefore must be unique for each data disk attached to a VM.
                 required: true
                 type: int
+            name:
+                description:
+                    - The disk name.
+                type: str
             disk_size_gb:
                 description:
                     - The initial disk size in GB for blank data disks.
@@ -719,6 +723,7 @@ EXAMPLES = '''
       - lun: 0
         managed_disk_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/disks/myDisk"
       - lun: 1
+        name: newdisk
         disk_size_gb: 128
         managed_disk_type: Premium_LRS
 
@@ -1236,6 +1241,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 elements='dict',
                 options=dict(
                     lun=dict(type='int', required=True),
+                    name=dict(type='str'),
                     disk_size_gb=dict(type='int'),
                     disk_encryption_set=dict(type='str'),
                     managed_disk_id=dict(type='str'),
@@ -2127,7 +2133,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                             data_disks.append(self.compute_models.DataDisk(
                                 lun=data_disk['lun'],
-                                name=disk_name,
+                                name=data_disk.get('name') if self.data_disk.get('name') is not None else disk_name,
                                 vhd=data_disk_vhd,
                                 caching=data_disk['caching'],
                                 create_option=create_option,
