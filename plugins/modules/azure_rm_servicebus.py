@@ -76,9 +76,9 @@ options:
     premium_messaging_partitions:
         description:
             - The number of partitions of a Service Bus namespace.
-            - This property is only applicable to Premium SKU namespaces.
+            - This property is only applicable to C(premium) SKU namespaces.
+            - It default value is C(1) for C(premium) namespaces.
         type: int
-        default: 1
         choices:
             - 1
             - 2
@@ -140,7 +140,7 @@ class AzureRMServiceBus(AzureRMModuleBaseExt):
             zone_redundant=dict(type='bool'),
             disable_local_auth=dict(type='bool'),
             public_network_access=dict(type='str', default='Enabled', choices=["Enabled", "Disabled", "SecuredByPerimeter"]),
-            premium_messaging_partitions=dict(type='int', default=1, choices=[1, 2, 4])
+            premium_messaging_partitions=dict(type='int', choices=[1, 2, 4])
         )
 
         self.resource_group = None
@@ -199,6 +199,9 @@ class AzureRMServiceBus(AzureRMModuleBaseExt):
             self.identity = identity_result.as_dict()
 
         if self.state == 'present':
+            if self.sku != 'premium' and self.premium_messaging_partitions is not None:
+                self.fail("The premium_messaging_partitions is only applicable to C(premium) SKU namespaces.")
+
             if not self.check_mode:
                 if original:
                     update_tags, new_tags = self.update_tags(original.tags)
