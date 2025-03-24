@@ -203,7 +203,8 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
     async def create_service_principal(self):
         request_body = ServicePrincipal(
             app_id=self.app_id,
-            account_enabled=True
+            account_enabled=True,
+            app_role_assignment_required=self.app_role_assignment_required
         )
         return await self._client.service_principals.post(body=request_body)
 
