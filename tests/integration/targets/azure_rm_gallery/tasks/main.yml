@@ -116,12 +116,17 @@
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    vm_size: Standard_B1ms
+    vm_size: Standard_D2s_v3
     network_interfaces: "vmforimage{{ rpfx }}nic"
+    managed_disk_type: Premium_LRS
+    data_disks:
+      - lun: 0
+        disk_size_gb: 128
+        managed_disk_type: Premium_LRS
     image:
-      offer: 0001-com-ubuntu-server-focal
+      offer: 0001-com-ubuntu-server-jammy
       publisher: Canonical
-      sku: 20_04-lts
+      sku: 22_04-lts-gen2
       version: latest
     tags:
       acg_allow_capturevm_with_permission: write
@@ -185,11 +190,14 @@
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
     generalized: true
+
 - name: Create custom image
   azure_rm_image:
     resource_group: "{{ resource_group }}"
     name: testimagea
     source: "vmforimage{{ rpfx }}"
+    hyper_v_generation: V2
+
 - name: Create or update a simple gallery.
   azure_rm_gallery:
     resource_group: "{{ resource_group }}"
