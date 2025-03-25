@@ -342,11 +342,13 @@ id:
            ry1283/images/myImage/versions/10.1.3"
 '''
 
-import time
-import json
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from azure.core.polling import LROPoller
-from azure.core.exceptions import ResourceNotFoundError
+try:
+    import time
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+except ImportError:
+    pass
 
 
 class Actions:
@@ -600,7 +602,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                                                                                      resource_group +
                                                                                                      '/providers/Microsoft.Storage' +
                                                                                                      '/storageAccounts/' +
-                                                                                                                storage_account)
+                                                                                                     storage_account)
                                     self.body['storage_profile']['os_diskImage']['source']['uri'] = kwargs[key]['os_disk']['source'].get('uri')
                                 else:
                                     self.fail("The os_disk.source parameters config errors")
@@ -812,9 +814,11 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
         response = None
         try:
             if self.to_do == Actions.Create:
-                response = self.image_version_client.gallery_image_versions.begin_create_or_update(self.resource_group, self.gallery_name, self.gallery_image_name, self.name, self.body)
+                response = self.image_version_client.gallery_image_versions.begin_create_or_update(self.resource_group,
+                                                                                                   self.gallery_name, self.gallery_image_name, self.name, self.body)
             else:
-                response = self.image_version_client.gallery_image_versions.begin_update(self.resource_group, self.gallery_name, self.gallery_image_name, self.name, self.body)
+                response = self.image_version_client.gallery_image_versions.begin_update(self.resource_group,
+                                                                                         self.gallery_name, self.gallery_image_name, self.name, self.body)
 
         except Exception as exc:
             self.log('Error attempting to create the GalleryImageVersion instance.')
