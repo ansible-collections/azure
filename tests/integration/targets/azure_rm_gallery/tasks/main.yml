@@ -39,6 +39,8 @@
       - tenant_id: "{{ azure_tenant }}"
         object_id: "{{ object_id }}"
         keys:
+          - encrypt
+          - decrypt
           - get
           - list
           - wrapkey
@@ -316,7 +318,7 @@
               - disk_encryption_set_id: "{{ des_results.state.id }}"
             os_disk_image:
               disk_encryption_set_id: "{{ des_results.state.id }}"
-          storage_account_type: Standard_ZRS
+          storage_account_type: Standard_LRS
     storage_profile:
       source_image:
         name: testimagea
@@ -355,7 +357,7 @@
               - disk_encryption_set_id: "{{ des_results.state.id }}"
             os_disk_image:
               disk_encryption_set_id: "{{ des_results.state.id }}"
-          storage_account_type: Standard_ZRS
+          storage_account_type: Standard_LRS
     storage_profile:
       source_image:
         name: testimagea
@@ -394,7 +396,7 @@
               - disk_encryption_set_id: "{{ des_results.state.id }}"
             os_disk_image:
               disk_encryption_set_id: "{{ des_results.state.id }}"
-          storage_account_type: Standard_ZRS
+          storage_account_type: Standard_LRS
     storage_profile:
       source_image:
         name: testimagea
@@ -433,7 +435,7 @@
               - disk_encryption_set_id: "{{ des_results.state.id }}"
             os_disk_image:
               disk_encryption_set_id: "{{ des_results.state.id }}"
-          storage_account_type: Standard_ZRS
+          storage_account_type: Standard_LRS
     storage_profile:
       source_image:
         name: testimagea
