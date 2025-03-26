@@ -2133,7 +2133,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                             data_disks.append(self.compute_models.DataDisk(
                                 lun=data_disk['lun'],
-                                name=data_disk.get('name') if self.data_disk.get('name') is not None else disk_name,
+                                name=self.data_disk.get('name') if self.data_disk.get('name') is not None else disk_name,
                                 vhd=data_disk_vhd,
                                 caching=data_disk['caching'],
                                 create_option=create_option,
