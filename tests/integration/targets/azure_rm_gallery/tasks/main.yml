@@ -75,6 +75,8 @@
     name: "des{{ rpfx }}01"
     source_vault: "myvault{{ rpfx }}"
     key_url: "{{ key_url }}"
+    identity:
+      type: SystemAssigned
     state: present
   register: des_results
 
@@ -85,8 +87,51 @@
     source_vault: "myvault{{ rpfx }}"
     key_url: "{{ key_url }}"
     state: present
+    identity:
+      type: SystemAssigned
     location: westus
   register: des_results02
+
+- name: Get, wrapkey or unwrapkey the disk encryption
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    vault_name: "myvault{{ rpfx }}"
+    enabled_for_disk_encryption: true
+    enable_purge_protection: true
+    vault_tenant: "{{ azure_tenant }}"
+    sku:
+      name: standard
+      family: A
+    access_policies:
+      - tenant_id: "{{ azure_tenant }}"
+        object_id: "{{ object_id }}"
+        keys:
+          - encrypt
+          - decrypt
+          - get
+          - list
+          - wrapkey
+          - unwrapkey
+          - create
+          - update
+          - import
+          - delete
+          - backup
+          - restore
+          - recover
+          - purge
+      - tenant_id: "{{ azure_tenant }}"
+        object_id: "{{ des_results.state.identity.principal_id }}"
+        keys:
+          - get
+          - wrapkey
+          - unwrapkey
+      - tenant_id: "{{ azure_tenant }}"
+        object_id: "{{ des_results02.state.identity.principal_id }}"
+        keys:
+          - get
+          - wrapkey
+          - unwrapkey
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
