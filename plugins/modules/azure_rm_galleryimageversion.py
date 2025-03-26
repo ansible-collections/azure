@@ -824,8 +824,8 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
         response = None
         try:
             if self.to_do == Actions.Create:
-                response = self.image_version_client.gallery_image_versions.begin_create_or_update(self.resource_group,
-                                                                                                   self.gallery_name, self.gallery_image_name, self.name, self.body)
+                response = self.image_version_client.gallery_image_versions.begin_create_or_update(self.resource_group, self.gallery_name,
+                                                                                                   self.gallery_image_name, self.name, self.body)
             else:
                 response = self.image_version_client.gallery_image_versions.begin_update(self.resource_group,
                                                                                          self.gallery_name, self.gallery_image_name, self.name, self.body)

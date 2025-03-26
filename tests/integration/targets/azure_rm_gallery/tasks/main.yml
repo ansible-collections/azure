@@ -119,10 +119,6 @@
     vm_size: Standard_D2s_v3
     network_interfaces: "vmforimage{{ rpfx }}nic"
     managed_disk_type: Premium_LRS
-    data_disks:
-      - lun: 0
-        disk_size_gb: 128
-        managed_disk_type: Premium_LRS
     image:
       offer: 0001-com-ubuntu-server-jammy
       publisher: Canonical

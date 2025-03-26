@@ -106,6 +106,7 @@ try:
 except ImportError:
     pass
 
+
 class AzureRMGalleryImageVersionsInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
