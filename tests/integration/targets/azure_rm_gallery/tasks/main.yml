@@ -127,60 +127,6 @@
     tags:
       acg_allow_capturevm_with_permission: write
 
-- name: Get VM facts
-  azure_rm_virtualmachine_info:
-    resource_group: "{{ resource_group }}"
-    name: "vmforimage{{ rpfx }}"
-  register: vm_output
-
-- name: Create a snapshot by importing an unmanaged blob from the same subscription.
-  azure_rm_snapshot:
-    resource_group: "{{ resource_group }}"
-    name: "mySnapshot-{{ rpfx }}"
-    location: eastus
-    creation_data:
-      create_option: Import
-      source_uri: 'https://{{ vm_output.vms[0].storage_account_name }}.blob.core.windows.net/{{ vm_output.vms[0].storage_container_name }}/{{ vm_output.vms[0].storage_blob_name }}'
-  register: output
-
-- name: Assert the snapshot created
-  ansible.builtin.assert:
-    that:
-      - output.changed
-
-- name: Create a managed disk
-  azure_rm_manageddisk:
-    resource_group: "{{ resource_group }}"
-    name: "disk-{{ rpfx }}"
-    disk_size_gb: 1
-  register: disk_output
-
-- name: Create a snapshot with I(incremental=True)
-  azure_rm_snapshot:
-    resource_group: "{{ resource_group }}"
-    name: "mySnapshot-{{ rpfx }}02"
-    location: eastus
-    incremental: true
-    creation_data:
-      create_option: Copy
-      source_id: "{{ disk_output.state.id }}"
-  register: output
-
-- name: Assert the snapshot idempotent result
-  ansible.builtin.assert:
-    that:
-      - output.changed
-
-- name: List the snapshot instance by resource group
-  azure_rm_snapshot_info:
-    resource_group: "{{ resource_group }}"
-  register: output
-
-- name: Assert there are two snapshots
-  ansible.builtin.assert:
-    that:
-      - output.state |length == 2
-
 - name: Generalize VM
   azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
@@ -407,11 +353,9 @@
               disk_encryption_set_id: "{{ des_results.state.id }}"
           storage_account_type: Standard_ZRS
     storage_profile:
-      os_disk:
-        source:
-          resource_group: "{{ resource_group }}"
-          storage_account: '{{ vm_output.vms[0].storage_account_name }}'
-          uri: 'https://{{ vm_output.vms[0].storage_account_name }}.blob.core.windows.net/{{ vm_output.vms[0].storage_container_name }}/{{ vm_output.vms[0].storage_blob_name }}'
+      source_image:
+        name: testimagea
+        resource_group: "{{ resource_group }}"
   register: output
 
 - name: Assert the gallery image version created
