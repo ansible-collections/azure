@@ -158,6 +158,12 @@ vms:
                     type: bool
                     returned: always
                     sample: False
+        user_data:
+            description:
+                - UserData for the VM, which must be base-64 encoded.
+            type: str
+            returned: always
+            sample: None
         id:
             description:
                 - Resource ID.
@@ -545,6 +551,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         new_result['state'] = 'present'
         new_result['location'] = vm.location
         new_result['vm_size'] = result['hardware_profile']['vm_size']
+        new_result['user_data'] = result.get('user_data', None)
 
         new_result['proximityPlacementGroup'] = result.get('proximity_placement_group')
         new_result['zones'] = result.get('zones', None)

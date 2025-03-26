@@ -270,7 +270,11 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                 if self.version == 'all':
                     self.results['secrets'] = self.get_secret_versions()
                 else:
-                    self.results['secrets'] = self.get_secret()
+                    response = self.get_secret(self.name)
+                    if response is not None:
+                        self.results['secrets'] = [response]
+                    else:
+                        self.results['secrets'] = []
         else:
             if self.show_deleted_secret:
                 self.results['secrets'] = self.list_deleted_secrets()
@@ -283,30 +287,30 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
 
         return SecretClient(vault_url=self.vault_uri, credential=self.azure_auth.azure_credential_track2)
 
-    def get_secret(self):
+    def get_secret(self, name):
         '''
         Gets the properties of the specified secret in key vault.
 
         :return: deserialized secret state dictionary
         '''
-        self.log("Get the secret {0}".format(self.name))
+        self.log("Get the secret {0}".format(name))
 
-        results = []
+        results = None
         try:
             if self.version == 'current':
-                response = self._client.get_secret(name=self.name, version='')
+                response = self._client.get_secret(name=name, version='')
             else:
-                response = self._client.get_secret(name=self.name, version=self.version)
+                response = self._client.get_secret(name=name, version=self.version)
 
             if response:
                 response = secretbundle_to_dict(response)
                 if self.has_tags(response['tags'], self.tags):
                     self.log("Response : {0}".format(response))
-                    results.append(response)
+                    results = response
 
         except ResourceNotFoundError as ec:
             self.log("Did not find the key vault secret {0}: {1}".format(
-                self.name, str(ec)))
+                name, str(ec)))
         except Exception as ec2:
             self.fail("Find the key vault secret got exception, exception as {0}".format(str(ec2)))
         return results
@@ -349,8 +353,8 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
 
             if response:
                 for item in response:
-                    item = secretitem_to_dict(item)
-                    if self.has_tags(item['tags'], self.tags):
+                    item = self.get_secret(item._id.split('/')[-1])
+                    if item is not None:
                         results.append(item)
         except Exception as e:
             self.fail(

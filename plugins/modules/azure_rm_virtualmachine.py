@@ -279,6 +279,10 @@ options:
                     - This value is used to identify data disks within the VM and therefore must be unique for each data disk attached to a VM.
                 required: true
                 type: int
+            name:
+                description:
+                    - The disk name.
+                type: str
             disk_size_gb:
                 description:
                     - The initial disk size in GB for blank data disks.
@@ -631,6 +635,11 @@ options:
                     - The flag that enables or disables a capability to have one or more managed data disks with UltraSSD_LRS storage account type on the VM.
                     - Managed disks with storage account type UltraSSD_LRS can be added to a virtual machine set only if this property is enabled.
                 type: bool
+    user_data:
+        description:
+            - UserData for the VM, which must be base-64 encoded.
+            - Customer should notpass any secrets in here. Minimum api-version '2021-03-01'.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -714,6 +723,7 @@ EXAMPLES = '''
       - lun: 0
         managed_disk_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/disks/myDisk"
       - lun: 1
+        name: newdisk
         disk_size_gb: 128
         managed_disk_type: Premium_LRS
 
@@ -964,6 +974,7 @@ azure_vm:
                     "id": "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/proximityPlacementGroups/testid13"
             },
             "CapacityReservation": {},
+            "UserData": Null,
             "hardwareProfile": {
                 "vmSize": "Standard_D1"
             },
@@ -1230,6 +1241,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 elements='dict',
                 options=dict(
                     lun=dict(type='int', required=True),
+                    name=dict(type='str'),
                     disk_size_gb=dict(type='int'),
                     disk_encryption_set=dict(type='str'),
                     managed_disk_id=dict(type='str'),
@@ -1275,7 +1287,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 options=dict(
                     ultra_ssd_enabled=dict(type='bool')
                 )
-            )
+            ),
+            user_data=dict(type='str'),
         )
 
         self.resource_group = None
@@ -1332,6 +1345,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.security_profile = None
         self.additional_capabilities = None
         self.swap_os_disk = None
+        self.user_data = None
 
         self.results = dict(
             changed=False,
@@ -1939,6 +1953,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         capacity_reservation=self.compute_models.CapacityReservationProfile(capacity_reservation_group=capacity_reservation_group_resource),
                         plan=plan,
                         zones=self.zones,
+                        user_data=to_native(base64.b64encode(to_bytes(self.user_data)))
                     )
 
                     if self.swap_os_disk is not None:
@@ -2118,7 +2133,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                             data_disks.append(self.compute_models.DataDisk(
                                 lun=data_disk['lun'],
-                                name=disk_name,
+                                name=data_disk.get('name') if self.data_disk.get('name') is not None else disk_name,
                                 vhd=data_disk_vhd,
                                 caching=data_disk['caching'],
                                 create_option=create_option,
@@ -2264,7 +2279,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         capacity_reservation=self.compute_models.CapacityReservationProfile(capacity_reservation_group=capacity_reservation_group_resource),
                         network_profile=self.compute_models.NetworkProfile(
                             network_interfaces=nics
-                        )
+                        ),
+                        user_data=to_native(base64.b64encode(to_bytes(self.user_data)))
                     )
 
                     if swap_os_disk_flag:

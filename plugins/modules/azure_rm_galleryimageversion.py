@@ -219,6 +219,11 @@ options:
                 choices:
                     - Standard_LRS
                     - Standard_ZRS
+    timeout:
+        description:
+            - Set the timeout (minute) period for creating an Image Version.
+        type: int
+        default: 10
     state:
         description:
             - Assert the state of the GalleryImageVersion.
@@ -506,6 +511,10 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                     )
                 )
             ),
+            timeout=dict(
+                type='int',
+                default=10
+            ),
             state=dict(
                 type='str',
                 default='present',
@@ -520,6 +529,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
         self.gallery_image_version = None
         self.tags = None
         self.state = None
+        self.timeout = None
 
         self.body = dict()
         self.results = dict(changed=False)
@@ -832,7 +842,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
             time.sleep(60)
             response = self.get_resource()
             i = i + 1
-            if i == 10:
+            if i == self.timeout:
                 self.fail("Create or Updating encountered an exception, wait 10 minutes when the status is still 'creating'")
 
         return response
