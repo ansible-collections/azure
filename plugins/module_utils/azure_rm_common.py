@@ -261,9 +261,9 @@ try:
     from azure.mgmt.sql import SqlManagementClient
     from azure.mgmt.servicebus import ServiceBusManagementClient
     from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
-    from azure.mgmt.rdbms.postgresql_flexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
+    from azure.mgmt.postgresql_flexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
     from azure.mgmt.rdbms.mysql import MySQLManagementClient
-    from azure.mgmt.rdbms.mysql_flexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
+    from azure.mgmt.mysql_flexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
     from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
     from azure.mgmt.containerregistry import ContainerRegistryManagementClient
     from azure.mgmt.containerinstance import ContainerInstanceManagementClient
@@ -1253,7 +1253,8 @@ class AzureRMModuleBase(object):
         self.log('Getting PostgreSQL client')
         if not self._postgresql_flexible_client:
             self._postgresql_flexible_client = self.get_mgmt_svc_client(PostgreSQLFlexibleManagementClient,
-                                                                        base_url=self._cloud_environment.endpoints.resource_manager)
+                                                                        base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                        api_version='2024-11-01-preview')
         return self._postgresql_flexible_client
 
     @property
@@ -1269,7 +1270,8 @@ class AzureRMModuleBase(object):
         self.log('Getting MySQL Flexible client')
         if not self._mysql_flexible_client:
             self._mysql_flexible_client = self.get_mgmt_svc_client(MySQLFlexibleManagementClient,
-                                                                   base_url=self._cloud_environment.endpoints.resource_manager)
+                                                                   base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                   api_version='2024-10-01-preview')
         return self._mysql_flexible_client
 
     @property
