@@ -101,7 +101,7 @@
 
 - name: Get latest version of key
   azure_rm_keyvaultkey_info:
-    vault_uri: https://myvault{{ rpfx }}.vault.azure.net
+    vault_uri: https://myvault{{ rpfx }}02.vault.azure.net
     name: testkey02
   register: results02
 
