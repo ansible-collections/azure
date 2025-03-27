@@ -26,7 +26,7 @@
   register: az_role_assignment_create
   ignore_errors: true
 
-- name: Create a key vault
+- name: Create first key vault
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     vault_name: "myvault{{ rpfx }}"
@@ -54,7 +54,36 @@
           - recover
           - purge
 
-- name: Create a key in key vault
+- name: Create secondary key vault
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    vault_name: "myvault{{ rpfx }}02"
+    enabled_for_disk_encryption: true
+    vault_tenant: "{{ azure_tenant }}"
+    location: westus
+    sku:
+      name: standard
+      family: A
+    access_policies:
+      - tenant_id: "{{ azure_tenant }}"
+        object_id: "{{ object_id }}"
+        keys:
+          - encrypt
+          - decrypt
+          - get
+          - list
+          - wrapkey
+          - unwrapkey
+          - create
+          - update
+          - import
+          - delete
+          - backup
+          - restore
+          - recover
+          - purge
+
+- name: Create first key in key vault
   azure_rm_keyvaultkey:
     key_name: testkey
     keyvault_uri: https://myvault{{ rpfx }}.vault.azure.net
@@ -65,14 +94,29 @@
     name: testkey
   register: results
 
+- name: Create secondary key in key vault
+  azure_rm_keyvaultkey:
+    key_name: testkey02
+    keyvault_uri: https://myvault{{ rpfx }}02.vault.azure.net
+
+- name: Get latest version of key
+  azure_rm_keyvaultkey_info:
+    vault_uri: https://myvault{{ rpfx }}.vault.azure.net
+    name: testkey02
+  register: results02
+
 - name: Assert the key vault facts
   ansible.builtin.set_fact:
     key_url: "{{ results['keys'][0]['kid'] }}"
 
+- name: Assert the key vault facts
+  ansible.builtin.set_fact:
+    key_url02: "{{ results02['keys'][0]['kid'] }}"
+
 - name: Create first disk encryption set
   azure_rm_diskencryptionset:
     resource_group: "{{ resource_group }}"
-    name: "des{{ rpfx }}01"
+    name: "des{{ rpfx }}"
     source_vault: "myvault{{ rpfx }}"
     key_url: "{{ key_url }}"
     identity:
@@ -84,15 +128,15 @@
   azure_rm_diskencryptionset:
     resource_group: "{{ resource_group }}"
     name: "des{{ rpfx }}02"
-    source_vault: "myvault{{ rpfx }}"
-    key_url: "{{ key_url }}"
+    source_vault: "myvault{{ rpfx }}02"
+    key_url: "{{ key_url02 }}"
     state: present
     identity:
       type: SystemAssigned
     location: westus
   register: des_results02
 
-- name: Get, wrapkey or unwrapkey the disk encryption
+- name: Set get, wrapkey or unwrapkey permission to the disk encryption
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     vault_name: "myvault{{ rpfx }}"
@@ -126,6 +170,36 @@
           - get
           - wrapkey
           - unwrapkey
+
+- name: Set get, wrapkey or unwrapkey permission to the disk encryption
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    vault_name: "myvault{{ rpfx }}02"
+    enabled_for_disk_encryption: true
+    enable_purge_protection: true
+    vault_tenant: "{{ azure_tenant }}"
+    location: westus
+    sku:
+      name: standard
+      family: A
+    access_policies:
+      - tenant_id: "{{ azure_tenant }}"
+        object_id: "{{ object_id }}"
+        keys:
+          - encrypt
+          - decrypt
+          - get
+          - list
+          - wrapkey
+          - unwrapkey
+          - create
+          - update
+          - import
+          - delete
+          - backup
+          - restore
+          - recover
+          - purge
       - tenant_id: "{{ azure_tenant }}"
         object_id: "{{ des_results02.state.identity.principal_id }}"
         keys:
@@ -366,6 +440,14 @@
               - disk_encryption_set_id: "{{ des_results.state.id }}"
             os_disk_image:
               disk_encryption_set_id: "{{ des_results.state.id }}"
+        - name: westus
+          regional_replica_count: 2
+          encryption:
+            data_disk_images:
+              - disk_encryption_set_id: "{{ des_results02.state.id }}"
+            os_disk_image:
+              disk_encryption_set_id: "{{ des_results02.state.id }}"
+          storage_account_type: Standard_LRS
     storage_profile:
       source_image:
         name: testimagea
@@ -397,6 +479,14 @@
               - disk_encryption_set_id: "{{ des_results.state.id }}"
             os_disk_image:
               disk_encryption_set_id: "{{ des_results.state.id }}"
+        - name: westus
+          regional_replica_count: 2
+          encryption:
+            data_disk_images:
+              - disk_encryption_set_id: "{{ des_results02.state.id }}"
+            os_disk_image:
+              disk_encryption_set_id: "{{ des_results02.state.id }}"
+          storage_account_type: Standard_LRS
     storage_profile:
       source_image:
         name: testimagea
@@ -428,6 +518,14 @@
               - disk_encryption_set_id: "{{ des_results.state.id }}"
             os_disk_image:
               disk_encryption_set_id: "{{ des_results.state.id }}"
+        - name: westus
+          regional_replica_count: 2
+          encryption:
+            data_disk_images:
+              - disk_encryption_set_id: "{{ des_results02.state.id }}"
+            os_disk_image:
+              disk_encryption_set_id: "{{ des_results02.state.id }}"
+          storage_account_type: Standard_LRS
     storage_profile:
       source_image:
         name: testimagea
@@ -459,6 +557,14 @@
               - disk_encryption_set_id: "{{ des_results.state.id }}"
             os_disk_image:
               disk_encryption_set_id: "{{ des_results.state.id }}"
+        - name: westus
+          regional_replica_count: 2
+          encryption:
+            data_disk_images:
+              - disk_encryption_set_id: "{{ des_results02.state.id }}"
+            os_disk_image:
+              disk_encryption_set_id: "{{ des_results02.state.id }}"
+          storage_account_type: Standard_LRS
     storage_profile:
       source_image:
         name: testimagea

@@ -784,7 +784,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                             if not self.default_compare(modifies, self.body['publishing_profile'][key], old_response['publishing_profile'][key], '', result):
                                 self.to_do = Actions.Update
                         elif key == 'end_of_life_date':
-                            if self.body['publishing_profile'][key].lower() != old_response['publishing_profile'].get(key):
+                            if self.body['publishing_profile'][key][:10].lower() != old_response['publishing_profile'].get(key)[:10].lower():
                                 self.to_do = Actions.Update
                         elif self.body['publishing_profile'].get(key) != old_response['publishing_profile'].get(key):
                             self.to_do = Actions.Update
