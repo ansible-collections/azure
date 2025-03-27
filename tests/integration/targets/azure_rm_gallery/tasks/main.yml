@@ -366,14 +366,6 @@
               - disk_encryption_set_id: "{{ des_results.state.id }}"
             os_disk_image:
               disk_encryption_set_id: "{{ des_results.state.id }}"
-        - name: westus
-          regional_replica_count: 2
-          encryption:
-            data_disk_images:
-              - disk_encryption_set_id: "{{ des_results02.state.id }}"
-            os_disk_image:
-              disk_encryption_set_id: "{{ des_results02.state.id }}"
-          storage_account_type: Standard_LRS
     storage_profile:
       source_image:
         name: testimagea
@@ -405,14 +397,6 @@
               - disk_encryption_set_id: "{{ des_results.state.id }}"
             os_disk_image:
               disk_encryption_set_id: "{{ des_results.state.id }}"
-        - name: westus
-          regional_replica_count: 2
-          encryption:
-            data_disk_images:
-              - disk_encryption_set_id: "{{ des_results02.state.id }}"
-            os_disk_image:
-              disk_encryption_set_id: "{{ des_results02.state.id }}"
-          storage_account_type: Standard_LRS
     storage_profile:
       source_image:
         name: testimagea
@@ -444,14 +428,6 @@
               - disk_encryption_set_id: "{{ des_results.state.id }}"
             os_disk_image:
               disk_encryption_set_id: "{{ des_results.state.id }}"
-        - name: westus
-          regional_replica_count: 2
-          encryption:
-            data_disk_images:
-              - disk_encryption_set_id: "{{ des_results02.state.id }}"
-            os_disk_image:
-              disk_encryption_set_id: "{{ des_results02.state.id }}"
-          storage_account_type: Standard_LRS
     storage_profile:
       source_image:
         name: testimagea
@@ -483,14 +459,6 @@
               - disk_encryption_set_id: "{{ des_results.state.id }}"
             os_disk_image:
               disk_encryption_set_id: "{{ des_results.state.id }}"
-        - name: westus
-          regional_replica_count: 2
-          encryption:
-            data_disk_images:
-              - disk_encryption_set_id: "{{ des_results02.state.id }}"
-            os_disk_image:
-              disk_encryption_set_id: "{{ des_results02.state.id }}"
-          storage_account_type: Standard_LRS
     storage_profile:
       source_image:
         name: testimagea
