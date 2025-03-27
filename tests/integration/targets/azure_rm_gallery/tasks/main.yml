@@ -622,9 +622,9 @@
     that:
       - output.changed
 
-- name: Pasue 2 minutes, wait for deletion complete
+- name: Pasue 5 minutes, wait for deletion complete
   ansible.builtin.pause:
-    minutes: 2
+    minutes: 5
   changed_when: true
 
 - name: Delete gallery image
