@@ -74,11 +74,11 @@ options:
             - The public IP address SKU.
             - When I(version=ipv6), if I(sku=standard) then set I(allocation_method=static).
             - When I(version=ipv4), if I(sku=standard) then set I(allocation_method=static).
+            - The I(sku=basic) will be retired on September 30, 2025.
+            - New I(sku=basic) SKU resource cannot be deployed after March 31, 2025.
         type: str
         choices:
-            - basic
             - standard
-            - Basic
             - Standard
     ip_tags:
         description:
@@ -219,7 +219,7 @@ state:
                 - The public IP address SKU.
             returned: always
             type: str
-            sample: Basic
+            sample: Standard
         tags:
             description:
                 - The resource tags.
@@ -298,7 +298,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
             allocation_method=dict(type='str', default='dynamic', choices=['Dynamic', 'Static', 'dynamic', 'static']),
             domain_name=dict(type='str', aliases=['domain_name_label']),
             reverse_fqdn=dict(type='str'),
-            sku=dict(type='str', choices=['Basic', 'Standard', 'basic', 'standard']),
+            sku=dict(type='str', choices=['Standard', 'standard']),
             ip_tags=dict(type='list', elements='dict', options=ip_tag_spec),
             idle_timeout=dict(type='int'),
             zones=dict(type='list', elements='str', choices=['1', '2', '3'])
@@ -335,7 +335,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
         changed = False
         pip = None
 
-        # capitalize the sku and allocation_method. basic => Basic, Basic => Basic.
+        # capitalize the sku and allocation_method. standard => Standard, Standard => Standard.
         self.allocation_method = self.allocation_method.capitalize() if self.allocation_method else None
         self.sku = self.sku.capitalize() if self.sku else None
         self.version = 'IPv4' if self.version == 'ipv4' else 'IPv6'

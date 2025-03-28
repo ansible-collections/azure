@@ -62,8 +62,9 @@
     - name: Create public IP address
       azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}"
-        allocation_method: Dynamic
         name: "{{ pubipname }}"
+        sku: Standard
+        allocation_method: Static
 
     - name: Create virtual network gateway without bgp settings
       azure_rm_virtualnetworkgateway:
@@ -144,8 +145,9 @@
     - name: Create public IP address
       azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}"
-        allocation_method: Dynamic
         name: "{{ pubipname }}"
+        sku: Standard
+        allocation_method: Static
 
     - name: Create virtual network gateway w/ sku and Generation2
       azure_rm_virtualnetworkgateway:

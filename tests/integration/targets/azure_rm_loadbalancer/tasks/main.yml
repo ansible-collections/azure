@@ -21,6 +21,8 @@
   azure_rm_publicipaddress:
     name: "{{ pipaname }}"
     resource_group: '{{ resource_group }}'
+    sku: Standard
+    allocation_method: Static
 
 - name: Clear load balancer
   azure_rm_loadbalancer:

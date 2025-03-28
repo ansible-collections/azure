@@ -14,6 +14,7 @@
     resource_group: "{{ resource_group }}"
     name: "pip{{ rpfx }}-first"
     allocation_method: Static
+    sku: Standard
     domain_name: "{{ domain_name }}-first"
   register: output
 
@@ -22,6 +23,7 @@
     resource_group: "{{ resource_group }}"
     name: "pip{{ rpfx }}"
     allocation_method: Static
+    sku: Standard
     domain_name: "{{ domain_name }}"
     reverse_fqdn: "{{ output.state.dns_settings.fqdn }}"
     tags:

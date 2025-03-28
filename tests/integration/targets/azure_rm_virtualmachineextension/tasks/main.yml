@@ -20,8 +20,9 @@
 - name: Create public IP address
   azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
-    allocation_method: Dynamic
     name: testPublicIP
+    sku: Standard
+    allocation_method: Static
 
 - name: Create Network Security Group that allows SSH
   azure_rm_securitygroup:
