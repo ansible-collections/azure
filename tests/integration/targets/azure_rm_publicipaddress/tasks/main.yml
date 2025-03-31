@@ -61,6 +61,7 @@
   azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     name: "pip{{ rpfx }}"
+    sku: 'Standard'
     allocation_method: static
     domain_name: "{{ domain_name }}"
   register: output
@@ -74,6 +75,7 @@
     resource_group: "{{ resource_group }}"
     name: "pip{{ rpfx }}"
     allocation_method: static
+    sku: 'Standard'
     domain_name: "{{ domain_name }}"
     append_tags: true
     tags:
@@ -103,6 +105,7 @@
   azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     name: "pip{{ rpfx }}"
+    sku: 'Standard'
     allocation_method: static
     domain_name: "{{ domain_name }}"
     append_tags: false
