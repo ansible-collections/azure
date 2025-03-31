@@ -101,6 +101,8 @@ options:
                 choices:
                     - linux
                     - windows
+                    - Linux
+                    - Windows
                 type: str
             disk_size_gb:
                 description:
@@ -377,7 +379,7 @@ class AzureRMMultipleManagedDisk(AzureRMModuleBase):
             ),
             os_type=dict(
                 type='str',
-                choices=['linux', 'windows']
+                choices=['linux', 'windows', 'Linux', 'Windows']
             ),
             disk_size_gb=dict(
                 type='int'

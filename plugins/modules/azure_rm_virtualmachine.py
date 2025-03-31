@@ -260,6 +260,8 @@ options:
         choices:
             - Windows
             - Linux
+            - windows
+            - linux
         default: Linux
     ephemeral_os_disk:
         description:
@@ -1213,7 +1215,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             os_disk_name=dict(type='str'),
             proximity_placement_group=dict(type='dict', options=proximity_placement_group_spec),
             capacity_reservation_group=dict(type='dict', options=capacity_reservation_group_spec),
-            os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
+            os_type=dict(type='str', choices=['Linux', 'Windows', 'linux', 'windows'], default='Linux'),
             public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static', 'Disabled'], default='Static',
                                              aliases=['public_ip_allocation']),
             open_ports=dict(type='list', elements='str'),

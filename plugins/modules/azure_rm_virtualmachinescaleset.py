@@ -157,6 +157,8 @@ options:
         choices:
             - Windows
             - Linux
+            - windows
+            - linux
         default: Linux
     ephemeral_os_disk:
         description:
@@ -722,7 +724,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
             image=dict(type='raw'),
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite'],
                                  default='ReadOnly'),
-            os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
+            os_type=dict(type='str', choices=['Linux', 'Windows', 'linux', 'windows'], default='Linux'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS']),
             data_disks=dict(
                 type='list',

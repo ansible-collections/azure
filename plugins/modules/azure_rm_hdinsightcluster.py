@@ -41,6 +41,7 @@ options:
         type: str
         choices:
             - 'linux'
+            - 'Linux'
     tier:
         description:
             - The cluster tier.
@@ -269,7 +270,7 @@ class AzureRMClusters(AzureRMModuleBaseExt):
             ),
             os_type=dict(
                 type='str',
-                choices=['linux']
+                choices=['linux', 'Linux']
             ),
             tier=dict(
                 type='str',

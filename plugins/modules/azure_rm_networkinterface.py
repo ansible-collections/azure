@@ -78,6 +78,8 @@ options:
         choices:
             - Windows
             - Linux
+            - windows
+            - linux
         default: Linux
     ip_configurations:
         description:
@@ -576,7 +578,7 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
             subnet_name=dict(type='str', aliases=['subnet']),
             virtual_network=dict(type='raw', aliases=['virtual_network_name']),
             ip_configurations=dict(type='list', default=[], elements='dict', options=ip_configuration_spec),
-            os_type=dict(type='str', choices=['Windows', 'Linux'], default='Linux'),
+            os_type=dict(type='str', choices=['Windows', 'Linux', 'windows', 'linux'], default='Linux'),
             open_ports=dict(type='list', elements='str'),
             enable_ip_forwarding=dict(type='bool', aliases=['ip_forwarding'], default=False),
             dns_servers=dict(type='list', elements='str'),
